@@ -4,22 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "0e47378dd0d66e9d",
+        "id": "09a02ab9651f96a1",
         "type": "tabs",
         "children": [
           {
-            "id": "050ce90a80d1d6ba",
+            "id": "8ae511b28755b16d",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "QT Development from official.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "QT Development from official"
+              "title": "新标签页"
             }
           }
         ]
@@ -214,10 +209,10 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "050ce90a80d1d6ba",
+  "active": "fb472bc440e7a387",
   "lastOpenFiles": [
+    "学习/Language/C C++/QT Development from official.md",
     "未命名.md",
-    "QT Development from official.md",
     "学习/algorithm/用法导向知识.md",
     "学习/其他专业书/Modern C++.md",
     "Files & LongText/Attachments/Pasted image 20250610214049.png",
