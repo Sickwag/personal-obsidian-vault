@@ -4242,7 +4242,7 @@ sequenceDiagram
 ### 🧑‍💻 User
 
 为什么_column_block中药存储9个Cblock宫？每一个Cblock不是代表一个3*3的方格吗？为什么需要_columnn_block和_row_block分别存储9个？
-#program once是什么意思？为什么要使用这段代码？什么情况下才会使用这段代码？
+`#program once` 是什么意思？为什么要使用这段代码？什么情况下才会使用这段代码？
 
 ---
 

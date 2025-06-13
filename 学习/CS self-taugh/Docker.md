@@ -39,7 +39,6 @@ Docker 中
 - **仓库**用来分享模板，常用的是 Dockerhub
 
 安装配置
-#Docker安装 #更改Docker位置 #Docker位置 
 - 使用下面代码可以更改安装位置
 `start /w "" "Docker Desktop Installer.exe" install --installation-dir=D:\Program\Docker
 `

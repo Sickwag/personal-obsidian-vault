@@ -46,7 +46,7 @@
     {
       "name": "copilot-plus-flash",
       "provider": "copilot-plus",
-      "enabled": true,
+      "enabled": false,
       "isBuiltIn": true,
       "core": true,
       "plusExclusive": true,
@@ -58,7 +58,7 @@
     {
       "name": "gpt-4.1",
       "provider": "openai",
-      "enabled": true,
+      "enabled": false,
       "isBuiltIn": true,
       "core": true,
       "capabilities": [
@@ -69,7 +69,7 @@
     {
       "name": "gpt-4.1-mini",
       "provider": "openai",
-      "enabled": true,
+      "enabled": false,
       "isBuiltIn": true,
       "core": true,
       "capabilities": [
@@ -80,7 +80,7 @@
     {
       "name": "gpt-4.1-nano",
       "provider": "openai",
-      "enabled": true,
+      "enabled": false,
       "isBuiltIn": true,
       "core": true,
       "capabilities": [
@@ -91,7 +91,7 @@
     {
       "name": "o4-mini",
       "provider": "openai",
-      "enabled": true,
+      "enabled": false,
       "isBuiltIn": true,
       "core": true,
       "capabilities": [
@@ -339,7 +339,7 @@
       "showInContextMenu": false
     }
   ],
-  "lastDismissedVersion": null,
+  "lastDismissedVersion": "2.9.0",
   "passMarkdownImages": true,
   "enableCustomPromptTemplating": true
 }

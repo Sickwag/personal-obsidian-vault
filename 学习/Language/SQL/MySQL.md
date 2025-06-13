@@ -230,7 +230,6 @@ sql 中的层级模式是 `数据库名.模式名.表名`，如果没有指定�
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240816225343.png)
 ### DQL (database query language)
 #### DQL 语句执行和书写顺序
-#sql执行顺序 #语句顺序 #DQL语句执行顺序
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240824165847.png)
 #### 基础命令
 ##### 操作符

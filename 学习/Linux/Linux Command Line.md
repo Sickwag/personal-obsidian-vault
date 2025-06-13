@@ -21,7 +21,7 @@ shell 就是一个程序，它接受从键盘输入的命令，然后
 - 以 “.” 字符开头的文件名是隐藏文件。用 ls -a 命令可以列出。
 - Linux 没有“文件扩展名”的概念，可以用你喜欢的任何名字来给文件起名。文件内容或用途由**其他方法**来决定。虽然类 Unix 的操作系统，不用文件扩展名来决定文件的内容或用途，但是有些应用程序会。
 -  Linux 支持长文件名，文件名可能包含空格，标点符号，但标点符号仅限“.”，“－”，下划线，最好不要在任何文件名和文件夹名中使用空格，输入名称包含空格的路径时，如果忘记 `“”` 括起，命令行会将空格后面的内容解释为参数，导致错误
-- 使用 vim 打开一个文件夹路径时，`vim` 会尝试打开 `/path/to/directory/README` 文件。如果这个文件不存在，`vim` 会创建它。 #vim打开文件夹 #vim文件夹
+- 使用 vim 打开一个文件夹路径时，`vim` 会尝试打开 `/path/to/directory/README` 文件。如果这个文件不存在，`vim` 会创建它。
 - file 命令识别文件类型
 	`file` 命令用于确定文件的类型。它不依赖于文件的扩展名，而是通过检查文件内容的特定特征来识别文件类型。`file` 命令使用一系列的测试来分析文件，这些测试包括但不限于：
 1. **魔法数字（Magic Numbers）**：很多文件格式都有特定的开头字节序列，称为“魔法数字”。例如，JPEG图片文件通常以 `0xFFD8FF` 开头，而GIF图片文件以 `GIF89a` 或 `GIF87a` 开头。`file` 命令会检查文件的开头部分，看是否匹配已知的魔法数字。
@@ -38,7 +38,7 @@ shell 就是一个程序，它接受从键盘输入的命令，然后
 - [Linux long text explanation \> linux 中各种目录作用](../../../Files%20&%20LongText/Long%20code/Linux%20long%20text%20explanation.md#linux%20中各种目录作用)
 - [参考链接：中文FHS文件目录分类](https://blog.csdn.net/yup1212/article/details/82152106)
 - [FHS文件目录分类规定：英文pdf](http://www.pathname.com/fhs/)
-- 图片表示 #linux文件 #linux目录作用
+- 图片表示
 ![Pasted image 20240922125030.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240922125030.png)
 ![Pasted image 20240922125042.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240922125042.png)
 ![Pasted image 20240922125122.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240922125122.png)
