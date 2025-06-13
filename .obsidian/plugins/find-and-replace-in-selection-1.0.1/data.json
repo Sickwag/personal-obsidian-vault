@@ -1,0 +1,6 @@
+{
+  "findText": "",
+  "findRegexp": "^(\\#+)\\s(.*)$",
+  "regexpFlags": "gm",
+  "replace": "#$1 $2"
+}

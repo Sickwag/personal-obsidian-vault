@@ -1,0 +1,268 @@
+{
+  "main": {
+    "id": "febd151eaede0d64",
+    "type": "split",
+    "children": [
+      {
+        "id": "0e47378dd0d66e9d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "050ce90a80d1d6ba",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "QT Development from official.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "QT Development from official"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "22acc8c252aa3615",
+    "type": "split",
+    "children": [
+      {
+        "id": "f7af89d61672c9a0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fb472bc440e7a387",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "custom",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "d1e212fee3e1649e",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "byModifiedTime"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "da5aeddede390dfb",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200
+  },
+  "right": {
+    "id": "8bf7189d29dd45a6",
+    "type": "split",
+    "children": [
+      {
+        "id": "4042b96027a461da",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9fc20a7d5a2b5b90",
+            "type": "leaf",
+            "state": {
+              "type": "quiet-outline",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "Plugin no longer active"
+            }
+          },
+          {
+            "id": "de8e7e1fbacad176",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "学习/algorithm/分析优化.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "分析优化 的反向链接列表"
+            }
+          },
+          {
+            "id": "7773defc7a1290fc",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "学习/Language/Android/Android Development.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Android Development 的出链列表"
+            }
+          },
+          {
+            "id": "6bfea65807e3c8f4",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "4ddd46f3beb1b2ee",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "学习/Language/Android/Android Development.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Android Development 的大纲"
+            }
+          },
+          {
+            "id": "b9f5fdafe2fa882b",
+            "type": "leaf",
+            "state": {
+              "type": "advanced-tables-toolbar",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "Plugin no longer active"
+            }
+          },
+          {
+            "id": "e54f850cd75592ed",
+            "type": "leaf",
+            "state": {
+              "type": "copilot-chat-view",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "Plugin no longer active"
+            }
+          },
+          {
+            "id": "ad298179d90004d3",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
+            }
+          }
+        ],
+        "currentTab": 7
+      }
+    ],
+    "direction": "horizontal",
+    "width": 231.5,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "markdown-importer:打开 Markdown 格式转换器": false,
+      "workspaces:管理工作区布局": false,
+      "table-editor-obsidian:Advanced Tables Toolbar": false,
+      "obsidian-git:Open Git source control": false,
+      "copilot:Open Copilot Chat": false
+    }
+  },
+  "active": "050ce90a80d1d6ba",
+  "lastOpenFiles": [
+    "未命名.md",
+    "QT Development from official.md",
+    "学习/algorithm/用法导向知识.md",
+    "学习/其他专业书/Modern C++.md",
+    "Files & LongText/Attachments/Pasted image 20250610214049.png",
+    "Files & LongText/Attachments/Pasted image 20250610213555.png",
+    "Files & LongText/Attachments/Pasted image 20250610203643.png",
+    "内外兼修？.md",
+    "软件开发.md",
+    "学习/其他专业书/Effective C++（侯捷）.md",
+    "API接口使用.md",
+    "学习/Scattered knowlegde/Github.md",
+    "学习/Scattered knowlegde/CMD和PS脚本.md",
+    "Ugot.md",
+    "学习/Scattered knowlegde/接口的使用.md",
+    "Competitions/Mathematical Modeling.md",
+    "Files & LongText/Attachments/Pasted image 20250609125018.png",
+    "学习/ProjectsStudy/Sudoku.md",
+    "学习/Language/C C++/C++ Basics.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "Files & LongText/Attachments/Pasted image 20250608124728.png",
+    "Ugot手册.md",
+    "Yanshee API referencde.md",
+    "Files & LongText/Attachments/file2.png",
+    "Files & LongText/Attachments/file1.png",
+    "Files & LongText/Attachments/开发常用正则表达式.md",
+    "2025-05-31.md",
+    "copilot-conversations/这是我在学习C++时的笔记，请你检查其中是否有错误。[[Modern_C++]]@20250531_174405.md",
+    "copilot-conversations",
+    "学习/其他专业书/计算机是怎样跑起来的.md",
+    "Chores/草稿.md",
+    "Chores/SOP.md",
+    "Chores/operation in devices.md",
+    "undonf.md",
+    "Files & LongText/Attachments/Pasted image 20250526045830.png",
+    "Files & LongText/Attachments/Pasted image 20250526044854.png",
+    "Files & LongText/Attachments/Pasted image 20250525154007.png",
+    "Competitions",
+    "学习/ProjectsStudy/Python",
+    "Files & LongText/ChatLogWithAi",
+    "output.txt",
+    "学习/Geography Learning/From Tutorial",
+    "学习/Geography Learning/AI QA",
+    "学习/Geography Learning",
+    "Clippings",
+    "学习/AI",
+    "未命名.canvas",
+    "未命名 1.canvas"
+  ]
+}

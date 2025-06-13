@@ -1,0 +1,1844 @@
+参考链接[序言 现代 C++ 教程: 高速上手 C++ 11/14/17/20 - Modern C++ Tutorial: C++ 11/14/17/20 On the Fly](https://changkun.de/modern-cpp/zh-cn/00-preface/)
+# 附录：构建 C++程序规则
+## 文件组织结构（Cmake 项目）
+标准文件结构可以参考
+```markdown
+MyAgorithmTools/
+├── CMakeLists.txt          # 根CMake配置文件
+├── build/                  # 构建目录（通常不提交到版本控制）
+├── docs/                   # 项目文档
+├── include/                # 公共头文件
+│   └── project_name/       # 项目命名空间目录
+├── src/                    # 源代码
+├── CMakeLists.txt
+│   ├── core/               # 核心功能模块
+│   ├── utils/              # 工具类
+│   │   └── OtherTools.h
+│   │   └── OtherTools.cpp
+│   ├── gui/                # 图形界面相关
+│   ├── tests/              # 单元测试
+│   └── main.cpp            # 主程序入口
+├── third_party/            # 第三方库
+├── scripts/                # 构建/部署脚本
+└── resources/
+```
+## 代码组织结构
+### 命名空间
+1. **`.h` 头文件中永远不要写 `using namespace std;`**
+2. 在 `.cpp` 文件中优先使用 `using std::xxx;`
+```cpp
+// 可以放在文件或者函数中，不能放在类定义中，因为这些语句不是成员
+using std::vector;
+using std::cout;
+using std::endl;
+```
+1. 如果只是某个函数中频繁使用，就在函数内部写 `using namespace std;`
+2. 对常用类型提前声明 `using std::vector;` 等，提高可读性又不造成污染
+3. 类定义中只能包含成员声明、定义和嵌套类型等，而 `using` 声明不是类的成员。
+
+| 方法                                                                  | 范围   | 污染风险 | 推荐程度  |
+| ------------------------------------------------------------------- | ---- | ---- | ----- |
+| `using std::xxx;`                                                   | 单个名字 | 极低   | ⭐⭐⭐⭐⭐ |
+| `using namespace std;`（函数内）                                         | 函数内  | 较低   | ⭐⭐⭐   |
+| `using namespace std;`（全局）                                          | 整个文件 | 高    | ❌     |
+| 命名空间别名（适用于很深的命名空间嵌套 `namespace sn = some::very::deep::namespace_;`） | 局部   | 无    | ⭐⭐⭐⭐  |
+| 写完整`std::xxx`                                                       | 全局   | 无    | ⭐⭐⭐⭐  |
+### 头文件和源文件
+在 C++ 中，除非是 `constexpr`、整型常量或 `inline` 静态成员变量，静态成员变量不能在类内初始化，必须在 `.h` 中声明但不初始化，`.cpp` 中定义初始化（C++17 之前）；C++17 及以后，`inline` 静态成员变量可以在类内初始化。
+#### `.h` 头文件（Header File）
+
+- **作用：声明**
+    - 类、函数、变量、宏等的**声明（declaration）**
+    - 不包含具体的实现逻辑
+    - `inline` 或者**模板**允许在头文件中定义
+    - 为避免多次包含应该使用 `#pragm once`
+- **目的：供其他 `.cpp` 文件包含使用**
+
+#### `.cpp` 源文件（Source File）
+
+- **作用：定义**
+    - 函数、类成员函数、全局变量等的**定义（definition）**
+- **目的：编译生成目标文件（.o / .obj），最终链接成可执行程序或库**
+
+| 项目   | 推荐写法                                   |
+| ---- | -------------------------------------- |
+| 类名   | PascalCase（如`FileSorter`）              |
+| 函数名  | camelCase 或 PascalCase（视团队而定）          |
+| 文件名  | 与类名一致，如`FileSorter.h`/`FileSorter.cpp` |
+| 宏定义  | 全大写 + 下划线（如`MAX_BUFFER_SIZE`）          |
+| 常量变量 | `kCamelCase`（Google 风格）                |
+| 成员变量 | `m_camelCase`或`_camelCase`             |
+| 静态变量 | `s_camelCase`                          |
+| 私有函数 | 开头下划线（如                                |
+
+### 结构化维护代码技巧
+#### 封装数据结构和逻辑
+使用 function 封装数据结构和 lambda 函数
+```cpp
+using SortFunction = std::function<bool(const FileInfo&, const FileInfo&)>;
+using SortTuple = std::tuple<std::string, SortFunction>;
+class FileSorter {
+public:
+    static const std::array<SortTuple, 6> sortingMethods;
+};
+const std::array<SortTuple, 6> FileSorter::sortingMethods = {{
+    {
+        "name_asc", 
+        [](const FileInfo& a, const FileInfo& b) { 
+            return a.filename < b.filename; 
+        }
+    },
+    {
+        "name_dsc", 
+        [](const FileInfo& a, const FileInfo& b) { 
+            return a.filename > b.filename; 
+        }
+    },
+    // 类似处理其他4种排序方式...
+}};
+```
+
+#### 初始化成员
+在 C++ 中，**推荐在一个类的声明中只进行成员变量的声明（不定义），然后在构造函数中对它们进行初始化** 。这是现代 C++ 编程中的最佳实践之一。
+**赋值方法：**
+
+| 初始化方式          | 是否推荐     | 说明                               |
+| -------------- | -------- | -------------------------------- |
+| 类内默认值（C++11 起） | ⚠️ 视情况而定 | `int m_age = 0;`简洁但不适合复杂类型或条件初始化 |
+| 构造函数初始化列表      | ✅ 强烈推荐   | 推荐用于所有成员变量初始化，尤其是 const、引用等      |
+| 构造函数体内赋值       | ❌ 不推荐    | 效率低，对于 const 成员不可用               |
+**赋值位置和方式**
+
+| 成员变量类型                    | 初始化方式                 |
+| ------------------------- | --------------------- |
+| `const`成员                 | 必须在初始化列表中赋值           |
+| 引用（reference）             | 必须在初始化列表中绑定           |
+| 没有默认构造函数的类类型              | 必须在初始化列表中调用带参构造       |
+| POD 类型（如 int、double）      | 可在类内设默认值或构造函数初始化      |
+| STL 容器（vector, map 等）     | 可在类内默认初始化或构造函数中设置初始容量 |
+| 如果是简单结构体 POD 成员可以直接在类内初始化 | 聚合初始化或者直接初始化          |
+
+# 第 1 章迈向现代 C++
+## 1.1 被弃用的特性
+
+> **注意**：弃用并非彻底不能用，只是用于暗示程序员这些特性将从未来的标准中消失，应该尽量避免使用。但是，已弃用的特性依然是标准库的一部分，并且出于兼容性的考虑，大部分特性其实会『永久』保留。
+
+- 不再允许字符串字面值常量赋值给一个 `char *`。如果需要用字符串字面值常量赋值和初始化一个 `char *`，应该使用 `const char *` 或者 `auto`。
+```cpp
+char *str = "hello world!"; // 将出现弃用警告
+```
+- C++98 异常说明、 `unexpected_handler`、`set_unexpected()` 等相关特性被弃用，应该使用 `noexcept`
+- `auto_ptr` 被弃用，应使用 `unique_ptr`。
+- `register` 关键字被弃用，可以使用但不再具备任何实际含义。
+- `bool` 类型的 `++` 操作被弃用。
+- 如果一个类有析构函数，为其生成拷贝构造函数和拷贝赋值运算符的特性被弃用了。
+- C 语言风格的类型转换被弃用（即在变量前使用 `(convert_type)`），应该使用 `static_cast`、`reinterpret_cast`、`const_cast` 来进行类型转换。
+- 特别地，在最新的 C++17 标准中弃用了一些可以使用的 C 标准库，例如 `<ccomplex>`、`<cstdalign>`、`<cstdbool>` 与 `<ctgmath>` 等
+## 1.2 与 C 的兼容性
+### Note：C++中的 lambda 捕获列表
+在C++11引入Lambda表达式后，捕获列表不仅可以捕获外部变量，还支持**初始化捕获**（C++11）和**通用Lambda捕获**（C++14）
+- **允许在捕获列表中定义新变量**，即使这些变量没有在外部作用域中声明
+- 新变量的类型可以省略，**由编译器推导**
+```cpp
+[out = ref(cout << "Result from C code: " << add(1, 2))](){
+        out.get() << ".\n";
+    }();
+```
+可以等效为：
+```cpp
+auto out = ref(cout << "Result from C code: " << add(1, 2));
+[&out]() { out.get() << ".\n"; }();
+```
+ref 的作用是获取一个**表达式**并使用 `reference_wrapper<T>` 包装（包装后是一个对象，提供更多的方法），其中 `T` 是表达式返回值的类型，在作用上来说等效于使用 `auto& cite = /*expression*/` 获取返回值的**引用从而避免复制**，然后使用 cite 这个引用变量进行一些操作。
+
+# 第 2 章语言可用性的强化
+## 2.1 常量
+### nullptr
+`nullptr` 出现的目的是为了替代 `NULL`。 C 与 C++ 语言中有**空指针常量**，它们能被隐式转换成任何指针类型的空指针值，或 C++ 中的任何成员指针类型的空成员指针值。 `NULL` 由标准库实现提供，并被定义为实现定义的空指针常量。在 C 中，有些标准库会把 `NULL` 定义为 `((void*)0)` 而有些将它定义为 `0`。
+
+C++ **不允许**直接将 `void *` 隐式转换到其他类型，从而 `((void*)0)` 不是 `NULL` 的合法实现。
+C++11 引入了 `nullptr` 关键字，专门用来区分空指针、`0`。而 `nullptr` 的类型为 `nullptr_t`
+### constexpr
+参考下面例子
+```cpp
+#define LEN 10
+char arr_1[10];                      // 合法
+char arr_2[LEN];                     // 合法
+
+int len = 10;
+// char arr_3[len];                  // 非法
+
+const int len_2 = len + 1;
+constexpr int len_2_constexpr = 1 + 2 + 3;
+// char arr_4[len_2];                // 非法
+char arr_4[len_2_constexpr];         // 合法
+
+// char arr_5[len_foo()+5];          // 非法
+char arr_6[len_foo_constexpr() + 1]; // 合法
+```
+mingw 会将非法情况都合法化不报错，但是原则上只有 constexpr 变量才能够作为数组大小的定义
+C++11 提供了 `constexpr` 让用户显式的声明函数或对象构造函数在编译期会成为常量表达式
+- **变量**：`constexpr` 可以修饰变量，表示其值在编译时已知。
+- **函数**：`constexpr` 函数指的是其返回值可以在编译时计算出的函数，这类函数必须满足：
+    1. **单一返回语句**：所有代码路径都必须通过单一 `return` 语句返回。
+    2. **仅编译时常量操作**：函数体内只能使用编译时常量、字面量、其他 `constexpr` 函数或 `constexpr` 变量。
+    3. **不允许修改外部状态**：不能修改非局部变量、使用 `volatile` 变量或 I/O 操作。
+    4. **返回类型限制**：`constexpr` 函数不仅限于基本数据类型，**任何可在编译时计算出的类型**都可以，包括：
+	    - 整数、浮点数等基本类型
+	    - `array`、`tuple` 等固定大小的容器
+	    - 用户定义的类型（UDT），前提是其构造函数也是 `constexpr`
+- **函数体限制**：函数体内不能包含运行时特征（如 I/O、异常抛出、`volatile` 访问等）
+---
+如果将 constexpr 应用于 if 的条件分支中，会导致**部分分支不会被检查**
+
+| 特性           | `if`          | `if constexpr`      |
+| ------------ | ------------- | ------------------- |
+| 编译器处理时间      | 运行时           | 编译时                 |
+| 所有分支是否都需要有效？ | 是 —— 都要能编译通过  | 否 —— 只有满足的分支被检查     |
+| 会生成多少函数版本？   | 一个函数，运行时判断分支  | 每个模板参数生成一个新函数，分支已确定 |
+| 对编译速度的影响？    | 较小            | 很可能增加编译时间（但优化性能）    |
+| 是否影响运行速度？    | 会影响（分支是运行时判断） | 不影响（只保留一个分支）        |
+
+### if/switch 变量声明强化
+现在 if 和 Switch语句的 `()` 中可以定义临时变量，作用域仅仅在对应语句中
+```cpp
+if (const vector<int>::iterator itr = find(vec.begin(), vec.end(), 3);
+    itr != vec.end()) {
+    *itr = 4;
+}
+```
+
+### 初始化列表
+[[Effective C++（侯捷）#构造函数和初始化列表|初始化列表和构造函数函数体初始化的区别]]
+普通数组、 POD （**P**lain **O**ld **D**ata，即没有构造、析构和虚函数的类或结构体） 类型都可以使用 `{}` 进行初始化，也就是我们所说的初始化列表，对于类对象的初始化，要么需要通过拷贝构造、要么就需要使用 `()` 进行。这些不同方法都针对各自对象，不能通用。所以 C++引入了 `initialize_list` 允许通过**构造函数**提供一种通用初始化方法
+```cpp
+class MagicFoo {
+public:
+    MagicFoo(initializer_list<int> list) {
+        for (auto& entry : list) {
+            vec.push_back(entry);
+        }
+    }
+    void constructInitialize() { // 对象构造初始化
+        for (const auto& item : vec) {
+            cout << item;
+        }
+    }
+    void functionInitializer(initializer_list<int> list) {
+        cout << endl;
+        for (auto& item : list) {
+            cout << item;
+        }
+    }
+private:
+    vector<int> vec;
+};
+
+int main() {
+    MagicFoo mf = { 1,2,3,4,5 };
+    MagicFoo mf2({ 1, 2, 3, 4, 5 });
+    MagicFoo mf3{ 1,2,3,4,5 };
+    mf.constructInitialize();
+    mf.functionInitializer({1, 2, 3, 4, 5});
+}
+```
+使用条件：
+- **类型一致性**：`initializer_list` 中的元素类型必须与声明的模板参数类型一致（如 `int`、`double`、`string` 等）。
+- **性能考虑**：频繁使用 `initializer_list` 可能引入额外的复制或移动操作，需权衡使用场景。
+- **容器支持**：标准库容器（如 `vector`、`list`）已内置支持 `initializer_list` 构造函数，简化了初始化过程。
+### 结构化绑定
+C++中如果要一个函数返回多个返回值，一般用 `tuple<返回值类型1, 返回值类型2,......>`，虽然可以，但是但缺陷是，C++11/14 并没有提供一种简单的方法**直接从**元组中拿到并定义元组中的元素。
+
+- 使用 `tie` 解包，则**需要先定义变量**
+```cpp
+int main() {
+    tuple<int, double, string> t(1, 2.5, "hello");
+    int a;
+    double b;
+    string c;
+    // 使用 tie 解包
+    tie(a, b, c) = t;
+    cout << "a = " << a << ", b = " << b << ", c = " << c << endl;
+    return 0;
+}
+```
+- 使用 `get<index>(tuple_obj)` 
+`get<index>` 的返回类型：（如果 `std::tuple` 中的元素是左值引用）或**值**（如果元素是右值引用或值类型），具体取决于 `std::tuple` 的构造方式。例如：
+```cpp
+std::tuple<int&, double&&, std::string> t(std::ref(a), 2.5, "hello");
+```
+> - `get<0>(t)` 返回 `int&`（左值引用）
+> - `get<1>(t)` 返回 `double&&`（右值引用）
+> - `get<2>(t)` 返回 `std::string`（值类型）
+> - **`std::tie` 的传递方式**：`std::tie` 始终返回**左值引用**，允许直接修改原 `std::tuple` 中的元素（如果 `std::tuple` 中的元素是可修改的）
+
+- C++17 使用结构化绑定传入
+`auto& [a, b, c] = t` 可以直接得到 tuple 中的内容，并且支持修改（因为会被应用传递到 a，b，c）
+- **结构化绑定**（C++17）是一种**语法糖**，允许你将 `std::tuple`（或其他支持的类型，如 `std::pair`、`std::array` 等）的元素**解包**到多个变量中。
+- **底层机制**：结构化绑定实际上创建了**引用**到 `std::tuple` 中的元素。这些引用是**左值引用**，除非 `std::tuple` 中的元素本身是右值引用。
+---
+如果修改 `a`、`b` 或 `c` 的值，**不会** 影响到原始的 tuple 对象 `tuple_obj`。这是因为结构化绑定默认是 **按值** 解包元组的元素到绑定变量中，意味着每个变量拥有自己独立的存储空间
+- **默认情况下**：当使用 `auto [a, b, c] = tuple_obj;` 时，`a`、`b`、`c` 是**左值引用**，指向 `tuple_obj` 中的元素。**修改 `a`、`b`、`c` 会直接影响 `tuple_obj`**。
+- **例外情况**：如果 `std::tuple` 中的元素本身是**右值引用**（例如，`std::tuple<int&&, double&&>`），则结构化绑定会创建**右值引用**，但这种情况较为特殊。
+
+## 2.3 类型推导
+### auto 类型推导
+不支持推导数组类型 `auto auto_arr2[10] = {arr};` 会报错
+`constexpr` 关键字将表达式或函数编译为常量结果。一个很自然的想法是，如果我们把这一特性引入到条件判断中去，让代码在编译时就完成分支判断
+```cpp
+template<typename T>
+auto print_type_info(const T& t) {
+    if constexpr (std::is_integral<T>::value) {
+        return t + 1;
+    } else {
+        return t + 0.001;
+    }
+}
+int main() {
+    std::cout << print_type_info(5) << std::endl;
+    std::cout << print_type_info(3.14) << std::endl;
+}
+```
+逻辑上等价于
+```cpp
+int print_type_info(const int& t) {
+    return t + 1;
+}
+double print_type_info(const double& t) {
+    return t + 0.001;
+}
+int main() {
+    std::cout << print_type_info(5) << std::endl;
+    std::cout << print_type_info(3.14) << std::endl;
+}
+```
+### decltype 类型推导
+`decltype` 关键字是为了解决 `auto` 关键字只能对变量进行类型推导的缺陷而出现的。
+```cpp
+auto x = 1;
+auto y = 2;
+decltype(x+y) z;
+```
+但是不能这么写：
+```cpp
+decltype(x+y) add(T x, U y) {/* body */}
+```
+判断类型是否相同还可以使用 `is_same<type1, type2>`
+`decltype expr` 的返回类型：根据 expr 是左值/右值/id 表达式等决定
+
+| 表达式形式（expr）    | decltype(expr) 类型 | 说明                         |
+| -------------- | ----------------- | -------------------------- |
+| 普通变量名（如 x）     | T（原类型）            | `decltype(x)` 表示变量的实际类型    |
+| 加括号的变量（如 (x)）  | T&（左值引用）          | `decltype((x))` 返回引用类型     |
+| 字面量 / 构造函数临时对象 | T（prvalue）        | `decltype(1 + 2)` 返回 `int` |
+| 带捕获的 lambda    | 某个闭包类型            | 由编译器生成的类型                  |
+## 2.5 模板
+- C++11 开始，连续的右尖括号将变得合法
+### 变长参数模板
+C++11 加入了新的模板类型参数列表表示方法，允许任意个数、任意类别的模板参数，同时也不需要在定义时将参数的个数固定。
+```cpp
+template<typename... Ts> class Magic;
+```
+支持在参数列表中输入 0 或者 0 个以上的参数，如果一定要参数，则至少写一个参数
+```cpp
+template<typename Require, typename... Args> class Magic;
+```
+
+#### 处理变长参数：
+##### sizeof 计算
+```cpp
+template<typename... Ts>
+void magic(Ts... args) {
+    std::cout << sizeof...(args) << std::endl;
+}
+```
+##### 递归计算
+- 简单递归
+```cpp
+template<typename T0>
+void printf1(T0 value) {
+    std::cout << value << std::endl;
+}
+template<typename T, typename... Ts>
+void printf1(T value, Ts... args) {
+    std::cout << value << std::endl;
+    printf1(args...);
+}
+```
+- 变参模板展开：利用 `if constexpr`，只检查参数列表长度的参数
+```cpp
+template<typename T0, typename... T>
+void printf2(T0 t0, T... t) {
+    std::cout << t0 << std::endl;
+    if constexpr (sizeof...(t) > 0) printf2(t...);
+}
+```
+这种解析参数的方法是通过**实例化不同参数个数和类型**情况下的模板来实现的：
+```cpp
+// 递归方法中
+如果使用printf1(1,2,3) // 其中参数类型自动推导
+// 则会实例化出三个不同的模板代码
+printf1<int> (3)
+printf1<int, int> (2, 3) -> printf1<int> (2) + printf1<int> (3)
+printf1<int, int> (1, 2, 3) -> printf1<int> (1) + printf1<int, int> (2, 3) -> printf1<int> (1) + printf1<int> (2) + printf1<int> (3)
+```
+- 通过模板实例化得到普通的函数，依次调用，即可完成边长类型变量的解析
+- 在编译期会出现递归实例化，实例化出不同的模板代码，代码运行期时只会使用不同的函数调用来完成功能，没有实现递归
+
+##### 初始化列表展开
+递归模板函数是一种标准的做法，但缺点显而易见的在于必须定义一个终止递归的函数。
+这里介绍一种使用初始化列表展开的黑魔法：
+```cpp
+template<typename T, typename... Ts>
+auto printf3(T value, Ts... args) {
+    std::cout << value << std::endl;
+    (void) std::initializer_list<T>{([&args] {
+        std::cout << args << std::endl;
+    }(), value)...};
+}
+```
+这里参考 [[Modern C++#Note：参数包解析]]
+
+##### apply 和 lambda 配合处理
+```cpp
+auto print_tuple = [](auto&&... items) {
+    ((std::cout << items << '\n'), ...);
+};
+std::apply(print_tuple, some_tuple); // 直接展开 tuple 为 parameter pack
+```
+
+### Note： 编译期逻辑表达
+| 特征                                       | 说明                                    |
+| ---------------------------------------- | ------------------------------------- |
+| **无变量本质**                                | 所有执行逻辑以表达式副作用、延迟表达式、“状态伪造”的方式构造       |
+| **不是函数环绕执行环境变量**                         | 表达式中的 0、value 等是用来“伪造”初始化列表构造语法的技巧代码  |
+| **编译期与运行期混合思考**                          | 有时代码完全在运行期，但展开逻辑却在编译期完成，这就是泛型米花板的含金量！ |
+| **lambda + 逗号 + 模板类型推导 = 编译期逻辑运行的暴力破解术** | 虽然它可能看起来“不优雅”，但在模板函数里模拟逻辑执行是唯一手段！     |
+C++ 编译器不是一个真正的逻辑执行环境，但它 **可以模拟一个存在于模板“生成代码”和表达式“副作用机制”中的准逻辑执行语言**
+在 C++ 模板编程中，我们“不是运行逻辑”，而是写一个“生成逻辑”的构造。也就是说，模板不是“运算法”，而是“生成另一个 C++ 代码结构”的宏系统，这种编程方式被称为：
+
+**在元层级（metalevel）上执行逻辑**，即：
+
+- 根据输入类型、值、参数包 → 生成新的 —— 模板实例化代码。
+- 运行环境 → 编译器代码生成阶段。
+- "**模板元编程**" 就是你描述的：“根据模板生成其他模板逻辑”，也就是在一个以编译阶段为主控器的系统中“推演生成运行期逻辑”。
+### Note：折叠表达式
+#### 含义和本质
+语法支持 8 种（主要是左折叠、右折叠）：
+折叠表达式（C++17）是**参数包在元编程中被最优雅使用的语法延伸**。它的本质是：
+
+> ✦ 用一个“二元运算符”，对其展开的每个参数进行“**编译期生成多个表达式**”。
+> ✦ 所谓“折叠”—— 不是计算时折叠，而是**生成表达式链结构**的方式被折叠。
+> ✦ 折叠表达式 `...` 的本质：不是为了**计算**某个表达式 —— 而是为了**在编译期根据参数包生成多个表达式片段**。每个 `args_i` 都会生成一份 `expr(args_i)` 逻辑代码。
+> ✦ 如果这个 expr 是 lambda、pair decay 表达式、嵌套函数计算 —— 仍然能在编译期转化成多个硬编码函数调用。
+
+语法含义取决于 `...` 的位置！
+```cpp
+(F ... op Args)
+(Args op ... op F)
+
+或
+(Args ... op) // 右折叠 
+(op ... Args) // 左折叠
+```
+其中 `op` 是任意重载或内置二元运算符（如 `+`, `-`, `<<`, 如果带自动推导的），`Args...` 是参数包。
+#### 标准语法
+
+| 标准写法（fold expression） | 折叠类型                  | 编译期表达顺序展开逻辑                                      | 示例写法                           | 翻译为                                               |
+| --------------------- | --------------------- | ------------------------------------------------ | ------------------------------ | ------------------------------------------------- |
+| `(操作 ...)`            | 右折叠（unary right fold） | `操作 first element op (second op (third op ...))` | `auto product = (args * ...)`  | `a0 * (a1 * (a2 * a3))`                           |
+| `(... 操作)`            | 左折叠（unary left fold）  | `(...(操作(previous_result, current_val))`         | `auto sum = (... + args)`      | `a0 + a1 + a2 + a3` 展开为 `(((a0 + a1) + a2) + a3)` |
+| `操作左边 ... 右边操作`       | 二元折叠中的左/右折叠符号决定       | 复杂，由位置决定顺序                                       | `(args_out << ... << args_in)` | `operator<< 把每一个 args_in 按顺序接上输出`                 |
+| 括号内有 , 与 ... 后随       | 折叠逗号表达式               | 几乎不执行中间求值，但能用于副作用                                | `(print(args), ...);`          | `print(a0), print(a1), print(a2), ...` 按顺序执行      |
+| 括号开头有 ...             | …初始位置不太好记，仅函数参数中作用    | 接着一个变参                                           | `f(args..., rest)`             | 习惯性写为函数参数包展开                                      |
+
+| 写法           | 编译器如何理解它？                          | 来计算顺序                      |
+| ------------ | ---------------------------------- | -------------------------- |
+| (op...)      | 折叠 op，左折叠                          | ((x1 op x2) op x3) op x4   |
+| (...op)      | 折叠 op，右折叠                          | x1 op (x2 op (x3 op x4))   |
+| (op ...)     | 以 op 左边为起点 展开 args op F            | F = initial value          |
+| (... op)     | 以 F op ... 的语法结构，折叠右侧              | funtor(F, args_i)          |
+| (函数逻辑 , ...) | 把每个 args 转化为 函数逻辑(args_i)，然后依次逗号执行 | 每一个 args_i 挛变为一个子表达式，按顺序运行 |
+| (args , ...) | args 是参数包，以逗号展开并执行有效               | fold 处理左折叠，用于副作用型逻辑时非常常见   |
+#### 左折叠
+```cpp
+(... OP args)
+// OP 会以 args 的第一个为 leftmost 运算项：
+// 编译器在**编译时**生成：
+((args_0 OP args_1) OP args_2) OP args_3 ...
+```
+经典示例：
+```cpp
+template<typename... Args>
+auto sum(..., Args&&... args) {
+    return (0 + ... + args);  // 0 为起点，args... 为参数包
+}
+```
+
+#### 右折叠
+```cpp
+(args OP ...)
+// - 会在括号内部 **从右向左开始计算**
+// - 这种写法允许你以参数包作为的左值，运算符作为操作 / 动作。
+```
+#### 元编程之外的折叠表达式
+折叠表达式 **确实大多数出现在模板参数包 `args...` 的上下文中中**，因为它依赖 parameter pack（变参结构，他的常用场景也是变参解析）。
+```cpp
+int arr[] = {1, 2, 3, 4}; // runtime 数组常量在编译期已知大小
+constexpr int total = (... + arr); // 折叠式从 arr[0] 到 arr[3] 做加法
+static_assert(total == 1 + 2 + 3 + 4);
+```
+
+#### 折叠表达式计算任意参数列表平均值
+不严谨写法：
+```cpp
+template<typename num, typename... Args>
+auto calcu_avg(num n, Args... nums) {
+    int count = 1;
+    double sum = 0.0 + n;
+    ((sum += nums), ...);
+    return sum / count;
+}
+```
+- `<typename num, typename... Args>` 表示一定有一个以上的参数，使用 `tpyename... Args` 允许任意数量参数
+- 定义了 sum 为 double，则返回值一定为 double 类型
+- `sizeof... (参数列表变量)` 可以直接得到列表的长度
+```cpp
+auto average(T ... t) {
+    return (t + ... ) / sizeof...(t);
+}
+int main() {
+    std::cout << average(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) << std::endl;
+}
+```
+
+### Note：`apaply` 与参数列表“完全解包”
+参考下面代码：
+```cpp
+auto add = [](auto a, auto b) { return a + b; };
+std::tuple<int, float> t(42, 3.2f);
+int result = std::apply(add, t);
+std::cout << result << std::endl;
+```
+`apply` 的目的在于解包，这也是最常用的场景：
+
+> 将一个可调用对象（lambda, function, functor）应用到 tuple 的每个元素上，就像 tuple 是一个参数包一样**解包（unpack）**
+
+内部逻辑为：
+- `using std::tuple_size_v<T>` 来知道内部元素数目
+- 使用 `std::index_sequence<0,1,2,...,N>` 模拟 pack
+- 逐个将 tuple 中的 `get<I>(t)` 实体展开
+### Note：参数包解析
+#### 参数包展开语法
+`(expression-with-pack)...;`
+- `...` 如果出现在 `(表达式)` 后面，那么说明这个表达式是一个可以被解包的表达式，表达式中含有能够**被解包**的参数包
+- `...` 会让表达式重复书写这个**参数包**中元素数量次，并且如果 `...` 前的括号中有 `,`，则认为这个 `,` 是执行操作分隔符，表示按逗号分隔顺序执行括号中的语句
+- `(左边表达式, 右边表达式)` 是一个 C++语法，会**先执行左边表达式，再执行右边表达式**，返回类型是右边的类型。这在 C++ 中是通用机制，**不是参数包特有的**。
+- `...`（也称为参数包展开运算符）用于对模板参数包在编译期展开
+- 这个表达式 `expression-with-pack` 必须包含至少一个模板参数包的变量（例如 `args...`, `Ts...` 等）
+```cpp
+(void) initializer_list<T>{ (lambda表达式(args_i), value)... };// 会被自动展开为
+(void) initializer_list<T>{
+    ([&a1](){...}(), value),
+    ([&a2](){...}(), value),
+    ([&a3](){...}(), value),
+	....
+}
+```
+这种展开过程是单纯在编译阶段通过**替换模板代码文本**并修改关键参数来实现，这就是**模板元编程**
+
+| 条件                  | 说明                                                                       |
+| ------------------- | ------------------------------------------------------------------------ |
+| 存在一个已定义的参数包         | 例如在模板函数为 `template<typename... Ts> void f(Ts... args)` 中，`args...` 这个包可用 |
+| `...` 出现在支持展开的语法结构中 | 比如函数参数、初始化列表、折叠表达式中                                                      |
+| 包在展开时必须已经被解包类型明确    | 例如每一个展开的 item 是一个变量、类型、模板参数                                              |
+- `...` 语法是用于参数包展开操作的编译期机制 - 它不能作用于普通的运行期数据结构（如 `std::vector`） - 但对于 `std::array` 等**已知长度的编译期结构**，可以结合 `std::index_sequence` 伪参数包展开来模拟“编译期遍历”的操作
+```cpp
+template<std::size_t... Is>
+void log_array(const std::array<int, 5>& arr, std::index_sequence<Is...>) {
+    (void)std::initializer_list<int>{
+        ((std::cout << arr[Is] << "\n", 0))...
+    };
+}
+int main() {
+    std::array<int, 5> arr = {10, 20, 30, 40, 50};
+    log_array(arr, std::make_index_sequence<5>{});
+    return 0;
+}
+```
+#### 参数包解析操作
+对于
+```cpp
+template<typename T, typename... Ts>
+auto printf3(T value, Ts... args) {
+    std::cout << value << std::endl;
+    (void) std::initializer_list<T>{([&args] {
+        std::cout << args << std::endl;
+    }(), value)...};
+}
+```
+- 这里由于模板参数包 Ts 不定长，需要一个个解析出来，使用了包解析语法生成了一个**参数列表数据结构**（由 initialize_list 包装）。
+- 但由于 initialize_list 中所有元素类型都必须限定为 T （参考 [[Modern C++#初始化列表]]），但是 lambda 函数只打印了内容（副作用），没有 T 类型的返回值，所以使用**操作分隔符**`,`，**执行**`value` 语句，让 `expression-with-pack` 表达式返回值类型为 T
+
+
+### Note：万能引用
+`template<typename Tuple> void apply_all_and_do (Tuple&& t);`
+`Func&&` 是模板完美转发的“万能引用”写法 —— `forward<Func>` 用于保留调用处 `f` 的值类别（是 lvalue 还是 rvalue）**不损失表达式身份**
+```cpp
+auto lambda = [](...){};
+apply_all_and_do(some_func, ...);   // 一个临时 Function（rvalue）
+
+auto& ref = some_func;
+apply_all_and_do(ref, ...);         // function 是 lvalue
+```
+两者都可以传入 `apply_all_and_do` 中都能接受，在函数体中可以对两者设计不同的处理逻辑
+`T&&` 会：
+
+| T 推导为            | 形参身份                                  |
+| ---------------- | ------------------------------------- |
+| `T` 为 `MyClass&` | f 为 `MyClass& &&`，其最终被折叠为 `MyClass &` |
+| `T` 为 `MyClass`  | f 为 `MyClass&&` 指向右值引用                |
+| `&&` 与 auto 搭配   | 转发器巅峰部分搭档                             |
+**无论模板参数是什么类型的引用，当且仅当实参类型为右引用时，模板参数才能被推导为右引用类型**。
+
+| 有 template T                                   | 参数 `T&&` 可变           |
+| ---------------------------------------------- | --------------------- |
+| `T` 推导为 `int&`，传入是 lvalue                      | 那么实际该函数接收到 int&       |
+| `T` 推导为 `string`，传入是临时（rvalue）                 | 则实际接收 string&&        |
+| 使用 `std::forward<T>(x)` 进行类型“转发/generate 归类语言” | f(a), f(b) 传递过程中无类型丢失 |
+
+### Note：完美转发
+完美转发 (forward)(value) 是元编程的“身份还原复刻师”
+使用完美转发+ [[Modern C++#Note：折叠表达式|折叠表达式]] + [[Modern C++#Note：`apaply` 与参数列表“完全解包”|apply参数处理]]三合一例子
+```cpp
+template<typename Func, typename Tuple>
+decltype(auto) apply_all_and_do(Func&& f, Tuple&& t) {
+    return std::apply([&f](auto&&... args) {
+        (std::forward<Func>(f)(std::forward<decltype(args)>(args)), ...);
+    }, std::forward<Tuple>(t));
+}
+// 用法：
+int main() {
+    auto log = [](auto&& value) { std::cout << value << std::endl; };
+    apply_all_and_do(log, std::make_tuple(1, 2.5, std::string("world")));
+}
+```
+`apply_all_and_do` 是一个模板函数
+- F 是一个[[Modern C++#Note：万能引用|万能引用]]，无论传入左值还是右值都能被接受，由函数体中逻辑（如使用完美转发还原**最古身份类型**）来对左右值进行不同的处理，同理 t
+- 函数体的内容是将 t 中的每一个元素应用 f 逻辑，使用封装好的 apply 模板
+- args 是传入 f 的参数列表，也通过[[Modern C++#Note：万能引用|万能引用]]传递给 lambda 中的 f，再通过[[Modern C++#Note：折叠表达式|折叠表达式]]将 args 解析为列表后将每一个 f 的参数完美转发，传入 f
+- apply 将**捕获了 f 的 lambda 函数**作为第一个参数，完美转发过后的 t 作为第二个参数，将 t 中的每一个元素应用 f 的逻辑，由于 f 和 t 是引用传递，所以更改会应用到两者上
+## 2.6 面向对象
+### 继承构造
+构造函数如果需要继承是需要将参数一一传递的，这将导致效率低下
+```cpp
+class Base {
+public:
+    int value1;
+    int value2;
+    Base() {
+        value1 = 1;
+    }
+    Base(int value) : Base() { // 委托 Base() 构造函数
+        value2 = value;
+    }
+};
+class Subclass : public Base {
+public:
+    using Base::Base; // 继承构造
+};
+```
+
+`using Base::Base;` 让子类继承
+- 父类 `Base` 中所有非拷贝、非移动构造函数；
+- 保留父类构造函数的访问权限（`public Base(int)` → 也转发为 `public` 给 Subclass）
+的 **构造函数（显式/隐式）**
+
+| 构造函数签名                      | 是否继承？                                            |
+| --------------------------- | ------------------------------------------------ |
+| Base()（默认）                  | ✅                                                |
+| Base(int x)                 | ✅                                                |
+| Base(const T&)（拷贝）          | ❌ 不被继承                                           |
+| Base(const Base&)（隐式拷贝构造函数） | ❌ Subclass 不会自动拥有                                |
+| Base&&（移动构造                 | ❌ 不会继承                                           |
+| explicit Base(int)          | ✅ 继承构造函数保留 explicit 关键字，Subclass 构造调用需要显式，不能自动转换 |
+| 拷贝构造 / 移动构造                 | 否                                                |
+| `explicit` 版构造函数            | 是的                                               |
+| 模板构造函数                      | 可以构造并暴露一个对应的模板构造                                 |
+| 私有构造函数                      | 否                                                |
+| protected                   | 是的，子类 accessible 和继承构造都通😊                       |
+传统 C++的继承写法为
+```cpp
+struct Base {
+    Base() {}
+    Base(int x) {}
+    Base(const T& other) = default;
+    Base(std::string&& s) {}
+};
+struct Subclass : Base {
+    Subclass() {}
+    Subclass(int x) : Base(x) {}
+    Subclass(const T& other) : Base(other) {}
+    Subclass(std::string&& s) : Base(std::move(s)) {}
+};
+```
+这是非常机械的代码，难以维护且性能较低
+### 同时使用默认构造和用户定义构造器
+若用户定义了任何构造函数，编译器将**不再生成默认构造函数**，但有时确实希望两者兼有。
+```cpp
+class Magic {
+public:
+    Magic() = default;
+    Magic& operator=(const Magic&) = delete;
+    Magic(int magic_number);
+};
+```
+- 编译器将会在知道用户已经写了其他构造函数时仍然在编译期自动构造这个函数，而不是拒绝。这个函数在大多编译器中作用是初始化一些类中**没有被声明的成员**
+ - 用 `= delete` 是阻止调用拷贝构造/赋值函数，多用于构造不可复制的类（单例、资源管理者等）
+### 显式虚函数重载
+```cpp
+struct Base {
+    virtual void foo();
+};
+struct SubClass: Base {
+    void foo();
+};
+```
+- 传统 C++中，如果父类中定义了虚函数，而子类中在不知道这个虚函数存在的情况下并不尝试重载虚函数，只是恰好加入了一个具有相同名字的函数。就会导致**意外重载虚函数**
+- 如果代码迭代过程中将父类虚函数删除，子类**原本用来*重载*父类旧虚函数**的函数将会变为普通得类方法
+- 引入 `override` 关键字将显式的告知编译器进行重载，编译器将检查基函数是否存在这样的其函数签名一致的虚函数，否则将无法通过编译
+```cpp
+struct Base {
+    virtual void foo(int);
+};
+struct SubClass: Base {
+    virtual void foo(int) override; // 合法
+    virtual void foo(float) override; // 非法, 父类没有此虚函数
+};
+```
+`final` 则是为了**防止类被继续继承**以及**终止虚函数继续重载**引入的。
+```cpp
+struct Base {
+    virtual void foo() final;
+};
+struct SubClass1 final: Base {
+}; // 合法
+
+struct SubClass2 : SubClass1 {
+}; // 非法, SubClass1 已 final
+
+struct SubClass3: Base {
+    void foo(); // 非法, foo 已 final
+};
+```
+C++中有什么内置方法可以将一个 string 字符串全部转为小写？
+### 强枚举类型
+传统 C++中，枚举类型并非类型安全，枚举类型会被视作整数，则会让两种完全不同的枚举类型可以进行直接的比较（虽然编译器给出了检查，但并非所有），甚至**同一个命名空间中的不同枚举类型的枚举值名字不能相同**
+- 传统枚举中 `enum struct` vs `enum class` 几乎无区别
+- 新强枚举类型中不能够将其与整数数字进行比较
+- 不能对不同的枚举类型的枚举值进行比较，但相同枚举值之间如果指定的值相同，那么可以进行比较
+- 强枚举类型可以指定类型值，但是值的基础类型**必须是整数**
+```cpp
+enum class new_enum : unsigned int { // 使用这种语法才能够赋值和相同枚举类型之间的比较
+    value1,
+    value2,
+    value3 = 100,
+    value4 = 100
+};
+```
+新旧对比
+
+| 特性                                | 传统枚举（**`enum`**）               | 强类型枚举（**`enum class`**）          |
+| --------------------------------- | ------------------------------ | -------------------------------- |
+| **枚举值是否会在外层命名空间暴露**               | ✅ 是的！会造成命名污染（name clash）       | ❌ 不会，枚举值嵌套在类中 -> `E::val`        |
+| **是否能隐式转换为 int / 整数类型**           | ✅ 是的，enum 值 **默认继承自 int**      | ❌ `enum class` 到 int 需要 **显式转换** |
+| **底层存储类型可以显式指定吗？**                | C++11 后可用 `enum : type` 指定底层类型 | ✅ 可以，而且默认为 int / 任意可选类型          |
+| **是否支持前置声明**（forward declaration） | ❌ 早期不支持 与底层类型的定义分离             | ✅ 支持前置声明                         |
+| **是否支持作用域控制**                     | ❌ 枚举值不能再作用域中独立                 | ✅ 每个枚举值都包裹在 :: 作用域里              |
+如果需要输出强枚举类型变量，**必须要进行强制类型转换**
+```cpp
+enum class Priority : uint8_t { Low = 1, High = 4 };
+int main() {
+    Priority p = Priority::Low;
+    std::cout << static_cast<uint8_t>(p) << std::endl; // 输出 1
+}
+// 大量的转换代码可以通过重载操作符一劳永逸
+template<typename T>
+std::ostream& operator<<(
+    typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e) {
+    return stream << static_cast<typename std::underlying_type<T>::type>(e);
+}
+```
+1. **SFINAE 应用**：`std::enable_if<std::is_enum<T>::value, std::ostream>::type` 是一种静态检查，只有当 `T` 是枚举类型时，函数模板才参与重载解析。
+2. 如果 T 是枚举类型，`std::enable_if<std::is_enum<T>::value, std::ostream>::type` 会解析出枚举类型变量**值的类型**，然后 enable_if 的第二个参数才会被传入 operator 中，使用 `::tpye` 得到 ostream 的类型作为 operator 的参数，而第二个参数则是 T 类型的变量。函数体中解析出枚举类型变量的值
+3. **利用 `std::underlying_type` 得到底层类型**，然后将枚举变量 `e` 强制转换为该类型进行输出。
+简而言之，`operator<<` 的第一个参数是将 `T` 限制为 `enum` 才能继续解析
+#### 命名空间暴露
+传统写法
+```cpp
+// 在文件中定义，会暴露到整个文件中，如果这个文件被include，会污染所有包含这段代码的空间
+enum Color { R, G, B };
+enum Light { R, OFF, RED }; // ❌ 编译错误！R 重定义了！
+```
+强枚举类型写法
+```cpp
+enum class Color { Red, Green, Blue };
+enum class Light { Red, On, Off };
+
+Color::Red 和 Light::Red 互不干扰 ✅
+```
+#### 传统枚举值非法与底层整数类型交互
+```cpp
+Color c = Color::G;
+int a = c; // a会等于1
+```
+如果 Color 是强枚举类型会导致编译不通过
+#### 枚举的底层存储类型不可控
+传统的 `enum` 是直接继承编译器整数系统，通常为 `int` 且不可修改。但是对于嵌入式系统、协议设计也许想要枚举以 `uint8_t`、`bool` 出现，传统 enum 不支持
+强枚举类型支持以下操作
+```cpp
+enum class Priority : uint8_t { Low = 1, High = 4 }; 
+```
+# 第 3 章语言运行期的强化
+### 3.1 Lambda 表达式
+#### 基本特性
+- Lambda 表达式内部函数体在默认情况下是不能够使用函数体外部的变量的，这时候捕获列表可以起到传递外部数据的作用
+- 值捕获、引用捕获都是已经在外层作用域声明的变量，因此这些捕获方式捕获的均为左值，而**不能捕获右值**。
+- C++14 允许捕获的成员用任意的表达式进行初始化，这就允许了右值的捕获，被声明的捕获变量类型会根据表达式进行判断，判断方式与使用 auto 本质上是相同的
+```cpp
+#include <memory>  // std::make_unique
+#include <utility> // std::move
+void lambda_expression_capture() {
+    auto important = std::make_unique<int>(1);
+    auto add = [v1 = 1, v2 = std::move(important)](int x, int y) -> int {
+        return x+y+v1+(*v2);
+    };
+    std::cout << add(3,4) << std::endl;
+}
+```
+- C++11 的捕获列表中新的变量初始化**不能使用 auto**来推断类型，C++14 允许
+```cpp
+auto add = [](auto x, auto y) {
+    return x+y;
+};
+add(1, 2);
+add(1.1, 2.2);
+```
+#### 隐式转换为函数指针
+Lambda 表达式中**没有捕获变量**（即捕获列表为空 `[]`）时，从 C++11 开始，无捕获的 lambda 可转换为与它的 operator() 对应的函数指针。^[2]
+转化为函数指针需要
+- Lambda 不能有**捕获列表（captures）**；
+- Lambda 必须是一个**静态函数行为**^[3]（无状态、无捕获）；
+- 转换目标必须是**兼容的函数指针类型**（参数和返回值匹配）。
+
+
+---
+[2]: 来自 C++标准（ISO C++11）
+[3]: 静态函数行为表示一个函数可以被转化为函数指针类型，没有存储外部变量（捕获），完全等价于一个 `staic type func(args)`，不持有任何外部变量的拷贝或者引用（状态）
+#### 异常处理
+| 写法                    | 作用说明                            |
+| --------------------- | ------------------------------- |
+| `noexcept`            | 显式说明该函数不会抛出异常                   |
+| `throw()`（C++11 之前）   | 已淘汰，在新代码中不建议使用                  |
+| `noexcept(condition)` | 条件式 noexcet，只有 condition 为真时不抛出 |
+| `[]() noexcept`       | Lambda 标记为不会抛出异常                |
+```cpp
+auto lamb = [](auto value) noexcept(is_same<decltype(value), int>()) -> int {return value * value;};
+```
+## 3.2 函数对象包装器
+### `std::function`
+C++11 `std::function` 是一种通用、多态的函数封装，它的实例可以对任何可以调用的目标实体进行存储、复制和调用操作，它也是对 C++ 中现有的可调用实体的一种类型安全的包裹（相对来说，函数指针的调用不是类型安全的），
+
+`std::function` 提供了类型擦除机制，使得它可以统一处理各种可调用对象（lambda、函数指针、绑定器、仿函数等），具有更高的灵活性和抽象能力。换句话说，就是函数的容器。**当我们有了函数的容器之后便能够更加方便的将函数、函数指针作为对象进行处理。**，可以理解为一种闭包对象^[1]
+`std::function` 是一个泛化的可调用对象的**封装容器**，可存储、复制、调用任意的：
+
+| 类型                     | 示例                                   |
+| ---------------------- | ------------------------------------ |
+| Lambda 表达式             | `[](int x) { cout << x; }`           |
+| 函数指针                   | `void(*)(int)`                       |
+| 普通函数                   | `void func(int)`                     |
+| 绑定器（`std::bind`）       | `std::bind(&Class::method, obj, _1)` |
+| 任意具有 `operator()` 的仿函数 | `MyFunctor` 实例                       |
+[1]:由 Lambda 表达式创建的**匿名类对象（anonymous object）**，称为 **闭包对象（closure object）**
+
+### `std::bin`
+#### 绑定函数和参数
+```cpp
+auto bound_func = std::bind(f, 1, _1, _2); // 给 f 的第一参数绑定值1，剩下等待两个参数
+bound_func(a, b); // 实际调用就是 f(1, a, b);
+--------------------或者这种形式-----------------------
+void deliver(std::string city, std::string phone) {
+    std::cout << "Deliver to " << city << ", call at " << phone << std::endl;
+}
+int main() {
+    // 使用 std::bind 绑定一个部分参数
+    auto action = std::bind(deliver, "Shanghai", std::placeholders::_1);
+    action("123-4567"); // 参数会填到 _1 的位置
+}
+```
+- 一旦你调用 `std::bind(...)`，编译器就会把你绑定的实参拷贝进闭包，并将其绑定逻辑“封死”在一个包装器中。你无法从中提取或去掉某个参数。原因是：
+- 绑定在编译期（Compile-time）即封装完成
+- `std::bind` 返回的是一个绑定器对象，其类型是未命名的，但它是可调用的，并且可以通过多次绑定继续扩展参数。
+#### 绑定函数指针到对象实例
+将 **函数指针** 和 **对象实例** 绑定，生成一个 **可调用对象**（适用于普通函数调用接口）：
+在 C++ 中，取成员函数地址必须显式使用 `&` 符号。这是语言标准规定的语法，但是普通函数名赋值给变量会隐式转换为函数指针
+```cpp
+thread tp(std::bind(&P_and_C::producer, &pc)); 
+// 其内部实现类似于
+auto binder = [&pc] { pc.producer(); };
+thread tp(binder);
+```
+### `std::placeholder`
+一般和 [[Modern C++#`std bind`|bind]] 配合使用，作为绑定函数参数位置占位符
+
+## 3.3 右值引用
+### 左值、右值的纯右值、将亡值、右值
+[[C++学习对话#左值引用和右值引用]]
+左右值之间的类型转换
+
+| 类别                | 表现                                              | 能调用操作                          |
+| ----------------- | ----------------------------------------------- | ------------------------------ |
+| 左值                | 指对象实际存在的，通常命名                                   | 允许 `=`、函数调用、函子调用               |
+| 右值                | 一般是临时对象                                         | 更愿意被移动（`std::move`），编译器可优化局部引用 |
+| 函数参数是左值但用户想移动     | `std::move(argument)` 拦截为一个右值桥                  |                                |
+| auto&&、自动引用推导也会保留 | auto&& 是 **universal reference**，能完整推导出参数身份对应关系 |                                |
+```cpp
+int x = 10;
+int&& y = std::move(x); // y是右值
+```
+---
+- **左值** (lvalue, left value)，顾名思义就是赋值符号左边的值。准确来说， 左值是表达式（不一定是赋值表达式）后依然存在的持久对象。
+- **右值** (rvalue, right value)，右边的值，是指表达式结束后就不再存在的临时对象。
+而 C++11 中为了引入强大的右值引用，将右值的概念进行了进一步的划分，分为：纯右值、将亡值。
+- **纯右值** (prvalue, pure rvalue)，纯粹的右值，要么是纯粹的字面量，例如 `10`, `true`；要么是求值结果相当于字面量或匿名临时对象，例如 `1+2`。非引用返回的临时变量、运算表达式产生的临时变量、原始字面量、Lambda 表达式都属于纯右值。
+- 字面量除了字符串字面量以外，均为纯右值。而字符串字面量是一个左值，类型为 const char 数组。例如：
+```cpp
+int main() {
+    // 正确，"01234" 类型为 const char [6]，因此是左值
+    const char (&left)[6] = "01234";
+
+    // 断言正确，确实是 const char [6] 类型，注意 decltype(expr) 在 expr 是左值
+    // 且非无括号包裹的 id 表达式与类成员表达式时，会返回左值引用
+    static_assert(std::is_same<decltype("01234"), const char(&)[6]>::value, "");
+
+    // 错误，"01234" 是左值，不可被右值引用
+    // const char (&&right)[6] = "01234";
+}
+```
+
+***且非无括号包裹的 id 表达式与类成员表达式时，会返回左值引用***可以参考 [[Modern C++#decltype 类型推导|decltype类型推导规则]]
+### 移动语义
+
+> 移动语义（Move Semantics）是指：**将资源从一个对象“移动”到另一个对象，而非复制它**。它通过**右值引用（rvalue reference）** 和 `std::move()` 机制实现。
+
+```cpp
+std::vector<int> v = heavy_computation(); // heavy_computation 返回一个局部 vector，传统拷贝代价峰值高
+```
+没有移动语义时：
+- 调用复制构造函数 → **将整个 vector 所有的堆内存数据复制到 v 中**；
+- 局部 vector 返回瞬间就销毁，白费了大量资源复制（copy）开销。
+- `vector`、`string` 这类对象的返回、赋值曾经低效，因为每个值返回或传参都必须浅拷贝全部数据，才有 new 变量接收；
+- `std::vector<int> func()` 会带来整个缓冲区内存的复制，严重降低性能；
+引入移动语义之后拷贝复制只是资源所有权转移（transfer of ownership），**不复制数据，提升性能**，开销近乎为 0。
+
+| 类                  | 是否可移动？                                                                         | 行为对比                     |
+| ------------------ | ------------------------------------------------------------------------------ | ------------------------ |
+| 标准容器               | ✅ 可以move                                                                       | 资源（指针）所有权转换，无需大量 copy    |
+| 函数对象               | ✅ bind, lambda 部分也能 move                                                       | 将整个状态快速转移进 std::function |
+| std::unique_ptr    | ✅ 必须 move（不能复制）                                                                | 唯一拥有资源，移动转移，安全资源封装       |
+| std::shared_ptr    | ✅ 可以 move，也可以 copy                                                             | 拷贝时增加引用计数                |
+| 内置类型（int，double 等） | ❌ 不用 move（无资源）                                                                 | 拷贝即可                     |
+| std::function      | ✅ 复杂封装内 std::bind std::function 是 type-erasure 模版，支持 std::move(v1) 情况转移lambda` |                          |
+
+传统 C++ 通过拷贝构造函数和赋值操作符为类对象设计了拷贝/复制的概念，但为了实现对资源的移动操作，调用者必须使用先复制、再析构的方式，否则就需要自己实现移动对象的接口。
+传统的 C++ 没有区分『移动』和『拷贝』的概念，造成了大量的数据拷贝，浪费时间和空间。
+```cpp
+void reference(int& v) {
+    std::cout << "左值" << std::endl;
+}
+void reference(int&& v) {
+    std::cout << "右值" << std::endl;
+}
+template <typename T>
+void pass(T&& v) {
+    std::cout << "普通传参:";
+    reference(v);
+}
+int main() {
+    std::cout << "传递右值:" << std::endl;
+    pass(1); // 1是右值, 但输出是左值
+
+    std::cout << "传递左值:" << std::endl;
+    int l = 1;
+    pass(l); // l 是左值, 输出左值
+
+    return 0;
+}
+```
+- 对于 `pass(1) -> 左值`：
+	- `1` 是一个纯右值（prvalue），传入 `T&& v` 模板参数时，C++ 的模板推导规则是：
+		- `T` 被推导为 `int`；
+		- 所以 `T&& v` 实际上被推导为 `int&& v`；
+		- ⟹**所以，参数 `v` 是右值引用绑定一个右值**：`1` 被绑定为 `int&& v = 1;` 这种。
+	- 虽然 `v` 是 `int&&` 类型，pass函数中将v传入reference的过程中给1赋予了一个"v"的名字，所以在上下文中，v是一个左值
+- 对于 `pass(l) -> 右值`：
+	- `l` 已经被命名，`T&&` 通过[[Modern C++#Note：万能引用|万能引用]]解析出传递的参数是一个左值 
+	- 然后调起对应的左值 reference 哈数
+
+### Note：mutable 
+```cpp
+[捕获列表](参数列表) mutable(可选) 异常属性 -> 返回类型 {
+    // 函数体
+}
+```
+#### 设计意义
+`mutable` 是为了在逻辑上“保持 const 性” 的同时，**允许某些内部数据轻微变化以提高性能或实现副作用（如缓存、日志、调试旗标等）**。
+1. **避免打破 const 正确性（const correctness）**：
+    - 即使你在 `const` 方法中修改一些不影响用户感官的内部状态（例如统计调用次数、缓存值），仍然要通过 `mutable` 来告诉编译器：这个修改是“可接受的”。
+2. **支持隐藏的副作用/模块性**：
+    - 一个方法即使是 const，也可以修改它自己的 `mutable` 成员，以保存计算结果或进行调试跟踪等，这样不会影响程序行为外部可见性。
+3. `mutable` 只能用于**类中的成员变量**:
+	- 1. **类成员变量**（即 `mutable int x;`） —— `✅ 合法`
+	- **Lambda 表达式参数列表后** —— `✅ 作为关键字使用`
+	- **函数、局部变量、全局变量，或其它类成员（如方法）** —— `❌ 不合法`
+#### 作用&特性
+##### 1. 修饰类成员变量
+**修饰对象成员变量的 `mutable` 表示“即使对象是 `const` 的，该成员也可以被修改。”**
+```cpp
+struct Cache {
+    mutable int cachedValue;  // 即使对象是 const，也能修改 cachedValue
+};
+
+void printCache(const Cache& c) {
+    c.cachedValue = 100;  // 允许！因为 cachedValue 是 mutable 的
+}
+```
+##### 2. 允许在 lambda 中修改变量
+当 Lambda 以**值捕获（by value）变量时，捕获的变量默认是 `const` 的**。加了 `mutable` 关键字后，捕获的变量就可以在 Lambda 内部修改了。
+### Note：退化规则
+C++ 中“**退化规则（decay rules）**”指的是某些类型的值在作为实参使用时，自动转换成“更简单的类型”，以符合使用场景。其中包括：
+#### 1. 函数类型 → 函数指针（func decay）
+```cpp
+void func(int); // 函数定义
+
+// 不论声明函数还是使用函数类型作为模板参数，都“退化”为函数指针
+using FuncType = void(int);
+void forward(FuncType f); // 实际被看作 void (*f)(int)
+```
+- C++ 函数 **不能直接作为“对象”传递或赋值**；
+- 函数类型退化为指针，允许函数变量通过间接方式在运行时表示函数，实现了变量函数式风格；
+- 通过对函数类型退化为函数指针，所有函数都能够通过统一的接口进行传入和调用，无需单独为每个具体的 `void(int)` 函数创建一个非指针的变量类型。
+#### 2. 数组类型 → 指针类型（array decay）
+```cpp
+int arr[5] = {1, 2, 3, 4, 5};
+int* p = arr; // arr 退化为 &arr[0]
+void print(int* a);
+print(arr); // arr 退化为指针，arr 不是 int* 类型，但传递时会退化
+```
+常用退化类型主变体
+```cpp
+#include <type_traits>
+std::decay<int[5]>::type       <=> int* (数组退化)
+std::decay<std::string&>::type <=> std::string (引用去掉)
+std::decay<const int&>::type   <=> int (去除常量，退化为基本类型值)
+std::decay<void(int)>::type    <=> void(*)(int) (函数名退化成指针)
+```
+### Note：explict
+`explicit` 是用于构造函数的一种修饰符。
+```cpp
+explicit constructor_name(...);explicit MyClass(int x);
+```
+它表示：**这个构造函数不允许隐式转换。**
+也就是说，**编译器不会用 explicit 构造函数进行自动类型转换**（implicit conversion）。
+## 1. explicit（隐式构造的陷阱）
+```cpp
+class MyInt {
+public:
+    MyInt(int x) : value(x) { } // implicit
+	int value;
+};
+```
+
+现在你写：
+```cpp
+MyInt m = 23;
+```
+
+这就是隐式转换：23 将**自动通过 `MyInt(int)` 构造函数构造一个临时对象**，并赋值给 `m`
+但如果发生了这个调用：
+```cpp
+void func(MyInt m);func(42); // 能成功
+```
+
+没有 explicit，你甚至可以直接将 `int` 传给期望是 `MyInt` 的函数！！💡 **隐式转换**
+
+| explicit修饰的目标 | 禁止自动转换                      |
+| ------------- | --------------------------- |
+| 构造函数          | ✅ 防止 "T obj = value;" 这种转换  |
+| 转换运算符         | ✅ 防止 from T → SomeType 隐式发生 |
+| 单参数构造         | ✅ 多个最佳实践建议 explicit         |
+| 多参数构造         | 通常不需要 explicit              |
+# 第 4 章 容器
+
+## 4.1 线性容器
+### `std::array`
+- 与 `std::vector` 不同，`std::array` 对象的大小是固定的，如果容器大小是固定的，那么可以优先考虑使用 `std::array` 容器。
+- `std::vector` 是自动扩容的，当存入大量的数据后，并且对容器进行了删除操作，容器**并不会自动归还被删除元素相应的内存**，这时候就需要手动运行 `shrink_to_fit()` 释放这部分内存。
+- array 与 C 风格代码的兼容
+```cpp
+void foo(int *p, int len) {
+    return;
+}
+
+std::array<int, 4> arr = {1,2,3,4};
+
+// C 风格接口传参
+// foo(arr, arr.size()); // 非法, 无法隐式转换
+foo(&arr[0], arr.size());		// 合法
+foo(arr.data(), arr.size());	// 合法
+```
+### `std::forward_list`
+- 和 `std::list` 的双向链表的实现不同，`std::forward_list` 使用单向链表进行实现，提供了 `O(1)` 复杂度的元素插入，**不支持快速随机访问**（这也是链表的特点），也是标准库容器中唯一一个**不提供** `size()` 方法的容器。
+- 当不需要双向迭代时，具有比 `std::list` 更高的空间利用率。
+## 4.2 无序容器
+略
+## 4.3 元组
+### `std::tuple`
+#### 基本操作
+1. `std::make_tuple`: 构造元组
+2. `std::get`: 获得元组某个位置的值
+3. `std::tie`: 元组拆包
+4. `std::tuple_cat` / `merge`: 合并两个元组
+   ```cpp
+auto t1 = std::make_tuple(1, "hello", 3.14);
+auto t2 = std::make_tuple(42, std::string("tuple2"), Matrix(), 7);
+auto t3 = merge(t1, t2); // 合并
+auto t3 = std::tuple_cat(t1, t2);
+	```
+其中，merge 使用值传递复制的方法构建元组，tuple_cat 它**不会自动进行数据复制**，除非传入是按值传递（by value）；可以提供下面的模板代码：
+```cpp
+template<typename Tuple1, typename Tuple2>
+auto merge_tuples(Tuple1&& t1, Tuple2&& t2) {
+    return std::tuple_cat(std::forward<Tuple1>(t1), std::forward<Tuple2>(t2));
+}
+```
+根据[[Modern C++#Note：完美转发|完美转发]]和[[Modern C++#Note：万能引用|万能引用]]中知识，可以知道：
+
+|`merge_tuples` 传入方式|`tuple_cat` 传入参数类别|
+|---|---|
+|t1 是 “左值” → 在 merge_tuple 中被当作变量名访问|所以作为左值传入 `tuple_cat`|
+|t2 是 “右值” → 也因变量命名转变为左值|`tuple_cat` 同样看到是一个 tuple 的左值变量|
+- 即便你传入的是 `std::move` 过来的 rvalue 参数，**`tuple_cat` 仍以左值来 copy 所有元素**；
+- 合并过程就变得无法使用 move，而采用 copy 构造 → 如果你 tuple 中有 expensive 类型（如字符串、vector），不显式使用 `move` 的情况下，这将浪费大量拷贝。对 ` unique_ptr `、` std::mutex ` 这种不可复制类型，编译器会直接报错。
+- 如果使用 forward 转发，则会：
+	- 如果是左值 → tuple_cat 会使用 `std::tuple<Ts...>` 内部的 copy构造函数；
+	- 如果是右值 → 使用 move构造函数；
+	- **如果无法得知任意参数的身份，建议使用 **universal reference（`T&&`）与 `std::forward<T>` 结合转发让编译器决定如何传递值，如果可以确定参数的身份，可以显式使用 move 让左值变成右值提高性能**
+
+> 除非是 tuple 元素都是 trivial 类型（如 int、double、enum、trivial-functions），否则绝不 recommended。
+
+5. 遍历元组
+```cpp
+template <typename T>
+auto tuple_len(T &tpl) {
+    return std::tuple_size<T>::value;
+}
+for(int i = 0; i != tuple_len(new_tuple); ++i){
+    // 运行期索引
+    std::cout << tuple_index(new_tuple, i) << std::endl;
+}
+```
+---
+#### 运行期索引
+-  `std::get` 除了使用常量获取元组对象外，C++14 增加使用类型获取元组中的对象：
+```cpp
+std::tuple<std::string, double, double, int> t("123", 4.5, 6.7, 8);
+std::cout << std::get<std::string>(t) << std::endl;
+std::cout << std::get<3>(t) << std::endl;
+```
+如果需要访问double则只能通过下标或是使用 `std::variant`、`std::any`、`std::apply`，处理元组多项逻辑。
+`std::get<>` 依赖一个编译期的常量，所以下面的方式是不合法的：
+```cpp
+int index = 1;
+std::get<index>(t);
+```
+# 第 5 章 智能指针与内存管理
+## 5.1 RAII 与引用计数
+
+> **引用计数**：引用计数这种计数是为了防止内存泄露而产生的。基本想法是对于动态分配的对象，进行引用计数，每当增加一次对同一个对象的引用，那么引用对象的引用计数就会增加一次，每删除一次引用，引用计数就会减一，当一个对象的引用计数减为零时，就自动删除指向的堆内存。
+> 
+> **注意**：引用计数不是垃圾回收——因为它无法处理循环引用，引用计数能够尽快收回不再被使用的对象，同时在回收的过程中也不会造成长时间的等待，更能够清晰地表明资源的生命周期。
+
+## 5.2 `std::shared_ptr`
+### 基本用途特点
+- 表示多个智能指针共享同一个资源的所有权。
+- 使用引用计数管理资源生命周期
+---
+- 支持拷贝构造和赋值
+- 适合多个部分共同拥有资源
+- 有性能开销（控制块 + 原子操作）
+### 用法
+强引用计数，表示当前有多少个`shared_ptr`正在使用资源。当为 0 时，资源会被释放。`std::shared_ptr` 可以通过 `get()` 方法来获取原始指针，通过 `reset()` 来减少一个引用计数，并通过 `use_count()` 来查看**一个对象的引用计数**。例如：
+其中，关键引用计数计算的是在于**对象指向的资源的引用次数**，引用次数=0 时会销毁对象
+```cpp
+auto pointer = make_shared<int>(10);
+auto pointer2 = pointer; // 引用计数+1
+auto pointer3 = pointer; // 引用计数+1
+int* p = pointer.get();  // 这样不会增加引用计数
+cout << "pointer.use_count() = " << pointer.use_count() << endl;   // 3
+cout << "pointer2.use_count() = " << pointer2.use_count() << endl; // 3
+cout << "pointer3.use_count() = " << pointer3.use_count() << endl; // 3
+
+pointer2.reset();
+cout << "reset pointer2:" << endl;
+cout << "pointer.use_count() = " << pointer.use_count() << endl;   // 2
+cout << "pointer2.use_count() = "
+<< pointer2.use_count() << endl;           // pointer2 已 reset; 0
+cout << "pointer3.use_count() = " << pointer3.use_count() << endl; // 2
+```
+`pointer`、`pointer2` 和 `pointer3` 都拥有独立的 `shared_ptr` 对象（占用各自的空间），但共享同一个控制块（控制块唯一地对应一块内存资源，这块资源每被引用一次，引用计数器就会+1，任何引用这块资源的 `shared_ptr` 的 `use_count` 方法都指向这个计数器）。
+- 控制块包含三个关键数据：
+    1. 对真实资源（如动态分配对象）的指针；
+    2. 当前引用计数和销毁时触发的清理逻辑。
+    3. 只要有一个 `shared_ptr` 存在，`shared_ptr` 指向的对象就不会被销毁。
+- 调用 `reset` 方法会使：
+	- 将`pointer2`指向null，同时**释放其对原资源的所有权**。
+	- 这相当于将该控制块的引用计数**减一**。
+---
+使用 `std::make_shared<T>(...)` 创建 `shared_ptr` 会一次性分配内存给资源和控制块，比直接使用 `shared_ptr<T>(new T(...))` 更高效。
+```cpp
+auto sp1 = std::make_shared<int>(42); // 推荐方式
+auto sp2 = std::shared_ptr<int>(new int(42)); // 效率略低
+```
+如果两个 `shared_ptr` 相互持有对方，会导致引用计数永远不为 0，从而造成内存泄漏。这种情况应使用 `std::weak_ptr` 来打破循环。
+```cpp
+struct A {
+    std::shared_ptr<A> other;
+};
+auto a1 = std::make_shared<A>();
+auto a2 = std::make_shared<A>();
+a1->other = a2;
+a2->other = a1; // 循环引用，无法释放！
+// 解决方法
+struct A {
+    std::weak_ptr<A> other; // 用 weak_ptr 避免循环
+};
+```
+## 5.3  `std::weak_ptr`
+### 基本用途特点
+- 观察由 `shared_ptr` 管理的对象，**不参与所有权管理**
+- 用于解决 `shared_ptr` 的循环引用问题
+---
+- 不影响资源生命周期
+- 必须通过 `.lock()` 转换成 `shared_ptr` 才能访问资源
+- 适合缓存、监听、观察者等场景
+
+表示有多少个`weak_ptr`在观察这个资源。不影响资源的释放。
+要访问 `weak_ptr` 所指向的对象，必须先调用 `.lock()` 获取一个临时的 `shared_ptr`：
+```cpp
+std::weak_ptr<T> wp = sp;
+if (auto sp_temp = wp.lock()) {
+    // 安全访问资源
+} else {
+    // 资源已经被释放
+}
+```
+## 5.3 `std::unique_ptr`
+
+### 基本用途特点
+- 表示对资源的**独占所有权** 。
+- 不可复制，但可以移动（move）。
+---
+- 自动释放资源（RAII）
+- 没有共享语义
+- 性能高（无额外开销）
+- 适用于单一所有者的情况（如局部变量、工厂函数返回值）
+
+`std::unique_ptr` 是一种独占的智能指针，它禁止其他智能指针与其共享同一个对象，从而保证代码的安全：
+```cpp
+std::unique_ptr<int> pointer = std::make_unique<int>(10); // make_unique 从 C++14 引入
+std::unique_ptr<int> pointer2 = pointer; // 非法
+```
+使用 move 将指针内容转移到其他的 `unique_ptr`
+```cpp
+struct Foo {
+    Foo() { std::cout << "Foo::Foo" << std::endl; }
+    ~Foo() { std::cout << "Foo::~Foo" << std::endl; }
+    void foo() { std::cout << "Foo::foo" << std::endl; }
+};
+
+void f(const Foo &) {
+    std::cout << "f(const Foo&)" << std::endl;
+}
+
+int main() {
+    std::unique_ptr<Foo> p1(std::make_unique<Foo>());
+    // p1 不空, 输出
+    if (p1) p1->foo();
+    {
+        std::unique_ptr<Foo> p2(std::move(p1));
+        // p2 不空, 输出
+        f(*p2);
+        // p2 不空, 输出
+        if(p2) p2->foo();
+        // p1 为空, 无输出
+        if(p1) p1->foo();
+        p1 = std::move(p2);
+        // p2 为空, 无输出
+        if(p2) p2->foo();
+        std::cout << "p2 被销毁" << std::endl;
+    }
+    // p1 不空, 输出
+    if (p1) p1->foo();
+    // Foo 的实例会在离开作用域时被销毁
+}
+```
+## 5.4 `std::weak_ptr`
+```cpp
+struct A {
+    std::shared_ptr<B> pointer;
+    ~A() {
+        std::cout << "A 被销毁" << std::endl;
+    }
+};
+struct B {
+    std::shared_ptr<A> pointer;
+    // std::weak_ptr<A> pointer; // 从 shared_ptr 改为 weak_ptr，避免增加引用计数
+    ~B() {
+        std::cout << "B 被销毁" << std::endl;
+    }
+};
+int main() {
+    auto a = std::make_shared<A>(); // A结构体资源引用+1
+    auto b = std::make_shared<B>(); // B结构体资源引用+1
+    a->pointer = b; // B结构体资源引用+1
+    b->pointer = a; // A结构体资源引用+1
+}
+```
+例子中
+![[file1.png]]
+将 B 的强指针改为弱指针后
+- `a` 初始化 → 引用计数 1
+- `b` 初始化 → 引用计数 1
+- `a->pointer = b`（`shared_ptr<B>` → `weak_ptr<A>`） → `b` 的引用计数仍为 1（因为没有增加强引用）
+- `b->pointer = a` → 因为是 `weak_ptr<A>`，**不增加** `a` 的强引用计数，但 `a->pointer` 是强引用 `b`
+接着当 a, b 被销毁之后
+![[file2.png]]
+
+# 第 6 章 正则表达式
+## 6.1 正则表达式简介
+[[用法导向知识#正则表达式]]
+## 6.2 std:: regex 及其相关
+[[用法导向知识#使用正则表达式循环替换字符串中内容]]
+# 第 7 章并行与并发
+## 7.1 并行基础
+## 7.2 互斥量与临界区
+C++ 保证了所有栈对象在生命周期结束时会被销毁，所以 `lock_guard`，`unique_lock` 都会在生命周期结束后自动调用 `.unlock()`
+## 7.3 期物
+### Note：常用 API
+#### `std::thread`
+对象的构造函数的作用是接受函数指针和传入函数的参数列表，然后创建一个线程，让这个线程执行函数操作
+```cpp
+语法
+std::thread t(func, arg1, arg2, arg3);
+----------------------------------------
+void func(int x, const std::string& msg) {
+    std::cout << "x = " << x << ", msg = " << msg << "\n";
+}
+int main() {
+    std::thread t(func, 42, "Hello"); // 创建线程并传入参数
+    t.join(); // 等待线程完成
+}
+```
+如果想要在一个 `thread` 中执行多个任务，可以使用函数对象，`bind` 或者 lambda 封装多个任务
+```cpp
+struct Task {
+    void operator()() {
+        func1();
+        func2();
+    }
+    void func1() { std::cout << "Func1\n"; }
+    void func2() { std::cout << "Func2\n"; }
+};
+
+void func1() { std::cout << "Func1\n"; }
+void func2() { std::cout << "Func2\n"; }
+
+int main() {
+    Task task;
+    std::thread t(task);
+    std::thread t([]() {
+	    func1();
+	    func2();
+	});
+	std::thread t(std::bind([]{ foo1(); foo2();}));
+    t.join();
+}
+```
+每一个通过 thread 管理的线程都必须要 `join` 或者 `detach` 来结束，分别表述主线程必须等待子线程完成或者主线程不等待两种状态
+#### `thread::join()` 
+`thread` 对象的 `join` 方法作用是**阻塞当前线程（通常是主线程），直到子线程完成其任务** 。换句话说，它只是让 **主线程等待子线程 `t` 中包含的任务结束**。
+- 当程序启动时，操作系统会创建一个 **主线程（Primary Thread/Main Thread）**`main` 函数运行在**主线程** 中。当你创建其他线程时，它们会与主线程并发执行。
+- 线程的执行从 `std::thread` 对象创建时就开始了。`join()` 只是用来确保主线程等待子线程完成。
+- `join()` 会在子线程完成后释放线程对象的资源（如线程 ID、栈等）。如果 thread 析构之前未调用 `join()` 或 `detach()` 会导致崩溃
+
+#### `thread::detach()`
+`detach()` 的作用是**将线程从 `std::thread` 对象中分离** ，使其独立运行，不再受该对象管理。分离后，主线程无法再通过 `join()` 等待该线程完成，也无法直接控制它，只能等待他自动结束
+
+#### `thread::get_id()`
+获取线程唯一 id
+#### atomic 原子对象
+##### 原子变量
+1. **无锁操作** ：在硬件支持下，原子操作不需要互斥锁。
+2. **高效** ：相比锁，性能更高，尤其在高并发场景下。
+3. 原子变量可以**不需要 Mutex** 就能确保线程安全。
+4. 对原子变量（`atomic` 变量）的操作是是原子性（不可中断）的
+5. 性能更高但只能处理单个值（int/bool等）。
+6. **线程安全**：读写不会导致竞态条件；
+```cpp
+std::atomic<int> atomic_count(0);
+int non_atomic_count = 0;
+void atomic_increment() {
+    for (int i = 0; i < 100000; ++i) {
+        ++atomic_count;
+    }
+}
+void non_atomic_increment() {
+    for (int i = 0; i < 100000; ++i) {
+        ++non_atomic_count;
+    }
+}
+int main() {
+    std::thread t1(atomic_increment);
+    std::thread t2(atomic_increment);
+    std::thread t3(non_atomic_increment);
+    std::thread t4(non_atomic_increment);
+    t1.join();
+    t2.join();
+    t3.join();
+    t4.join();
+    std::cout << "atomic_count = " << atomic_count << std::endl;  // 精确为 200000
+    std::cout << "non_atomic_count = " << non_atomic_count << std::endl; // 可能随机更高、更低
+}
+```
+
+^7wqxo5
+普通的变量改变值需要进入三个步骤：读取，计算，写入
+```assembly
+mov eax, [non_atomic_count]  # 读取当前值
+add eax, 1                     # 加 1
+mov [non_atomic_count], eax    # 写回新值
+线程A读取（100） → 线程B读取（100）→ 
+线程A计算（101）→ 线程B计算（101）→ 
+线程A写回（101）→ 线程B写回（101）
+```
+线程 B 应该在 A 写会之后读取，但是 non_atomic_count 不是原子变量无法保证这一点 `atomic_count` 是一个**原子变量**，任何对他的操作只能一步一步来不可中断，就可以，所以 `atomic_count==200000`
+如果将代码改为：
+```cpp
+std::thread t3(non_atomic_increment);
+t3.join();
+std::thread t4(non_atomic_increment);
+t4.join();
+```
+就不会出现少加现象，但操作并不是交替进行的
+##### 原子操作
+`atomic::fetch_add(n) `：
+- 对原子变量执行原子加法操作，并返回原值。
+- 是线程安全的操作，不会导致数据竞争。
+
+`atomic::memory_order_relaxed`：
+- 是一种内存序（Memory Order）选项。
+- 表示不关心内存顺序一致性，只保证操作本身的原子性。
+- 性能最高，但语义最弱，适用于不需要同步其他操作的场景。
+
+| 方法               | 作用        |
+| ---------------- | --------- |
+| `store(val)`     | 原子写入      |
+| `load()`         | 原子读取      |
+| `fetch_add(val)` | 原子加法，返回旧值 |
+| `exchange(val)`  | 原子交换，返回旧值 |
+#### 资源锁定和线程执行
+##### 锁的使用
+可以参考[[C++ Runoob Tutoral#互斥量和互斥锁|互斥量和互斥锁]] ，[[C++ Runoob Tutoral#线程管理|线程管理]] 
+这里补充：
+- 当创建 `unique_lock<std::mutex>` 对象时，它会自动调用 `mtx.lock()`，获取互斥锁。
+- 锁的生命周期与作用域一致，离开作用域析构函数会自动调用 `mtx.unlock()`，释放锁，也可以手动调用 `.unlock()` 解锁
+- **锁的粒度** ：`std::unique_lock` 并不是直接锁定“当前代码作用域中的所有资源”，而是锁定其绑定的互斥锁（`std::mutex`），从而间接保护与该锁关联的共享资源。
+##### 条件变量
+参考[[C++ Runoob Tutoral#条件变量|条件变量]]
+这里补充：
+- 条件变量 `cv` 不绑定任何线程，它只是一个“广播站”。
+- consumer 函数中的提前解锁操作仅仅是为了减少锁在 c 线程中的持有时间，更快地进行资源交替。而 producer 中没有进行的 `lock.unlock()` 其实会在一遍 for 循环结束 `lock` 生命周期结束时执行。
+- 一般（***不强制***）在**互斥锁解锁之后**使用 notify 通知线程继续
+```cpp
+cv.wait(unique_lock<std::mutex>& lock, Predicate pred);
+cv.wait(lock, []{ return !data_queue.empty() || done; });
+// 只要队列为空并且还没完成生产，就一直等下去。
+```
+1. **等待条件成立** ：
+    - `cv.wait(...)` 会**阻塞当前线程** ，直到被其他线程调用 `notify_one()` 或 `notify_all()`。
+    - 在等待期间，**自动释放锁（unlock）** ，允许其他线程修改共享资源。
+    - 当被唤醒后，**重新获得锁（lock）** ，然后检查谓词（predicate）是否为真。
+2. **谓词的作用（predicate）** ：
+    - 是一个返回布尔值的可调用对象（如 lambda 表达式）。
+    - 目的是防止虚假唤醒（spurious wakeups）——即线程被唤醒但条件仍未满足的情况。
+##### 经典消费者生产者模型
+```cpp
+std::queue<int> data_queue;
+std::mutex mtx; 
+std::condition_variable cv;
+bool done = false;
+
+// 生产者
+void producer() {
+    for (int i = 0; i < 5; ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::unique_lock<std::mutex> lock(mtx);
+        data_queue.push(i);
+        std::cout << "Produced: " << i << "\n";
+        cv.notify_one(); // 通知消费者可以消费
+    }
+    done = true;
+    cv.notify_all(); // 唤醒所有消费者，告知生产结束
+}
+
+// 消费者
+void consumer() {
+    while (true) {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.wait(lock, []{ return !data_queue.empty() || done; });
+        if (done && data_queue.empty()) break;
+        int value = data_queue.front();
+        data_queue.pop();
+        lock.unlock(); // 提前解锁，减少锁持有时间
+        std::cout << "Consumed: " << value << "\n";
+    }
+}
+
+int main() {
+    std::thread p(producer);
+    std::thread c(consumer);
+
+    p.join();
+    c.join();
+
+    std::cout << "All tasks completed.\n";
+}
+```
+---
+- 前置知识：
+	- `std::condition_variable` 需要与 `std::mutex` 配合使用，通过 `wait` 和 `notify` 实现线程间通信。
+	- 消费者线程在 `cv.wait(lock, predicate)` 处阻塞，等待条件满足（队列非空或生产结束）。
+	- 生产者通过 `cv.notify_one`（唤醒 **一个** 等待的线程（随机选择）） 或 `cv.notify_all` 唤醒**等待**的消费者线程。
+	- 通常在资源解锁之前要使用 notify 通知其他线程等待，然后 unlock 解锁资源
+- 疑问点：
+	- 互斥锁锁定的是什么资源？
+		- 锁定的是在 `unique_lock` 构造函数中传入的互斥量：`mtx`，而这个互斥量是用来保护共享资源的，比如这里的 `data_queue`
+	- 为什么 producer 和 consumer 中每次循环都创建一个 `unique_lock` 对象？
+		- 每次进入循环时都会创建一个新的 RAII 锁对象，它绑定到同一个全局互斥量（`mutex mtx`）上
+	- mutex 和 unique_lock 是如何工作的？
+	- 
+### Note：内存模型
+- **内存顺序**：定义多个线程对共享数据的**可见性规则**，避免编译器/CPU 重排序导致问题。
+- **六种内存序**（`std::memory_order`）
+
+| Memory Order           | 使用场景                | 同步机制         |
+| ---------------------- | ------------------- | ------------ |
+| `memory_order_relaxed` | 最小粒度同步，用于计数器        | 无顺序控制        |
+| `memory_order_acquire` | 读取保护出临界区的变量修改       | 读取同步（ARRIER） |
+| `memory_order_release` | 写入用于保护线程之间的共享状态     | 写入存留（ARRIER） |
+| `memory_order_acq_rel` | 两者都有（常用于锁或交换变量）     | 两者结合         |
+| `memory_order_seq_cst` | 默认选项：完全的顺序一致性（强一致性） | 保证严苛内存访问顺序   |
+```cpp
+std::atomic<int> counter(0);
+void increment() {
+    for (int i = 0; i < 100000; ++i) {
+        counter.fetch_add(1, std::memory_order_relaxed);
+    }
+}
+
+int main() {
+    std::thread t1(increment);
+    std::thread t2(increment);
+
+    t1.join();
+    t2.join();
+```
+
+### Note：谓词
+**谓词**（Predicate）是指一个 **返回 `bool` 值的可调用对象**，常见于标准库算法（如 `std::find_if`）或同步原语（如 `condition_variable::wait`）。它是一个广义概念，包含以下形式（任何能通过 `()` 调用的东西，包括：函数指针，**成员函数指针**，lambda 和仿函数）
+所以，`conditional_variable` 的谓词部分只能填入：
+```cpp
+void foo() {}
+void (*func_ptr)() = foo; // 函数指针
+void (P_and_C::*member_func_ptr)() = &P_and_C::producer; // 调用某个类中的成员函数
+auto lambda = [] { /*...*/ }; 
+struct Functor { void operator()() { /*...*/ } };
+Functor f;
+
+cv.wait(lock, foo/(*func_ptr)()/&P_and_C::producer/lambda/f)
+```
+### Note：并行与并发基本概念
+#### 1. 线程（Thread）
+- 定义
+	- 线程是操作系统调度的最小单位。
+	- 每个线程可以独立执行任务，但共享进程的资源（如内存、文件句柄等）。
+	- 在多核 CPU 上，多个线程可以同时运行；在单核 CPU 上，通过时间片轮转实现“伪并行”。
+- 特点：
+	- **轻量级** ：线程比进程更轻量，切换开销小。
+	- **资源共享** ：同一进程中的线程共享地址空间，可以直接访问全局变量、堆内存等。
+	- **独立性差** ：如果一个线程崩溃，可能会导致整个进程崩溃。
+	- 并发性比进程更容易实现；
+	- 多线程共享数据必须注意资源竞争、并发保护。
+#### 2. 进程（Process）
+- **概念**：进程是一个程序的执行实例，包含独立的地址空间（内存空间），有自己的堆栈、堆、代码段等。
+- **特点**：
+    - 进程是操作系统分配资源的基本单位。
+	- 每个进程拥有独立的地址空间，彼此隔离。
+    - 启动/销毁的代价较高；
+    - 不同进程的数据交换需要 **进程间通信（IPC）**。
+    - 类比：像一个独立的工厂，内部资源自成体系。
+#### 3. 并发（Concurrency） vs 并行（Parallelism）
+
+|类别|并发（Concurrency）|并行（Parallelism）|
+|---|---|---|
+|意义|同时或交替处理多个任务（“看起来在同时做”）|在多处理器上真正“同时执行”多个任务|
+|实现方式|单核CPU上任务的时间片切换|多核心 CPU 上多个任务真实并行执行|
+|应用场景|异步处理（如UI、文件加载）、Guard Against Overlap|高性能计算、数据计算、多任务流水线处理|
+|类比|多人看同一盘棋轮流落子|多盘棋一只手套两只手分头下|
+
+**C++并发模型以并发为主（抽象为多个任务），并行则是实现效果的一个可能方式（由编译器/平台决定）**
+#### 4. 竞态条件
+**竞态条件**是指多个线程或进程在访问共享资源时，由于执行顺序的不确定性，导致程序的行为出现不可预测的结果。在并发编程中，当多个线程同时访问共享数据且至少有一个线程修改数据时，如果没有适当的同步机制，就可能出现竞态条件。
+[[Modern C++#^7wqxo5|原子变量]]中 `non_atomic_count` 的累加操作就是竞态条件
+
+# 第 8 章 文件系统
+
+文件系统库提供了文件系统、路径、常规文件、目录等等相关组件进行操作的相关功能。和正则表达式库类似，他也是最先由 boost 发起，并最终被合并为 C++ 标准的众多库之一。
+
+## 8.1 文档与链接
+# 第 9 章 其他杂项
+
+## 9.1 新类型
+### `long long int`
+`long long int` 并不是 C++11 最先引入的，其实早在 C99， `long long int` 就已经被纳入 C 标准中，所以大部分的编译器早已支持。 C++11 的工作则是正式把它纳入标准库， 规定了一个 `long long int` 类型至少具备 64 位的比特数。
+
+## 9.2 noexcept 的修饰和操作
+C++11 将异常的声明简化为以下两种情况：
+1. 函数可能抛出任何异常
+2. 函数不能抛出任何异常
+使用 `noexcept` 对这两种行为进行限制，例如：
+```cpp
+void may_throw(); // 可能抛出异常
+void no_throw() noexcept; // 不可能抛出异常
+```
+- 使用 `noexcept` 修饰过的函数如果抛出异常，**编译器**会使用 `std::terminate()` 来立即终止程序运行。
+- `noexcept` 还能够做操作符，用于操作一个表达式，当表达式无异常时，返回 `true`，否则返回 `false`。
+- noexcept 还能够做操作符，用于操作一个表达式，当表达式无异常时，返回 true，否则返回 false。
+## 9.3 字面量
+### 原始字符串字面量
+传统 C++ 里面要编写一个充满特殊字符的字符串其实是非常痛苦的一件事情，比如一个包含 HTML 本体的字符串需要添加大量的转义符，例如一个Windows 上的文件路径经常会：`C:\\File\\To\\Path`。
+现在已经有 R 原生字符串支持 `string str = R"(C:\file\code\folder)"`
+
+### 自定义字符串
+可以通过在原始字面量后面加上 `_suffix`（这个自定义部分名称）就可以表示这个字面量是一个字符串，并且会这个字符串的实际含义是根据通过重载函数内部函数体定义。对不同的支持类型使用不同的函数参数类型来重载就能够得到对应的自定义字面量结果
+C++ 规定了自定义字面量的参数类型，常见如下：
+
+| **字面量类型**    | **函数参数类型**              | **示例**           |
+| ------------ | ----------------------- | ---------------- |
+| 字符串字面量       | `(const char*, size_t)` | `"hello"_s`      |
+| 整数字面量        | `unsigned long long`    | `42_km`          |
+| 浮点数字面量       | `long double`           | `3.14_rad`       |
+| 字符字面量        | `char`                  | `'x'_to_upper`   |
+| 原始字符串（C++14） | `(const char*, size_t)` | `R"(raw)"_parse` |
+字面量通过使用 `ReturnType operator"" _suffix(Parameters)` 重载 `""` 操作符实现
+- 后缀名必须以下划线 `_` 开头（避免与未来标准库字面量冲突）
+- 当编译器遇到字面量后接用户定义的后缀（如 `"abc"_wow` 或 `123_km`），会自动调用对应的重载函数，根据字面量类型传入预定义的参数类型，并将返回值作为结果。
+- 不能将字符串字面量的参数改为 `std::string`，必须使用 `(const char*, size_t)` 避免不必要的 `std::string` 构造，允许直接处理原始字符数组。
+- 如果使用字符串字面量或者原始字符串参数列表，参数列表中：
+	- `str` 是后缀前的字符串字面量
+	- `len` 是字符串长度（不包括终止符 `\0`）
+- **自定义字面量 = 固定参数类型 + 用户定义后缀 + 自由返回值**
+#### 更好的单位可读性
+```cpp
+struct Distance {
+    double dis;
+};
+
+Distance operator"" _km(long double dis) {
+    string result;
+    return Distance{ static_cast<double>(dis * 1000) };
+}
+auto d = 2.5_km;
+```
+#### 实现快捷正则对象创建
+```cpp
+regex operator"" _re(const char* restr, size_t len) {
+    return regex(restr, len);
+}
+auto re = R"(\d+)"_re;
+```
+![[Pasted image 20250608124728.png]]
+#### 对象哈希值快速比较
+```cpp
+constexpr size_t operator"" _str_hash(const char* str, size_t len) {
+    size_t result = 14695981039346656037ULL;
+    for (size_t i = 0;i < len;i++) {
+        result ^= hash<char>{}(str[i]);
+    }
+    return result;
+}
+
+int main() {
+    auto str1 = "hello"_str_hash;
+    auto str2 = "world"_str_hash;
+    return 0;
+}
+```
+这个例子中是一个简单的 **编译期字符串哈希** 实现，用于：
+- 快速比较字符串常量
+- 避免**运行时**重复哈希计算
+- 作为 switch-case 的替代方案（某些技巧）
+- 资源 ID 映射、消息类型标识等
+#### 翻译文本映射
+```cpp
+class I18N {
+private:
+	enum class Language { ENGLISH, CHINESE };
+    Language current_lang;
+    std::unordered_map<std::string, std::unordered_map<Language, std::string>> dict;
+	bool is_load = false;
+	void load_if_not_loaded() {
+	    if (!loaded) {
+	        load_translations("lang_en.txt", "lang_zh.txt");
+	        loaded = true;
+	    }
+	}
+    I18N() : current_lang(Language::ENGLISH) { load_if_not_loaded(); }
+
+public:
+    static I18N& get_instance() {
+        static I18N instance;
+        return instance;
+    }
+
+    void set_language(Language lang) {
+        current_lang = lang;
+    }
+    
+    void load_translations(const std::string& en_path, const std::string& zh_path) {
+        auto load = [this](const std::string& path, Language lang) {
+            std::ifstream fin(path);
+            if (!fin) return;
+
+            std::string line;
+            while (std::getline(fin, line)) {
+                std::istringstream sin(line);
+                std::string key, value;
+                if (std::getline(sin, key, '=') && std::getline(sin, value)) {
+                    dict[key][lang] = value;
+                }
+            }
+        };
+
+        load(en_path, Language::ENGLISH);
+        load(zh_path, Language::CHINESE);
+    }
+
+    std::string translate(const std::string& key) {
+        if (dict.count(key) && dict[key].count(current_lang)) {
+            return dict[key][current_lang];
+        }
+        return key; // 回退为原 key
+    }
+};
+
+std::string operator"" _i18n(const char* key, size_t) {
+    return I18N::get_instance().translate(key);
+}
+int main() {
+    I18N::get_instance().load_translations("lang_en.txt", "lang_zh.txt");
+    I18N::get_instance().set_language(Language::CHINESE);
+
+    std::cout << "login_button"_i18n << std::endl;
+    std::cout << "save_file"_i18n << std::endl;
+
+    return 0;
+}
+```
+使用经典的单例模式实现
+注意其中的 `(getline(sin, key, '=') && getline(sin, value)` 这段代码通过控制流指针来读取**文本文件中的非结构化键值对数据**
+假设一行是：
+```text
+hello=你好
+```
+执行 `getline(sin, key, '=')`
+- 将 `"hello"` 存入 `key`。
+- 流指针停在 `=` 后面的位置。
+执行 `getline(sin, value)`
+- 调用 `getline` 默认按换行符（`\n`）为分隔符。
+- 从流指针当前位置开始（即 `=` 后面），读整个剩余部分（这里就是 `"你好"`）存入 `value`。
+- 第二个 getline 会使用 `\n` 作为终止符，不能使用 `=`
+
+> 这样的写法用于代码中文本或者设计稿中文本到对应语言的转换，设计师的“登录”设置为 `login_button`，但是在中文界面上需要显示为"登录"，英文界面上需要显示“Login”，这样的字符串映射风格保证了不同人的变量使用风格，又实现了功能
+
+### Note：类型操作符
+C++ STL 中在 `<type_traits>` 中定义的类型操作特性（Type Traits），可以用于元编程和模板推导。
+
+| Trait                                   | 定义                                                           | 功能                                                     | 示例                                                          | 用途                        |
+| --------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------ | ----------------------------------------------------------- | ------------------------- |
+| `std::decay<T>`                         | `T` 在函数传参时经过的自动类型转换（去数组、函数类型转指针、引用变值类型 + strip CV qualifier） | 去除引用、const volatile、数组退化  <br>（用于函数参数类型一致）             | `std::decay<const int&>::type` → `int`                      | 编写通用模板逻辑                  |
+| `std::remove_const<T>`                  | 移除 `const` 属性，保留 `volatile`                                  | `const int` → `int`                                    | `std::remove_const<const int>::type` → `int`                | 用户类型操作或实现 non-const trait |
+| `std::remove_volatile<T>`               | 移除 `volatile` 属性                                             | `volatile int` → `int`                                 | `std::remove_volatile<volatile int>::type` → `int`          | 同上                        |
+| `std::remove_cv<T>`                     | 同时移除 `const` 和 `volatile`                                    | `const volatile int` → `int`                           | `std::remove_cv<const volatile int>::type` → `int`          | 获取裸类型                     |
+| `std::remove_reference<T>`              | 去除引用（`T&`, `T&&` → `T`）                                      | 提取原始类型（非引用）                                            | `std::remove_reference<int&>::type` → `int`                 | 元编程泛用                     |
+| `std::remove_pointer<T>`                | 去除指针                                                         | `T* → T`，`T (*fn)() → T`*                              | `std::remove_pointer<int*>::type` → `int`                   | 函数指针简化                    |
+| `std::remove_extent<T>`                 | 去除数组维度（一维有效）                                                 | `int[10] → int`  <br>`int[10][20] → int[20]`           | `std::remove_extent<int[10]>::type` → `int`                 | 数组处理                      |
+| `_t` 后缀                                 | C++14 后的别名写法                                                 | 代替 `::type`                                            | `std::remove_const_t<const int>` → `int`                    | 简洁语法                      |
+| `std::remove_cvref<T>`                  | C++20 加入，等于 `decay` 裁剪版                                      | 去除 CV + reference，但不去数组、函数                             | `const int&& → int`  <br>`const char(&)[5] → const char[5]` | 实现 std::expected 等        |
+| `std::is_same_v<T, U>`                  | 类型比较                                                         | 返回 `true` / `false` 表示是否相同                             | 在模板中做 SFINAE 或条件分支                                          |                           |
+| `std::is_integral<T>`                   | 判断是否是整型                                                      | `int, bool, enum → true`  <br>`double → false`         |                                                             |                           |
+| `std::enable_if`                        | 类型选择器                                                        | 在 SFINAE 和条件模板中广泛使用                                    | 防止某些模板被匹配                                                   |                           |
+| `std::forward_as_tuple, std::declval` 等 | 配合类型 trait 使用                                                | 实现 forward, perfect forwarding, implicit conversions 等 |                                                             |                           |
+## 9.4 内存对齐
+C++ 11 引入了两个新的关键字 alignof 和 alignas 来支持对内存对齐进行控制。 alignof 关键字能够获得一个与平台相关的 std:: size_t 类型的值，用于查询该平台的对齐方式。 
+```cpp
+#include <iostream>
+
+struct Storage {
+    char      a;
+    int       b;
+    double    c;
+    long long d;
+};
+
+struct alignas(std::max_align_t) AlignasStorage {
+    char      a;
+    int       b;
+    double    c;
+    long long d;
+};
+
+int main() {
+    std::cout << alignof(Storage) << std::endl;
+    std::cout << alignof(AlignasStorage) << std::endl;
+    return 0;
+}
+```
+
+其中 `std::max_align_t` 要求每个标量类型的对齐方式严格一样，因此它几乎是最大标量没有差异，进而大部分平台上得到的结果为 `long double`，因此我们这里得到的 `AlignasStorage` 的对齐要求是 8 或 16。
+# 第 10 章展望：C++20 简介
+## 概念与约束
+概念（Concepts）是对 C++ 模板编程的进一步增强扩展。简单来说，概念是一种编译期的特性，它能够让编译器在编译期时对模板参数进行判断，从而大幅度增强我们在 C++ 中模板编程的体验。
+使用模板进行编程时候我们经常会遇到各种令人发指的错误，这是因为到目前为止我们始终不能够对模板参数进行检查与限制。举例而言，下面简单的两行代码会造成大量的几乎不可读的编译错误：
+```cpp
+#include <list>
+#include <algorithm>
+int main() {
+    std::list<int> l = {1, 2, 3};
+    std::sort(l.begin(), l.end());
+    // 应该使用l.sort();
+    return 0;
+}
+```
+本质上是因为 list 容器不支持随机访问迭代器，sort 需要访问随机访问迭代器才能排序，**C++ 是静态类型语言，模板推导只能在编译时完成**，且 `std::sort` 是一个高度泛型的，使用到了大量底层的模板函数模板（即编译期间才开始校验可用性）。

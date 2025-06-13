@@ -1,0 +1,19 @@
+{
+  "promptDelete": false,
+  "attachmentFolderPath": "Files & LongText/Attachments",
+  "alwaysUpdateLinks": true,
+  "showLineNumber": true,
+  "trashOption": "local",
+  "newFileLocation": "root",
+  "strictLineBreaks": false,
+  "vimMode": false,
+  "spellcheck": false,
+  "autoPairMarkdown": true,
+  "pdfExportSettings": {
+    "includeName": true,
+    "pageSize": "A4",
+    "landscape": false,
+    "margin": "2",
+    "downscalePercent": 70
+  }
+}

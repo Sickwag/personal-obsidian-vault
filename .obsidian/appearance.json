@@ -1,0 +1,13 @@
+{
+  "accentColor": "#615c6a",
+  "cssTheme": "Blue Topaz",
+  "theme": "obsidian",
+  "baseFontSize": 13,
+  "baseFontSizeAction": true,
+  "enabledCssSnippets": [
+    "Equal Width Alignment",
+    "replace###"
+  ],
+  "interfaceFontFamily": "",
+  "textFontFamily": ""
+}
