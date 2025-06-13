@@ -21,8 +21,24 @@
               "icon": "lucide-file",
               "title": "C++ Runoob Tutoral"
             }
+          },
+          {
+            "id": "dbb97ba373952527",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "未命名.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "未命名"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -79,8 +95,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -154,13 +169,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "学习/Language/C C++/C++ Runoob Tutoral.md",
+                "file": "未命名.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "C++ Runoob Tutoral 的大纲"
+              "title": "未命名 的大纲"
             }
           },
           {
@@ -178,7 +193,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 231.5
+    "width": 231.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -194,8 +210,11 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "a73a3afa31022515",
+  "active": "dbb97ba373952527",
   "lastOpenFiles": [
+    "未命名 1.md",
+    "未命名.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Linux/Linux Command Line.md",
     "学习/Language/Python/Python Basics.md",
     "学习/ProjectsStudy/Sudoku.md",
@@ -203,12 +222,10 @@
     "学习/Language/C C++/C++ prime plus.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
     "学习/Language/SQL/MySQL.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/algorithm/刷题路线.md",
     "学习/CS self-taugh/Docker.md",
     "学习/Language/HTML/HTML.md",
     "学习/其他专业书/Modern C++.md",
-    "未命名.md",
     "学习/Language/C C++/QT Development from official.md",
     "学习/algorithm/用法导向知识.md",
     "Files & LongText/Attachments/Pasted image 20250610214049.png",
@@ -228,7 +245,6 @@
     "Yanshee API referencde.md",
     "Files & LongText/Attachments/file2.png",
     "Files & LongText/Attachments/file1.png",
-    "Files & LongText/Attachments/开发常用正则表达式.md",
     "copilot-conversations",
     "Files & LongText/Attachments/Pasted image 20250526045830.png",
     "Files & LongText/Attachments/Pasted image 20250526044854.png",
