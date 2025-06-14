@@ -3,6 +3,7 @@ epoch: 1748684645727
 modelKey: qwen/qwen3-235b-a22b:free|openrouterai
 tags:
   - copilot-conversation
+created: 2025-05-31
 ---
 
 **user**: 这是我在学习C++时的笔记，请你检查其中是否有错误。[[Modern C++]]
