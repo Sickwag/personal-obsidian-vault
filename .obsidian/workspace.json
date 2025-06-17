@@ -70,8 +70,8 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
-                "matchingCase": false,
+                "query": "ka",
+                "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
                 "extraContext": false,
@@ -91,12 +91,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -211,7 +211,7 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "4925ff85df94f502",
+  "active": "d1e212fee3e1649e",
   "lastOpenFiles": [
     "Files & LongText/Attachments/Pasted image 20250614125441.png",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
