@@ -3257,3 +3257,77 @@ HAVING 非常类似于 WHERE。事实上，目前为止所学过的所有类型�
 3. **减少重复计算**：
     
     - 自连接只需要执行一次连接操作，而子查询需要对外部查询的每一行重复执行，导致重复计算。
+
+# C++数据库编程
+## 准备工作
+mysql-connector-cpp 安装步骤 [2025最新版VS2022配置C++ connector连接mysql(保姆级教学)mysql c++ connector-CSDN博客](https://blog.csdn.net/weixin_74027669/article/details/137203874)
+![[Pasted image 20250620144029.png]]
+随着 mysql 更新，`mysqlcppconnXXXXXXX.dll` 文件数字可能有变化，需要对应地调整
+![[Pasted image 20250620144354.png]]
+中的第二项 `mysqlcppconn8.lib`
+
+> 记下这里时（2025 年 6 月 20 日14:45:29）已经升级到了 `mysqlcppconnx.dll`（10）所以需要在图片中位置相应改动
+
+示例代码中必须要能够登录 root 账户才能 `create database` 操作，如果没有权限可以参考下面代码**操作数据库**
+```cpp
+#include <cppconn/statement.h>
+#include <cppconn/resultset.h>
+#include <cppconn/exception.h>
+#include <cppconn/driver.h>
+#include <iostream>
+
+// 强制使用多字节字符集
+#pragma execution_character_set("utf-8")  // 避免debug和release模式下字符解析问题
+
+int main() {
+    // 统一连接配置
+    const char* host = "mysql2.sqlpub.com";
+    const int port = 3307;
+    const char* user = "sickwag";
+    const char* password = "iyNnmQ6mNSKqSmgF";
+
+    try {
+        sql::Driver* driver = get_driver_instance();
+
+        // 标准连接字符串格式
+        std::string connStr = "tcp://" + std::string(host) + ":" + std::to_string(port);
+
+        // 添加连接参数
+        sql::ConnectOptionsMap options;
+
+        options["hostName"] = host;
+        options["port"] = port;
+        options["userName"] = user;
+        options["password"] = password;
+        options["OPT_RECONNECT"] = true;
+        options["OPT_CHARSET_NAME"] = "utf8mb4";
+
+        sql::Connection* con = driver->connect(options);
+
+        if (con->isValid()) {
+            std::cout << "连接成功!" << std::endl;
+            // 执行SQL...
+            sql::Statement* stmt = con->createStatement();
+            stmt->execute("use sickwag_learing_db");
+            stmt->execute("drop table if exists problems");
+
+        }
+
+        delete con;
+    }
+    catch (sql::SQLException& e) {
+        std::cerr << "error code: " << e.getErrorCode() << std::endl
+            << "SQL statement: " << e.getSQLState() << std::endl
+            << "error info: " << e.what() << std::endl;
+    }
+
+    return 0;
+}
+```
+教程中代码仅仅只能用于 release 中，debug 模式下会出现堆栈异常
+
+> PS：
+> - 代码中的 driver，con 和 stmt 对象是指针，需要手动释放资源
+> - **`driver`**：获取驱动实例，用于创建连接。由单例模式函数 `get_driver_instance()` 函数的单例对象控制，不需要手动控制
+- **`con`**：通过驱动实例创建连接对象，使用指针以便后续管理连接的生命周期。多个连接可以共用一个驱动
+- **`stmt`**：通过连接对象创建语句对象，同样使用指针以便执行 SQL 语句和资源管理。生命周期和 con 绑定，连接管理了自然不会有语句对象
