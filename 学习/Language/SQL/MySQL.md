@@ -3332,7 +3332,7 @@ int main() {
 - **`con`**：通过驱动实例创建连接对象，使用指针以便后续管理连接的生命周期。多个连接可以共用一个驱动
 - **`stmt`**：通过连接对象创建语句对象，同样使用指针以便执行 SQL 语句和资源管理。生命周期和 con 绑定，连接管理了自然不会有语句对象
 
-## 🧩 一、常用操作分类与常用 API
+## 常用操作分类与常用 API
 
 ### 1️⃣ 连接与初始化
 
@@ -3397,19 +3397,29 @@ int main() {
 
 ---
 
-## 🎯 二、常用编程定式（Best Practices）
+## 常用编程定式（Best Practices）
 
-## 1. 使用 `try-catch` 捕获异常
+### 1. 使用 `try-catch` 捕获异常
 ```cpp
+try {
+    // 所有数据库操作
+}
+catch (sql::SQLException& e) {
+    std::cerr << "SQL Error: " << e.what() << std::endl;
+    std::cerr << "Error Code: " << e.getErrorCode() << std::endl;
+}
 
 ```
 
-## 2. 使用 `unique_ptr` 封装资源（RAII 风格）
+### 2. 使用 `unique_ptr` 封装资源（RAII 风格）
 ```cpp
+#include <memory>
 
+std::unique_ptr<sql::Statement> stmt(con->createStatement());
+std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT * FROM users"));
 ```
 
-## 3. 使用 `PreparedStatement` 防止 SQL 注入
+### 3. 使用 `PreparedStatement` 防止 SQL 注入
 ```cpp
 std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("INSERT INTO users (name, age) VALUES (?, ?)"));
 pstmt->setString(1, "Alice");
@@ -3417,7 +3427,7 @@ pstmt->setInt(2, 25);
 pstmt->executeUpdate();
 ```
 
-## 4. 使用 `ResultSetMetaData` 获取列信息
+### 4. 使用 `ResultSetMetaData` 获取列信息
 ```cpp
 sql::ResultSetMetaData* meta = res->getMetaData();
 for (int i = 1; i <= meta->getColumnCount(); ++i) {
@@ -3425,7 +3435,7 @@ for (int i = 1; i <= meta->getColumnCount(); ++i) {
 }
 ```
 
-## 5. 多语句查询处理
+### 5. 多语句查询处理
 ```cpp
 stmt->execute("SELECT * FROM table1; SELECT * FROM table2");
 do {
@@ -3433,7 +3443,7 @@ std::unique_ptr<sql::ResultSet> res(stmt->getResultSet());    // 处理当前结
 } while (stmt->getMoreResults());
 ```
 
-## 6. 事务处理定式
+### 6. 事务处理定式
 ```cpp
 con->setAutoCommit(false);
 try {
@@ -3445,3 +3455,78 @@ try {
 		throw;
 }
 ```
+
+### 7. 语句执行情况检查
+| API               | 返回值类型              | 是否成功       | 是否影响行数      | 是否有结果集          |
+| ----------------- | ------------------ | ---------- | ----------- | --------------- |
+| `execute()`       | `bool`             | ✅ 检查是否抛出异常 | ❌           | ✅ `true` 表示有结果集 |
+| `executeQuery()`  | `ResultSet*`       | ✅          | ❌           | ✅               |
+| `executeUpdate()` | `int`              | ✅          | ✅           | ❌               |
+| `executeBatch()`  | `std::vector<int>` | ✅          | ✅（每条语句影响行数） | ❌               |
+#### `execute()`
+```cpp
+bool hasResultSet = stmt->execute("SQL语句");
+```
+
+| 返回值     | 说明                                 |
+| ------- | ---------------------------------- |
+| `true`  | 执行成功并且返回了结果集（如 SELECT）             |
+| `false` | 执行成功但没有结果集（如 INSERT、UPDATE、DELETE） |
+
+> ❗不能通过 `execute()` 判断是否出错，只管结果是否是 ResultSet。
+
+#### `executeQuery()` 
+
+```cpp
+sql::ResultSet* res = stmt->executeQuery("SELECT * FROM table");
+```
+- **成功时**：返回 `ResultSet*` 用于读取数据。
+- **失败时**：抛出 `sql::SQLException` 异常。
+所以使用 c++操控 sql 时一般都放在 try-catch 语句中执行
+
+
+#### `executeUpdate()`
+```cpp
+int affectedRows = stmt->executeUpdate("UPDATE ...");
+```
+
+|返回值|含义|
+|---|---|
+|`>=0`|成功，表示受影响的行数（如 1、2、3）|
+|抛出异常|执行失败，如语法错误或约束冲突|
+
+#### `executeNonQuery()`（Connector/C++ 8.0+）
+```cpp
+sql::SQLString query("DELETE FROM users WHERE id=1");
+sql::SQLExecutionThread safeQuery(con);
+safeQuery.execute(query);
+```
+
+> 特定于线程安全执行，返回 `bool` 表示成功与否。
+
+#### `getWarnings()` 和 `clearWarnings()`
+```cpp
+sql::SQLWarning* warning = con->getWarnings();
+while (warning) {
+	std::cerr << "Warning: " << warning->getMessage() << std::endl;
+	warning = warning->getNextWarning();
+}
+con->clearWarnings();
+```
+
+> 用于获取连接或语句的警告信息（如字段截断、类型转换警告等）。
+
+#### `getErrorCode()` 和 `getSQLState()`
+```cpp
+catch (sql::SQLException& e) {
+	std::cerr << "Error Code: " << e.getErrorCode() << std::endl;
+	std::cerr << "SQL State: " << e.getSQLState() << std::endl;
+	std::cerr << "Message: " << e.what() << std::endl;
+}
+```
+
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+	    name varchar(255) not null,
+	     age int not null
+    );
