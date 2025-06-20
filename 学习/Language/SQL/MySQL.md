@@ -3331,3 +3331,117 @@ int main() {
 > - **`driver`**：获取驱动实例，用于创建连接。由单例模式函数 `get_driver_instance()` 函数的单例对象控制，不需要手动控制
 - **`con`**：通过驱动实例创建连接对象，使用指针以便后续管理连接的生命周期。多个连接可以共用一个驱动
 - **`stmt`**：通过连接对象创建语句对象，同样使用指针以便执行 SQL 语句和资源管理。生命周期和 con 绑定，连接管理了自然不会有语句对象
+
+## 🧩 一、常用操作分类与常用 API
+
+### 1️⃣ 连接与初始化
+
+|操作|API 示例|说明|
+|---|---|---|
+|获取驱动实例|`sql::Driver* driver = get_driver_instance();`|获取 MySQL 驱动|
+|连接到数据库|`sql::Connection* con = driver->connect(host, user, pass);`|使用用户名/密码连接|
+|使用连接参数|`con = driver->connect(options);`|`sql::ConnectOptionsMap` 用于更灵活的连接配置|
+|设置数据库|`con->setSchema("test_db");`|选择当前操作的数据库|
+
+### 2️⃣ SQL 执行操作
+
+|操作|API 示例|说明|
+|---|---|---|
+|创建语句对象|`sql::Statement* stmt = con->createStatement();`|用于执行静态 SQL|
+|执行通用 SQL|`stmt->execute("SQL语句");`|可用于 CREATE、INSERT、UPDATE、DELETE、DROP 等|
+|执行查询 SQL|`sql::ResultSet* res = stmt->executeQuery("SELECT ...");`|用于 SELECT 查询|
+|执行更新 SQL|`int rows = stmt->executeUpdate("UPDATE ...");`|会返回影响行数|
+|预编译语句|`sql::PreparedStatement* pstmt = con->prepareStatement("INSERT INTO ... VALUES (?, ?)");`|用于参数化 SQL|
+|设置参数|`pstmt->setString(1, "value");`|设置预编译参数|
+|执行预编译语句|`pstmt->executeUpdate();`|执行预编译 SQL|
+
+### 3️⃣ 结果处理（ResultSet）
+
+|操作|API 示例|说明|
+|---|---|---|
+|遍历结果集|`while (res->next())`|从上到下按行读取|
+|获取字段值|`res->getString("name")` 或 `res->getInt(1)`|按字段名或索引获取|
+|获取字段类型|`meta->getColumnTypeName(i)`|从 `ResultSetMetaData` 获取类型|
+|获取字段名|`meta->getColumnName(i)`|获取列名|
+|获取字段数量|`meta->getColumnCount()`|获取结果集字段数|
+|获取下一个结果|`stmt->getMoreResults()`|用于处理多语句查询|
+|获取当前结果集|`stmt->getResultSet()`|多结果集处理中使用|
+
+### 4️⃣ 元数据（Metadata）
+
+|操作|API 示例|说明|
+|---|---|---|
+|获取数据库元信息|`sql::DatabaseMetaData* meta = con->getMetaData();`|包括数据库名、版本、表信息等|
+|获取表信息|`meta->getTables(...)`|获取数据库中所有表|
+|获取列信息|`meta->getColumns(...)`|获取某张表的列信息|
+|获取结果集元数据|`sql::ResultSetMetaData* meta = res->getMetaData();`|获取查询结果的字段信息|
+
+### 5️⃣ 事务控制
+
+|操作|API 示例|说明|
+|---|---|---|
+|设置事务自动提交|`con->setAutoCommit(false);`|关闭自动提交，开启事务|
+|提交事务|`con->commit();`|提交事务|
+|回滚事务|`con->rollback();`|出错时回滚事务|
+
+### 6️⃣ 资源管理与释放
+
+|操作|API 示例|说明|
+|---|---|---|
+|释放 Statement|`delete stmt;`|手动释放语句资源|
+|释放 ResultSet|`delete res;`|手动释放查询结果|
+|关闭连接|`con->close();`|释放数据库连接资源|
+|释放连接|`delete con;`|手动释放连接对象|
+
+> ✅ 推荐使用 `std::unique_ptr` 或封装类实现资源自动释放，避免内存泄漏
+
+---
+
+## 🎯 二、常用编程定式（Best Practices）
+
+## 1. 使用 `try-catch` 捕获异常
+```cpp
+
+```
+
+## 2. 使用 `unique_ptr` 封装资源（RAII 风格）
+```cpp
+
+```
+
+## 3. 使用 `PreparedStatement` 防止 SQL 注入
+```cpp
+std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("INSERT INTO users (name, age) VALUES (?, ?)"));
+pstmt->setString(1, "Alice");
+pstmt->setInt(2, 25);
+pstmt->executeUpdate();
+```
+
+## 4. 使用 `ResultSetMetaData` 获取列信息
+```cpp
+sql::ResultSetMetaData* meta = res->getMetaData();
+for (int i = 1; i <= meta->getColumnCount(); ++i) {
+	std::cout << meta->getColumnName(i) << " (" << meta->getColumnTypeName(i) << ") | ";
+}
+```
+
+## 5. 多语句查询处理
+```cpp
+stmt->execute("SELECT * FROM table1; SELECT * FROM table2");
+do {
+std::unique_ptr<sql::ResultSet> res(stmt->getResultSet());    // 处理当前结果集
+} while (stmt->getMoreResults());
+```
+
+## 6. 事务处理定式
+```cpp
+con->setAutoCommit(false);
+try {
+    stmt->executeUpdate("UPDATE ...");
+	stmt->executeUpdate("INSERT ...");
+	con->commit();
+} catch (sql::SQLException&) {
+	    con->rollback();
+		throw;
+}
+```
