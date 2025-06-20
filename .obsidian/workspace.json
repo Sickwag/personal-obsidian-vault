@@ -38,18 +38,13 @@
             }
           },
           {
-            "id": "607c335362f8bbf1",
+            "id": "e4a9be4246dd464d",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Language/SQL/MySQL.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "MySQL"
+              "title": "新标签页"
             }
           }
         ],
@@ -208,7 +203,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 231.5
+    "width": 231.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -224,10 +220,11 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "607c335362f8bbf1",
+  "active": "e4a9be4246dd464d",
   "lastOpenFiles": [
-    "学习/algorithm/刷题路线.md",
     "学习/algorithm/用法导向知识.md",
+    "学习/algorithm/刷题路线.md",
+    "学习/Language/SQL/MySQL.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "祛魅.md",
     "Files & LongText/Attachments/Pasted image 20250614125441.png",
@@ -242,7 +239,6 @@
     "学习/Language/C C++/C++ Basics.md",
     "学习/Language/C C++/C++ prime plus.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
-    "学习/Language/SQL/MySQL.md",
     "学习/CS self-taugh/Docker.md",
     "学习/Language/HTML/HTML.md",
     "学习/其他专业书/Modern C++.md",
