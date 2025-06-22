@@ -58,17 +58,17 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "ugot.md",
+                "file": "学习/Language/C C++/C++ Runoob Tutoral.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "ugot"
+              "title": "C++ Runoob Tutoral"
             }
           }
         ],
-        "currentTab": 3
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -125,7 +125,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -239,15 +240,15 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "8136df2f3dedcd4a",
+  "active": "e4a9be4246dd464d",
   "lastOpenFiles": [
-    "学习/Language/SQL/MySQL.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "ugot.md",
+    "学习/Language/SQL/MySQL.md",
     "Files & LongText/Attachments/Pasted image 20250620144354.png",
     "Files & LongText/Attachments/Pasted image 20250620144029.png",
     "学习/algorithm/用法导向知识.md",
     "学习/algorithm/刷题路线.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "祛魅.md",
     "Files & LongText/Attachments/Pasted image 20250614125441.png",
     "copilot-conversations/Modern C++笔记检查.md",

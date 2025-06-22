@@ -3331,10 +3331,80 @@ int main() {
 > - **`driver`**：获取驱动实例，用于创建连接。由单例模式函数 `get_driver_instance()` 函数的单例对象控制，不需要手动控制
 - **`con`**：通过驱动实例创建连接对象，使用指针以便后续管理连接的生命周期。多个连接可以共用一个驱动
 - **`stmt`**：通过连接对象创建语句对象，同样使用指针以便执行 SQL 语句和资源管理。生命周期和 con 绑定，连接管理了自然不会有语句对象
+### 连接数据库参数
+#### 使用参数或者纯字符串连接
+连接的各项指标 `options` 字符串参数填写**必须使用 `(const) char*` 字符数组**初始化的变量，**不能使用 `string`**，因为会在末尾填上 `\n` 导致
+```sql
+SQL Error: Access denied for user 'sickwag'@'42.97.247.141' (using password: YES)
+Error Code: 1045
+```
+1045 错误**最有可能表示的是**账号密码输入错误，在 sprintboot 或者会自动添加 `\n` 的 `string` 对象代码中出现，也可能是因为拼写错误
+正确参考：
+```cpp
+const char* host = "mysql2.sqlpub.com";
+const int port = 3307;
+const char* user = "sickwag";
+const char* password = "iyNnmQ6mNSKqSmgF";
+const char* db_name = "sickwag_learing_db";
 
-## 常用操作分类与常用 API
+MySQLDB db(host, port, user, password, db_name);
 
-### 1️⃣ 连接与初始化
+MySQLDB::MySQLDB(const std::string& host, int port, const std::string& user, const std::string& password, const std::string& db)
+    : driver(sql::mysql::get_mysql_driver_instance()) {
+
+    std::string connStr = "tcp://" + host + ":" + std::to_string(port);
+    con.reset(driver->connect(connStr, user, password));  // 更稳定，兼容多数认证方式
+
+    if (!db.empty()) {
+        con->setSchema(db);
+    }
+
+    con->setAutoCommit(false);
+}
+```
+
+#### 使用 `ConnectOptionsMap` 连接
+`ConnectOptionsMap` 是 MySQL Connector/C++ 中一种**类型安全的连接配置方式**，可以设置：
+- 主机、端口、用户名、密码
+- 编码、SSL、连接超时
+- 认证方式、连接池、压缩等高级参数
+比传统的 `connect("tcp://host:port", user, password)` 更强大
+
+| 参数名（Key）                                | 示例值                               | 说明                                |
+| --------------------------------------- | --------------------------------- | --------------------------------- |
+| `"hostName"`                            | `"localhost"` 或 `"192.168.1.100"` | 主机地址                              |
+| `"port"`                                | `3306`                            | 端口号                               |
+| `"userName"`                            | `"root"`                          | 登录用户名                             |
+| `"password"`                            | `"your_password"`                 | 登录密码                              |
+| `"password2"`                           | `"failover_password"`             | 主密码失败时使用备用密码（例如主从切换）              |
+| `"password3"`                           | `"secondary_backup_password"`     | 第三密码（高级用法）                        |
+| `"schema"`                              | `"test_db"`                       | 数据库名（相当于 setSchema）               |
+| `"OPT_RECONNECT"`                       | `true`                            | 是否启用连接丢失后自动重连                     |
+| `"OPT_CHARSET_NAME"`                    | `"utf8mb4"`                       | 设置连接字符集                           |
+| `"OPT_CONNECT_TIMEOUT"`                 | `30`（秒）                           | 设置连接超时时间                          |
+| `"OPT_READ_TIMEOUT"`                    | `30`                              | 读取超时时间                            |
+| `"OPT_WRITE_TIMEOUT"`                   | `30`                              | 写入超时时间                            |
+| `"OPT_LOCAL_INFILE"`                    | `true`                            | 是否启用 `LOAD DATA LOCAL INFILE`     |
+| `"OPT_SSL_MODE"`                        | `sql::SSLMode::SSL_MODE_REQUIRED` | 设置 SSL 模式（如必须加密）                  |
+| `"OPT_SSL_CA"`                          | `"path/to/ca.pem"`                | SSL CA 证书路径                       |
+| `"OPT_SSL_FIPS_MODE"`                   | `true`                            | 开启 FIPS 模式（合规加密）                  |
+| `"OPT_PLUGIN_DIR"`                      | `"path/to/plugins"`               | 指定认证插件路径                          |
+| `"OPT_DEFAULT_AUTH"`                    | `"mysql_native_password"`         | 挜定认认证插件                           |
+| `"OPT_COMPRESS"`                        | `true`                            | 启用压缩协议传输数据                        |
+| `"OPT_NAMED_PIPE"`                      | `true`                            | 使用命名管道连接（Windows 下）               |
+| `"OPT_UNIX_SOCKET"`                     | `"/tmp/mysql.sock"`               | 指定 Unix 套接字路径                     |
+| `"OPT_ZSTD_COMPRESSION_LEVEL"`          | `3`                               | ZStandard 压缩等级                    |
+| `"CLIENT_MULTI_STATEMENTS"`             | `true`                            | 执行多语句（如 `SELECT a; SELECT b;`）    |
+| `"CLIENT_MULTI_RESULTS"`                | `true`                            | 支持多个结果集                           |
+| `"CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS"` | `true`                            | 允许处理过期密码                          |
+| `"OPT_REPORT_DATA_TRUNCATION"`          | `true`                            | 是否报告数据截断警告                        |
+| `"OPT_HOST_READ_ONLY"`                  | `true`                            | 只连接到只读实例（用于负载均衡）                  |
+| `"OPT_USE_TLS"`                         | `true`                            | 使用 TLS 加密连接                       |
+| `"OPT_TLS_VERSION"`                     | `"TLSv1.2,TLSv1.3"`               | 指定 TLS 使用版本                       |
+| `"OPT_FIDO_CALLBACK"`                   | FIDO 回调函数                         | 用于 FIDO 认证（如 MySQL 8.0 的 FIDO 认证） |
+### 常用操作分类与常用 API
+
+#### 1️⃣ 连接与初始化
 
 |操作|API 示例|说明|
 |---|---|---|
@@ -3343,7 +3413,7 @@ int main() {
 |使用连接参数|`con = driver->connect(options);`|`sql::ConnectOptionsMap` 用于更灵活的连接配置|
 |设置数据库|`con->setSchema("test_db");`|选择当前操作的数据库|
 
-### 2️⃣ SQL 执行操作
+#### 2️⃣ SQL 执行操作
 
 |操作|API 示例|说明|
 |---|---|---|
@@ -3355,7 +3425,7 @@ int main() {
 |设置参数|`pstmt->setString(1, "value");`|设置预编译参数|
 |执行预编译语句|`pstmt->executeUpdate();`|执行预编译 SQL|
 
-### 3️⃣ 结果处理（ResultSet）
+#### 3️⃣ 结果处理（ResultSet）
 
 |操作|API 示例|说明|
 |---|---|---|
@@ -3367,7 +3437,7 @@ int main() {
 |获取下一个结果|`stmt->getMoreResults()`|用于处理多语句查询|
 |获取当前结果集|`stmt->getResultSet()`|多结果集处理中使用|
 
-### 4️⃣ 元数据（Metadata）
+#### 4️⃣ 元数据（Metadata）
 
 |操作|API 示例|说明|
 |---|---|---|
@@ -3376,7 +3446,7 @@ int main() {
 |获取列信息|`meta->getColumns(...)`|获取某张表的列信息|
 |获取结果集元数据|`sql::ResultSetMetaData* meta = res->getMetaData();`|获取查询结果的字段信息|
 
-### 5️⃣ 事务控制
+#### 5️⃣ 事务控制
 
 |操作|API 示例|说明|
 |---|---|---|
@@ -3384,7 +3454,7 @@ int main() {
 |提交事务|`con->commit();`|提交事务|
 |回滚事务|`con->rollback();`|出错时回滚事务|
 
-### 6️⃣ 资源管理与释放
+#### 6️⃣ 资源管理与释放
 
 |操作|API 示例|说明|
 |---|---|---|
@@ -3397,9 +3467,9 @@ int main() {
 
 ---
 
-## 常用编程定式（Best Practices）
+### 常用编程定式（Best Practices）
 
-### 1. 使用 `try-catch` 捕获异常
+#### 1. 使用 `try-catch` 捕获异常
 ```cpp
 try {
     // 所有数据库操作
@@ -3411,7 +3481,7 @@ catch (sql::SQLException& e) {
 
 ```
 
-### 2. 使用 `unique_ptr` 封装资源（RAII 风格）
+#### 2. 使用 `unique_ptr` 封装资源（RAII 风格）
 ```cpp
 #include <memory>
 
@@ -3419,7 +3489,7 @@ std::unique_ptr<sql::Statement> stmt(con->createStatement());
 std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT * FROM users"));
 ```
 
-### 3. 使用 `PreparedStatement` 防止 SQL 注入
+#### 3. 使用 `PreparedStatement` 防止 SQL 注入
 ```cpp
 std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("INSERT INTO users (name, age) VALUES (?, ?)"));
 pstmt->setString(1, "Alice");
@@ -3427,7 +3497,7 @@ pstmt->setInt(2, 25);
 pstmt->executeUpdate();
 ```
 
-### 4. 使用 `ResultSetMetaData` 获取列信息
+#### 4. 使用 `ResultSetMetaData` 获取列信息
 ```cpp
 sql::ResultSetMetaData* meta = res->getMetaData();
 for (int i = 1; i <= meta->getColumnCount(); ++i) {
@@ -3435,7 +3505,7 @@ for (int i = 1; i <= meta->getColumnCount(); ++i) {
 }
 ```
 
-### 5. 多语句查询处理
+#### 5. 多语句查询处理
 ```cpp
 stmt->execute("SELECT * FROM table1; SELECT * FROM table2");
 do {
@@ -3443,7 +3513,7 @@ std::unique_ptr<sql::ResultSet> res(stmt->getResultSet());    // 处理当前结
 } while (stmt->getMoreResults());
 ```
 
-### 6. 事务处理定式
+#### 6. 事务处理定式
 ```cpp
 con->setAutoCommit(false);
 try {
@@ -3456,14 +3526,14 @@ try {
 }
 ```
 
-### 7. 语句执行情况检查
+#### 7. 语句执行情况检查
 | API               | 返回值类型              | 是否成功       | 是否影响行数      | 是否有结果集          |
 | ----------------- | ------------------ | ---------- | ----------- | --------------- |
 | `execute()`       | `bool`             | ✅ 检查是否抛出异常 | ❌           | ✅ `true` 表示有结果集 |
 | `executeQuery()`  | `ResultSet*`       | ✅          | ❌           | ✅               |
 | `executeUpdate()` | `int`              | ✅          | ✅           | ❌               |
 | `executeBatch()`  | `std::vector<int>` | ✅          | ✅（每条语句影响行数） | ❌               |
-#### `execute()`
+##### `execute()`
 ```cpp
 bool hasResultSet = stmt->execute("SQL语句");
 ```
@@ -3475,7 +3545,7 @@ bool hasResultSet = stmt->execute("SQL语句");
 
 > ❗不能通过 `execute()` 判断是否出错，只管结果是否是 ResultSet。
 
-#### `executeQuery()` 
+##### `executeQuery()` 
 
 ```cpp
 sql::ResultSet* res = stmt->executeQuery("SELECT * FROM table");
@@ -3485,7 +3555,7 @@ sql::ResultSet* res = stmt->executeQuery("SELECT * FROM table");
 所以使用 c++操控 sql 时一般都放在 try-catch 语句中执行
 
 
-#### `executeUpdate()`
+##### `executeUpdate()`
 ```cpp
 int affectedRows = stmt->executeUpdate("UPDATE ...");
 ```
@@ -3495,7 +3565,7 @@ int affectedRows = stmt->executeUpdate("UPDATE ...");
 |`>=0`|成功，表示受影响的行数（如 1、2、3）|
 |抛出异常|执行失败，如语法错误或约束冲突|
 
-#### `executeNonQuery()`（Connector/C++ 8.0+）
+##### `executeNonQuery()`（Connector/C++ 8.0+）
 ```cpp
 sql::SQLString query("DELETE FROM users WHERE id=1");
 sql::SQLExecutionThread safeQuery(con);
@@ -3504,7 +3574,7 @@ safeQuery.execute(query);
 
 > 特定于线程安全执行，返回 `bool` 表示成功与否。
 
-#### `getWarnings()` 和 `clearWarnings()`
+##### `getWarnings()` 和 `clearWarnings()`
 ```cpp
 sql::SQLWarning* warning = con->getWarnings();
 while (warning) {
@@ -3516,7 +3586,7 @@ con->clearWarnings();
 
 > 用于获取连接或语句的警告信息（如字段截断、类型转换警告等）。
 
-#### `getErrorCode()` 和 `getSQLState()`
+##### `getErrorCode()` 和 `getSQLState()`
 ```cpp
 catch (sql::SQLException& e) {
 	std::cerr << "Error Code: " << e.getErrorCode() << std::endl;
