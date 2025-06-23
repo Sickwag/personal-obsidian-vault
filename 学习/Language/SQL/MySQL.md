@@ -3402,6 +3402,7 @@ MySQLDB::MySQLDB(const std::string& host, int port, const std::string& user, con
 | `"OPT_USE_TLS"`                         | `true`                            | 使用 TLS 加密连接                       |
 | `"OPT_TLS_VERSION"`                     | `"TLSv1.2,TLSv1.3"`               | 指定 TLS 使用版本                       |
 | `"OPT_FIDO_CALLBACK"`                   | FIDO 回调函数                         | 用于 FIDO 认证（如 MySQL 8.0 的 FIDO 认证） |
+
 ### 常用操作分类与常用 API
 
 #### 1️⃣ 连接与初始化
