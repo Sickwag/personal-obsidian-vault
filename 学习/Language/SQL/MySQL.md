@@ -3405,6 +3405,17 @@ MySQLDB::MySQLDB(const std::string& host, int port, const std::string& user, con
 
 其中：
 如果没有分行解析 sql 的需求，想要将整个 sql 文件中的所有内容转化为纯字符发送到 mysql 数据库一次性执行，就需要开启多语句支持 `CLIENT_MULTI_STATEMENT`，多结果集返回查询需要开启 `CLIENT_MULTI_RESULTS`
+使用 option 作为连接需要获取 options 中的参数时，需要通过 `get()` 获取类型
+如options 中存储了数据库名称，现在需要通过  `setSchema` 来设置默认连接的数据库，则需要使用
+```cpp
+on->setSchema(options["schema"].get<sql::SQLString>()->asStdString());
+```
+先获取键值（`sql::ConnectOptionsMap`）的结构为
+```cpp
+typedef std::map< sql::SQLString, ConnectPropertyVal > ConnectOptionsMap;
+typedef sql::Variant ConnectPropertyVal;
+```
+所以需要先 get 获取元数据，然后转化为需要的数据类型，所有的元数据已经支持 bool，int，double 等类型，SQLString 对象有 asStdString 方法可以转化
 ### 常用操作分类与常用 API
 
 #### 1️⃣ 连接与初始化
