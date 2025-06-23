@@ -100,7 +100,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "getline",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -121,7 +121,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -242,6 +243,10 @@
   },
   "active": "3202a2f77d772765",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/Pasted image 20250623122025.png",
+    "Files & LongText/Attachments/Pasted image 20250623122023.png",
+    "Files & LongText/Attachments/Pasted image 20250623122015.png",
+    "Files & LongText/Attachments/Pasted image 20250623121950.png",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Language/SQL/MySQL.md",
     "学习/algorithm/刷题路线.md",
@@ -274,11 +279,7 @@
     "API接口使用.md",
     "学习/Scattered knowlegde/Github.md",
     "学习/Scattered knowlegde/CMD和PS脚本.md",
-    "Ugot.md",
     "Files & LongText/Attachments/Pasted image 20250609125018.png",
-    "Files & LongText/Attachments/Pasted image 20250608124728.png",
-    "Files & LongText/Attachments/file2.png",
-    "Files & LongText/Attachments/file1.png",
     "copilot-conversations",
     "Competitions",
     "学习/ProjectsStudy/Python",

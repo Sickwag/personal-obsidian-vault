@@ -3403,6 +3403,8 @@ MySQLDB::MySQLDB(const std::string& host, int port, const std::string& user, con
 | `"OPT_TLS_VERSION"`                     | `"TLSv1.2,TLSv1.3"`               | 指定 TLS 使用版本                       |
 | `"OPT_FIDO_CALLBACK"`                   | FIDO 回调函数                         | 用于 FIDO 认证（如 MySQL 8.0 的 FIDO 认证） |
 
+其中：
+如果没有分行解析 sql 的需求，想要将整个 sql 文件中的所有内容转化为纯字符发送到 mysql 数据库一次性执行，就需要开启多语句支持 `CLIENT_MULTI_STATEMENT`，多结果集返回查询需要开启 `CLIENT_MULTI_RESULTS`
 ### 常用操作分类与常用 API
 
 #### 1️⃣ 连接与初始化
@@ -3601,3 +3603,41 @@ catch (sql::SQLException& e) {
 	    name varchar(255) not null,
 	     age int not null
     );
+#### 8. 直接提交 sql 脚本
+```cpp
+void MySQLDB::executeFromFile(const std::string& filePath) {
+	std::ifstream f(filePath);
+	if (!f.is_open()) {
+		throw std::runtime_error("cannot open this file: " + filePath);
+	}
+	// remove all comments
+	std::string statment, line;
+	while (std::getline(f, line)) {
+		if (line.starts_with("-- ") or line.starts_with("# ")) {
+			continue;
+		} else {
+			statment += line;
+		}
+	}
+	f.close();
+	if (statment.empty()) {
+		throw std::runtime_error("sql file is empty!");
+	}
+	std::unique_ptr<sql::Statement> stmt(con->createStatement());
+	try {
+		stmt->execute(statment);
+	}
+	catch (const sql::SQLException& e) {
+		print_sql_error(e);
+	}
+}
+```
+需要注意：
+提交的 sql 文件编码是 utf-8 格式，否则需要设置额外解码参数给 fstream，调整文件编码格式可以参考 [Visual Studio 设置默认编码格式为 UTF-8 或 GB2312-80 与文件没有高级保存选项怎么显示](https://blog.csdn.net/qq_41868108/article/details/105750175)，不然在会出现
+```bash
+connected!
+sql error code: 1064
+sql statement: 42000
+sql description: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 1
+```
+乍看之下还看不出哪里有问题，语法错误，通过调试会发现，statement 字符串值显示为 `<字符串中的字符无效。>`，打开其中内容发现其中有大量 `\0` 无意义字符，判定为文件编码问题，修改为 utf-8 即可解决
