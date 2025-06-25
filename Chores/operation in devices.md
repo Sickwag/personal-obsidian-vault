@@ -58,3 +58,17 @@ started 3 plugins.
 2024 年 9 月 22 日16:58:19
 ![Pasted image 20240922165820.png](Pasted%20image%2020240922165820.png)
 [如何彻底关闭Win11更新？分享四种关闭方法_win11关闭自动更新-CSDN博客](https://blog.csdn.net/XdecadeXXX/article/details/137913605)
+
+## 关闭 microsoft 兼容性遥测
+2025 年 6 月 25 日08:39:54
+**通过**[隐私至上：5 招轻松关闭 Windows 11 遥测，防止数据收集 - 系统极客](https://www.sysgeek.cn/disable-windows-11-telemetry/)
+的方案 1 个方案 2 关闭
+
+## 解决 vscode cpp tools 占用高问题
+[问题解决：VScode高CPU占有率 cpptools high CPU-CSDN博客](https://blog.csdn.net/qq_43827595/article/details/105613954)
+将 cpptools. exe C/C   Extension for Visual Studio Code 内存占用减少一半以上，CPU 占用降低到 0.1%
+在 settings. json 中将 
+```json
+"C_Cpp.intelliSenseEngine": "default", // 调整为
+"C_Cpp.intelliSenseEngine": "disabled",
+```
