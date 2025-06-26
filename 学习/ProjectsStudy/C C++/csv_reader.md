@@ -32,6 +32,15 @@ target_include_directories(cmake-test PRIVATE ${Boost_INCLUDE_DIRS})
 - `target_include_directories` 这行代码的作用是指定编译器在查找头文件时应搜索的目录路径。
 - `${Boost_INCLUDE_DIRS}`: Boost头文件所在的路径变量，这是通过
 ### 不使用包管理器调用库
+| **场景**              | **推荐方式**            |
+| ------------------- | ------------------- |
+| 系统预装库（如 Boost）      | `find_package`      |
+| 本地库（手动下载）           | 直接指定路径              |
+| Git 子模块             | `add_subdirectory`  |
+| 从 GitHub 直接下载       | `FetchContent`      |
+| 需要自定义编译步骤           | `ExternalProject`   |
+| Unix 的 `pkg-config` | `pkg_check_modules` |
+
 #### 引入本地库
 ```cmake
 cmake_minimum_required(VERSION 3.10)
@@ -49,7 +58,7 @@ target_link_libraries(my_app PRIVATE "${LIBFOO_ROOT}/lib/libfoo.a")
 # 如果是动态库（Windows 为 .dll，Linux 为 .so）
 target_link_libraries(my_app PRIVATE "${LIBFOO_ROOT}/lib/libfoo.so")
 ```
-#### ### 使用 `FetchContent`
+#### 使用 `FetchContent`
 ```cmake
 include(FetchContent)
 
@@ -77,59 +86,43 @@ ExternalProject_Add(
   URL "https://zlib.net/zlib-1.2.11.tar.gz"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
 )
-```
 # 获取 zlib 的路径
 ExternalProject_Get_Property(zlib_external install_dir)
 target_link_libraries(my_app PRIVATE "${install_dir}/lib/zlib.a")
-
----
-
-### **6. 使用 `pkg-config`（Unix-like 系统）**
-
+```
+#### 使用 `pkg-config`（Unix-like 系统）
 适用于通过 `pkg-config` 管理的库（如 GTK）。  
 **示例：引入 GTK3**
-
-cmake
-
-复制
-
-下载
-
+```cmake
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
 target_include_directories(my_app PRIVATE ${GTK3_INCLUDE_DIRS})
 target_link_libraries(my_app PRIVATE ${GTK3_LIBRARIES})
-
----
-
-### **7. 自定义 Find 模块（高级）**
-
+```
+#### 自定义 Find 模块（高级）
 如果库没有提供 CMake 支持，可以手动编写 `FindXXX.cmake` 文件。  
 **示例：自定义查找 `libfoo`**
-
 1. 创建 `cmake/FindLibFoo.cmake`：
-    
-    cmake
-    
-    复制
-    
-    下载
-    
-    find_path(LIBFOO_INCLUDE_DIR foo.h PATH_SUFFIXES include)
-    find_library(LIBFOO_LIBRARY foo PATH_SUFFIXES lib)
-    
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(LibFoo DEFAULT_MSG LIBFOO_LIBRARY LIBFOO_INCLUDE_DIR)
-    
+```cmake
+find_path(LIBFOO_INCLUDE_DIR foo.h PATH_SUFFIXES include)
+find_library(LIBFOO_LIBRARY foo PATH_SUFFIXES lib)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(LibFoo DEFAULT_MSG LIBFOO_LIBRARY LIBFOO_INCLUDE_DIR)
+```
 2. 在 `CMakeLists.txt` 中使用：
-    
-    cmake
-    
-    复制
-    
-    下载
-    
-    list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-    find_package(LibFoo REQUIRED)
-    target_link_libraries(my_app PRIVATE ${LIBFOO_LIBRARY})
+```cmake
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+find_package(LibFoo REQUIRED)
+target_link_libraries(my_app PRIVATE ${LIBFOO_LIBRARY})
+```
+### CMake 创建内置变量
+当使用 `find_package` 命令时，会自动在包管理器中扫描创建内置变量供 cmake 使用，如：
+```cmake
+find_package(OpenCV REQUIRED)
+```
+会创建
+- OpenCV_LIBS
+- OpenCV_INCLUDE_DIRS
+- OpenCV_LIBRARIES（opencv 用到的库）
+指向对应的文件夹，调用它们的方法是使用 `${var_name}`
