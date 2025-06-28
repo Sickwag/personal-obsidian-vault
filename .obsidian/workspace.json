@@ -41,10 +41,15 @@
             "id": "a8add8e3974b1981",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "祛魅.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
               "icon": "lucide-file",
-              "title": "新标签页"
+              "title": "祛魅"
             }
           }
         ],
@@ -219,7 +224,7 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "e54f850cd75592ed",
+  "active": "a8add8e3974b1981",
   "lastOpenFiles": [
     "学习/ProjectsStudy/C C++/csv_reader.md",
     "学习/algorithm/刷题路线.md",
