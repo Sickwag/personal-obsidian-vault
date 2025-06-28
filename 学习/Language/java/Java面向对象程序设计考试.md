@@ -64,7 +64,7 @@ public:
 | 内存管理  | 自动垃圾回收                            | 需要手动管理                                                |
 | 对象存储  | 堆内存                               | 栈或堆                                                   |
 | 对象访问  | 通过引用                              | 直接或通过指针                                               |
-| 析构方法  | 无，有 `finalize()` 但不推荐           | 有析构函数                                                 |
+| 析构方法  | 无，有 `finalize()` 但不推荐             | 有析构函数                                                 |
 1. 当类只包含静态成员时，创建该类的实例没有实际意义
 2. Java 会为没有显式构造方法的类提供默认的 public 无参构造方法，这可能导致其他开发人员错误地实例化这个工具类
 3. **为什么 Java 设计所有成员都是 static 的类不应被实例化？**
@@ -146,7 +146,7 @@ map.compute(n, (k, v) -> (v == null) ? 1 : v + 1);
 ```java
 List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
 ```
-- **特点 * *：
+- **特点**：
 - 返回一个固定大小的 `List`，不能修改（不能 `add` 或 `remove`）。
 - 适用于初始化后不需要修改的列表。
 
@@ -154,14 +154,14 @@ List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
 ```java
 List<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5));
 ```
-- **特点 * *：
+- **特点**：
 - 返回一个可修改的 `ArrayList`，可以动态增删元素。
 
 #####  Java 9 + 的 `List.of()`
 ```java
 List<Integer> list = List.of(1, 2, 3, 4, 5);
 ```
-- **特点 * *：
+- **特点**：
 - 返回一个不可变的 `List`（Java 9 + 支持）。
 - 性能比 `Arrays.asList()` 更好。
 
@@ -170,7 +170,7 @@ List<Integer> list = List.of(1, 2, 3, 4, 5);
 List<Integer> list = new ArrayList<>();
 Collections.addAll(list, 1, 2, 3, 4, 5);
 ```
-- **特点 * *：
+- **特点**：
 - 适用于动态添加元素到已有 `List`。
 
 -- -
@@ -180,21 +180,21 @@ Collections.addAll(list, 1, 2, 3, 4, 5);
 ```java
 int[] arr = { 1, 2, 3, 4, 5 };
 ```
-- **特点 * *：
+- **特点**：
 - 最简洁的方式，适用于已知所有元素的情况。
 
 #####  `Arrays.stream()` 转换
 ```java
 int[] arr = Arrays.stream(new int[] {1, 2, 3, 4, 5}).toArray();
 ```
-- **特点 * *：
+- **特点**：
 - 适用于需要动态计算或转换的情况。
 
 #####  `IntStream.of()`
 ```java
 int[] arr = IntStream.of(1, 2, 3, 4, 5).toArray();
 ```
-- **特点 * *：
+- **特点**：
 - 适用于 Java 8 + ，支持流式操作。
 
 -- -
@@ -204,7 +204,7 @@ int[] arr = IntStream.of(1, 2, 3, 4, 5).toArray();
 List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
 int[] arr = list.stream().mapToInt(Integer::intValue).toArray();
 ```
-- **特点 * *：
+- **特点**：
 - 适用于需要从 `List` 转换到 `int[]` 的情况。
 
 -- -
@@ -214,7 +214,7 @@ int[] arr = list.stream().mapToInt(Integer::intValue).toArray();
 int[] arr = { 1, 2, 3, 4, 5 };
 List<Integer> list = Arrays.stream(arr).boxed().collect(Collectors.toList());
 ```
-- **特点 * *：
+- **特点**：
 - 适用于需要从 `int[]` 转换到 `List` 的情况。
 
 -- -
@@ -257,26 +257,29 @@ Arr1 : [1, 2, 3, 4, 5]
 
 #### 6. 总结
 
-| 操作 | 方法 | 适用场景            |
-| ---------------------------- - | ------------------------------------------------------------------ | -------------- - |
-| **初始化 `List<Integer > `* * | `Arrays.asList()`, `new ArrayList<>(Arrays.asList())`, `List.of()` | 需要快速初始化不可变或可变列表 |
-| **初始化 `int[]`** | `int[] arr = { 1, 2, 3 }`, `IntStream.of(1, 2, 3).toArray()` | 需要快速初始化数组       |
-| **`List<Integer > ` 转 `int[]`** | `list.stream().mapToInt(Integer::intValue).toArray()` | 需要将列表转换为数组      |
-| **`int[]` 转 `List<Integer > `** | `Arrays.stream(arr).boxed().collect(Collectors.toList())` | 需要将数组转换为列表 |
+| 操作 | 方法 | 适用场景 |
+|------|------|----------|
+| **初始化 `List<Integer>`** | `Arrays.asList()`, `new ArrayList<>(Arrays.asList())`, `List.of()` | 需要快速初始化不可变或可变列表 |
+| **初始化 `int[]`** | `int[] arr = { 1, 2, 3 }`, `IntStream.of(1, 2, 3).toArray()` | 需要快速初始化数组 |
+| **`List<Integer>` 转 `int[]`** | `list.stream().mapToInt(Integer::intValue).toArray()` | 需要将列表转换为数组 |
+| **`int[]` 转 `List<Integer>`** | `Arrays.stream(arr).boxed().collect(Collectors.toList())` | 需要将数组转换为列表 |
+
+
 
 #### 推荐方法
 - **初始化 `List<Integer > `* * ：`List.of()`（Java 9 + ）或 `new ArrayList<>(Arrays.asList())`。
 - **初始化 `int[]`** ：直接初始化 `int[] arr = { 1, 2, 3 }`。
-- **转换 * *： `stream()` 进行 `List` 和 `int[]` 之间的转换。
+- **转换**： `stream()` 进行 `List` 和 `int[]` 之间的转换。
 
 -- -
 
 #### 7. 常见问题
-##### * *(1) `Arrays.asList()` 和 `List.of()` 的区别？ * *
-| 方法 | 可变性 | 是否允许 `null` | Java 版本 |
-|------ | -------- | ---------------- | ----------|
-| `Arrays.asList()` | 固定大小（不可增删） | 允许 `null` | Java 1.2 + |
-| `List.of()` | 完全不可变 | 不允许 `null` | Java 9 + |
+##### (1) `Arrays.asList()` 和 `List.of()` 的区别？
+
+| 方法                | 可变性        | 是否允许 `null` | Java 版本    |
+| ----------------- | ---------- | ----------- | ---------- |
+| `Arrays.asList()` | 固定大小（不可增删） | 允许 `null`   | Java 1.2 + |
+| `List.of()`       | 完全不可变      | 不允许 `null`  | Java 9 +   |
 
 ##### 为什么 `Arrays.asList()` 返回的 `List` 不能修改？
 - 它返回的是基于数组的 `List`，底层仍然是数组，所以不能改变大小（不能 `add` 或 `remove`）。
@@ -337,9 +340,9 @@ Arr1 : [1, 2, 3, 4, 5]
 -- -
 
 #### 10. 总结
-- **`List<Integer > ` 初始化 * *：`Arrays.asList()`, `List.of()`, `new ArrayList<>()`。
+- **`List<Integer > ` 初始化**：`Arrays.asList()`, `List.of()`, `new ArrayList<>()`。
 - **`int[]` 初始化** ：`int[] arr = { 1, 2, 3 }`, `IntStream.of().toArray()`。
-- **转换 * *：`stream().mapToInt().toArray()` 和 `Arrays.stream().boxed().collect(Collectors.toList())`。
+- **转换**：`stream().mapToInt().toArray()` 和 `Arrays.stream().boxed().collect(Collectors.toList())`。
 
 通过以上方法，你可以轻松地在 `List<Integer > ` 和 `int[]` 之间转换，并快速初始化多个常量值。
 
@@ -376,7 +379,7 @@ Arr1 : [1, 2, 3, 4, 5]
     - 线程安全但性能差，全表锁。
     - 遗留类，不推荐使用。
 #### 1. 如何在创建哈希表的同时初始化内容？
-在 Java 中，可以使用 * *双括号初始化（Double Brace Initialization） * *或 * *Java 9 + 的 `Map.of()` / `Map.ofEntries()`* * 方法直接初始化 `HashMap`。
+在 Java 中，可以使用**双括号初始化（Double Brace Initialization）**或**Java 9 + 的 `Map.of()` / `Map.ofEntries()`* * 方法直接初始化 `HashMap`。
 
 ##### 双括号初始化
 ```java
@@ -388,7 +391,7 @@ Map<String, Integer> map = new HashMap<>() {
     }
 };
 ```
-- **缺点 * *：
+- **缺点**：
 - 会创建一个匿名子类，可能影响序列化。
 - 性能稍差（每次初始化都会生成一个新类）。
 
@@ -400,9 +403,9 @@ Map<String, Integer> map = Map.of(
     "Charlie", 35
 );
 ```
-- **特点 * *：
-- 适用于 * *少量键值对 * *（最多 10 个，因为 `Map.of()` 有参数限制）。
-- 返回的是 * *不可变 Map * *（不能修改）。
+- **特点**：
+- 适用于**少量键值对**（最多 10 个，因为 `Map.of()` 有参数限制）。
+- 返回的是**不可变 Map**（不能修改）。
 
 ##### Java 9 + 的 `Map.ofEntries()`
 ```java
@@ -412,9 +415,9 @@ Map<String, Integer> map = Map.ofEntries(
     Map.entry("Charlie", 35)
 );
 ```
-- **特点 * *：
-- 适用于 * *任意数量的键值对 * *。
-- 返回的也是 * *不可变 Map * *。
+- **特点**：
+- 适用于**任意数量的键值对**。
+- 返回的也是**不可变 Map**。
 
 ##### 使用 `Stream` + `Collectors.toMap()`
 ```java
@@ -424,46 +427,47 @@ Map<String, Integer> map = Stream.of(
     new AbstractMap.SimpleEntry<>("Charlie", 35)
 ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 ```
-- **特点 * *：
+- **特点**：
 - 适用于动态构建 Map。
-- 返回的是 * *可变 Map * *。
+- 返回的是**可变 Map**。
 
 -- -
 
 #### 2. Java 容器的初始化方式
-Java 的集合类（如 `List`, `Set`, `Map`）通常有 * *多种初始化方式 * *：
+Java 的集合类（如 `List`, `Set`, `Map`）通常有**多种初始化方式**：
+
 | 容器类型 | 初始化方式 | 示例 |
 |---------- | ------------ | ------|
 | **`List`* * | `Arrays.asList()`, `List.of()`, `new ArrayList<>(List.of())` | `List<String > list = List.of("A", "B");` |
 | **`Set`* * | `Set.of()`, `new HashSet<>(Arrays.asList())` | `Set<String > set = Set.of("A", "B");` |
 | **`Map`* * | `Map.of()`, `Map.ofEntries()`, 双括号初始化 | `Map<String, Integer > map = Map.of("A", 1);` |
 
-**通用规律 * *：
-- **不可变集合 * *：`List.of()`, `Set.of()`, `Map.of()`（Java 9 + ）。
-- **可变集合 * *：通过构造函数传入初始数据，如 `new ArrayList<>(List.of(...))`。
+**通用规律**：
+- **不可变集合**：`List.of()`, `Set.of()`, `Map.of()`（Java 9 + ）。
+- **可变集合**：通过构造函数传入初始数据，如 `new ArrayList<>(List.of(...))`。
 
 -- -
 
 #### 3. 为什么 `Map<String, Integer > map = new HashMap<>();` 左边用 `Map`，右边用 `HashMap`？
-这是** 面向接口编程（Interface - based Programming） * *的体现：
-- **`Map` 是接口 * *，`HashMap` 是它的一个实现。
-- **`TreeMap`、`ConcurrentHashMap` 也是 `Map` 的实现 * *，但底层数据结构不同：
+这是** 面向接口编程（Interface - based Programming）**的体现：
+- **`Map` 是接口**，`HashMap` 是它的一个实现。
+- **`TreeMap`、`ConcurrentHashMap` 也是 `Map` 的实现**，但底层数据结构不同：
 - `HashMap`：哈希表（无序，O (1) 查询）。
 - `TreeMap`：红黑树（按 key 排序，O (log n) 查询）。
 - `ConcurrentHashMap`：线程安全的哈希表。
 
 ##### 为什么这样设计？
-1. * *灵活性 * *：可以随时替换实现，例如：
+1.**灵活性**：可以随时替换实现，例如：
 ```java
 Map<String, Integer> map = new HashMap<>();  // 今天用 HashMap
 map = new TreeMap<>();                       // 明天换成 TreeMap
 ```
 而客户端代码（使用 `map` 的地方）不需要修改。
 
-2. * *遵循依赖倒置原则（DIP） * *：
+2.**遵循依赖倒置原则（DIP）**：
 - 高层模块（业务逻辑）不应该依赖低层模块（`HashMap`），而是依赖抽象（`Map`）。
 
-3. * *多态 * *：可以通过接口统一操作不同的实现。
+3.**多态**：可以通过接口统一操作不同的实现。
 
 ##### 示例：`Map` 的不同实现
 ```java
@@ -476,8 +480,8 @@ Map<String, Integer> concurrentMap = new ConcurrentHashMap<>();  // 线程安全
 -- -
 
 #### 4. 为什么泛型 `String, Integer` 在左边的 `Map` 中声明？
-- **泛型是类型声明的一部分 * *，而 * *变量类型（`Map`） * *决定了它能调用的方法。
-- **右侧的 `new HashMap<>()` 使用了类型推断（Diamond Operator `< > `） * *：
+- **泛型是类型声明的一部分**，而**变量类型（`Map`）**决定了它能调用的方法。
+- **右侧的 `new HashMap<>()` 使用了类型推断（Diamond Operator `< > `）**：
 - Java 编译器会根据左侧的泛型类型自动推断右侧的泛型。
 - 等价于 `new HashMap<String, Integer>()`，但更简洁。
 
@@ -498,18 +502,18 @@ HashMap<String, Integer> map = new HashMap<>();  // 也可以，但灵活性降�
 | 问题 | 解决方案 | 关键点 |
 |------ | ---------- | --------|
 | **初始化 `HashMap`* * | `Map.of()`, `Map.ofEntries()`, 双括号初始化 | Java 9 + 推荐 `Map.of()` |
-| **容器初始化通用方法 * *| `List.of()`, `Set.of()`, `Map.of()` | 不可变集合 |
-| **`Map` 接口 vs 实现类 * *| `Map<String, Integer > map = new HashMap<>();` | 面向接口编程，灵活替换实现 |
-| **泛型声明位置 * *| 左侧 `Map` 定义泛型，右侧 `< > ` 自动推断 | 类型安全，代码简洁 |
+| **容器初始化通用方法**| `List.of()`, `Set.of()`, `Map.of()` | 不可变集合 |
+| **`Map` 接口 vs 实现类**| `Map<String, Integer > map = new HashMap<>();` | 面向接口编程，灵活替换实现 |
+| **泛型声明位置**| 左侧 `Map` 定义泛型，右侧 `< > ` 自动推断 | 类型安全，代码简洁 |
 
 #### 最佳实践
-1. * *优先使用 `Map.of()` 或 `Map.ofEntries()`* * 初始化不可变 Map（Java 9 + ）。
-2. * *需要可变 Map 时 * *：
+1.**优先使用 `Map.of()` 或 `Map.ofEntries()`* * 初始化不可变 Map（Java 9 + ）。
+2.**需要可变 Map 时**：
 ```java
 Map<String, Integer> map = new HashMap<>(Map.of("A", 1, "B", 2));
 ```
-3. * *变量类型声明为 `Map`* * （而非 `HashMap`），以提高代码灵活性。
-4. * *理解接口与实现的关系 * *：`Map` 是规范，`HashMap` / `TreeMap` 是具体实现。
+3.**变量类型声明为 `Map`* * （而非 `HashMap`），以提高代码灵活性。
+4.**理解接口与实现的关系**：`Map` 是规范，`HashMap` / `TreeMap` 是具体实现。
 
 -- -
 
@@ -545,8 +549,8 @@ public class Main {
 { Alice = 25, Bob = 30 }
 ```
 
-### 程序 14
-#### 修改数组中元素
+## 程序 14
+### 修改数组中元素
 
 | 数据结构          | 修改方法                             | 示例                                           |
 | ------------- | -------------------------------- | -------------------------------------------- |
@@ -557,7 +561,7 @@ public class Main {
 | **Stream**    | `map()` + `collect()`            | `list.stream().map(n -> n * 2).collect(...)` |
 
 
-### 程序 31
+## 程序 31
 初始化数组方法：
 ```java
 List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
@@ -572,3 +576,32 @@ List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 |`Collectors.toList()` + `reverse`|❌ 不修改|需要新 List|⭐⭐|
 |`LinkedList.descendingIterator()`|❌ 不修改|仅 `LinkedList`|⭐⭐⭐|
 
+# 头歌考试
+## 杂项
+java 中的 main 方法一定要有 `String[] args` 作为参数
+## 2、Java 入门 - 变量与数据类型
+### 字符串不可变性
+java 的 string 类型实例化得到的是一个指向字符串对象的引用变量
+如果使用 `=` 对它重新赋值的操作是创建一个新的字符串对象，并将这个引用变量指向它，原字符串通过 gc 机制被回收。但是 java 中**字符串对象本身是不可以被改变的**
+
+| C++（以 std::string 为例）       | Java（String 类）                       | 行为对照理解                                      |
+| --------------------------- | ------------------------------------ | ------------------------------------------- |
+| 支持 `s += "new"` 直接修改自身对象    | `String` 不能修改其自身，必须接受如拷贝的新对象         | 类似发生如 `j = s + "new";` 返回新的对象，`s`自已还是 Hello |
+| 提供 `append`, `insert` 改原字符串 | 无这些方法，在 `String` 上再也无法改变             | 要修改用 `StringBuilder` 中的方法才对（这和 C++ 技术很相似）   |
+| 使用 “字符串常量池”（Java有）          | 类似 `String` 在Java中可复用相同值字符串，效果上性能高一些 |                                             |
+### 运算符优先级
+1. **单目运算符** (最高优先级之一)
+    - `++` (前后缀)、`--` (前后缀)、`+` (正号)、`-` (负号)、`!`、`~`（先自增自减然后在运算）
+2. **乘除类二元运算符**
+    - `*`、`/`、`%`
+3. **加减类二元运算符**
+    - `+`、`-`（这里的`+`是加号，不是正号）
+4. **三目运算符 `?:`** (几乎总是最低)
+
+### java 局部作用域和 C++差异
+| 语言       | `for` 循环变量作用域 | 是否允许遮蔽外部变量 | 设计理念            |
+| -------- | ------------- | ---------- | --------------- |
+| **C++**  | 仅限于循环内（局部）    | ✅ 允许遮蔽     | 灵活，方便编写短小局部代码   |
+| **Java** | 整个方法/作用域      | ❌ 不允许同名变量  | 更严格，避免潜在错误和代码混淆 |
+具体体现在：
+java 中整个函数是一个局部作用域，其中的循环，初始化部分不会单独作为一个作用域而是与外部共享，C++分的更细，允许遮蔽 
