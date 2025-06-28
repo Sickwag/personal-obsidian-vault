@@ -126,3 +126,26 @@ find_package(OpenCV REQUIRED)
 - OpenCV_INCLUDE_DIRS
 - OpenCV_LIBRARIES（opencv 用到的库）
 指向对应的文件夹，调用它们的方法是使用 `${var_name}`
+
+
+# fast-cpp-csv-parse 项目
+## 阅读源码
+#### mutable 作用
+```cpp
+struct base : std::exception {
+  virtual void format_error_message() const = 0;
+
+  const char* what() const noexcept override {
+    format_error_message();
+    return error_message_buffer;
+  }
+
+  mutable char error_message_buffer[2048];
+};
+```
+- 声明所有继承base的结构体或者类，都需要重谢format_err_message()方法
+- 重写了what方法
+- 将error_message_buffer字符数组报错信息限制为2048字符大小，由于不同错误内容不同，所以他是可以修改的。
+	- `mutable` 表示这个成员即使在 `const` 函数中也可以被修改；
+	- 通常用于“逻辑上不变，但需要缓存数据”的场景；
+	- 在这个项目中，`what()` 是 `const` 方法，但需要构造错误信息，因此需要 `mutable`。

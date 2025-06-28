@@ -53,7 +53,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -225,11 +225,11 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "a8add8e3974b1981",
+  "active": "f447b24ae09b2814",
   "lastOpenFiles": [
+    "学习/Language/java/Java面向对象程序设计考试.md",
     "Files & LongText/Attachments/Pasted image 20250628144922.png",
     "学习/algorithm/用法导向知识.md",
-    "学习/Language/java/Java面向对象程序设计考试.md",
     "学习/ProjectsStudy/C C++/csv_reader.md",
     "祛魅.md",
     "学习/algorithm/刷题路线.md",
@@ -264,7 +264,6 @@
     "学习/Language/Python/Python Basics.md",
     "Files & LongText/Attachments/Pasted image 20250610214049.png",
     "Files & LongText/Attachments/Pasted image 20250610213555.png",
-    "Files & LongText/Attachments/Pasted image 20250610203643.png",
     "copilot-conversations",
     "Competitions",
     "学习/ProjectsStudy/Python",

@@ -815,3 +815,34 @@ public class ReverStr{
 }
 ```
 Scanner 可以使用 `sc.nextXXX（对象名称类型）` 将流中的字符解析并返回对应的类型
+## Math 类
+需要先导入 `import java.lang.Math;`
+提供常用方法
+```java
+Math.sqrt(a1);
+Math.cbrt(a2);
+Math.pow(a3, a4);
+Math.max(a5, a6);
+Math.min(a5, a6);
+Math.abs(a7);
+Math.ceil(a8);
+Math.floor(a9);
+Math.rint(a10);
+Math.round(a11);
+```
+## 异常处理
+
+在 Java 中，源文件 Test. java 中包含如下代码段，则程序编译运行结果是（ ）
+```java
+public class HelloWorld{
+    public static void main (String[] args){
+        System.out.print (“HelloWorld!”);
+    }
+}
+```
+A、输出：HelloWorld!
+B、编译出错，提示“公有类 HelloWorld 必须在 HelloWorld. java 文件中定义”
+C、运行正常，但没有输出内容
+D、运行时出现异常
+
+throw 用于 try-catch 中，throws 用于函数体前说明修饰符
