@@ -588,7 +588,22 @@ D、构造方法只能用new关键字来创建
 
 java 的类末尾不需要分号
 
-## 2、Java 入门 - 变量与数据类型
+instanceof 用来比较类对象类型
+```java
+public static void show(Animal a) {
+    a.eat();
+    // 类型判断
+    if (a instanceof Cat) { // 猫做的事情
+        Cat c = (Cat) a;
+        c.work();
+    } else if (a instanceof Dog) { // 狗做的事情
+        Dog c = (Dog) a;
+        c.work();
+    }
+}
+```
+
+## 变量与数据类型
 ### 字符串不可变性
 java 的 string 类型实例化得到的是一个指向字符串对象的引用变量
 如果使用 `=` 对它重新赋值的操作是创建一个新的字符串对象，并将这个引用变量指向它，原字符串通过 gc 机制被回收。但是 java 中**字符串对象本身是不可以被改变的**
@@ -712,3 +727,91 @@ class Student extends Person{
 将一个父类的引用指向一个子类的对象，称为向上转型 (upcasting)，自动进行类型转换。此时通过父类引用调用的方法是子类覆盖或继承父类的方法，不是父类的方法。此时通过父类引用变量无法调用子类特有的方法；
 
 如果父类要调用子类的特有方法就得将一个指向子类对象的父类引用赋给一个子类的引用，称为向下转型，此时必须进行强制类型转换。
+
+---
+在 Java 中有两种形式可以实现多态：继承和接口。
+
+## 重写
+重写的方法不能比被重写的方法有更严格的访问权限;
+重写的方法不能比被重写的方法产生更多的异常
+
+---
+方法重载是一个类中定义了多个方法名相同，而他们的参数的数量不同或数量相同而类型和次序不同，则称为方法的重载；
+方法重写是在子类存在方法与父类的方法的名字相同而且参数的个数与类型一样，返回值也一样的方法，就称为方法的重写；
+方法重载是一个类的多态性表现，而方法重写是子类与父类的一种多态性表现。
+
+## 抽象类
+抽象类的定义规则：
+- 抽象类和抽象方法都必须用 abstract 关键字来修饰；
+- 抽象类不能被实例化，也就是不能用 new 关键字去产生对象；
+- 抽象方法只需声明，而不需实现；
+- 含有抽象方法的类必须被声明为抽象类，抽象类的子类必须复写所有的抽象方法后才能被实例化，否则这个子类还是个抽象类。
+抽象类的出现是为了解决：
+1. 解决“继承的规范性问题”
+2. **提供**“部分实现”**，强制子类实现特定方法
+	- 抽象类可以包含**具体方法（有实现）**和**抽象方法（没有实现）**。
+	- **抽象方法**只有声明没有实现，强制子类必须重写（否则子类也得是抽象类）。
+	- 适用于父类知道子类必须做什么，但不知道具体怎么做”情况。
+### final 关键字
+在 Java 中声明类、属性和方法时，可使用关键字 final 来修饰。
+- final 标记的类不能被继承；
+- final 标记的方法不能被子类复写；
+- final 标记的变量（成员变量或局部变量）即为常量，只能赋值一次。
+- final 用来修饰一个类，意味着该类成为不能被继承的最终类。
+### 接口
+接口里的数据成员必须初始化，且数据成员均为常量；
+接口里的方法必须全部声明为 abstract，也就是说，接口不能像抽象类一样保有一般的方法，而必须全部是“抽象方法”。
+实现接口使用 `implements` 关键字，继承使用 `extends`
+```java
+interface Person {
+  /********* begin *********/
+  public String name = "张三";
+  public int age = 18;
+  public String occupation = "学生";
+  public static void talk() {}
+  /********* end *********/
+}
+// Student类继承自Person类 复写talk()方法返回姓名、年龄和职业信息
+class Student implements Person {
+  /********* begin *********/
+  public void talk() {
+    System.out.println("学生——>姓名：" + Person.name + "，年龄：" + Person.age + "，职业：" + Person.occupation + "！");
+  }
+  /********* end *********/
+}
+```
+## 类型转换
+1. `String.valueOf()`：字符串 → 包装类对象（或缓存值）
+2. `String.parseXXX()`：字符串 → 基本类型
+3. `Integer/Double/Float.toString()`：基本类型/包装类 → 字符串
+4. 类型转换 vs 自动装箱/拆箱
+```java
+int num1 = 100;
+   Integer num2 = num1;  // 自动装箱（底层调用 Integer.valueOf(num1)）
+   int num3 = num2;      // 自动拆箱（底层调用 num2.intValue()）
+```
+5. 包装类之间的类型转换需要使用 `XXXXValue()`
+```java
+int score = 67;
+Integer score1 = new Integer(score);
+double score2 = score1.doubleValue(); 
+float score3 = score1.floatValue();
+int score4 = score1.intValue();
+```
+## 字符串类
+```java
+// import java.util.StringBuffer StringBuffer不需要引入任何包
+package test;
+public class ReverStr{
+	public static StringBuffer reverseWordsInSentence(String str) {
+		StringBuffer sb = new StringBuffer(str);
+		String words[] = str.split(" ");
+		for(int i = 0; i < words.length; i++){
+			StringBuffer temp = new StringBuffer(words[i]).revese();
+			sb.append(temp + " ");
+		}
+		sb.pop();
+	}
+}
+```
+Scanner 可以使用 `sc.nextXXX（对象名称类型）` 将流中的字符解析并返回对应的类型
