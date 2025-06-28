@@ -105,8 +105,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -204,7 +203,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 231.5
+    "width": 403.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -220,7 +219,7 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "a8add8e3974b1981",
+  "active": "e54f850cd75592ed",
   "lastOpenFiles": [
     "学习/ProjectsStudy/C C++/csv_reader.md",
     "学习/algorithm/刷题路线.md",
