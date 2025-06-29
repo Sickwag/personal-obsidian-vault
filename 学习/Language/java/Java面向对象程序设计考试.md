@@ -602,6 +602,7 @@ public static void show(Animal a) {
     }
 }
 ```
+写在同一目录下的两个文件，如果没有有声明 package 所属，不需要 import，Java 会自动识别同一包中的类
 
 ## 变量与数据类型
 ### 字符串不可变性
