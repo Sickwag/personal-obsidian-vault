@@ -1,6 +1,7 @@
 ---
 number headings: first-level 1, max 6, contents ^TOC, 1.1.
 ---
+
 参考教程文档 [C++ 教程 | 菜鸟教程 (runoob.com)](https://www.runoob.com/cplusplus/cpp-tutorial.html)
 # 基础知识
 ## 零碎知识
@@ -5407,6 +5408,9 @@ int main() {
 大部分用法放在[多线程](#多线程)中
 # C++高级特性
 ## 高级语法
+### 折叠表达式
+参考 [[Modern C++#Note：折叠表达式]]
+
 ### 组合比较
 ```cpp
 // 标准严格弱序实现
@@ -5569,3 +5573,75 @@ int* arr = new int[5]{1, 2, 3};  // 初始化动态数组
 vector<int> v(10, 2); // 10个2vector<int> v{10, 2}; // 包含10和2两个元素
 ```
 
+## 概念\用法区分
+### 函数对象 vs 函数指针 vs lambda
+#### 函数指针（Function Pointer）
+最传统的调用方式，C 语言遗产。
+```cpp
+void say_hello() {
+    std::cout << "Hello!\n";
+}
+void call(void (*func)()) {
+    func(); // 函数指针调用
+}
+```
+适合传递普通函数，语法较繁琐，对类型要求严格，不支持捕获外部变量。
+#### 函数对象 / 仿函数（Function Object）
+本质是一个“重载了 `operator()` 的类”，可以像函数一样使用对象。
+```cpp
+struct Adder {
+	int operator()(int a, int b) const { return a + b; }   
+};
+```
+优点是可携带状态、可内联优化，STL 算法中大量使用，比如 `std::sort` 搭配比较器。
+#### Lambda 表达式
+本质是一个匿名的函数对象，写法灵活、可捕获变量。
+```cpp
+auto adder = [](int a, int b) { return a + b; };
+```
+既能像函数指针那样使用，又能像函数对象一样携带状态，兼具两者优点。
+#### 性能对比
+**函数对象 ≈ lambda > 函数指针 > std::function**
+##### 1. lambda 类型
+- lambda 本质就是编译器帮你生成的匿名函数对象，它们都是 **编译期类型**、可以被 **内联优化**。
+举个例子：
+```cpp
+#include <algorithm>
+include <vector>
+std::vector<int> vec = {3, 1, 4, 1, 5};
+std::sort(vec.begin(), vec.end(), [](int a, int b) { return a > b; });
+```
+这个 lambda 表达式，最终会被编译器转成类似如下结构：
+```cpp
+struct Comp {
+    bool operator()(int a, int b) const { return a > b; }
+};
+```
+也就是说，从性能角度来看，lambda 和你手写的函数对象效果是一样的，**区别只是有没有名字**而已。
+**优势**：可内联优化、零额外开销**劣势**：略显抽象，捕获变量时可能造成误用（比如引用捕获生命周期问题）
+##### 2. 函数指针：灵活但“冷门”
+函数指针因为是 **运行时确定的函数地址**，所以不能内联，性能略差。
+```cpp
+void foo() { std::cout << "Hello\n"; }   void run(void (*fp)()) { fp(); }
+```
+相比函数对象或 lambda，它的开销略高，主要体现在：
+- 无法内联 → **函数调用成本更高**
+- 不能携带状态 → **扩展性差**
+- 类型不灵活 → **泛型编程不友好**
+但它依然有用武之地，比如你要调用某个库函数的钩子、处理 C 风格 API（如 `qsort`）时，函数指针是必须的。
+##### 3. std::function：最灵活也最慢
+std::function是一个 **类型擦除**容器，可以包装任意可调用对象（包括函数指针、lambda、仿函数等），代价是：
+- 要在堆上分配空间（如果可调用对象太大）
+- 无法内联
+- 性能开销比前三者都大
+```cpp
+std::function<void()> func = [] { std::cout << "Hello\n"; };
+```
+建议在 **必须多态传参** 或 **统一接口** 场景下使用，其他场景谨慎上。
+
+| 场景           | 推荐使用           | 原因         |
+| ------------ | -------------- | ---------- |
+| STL 算法排序、查找等 | lambda / 仿函数   | 编译期优化，零开销  |
+| 回调函数 / 钩子传参  | 函数指针           | 简洁直观       |
+| 状态携带、灵活封装    | lambda / 仿函数   | 可维护性强      |
+| 多态可调用对象封装    | std:: function | 提高通用性，牺牲性能 |

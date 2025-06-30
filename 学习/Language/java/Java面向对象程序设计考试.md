@@ -2,7 +2,7 @@
 created: 2025-05-08
 description: 大购题库，50个程序题。Solution放在Solution.java中，测试代码是否正确放在Test.java中，Main.java只用来调用接口
 ---
-# 大购习题
+ # 大购习题
 
 ## 程序 2 -> 范围内素数
 可以参考 [[用法导向知识#欧拉筛法（线性筛法）|C++实现]]
@@ -575,6 +575,15 @@ List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 |`IntStream.range()` 反向索引|❌ 不修改|任意 List|⭐⭐|
 |`Collectors.toList()` + `reverse`|❌ 不修改|需要新 List|⭐⭐|
 |`LinkedList.descendingIterator()`|❌ 不修改|仅 `LinkedList`|⭐⭐⭐|
+
+## 常用操作
+### 排序
+| 操作                  | 方法                                                             | 示例代码                                |
+| ------------------- | -------------------------------------------------------------- | ----------------------------------- |
+| **ArrayList 排序**    | `Collections.sort(list)`                                       | `Collections.sort(list)`            |
+| **ArrayList 自定义排序** | `list.sort(Comparator)` 或 `Collections.sort(list, Comparator)` | `list.sort((a, b) -> b - a)`        |
+| **数组排序**            | `Arrays.sort(arr)`                                             | `Arrays.sort(arr)`                  |
+| **数组自定义排序**         | `Arrays.sort(arr, Comparator)`（只适用对象数组）                        | `Arrays.sort(arr, (a, b) -> b - a)` |
 
 # 头歌考试
 ## 杂项
