@@ -11,41 +11,41 @@ description: 大购题库，50个程序题。Solution放在Solution.java中，�
 ```java
 List<Integer> primes = new ArrayList<>();
 ```
-- **左边`List<Integer>`**：声明接口类型（面向接口编程），提高灵活性。
-- **右边`ArrayList<>()`**：
+- **左边 `List<Integer>`**：声明接口类型（面向接口编程），提高灵活性。
+- **右边 `ArrayList<>()`**：
     - `<>`：钻石操作符（Java 7+），编译器自动推断泛型类型（与左侧一致）。
     - `()`：调用无参构造器。
-- **为什么不用重复写`Integer`**？  
-    Java编译器通过左侧类型自动推断右侧泛型类型，避免冗余。
+- **为什么不用重复写 `Integer`**？  
+    Java 编译器通过左侧类型自动推断右侧泛型类型，避免冗余。
 - C++：`std::vector<int> v;`
-- Java：`List<Integer> list = new ArrayList<>();` `List`是接口，`ArrayList`是实现类。 
-    （Java必须用包装类，不能直接用 `int`）
+- Java：`List<Integer> list = new ArrayList<>();` `List` 是接口，`ArrayList` 是实现类。 
+    （Java 必须用包装类，不能直接用 `int`）
 
 ### `int` vs `Integer`
 
-|特性|`int`|`Integer`|
+|特性| `int` | `Integer` |
 |---|---|---|
 |类型|基本类型|包装类（对象）|
 |存储|栈内存|堆内存|
-|默认值|0|`null`|
-|集合中|不支持|必须用`Integer`|
+|默认值|0| `null` |
+|集合中|不支持|必须用 `Integer` |
 |性能|更高|有对象开销|
 
-**为什么参数用`Integer`？**
+**为什么参数用 `Integer`？**
 - 你的代码中实际是 `int`（正确做法），`Integer` 通常用于泛型或需要 `null` 的场景。
-### 为什么用`.get()`而非`[]`？
+### 为什么用 `.get()` 而非 `[]`？
 
-- **`List`是接口**，不保证连续存储（如`LinkedList`），所以不能用`[]`语法。
-- **数组`Integer[]`**：可以用`arr[j]`，但`List`必须用`list.get(j)`。
+- **`List` 是接口**，不保证连续存储（如 `LinkedList`），所以不能用 `[]` 语法。
+- **数组 `Integer[]`**：可以用 `arr[j]`，但 `List` 必须用 `list.get(j)`。
 - **设计差异**：  
-    Java严格区分数组和集合，C++中 `std::vector` 重载了 `[]`，但Java的 `List` 没有。
+    Java 严格区分数组和集合，C++中 `std::vector` 重载了 `[]`，但 Java 的 `List` 没有。
 
 ### private constructor 警告
-- 当类只包含静态方法（如你的`Solution`工具类）时，IDEA建议：
+- 当类只包含静态方法（如你的 `Solution` 工具类）时，IDEA 建议：
     - 添加私有构造器：防止被意外实例化
     - 将类声明为 `final`：禁止继承
     - - 工具类不需要实例化，私有构造器是防御性编程手段
-- 类似C++中的`= delete`：
+- 类似 C++中的 `= delete`：
 ```cpp
 class Solution {
 public:
@@ -72,35 +72,35 @@ public:
 	- **设计意图明确性**：工具类（如 `Math`、`Collections`）本质是函数集合，不是对象
 	- **防止误用**：实例化后可能误导其他开发者以为该类有实例状态，可能违反单例模式（如果工具类意外维护了状态）
 ---
-为什么C++**不能这样设计**
+为什么 C++**不能这样设计**
 C++采用不同的对象创建机制：
 
-- 对象可以在栈上直接创建（不需要new）
+- 对象可以在栈上直接创建（不需要 new）
 - 构造函数访问控制不影响栈上对象创建
-- 因此C++中构造函数只能是public的
+- 因此 C++中构造函数只能是 public 的
 ### final 关键字
 1. **修饰变量**：表示变量只能被赋值一次，不能被重新赋值，类似于 [[C++ Runoob Tutoral#const 的作用|const]]
 2. **修饰方法**：表示方法不能被子类重写
 3. **修饰类**：表示类不能被继承
 会对程序产生下面优化：
 4. **安全性**：防止变量被意外重新赋值
-5. **线程安全**：`final`变量在多线程环境下更安全
+5. **线程安全**：`final` 变量在多线程环境下更安全
 6. **代码清晰**：明确表达变量不应被修改的意图
-7. **优化**：JVM可能对 `final` 变量进行优化
+7. **优化**：JVM 可能对 `final` 变量进行优化
 
 |特性|Java final|C++ const|
 |---|---|---|
-|变量不可变|`final int x = 5;`|`const int x = 5;`|
-|类不可继承|`final class A {}`|N/A (C++用final关键字)|
-|方法不可覆盖|`final void m() {}`|N/A (C++用final关键字)|
-- Java的 `final` 可以修饰类、方法、变量。没有等价于C++的 `const&` 参数传递机制
-- C++的 `const` 主要修饰变量和方法（保证不修改成员）。`const`是类型系统的一部分，更强大
+|变量不可变| `final int x = 5;` | `const int x = 5;` |
+|类不可继承| `final class A {}` |N/A (C++用 final 关键字)|
+|方法不可覆盖| `final void m() {}` |N/A (C++用 final 关键字)|
+- Java 的 `final` 可以修饰类、方法、变量。没有等价于 C++的 `const&` 参数传递机制
+- C++的 `const` 主要修饰变量和方法（保证不修改成员）。`const` 是类型系统的一部分，更强大
 
 ### SonarQube 提示
 **SonarQube** 是一个开源的代码质量管理平台，主要用于：
 
 - 静态代码分析
-- 检测代码缺陷、漏洞和代码异味(code smells)
+- 检测代码缺陷、漏洞和代码异味 (code smells)
 - 提供代码质量报告
 - 帮助团队维护代码健康度
 
@@ -114,26 +114,26 @@ C++采用不同的对象创建机制：
 - 通过实例调用静态方法 `**java:S2209 - Change this instance-reference to a static reference**`
 
 ## 程序 4
-### 2. Java中修改Map值的正确方式
+### 2. Java 中修改 Map 值的正确方式
 
-情况1：直接覆盖值（对应C++的`map[key] = value`）
+情况 1：直接覆盖值（对应 C++的 `map[key] = value`）
 ```java
 map.put(n, newValue);  // 无论键是否存在都会覆盖
 ```
 
-情况2：条件修改（键必须存在）
+情况 2：条件修改（键必须存在）
 ```java
 if (map.containsKey(n)) {    map.put(n, map.get(n) + 1);  // 相当于C++的map[n]++}
 ```
 
-情况3：智能合并（推荐方式）
+情况 3：智能合并（推荐方式）
 ```java
 // Java 8+ 最佳实践
 map.merge(n, 1, Integer::sum); // 等效于：
 // 如果键不存在 → 插入(n,1)// 如果键存在 → 旧值 + 1
 ```
 
-情况4：原子性操作（线程安全场景）
+情况 4：原子性操作（线程安全场景）
 ```java
 ConcurrentHashMap<Integer, Integer> map = new ConcurrentHashMap<>();
 map.compute(n, (k, v) -> (v == null) ? 1 : v + 1);
@@ -360,7 +360,7 @@ Arr1 : [1, 2, 3, 4, 5]
 1. **HashMap**
     
     - 最常用，基于哈希表实现。
-    - 查找/插入/删除平均时间复杂度为 O(1)。
+    - 查找/插入/删除平均时间复杂度为 O (1)。
     - 无序，线程不安全。
 2. **LinkedHashMap**
     
@@ -369,7 +369,7 @@ Arr1 : [1, 2, 3, 4, 5]
 3. **TreeMap**
     
     - 基于红黑树实现，按键排序。
-    - 查找/插入/删除时间复杂度 O(log n)。
+    - 查找/插入/删除时间复杂度 O (log n)。
 4. **ConcurrentHashMap**
     
     - 线程安全，分段锁减少锁竞争。
@@ -570,11 +570,11 @@ List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 
 |方法|是否修改原 List|适用场景|代码简洁性|
 |---|---|---|---|
-|`Collections.reverse()`|✅ 修改|任意 List|⭐⭐⭐|
-|`Stream.sorted(reverseOrder)`|❌ 不修改|可排序 List|⭐⭐|
-|`IntStream.range()` 反向索引|❌ 不修改|任意 List|⭐⭐|
-|`Collectors.toList()` + `reverse`|❌ 不修改|需要新 List|⭐⭐|
-|`LinkedList.descendingIterator()`|❌ 不修改|仅 `LinkedList`|⭐⭐⭐|
+| `Collections.reverse()` |✅ 修改|任意 List|⭐⭐⭐|
+| `Stream.sorted(reverseOrder)` |❌ 不修改|可排序 List|⭐⭐|
+| `IntStream.range()` 反向索引|❌ 不修改|任意 List|⭐⭐|
+| `Collectors.toList()` + `reverse` |❌ 不修改|需要新 List|⭐⭐|
+| `LinkedList.descendingIterator()` |❌ 不修改|仅 `LinkedList` |⭐⭐⭐|
 
 ## 常用操作
 ### 排序
@@ -590,10 +590,10 @@ List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 java 中的 main 方法一定要有 `String[] args` 作为参数
   
 下列关于构造方法的说法**不正确**的是（）
-A、Java语言规定构造方法名必须与类名相同
-B、Java语言规定构造方法没有返回值，且不用void关键字声明
+A、Java 语言规定构造方法名必须与类名相同
+B、Java 语言规定构造方法没有返回值，且不用 void 关键字声明
 **C、构造方法不可以重载**
-D、构造方法只能用new关键字来创建
+D、构造方法只能用 new 关键字来创建
 
 java 的类末尾不需要分号
 
@@ -613,23 +613,83 @@ public static void show(Animal a) {
 ```
 写在同一目录下的两个文件，如果没有有声明 package 所属，不需要 import，Java 会自动识别同一包中的类
 
+java 中方法重载满足下面任意 1 个要求
+- **参数类型不同**：`void foo(int a)` vs `void foo(String a)`
+- **参数个数不同**：`void foo(int a)` vs `void foo(int a, int b)`
+- **参数顺序不同**（如果类型不同）：`void foo(int a, String b)` vs `void foo(String a, int b)`
+
+| 情况     | 示例                                                                  | 是否合法   |
+| ------ | ------------------------------------------------------------------- | ------ |
+| 仅返回值不同 | `int foo()` vs `String foo()`                                       | ❌ 编译错误 |
+| 仅修饰符不同 | `public void foo()` vs `private void foo()`                         | ❌ 编译错误 |
+| 异常列表不同 | `void foo() throws IOException` vs `void foo() throws SQLException` | ❌ 编译错误 |
+访问器方法：
+的，在 Java 中，**访问器方法（Accessor Methods）** 通常指的是对 **`private` 成员字段** 进行 **读取（getter）** 和 **修改（setter）** 的方法，它们属于 **封装（Encapsulation）** 的核心实践
+
+| 类型                 | 方法名格式          | 示例                     |
+| ------------------ | -------------- | ---------------------- |
+| **getter**         | `get<Field>()` | `getName()`            |
+| **setter**         | `set<Field>()` | `setName(String name)` |
+| **boolean getter** | `is<Field>()`  | `isStudent()`          |
+继承规则
+
+| **访问修饰符**                | **能否被继承？**                | **子类访问方式**                                 |
+| ------------------------ | ------------------------- | ------------------------------------------ |
+| **`public`**             | ✔️ **是**                  | 可直接访问（`subclass.method()`）                 |
+| **`protected`**          | ✔️ **是**                  | 可直接访问（`subclass.method()`）                 |
+| 默认（包级 `package-private`） | ✔️ **是（同包）**，❌ **否（不同包）** | 仅同包可用                                      |
+| **`private`**            | ❌ **否**                   | **不可访问**（但可通过父类 `public/protected` 方法间接访问） |
+
+继承实例，注意写法 super
+
+> 2. 按要求编写一个 Java 应用程序:
+(1) 定义一个类，描述一个矩形，包含有长、宽两种属性，和计算面积方法。
+(2) 编写一个类，继承自矩形类，同时该类描述长方体，具有长、宽、高属性，和计算体积的方法。
+(3) 编写一个测试类，对以上两个类进行测试，创建一个长方体，定义其长、宽、高，输出其底面积和体积。
+
+```java
+class Rectangle {
+    private double length; // 长
+    private double width; // 宽
+
+    public Rectangle(double length, double width) {
+        this.length = length;
+        this.width = width;
+    }
+    public double getArea() {
+        return length * width;
+    }
+}
+
+class Cuboid extends Rectangle {
+    private double height; 
+    public Cuboid(double length, double width, double height) {
+        super(length, width);
+        this.height = height;
+    }
+
+    public double getVolume() {
+        return getArea() * height;
+    }
+}
+```
 ## 变量与数据类型
 ### 字符串不可变性
 java 的 string 类型实例化得到的是一个指向字符串对象的引用变量
 如果使用 `=` 对它重新赋值的操作是创建一个新的字符串对象，并将这个引用变量指向它，原字符串通过 gc 机制被回收。但是 java 中**字符串对象本身是不可以被改变的**
 
-| C++（以 std::string 为例）       | Java（String 类）                       | 行为对照理解                                      |
+| C++（以 std:: string 为例）       | Java（String 类）                       | 行为对照理解                                      |
 | --------------------------- | ------------------------------------ | ------------------------------------------- |
-| 支持 `s += "new"` 直接修改自身对象    | `String` 不能修改其自身，必须接受如拷贝的新对象         | 类似发生如 `j = s + "new";` 返回新的对象，`s`自已还是 Hello |
+| 支持 `s += "new"` 直接修改自身对象    | `String` 不能修改其自身，必须接受如拷贝的新对象         | 类似发生如 `j = s + "new";` 返回新的对象，`s` 自已还是 Hello |
 | 提供 `append`, `insert` 改原字符串 | 无这些方法，在 `String` 上再也无法改变             | 要修改用 `StringBuilder` 中的方法才对（这和 C++ 技术很相似）   |
-| 使用 “字符串常量池”（Java有）          | 类似 `String` 在Java中可复用相同值字符串，效果上性能高一些 |                                             |
+| 使用 “字符串常量池”（Java 有）          | 类似 `String` 在 Java 中可复用相同值字符串，效果上性能高一些 |                                             |
 ### 运算符优先级
 1. **单目运算符** (最高优先级之一)
     - `++` (前后缀)、`--` (前后缀)、`+` (正号)、`-` (负号)、`!`、`~`（先自增自减然后在运算）
 2. **乘除类二元运算符**
     - `*`、`/`、`%`
 3. **加减类二元运算符**
-    - `+`、`-`（这里的`+`是加号，不是正号）
+    - `+`、`-`（这里的 `+` 是加号，不是正号）
 4. **三目运算符 `?:`** (几乎总是最低)
 
 ```java
@@ -651,10 +711,10 @@ java 中整个函数是一个局部作用域，其中的循环，初始化部分
 
 |修饰符|类内部|同包|子类|其他包|
 |---|---|---|---|---|
-|`public`|✅|✅|✅|✅|
-|`protected`|✅|✅|✅|❌|
+| `public` |✅|✅|✅|✅|
+| `protected` |✅|✅|✅|❌|
 |**`默认`** (不写)|✅|✅|❌|❌|
-|`private`|✅|❌|❌|❌|
+| `private` |✅|❌|❌|❌|
 
 ```java
 class MyClass {
@@ -791,16 +851,16 @@ class Student implements Person {
 }
 ```
 ## 类型转换
-1. `String.valueOf()`：字符串 → 包装类对象（或缓存值）
-2. `String.parseXXX()`：字符串 → 基本类型
-3. `Integer/Double/Float.toString()`：基本类型/包装类 → 字符串
+1. `String.valueOf ()`：字符串 → 包装类对象（或缓存值）
+2. `String.parseXXX ()`：字符串 → 基本类型
+3. `Integer/Double/Float.toString ()`：基本类型/包装类 → 字符串
 4. 类型转换 vs 自动装箱/拆箱
 ```java
 int num1 = 100;
    Integer num2 = num1;  // 自动装箱（底层调用 Integer.valueOf(num1)）
    int num3 = num2;      // 自动拆箱（底层调用 num2.intValue()）
 ```
-5. 包装类之间的类型转换需要使用 `XXXXValue()`
+5. 包装类之间的类型转换需要使用 `XXXXValue ()`
 ```java
 int score = 67;
 Integer score1 = new Integer(score);
@@ -824,9 +884,9 @@ public class ReverStr{
 	}
 }
 ```
-Scanner 可以使用 `sc.nextXXX（对象名称类型）` 将流中的字符解析并返回对应的类型
+Scanner 可以使用 `sc. nextXXX（对象名称类型）` 将流中的字符解析并返回对应的类型
 ## Math 类
-需要先导入 `import java.lang.Math;`
+需要先导入 `import java. lang. Math;`
 提供常用方法
 ```java
 Math.sqrt(a1);

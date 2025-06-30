@@ -85,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "折叠表达",
+                "query": "",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
