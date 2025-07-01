@@ -585,10 +585,9 @@ List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 | **数组排序**            | `Arrays.sort(arr)`                                             | `Arrays.sort(arr)`                  |
 | **数组自定义排序**         | `Arrays.sort(arr, Comparator)`（只适用对象数组）                        | `Arrays.sort(arr, (a, b) -> b - a)` |
 
-# 头歌考试
-## 杂项
+# 杂项
 java 中的 main 方法一定要有 `String[] args` 作为参数
-  
+   
 下列关于构造方法的说法**不正确**的是（）
 A、Java 语言规定构造方法名必须与类名相同
 B、Java 语言规定构造方法没有返回值，且不用 void 关键字声明
@@ -617,6 +616,7 @@ java 中方法重载满足下面任意 1 个要求
 - **参数类型不同**：`void foo(int a)` vs `void foo(String a)`
 - **参数个数不同**：`void foo(int a)` vs `void foo(int a, int b)`
 - **参数顺序不同**（如果类型不同）：`void foo(int a, String b)` vs `void foo(String a, int b)`
+
 
 | 情况     | 示例                                                                  | 是否合法   |
 | ------ | ------------------------------------------------------------------- | ------ |
@@ -673,6 +673,10 @@ class Cuboid extends Rectangle {
     }
 }
 ```
+
+java 中表达式是从左到右执行的，`1+2+“aa” + 3` 的值为 `“3aa3”`
+整数或者更高级的数据类型赋值给 `char` 类型会在编译时期报错
+# 头歌考试
 ## 变量与数据类型
 ### 字符串不可变性
 java 的 string 类型实例化得到的是一个指向字符串对象的引用变量
