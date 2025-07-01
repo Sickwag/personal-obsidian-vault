@@ -504,6 +504,7 @@ public class Main {
 List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 ```
 排序数组方法
+
 |方法|是否修改原 List|适用场景|代码简洁性|
 |---|---|---|---|
 | `Collections.reverse()` |✅ 修改|任意 List|⭐⭐⭐|
@@ -601,31 +602,25 @@ class Cuboid extends Rectangle {
 ```
 java 中表达式是从左到右执行的，`1+2+“aa” + 3` 的值为 `“3aa3”`
 整数或者更高级的数据类型赋值给 `char` 类型会在编译时期报错
-```markdown
 - 重写和重载的定义分别是什么？
-重写（Override）：发生在子类与父类之间，子类重新定义父类中已有的方法，方法名、参数列表、返回类型必须相同（或兼容），访问权限不能更严格。用于实现多态。
-重载（Overload）：发生在同一个类中，多个方法具有相同的名称但参数列表不同（参数个数、类型或顺序不同），返回类型可以不同。用于实现相同操作的不同形式。
+**重写**（Override）：发生在子类与父类之间，子类重新定义父类中已有的方法，方法名、参数列表、返回类型必须相同（或兼容），访问权限不能更严格。用于实现多态。
+**重载**（Overload）：发生在同一个类中，多个方法具有相同的名称但参数列表不同（参数个数、类型或顺序不同），返回类型可以不同。用于实现相同操作的不同形式。
 
 ---
 - 是否一个文件的外部类只能使用public和默认两种修饰符，内部类呢？
-是的，一个 `.java` 文件中只能有一个外部类（top-level class），它只能是 `public` 或默认（包私有），不能是 `private` 或 `protected`。
-内部类（inner class）可以使用 `public`、`protected`、`private` 或默认访问修饰符。
-
+是的，一个 `.java` 文件中只能有一个外部类（top-level class），它只能是 `public` 或默认（包私有），不能是 `private` 或 `protected`。内部类（inner class）可以使用 `public`、`protected`、`private` 或默认访问修饰符。
 ---
 - java中，一个类的构造函数是否可以有返回值和修饰符？
 构造函数不能有返回值类型（包括 `void`），但可以有访问修饰符（如 `public`、`protected`、`private`、默认），用于控制该构造函数的访问权限。
-
 ---
 - 在两个没有关系和有继承关系的类对象使用强制类型转换时，判断是否能够转换的机制是什么？
 Java 中的强制类型转换（向下转型）只有在两个类之间存在继承关系时才可能成功。如果两个类没有继承关系，编译时就会报错。
 运行时如果类型不匹配，会抛出 `ClassCastException`。
 
----
 - 接口能否继承实体类？接口是如何实现多重继承的？
-接口不能继承实体类（即 `class`），只能继承其他接口（使用 `extends`），并且可以继承多个接口，从而实现多重继承。
+接口不能继承实体类（即 `class`），只能继承其他接口（**使用 `extends`**），并且可以继承多个接口，从而实现多重继承。
 接口本身不包含状态（Java 8 之前），所以不能继承类。Java 9+ 中接口可以有私有方法，但仍然不能继承类。
 
----
 - 类中protect属性的成员是否能被同一包中的不同类访问？
 是的，`protected` 成员可以被：
 - 同一个包中的其他类访问；
@@ -664,12 +659,6 @@ import java.util.List;  // ✅ 正确位置
 public class MyClass { ... }
 ```
 
----
-- 什么是程序性结果，什么是非程序性结果？
-
-这不是 Java 的标准术语，可能是提问者理解有误或来自特定语境。
-- **程序性结果**：通常指由程序逻辑直接决定的输出或行为（如打印、变量值）。
-- **非程序性结果**：可能指由外部因素（如用户输入、网络、文件、多线程）导致的不可预测的结果。
 
 ---
 - `>>>` 是什么意思？`<<<` 呢？
@@ -730,13 +719,200 @@ try (FileInputStream fis = new FileInputStream("file.txt")) {
 - 构造方法是否允许返回 void 类型？
 构造方法 **不允许返回类型**，包括 `void`。它没有返回类型，甚至连 `void` 都不能写。
 构造方法名必须与类名相同，且不能有返回类型。
-- C #是不是编译型语言 ？它的运行是否需要虚拟机？
+- C\# 是不是编译型语言 ？它的运行是否需要虚拟机？
 
 C# 是编译型语言，但不是编译为机器码的直接语言。
 C# 编译为 **中间语言（IL）**，然后在 **. NET CLR（公共语言运行时）** 上运行，CLR 类似于 Java 的 JVM。
-所以：
-- C# 是编译型语言；
-- 它的运行依赖于 .NET 运行时（CLR），不是 JVM。
+所以：C# 是编译型语言；
+
+- 什么是保留字，什么是关键字？他们之间的区别是什么？
+
+关键字（Keyword）：是 Java 语言中具有特殊含义的标识符，不能用作变量名、类名等。例如：`class`, `public`, `static`, `void` 等。
+
+保留字（Reserved Word）：是语言规范中保留但目前未被使用的关键字，将来可能赋予特定含义。例如：`goto`, `const` 是保留字，但目前没有实际用途。
+
+区别：关键字是当前已经被使用、具有特定功能的词；保留字是语言保留但尚未启用的词，两者都不能作为标识符使用。
+
+---
+
+- java.lang.Runnable和java.lang.Thread中是否都有run和start方法。创建一个线程的方法分别是什么？请你举出对应的例子
+
+`Runnable` 接口：
+- 只有 `run()` 方法；
+- 没有 `start()` 方法。
+
+`Thread` 类：
+- 有 `run()` 方法（实现自 `Runnable`）；
+- 有 `start()` 方法（用于启动线程）。
+
+创建线程的两种主要方式：
+
+1. **实现 `Runnable` 接口：**
+```java
+class MyRunnable implements Runnable {
+    public void run() {
+        System.out.println("Runnable thread running");
+    }
+}
+
+// 使用 Thread 启动
+Thread t = new Thread(new MyRunnable());
+t.start();  // 启动线程
+```
+
+2. **继承 `Thread` 类并重写 `run()`：**
+```java
+class MyThread extends Thread {
+    public void run() {
+        System.out.println("Thread subclass running");
+    }
+}
+
+// 启动线程
+MyThread t = new MyThread();
+t.start();
+```
+
+注意：只有调用 `start()` 才会真正启动线程；直接调用 `run()` 只是普通方法调用，不会创建新线程。
+
+---
+
+- 内部类的修饰符可以是什么？
+
+内部类（Inner Class）可以使用以下修饰符：
+- `public`、`protected`、`private`、默认（包私有）
+- `static`（静态内部类）
+- `final`、`abstract`（用于控制继承和实例化）
+- `strictfp`（用于浮点运算的精度控制）
+
+例如：
+```java
+public class Outer {
+    public static class Inner4 {}  // 静态内部类
+    private class Inner1 {}         // 私有内部类
+    protected class Inner2 {}      // 受保护内部类
+    class Inner3 {}                // 默认访问权限
+}
+```
+
+---
+
+- 静态方法中可以调用实例方法吗？静态方法是否只能调用其他静态方法，访问其他静态成员？静态方法如果要调用同类中的静态方法，是否需要使用 this 关键字？
+
+静态方法中 **不能直接调用实例方法或访问实例变量**，因为它们依赖于对象实例。
+
+静态方法只能直接访问：
+- 静态变量；
+- 静态方法；
+- 不能使用 `this` 或 `super`。因为这是实例才有的
+
+如果要调用实例方法，必须先创建类的实例。
+
+例如：
+```java
+class MyClass {
+    int x = 10;
+    static int y = 20;
+
+    void instanceMethod() {
+        System.out.println("Instance method");
+    }
+
+    static void staticMethod() {
+        // instanceMethod(); ❌ 编译错误
+        MyClass obj = new MyClass();
+        obj.instanceMethod(); // ✅ 合法
+
+        System.out.println(y); // ✅ 合法
+        // System.out.println(x); ❌ 编译错误
+
+        anotherStaticMethod(); // ✅ 合法
+        // this.anotherStaticMethod(); ❌ 编译错误，不能在静态方法中使用 this
+    }
+
+    static void anotherStaticMethod() {
+        System.out.println("Another static method");
+    }
+}
+```
+
+---
+
+- 多态的表现是否体现在函数的重载和重写上？
+
+多态（Polymorphism）主要体现在 **方法重写（Override）** 上，而不是重载（Overload）。
+
+- **重写（Override）**：运行时多态，子类重写父类方法，根据对象的实际类型决定调用哪个方法。
+- **重载（Overload）**：编译时多态，方法名相同，参数不同，根据参数类型在编译时决定调用哪个方法。
+
+例如：
+```java
+class Animal {
+    void speak() { System.out.println("Animal speaks"); }
+}
+
+class Dog extends Animal {
+    @Override
+    void speak() { System.out.println("Dog barks"); }
+}
+
+Animal a = new Dog();
+a.speak(); // 输出 "Dog barks"，运行时多态（重写体现）
+```
+
+---
+
+- 抽象接口（java 8 之前）的方法访问修饰符是什么？如果不写访问修饰符默认是什么？
+
+在 Java 8 之前，接口中的方法默认是：
+- `public abstract`（即使不写，也默认是 `public` 和 `abstract`）
+
+例如：
+```java
+interface MyInterface {
+    void doSomething(); // 默认是 public abstract
+}
+```
+
+接口中不允许使用 `private` 或 `protected` 方法（Java 9+ 才允许 `private` 方法）。
+
+---
+
+- java 中构造方法是否可以重载？
+
+是的，Java 中的构造方法可以重载。
+
+构造方法重载是指在同一个类中定义多个构造方法，它们具有相同的名称（类名）但参数列表不同。
+
+例如：
+```java
+class Person {
+    String name;
+    int age;
+
+    // 无参构造方法
+    Person() {
+        this.name = "Unknown";
+    }
+
+    // 有参构造方法
+    Person(String name) {
+        this.name = name;
+    }
+
+    Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+```
+
+通过不同参数调用不同的构造方法，实现对象的多种初始化方式。
+```java
+Person p1 = new Person();           // 调用无参构造
+Person p2 = new Person("Tom");      // 调用一个参数的构造
+Person p3 = new Person("Jerry", 25); // 调用两个参数的构造
+```
 
 # 头歌考试
 ## 变量与数据类型
