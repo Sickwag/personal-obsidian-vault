@@ -3,11 +3,9 @@ created: 2025-05-08
 description: 大购题库，50个程序题。Solution放在Solution.java中，测试代码是否正确放在Test.java中，Main.java只用来调用接口
 ---
  # 大购习题
-
 ## 程序 2 -> 范围内素数
 可以参考 [[用法导向知识#欧拉筛法（线性筛法）|C++实现]]
 ### 泛型类型推断（`ArrayList<>()`）
-
 ```java
 List<Integer> primes = new ArrayList<>();
 ```
@@ -22,7 +20,6 @@ List<Integer> primes = new ArrayList<>();
     （Java 必须用包装类，不能直接用 `int`）
 
 ### `int` vs `Integer`
-
 |特性| `int` | `Integer` |
 |---|---|---|
 |类型|基本类型|包装类（对象）|
@@ -30,11 +27,9 @@ List<Integer> primes = new ArrayList<>();
 |默认值|0| `null` |
 |集合中|不支持|必须用 `Integer` |
 |性能|更高|有对象开销|
-
 **为什么参数用 `Integer`？**
 - 你的代码中实际是 `int`（正确做法），`Integer` 通常用于泛型或需要 `null` 的场景。
 ### 为什么用 `.get()` 而非 `[]`？
-
 - **`List` 是接口**，不保证连续存储（如 `LinkedList`），所以不能用 `[]` 语法。
 - **数组 `Integer[]`**：可以用 `arr[j]`，但 `List` 必须用 `list.get(j)`。
 - **设计差异**：  
@@ -54,7 +49,6 @@ public:
 ```
 ### 测试类 static 警告
 **类名以 `Test` 结尾**：IDEA 默认会将 `*Test` 结尾的类视为测试类（即使没有注解）
-
 ## 程序 3
 - Java 的 doxygen 写法和 C++一样，各种标签都一样，并且可 javadoc 命令生成文档
 ### Java 中的类实例化
@@ -74,7 +68,6 @@ public:
 ---
 为什么 C++**不能这样设计**
 C++采用不同的对象创建机制：
-
 - 对象可以在栈上直接创建（不需要 new）
 - 构造函数访问控制不影响栈上对象创建
 - 因此 C++中构造函数只能是 public 的
@@ -98,7 +91,6 @@ C++采用不同的对象创建机制：
 
 ### SonarQube 提示
 **SonarQube** 是一个开源的代码质量管理平台，主要用于：
-
 - 静态代码分析
 - 检测代码缺陷、漏洞和代码异味 (code smells)
 - 提供代码质量报告
@@ -115,30 +107,25 @@ C++采用不同的对象创建机制：
 
 ## 程序 4
 ### 2. Java 中修改 Map 值的正确方式
-
 情况 1：直接覆盖值（对应 C++的 `map[key] = value`）
 ```java
 map.put(n, newValue);  // 无论键是否存在都会覆盖
 ```
-
 情况 2：条件修改（键必须存在）
 ```java
 if (map.containsKey(n)) {    map.put(n, map.get(n) + 1);  // 相当于C++的map[n]++}
 ```
-
 情况 3：智能合并（推荐方式）
 ```java
 // Java 8+ 最佳实践
 map.merge(n, 1, Integer::sum); // 等效于：
 // 如果键不存在 → 插入(n,1)// 如果键存在 → 旧值 + 1
 ```
-
 情况 4：原子性操作（线程安全场景）
 ```java
 ConcurrentHashMap<Integer, Integer> map = new ConcurrentHashMap<>();
 map.compute(n, (k, v) -> (v == null) ? 1 : v + 1);
 ```
-
 ## 程序 7
 ### 数组和初始化
 #### 1. 将多个常量 `int` 值添加到 `List<Integer > ` 中
@@ -174,7 +161,6 @@ Collections.addAll(list, 1, 2, 3, 4, 5);
 - 适用于动态添加元素到已有 `List`。
 
 -- -
-
 #### 2. 将多个常量 `int` 值转换为 `int[]` 数组
 ##### 直接初始化数组
 ```java
@@ -198,7 +184,6 @@ int[] arr = IntStream.of(1, 2, 3, 4, 5).toArray();
 - 适用于 Java 8 + ，支持流式操作。
 
 -- -
-
 #### 3. 从 `List<Integer > ` 转换为 `int[]`
 ```java
 List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
@@ -208,7 +193,6 @@ int[] arr = list.stream().mapToInt(Integer::intValue).toArray();
 - 适用于需要从 `List` 转换到 `int[]` 的情况。
 
 -- -
-
 #### 4. 从 `int[]` 转换为 `List<Integer > `
 ```java
 int[] arr = { 1, 2, 3, 4, 5 };
@@ -218,35 +202,28 @@ List<Integer> list = Arrays.stream(arr).boxed().collect(Collectors.toList());
 - 适用于需要从 `int[]` 转换到 `List` 的情况。
 
 -- -
-
 #### 5. 综合示例
 ```java
 import java.util.*;
 import java.util.stream.*;
-
 public class Main {
     public static void main(String[] args) {
         // 1. 初始化 List<Integer>
         List<Integer> list1 = Arrays.asList(1, 2, 3, 4, 5);
         List<Integer> list2 = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5));
         List<Integer> list3 = List.of(1, 2, 3, 4, 5);
-
         // 2. 初始化 int[]
         int[] arr1 = { 1, 2, 3, 4, 5 };
         int[] arr2 = IntStream.of(1, 2, 3, 4, 5).toArray();
-
         // 3. List<Integer> 转 int[]
         int[] arr3 = list1.stream().mapToInt(Integer::intValue).toArray();
-
         // 4. int[] 转 List<Integer>
         List<Integer> list4 = Arrays.stream(arr1).boxed().collect(Collectors.toList());
-
         System.out.println("List1: " + list1);
         System.out.println("Arr1: " + Arrays.toString(arr1));
     }
 }
 ```
-
 ** 输出** ：
 ```
 List1: [1, 2, 3, 4, 5]
@@ -254,33 +231,25 @@ Arr1 : [1, 2, 3, 4, 5]
 ```
 
 -- -
-
 #### 6. 总结
-
 | 操作 | 方法 | 适用场景 |
 |------|------|----------|
 | **初始化 `List<Integer>`** | `Arrays.asList()`, `new ArrayList<>(Arrays.asList())`, `List.of()` | 需要快速初始化不可变或可变列表 |
 | **初始化 `int[]`** | `int[] arr = { 1, 2, 3 }`, `IntStream.of(1, 2, 3).toArray()` | 需要快速初始化数组 |
 | **`List<Integer>` 转 `int[]`** | `list.stream().mapToInt(Integer::intValue).toArray()` | 需要将列表转换为数组 |
 | **`int[]` 转 `List<Integer>`** | `Arrays.stream(arr).boxed().collect(Collectors.toList())` | 需要将数组转换为列表 |
-
-
-
 #### 推荐方法
 - **初始化 `List<Integer > `* * ：`List.of()`（Java 9 + ）或 `new ArrayList<>(Arrays.asList())`。
 - **初始化 `int[]`** ：直接初始化 `int[] arr = { 1, 2, 3 }`。
 - **转换**： `stream()` 进行 `List` 和 `int[]` 之间的转换。
 
 -- -
-
 #### 7. 常见问题
 ##### (1) `Arrays.asList()` 和 `List.of()` 的区别？
-
 | 方法                | 可变性        | 是否允许 `null` | Java 版本    |
 | ----------------- | ---------- | ----------- | ---------- |
 | `Arrays.asList()` | 固定大小（不可增删） | 允许 `null`   | Java 1.2 + |
 | `List.of()`       | 完全不可变      | 不允许 `null`  | Java 9 +   |
-
 ##### 为什么 `Arrays.asList()` 返回的 `List` 不能修改？
 - 它返回的是基于数组的 `List`，底层仍然是数组，所以不能改变大小（不能 `add` 或 `remove`）。
 
@@ -295,7 +264,6 @@ list.addAll(Arrays.asList(1, 2, 3, 4, 5));
 ```
 
 -- -
-
 #### 8. 最佳实践
 - **优先 `List.of()`* * （Java 9 + ）或 `Arrays.asList()` 初始化不可变列表。
 - **需要可变列表时， `new ArrayList<>(Arrays.asList())`* * 。
@@ -303,34 +271,27 @@ list.addAll(Arrays.asList(1, 2, 3, 4, 5));
 - **转换时 `stream()` 方法** ，代码更简洁。
 
 -- -
-
 #### 9. 代码示例
 ```java
 import java.util.*;
 import java.util.stream.*;
-
 public class Main {
     public static void main(String[] args) {
         // 1. 初始化 List<Integer>
         List<Integer> list1 = List.of(1, 2, 3, 4, 5); // Java 9+
         List<Integer> list2 = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5));
-
         // 2. 初始化 int[]
         int[] arr1 = { 1, 2, 3, 4, 5 };
         int[] arr2 = IntStream.of(1, 2, 3, 4, 5).toArray();
-
         // 3. List<Integer> 转 int[]
         int[] arr3 = list1.stream().mapToInt(Integer::intValue).toArray();
-
         // 4. int[] 转 List<Integer>
         List<Integer> list3 = Arrays.stream(arr1).boxed().collect(Collectors.toList());
-
         System.out.println("List1: " + list1);
         System.out.println("Arr1: " + Arrays.toString(arr1));
     }
 }
 ```
-
 ** 输出** ：
 ```
 List1: [1, 2, 3, 4, 5]
@@ -338,18 +299,14 @@ Arr1 : [1, 2, 3, 4, 5]
 ```
 
 -- -
-
 #### 10. 总结
 - **`List<Integer > ` 初始化**：`Arrays.asList()`, `List.of()`, `new ArrayList<>()`。
 - **`int[]` 初始化** ：`int[] arr = { 1, 2, 3 }`, `IntStream.of().toArray()`。
 - **转换**：`stream().mapToInt().toArray()` 和 `Arrays.stream().boxed().collect(Collectors.toList())`。
 
 通过以上方法，你可以轻松地在 `List<Integer > ` 和 `int[]` 之间转换，并快速初始化多个常量值。
-
-
 ### 哈希表和初始化
 #### 各种哈希表类型
-
 | 类                     | 特点                     | 适用场景       |
 | --------------------- | ---------------------- | ---------- |
 | **HashMap**           | 无序，线程不安全，允许 `null` 键/值 | 快速查找，无并发需求 |
@@ -380,7 +337,6 @@ Arr1 : [1, 2, 3, 4, 5]
     - 遗留类，不推荐使用。
 #### 1. 如何在创建哈希表的同时初始化内容？
 在 Java 中，可以使用**双括号初始化（Double Brace Initialization）**或**Java 9 + 的 `Map.of()` / `Map.ofEntries()`* * 方法直接初始化 `HashMap`。
-
 ##### 双括号初始化
 ```java
 Map<String, Integer> map = new HashMap<>() {
@@ -432,7 +388,6 @@ Map<String, Integer> map = Stream.of(
 - 返回的是**可变 Map**。
 
 -- -
-
 #### 2. Java 容器的初始化方式
 Java 的集合类（如 `List`, `Set`, `Map`）通常有**多种初始化方式**：
 
@@ -441,13 +396,11 @@ Java 的集合类（如 `List`, `Set`, `Map`）通常有**多种初始化方式*
 | **`List`* * | `Arrays.asList()`, `List.of()`, `new ArrayList<>(List.of())` | `List<String > list = List.of("A", "B");` |
 | **`Set`* * | `Set.of()`, `new HashSet<>(Arrays.asList())` | `Set<String > set = Set.of("A", "B");` |
 | **`Map`* * | `Map.of()`, `Map.ofEntries()`, 双括号初始化 | `Map<String, Integer > map = Map.of("A", 1);` |
-
 **通用规律**：
 - **不可变集合**：`List.of()`, `Set.of()`, `Map.of()`（Java 9 + ）。
 - **可变集合**：通过构造函数传入初始数据，如 `new ArrayList<>(List.of(...))`。
 
 -- -
-
 #### 3. 为什么 `Map<String, Integer > map = new HashMap<>();` 左边用 `Map`，右边用 `HashMap`？
 这是** 面向接口编程（Interface - based Programming）**的体现：
 - **`Map` 是接口**，`HashMap` 是它的一个实现。
@@ -463,12 +416,10 @@ Map<String, Integer> map = new HashMap<>();  // 今天用 HashMap
 map = new TreeMap<>();                       // 明天换成 TreeMap
 ```
 而客户端代码（使用 `map` 的地方）不需要修改。
-
 2.**遵循依赖倒置原则（DIP）**：
 - 高层模块（业务逻辑）不应该依赖低层模块（`HashMap`），而是依赖抽象（`Map`）。
 
 3.**多态**：可以通过接口统一操作不同的实现。
-
 ##### 示例：`Map` 的不同实现
 ```java
 Map<String, Integer> hashMap = new HashMap<>();  // 哈希表实现
@@ -478,7 +429,6 @@ Map<String, Integer> concurrentMap = new ConcurrentHashMap<>();  // 线程安全
 尽管底层实现不同，但它们的** 方法签名（如 `put()`, `get()`）由 `Map` 接口统一规定** ，因此可以互换。
 
 -- -
-
 #### 4. 为什么泛型 `String, Integer` 在左边的 `Map` 中声明？
 - **泛型是类型声明的一部分**，而**变量类型（`Map`）**决定了它能调用的方法。
 - **右侧的 `new HashMap<>()` 使用了类型推断（Diamond Operator `< > `）**：
@@ -496,16 +446,13 @@ HashMap<String, Integer> map = new HashMap<>();  // 也可以，但灵活性降�
 - 此时 `map` 的类型是 `HashMap` 而不是 `Map`，后续无法直接替换为 `TreeMap`。
 
 -- -
-
 #### 5. 总结
-
 | 问题 | 解决方案 | 关键点 |
 |------ | ---------- | --------|
 | **初始化 `HashMap`* * | `Map.of()`, `Map.ofEntries()`, 双括号初始化 | Java 9 + 推荐 `Map.of()` |
 | **容器初始化通用方法**| `List.of()`, `Set.of()`, `Map.of()` | 不可变集合 |
 | **`Map` 接口 vs 实现类**| `Map<String, Integer > map = new HashMap<>();` | 面向接口编程，灵活替换实现 |
 | **泛型声明位置**| 左侧 `Map` 定义泛型，右侧 `< > ` 自动推断 | 类型安全，代码简洁 |
-
 #### 最佳实践
 1.**优先使用 `Map.of()` 或 `Map.ofEntries()`* * 初始化不可变 Map（Java 9 + ）。
 2.**需要可变 Map 时**：
@@ -516,11 +463,9 @@ Map<String, Integer> map = new HashMap<>(Map.of("A", 1, "B", 2));
 4.**理解接口与实现的关系**：`Map` 是规范，`HashMap` / `TreeMap` 是具体实现。
 
 -- -
-
 #### 代码示例
 ```java
 import java.util.*;
-
 public class Main {
     public static void main(String[] args) {
         // 1. 初始化 Map（Java 9+）
@@ -529,29 +474,23 @@ public class Main {
             Map.entry("Alice", 25),
             Map.entry("Bob", 30)
         );
-
         // 2. 转换为可变 Map
         Map<String, Integer> mutableMap = new HashMap<>(map1);
-
         // 3. 面向接口编程
         Map<String, Integer> map = new HashMap<>();  // 今天用 HashMap
         map = new TreeMap<>();                       // 明天换成 TreeMap
-
         System.out.println(map1);
         System.out.println(mutableMap);
     }
 }
 ```
-
 ** 输出** ：
 ```
 {Alice = 25, Bob = 30}
 { Alice = 25, Bob = 30 }
 ```
-
 ## 程序 14
 ### 修改数组中元素
-
 | 数据结构          | 修改方法                             | 示例                                           |
 | ------------- | -------------------------------- | -------------------------------------------- |
 | **数组**        | `array[index] = newValue`        | `arr[1] = 20`                                |
@@ -559,15 +498,12 @@ public class Main {
 | **ArrayList** | `arrayList.set(index, newValue)` | `arrayList.set(3, 40)`                       |
 | **不可变 List**  | 不能修改大小，但可修改元素                    | `fixedList.set(1, 20)`                       |
 | **Stream**    | `map()` + `collect()`            | `list.stream().map(n -> n * 2).collect(...)` |
-
-
 ## 程序 31
 初始化数组方法：
 ```java
 List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 ```
 排序数组方法
-
 |方法|是否修改原 List|适用场景|代码简洁性|
 |---|---|---|---|
 | `Collections.reverse()` |✅ 修改|任意 List|⭐⭐⭐|
@@ -575,7 +511,6 @@ List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 | `IntStream.range()` 反向索引|❌ 不修改|任意 List|⭐⭐|
 | `Collectors.toList()` + `reverse` |❌ 不修改|需要新 List|⭐⭐|
 | `LinkedList.descendingIterator()` |❌ 不修改|仅 `LinkedList` |⭐⭐⭐|
-
 ## 常用操作
 ### 排序
 | 操作                  | 方法                                                             | 示例代码                                |
@@ -584,10 +519,9 @@ List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 | **ArrayList 自定义排序** | `list.sort(Comparator)` 或 `Collections.sort(list, Comparator)` | `list.sort((a, b) -> b - a)`        |
 | **数组排序**            | `Arrays.sort(arr)`                                             | `Arrays.sort(arr)`                  |
 | **数组自定义排序**         | `Arrays.sort(arr, Comparator)`（只适用对象数组）                        | `Arrays.sort(arr, (a, b) -> b - a)` |
-
 # 杂项
 java 中的 main 方法一定要有 `String[] args` 作为参数
-   
+
 下列关于构造方法的说法**不正确**的是（）
 A、Java 语言规定构造方法名必须与类名相同
 B、Java 语言规定构造方法没有返回值，且不用 void 关键字声明
@@ -595,7 +529,6 @@ B、Java 语言规定构造方法没有返回值，且不用 void 关键字声�
 D、构造方法只能用 new 关键字来创建
 
 java 的类末尾不需要分号
-
 instanceof 用来比较类对象类型
 ```java
 public static void show(Animal a) {
@@ -611,12 +544,10 @@ public static void show(Animal a) {
 }
 ```
 写在同一目录下的两个文件，如果没有有声明 package 所属，不需要 import，Java 会自动识别同一包中的类
-
 java 中方法重载满足下面任意 1 个要求
 - **参数类型不同**：`void foo(int a)` vs `void foo(String a)`
 - **参数个数不同**：`void foo(int a)` vs `void foo(int a, int b)`
 - **参数顺序不同**（如果类型不同）：`void foo(int a, String b)` vs `void foo(String a, int b)`
-
 
 | 情况     | 示例                                                                  | 是否合法   |
 | ------ | ------------------------------------------------------------------- | ------ |
@@ -639,9 +570,7 @@ java 中方法重载满足下面任意 1 个要求
 | **`protected`**          | ✔️ **是**                  | 可直接访问（`subclass.method()`）                 |
 | 默认（包级 `package-private`） | ✔️ **是（同包）**，❌ **否（不同包）** | 仅同包可用                                      |
 | **`private`**            | ❌ **否**                   | **不可访问**（但可通过父类 `public/protected` 方法间接访问） |
-
 继承实例，注意写法 super
-
 > 2. 按要求编写一个 Java 应用程序:
 (1) 定义一个类，描述一个矩形，包含有长、宽两种属性，和计算面积方法。
 (2) 编写一个类，继承自矩形类，同时该类描述长方体，具有长、宽、高属性，和计算体积的方法。
@@ -651,7 +580,6 @@ java 中方法重载满足下面任意 1 个要求
 class Rectangle {
     private double length; // 长
     private double width; // 宽
-
     public Rectangle(double length, double width) {
         this.length = length;
         this.width = width;
@@ -660,22 +588,156 @@ class Rectangle {
         return length * width;
     }
 }
-
 class Cuboid extends Rectangle {
     private double height; 
     public Cuboid(double length, double width, double height) {
         super(length, width);
         this.height = height;
     }
-
     public double getVolume() {
         return getArea() * height;
     }
 }
 ```
-
 java 中表达式是从左到右执行的，`1+2+“aa” + 3` 的值为 `“3aa3”`
 整数或者更高级的数据类型赋值给 `char` 类型会在编译时期报错
+```markdown
+- 重写和重载的定义分别是什么？
+重写（Override）：发生在子类与父类之间，子类重新定义父类中已有的方法，方法名、参数列表、返回类型必须相同（或兼容），访问权限不能更严格。用于实现多态。
+重载（Overload）：发生在同一个类中，多个方法具有相同的名称但参数列表不同（参数个数、类型或顺序不同），返回类型可以不同。用于实现相同操作的不同形式。
+
+---
+- 是否一个文件的外部类只能使用public和默认两种修饰符，内部类呢？
+是的，一个 `.java` 文件中只能有一个外部类（top-level class），它只能是 `public` 或默认（包私有），不能是 `private` 或 `protected`。
+内部类（inner class）可以使用 `public`、`protected`、`private` 或默认访问修饰符。
+
+---
+- java中，一个类的构造函数是否可以有返回值和修饰符？
+构造函数不能有返回值类型（包括 `void`），但可以有访问修饰符（如 `public`、`protected`、`private`、默认），用于控制该构造函数的访问权限。
+
+---
+- 在两个没有关系和有继承关系的类对象使用强制类型转换时，判断是否能够转换的机制是什么？
+Java 中的强制类型转换（向下转型）只有在两个类之间存在继承关系时才可能成功。如果两个类没有继承关系，编译时就会报错。
+运行时如果类型不匹配，会抛出 `ClassCastException`。
+
+---
+- 接口能否继承实体类？接口是如何实现多重继承的？
+接口不能继承实体类（即 `class`），只能继承其他接口（使用 `extends`），并且可以继承多个接口，从而实现多重继承。
+接口本身不包含状态（Java 8 之前），所以不能继承类。Java 9+ 中接口可以有私有方法，但仍然不能继承类。
+
+---
+- 类中protect属性的成员是否能被同一包中的不同类访问？
+是的，`protected` 成员可以被：
+- 同一个包中的其他类访问；
+- 不同包中的子类访问（即使不在同一个包中）；
+- 但不能被不同包中的非子类访问。
+
+---
+- `BufferReader br = new BufferReader(new InputStream(System.in));`代码中，是否等号左边是一种声明变量的方法，即使写`BufferReader br`也是合法的？等号右边是实现，是用new创建对象，调起类的BufferReader构造函数(括号中又创建了InputStream对象并初始化，传入BufferReader对象的构造函数中)的方法？
+是的，等号左边是声明一个 `BufferReader` 类型的引用变量 `br`，右边是创建对象的过程。
+但注意：`InputStream` 是抽象类，不能直接 `new InputStream(System.in)`，应该使用 `InputStreamReader`：
+```java
+BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+```
+
+---
+- 假如我要声明一个数组，`int[] arr;` 这样的方式是否不会给 arr 分配内存，并且 arr 只会是一个基本数组类型不是对象，不能调用 `.length` 获取数组长度。而不会像 `int[] arr = new int[];` 一样得到一个数组类型对象对吗？
+
+`int[] arr;` 只是声明了一个数组变量，没有分配内存，也没有创建数组对象，因此不能使用 `.length`。
+`int[] arr = new int[5];` 或 `int[] arr = {1,2,3};` 才是创建数组对象，此时可以使用 `.length` 获取长度。
+数组在 Java 中是对象，`int[] arr;` 是声明一个对象引用，初始值为 `null`。
+
+---
+- String 不是基本类型，为什么它可以在代码中不用导入直接定义，并且也不用使用 new 关键字创建对象就能使用？
+
+`String` 是 Java 的标准类（`java.lang.String`），而 `java.lang` 包是默认导入的，所以不需要手动 `import`。
+同时，Java 对 `String` 提供了语法糖支持，允许直接使用字符串字面量（如 `"Hello"`）创建对象，无需 `new String("Hello")`。
+
+---
+- import 语句是否一定要放在 java 文件的开头？
+
+`import` 语句必须放在 **包声明之后、类定义之前**，不能放在类内部或文件顶部之前。
+例如：
+```java
+package mypackage;
+import java.util.List;  // ✅ 正确位置
+public class MyClass { ... }
+```
+
+---
+- 什么是程序性结果，什么是非程序性结果？
+
+这不是 Java 的标准术语，可能是提问者理解有误或来自特定语境。
+- **程序性结果**：通常指由程序逻辑直接决定的输出或行为（如打印、变量值）。
+- **非程序性结果**：可能指由外部因素（如用户输入、网络、文件、多线程）导致的不可预测的结果。
+
+---
+- `>>>` 是什么意思？`<<<` 呢？
+
+`>>>` 是 Java 中的 **无符号右移运算符**，将二进制位向右移动，高位补 0（不管符号位）。
+`<<<` 不是 Java 的合法运算符。Java 有 `<<`（左移），但没有 `<<<`。
+
+---
+- this 和 super 是指针还是引用？
+
+Java 中没有指针概念，`this` 和 `super` 是**引用**，分别指向当前对象和父类对象。
+- `this`：当前对象的引用；
+- `super`：父类对象的引用。
+
+它们不能像 C/C++ 中的指针那样进行地址运算。
+
+---
+- java 如何抛出异常？请举出例子
+
+使用 `throw` 关键字抛出异常。
+```java
+public class TestException {
+    public static void main(String[] args) {
+        try {
+            throw new IllegalArgumentException("参数错误");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+你也可以抛出检查型异常（checked exception）或运行时异常（unchecked exception）。
+- 如何使用 try-catch-finally？
+
+`try-catch-finally` 用于处理异常并确保资源释放或最终操作执行。
+```java
+try {
+    // 可能抛出异常的代码
+} catch (ExceptionType1 e1) {
+    // 处理异常
+} catch (ExceptionType2 e2) {
+    // 处理另一个异常
+} finally {
+    // 无论是否发生异常，都会执行（常用于关闭资源）
+}
+```
+Java 7+ 支持 `try-with-resources`：
+```java
+try (FileInputStream fis = new FileInputStream("file.txt")) {
+    // 使用 fis
+} catch (IOException e) {
+    e.printStackTrace();
+} finally {
+    // 可选
+}
+```
+---
+- 构造方法是否允许返回 void 类型？
+构造方法 **不允许返回类型**，包括 `void`。它没有返回类型，甚至连 `void` 都不能写。
+构造方法名必须与类名相同，且不能有返回类型。
+- C #是不是编译型语言 ？它的运行是否需要虚拟机？
+
+C# 是编译型语言，但不是编译为机器码的直接语言。
+C# 编译为 **中间语言（IL）**，然后在 **. NET CLR（公共语言运行时）** 上运行，CLR 类似于 Java 的 JVM。
+所以：
+- C# 是编译型语言；
+- 它的运行依赖于 .NET 运行时（CLR），不是 JVM。
+
 # 头歌考试
 ## 变量与数据类型
 ### 字符串不可变性
@@ -699,9 +761,7 @@ java 的 string 类型实例化得到的是一个指向字符串对象的引用�
 ```java
 int x = -a++ + ~b ? c : d--;
 ```
-
 （答案是：`((- (a++)) + (~b)) ? c : (d--)`）
-
 ### java 局部作用域和 C++差异
 | 语言       | `for` 循环变量作用域 | 是否允许遮蔽外部变量 | 设计理念            |
 | -------- | ------------- | ---------- | --------------- |
@@ -709,7 +769,6 @@ int x = -a++ + ~b ? c : d--;
 | **Java** | 整个方法/作用域      | ❌ 不允许同名变量  | 更严格，避免潜在错误和代码混淆 |
 具体体现在：
 java 中整个函数是一个局部作用域，其中的循环，初始化部分不会单独作为一个作用域而是与外部共享，C++分的更细，允许遮蔽 
-
 ### 默认修饰符
 在 Java 中，如果类中不显式声明成员变量的可见性（即不使用 `public`、`private` 或 `protected` 修饰符），则该成员变量的默认可见性是 `包级私有（package-private）`（也叫 "默认访问权限"）。
 
@@ -719,16 +778,13 @@ java 中整个函数是一个局部作用域，其中的循环，初始化部分
 | `protected` |✅|✅|✅|❌|
 |**`默认`** (不写)|✅|✅|❌|❌|
 | `private` |✅|❌|❌|❌|
-
 ```java
 class MyClass {
     int a;
     static int b;
     void fa(){
-    
     }
     static void fb(){
-    
     }
     public void m1(){
         System.out.println(a);    //位置1
@@ -763,7 +819,6 @@ G、位置 7
 静态方法不能直接调用其他类中的普通方法
 ![[Pasted image 20250628144922.png|350]]
 可以使用 `static {}` 创建静态代码块
-
 ## 封装，继承和多态
 ### 封装
 构造一个类，把对象的属性封装起来，同时提供一些可以被外界访问属性的方法。
@@ -773,13 +828,11 @@ G、位置 7
 - 子类可以用自己的方式实现父类的方法；
 
 子类实例化时的行为：
-
 > 子类对象在实例化时会默认先去调用父类中的无参构造方法，之后再调用本类中的相应构造方法
 
 ```java
 class Student extends Person{
     String school ;
-    
     // 子类的构造方法
     public Student(){
         super() ; //实际上在程序的这里隐含了这样一条语句
@@ -797,14 +850,11 @@ class Student extends Person{
 - 子类重写父类的方法 (多态下调用子类重写的方法)；
 - 父类引用变量指向子类对象 (子类到父类的类型转换)。
 子类转换成父类时的规则:
-
 将一个父类的引用指向一个子类的对象，称为向上转型 (upcasting)，自动进行类型转换。此时通过父类引用调用的方法是子类覆盖或继承父类的方法，不是父类的方法。此时通过父类引用变量无法调用子类特有的方法；
-
 如果父类要调用子类的特有方法就得将一个指向子类对象的父类引用赋给一个子类的引用，称为向下转型，此时必须进行强制类型转换。
 
 ---
 在 Java 中有两种形式可以实现多态：继承和接口。
-
 ## 重写
 重写的方法不能比被重写的方法有更严格的访问权限;
 重写的方法不能比被重写的方法产生更多的异常
@@ -813,7 +863,6 @@ class Student extends Person{
 方法重载是一个类中定义了多个方法名相同，而他们的参数的数量不同或数量相同而类型和次序不同，则称为方法的重载；
 方法重写是在子类存在方法与父类的方法的名字相同而且参数的个数与类型一样，返回值也一样的方法，就称为方法的重写；
 方法重载是一个类的多态性表现，而方法重写是子类与父类的一种多态性表现。
-
 ## 抽象类
 抽象类的定义规则：
 - 抽象类和抽象方法都必须用 abstract 关键字来修饰；
@@ -905,7 +954,6 @@ Math.rint(a10);
 Math.round(a11);
 ```
 ## 异常处理
-
 在 Java 中，源文件 Test. java 中包含如下代码段，则程序编译运行结果是（ ）
 ```java
 public class HelloWorld{
@@ -918,5 +966,4 @@ A、输出：HelloWorld!
 B、编译出错，提示“公有类 HelloWorld 必须在 HelloWorld. java 文件中定义”
 C、运行正常，但没有输出内容
 D、运行时出现异常
-
 throw 用于 try-catch 中，throws 用于函数体前说明修饰符
