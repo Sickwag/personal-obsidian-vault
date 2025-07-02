@@ -521,6 +521,283 @@ List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 | **数组排序**            | `Arrays.sort(arr)`                                             | `Arrays.sort(arr)`                  |
 | **数组自定义排序**         | `Arrays.sort(arr, Comparator)`（只适用对象数组）                        | `Arrays.sort(arr, (a, b) -> b - a)` |
 # 杂项
+你提的几个问题非常经典，涉及 Java 中的类成员、接口、以及输入处理等核心知识点。我们一个一个来解答：
+
+---
+
+🔹1. 是否除 static 内部类外，不能在类内部声明 static 成员？
+
+✅ 不完全是。Java 中的类内部可以声明多种 `static` 成员，包括：
+
+- `static` 变量（静态变量）
+- `static` 方法（静态方法）
+- `static` 块（静态初始化块）
+- `static` 内部类（静态嵌套类）
+
+✅ 示例：
+
+```java
+public class MyClass {
+
+    // 静态变量
+    static int count = 0;
+
+    // 静态方法
+    static void showCount() {
+        System.out.println("Count: " + count);
+    }
+
+    // 静态内部类
+    static class StaticInner {
+        void display() {
+            System.out.println("Static inner class");
+        }
+    }
+
+    // 静态初始化块
+    static {
+        System.out.println("Static block executed.");
+    }
+
+    public static void main(String[] args) {
+        MyClass.showCount();
+
+        StaticInner inner = new StaticInner();
+        inner.display();
+    }
+}
+```
+
+❗注意：
+
+- **非静态内部类（普通内部类）中不能有静态成员**（变量或方法），除非它是 `static final` 常量。
+
+```java
+class Outer {
+    class Inner {
+        // ❌ 编译错误：非静态内部类不能有静态成员
+        static int x = 10;
+    }
+}
+```
+
+---
+
+🔹2. 在 Java 8 及以后版本中，接口中是否只能有 `static` 方法和 `default` 方法才能有方法体？
+
+✅ 是的，从 Java 8 开始，接口可以包含以下几种方法：
+
+| 方法类型 | 是否可以有方法体 | Java 版本 | 说明 |
+|----------|------------------|-----------|------|
+| 抽象方法 | ❌ 没有方法体 | Java 1.0+ | 默认就是 public abstract |
+| `default` 方法 | ✅ 有方法体 | Java 8+ | 默认实现，用于向后兼容 |
+| `static` 方法 | ✅ 有方法体 | Java 8+ | 接口级别的静态方法 |
+| `private` 方法 | ✅ 有方法体 | Java 9+ | 用于辅助 `default` 或 `static` 方法 |
+| `private static` 方法 | ✅ 有方法体 | Java 9+ | 用于辅助静态方法 |
+
+✅ 示例：Java 8 接口中的 `default` 和 `static` 方法
+
+```java
+interface MyInterface {
+    // 抽象方法
+    void sayHello();
+
+    // default 方法（有方法体）
+    default void sayDefault() {
+        System.out.println("Default method");
+    }
+
+    // static 方法（有方法体）
+    static void sayStatic() {
+        System.out.println("Static method");
+    }
+}
+```
+
+✅ 实现类：
+
+```java
+class MyClass implements MyInterface {
+    @Override
+    public void sayHello() {
+        System.out.println("Hello from MyClass");
+    }
+}
+```
+
+✅ 使用：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        MyClass obj = new MyClass();
+        obj.sayHello();      // Hello from MyClass
+        obj.sayDefault();    // Default method
+        MyInterface.sayStatic(); // Static method
+    }
+}
+```
+
+---
+
+🔹3. 接口能否使用 `abstract` 关键字？
+
+✅ 可以，但不是必须的。
+
+- 接口本身就是抽象的；
+- 从 Java 9 开始，接口可以有 `private` 方法、`default` 方法、`static` 方法；
+- 所以 `abstract` 关键字在接口中可以加，但**通常省略**。
+
+✅ 示例：
+
+```java
+abstract interface Animal {
+    void speak();
+}
+```
+
+或者：
+
+```java
+interface Animal {
+    void speak();
+}
+```
+
+❗注意：
+
+- Java 9 之前，接口默认就是 `abstract`；
+- Java 9+ 中，接口可以包含默认方法和静态方法，但接口本身仍然是 `abstract` 的；
+- 你不能使用 `final interface`，因为接口不能被 `final` 修饰。
+
+---
+
+🔹4. `Scanner`、`System.in` 和 `BufferedReader` 分别怎么用？有什么不同？
+
+📌 三者的关系：
+
+- `System.in` 是标准输入流（`InputStream` 类型）；
+- `Scanner` 和 `BufferedReader` 都是**包装类**，用于读取 `System.in` 的内容；
+- 但它们的使用方式和适用场景不同。
+
+---
+
+✅ 1. `System.in`（原始输入流）
+
+- 是 `InputStream` 类型；
+- 通常不直接使用，而是包装成 `BufferedReader` 或 `Scanner`。
+
+```java
+InputStream input = System.in;
+int data = input.read(); // 读取一个字节
+```
+
+---
+
+✅ 2. `Scanner`（适合读取基本类型和简单输入）
+
+- 简单易用，适合读取用户输入的数字、字符串等；
+- 支持按类型读取（如 `nextInt()`, `nextLine()`）；
+- 适用于控制台交互式程序。
+
+示例：
+
+```java
+import java.util.Scanner;
+
+public class ScannerExample {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter your name: ");
+        String name = scanner.nextLine();  // 读取一行字符串
+
+        System.out.print("Enter your age: ");
+        int age = scanner.nextInt();       // 读取一个整数
+
+        System.out.println("Name: " + name);
+        System.out.println("Age: " + age);
+
+        scanner.close();
+    }
+}
+```
+
+---
+
+✅ 3. `BufferedReader`（适合读取文本行）
+
+- 用于读取字符输入流，效率更高；
+- 通常配合 `InputStreamReader` 使用；
+- 适合读取大量文本数据或按行处理；
+- 需要手动处理异常（IOException）；
+- 不支持直接读取基本类型。
+
+示例：
+
+```java
+import java.io.*;
+
+public class BufferedReaderExample {
+    public static void main(String[] args) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+        System.out.print("Enter your name: ");
+        String name = reader.readLine();  // 读取一行
+
+        System.out.print("Enter your age: ");
+        int age = Integer.parseInt(reader.readLine());  // 转为整数
+
+        System.out.println("Name: " + name);
+        System.out.println("Age: " + age);
+
+        reader.close();
+    }
+}
+```
+如果需要读取单个字符，单个数据，参考：
+```java
+BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+int a = Integer.parseInt(bf.readLine());
+char c = (char)bf.read();
+```
+
+🔍 对比总结
+
+| 特性 | `Scanner` | `BufferedReader` |
+|------|------------|------------------|
+| 所属包 | `java.util` | `java.io` |
+| 读取方式 | 按类型读取（`nextInt()`, `nextLine()`） | 按行读取（`readLine()`） |
+| 性能 | 较慢 | 更快，适合大量输入 |
+| 是否需要关闭 | 是（`scanner.close()`） | 是（`reader.close()`） |
+| 是否支持正则表达式 | ✅ 支持 | ❌ 不支持 |
+| 是否支持直接读取基本类型 | ✅ 支持 | ❌ 需要手动转换 |
+| 是否抛出异常 | ❌ 不抛出 | ✅ 抛出 `IOException` |
+
+---
+
+✅ 什么时候用哪个？
+
+| 场景              | 推荐使用                               |
+| --------------- | ---------------------------------- |
+| 控制台交互（读取数字、字符串） | `Scanner`                          |
+| 读取大量文本、按行处理     | `BufferedReader`                   |
+| 读取二进制数据         | `InputStream`（如 `FileInputStream`） |
+
+---
+
+📌 总结
+
+| 问题 | 回答 |
+|------|------|
+| 类内部是否只能在 static 内部类中声明 static 成员？ | ❌ 不是，类中可以声明 static 变量、方法、块、静态内部类 |
+| 接口中是否只能有 `static` 和 `default` 方法才能有方法体？ | ✅ 是的（Java 8+） |
+| 接口能否使用 `abstract` 关键字？ | ✅ 可以，但接口本身就是抽象的，关键字可省略 |
+| `Scanner` vs `BufferedReader` | `Scanner` 更简单，`BufferedReader` 更高效 |
+
+---
+
+如果你还想了解这些输入方式的性能差异、或者如何处理输入异常，也可以继续问我 😊
 内部类的访问控制权限可以使 private 或者默认，不能是 protect 或者
 
 面向对象编程顺序：面向分析 OOA-->面向设计 OOD-->面向对象 OOP
@@ -539,6 +816,8 @@ List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 java 中的 main 方法一定要有 `String[] args` 作为参数
 
 继承 Applet 的类必须要实现 `actionPerformed` 方法
+
+接口中只能包含 `static` 方法和 `default` 方法才有方法体？**普通方法不能有方法体**
 
 下列关于构造方法的说法**不正确**的是（）
 A、Java 语言规定构造方法名必须与类名相同
