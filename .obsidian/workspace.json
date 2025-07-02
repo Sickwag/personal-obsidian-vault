@@ -8,21 +8,6 @@
         "type": "tabs",
         "children": [
           {
-            "id": "72dbcc474a560cc7",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Language/C C++/C++ Runoob Tutoral.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "C++ Runoob Tutoral"
-            }
-          },
-          {
             "id": "f447b24ae09b2814",
             "type": "leaf",
             "state": {
@@ -37,8 +22,7 @@
               "title": "csv_reader"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -210,47 +194,7 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "floating": {
-    "id": "32cd5982f5f3066b",
-    "type": "floating",
-    "children": [
-      {
-        "id": "56901ed035c4ea8a",
-        "type": "window",
-        "children": [
-          {
-            "id": "af25f61c3d47d703",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "a8add8e3974b1981",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "学习/Language/java/Java面向对象程序设计考试.md",
-                    "mode": "source",
-                    "source": false,
-                    "backlinks": false
-                  },
-                  "icon": "lucide-file",
-                  "title": "Java面向对象程序设计考试"
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "vertical",
-        "x": 426,
-        "y": 10,
-        "width": 662,
-        "height": 708,
-        "maximize": false,
-        "zoom": 0.5
-      }
-    ]
-  },
-  "active": "a8add8e3974b1981",
+  "active": "f447b24ae09b2814",
   "lastOpenFiles": [
     "学习/Language/java/Java面向对象程序设计考试.md",
     "学习/Language/SQL/MySQL.md",
