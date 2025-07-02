@@ -1210,6 +1210,32 @@ Person p2 = new Person("Tom");      // 调用一个参数的构造
 Person p3 = new Person("Jerry", 25); // 调用两个参数的构造
 ```
 
+```java
+class FrameInOut extends Frame implements ActionsListener{
+	setLayout(new FlowLayout);
+	input.addActionListener(this);
+	output.addActionListener(this);
+	setSize(300,200);
+	show();
+}
+```
+- 编译源程序
+- 生成字节码
+- 解释运行字节码
+
+线程状态：新建状态，可运行状态，运行状态，祖册状态，终止状态
+
+继承 Applet 类：
+```java
+public class Gh extends Applet implements ActionListener{
+	.....
+	
+	public void actionPerformed(ActionEvent e){
+		a = new Integer(tfd1.getText()).intValue();
+	}
+}
+```
+
 # 头歌考试
 ## 变量与数据类型
 ### 字符串不可变性
