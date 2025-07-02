@@ -232,12 +232,12 @@ Arr1 : [1, 2, 3, 4, 5]
 
 -- -
 #### 6. 总结
-| 操作 | 方法 | 适用场景 |
-|------|------|----------|
-| **初始化 `List<Integer>`** | `Arrays.asList()`, `new ArrayList<>(Arrays.asList())`, `List.of()` | 需要快速初始化不可变或可变列表 |
-| **初始化 `int[]`** | `int[] arr = { 1, 2, 3 }`, `IntStream.of(1, 2, 3).toArray()` | 需要快速初始化数组 |
-| **`List<Integer>` 转 `int[]`** | `list.stream().mapToInt(Integer::intValue).toArray()` | 需要将列表转换为数组 |
-| **`int[]` 转 `List<Integer>`** | `Arrays.stream(arr).boxed().collect(Collectors.toList())` | 需要将数组转换为列表 |
+| 操作                            | 方法                                                                 | 适用场景            |
+| ----------------------------- | ------------------------------------------------------------------ | --------------- |
+| **初始化 `List<Integer>`**       | `Arrays.asList()`, `new ArrayList<>(Arrays.asList())`, `List.of()` | 需要快速初始化不可变或可变列表 |
+| **初始化 `int[]`**               | `int[] arr = { 1, 2, 3 }`, `IntStream.of(1, 2, 3).toArray()`       | 需要快速初始化数组       |
+| **`List<Integer>` 转 `int[]`** | `list.stream().mapToInt(Integer::intValue).toArray()`              | 需要将列表转换为数组      |
+| **`int[]` 转 `List<Integer>`** | `Arrays.stream(arr).boxed().collect(Collectors.toList())`          | 需要将数组转换为列表      |
 #### 推荐方法
 - **初始化 `List<Integer > `* * ：`List.of()`（Java 9 + ）或 `new ArrayList<>(Arrays.asList())`。
 - **初始化 `int[]`** ：直接初始化 `int[] arr = { 1, 2, 3 }`。
@@ -521,9 +521,19 @@ List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 | **数组排序**            | `Arrays.sort(arr)`                                             | `Arrays.sort(arr)`                  |
 | **数组自定义排序**         | `Arrays.sort(arr, Comparator)`（只适用对象数组）                        | `Arrays.sort(arr, (a, b) -> b - a)` |
 # 杂项
-你提的几个问题非常经典，涉及 Java 中的类成员、接口、以及输入处理等核心知识点。我们一个一个来解答：
+| 容器类            | 默认布局管理器           | 特点               |
+| -------------- | ----------------- | ---------------- |
+| `JFrame`（内容面板） | `BorderLayout`    | 五大区域（北、南、东、西、中）  |
+| `JWindow`      | `BorderLayout`    | 类似 JFrame        |
+| `JDialog`      | `BorderLayout`    | 用于弹窗             |
+| `JScrollPane`  | `BorderLayout`    | 特殊用途容器           |
+| `JRootPane`    | `BorderLayout`    | 通常用于 JFrame 内部结构 |
+| `JPanel`       | `FlowLayout`      | 简单排列，适合嵌套        |
+| `JApplet`      | `FlowLayout`      | 旧版本常用            |
+| `JToolBar`     | `FlowLayout`      | 工具栏              |
+| `JTabbedPane`  | `CardLayout`      | 切换卡片式界面          |
+| `JLayeredPane` | `null`（无布局，即绝对布局） | 分层显示组件           |
 
----
 
 🔹1. 是否除 static 内部类外，不能在类内部声明 static 成员？
 
