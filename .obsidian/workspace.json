@@ -37,8 +37,7 @@
               "title": "MySQL"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -210,11 +209,11 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "29a7d43e190d60a3",
+  "active": "f447b24ae09b2814",
   "lastOpenFiles": [
+    "学习/Language/SQL/MySQL.md",
     "学习/ProjectsStudy/C C++/csv_reader.md",
     "学习/Language/java/Java面向对象程序设计考试.md",
-    "学习/Language/SQL/MySQL.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/algorithm/用法导向知识.md",
     "Files & LongText/Attachments/Pasted image 20250628144922.png",
