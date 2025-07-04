@@ -1,3 +1,5 @@
+## 杂项
+static 成员函数中不允许使用 const 修饰**方法体**
 ## 单例模式使用模板
 ```cpp
 #pragma once
