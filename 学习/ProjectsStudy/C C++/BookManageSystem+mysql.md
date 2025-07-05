@@ -157,170 +157,149 @@ void utils::register_user() {
 #include <string>
 #include <vector>
 #include <regex>
-#include <stdexcept>
 #include <limits>
 #include <format>
+#include <algorithm>
+#include <functional>
 
 class InputValidator {
-public:
-    // 通用输入验证模板
+private:
+    // 输入错误处理：清除流、提示错误
+    static void handle_input_error() {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cerr << "Invalid input. Please try again.\n\n";
+    }
+
+    // 主模板：适用于基本类型（int, double 等）
     template<typename T>
-    static T validate_input(
-        const std::string& prompt,
-        const std::function<bool(const T&)>& validator,
-        const std::string& error_msg = "Invalid input. Please try again."
-    ) {
+    static T read_input(const std::string& prompt, const std::function<bool(const T&)>& validator) {
         T value;
         while (true) {
             std::cout << prompt;
             std::cin >> value;
 
-            if (std::cin.fail()) {
-                std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                std::cerr << "Input type mismatch. Please try again.\n";
-                continue;
-            }
+            if (std::cin.fail()) handle_input_error();
+            else if (validator(value)) return value;
 
-            if (validator(value)) {
-                return value;
-            }
-
-            std::cerr << std::format("{}\n", error_msg) << std::endl;
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cerr << "Invalid input. Please try again.\n\n";
         }
     }
 
-    // 验证输入是否匹配正则表达式
-    static std::string validate_regex(
+    // 特化 std::string：使用 std::getline 读取完整字符串（支持空格）
+    template<>
+    static std::string read_input<std::string>(
         const std::string& prompt,
-        const std::string& regex_pattern,
-        const std::string& error_msg = "Input does not match pattern."
+        const std::function<bool(const std::string&)>& validator
     ) {
         std::string value;
-        std::regex pattern(regex_pattern);
-
         while (true) {
             std::cout << prompt;
-            std::cin >> value;
+            std::getline(std::cin, value);
 
-            if (std::cin.fail()) {
-                std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                std::cerr << "Input type mismatch. Please try again.\n";
-                continue;
-            }
+            if (std::cin.fail()) handle_input_error();
+            else if (validator(value)) return value;
 
-            if (std::regex_match(value, pattern)) {
-                return value;
-            }
-
-            std::cerr << std::format("{} (Pattern: {})\n", error_msg, regex_pattern) << std::endl;
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cerr << "Invalid input. Please try again.\n\n";
         }
     }
 
-    // 验证输入是否在枚举范围内
-    static std::string validate_enum(
+public:
+    // 验证字符串是否匹配正则表达式
+    static std::string regex(
         const std::string& prompt,
-        const std::vector<std::string>& valid_options
+        const std::string& pattern,
+        const std::string& error_msg = "Input does not match pattern."
     ) {
-        while (true) {
-            std::string value;
-            std::cout << prompt;
-            std::cin >> value;
-
-            if (std::cin.fail()) {
-                std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                std::cerr << "Input type mismatch. Please try again.\n";
-                continue;
-            }
-
-            for (const auto& option : valid_options) {
-                if (value == option) {
-                    return value;
-                }
-            }
-
-            std::string options_str;
-            for (size_t i = 0; i < valid_options.size(); ++i) {
-                options_str += valid_options[i];
-                if (i != valid_options.size() - 1) options_str += ", ";
-            }
-
-            std::cerr << std::format("Invalid input. Allowed options: {}\n", options_str) << std::endl;
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        }
+        std::regex re(pattern);
+        return read_input<std::string>(
+            prompt,
+            [&](const std::string& s) { return std::regex_match(s, re); }
+        );
     }
 
-    // 验证字符串长度在指定范围内
-    static std::string validate_length(
+    // 验证字符串是否在枚举列表中
+    static std::string enum_str(
+        const std::string& prompt,
+        const std::vector<std::string>& options,
+        const std::string& error_msg = "Invalid option."
+    ) {
+        return read_input<std::string>(
+            prompt,
+            [&](const std::string& s) {
+                return std::find(options.begin(), options.end(), s) != options.end();
+            }
+        );
+    }
+
+    // 验证字符串长度范围
+    static std::string length(
         const std::string& prompt,
         size_t min_len,
-        size_t max_len
+        size_t max_len,
+        const std::string& error_msg = "Input length must be between {} and {}."
     ) {
-        while (true) {
-            std::string value;
-            std::cout << prompt;
-            std::cin >> value;
-
-            if (std::cin.fail()) {
-                std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                std::cerr << "Input type mismatch. Please try again.\n";
-                continue;
+        return read_input<std::string>(
+            prompt,
+            [&](const std::string& s) {
+                return s.length() >= min_len && s.length() <= max_len;
             }
-
-            if (value.length() >= min_len && value.length() <= max_len) {
-                return value;
-            }
-
-            std::cerr << std::format("Input must be between {} and {} characters.\n", min_len, max_len) << std::endl;
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        }
+        );
     }
 
-    // 验证输入不为空
-    static std::string validate_not_empty(const std::string& prompt) {
-        while (true) {
-            std::string value;
-            std::cout << prompt;
-            std::cin >> value;
+    // 验证字符串非空
+    static std::string not_empty(
+        const std::string& prompt,
+        const std::string& error_msg = "Input cannot be empty."
+    ) {
+        return read_input<std::string>(
+            prompt,
+            [](const std::string& s) { return !s.empty(); }
+        );
+    }
 
-            if (std::cin.fail()) {
-                std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                std::cerr << "Input type mismatch. Please try again.\n";
-                continue;
+    // 验证字符串是否为纯数字（如电话、ID）
+    static std::string numeric(
+        const std::string& prompt,
+        const std::string& error_msg = "Input must be numeric."
+    ) {
+        return read_input<std::string>(
+            prompt,
+            [](const std::string& s) {
+                return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit);
             }
+        );
+    }
 
-            if (!value.empty()) {
-                return value;
-            }
-
-            std::cerr << "Input cannot be empty. Please try again.\n" << std::endl;
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        }
+    // 验证整数范围
+    static int integer_range(
+        const std::string& prompt,
+        int min,
+        int max,
+        const std::string& error_msg = "Value must be between {} and {}."
+    ) {
+        return read_input<int>(
+            std::format(prompt, min, max),
+            [&](int x) { return x >= min && x <= max; }
+        );
     }
 };
 
 ```
 支持长度，枚举类型（通过 vector），正则验证，使用方法
 ```cpp
-std::string phone = InputValidator::validate_regex(
-    "Input your phone (11 digits): ",
-    R"(\d{11})",
-    "Invalid phone number: must be exactly 11 digits."
+int age = InputValidator::integer_range("Enter your age ({}-{}): ", 18, 99);
+std::string phone = InputValidator::regex(
+    "Enter phone (11 digits): ",
+    R"(\d{11})"
 );
-
-std::string identity = InputValidator::validate_enum(
-    "Input your identity (reader, librarian, sys_admin): ",
+std::string role = InputValidator::enum_str(
+    "Enter role (reader, librarian, sys_admin): ",
     {"reader", "librarian", "sys_admin"}
 );
+std::string name = InputValidator::length(
+    "Enter username (5-20 characters): ",
+    5, 20
+);
+std::string name = InputValidator::not_empty("Enter your name: ");
 ```
