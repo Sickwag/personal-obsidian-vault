@@ -52,7 +52,8 @@
               "title": "王道考研计算机组成原理"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -223,8 +224,10 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "f447b24ae09b2814",
+  "active": "e038ebc4e3f6a0a1",
   "lastOpenFiles": [
+    "学习/4Bases&Work/计算机组成原理/王道考研计算机组成原理.md",
+    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "学习/4Bases&Work/计算机组成原理/计组期末考试.md",
     "Files & LongText/Attachments/Pasted image 20250706165634.png",
     "Files & LongText/Attachments/Pasted image 20250706165520.png",
@@ -236,8 +239,6 @@
     "Files & LongText/Attachments/Pasted image 20250706153713.png",
     "Files & LongText/Attachments/Pasted image 20250705200053.png",
     "Files & LongText/Attachments/Pasted image 20250706153602.png",
-    "学习/4Bases&Work/计算机组成原理/王道考研计算机组成原理.md",
-    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "学习/ProjectsStudy/C C++/csv_reader.md",
     "学习/4Bases&Work/计算机组成原理/Hardware Animation.md",
     "学习/4Bases&Work/计算机组成原理/计组---刘宏伟.md",
