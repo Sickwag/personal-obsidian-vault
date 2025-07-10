@@ -21,8 +21,19 @@
               "icon": "lucide-file",
               "title": "BookManageSystem+mysql"
             }
+          },
+          {
+            "id": "2540126cddb5abc2",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -193,10 +204,10 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "f447b24ae09b2814",
+  "active": "2540126cddb5abc2",
   "lastOpenFiles": [
-    "学习/4Bases&Work/计算机组成原理/王道考研计算机组成原理.md",
     "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
+    "学习/4Bases&Work/计算机组成原理/王道考研计算机组成原理.md",
     "学习/4Bases&Work/计算机组成原理/计组期末考试.md",
     "Files & LongText/Attachments/Pasted image 20250706165634.png",
     "Files & LongText/Attachments/Pasted image 20250706165520.png",
