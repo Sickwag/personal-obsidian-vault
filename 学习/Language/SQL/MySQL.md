@@ -3665,3 +3665,34 @@ sql description: You have an error in your SQL syntax; check the manual that cor
 乍看之下还看不出哪里有问题，语法错误，通过调试会发现，statement 字符串值显示为 `<字符串中的字符无效。>`，打开其中内容发现其中有大量 `\0` 无意义字符，判定为文件编码问题，修改为 utf-8 即可解决
 
 ## 解析数据库返回内容
+由于[[MySQL Long Code Practice#mysql-connector-cpp 链接模板|链接模板]]预输入代码将所有插入内容视为字符串插入
+```cpp
+int MySQLDB::prepare_execute(const std::string& sql, const std::vector<std::string>& params) {
+	std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement(sql));
+	for (size_t i = 0; i < params.size(); ++i) {
+		pstmt->setString(i + 1, params[i]);
+	}
+	return pstmt->executeUpdate();
+}
+```
+会在表中不为 varchar，char 类型的字段位置报错
+最直接的方式是用 if-else 为每种类型设置对应设置 set 语句
+```cpp
+int MySQLDB::prepare_execute(const std::string& sql, const std::vector<std::variant<int, bool, std::string>>& params) {
+    std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement(sql));
+    for (size_t i = 0; i < params.size(); ++i) {
+        std::visit([&pstmt, i](auto&& value) {
+            using T = std::decay_t<decltype(value)>;
+            if constexpr (std::is_same_v<T, int>) {
+                pstmt->setInt(i + 1, value);
+            } else if constexpr (std::is_same_v<T, bool>) {
+                pstmt->setBoolean(i + 1, value);
+            } else if constexpr (std::is_same_v<T, std::string>) {
+                pstmt->setString(i + 1, value);
+            }
+        }, params[i]);
+    }
+    return pstmt->executeUpdate();
+}
+```
+更有拓展性的方法是：
