@@ -936,3 +936,256 @@ BEGIN
 	END WHILE; 
 END $
 ```
+## C++数据库编程
+### mysql-connector-cpp 链接模板
+```cpp
+// mysql_db.h
+#pragma once
+
+#include <algorithm>
+#include <mysql_driver.h>
+#include <cppconn/resultset.h>
+#include <string>
+#include <filesystem>
+#include <iosfwd>
+#include <fstream>
+#include <vector>
+#include <memory>
+#include <cppconn/connection.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+#include <cppconn/exception.h>
+#include <list>
+#include <unordered_map>
+#include <unordered_set>
+#include <chrono>
+#include <format>
+
+using ColumnInfo = std::unordered_map<std::string, std::unordered_set<std::string>>;
+
+class MySQLDB {
+public:
+	MySQLDB(const std::string& host, int port, const std::string& user, const std::string& password, const std::string& db = "");
+	MySQLDB(sql::ConnectOptionsMap options);
+
+	ColumnInfo describe_table(std::string& table_name, const std::vector<std::string>& info = {"Field", "Type", "Null", "Key", "Default", "Extra"}) const;
+	std::unique_ptr<sql::ResultSet> query(const std::string& sql);
+	int execute(const std::string& sql);
+
+	std::unique_ptr<sql::ResultSet> prepare_query(const std::string& sql, const std::vector<std::string>& params);
+	int prepare_execute(const std::string& sql, const std::vector<std::string>& params);
+	int prepare_execute(const std::string& sql, const std::vector<std::vector<std::string>>& params);
+
+	void executeFromFile(const std::string& filePath);
+
+	// 事务控制
+	void begin_transaction();
+	void commit();
+	void rollback();
+
+	bool is_connect() const;
+	static void print_sql_error(const sql::SQLException& e);
+
+private:
+
+	std::unique_ptr<sql::Connection> con;
+	sql::mysql::MySQL_Driver* driver;
+};
+```
+---
+```cpp
+// mysql_db.cpp
+#include "mysql_db.h"
+#include <cppconn/connection.h>
+
+MySQLDB::MySQLDB(const std::string& host, int port, const std::string& user, const std::string& password, const std::string& db_name) : driver(sql::mysql::get_driver_instance()) {
+	std::string connStr = "tcp://" + host + ":" + std::to_string(port);
+	con.reset(driver->connect(connStr, user, password));  // 更稳定，兼容多数认证方式
+
+	if (!db_name.empty()) {
+		con->setSchema(db_name);
+	} else {
+		throw std::runtime_error("undefined db schema!");
+	}
+
+	con->setAutoCommit(false);
+}
+
+MySQLDB::MySQLDB(sql::ConnectOptionsMap options) : driver(sql::mysql::get_driver_instance()) {
+	con.reset(driver->connect(options));
+	try {
+		if (!options["schema"].get<sql::SQLString>()) {
+			throw std::runtime_error("undefined db schema!");
+		}
+		con->setSchema(options["schema"].get<sql::SQLString>()->asStdString());
+		con->setAutoCommit(false);
+	}
+	catch (const sql::SQLException& e) {
+		print_sql_error(e);
+	}
+}
+
+ColumnInfo MySQLDB::describe_table(std::string& table_name, const std::vector<std::string>& info) const {
+	std::unique_ptr<sql::Statement> stmt(con->createStatement());
+	std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("DESC " + table_name + ";"));
+	ColumnInfo ci;
+	while (res->next()) {
+		auto field = res->getString(info[0]);
+		for (int i = 1; i < info.size(); i++) {
+			ci[field].insert(res->getString(info[i]));
+		}
+	}
+	return ci;
+}
+
+std::unique_ptr<sql::ResultSet> MySQLDB::query(const std::string& sql) {
+	std::unique_ptr<sql::Statement> stmt(con->createStatement());
+	sql::ResultSet* rawRes = stmt->executeQuery(sql);
+	return std::unique_ptr<sql::ResultSet>(rawRes);
+}
+
+int MySQLDB::execute(const std::string& sql) {
+	std::unique_ptr<sql::Statement> stmt(con->createStatement());
+	int changed_rows = stmt->executeUpdate(sql);
+	return changed_rows;
+}
+/*
+std::vector<std::string> params = {"Bob", "28"};
+db.prepareExecute("INSERT INTO users (name, age) VALUES (?, ?)", params);
+*/
+
+/**
+ * @brief 执行带参数的 SQL 查询语句并返回结果集。
+ *
+ * @param sql 带占位符（`?`）的 SQL 查询语句。
+ * @param params 参数列表，按顺序替换 SQL 中的占位符。
+ * @return std::unique_ptr<sql::ResultSet> 查询结果集的智能指针。
+ * @throw sql::SQLException 如果 SQL 执行失败。
+ *
+ * @note 参数索引从 1 开始（JDBC 标准）。
+ * @warning 不支持参数化表名或列名，仅支持值参数化。
+ */
+std::unique_ptr<sql::ResultSet> MySQLDB::prepare_query(
+	const std::string& sql,
+	const std::vector<std::string>& params
+) {
+	std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement(sql));
+	for (size_t i = 0; i < params.size(); ++i) {
+		pstmt->setString(i + 1, params[i]);  // 参数索引从 1 开始
+	}
+	sql::ResultSet* rawRes = pstmt->executeQuery();
+	return std::unique_ptr<sql::ResultSet>(rawRes);
+}
+
+
+/**
+ * @brief 执行带参数（如 INSERT, UPDATE, DELETE）的 SQL 查询语句并返回结果集。
+ *
+ * @param sql 带占位符（`?`）的 SQL 查询语句。
+ * @param params 参数列表，按顺序替换 SQL 中的占位符。
+ * @return std::unique_ptr<sql::ResultSet> 查询结果集的智能指针。
+ * @throw sql::SQLException 如果 SQL 执行失败。
+ *
+ * @note 参数索引从 1 开始（JDBC 标准）。
+ * @warning 不支持参数化表名或列名，仅支持值参数化。
+ */
+int MySQLDB::prepare_execute(const std::string& sql, const std::vector<std::string>& params) {
+	std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement(sql));
+	for (size_t i = 0; i < params.size(); ++i) {
+		pstmt->setString(i + 1, params[i]);
+	}
+	return pstmt->executeUpdate();
+}
+/**
+ * @brief 批量执行带参数的 SQL 更新/插入语句。
+ *
+ * @param sql 带占位符（`?`）的 SQL 语句（适用于所有参数行）。
+ * @param params 批量参数列表，每一行对应一次 SQL 执行的参数。
+ * @return int 成功执行的语句数量。
+ * @throw sql::SQLException 如果某条 SQL 执行失败。
+ * @warning 批量操作不支持事务回滚，建议在调用前手动开启事务。
+ * @code
+ * ```cpp
+ * std::vector<std::vector<std::string>> batchParams = {
+ * 	{"Alice", "25"},
+ * 	{"Bob", "30"}
+ * };
+ * int statementsExecuted = prepareExecute(
+ * 	"INSERT INTO users (name, age) VALUES (?, ?)",
+ * 	batchParams
+ * );
+ * std::cout << "Statements executed: " << statementsExecuted << std::endl;
+ * ```
+ */
+int MySQLDB::prepare_execute(const std::string& sql, const std::vector<std::vector<std::string>>& params) {
+	for (const auto& item : params) {
+		prepare_execute(sql, item);
+	}
+	return params.size();
+}
+
+void MySQLDB::executeFromFile(const std::string& filePath) {
+	std::ifstream f(filePath, std::ios::binary);
+	if (!f.is_open()) {
+		throw std::runtime_error("cannot open this file: " + filePath);
+	}
+
+	// skip utf-8 with bom 3 chars start
+	char bom[3];
+	f.read(bom, 3);
+	if (!(bom[0] == '\xEF' && bom[1] == '\xBB' && bom[2] == '\xBF')) {
+		f.seekg(0);
+	}
+
+	std::string line, statement;
+	while (std::getline(f, line)) {
+		line.erase(line.begin(), std::find_if(line.begin(), line.end(), [](unsigned char ch) {
+			return !std::isspace(ch);
+				   }));
+		if (line.empty() || line.starts_with("--") || line.starts_with("#")) {
+			continue;
+		}
+		statement += line;
+	}
+
+	// 逐条执行 SQL 语句（根据分号分隔）
+	std::istringstream sqlStream(statement);
+	std::string sqlStmt;
+	while (std::getline(sqlStream, sqlStmt, ';')) {
+		if (!sqlStmt.empty()) {
+			std::unique_ptr<sql::Statement> stmt(con->createStatement());
+			try {
+				stmt->execute(sqlStmt + ';');  // 补全分号
+			}
+			catch (const sql::SQLException& e) {
+				print_sql_error(e);
+			}
+		}
+	}
+	std::cout << "execute form " + filePath + "successfully!\n";
+	f.close();
+}
+
+void MySQLDB::begin_transaction() {
+	con->setAutoCommit(false);
+}
+
+void MySQLDB::commit() {
+	con->commit();
+}
+
+void MySQLDB::rollback() {
+	con->rollback();
+}
+
+bool MySQLDB::is_connect() const {
+	return con && con->isValid();
+}
+
+void MySQLDB::print_sql_error(const sql::SQLException& e) {
+	std::cerr << "sql error code: " << e.getErrorCode() << '\n'
+		<< "sql statement: " << e.getSQLState() << '\n'
+		<< "sql description: " << e.what();
+}
+
+```

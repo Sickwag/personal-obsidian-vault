@@ -3266,6 +3266,8 @@ mysql-connector-cpp 安装步骤 [2025最新版VS2022配置C++ connector连接my
 
 > 记下这里时（2025 年 6 月 20 日14:45:29）已经升级到了 `mysqlcppconnx.dll`（10）所以需要在图片中位置相应改动
 
+### 链接模板
+完整代码实现见[[MySQL Long Code Practice#C++数据库编程#mysql-connector-cpp 链接模板|基本功能实现代码]]
 示例代码中必须要能够登录 root 账户才能 `create database` 操作，如果没有权限可以参考下面代码**操作数据库**
 ```cpp
 #include <cppconn/statement.h>
@@ -3451,12 +3453,12 @@ typedef sql::Variant ConnectPropertyVal;
 
 #### 4️⃣ 元数据（Metadata）
 
-|操作|API 示例|说明|
-|---|---|---|
-|获取数据库元信息|`sql::DatabaseMetaData* meta = con->getMetaData();`|包括数据库名、版本、表信息等|
-|获取表信息|`meta->getTables(...)`|获取数据库中所有表|
-|获取列信息|`meta->getColumns(...)`|获取某张表的列信息|
-|获取结果集元数据|`sql::ResultSetMetaData* meta = res->getMetaData();`|获取查询结果的字段信息|
+| 操作       | API 示例                                               | 说明             |
+| -------- | ---------------------------------------------------- | -------------- |
+| 获取数据库元信息 | `sql::DatabaseMetaData* meta = con->getMetaData();`  | 包括数据库名、版本、表信息等 |
+| 获取表信息    | `meta->getTables(...)`                               | 获取数据库中所有表      |
+| 获取列信息    | `meta->getColumns(...)`                              | 获取某张表的列信息      |
+| 获取结果集元数据 | `sql::ResultSetMetaData* meta = res->getMetaData();` | 获取查询结果的字段信息    |
 
 #### 5️⃣ 事务控制
 
@@ -3514,6 +3516,17 @@ pstmt->executeUpdate();
 sql::ResultSetMetaData* meta = res->getMetaData();
 for (int i = 1; i <= meta->getColumnCount(); ++i) {
 	std::cout << meta->getColumnName(i) << " (" << meta->getColumnTypeName(i) << ") | ";
+}
+// 获取最新创建的一行记录的id值
+std::string sql_string_query = "SELECT id FROM users ORDER BY created_at DESC LIMIT 1;";
+auto result = db.query(sql_string_query);
+
+if (result->next()) {
+    int last_id = result->getInt("id");
+    std::cout << "Latest ID: " << last_id << std::endl;
+    // 使用 last_id 进行后续操作
+} else {
+    std::cerr << "No results found." << std::endl;
 }
 ```
 
@@ -3650,3 +3663,5 @@ sql statement: 42000
 sql description: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 1
 ```
 乍看之下还看不出哪里有问题，语法错误，通过调试会发现，statement 字符串值显示为 `<字符串中的字符无效。>`，打开其中内容发现其中有大量 `\0` 无意义字符，判定为文件编码问题，修改为 utf-8 即可解决
+
+## 解析数据库返回内容
