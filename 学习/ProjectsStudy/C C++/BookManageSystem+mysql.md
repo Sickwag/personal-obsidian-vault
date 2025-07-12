@@ -1,5 +1,58 @@
 ## 杂项
 static 成员函数中不允许使用 const 修饰**方法体**
+对于明显没有语法错误，继承正确的 C2504 找不到基类错误，可移植性 codemaid 的代码清理工作，自动调整 include 的顺序，解决问题
+```cpp
+// user.h
+#pragma once
+#include<string>
+#include "mysql_db.h"
+#include <cppconn/resultset.h>
+#include <any>
+#include <memory>
+#include <unordered_map>
+#include <vector>
+class User {
+public:
+	User(MySQLDB& inited_db);
+	std::string id, password, name, nick_name, priority, phone, create_at;
+	bool is_avaliable;
+	void self_checking() const;
+	void change_password();
+private:
+	MySQLDB& db;
+protected:
+	MySQLDB& get_db()const;
+	void print_result_set(const std::unique_ptr<sql::ResultSet>& rs, bool print_header = true )const ;
+};
+
+// librarian.h
+#pragma once 
+#include "user.h"
+#include "utils.h"
+class Librarian : public User {
+public:
+	void add_books() const;
+	void check_books_info() const;
+	void display_all_books_info() const;
+	void change_book_info() const;
+	void remove_book() const;
+	void custom_check() const;
+};
+
+// sys_admin.h
+#pragma once
+#include "librarian.h"
+class Sys_admin : public Librarian {
+public:
+	void adjust_permission() const;
+	void set_anoucement() const;
+};
+```
+```error
+严重性	代码	说明	项目	文件	行	抑制状态	详细信息
+错误	C2504	“Librarian”: 未定义基类	mysql-connect-demo	D:\Code Files\vsstudio\mysql-connect-demo\mysql-connect-demo\sys_admin.h	5		
+```
+**![[Pasted image 20250712150300.png]]**
 ## 单例模式使用模板
 ```cpp
 #pragma once
@@ -391,3 +444,66 @@ foo(s);        // ❌ N 无法在编译期推导（除非 s 是 constexpr）
 
 如果希望函数 **仅接受对象**，使用 **非 `const` 左值引用 (`T&`)** 或 **指针 (`T*`)**。
 如果希望函数 **仅接受字面量**，使用 **编译期约束类型**（如模板 NTTP 或 `std::format_string`）。
+
+## 常用操作
+### 将字符串根据字符串分类存放
+[[用法导向知识#按字符（串）划分子串|字符串分类]]中已经提到使用基本 stl 库实现这一功能，但是这里使用 boost 库实现
+#### Boost. StringAlgorithms
+```cpp
+#include <boost/algorithm/string.hpp>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::string input = "apple,banana,orange,grape";
+    std::vector<std::string> result;
+    boost::algorithm::split(result, input, boost::algorithm::is_any_of("|"));
+    for (const auto& token : result) {
+        std::cout << token << std::endl;
+    }
+
+    return 0;
+}
+```
+这种方式能够接受字符串作为分割字符串，`boost::algorithm::split` 也可以写成 `boost::split`
+### boost::algorithm::split_regex
+```cpp
+#include <iostream>
+#include <vector>
+#include <string>
+#include <boost/algorithm/string/regex.hpp>
+
+int main() {
+    std::string input = "apple||banana||orange||grape";
+    std::vector<std::string> result;
+
+    boost::algorithm::split_regex(result, input, boost::regex("\\|\\|"));
+
+    for (const auto& token : result) {
+        std::cout << token << std::endl;
+    }
+
+    return 0;
+}
+
+```
+使用正则性能较低，但功能性强
+### boost::tokenizer
+```cpp
+#include <boost/tokenizer.hpp>
+#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    std::string input = "apple###banana###orange###grape";
+    boost::char_separator<char> sep("###");  // 分隔符为 "###"
+    boost::tokenizer<boost::char_separator<char>> tokens(input, sep);
+
+    for (const auto& token : tokens) {
+        std::cout << token << std::endl;
+    }
+    return 0;
+}
+```
+纯粹字符处理，每个结果存放在
