@@ -38,7 +38,7 @@
             }
           },
           {
-            "id": "4e55ae72c499ebc6",
+            "id": "b7824b1c16c04127",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -52,8 +52,7 @@
               "title": "用法导向知识"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -208,8 +207,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -225,14 +223,20 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "4e55ae72c499ebc6",
+  "active": "f447b24ae09b2814",
   "lastOpenFiles": [
+    "学习/algorithm/用法导向知识.md",
+    "学习/Language/SQL/MySQL.md",
+    "Files & LongText/Attachments/v2-59316dd6046b17bb0dd8ddb2d84b16e0_b.gif",
+    "Files & LongText/Attachments/Pasted image 20250716162437.png",
+    "Files & LongText/Attachments/Pasted image 20250716162304.png",
+    "Files & LongText/Attachments/Pasted image 20250716162240.png",
+    "Files & LongText/Attachments/Pasted image 20250716161715.png",
     "学习/algorithm/题型分类.md",
     "学习/algorithm/刷题路线.md",
     "Files & LongText/Attachments/Pasted image 20250716143325.png",
     "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "Files & LongText/Attachments/Pasted image 20250712150300.png",
-    "学习/Language/SQL/MySQL.md",
     "Files & LongText/Long code/MySQL Long Code Practice.md",
     "Files & LongText/Long code/未命名.md",
     "学习/4Bases&Work/计算机组成原理/王道考研计算机组成原理.md",
@@ -240,17 +244,11 @@
     "Files & LongText/Attachments/Pasted image 20250706165634.png",
     "Files & LongText/Attachments/Pasted image 20250706165520.png",
     "Files & LongText/Attachments/Pasted image 20250706165510.png",
-    "Files & LongText/Attachments/Pasted image 20250706162244.png",
-    "Files & LongText/Attachments/Pasted image 20250706161620.png",
-    "Files & LongText/Attachments/Pasted image 20250706155609.png",
-    "Files & LongText/Attachments/Pasted image 20250706155251.png",
-    "Files & LongText/Attachments/Pasted image 20250706153713.png",
     "学习/ProjectsStudy/C C++/csv_reader.md",
     "学习/4Bases&Work/计算机组成原理/Hardware Animation.md",
     "学习/4Bases&Work/计算机组成原理/计组---刘宏伟.md",
     "学习/Language/java/Java面向对象程序设计考试.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/algorithm/用法导向知识.md",
     "祛魅.md",
     "Files & LongText/ChatLogWithAi/C++学习对话.md",
     "Files & LongText/ChatLogWithAi/append.md",
@@ -263,7 +261,6 @@
     "学习/ProjectsStudy/C C++/cJSON.md",
     "学习/ProjectsStudy/C C++/PicToAscii.md",
     "学习/ProjectsStudy/C C++",
-    "学习/ProjectsStudy/Build your own text editor.md",
     "学习/4Bases&Work/软考",
     "copilot-conversations",
     "Competitions",
