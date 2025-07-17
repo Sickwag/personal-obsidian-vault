@@ -23,6 +23,21 @@
             }
           },
           {
+            "id": "490099e6a2dac37e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "CLI11.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "CLI11"
+            }
+          },
+          {
             "id": "2540126cddb5abc2",
             "type": "leaf",
             "state": {
@@ -52,7 +67,8 @@
               "title": "用法导向知识"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -207,7 +223,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -223,12 +240,13 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "f447b24ae09b2814",
+  "active": "490099e6a2dac37e",
   "lastOpenFiles": [
+    "学习/algorithm/刷题路线.md",
+    "CLI11.md",
     "Files & LongText/ChatLogWithAi/C++学习对话.md",
     "Files & LongText/ChatLogWithAi/Python练手 PicToAscii.md",
     "Files & LongText/ChatLogWithAi/算法学习.md",
-    "学习/algorithm/刷题路线.md",
     "学习/algorithm/用法导向知识.md",
     "学习/algorithm/题型分类.md",
     "学习/Language/SQL/MySQL.md",
@@ -260,7 +278,6 @@
     "学习/其他专业书/Modern C++.md",
     "学习/ProjectsStudy/C C++/2048CLI.md",
     "学习/ProjectsStudy/C C++/Sudoku.md",
-    "学习/ProjectsStudy/C C++/cJSON.md",
     "学习/ProjectsStudy/C C++",
     "学习/4Bases&Work/软考",
     "copilot-conversations",
