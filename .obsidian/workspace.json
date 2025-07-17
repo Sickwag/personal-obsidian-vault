@@ -207,8 +207,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -226,15 +225,18 @@
   },
   "active": "f447b24ae09b2814",
   "lastOpenFiles": [
+    "Files & LongText/ChatLogWithAi/C++学习对话.md",
+    "Files & LongText/ChatLogWithAi/Python练手 PicToAscii.md",
+    "Files & LongText/ChatLogWithAi/算法学习.md",
+    "学习/algorithm/刷题路线.md",
     "学习/algorithm/用法导向知识.md",
+    "学习/algorithm/题型分类.md",
     "学习/Language/SQL/MySQL.md",
     "Files & LongText/Attachments/v2-59316dd6046b17bb0dd8ddb2d84b16e0_b.gif",
     "Files & LongText/Attachments/Pasted image 20250716162437.png",
     "Files & LongText/Attachments/Pasted image 20250716162304.png",
     "Files & LongText/Attachments/Pasted image 20250716162240.png",
     "Files & LongText/Attachments/Pasted image 20250716161715.png",
-    "学习/algorithm/题型分类.md",
-    "学习/algorithm/刷题路线.md",
     "Files & LongText/Attachments/Pasted image 20250716143325.png",
     "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "Files & LongText/Attachments/Pasted image 20250712150300.png",
@@ -251,7 +253,6 @@
     "学习/Language/java/Java面向对象程序设计考试.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "祛魅.md",
-    "Files & LongText/ChatLogWithAi/C++学习对话.md",
     "Files & LongText/ChatLogWithAi/append.md",
     "Files & LongText/ChatLogWithAi/C++瀛︿範瀵硅瘽.md",
     "Files & LongText/ChatLogWithAi/关于vs中cmake项目设置.md",
@@ -260,7 +261,6 @@
     "学习/ProjectsStudy/C C++/2048CLI.md",
     "学习/ProjectsStudy/C C++/Sudoku.md",
     "学习/ProjectsStudy/C C++/cJSON.md",
-    "学习/ProjectsStudy/C C++/PicToAscii.md",
     "学习/ProjectsStudy/C C++",
     "学习/4Bases&Work/软考",
     "copilot-conversations",
