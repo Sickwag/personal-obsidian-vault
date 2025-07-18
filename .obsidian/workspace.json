@@ -8,21 +8,6 @@
         "type": "tabs",
         "children": [
           {
-            "id": "f447b24ae09b2814",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/algorithm/刷题路线.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "刷题路线"
-            }
-          },
-          {
             "id": "490099e6a2dac37e",
             "type": "leaf",
             "state": {
@@ -38,36 +23,22 @@
             }
           },
           {
-            "id": "2540126cddb5abc2",
+            "id": "0d4c9929f4ed251f",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/Language/SQL/MySQL.md",
+                "file": "CodeLineCounter.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "MySQL"
-            }
-          },
-          {
-            "id": "b7824b1c16c04127",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/algorithm/用法导向知识.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "用法导向知识"
+              "title": "CodeLineCounter"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -239,9 +210,12 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "f447b24ae09b2814",
+  "active": "0d4c9929f4ed251f",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/Pasted image 20250718231419.png",
+    "CodeLineCounter.md",
     "CLI11.md",
+    "学习/algorithm/刷题路线.md",
     "Files & LongText/Attachments/Pasted image 20250718095637.png",
     "Files & LongText/Attachments/Pasted image 20250718095633.png",
     "Files & LongText/Attachments/Pasted image 20250717214758.png",
@@ -252,7 +226,6 @@
     "Files & LongText/Attachments/Pasted image 20250717204518.png",
     "学习/algorithm/用法导向知识.md",
     "Files & LongText/ChatLogWithAi/C++学习对话.md",
-    "学习/algorithm/刷题路线.md",
     "Files & LongText/ChatLogWithAi/Python练手 PicToAscii.md",
     "Files & LongText/ChatLogWithAi/算法学习.md",
     "学习/algorithm/题型分类.md",
@@ -275,7 +248,6 @@
     "Files & LongText/ChatLogWithAi/关于vs中cmake项目设置.md",
     "Chores/operation in devices.md",
     "学习/其他专业书/Modern C++.md",
-    "学习/ProjectsStudy/C C++/2048CLI.md",
     "学习/ProjectsStudy/C C++",
     "学习/4Bases&Work/软考",
     "copilot-conversations",
