@@ -67,8 +67,7 @@
               "title": "用法导向知识"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -240,8 +239,9 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "490099e6a2dac37e",
+  "active": "f447b24ae09b2814",
   "lastOpenFiles": [
+    "CLI11.md",
     "Files & LongText/Attachments/Pasted image 20250718095637.png",
     "Files & LongText/Attachments/Pasted image 20250718095633.png",
     "Files & LongText/Attachments/Pasted image 20250717214758.png",
@@ -252,7 +252,6 @@
     "Files & LongText/Attachments/Pasted image 20250717204518.png",
     "学习/algorithm/用法导向知识.md",
     "Files & LongText/ChatLogWithAi/C++学习对话.md",
-    "CLI11.md",
     "学习/algorithm/刷题路线.md",
     "Files & LongText/ChatLogWithAi/Python练手 PicToAscii.md",
     "Files & LongText/ChatLogWithAi/算法学习.md",
@@ -260,7 +259,6 @@
     "学习/Language/SQL/MySQL.md",
     "Files & LongText/Attachments/v2-59316dd6046b17bb0dd8ddb2d84b16e0_b.gif",
     "Files & LongText/Attachments/Pasted image 20250716162437.png",
-    "Files & LongText/Attachments/Pasted image 20250716162304.png",
     "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "Files & LongText/Long code/MySQL Long Code Practice.md",
     "Files & LongText/Long code/未命名.md",
