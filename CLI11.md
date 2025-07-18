@@ -64,7 +64,50 @@ app.add_option("--custom", value)
    });
 ```
 the return value is a string indicates validate fail.
+## 位置参数
+`--` 是一个分隔符，表示后面的所有参数都是位置参数，位置参数按照定义顺序被解析
+1. 首先处理必需的位置参数
+2. 然后处理其他位置参数
+3. 支持验证功能来确保参数匹配正确的选项
+要创建位置参数，只需在选项名称中包含一个不以破折号开头的名称：
+```cpp
+std::string filename;  
+app.add_option("filename", filename, "Input file");  
+  
+// 或者同时支持位置参数和选项形式  
+app.add_option("-f,--file,filename", filename, "Input file");
+```
+当启用 `prefix_command` 模式后，CLI11会在遇到第一个无法识别的参数时立即停止解析，并将所有剩余的参数都存储到 `remaining` 数组中。
+```cpp
+TEST_CASE_METHOD(TApp, "PrefixSubcom", "[subcom]") {
+    auto *subc = app.add_subcommand("subc");
+    subc->prefix_command();
+
+    app.add_flag("--simple");
+    args = {"--simple", "subc", /*从这里开始解析失败*/ "other", "--simple", "--mine"};
+    run();
+
+    CHECK(0u == app.remaining_size());
+    CHECK(3u == app.remaining_size(true));
+    CHECK(std::vector<std::string>({"other", "--simple", "--mine"}) == subc->remaining());
+}
+```
+也可以应用于位置参数：
+```cpp
+// Allow extras to be captured
+app.allow_extras();
+sub->allow_extras();
+
+// Process the args
+args = {"one", "two", "sub", "three", "four"};
+run();
+
+// Check what was captured
+CHECK(std::vector<std::string>({"one", "two"}) == app.remaining());
+CHECK(std::vector<std::string>({"three", "four"}) == sub->remaining());
+```
 ## Subcommand
+### 子命令用法
 子命令实际上也是一个CLI11风格的app，只是运行在主要app下，它通常通过输入不用-作为前缀的参数来调起，比如如果我在代码中添加
 ```cpp
 auto* process_cmd = app.add_subcommand("process", "Process files"); 
@@ -95,6 +138,51 @@ if (app.got_subcommand("sub")) {
     // Handle subcommand
 }
 ```
+### 子命令配置和获取
+子命令名称是大小写敏感和下划线敏感的
+```cpp
+sub->ignore_case();        // Make this subcommand case-insensitive
+app.ignore_case();         // Make all subcommands case-insensitive
+sub->ignore_underscore();  // Make this subcommand ignore underscores
+app.ignore_underscore();   // Make all subcommands ignore underscores
+```
+子命令之间可以也可以通过 api 调整[[#Option Relationships and Dependencies 选项关系与依赖|依赖关系]]
+获取子命令并用 vector 存储：可以通过 predict 过滤
+```cpp
+std::vector<App*> subcommands = app.get_subcommands();
+// or
+auto utils = app.get_subcommands([](const App* sub) {
+    return sub->get_group() == "Utilities";
+});
+```
+![[Pasted image 20250718095637.png]]
+### 子命令函数回调
+为子命令设置回调，以便在调用时执行代码，默认情况下，回调函数在所有解析完成后运行。可以通过 `immediate_callback()` 更改。
+```cpp
+sub->callback([&]() {
+    // This code runs immediately after sub is parsed
+})->immediate_callback();
+```
+### 特殊子命令
+#### 无名称子命令
+创建无名称子命令有两种方式：
+1. 使用空字符串作为名称：
+```cpp
+auto *sub = app.add_subcommand("", "empty name");
+```
+2. 不提供参数：
+```cpp
+auto *sub = app.add_subcommand();
+```
+无名称子命令的选项可以直接从主应用程序访问，用起来像是主命令参数
+```cpp
+auto *sub = app.add_subcommand("", "empty name");
+auto *opt = sub->add_option("-v,--value", val);
+args = {"-v", "4.56"};
+run();
+// run as :./app -v 4.56 # 直接使用无名称子命令中的选项
+```
+
 # Core APIs
 App 类提供了许多用于自定义行为的方法。大多数方法返回 `this` 以允许方法链式调用
 ## Configuration Method
@@ -169,3 +257,104 @@ try {
 }
 ```
 # Options 选项类
+## 选项参数配置
+可以通过多种方式设置选项：
+- **Short names**: Single-character names prefixed with a single dash (e.g., `-v`, `-h`)  
+    短名称：以单个短横线前缀的单字符名称（例如， `-v` ， `-h` ）
+- **Long names**: Multi-character names prefixed with double dashes (e.g., `--verbose`, `--help`)  
+    长名称：以双短横线前缀的多字符名称（例如， `--verbose` ， `--help` ）
+- **Positional names**: Names without dashes used for positional arguments  
+    位置名称：用于位置参数的名称，不带短横线
+Multi-Option Policies  多选项策略
+For options that can be specified multiple times, you can set the multi-option policy:
+对于可以多次指定的选项，您可以设置多选项策略：
+
+- TakeLast - 仅使用指定的最后一个值
+- TakeFirst - 仅使用指定的第一个值
+- TakeAll - 存储所有值（向量的默认行为）
+- Join - 使用分隔符连接所有值
+- Sum - 求和数值
+- Reverse - 逆序取值
+```cpp
+app.add_option("-v,--value", values)
+   ->multi_option_policy(CLI::MultiOptionPolicy::TakeAll);
+```
+
+## 兼容类型
+- **Basic types**: integers, floating-point, boolean, strings, characters  
+    基本类型：整数、浮点数、布尔值、字符串、字符
+- **Container types**: vectors, sets, lists, maps, etc.  
+    容器类型：向量、集合、列表、映射等。
+- **Tuple-like types**: pairs, tuples, arrays  
+    元组类型：对、元组、数组
+- **Complex types**: like `std::complex`  复杂类型：如 `std::complex`
+- **Optional types**: `std::optional`, `boost::optional`  
+    可选类型： `std::optional` , `boost::optional`
+- **User-defined types**: with appropriate conversion support  
+    用户自定义类型：具有适当的转换支持
+## 内置验证器
+### 用于 add_option
+```cpp
+app.add_option("--num", num)
+   ->check(CLI::Range(0, 10) | CLI::Range(20, 30));
+```
+- `Range` - Check if value is within a range  
+- `PositiveNumber` - Check if value is positive  
+- `NonNegativeNumber` - Check if value is non-negative  
+- `ExistingFile` - Check if file exists  
+- `ExistingDirectory` - Check if directory exists  
+- `IsMember` - Check if value is in a set of allowed values  
+### 用于 get_option
+- `count()` - Returns how many times the option was specified  
+- `empty()` - Checks if any values were provided  
+- `results()` - Returns the **raw string results**  
+- `as<T>()` - Returns the converted value of type T  
+```cpp
+// or explicitly:
+int value = app.get_option("--number")->as<int>();
+```
+
+## Option Relationships and Dependencies  选项关系与依赖
+设置不同选项之间的依赖关系：
+```cpp
+auto optA = app.add_option("--optA", a_val);
+auto optB = app.add_option("--optB", b_val);
+
+optA->needs(optB);  // If optA is used, optB must also be used
+
+/*
+ *- `./program --optB value2 --optA value1` （两个选项都提供）
+ *- `./program --optB value2` （只提供optB，不使用optA）
+ *- `./program` （两个选项都不提供，会抛出 `CLI::RequiresError` 异常。）
+ */
+
+// or
+optA->excludes(optB);  // optA and optB cannot both be used
+/**
+ * ./program --optA value1 --optB value2 （同时使用两个互斥选项， CLI::ExcludesError 异常）
+ */
+```
+设置回调函数：
+```cpp
+app.add_option_function<int>("--callback", 
+    [](int value) {
+        std::cout << "Callback with value: " << value << std::endl;
+    },
+    "An option with a callback"
+);
+```
+当选项被解析或应用默认值时，回调将被执行。
+还可以捕获默认值，读取环境变量
+```cpp
+int value = 42;
+app.add_option("-n,--number", value, "A number")
+   ->capture_default_str();  // Shows "42" in help message
+   ->envname("PATH_VAR");
+```
+- `default_str(string)` - 直接设置默认字符串，设置选项在帮助信息中显示的默认值字符串，不进行任何验证或回调
+- `default_val(value)` - 设置并验证默认值不仅设置默认字符串，还会验证该值并可能更新绑定的变量
+- `get_default_str()` - 获取默认字符串这是一个简单的getter方法，返回当前存储的默认字符串
+- `capture_default_str()` - 捕获当前值作为默认字符串调用 `default_function_` 来捕获当前绑定变量的值作为默认字符串
+
+# 高级功能
+## 自定义类型和模板特化
