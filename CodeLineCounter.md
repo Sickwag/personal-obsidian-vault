@@ -14,6 +14,13 @@ std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterato
 std::string content(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
    ```
    粗看两者相同，但是第一行会被解释为构造一个 string 对象，第二个会被解释为返回值为 string 的函数声明，这样会导致再使用
+5. 如果通过头文件引入第三方库，为了防止 `F2` 重构名称或者其他批量操作时影响库文件，可以在 `settings.json` 中添加：
+   ```json
+"files.readonlyInclude": {
+       "include/CLI11/CLI11.hpp": true
+   }
+   ```
+   保护文件为只读
 # API 使用
 ## parse 引出的 CallForHelp 异常解析
 ### 现象
