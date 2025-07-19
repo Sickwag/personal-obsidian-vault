@@ -14,3 +14,36 @@ std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterato
 std::string content(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
    ```
    粗看两者相同，但是第一行会被解释为构造一个 string 对象，第二个会被解释为返回值为 string 的函数声明，这样会导致再使用
+# API 使用
+## parse 解析
+CLI 11 项目中，如果用户输入参数 `--help` 或者 `--version` 时，程序一定会抛出 `CLI::CallForHelp` 错误，这并不是故意报错，是为了提醒开发者**有意识地处理这些情况** ，比如打印帮助信息、清理资源、优雅退出等
+常用模板是：
+```cpp
+int main(int argc, char** argv) {
+    try {
+        start(argc, argv);
+        // 其他处理函数
+        return 0；
+    } catch (const CLI::CallForHelp& e) { // 用户输入了`--help`或`--version`，正常流程
+        std::cout << e.what() << std::endl;
+        return 1;
+    } catch (const CLI::ParseError& e) { // 命令行参数解析失败（比如类型不对、参数缺失）
+        std::cerr << e.what() << std::endl;
+        return e.get_exit_code();
+    } catch (const std::exception& e) {
+        std::cerr << "Unexpected error: " << e.what() << std::endl;
+        return 2;
+    }
+}
+```
+使用 `app.parse(argc, argv)` 就需要自己写 try-catch 捕获错误，如果使用 `CLI11_PARSE` 宏
+```cpp
+#define CLI11_PARSE(app, ...)                                                                                          \
+    try {                                                                                                              \
+        (app).parse(__VA_ARGS__);                                                                                      \
+    } catch(const CLI::ParseError &e) {                                                                                \
+        return (app).exit(e);                                                                                          \
+    }
+#endif
+```
+就会自动处理错误，并且
