@@ -15,7 +15,8 @@ std::string content(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<
    ```
    粗看两者相同，但是第一行会被解释为构造一个 string 对象，第二个会被解释为返回值为 string 的函数声明，这样会导致再使用
 # API 使用
-## parse 解析
+## parse 引出的 CallForHelp 异常解析
+### 现象
 CLI 11 项目中，如果用户输入参数 `--help` 或者 `--version` 时，程序一定会抛出 `CLI::CallForHelp` 错误，这并不是故意报错，是为了提醒开发者**有意识地处理这些情况** ，比如打印帮助信息、清理资源、优雅退出等
 常用模板是：
 ```cpp
@@ -46,4 +47,63 @@ int main(int argc, char** argv) {
     }
 #endif
 ```
-就会自动处理错误，并且
+就会自动处理错误，并且必须包含 `(app).exit(e)`，打印错误信息的代码被封装在 exit 函数中，不使用会导致程序只抛出异常，而没有信息提示，CallForHelp 异常在 CLI 11 库中被设计为抛出异常之后打印 help 手册，而这个手册通过
+```cpp
+CLI11_INLINE int App::exit(const Error &e, std::ostream &out, std::ostream &err) const {
+
+    /// Avoid printing anything if this is a CLI::RuntimeError
+    if(e.get_name() == "RuntimeError")
+        return e.get_exit_code();
+
+    if(e.get_name() == "CallForHelp") {
+        out << help();
+        return e.get_exit_code();
+    }
+
+    if(e.get_name() == "CallForAllHelp") {  // this line
+        out << help("", AppFormatMode::All);
+        return e.get_exit_code();
+    }
+
+    if(e.get_name() == "CallForVersion") {
+        out << e.what() << '\n';
+        return e.get_exit_code();
+    }
+
+    if(e.get_exit_code() != static_cast<int>(ExitCodes::Success)) {
+        if(failure_message_)
+            err << failure_message_(this, e) << std::flush;
+    }
+
+    return e.get_exit_code();
+}
+```
+`exit` 函数处理。所以最好的方法就是使用 `CLI11_PARSE` 宏
+### 原理
+在 C++ 中，**异常是从抛出点沿着调用栈向上传播的** ，直到找到匹配的 `catch` 块为止。
+```cpp
+void func3() {
+    throw std::runtime_error("Error in func3");
+}
+
+void func2() {
+    func3();  // func3 抛出异常
+}
+
+void func1() {
+    func2();  // 异常继续向上传播
+}
+
+int main() {
+    try {
+        func1();  // 异常最终传播到 main 的 try 块中
+    } catch (const std::exception& e) {
+        std::cout << "Caught in main: " << e.what() << std::endl;
+    }
+}
+```
+输出：
+```terminal
+Caught in main: Error in func3
+```
+结论：只要**没有在中间函数中捕获异常** ，它就会一直传播到调用栈的上层，直到被某个 `catch` 捕获。另外，现代 C++中默认遵循这种异常抛出规则，所以在 C++11 以后，函数声明中使用 `throw()` 抛出异常的做法已经废弃，不起作用
