@@ -3256,7 +3256,7 @@ HAVING 非常类似于 WHERE。事实上，目前为止所学过的所有类型�
     
     - 自连接只需要执行一次连接操作，而子查询需要对外部查询的每一行重复执行，导致重复计算。
 
-# C++数据库编程
+# C++数据库编程（mysql-connenctor-cpp）
 ## 准备工作
 mysql-connector-cpp 安装步骤 [2025最新版VS2022配置C++ connector连接mysql(保姆级教学)mysql c++ connector-CSDN博客](https://blog.csdn.net/weixin_74027669/article/details/137203874)
 ![[Pasted image 20250620144029.png]]
@@ -3696,3 +3696,163 @@ int MySQLDB::prepare_execute(const std::string& sql, const std::vector<std::vari
 }
 ```
 更有拓展性的方法是：
+# C++数据库编程（Boost:mysql）
+参考链接：[Boost 入门 - 1.88.0 - Boost C++ 函数库](https://boost.ac.cn/doc/libs/1_88_0/more/getting_started/index.html)
+## 准备工作
+### 模板
+使用[包含 msvc 编译器的模板配置](E:\file_storage\Files\各种配置和工具\.vscode配置文件\cmake工程通用模板)，只能使用 msvc 编译器+vcpkg 整合 `boost:x64-windows`，要使用 mingw 只能重新安装 mingw 版本的 boost
+连接模板为：
+```cpp
+#include <boost/mysql/any_connection.hpp>
+#include <boost/mysql/connect_params.hpp>
+#include <boost/mysql/error_with_diagnostics.hpp>
+#include <boost/mysql/results.hpp>
+#include <boost/asio/io_context.hpp>
+#include <iostream>
+#include "MySQLDB.h"
+
+namespace mysql = boost::mysql;
+namespace asio = boost::asio;
+
+void main_impl(int argc, char** argv) {
+    if (argc != 4) {
+        std::cerr << "Usage: " << argv[0] << " <username> <password> <server-hostname>\n";
+        exit(1);
+    }
+
+    const char* username = argv[1];
+    const char* password = argv[2];
+    const char* hostname = argv[3];
+
+    // The execution context, required to run I/O operations.
+    asio::io_context ctx;
+
+    // Represents a connection to the MySQL server.
+    mysql::any_connection conn(ctx);
+
+    // The hostname, username and password to use
+    mysql::connect_params params;
+    params.server_address.emplace_host_and_port(hostname, 3307);
+    params.username = username;
+    params.password = password;
+
+    // Connect to the server
+    conn.connect(params);
+
+    // Issue the SQL query to the server
+    const char* sql = "SELECT * from users;";
+    mysql::results result;
+    conn.execute("use sickwag_learning;", result);
+    conn.execute(sql, result);
+
+    // Print the first field in the first row
+    std::cout << result.rows().at(0).at(0) << std::endl;
+
+    // Close the connection
+    conn.close();
+}
+
+int main(int argc, char** argv) {
+    try {
+        main_impl(argc, argv);
+    } catch (const mysql::error_with_diagnostics& err) {
+        std::cerr << "Error: " << err.what() << '\n'
+                  << "Server diagnostics: " << err.get_diagnostics().server_message() << std::endl;
+        return 1;
+    } catch (const std::exception& err) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return 1;
+    }
+}
+```
+参数可以再 `launch.json` 中设置，也可以 `settings.json` 全局指定
+
+### 前置知识
+#### result 结果集容器
+`boost::mysql::results` 是 Boost.MySQL 提供的 **结果集容器**，用于存储 SQL 查询的返回数据。其中的方法支持链式调用，支持显式类型转换，但 **不自动转换**
+`.rows()`
+- 返回一个包含所有 **结果集** 的数组。
+- 一个 SQL 查询可能返回多个结果集（如存储过程执行多个 `SELECT`）。
+`.row().at(0).at(0)`
+**row 表示结果集合数组行**
+- `.rows().at(0).at(0)`：访问第一个结果集（`rows_view`）的第一行（`row_view`）的第一个字段（`field_view`）。
+- `.rows()` 返回一个 `rows_view`，表示一个结果集，包含多行（`row_view`）。
+- `.rows(1).at(2).at(3)`：访问 **第二个结果集** 的第三行第四列。
+- `rows(i)` 返回第 `i` 个结果集（`rows_view`）。
+#### 常用 api 写法
+##### 处理 null 值
+```cpp
+const mysql::field& field = result.rows().at(0).at(0);
+
+if (field.is_null()) {
+    std::cout << "字段为 NULL" << std::endl;
+} else {
+    std::string value = field.get<std::string>();
+}
+```
+##### 按字段访问
+`Boost.MySQL` 本身不支持直接通过字段名访问，应该在 sql 语句中实现设置好筛选条件
+```cpp
+mysql::results result;
+conn.execute("SELECT id, name FROM users", result);
+
+// 获取列索引
+auto meta = result.rows().meta();
+int name_col_index = -1;
+for (size_t i = 0; i < meta.size(); ++i) {
+    if (meta[i].name() == "name") {
+        name_col_index = i;
+        break;
+    }
+}
+
+// 访问字段值
+if (name_col_index != -1) {
+    for (const auto& row : result.rows()) {
+        std::string name = row.at(name_col_index).get_string();
+        std::cout << "Name: " << name << std::endl;
+    }
+}
+
+// 访问结果集的第n行到m行的某个字段集合
+// 假设字段是 id（第一个列）
+for (size_t i = n; i <= m; ++i) {
+    int64_t id = result.rows().at(i).at(0).get_int64();
+    std::cout << "Row " << i << " ID: " << id << std::endl;
+}
+```
+##### 预处理语句（防止 SQL 注入）
+```cpp
+mysql::statement stmt = conn.prepare_statement("INSERT INTO users (id, name, age) VALUES (?, ?, ?)");
+// 绑定多个参数
+stmt.bind(1, "Alice", 25);
+// 执行插入
+conn.execute(stmt);
+```
+
+##### 事务操作
+```cpp
+mysql::transaction tx = conn.start_transaction();
+tx.execute("INSERT INTO users (name) VALUES ('Alice')");
+tx.commit();  // 提交事务
+```
+##### 异步查询
+```cpp
+mysql::results result;
+conn.async_execute("SELECT * FROM users", result, [&](mysql::error_code ec) {
+    if (ec) {
+        std::cerr << "异步查询失败: " << ec.message() << std::endl;
+        return;
+    }
+    // 获取结果...
+});
+```
+##### 错误处理
+```cpp
+try {
+    conn.execute("SELECT invalid_column FROM users", result);
+} catch (const mysql::error_with_diagnostics& err) {
+    std::cerr << "SQL 错误: " << err.what() << std::endl;
+    std::cerr << "服务器诊断: " << err.get_diagnostics().server_message() << std::endl;
+}
+```

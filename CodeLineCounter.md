@@ -21,6 +21,7 @@ std::string content(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<
    }
    ```
    保护文件为只读
+6. vscode 写代码时，如果想通过 cmake 传入参数，在 launch. json 中设置的 args 会被 settings. json 中的 `cmake.DebugConfig。args` 覆盖
 # API 使用
 ## parse 引出的 CallForHelp 异常解析
 ### 现象
