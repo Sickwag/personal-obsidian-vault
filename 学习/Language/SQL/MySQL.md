@@ -3780,6 +3780,11 @@ int main(int argc, char** argv) {
 - `.rows()` 返回一个 `rows_view`，表示一个结果集，包含多行（`row_view`）。
 - `.rows(1).at(2).at(3)`：访问 **第二个结果集** 的第三行第四列。
 - `rows(i)` 返回第 `i` 个结果集（`rows_view`）。
+
+> [!NOTICE]
+> 
+> - 注意，`rows (). at (i)` 返回一行内容，可以调用 `as_vector()` 将结果转化为 vector，但是其中元素必须是同一类型，否则抛出错误
+> - `rows().at(i).at(j)` 返回一个单元格值，可以调用 `as_type()` 转换为各种类型，不能隐式转换，比如将 int（mysql 数据类型）转化为 string（C++数据类型）会抛出 `bad_value_access` 错误
 #### 常用 api 写法
 ##### 处理 null 值
 ```cpp
@@ -3829,6 +3834,15 @@ mysql::statement stmt = conn.prepare_statement("INSERT INTO users (id, name, age
 stmt.bind(1, "Alice", 25);
 // 执行插入
 conn.execute(stmt);
+
+// 也可以使用， 注意包含同文件with_params
+const char* sql_string = "select * from users u where u.id = ?;";
+mysql::statement stmt = co_await conn.async_prepare_statement(sql_string);
+short id = 3;
+co_await conn.async_execute(
+    mysql::with_params("SELECT * FROM users u WHERE u.id = {}", id),
+    result
+);
 ```
 
 ##### 事务操作
@@ -3910,3 +3924,119 @@ asio::co_spawn(
 - **当 I/O 完成，`io_context` 会唤醒对应的协程**。
 - 协程本质是一个 **可挂起/恢复的函数**，内部包含通过 `co_await` 修饰的操作和协程所需的局部变量，资源。
 - 协程的局部变量 **不会因挂起丢失**，因为编译器会将其分配在堆内存中（而非普通函数的栈内存）。
+异步连接数据库代码示例：
+```cpp
+asio::awaitable<void> coro_main(
+    mysql::any_connection& conn,
+    std::string_view username,
+    std::string_view password,
+    std::string_view database,
+    std::string_view server_hostname) {
+    mysql::connect_params params;
+    params.username = username;
+    params.password = password;
+    params.server_address.emplace_host_and_port(std::string(server_hostname), 3307);
+
+    co_await conn.async_connect(params);
+    const char* sql_string = "select * from users;";
+    mysql::results result;
+    co_await conn.async_execute("use sickwag_learning;", result);
+    co_await conn.async_execute(sql_string, result);
+    std::cout << result.rows().at(0).at(0) << std::endl;
+    co_await conn.async_close();
+}
+
+void main_impl(int argc, char** argv) {
+    if (argc != 5) {
+        std::cerr << "Usage: " << argv[0] << " <username> <password> <database> <server-hostname>\n";
+        exit(1);
+    }
+
+    asio::io_context ctx;
+    mysql::any_connection conn(ctx);
+    asio::co_spawn(
+        ctx,
+        [&conn, &argv]() {
+            return coro_main(conn, argv[1], argv[2], argv[3], argv[4]);
+        },
+        [](const std::exception_ptr& ptr) {
+            if (ptr) {
+                std::rethrow_exception(ptr);
+            }
+        });
+
+    ctx.run();
+}
+
+int main(int argc, char** argv) {
+    try {
+        main_impl(argc, argv);
+    } catch (const mysql::error_with_diagnostics& err) {
+        std::cerr << "Error: " << err.what() << '\n'
+                  << "Server diagnostics: " << err.get_diagnostics().server_message() << '\n';
+        return 1;
+    } catch (const std::exception& err) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return 1;
+    }
+}
+```
+#### 执行预处理语句
+千万要注意编译器报错时看看是不是少 include 一些文件，还有创建完协程***一定要记得绑定协程到事件管理器，然后运行***
+```cpp
+asio::awaitable<void> coro_main(
+    mysql::any_connection& conn,
+    std::string_view username,
+    std::string_view password,
+    std::string_view database,
+    std::string_view hostname
+){
+    mysql::connect_params params;
+    params.database = database;
+    params.password = password;
+    params.server_address.emplace_host_and_port(std::string(hostname),3307);
+    params.username = username;
+
+    mysql::results result;
+    co_await conn.async_connect(params);
+    const char* sql_string = "select * from users u where u.id = ?;";
+    mysql::statement stmt = co_await conn.async_prepare_statement(sql_string);
+    short id = 3;
+    co_await conn.async_execute(
+        mysql::with_params("SELECT * FROM users u WHERE u.id = {}", id),
+        result
+    );
+
+    if(result.rows().empty()){
+        std::cerr << "empty query result!";
+    }else{
+        std::cerr << "not empty query result!\n";
+        std::cerr << result.rows().at(0).at(0) << '\n';
+        std::cerr << result.rows().at(0).at(1) << '\n';
+        std::cerr << result.rows().at(0).at(2) << '\n';
+    }
+}
+
+int main(int argc, char** argv) {
+    try {
+        asio::io_context ctx;
+        mysql::any_connection conn(ctx);
+
+        asio::co_spawn(ctx, coro_main(conn, argv[1], argv[2], argv[3], argv[4]), [](const std::exception_ptr& ptr) {
+            if (ptr)
+                std::rethrow_exception(ptr);
+        });
+
+        ctx.run();  // 必须调用，否则协程不会执行
+    } catch (const mysql::error_with_diagnostics& err) {
+        std::cerr << "Error: " << err.what() << '\n'
+                  << "Server diagnostics: " << err.get_diagnostics().server_message() << '\n';
+        return 1;
+    } catch (const std::exception& err) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return 1;
+    }
+}
+```
+
+#### 静态接口
