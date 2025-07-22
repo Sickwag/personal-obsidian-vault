@@ -4042,19 +4042,19 @@ int main(int argc, char** argv) {
 ```
 其他方法参考[[#预处理语句（防止 SQL 注入）]]
 
-#### 静态接口
+### 静态接口
 Boost 库中的“静态接口”是指 **不依赖对象实例** 的***类方法***或自由函数（free function），**通过类名直接调用**，可以是类的静态成员函数，不访问对象内部状态（即不使用 this 指针），常用于封装**异步操作**和**资源管理**的通用逻辑，简化代码结构并提升可维护性
 它不像传统反射（如 Java/Python）那样在运行时动态获取类型信息，而是 **在编译时生成结构体的元数据**，供程序使用。
 你告诉编译器：“这个结构体有哪些字段”，它会 **自动生成一个描述结构体成员的元信息结构**，比如字段名和字段类型。
-##### 结构体元数据解析
+#### 结构体元数据解析
 `BOOST_DESCRIBE_STRUCT` 是 Boost.Describe 库中的一个宏，用于 **为结构体或类定义成员变量的元数据（metadata）**，以便在编译时或运行时 **访问其字段名、字段类型、字段值**，实现 **静态反射（Static Reflection）**。
-##### 多结果集查询
+#### 多结果集查询
 使用多结果集查询需要先在单个 `connection::execute` 调用中运行多个分号分隔的文本查询。出于安全考虑，此功能默认禁用。启用它需要在连接之前设置 `handshake_params::multi_queries`
 它的定义为：
 ![[Pasted image 20250722152355.png]]
 使用构造函数初始化并将 multi_queries 设置为 true
 像 `DELIMITER` 这样的语句使用此功能 **不起作用**。这是因为 `DELIMITER` 是 `mysql` 命令行工具的伪命令，而不是实际的 SQL。
-##### 静态接口结构体解析数据类型
+#### 静态接口结构体解析数据类型
 需要注意的是，使用静态接口解析***行数据结构体*** 需要 mysql 表中字段类型和 C++对应类型字段匹配，`ptr_by_name` 认为**行数据结构体**中成员名称必须和字段名相同。存储的是表的字段名。其实存储的将会是***字段值***
 
 ```error
@@ -4082,7 +4082,7 @@ mysql::static_results<mysql::pfr_by_postion<Info>> result;
 最终 mediumint 类型被解析到 `std::string` 类型中导致报错
 `std::int32_t` 与 `TINYINT`（1 字节整数）兼容，但不与 `BIGINT`（8 字节整数）兼容。有关允许的字段类型的完整列表，[请参阅此表](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/static_interface.html#mysql.static_interface.readable_field_reference)。
 
-##### mysql 允许为空字段 C++解析报错
+#### mysql 允许为空字段 C++解析报错
 如果设置了一个字段在 MySQL 中是可以为 `NULL` 的，那么在***行数据结构体***中对应的 C++数据类型可能要转换，比如 `std::string` 类型不能为 NULL（`std::string` 是一个类类型（class type），**它不是指针**，因此**不存在 "NULL" 或 `nullptr` 的概念**。像 C 风格的 `char*` 字符串那样可能指向 `NULL` 或 `nullptr`。）可以通过使用 `std::optional<std::string>` 类型来让变量可以为 `NULL`
 这个字段可以为 `NULL`，可能查询值中的字段非空，但是为了安全性，代码会选择在编译器报错杜绝运行期类型转换带来的风险，Boost. MySQL 的静态接口无法将 `NULL` 值赋给 `std::string`，于是抛出此异常。
 解决方法是：修改结构体，将可能为 `NULL` 的字段改为 `std::optional<T>`，对封装类 `option<T>` 的解析和操作，需要注意[[#复杂类型误用未定义操作符报错]]，或者***不使用静态接口映射***，使用 `rows().at().at()` 手动解析
@@ -4104,4 +4104,127 @@ if (info.phone.has_value()) {
 } else {
     std::cout << "Phone: NULL" << '\n';
 }
+```
+
+##### 反射技术比较
+参考[静态接口 - 1.88.0 - Boost C++ 函数库](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/static_interface.html#mysql.static_interface.meta_checks)比较表格
+
+### UPDATE、事务和分号分隔查询
+#### 简单 update
+执行 update 同样使用 `conn. execute`，只不过一般使用 `with_params` 插入参数
+```cpp
+short id = 3;
+std::string nick_name = "nick";
+co_await conn.async_execute(
+    mysql::with_params("update users u set nick_name = {} where u.id = {};", nick_name, id),
+    result
+);
+```
+对于这样的代码：
+```cpp
+mysql::results result;
+co_await conn.async_execute(
+    mysql::with_params(
+        "START TRANSACTION;"
+        "UPDATE employee SET first_name = {} WHERE id = {};"
+        "SELECT first_name, last_name FROM employee WHERE id = {};"
+        "COMMIT",
+        new_first_name,
+        employee_id,
+        employee_id
+    ),
+    result
+);
+```
+传递给 `with_params` 的参数列表中重复 `employee_id` 违反了 DRY 原则。与 `std::format` 一样，我们可以通过使用手动索引多次引用格式参数
+```cpp
+mysql::results result;
+co_await conn.async_execute(
+    mysql::with_params(
+        "START TRANSACTION;"
+        "UPDATE employee SET first_name = {0} WHERE id = {1};"
+        "SELECT first_name, last_name FROM employee WHERE id = {1};"
+        "COMMIT",
+        new_first_name,
+        employee_id
+    ),
+    result
+);
+```
+#### 将静态接口与多结果集一起使用
+```cpp
+mysql::static_results<
+    std::tuple<>,                  // START TRANSACTION doesn't generate rows
+    std::tuple<>,                  // The UPDATE doesn't generate rows
+    mysql::pfr_by_name<employee>,  // The SELECT generates employees
+    std::tuple<>                   // The COMMIT doesn't generate rows
+> result;
+
+co_await conn.async_execute(
+    mysql::with_params(
+        "START TRANSACTION;"
+        "UPDATE employee SET first_name = {0} WHERE id = {1};"
+        "SELECT first_name, last_name FROM employee WHERE id = {1};"
+        "COMMIT",
+        new_first_name,
+        employee_id
+    ),
+    result
+);
+
+// We've run 4 SQL queries, so MySQL has returned us 4 resultsets.
+// The SELECT is the 3rd resultset. Retrieve the generated rows.
+// employees is a span<const employee>
+auto employees = result.rows<2>(); // 第三个结果集
+if (employees.empty()) {
+    std::cout << "No employee with ID = " << employee_id << std::endl;
+}
+else {
+    const employee& emp = employees[0];
+    std::cout << "Updated: employee is now " << emp.first_name << " " << emp.last_name << std::endl;
+}
+```
+
+### 连接池
+
+创建连接池
+connection_pool 是一个 I/O 对象，包含 any_connection 对象，并且可以从执行上下文和一个 pool_params 配置结构体构建。
+
+```cpp
+// Create an I/O context, required by all I/O objects
+asio:: io_context ctx;
+
+// pool_params contains configuration for the pool.
+// You must specify enough information to establish a connection,
+// including the server address and credentials.
+// You can configure a lot of other things, like pool limits
+mysql:: pool_params params;
+params. server_address. emplace_host_and_port (server_hostname);
+params. username = username;
+params. password = password;
+params. database = "boost_mysql_examples";
+
+// Construct the pool.
+// ctx will be used to create the connections and other I/O objects
+mysql:: connection_pool pool (ctx, std:: move (params));
+```
+通常每个应用程序创建一个连接池。每个连接池应该调用一次 `connection_pool:: async_run。`
+当使用连接池时，我们不需要显式地创建、连接或关闭连接。相反，我们使用 `connection_pool:: async_get_connection` 从池中获取它们。
+```cpp
+mysql::pooled_connection conn = co_await pool.async_get_connection();
+mysql::static_results<mysql::pfr_by_name<employee>> result;
+co_await conn->async_execute(
+    mysql::with_params("SELECT first_name, last_name FROM employee WHERE id = {}", employee_id),
+    result
+);
+```
+当 `pooled_connection` 被销毁时，连接将返回到池中。底层连接将使用轻量级会话重置机制进行清理和回收。后续的 `async_get_connection` 调用可能会检索到相同的连接。这提高了效率，因为会话建立的成本很高。
+```cpp
+// This will wait until a healthy connection is ready to be used.
+// pooled_connection grants us exclusive access to the connection until
+// the object is destroyed.
+// Fail the operation if no connection becomes available in the next 20 seconds.
+mysql::pooled_connection conn = co_await pool.async_get_connection(
+    asio::cancel_after(std::chrono::seconds(1))
+);
 ```
