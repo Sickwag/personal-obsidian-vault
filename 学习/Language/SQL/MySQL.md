@@ -4040,3 +4040,49 @@ int main(int argc, char** argv) {
 ```
 
 #### 静态接口
+##### 静态接口结构体解析数据类型
+需要注意的是，使用静态接口解析***行数据结构体*** 需要 mysql 表中字段类型和 C++对应类型字段匹配，不能认为**行数据结构体**存储的是表的字段名。其实存储的将会是***字段值***
+
+```error
+Error: Incompatible types for field 'id': C++ type 'string' is not compatible with DB type 'MEDIUMINT'
+NULL checks failed for field 'phone': the database type may be NULL, but the C++ type cannot. Use std::optional<T> or boost::optional<T>: The static interface detected a type mismatch between your declared row type and what the server returned. Verify your type definitions. [mysql.client:10]
+Server diagnostics:
+```
+上面错误是由于设置：
+```cpp
+struct Info{
+    std::string id, name, nick_name, priority;
+    std::optional<std::string> phone;
+};
+// 但是通过下面代码解析
+mysql::static_results<mysql::pfr_by_name<Info>> result;
+short id = 3;
+co_await conn.async_execute(
+    mysql::with_params("select id, name, nick_name, priority, phone from users where id = {};", id),
+    result);
+```
+最终 mediumint 类型被解析到 `std::string` 类型中导致报错
+
+##### mysql 允许为空字段 C++解析报错
+如果设置了一个字段在 MySQL 中是可以为 `NULL` 的，那么在***行数据结构体***中对应的 C++数据类型可能要转换，比如 `std::string` 类型不能为 NULL（`std::string` 是一个类类型（class type），**它不是指针**，因此**不存在 "NULL" 或 `nullptr` 的概念**。像 C 风格的 `char*` 字符串那样可能指向 `NULL` 或 `nullptr`。）可以通过使用 `std::optional<std::string>` 类型来让变量可以为 `NULL`
+这个字段可以为 `NULL`，可能查询值中的字段非空，但是为了安全性，代码会选择在编译器报错杜绝运行期类型转换带来的风险，Boost. MySQL 的静态接口无法将 `NULL` 值赋给 `std::string`，于是抛出此异常。
+解决方法是：修改结构体，将可能为 `NULL` 的字段改为 `std::optional<T>`，对封装类 `option<T>` 的解析和操作，需要注意[[#复杂类型误用未定义操作符报错]]，或者***不使用静态接口映射***，使用 `rows().at().at()` 手动解析
+##### 复杂类型误用未定义操作符报错
+
+对于 `optional<T>` 类型，不能 `<<` 输出值，导致 cmake 大量***近乎不可读的***报错：
+![[Pasted image 20250722003147.png]]
+这些错误来自错误列表（还是可读的😅）
+![[Pasted image 20250722004123.png]] 通过筛选器筛选**输出**关键词，问题列表中也可以筛选从而快速定位
+```bash
+error # 注意error后有空格，一般错误以 字母+数字 编写，可以用筛选器正则表达筛选快速找到错误所在
+warning 
+```
+![[Pasted image 20250722004106.png]]
+并通过下面这段代码来输出包装器中的值：
+```cpp
+if (info.phone.has_value()) {
+    std::cout << "Phone: " << info.phone.value() << '\n';
+} else {
+    std::cout << "Phone: NULL" << '\n';
+}
+```
