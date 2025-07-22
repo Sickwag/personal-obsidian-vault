@@ -3779,7 +3779,7 @@ int main(int argc, char** argv) {
 - `.rows().at(0).at(0)`：访问第一个结果集（`rows_view`）的第一行（`row_view`）的第一个字段（`field_view`）。
 - `.rows()` 返回一个 `rows_view`，表示一个结果集，包含多行（`row_view`）。
 - `.rows(1).at(2).at(3)`：访问 **第二个结果集** 的第三行第四列。
-- `rows(i)` 返回第 `i` 个结果集（`rows_view`）。
+- `rows(i)` 返回第 `i+1` 个结果集（`rows_view`）。也可以写 `rows<1>()` 
 
 > [!NOTICE]
 > 
@@ -3843,6 +3843,8 @@ co_await conn.async_execute(
     mysql::with_params("SELECT * FROM users u WHERE u.id = {}", id),
     result
 );
+// 或者
+co_await conn.async_execute(stmt.bind(id), result);
 ```
 
 ##### 事务操作
@@ -4038,10 +4040,16 @@ int main(int argc, char** argv) {
     }
 }
 ```
+其他方法参考[[#预处理语句（防止 SQL 注入）]]
 
 #### 静态接口
+Boost 库中的“静态接口”是指 **不依赖对象实例** 的***类方法***或自由函数（free function），**通过类名直接调用**，可以是类的静态成员函数，不访问对象内部状态（即不使用 this 指针），常用于封装**异步操作**和**资源管理**的通用逻辑，简化代码结构并提升可维护性
+##### 多结果集查询
+使用多结果集查询需要先在单个 [`connection::execute`](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/ref/boost__mysql__connection/execute.html "connection:: execute") 调用中运行多个分号分隔的文本查询。出于安全考虑，此功能默认禁用。启用它需要在连接之前设置 [`handshake_params::multi_queries`](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/ref/boost__mysql__handshake_params/multi_queries.html "handshake_params:: multi_queries")
+它的定义为：
+
 ##### 静态接口结构体解析数据类型
-需要注意的是，使用静态接口解析***行数据结构体*** 需要 mysql 表中字段类型和 C++对应类型字段匹配，不能认为**行数据结构体**存储的是表的字段名。其实存储的将会是***字段值***
+需要注意的是，使用静态接口解析***行数据结构体*** 需要 mysql 表中字段类型和 C++对应类型字段匹配，`ptr_by_name` 认为**行数据结构体**中成员名称必须和字段名相同。存储的是表的字段名。其实存储的将会是***字段值***
 
 ```error
 Error: Incompatible types for field 'id': C++ type 'string' is not compatible with DB type 'MEDIUMINT'
@@ -4054,14 +4062,19 @@ struct Info{
     std::string id, name, nick_name, priority;
     std::optional<std::string> phone;
 };
-// 但是通过下面代码解析
+// 但是通过下面代码使用名称解析
 mysql::static_results<mysql::pfr_by_name<Info>> result;
 short id = 3;
 co_await conn.async_execute(
     mysql::with_params("select id, name, nick_name, priority, phone from users where id = {};", id),
     result);
+    
+// 如果使用boost::mysql::ptr_by_postion，则会按照查询结果字段顺序解析到结构体中
+mysql::static_results<mysql::pfr_by_postion<Info>> result;
+// 按顺序赋值到Info中的元素
 ```
 最终 mediumint 类型被解析到 `std::string` 类型中导致报错
+`std::int32_t` 与 `TINYINT`（1 字节整数）兼容，但不与 `BIGINT`（8 字节整数）兼容。有关允许的字段类型的完整列表，[请参阅此表](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/static_interface.html#mysql.static_interface.readable_field_reference)。
 
 ##### mysql 允许为空字段 C++解析报错
 如果设置了一个字段在 MySQL 中是可以为 `NULL` 的，那么在***行数据结构体***中对应的 C++数据类型可能要转换，比如 `std::string` 类型不能为 NULL（`std::string` 是一个类类型（class type），**它不是指针**，因此**不存在 "NULL" 或 `nullptr` 的概念**。像 C 风格的 `char*` 字符串那样可能指向 `NULL` 或 `nullptr`。）可以通过使用 `std::optional<std::string>` 类型来让变量可以为 `NULL`
