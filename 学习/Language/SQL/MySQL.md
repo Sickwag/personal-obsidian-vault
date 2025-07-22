@@ -4044,10 +4044,16 @@ int main(int argc, char** argv) {
 
 #### 静态接口
 Boost 库中的“静态接口”是指 **不依赖对象实例** 的***类方法***或自由函数（free function），**通过类名直接调用**，可以是类的静态成员函数，不访问对象内部状态（即不使用 this 指针），常用于封装**异步操作**和**资源管理**的通用逻辑，简化代码结构并提升可维护性
+它不像传统反射（如 Java/Python）那样在运行时动态获取类型信息，而是 **在编译时生成结构体的元数据**，供程序使用。
+你告诉编译器：“这个结构体有哪些字段”，它会 **自动生成一个描述结构体成员的元信息结构**，比如字段名和字段类型。
+##### 结构体元数据解析
+`BOOST_DESCRIBE_STRUCT` 是 Boost.Describe 库中的一个宏，用于 **为结构体或类定义成员变量的元数据（metadata）**，以便在编译时或运行时 **访问其字段名、字段类型、字段值**，实现 **静态反射（Static Reflection）**。
 ##### 多结果集查询
-使用多结果集查询需要先在单个 [`connection::execute`](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/ref/boost__mysql__connection/execute.html "connection:: execute") 调用中运行多个分号分隔的文本查询。出于安全考虑，此功能默认禁用。启用它需要在连接之前设置 [`handshake_params::multi_queries`](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/ref/boost__mysql__handshake_params/multi_queries.html "handshake_params:: multi_queries")
+使用多结果集查询需要先在单个 `connection::execute` 调用中运行多个分号分隔的文本查询。出于安全考虑，此功能默认禁用。启用它需要在连接之前设置 `handshake_params::multi_queries`
 它的定义为：
-
+![[Pasted image 20250722152355.png]]
+使用构造函数初始化并将 multi_queries 设置为 true
+像 `DELIMITER` 这样的语句使用此功能 **不起作用**。这是因为 `DELIMITER` 是 `mysql` 命令行工具的伪命令，而不是实际的 SQL。
 ##### 静态接口结构体解析数据类型
 需要注意的是，使用静态接口解析***行数据结构体*** 需要 mysql 表中字段类型和 C++对应类型字段匹配，`ptr_by_name` 认为**行数据结构体**中成员名称必须和字段名相同。存储的是表的字段名。其实存储的将会是***字段值***
 
