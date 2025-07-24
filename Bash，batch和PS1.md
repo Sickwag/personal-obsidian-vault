@@ -14,4 +14,18 @@ move 用来移动文件夹或者文件； move 原A 终B；会将‘原A’下�
 若是‘原A’不存在，则会报错；若是‘终B’不存在，会直接将‘原A’改为‘终B’；
 `copy a b` 把 A 拷贝到 B 位置
 `rd` remove directory
-del
+`del` delete file
+
+---
+使用默认方法打开一个文件
+```powershell
+start "" "文件的完整路径或相对路径"
+```
+调用一个可执行文件：
+```powershell
+"C:\Program Files\SomeApp\app.exe" --arg1 --arg2
+```
+执行另一个批处理文件
+```powershell
+call other_script.bat
+```
