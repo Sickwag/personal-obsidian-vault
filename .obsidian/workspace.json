@@ -28,13 +28,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Boost库文档学习.md",
+                "file": "学习/algorithm/用法导向知识.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "Boost库文档学习"
+              "title": "用法导向知识"
             }
           }
         ],
@@ -95,7 +95,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -211,10 +212,10 @@
   },
   "active": "f1fd152e9aebf060",
   "lastOpenFiles": [
+    "Boost库文档学习.md",
     "Bash，batch和PS1.md",
     "CodeLineCounter.md",
     "CLI11.md",
-    "Boost库文档学习.md",
     "学习/Language/C C++/Entrance of docs.md",
     "学习/Language/C C++/QT Development from official.md",
     "学习/Language/SQL/MySQL.md",
