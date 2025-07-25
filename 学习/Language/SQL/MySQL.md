@@ -4228,3 +4228,79 @@ mysql::pooled_connection conn = co_await pool.async_get_connection(
     asio::cancel_after(std::chrono::seconds(1))
 );
 ```
+
+# MySQL 情景设计题
+### 185. 部门工资前三高的所有员工
+(https://leetcode.cn/problems/department-top-three-salaries/)
+使用窗口函数：
+```sql
+SELECT
+    d.name   AS Department,
+    e.name   AS Employee,
+    e.salary AS Salary
+FROM (
+    SELECT
+        e.*,
+        -- 在每个部门内，按 salary 从大到小排雷；同薪同名次
+        DENSE_RANK() OVER (PARTITION BY departmentId ORDER BY salary DESC) AS dr
+    FROM Employee e
+) AS e
+JOIN Department d ON d.id = e.departmentId
+WHERE e.dr <= 3;   -- 只取前三档工资
+```
+- 分片（PARTITION BY departmentId）
+	- 以后所有的运算只在每一块内部进行，互不干扰。
+	- 这里使用 `PARTITION BY departmentId` 表示根据 `departmentId` 分块
+- `DENSE_RANK()`给这排好的序打上 **分档号**。  
+    - `DENSE_RANK()` 的规则： • 只要值不同，就跳到下一个整数。相同薪水的人**始终拿到同样的档号**。
+    - 上一步算完后，临时表 e2 里**每条记录都多了一个新的列 `dr`**，告诉你“这名员工**在自己部门内属于第几档工资**”。
+不使用窗口函数：
+```sql
+select d.name Department, a.name Employee, a.salary Salary
+FROM employee a
+LEFT JOIN employee b
+       ON a.departmentId = b.departmentId
+      AND a.salary < b.salary
+      
+      -- a表中的每行数据都会匹配上b表中的**同一部门**中薪水比这一行数据高的数据
+	  -- ab相同，所以最终是自连接，合并成更大一张表
+LEFT JOIN department d
+       ON a.departmentId = d.id
+       
+       -- 加入departmentId信息，不然上面left join会出错       
+where a.departmentId = d.id 	-- 简单筛选
+GROUP BY a.id          			-- 按照部门id聚成一行
+HAVING COUNT(distinct b.salary) <=2
+-- 核心：
+-- 对于员工 `a`，把比他工资高的（b中存储）**不同薪水**计数：
+	-- 0 条 → `a` 的工资就是部门第一；
+	-- 1 条 → 第二高；
+	-- 2 条 → 第三高。
+order by a.departmentId,a.salary desc
+```
+
+
+```sql
+-- 错误写法
+select  round(avg(a.event_date is not null), 2) fraction
+from Activity a
+left join
+    （select player_id, min(event_date)
+        as first_login
+    from Activity
+    group by player_id）as r
+on r.player_id = a.player_id
+where datediff(a.event_date, r.first_login) = 1;
+
+-- 正确写法
+select round(avg(a.event_date is not null), 2) fraction
+from 
+    (select player_id, min(event_date) as login
+    from activity
+    group by player_id) p 
+left join activity a 
+on p.player_id=a.player_id and datediff(a.event_date, p.login)=1
+```
+注意 where 会筛选 join 之后的表，按行筛选，也就是说，left join 会保留坐标的行，而 on 中的筛选条件会筛选掉右边拼接到左边的行中的这一部分
+如果使用 where 做筛选，那么和 inner join 没有区别了
+这里需要保留原表 `Activity` 中的 `player_id` 做计算，不能保留右边的表
