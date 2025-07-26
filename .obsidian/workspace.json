@@ -51,9 +51,19 @@
               "icon": "lucide-file",
               "title": "MySQL"
             }
+          },
+          {
+            "id": "4deb605d44784a23",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 2
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -225,10 +235,11 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "fb53d827eac3168c",
+  "active": "4deb605d44784a23",
   "lastOpenFiles": [
-    "学习/其他专业书/Modern C++.md",
     "学习/4Bases&Work/开发情景&面试题/面试题.md",
+    "学习/Language/SQL/MySQL.md",
+    "学习/其他专业书/Modern C++.md",
     "学习/ProjectsStudy/C C++/CodeLineCounter.md",
     "Files & LongText/Attachments/source 1.zip",
     "学习/4Bases&Work/开发情景&面试题/处理海量数据.md",
@@ -243,7 +254,6 @@
     "学习/ProjectsStudy/C C++/Boost库文档学习.md",
     "Chores/SOP.md",
     "学习/Language/C C++/QT Development from official.md",
-    "学习/Language/SQL/MySQL.md",
     "学习/Language/XML/XML.md",
     "学习/algorithm/刷题路线.md",
     "Files & LongText/Attachments/Pasted image 20250722152355.png",
