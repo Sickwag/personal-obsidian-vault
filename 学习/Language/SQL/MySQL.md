@@ -4303,4 +4303,4 @@ on p.player_id=a.player_id and datediff(a.event_date, p.login)=1
 ```
 注意 where 会筛选 join 之后的表，按行筛选，也就是说，left join 会保留坐标的行，而 on 中的筛选条件会筛选掉右边拼接到左边的行中的这一部分
 如果使用 where 做筛选，那么和 inner join 没有区别了
-这里需要保留原表 `Activity` 中的 `player_id` 做计算，不能保留右边的表
+这里需要保留原表 `Activity` 中的 `player_id` 做计算，不能保留右边的表（第一次登录表）中的信息，所以 left join 的是 Activity，From 的是第一次登录表
