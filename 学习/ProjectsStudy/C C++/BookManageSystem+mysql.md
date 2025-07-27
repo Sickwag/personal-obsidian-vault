@@ -528,3 +528,192 @@ int main() {
 }
 ```
 纯粹字符处理，每个结果存放在 tokenizer 中
+
+### 异步链接数据库
+```cpp
+#pragma once
+
+#include <boost/asio.hpp>
+#include <boost/mysql.hpp>
+#include <string_view>
+#include <vector>
+#include <stdexcept>
+namespace mysql = boost::mysql;
+namespace asio = boost::asio;
+using asio::awaitable;
+using asio::use_awaitable;
+
+// 连接配置结构体
+struct conn_cfg {
+    std::string host;
+    std::uint16_t port = 3306;
+    std::string user;
+    std::string password;
+    std::string database;
+    mysql::ssl_mode ssl = mysql::ssl_mode::disable;
+};
+
+// SQL错误异常类
+struct sql_error : std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
+
+// 用户结构体示例
+struct user {
+    int id;
+    std::string name;
+};
+
+// MySQL数据库操作类
+class MySQLDB {
+public:
+    explicit MySQLDB(asio::any_io_executor ex) : conn_(ex) {}
+    awaitable<void> connect(const conn_cfg& cfg);
+    awaitable<void> execute(std::string_view sql);
+    awaitable<void> execute_script(std::string_view script);
+    template <typename... Args>
+    awaitable<mysql::results> query(std::string_view sql, Args&&... args) {
+        auto stmt = co_await conn_.async_prepare_statement(sql, use_awaitable);
+        mysql::results res;
+        co_await conn_.async_execute(stmt.bind(std::forward<Args>(args)...), res, use_awaitable);
+        co_return res;
+    }
+
+    // ---------- 将SQL执行结果解析到简单结构体 ----------
+    template <typename T>
+    awaitable<std::vector<T>> query_into(std::string_view sql) {
+        mysql::results res;
+        auto stmt = co_await conn_.async_prepare_statement(sql, use_awaitable);
+        co_await conn_.async_execute(stmt.bind(), res, use_awaitable);
+        
+        std::vector<T> result;
+        result.reserve(res.rows().size());
+        
+        for (const auto& row : res.rows()) {
+            T item{};
+            // 这里需要根据具体的结构体字段进行映射
+            // 由于C++反射机制的限制，我们需要手动实现字段映射
+            // 对于user结构体，我们假设它有id和name字段
+            if constexpr (std::is_same_v<T, user>) {
+                item.id = row[0].as_int64();
+                item.name = row[1].as_string();
+            }
+            result.push_back(item);
+        }
+        
+        co_return result;
+    }
+    awaitable<void> begin();
+    awaitable<void> commit();
+    awaitable<void> rollback();
+    awaitable<void> close() noexcept;
+
+private:
+    mysql::any_connection conn_;
+    static std::vector<std::string_view> split_script(std::string_view script);
+};
+
+```
+实现数据库基本功能：
+- 单条执行 sql 语句
+- 多条执行 sql 语句
+- 执行 sql 脚本
+- 解析简单结构体
+- 事务处理
+- 自定义异常类型
+示例函数实现：
+```cpp
+#include "identities.h"
+
+awaitable<void> Reader::login_with_pwd(const std::string& name, const std::string& password) {
+    // 使用db_执行登录验证的SQL语句
+    auto result = co_await db_.query("SELECT * FROM users WHERE name_ = ? AND password_ = ?", name, password);
+    if (result.rows().empty()) {
+        throw std::runtime_error("Invalid username or password");
+    }
+    // 可以在这里添加更多登录后的处理逻辑
+}
+
+awaitable<void> Reader::login_captcha(const std::string& email, const std::string& captcha) {
+    // 使用db_执行验证码登录的SQL语句
+    auto result = co_await db_.query("SELECT * FROM users WHERE email_ = ? AND captcha = ?", email, captcha);
+    if (result.rows().empty()) {
+        throw std::runtime_error("Invalid email or captcha");
+    }
+    // 可以在这里添加更多登录后的处理逻辑
+}
+
+awaitable<void> Reader::register_account(const User& user_info) {
+    // 使用db_执行账户注册的SQL语句
+    co_await db_.execute("INSERT INTO users (name_, password_, permission_, created_at_, email_, is_available_) VALUES ('" + 
+        user_info.name_ + "', '" + user_info.password_ + "', '" + user_info.permission_ + "', '" + 
+        user_info.created_at_ + "', '" + user_info.email_ + "', " + (user_info.is_available_ ? "1" : "0") + ")");
+}
+
+awaitable<void> Reader::borrow_book(const std::string& title, const std::string& author) {
+    // 使用db_执行借书的SQL语句
+    // 这里需要检查书籍是否可借，更新书籍状态等
+    co_await db_.execute("UPDATE books SET lending = lending + 1, remain = remain - 1 WHERE title = '" + title + "' AND author = '" + author + "'");
+}
+
+awaitable<void> Reader::return_book(const std::string& title, const std::string& author) {
+    // 使用db_执行还书的SQL语句
+    // 这里需要检查书籍是否匹配，更新书籍状态等
+    co_await db_.execute("UPDATE books SET lending = lending - 1, remain = remain + 1 WHERE title = '" + title + "' AND author = '" + author + "'");
+}
+
+awaitable<void> Reader::self_checking() {
+    // 使用db_执行自我检查的SQL语句
+    // 可以查询用户的借书记录等信息
+}
+
+awaitable<void> Reader::change_password() {
+    // 使用db_执行修改密码的SQL语句
+    // 这里需要具体的实现逻辑
+}
+
+awaitable<void> Librarian::show_book_info(const std::string& code) {
+    // 使用db_执行查询书籍信息的SQL语句
+    auto result = co_await db_.query("SELECT * FROM books WHERE code = ?", code);
+    if (result.rows().empty()) {
+        throw std::runtime_error("Book not found");
+    }
+    // 可以在这里添加处理查询结果的逻辑
+}
+
+awaitable<void> Librarian::add_book() {
+    // 使用db_执行添加书籍的SQL语句
+    // 需要具体的实现逻辑
+}
+
+awaitable<void> Librarian::remove_book() {
+    // 使用db_执行删除书籍的SQL语句
+    // 需要具体的实现逻辑
+}
+
+awaitable<void> Librarian::edit_book_info() {
+    // 使用db_执行编辑书籍信息的SQL语句
+    // 需要具体的实现逻辑
+}
+
+awaitable<void> SystemAdmin::change_permission() {
+    // 使用db_执行修改权限的SQL语句
+    // 需要具体的实现逻辑
+}
+
+awaitable<void> SystemAdmin::set_announcement() {
+    // 使用db_执行发布公告的SQL语句
+    // 需要具体的实现逻辑
+}
+```
+示例使用：
+```cpp
+awaitable<void> Reader::login_with_pwd(const std::string& name, const std::string& password) {
+    // 使用db_执行登录验证的SQL语句
+    auto result = co_await db_.query("SELECT * FROM users WHERE name_ = ? AND password_ = ?", name, password);
+    if (result.rows().empty()) {
+        throw std::runtime_error("Invalid username or password");
+    }
+    // 可以在这里添加更多登录后的处理逻辑
+}
+```
