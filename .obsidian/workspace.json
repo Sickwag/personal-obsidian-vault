@@ -67,8 +67,7 @@
               "title": "MySQL"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -125,7 +124,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -239,10 +239,10 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "05b26376be1efc59",
+  "active": "8be06d862bcb3588",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "Files & LongText/ChatLogWithAi/对AI解释的理解.md",
+    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "软考.md",
     "学习/Language/SQL/MySQL.md",
     "学习/ProjectsStudy/C C++/Boost库文档学习.md",

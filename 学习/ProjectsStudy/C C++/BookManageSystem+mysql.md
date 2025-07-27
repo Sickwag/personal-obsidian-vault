@@ -21,6 +21,12 @@ target_compile_options(BookManagePlus PRIVATE "/std:c++20" "/Zc:__cplusplus")
 ## 杂项
 static 成员函数中不允许使用 const 修饰**方法体**
 同样，使用 const 修饰方法体的函数无法调用其他不用 const 修饰方法体的函数
+模板函数（使用 template 的）必须要在 `.h` 中定义和实现，如果实现放在 `cpp` 文件会出现 `LNK2019` 报错，连接错误。信息类似于 ^quxnvg
+```powershell
+error LNK2019: 无法解析的外部符号 "public: static class MySQLDB & __cdecl ServiceLocator::get<class MySQLDB>(void)"
+error LNK2019: 无法解析的外部符号 "public: static void __cdecl ServiceLocator::provide<class MySQLDB>(class std::shared_ptr<class MySQLDB>)"
+fatal error LNK1120: 2 个无法解析的外部命令
+```
 对于明显没有语法错误，继承正确的 C2504 找不到基类错误，可移植性 codemaid 的代码清理工作，自动调整 include 的顺序，解决问题
 ```cpp
 // user.h
@@ -771,5 +777,81 @@ awaitable<void> Reader::login_with_pwd(const std::string& name, const std::strin
         throw std::runtime_error("Invalid username or password");
     }
     // 可以在这里添加更多登录后的处理逻辑
+}
+```
+### 服务注册管理
+#### 问题背景
+- 有一些“模块类”（如 Reader，Librarian 这些类）需要一些“服务类”（如 MySQLDB 提供数据库连接，Logger 提供日志记录）提供的功能
+- 由于这些类的功能大多比较复杂，往往只需要其中的部分功能，如果在每一个模块类中都加上这些服务对象成员，这样会导致实例化资源浪费、连接爆炸、难以管理
+- 如果每个“模块类”中的“服务类”对象都使用引用传递，这样可以解决资源浪费问题，但是每个“模块类”实例化都需要
+	- 提前创建***生命周期长于模块类对象***的服务类对象，将对象传入模块类的构造函数中
+	- 如果模块类需要的服务很多，构造函数需要传入很多参数，可读性降低，不好维护
+	- 新增模块类的时候需要了解底层实现，了解各类服务都是什么
+#### 解决方案
+创建服务管理类对象，统一管理所有服务，为**所有模块**提供服务
+```cpp
+#pragma once
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <typeindex>
+#include <unordered_map>
+
+class ServiceLocator {
+   private:
+    static std::mutex mtx_;
+    static std::unordered_map<std::type_index, std::shared_ptr<void>> services_;
+
+   public:
+    // 手动注册服务
+    template <typename T>
+    static void provide(std::shared_ptr<T> service) {
+        std::lock_guard<std::mutex> lock(mtx_);
+        services_[std::type_index(typeid(T))] = std::static_pointer_cast<void>(service);
+    }
+    template <typename T>
+    static T& get() {
+        std::lock_guard<std::mutex> lock(mtx_);
+        auto it = services_.find(std::type_index(typeid(T)));
+        if (it == services_.end()) {
+            throw std::runtime_error("Service not registered: " + std::string(typeid(T).name()));
+        }
+        return *std::static_pointer_cast<T>(it->second);
+    }
+
+    // // 检查是否已注册
+    template <typename T>
+    static bool has() {
+        std::lock_guard<std::mutex> lock(mtx_);
+        return services_.find(std::type_index(typeid(T))) != services_.end();
+    }
+
+    // // 清理（可选，用于测试）
+    static void reset() {
+        std::lock_guard<std::mutex> lock(mtx_);
+        services_.clear();
+    }
+};
+
+inline std::mutex ServiceLocator::mtx_;
+inline std::unordered_map<std::type_index, std::shared_ptr<void>> ServiceLocator::services_;
+```
+
+#### 注意事项和使用
+- 函数模板实现放在头文件中，否则会引发 LNK 2019 错误 ![[BookManageSystem+mysql#^quxnvg]]
+- 类型指针和引用转换
+	- 因为 services_中存储的“服务”是任意类型的，所以 `it->second` → 类型是 `std::shared_ptr<void>`，它是一个“类型擦除”的智能指针，**指向一个 `T` 类型的对象，但编译器不知道具体类型**
+	- `static_pointer_cast` 是 `shared_ptr` 的类型转换工具,它不改变引用计数，只做指针转换（类似 `static_cast<T*>(ptr)`）,转换后得到：`std::shared_ptr<T>`
+	- 对 `std::shared_ptr<T>` 解引用 `*std::shared_ptr<T>  →  T&`，最终返回的是：**一个对原始对象的引用（`T&`）**
+- 服务管理逻辑：
+	- provide 函数接受任意类型的对象，他们都是“服务”，本质是 MySQLDB，Logger 这些提供各式各样功能的类。每个将会被用到的服务类由 service_locator 管理。每调用一次 provide 就会将一个已经初始化的服务加入到管理，任意的模块如果需要这些服务，需新增一个这些服务的**引用成员变量**。
+	- get 函数可以获取对应服务的指针，通过在 services_中搜索对应服务，通过 `*std::static_pointer_cast<T>(it->second)` 返回对应指针给模块调用。这样每个模块通过 get 调用的指针都会指向同一个服务类实例，节省了资源开销，通过指针传递服务也加快了速度。
+	- 正应为 services_中是 `std::unordered_map<std::type_index, std::shared_ptr<void>>` 结构，所以 ServiceLocator 中每个服务只能存在一个，如果需要多种相同但由细微差异的服务则需要改变 services_的数据结构，然后在 get 函数传入参数来选中具体需要哪一个服务。
+- 使用方法
+```cpp
+class Reader {
+public:
+    Reader() : db_(ServiceLocator::get<MySQLDB>()) {}
+    /* 其他方法 */
 }
 ```
