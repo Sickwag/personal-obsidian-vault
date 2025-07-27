@@ -535,6 +535,7 @@ int main() {
 
 #include <boost/asio.hpp>
 #include <boost/mysql.hpp>
+#include <boost/mysql/pfr.hpp>
 #include <string_view>
 #include <vector>
 #include <stdexcept>
@@ -560,8 +561,8 @@ struct sql_error : std::runtime_error {
 
 // 用户结构体示例
 struct user {
-    int id;
-    std::string name;
+    std::optional<int> id;
+    std::optional<std::string> name;
 };
 
 // MySQL数据库操作类
@@ -570,7 +571,9 @@ public:
     explicit MySQLDB(asio::any_io_executor ex) : conn_(ex) {}
     awaitable<void> connect(const conn_cfg& cfg);
     awaitable<void> execute(std::string_view sql);
-    awaitable<void> execute_script(std::string_view script);
+    awaitable<void> execute_script(const std::string& script);
+    awaitable<void> execute_multi(std::string_view sql_batch);
+
     template <typename... Args>
     awaitable<mysql::results> query(std::string_view sql, Args&&... args) {
         auto stmt = co_await conn_.async_prepare_statement(sql, use_awaitable);
@@ -579,29 +582,21 @@ public:
         co_return res;
     }
 
-    // ---------- 将SQL执行结果解析到简单结构体 ----------
     template <typename T>
     awaitable<std::vector<T>> query_into(std::string_view sql) {
-        mysql::results res;
-        auto stmt = co_await conn_.async_prepare_statement(sql, use_awaitable);
-        co_await conn_.async_execute(stmt.bind(), res, use_awaitable);
-        
-        std::vector<T> result;
-        result.reserve(res.rows().size());
-        
-        for (const auto& row : res.rows()) {
-            T item{};
-            // 这里需要根据具体的结构体字段进行映射
-            // 由于C++反射机制的限制，我们需要手动实现字段映射
-            // 对于user结构体，我们假设它有id和name字段
-            if constexpr (std::is_same_v<T, user>) {
-                item.id = row[0].as_int64();
-                item.name = row[1].as_string();
+        mysql::static_results<mysql::pfr_by_name<T>> res;
+        co_await conn_.async_execute(sql, res);
+        std::vector<T> results;
+        if(res.rows().empty()) {
+            throw std::runtime_error("sql matched nothing.");
+            co_return std::vector<T>();
+        }else{
+            for(const auto& row : res.rows()){
+                const T& res_struct = row;
+                results.emplace_back(res_struct);
             }
-            result.push_back(item);
         }
-        
-        co_return result;
+        co_return results;
     }
     awaitable<void> begin();
     awaitable<void> commit();
@@ -610,9 +605,20 @@ public:
 
 private:
     mysql::any_connection conn_;
-    static std::vector<std::string_view> split_script(std::string_view script);
+    static std::vector<std::string_view> split_script(const std::string& script);
 };
+```
 
+如果运行连接数据库功能时，提示 ssl plugin 缺失，需要传入 `mysql::ssl_mode ssl = mysql::ssl_mode::disable;` 打开 ssl 开关
+其中 query 支持预处理传参，其实现依赖的是[[Modern C++#Note：完美转发|完美转发]]
+```cpp
+template <typename... Args>
+awaitable<mysql::results> query(std::string_view sql, Args&&... args) {
+    auto stmt = co_await conn_.async_prepare_statement(sql, use_awaitable);
+    mysql::results res;
+    co_await conn_.async_execute(stmt.bind(std::forward<Args>(args)...), res, use_awaitable);
+    co_return res;
+}
 ```
 实现数据库基本功能：
 - 单条执行 sql 语句
@@ -623,87 +629,137 @@ private:
 - 自定义异常类型
 示例函数实现：
 ```cpp
-#include "identities.h"
+// MySQLDB.cpp
+#include "../include/MySQLDB.h"
+#include <fstream>
+#include <boost/algorithm/string/trim.hpp>
+#include "MySQLDB.h"
 
-awaitable<void> Reader::login_with_pwd(const std::string& name, const std::string& password) {
-    // 使用db_执行登录验证的SQL语句
-    auto result = co_await db_.query("SELECT * FROM users WHERE name_ = ? AND password_ = ?", name, password);
-    if (result.rows().empty()) {
-        throw std::runtime_error("Invalid username or password");
+namespace mysql = boost::mysql;
+namespace asio = boost::asio;
+using asio::awaitable;
+using asio::use_awaitable;
+
+// 连接到数据库
+awaitable<void> MySQLDB::connect(const conn_cfg& cfg) {
+    mysql::connect_params params;
+    params.server_address.emplace_host_and_port(cfg.host, cfg.port);
+    params.username = cfg.user;
+    params.password = cfg.password;
+    params.database = cfg.database;
+    params.ssl = cfg.ssl;
+
+    co_await conn_.async_connect(params, use_awaitable);
+}
+
+// ---------- 1. 执行单条语句 ----------
+awaitable<void> MySQLDB::execute(std::string_view sql) {
+    mysql::results res;
+    auto stmt = co_await conn_.async_prepare_statement(sql, use_awaitable);
+    co_await conn_.async_execute(stmt.bind(), res, use_awaitable);
+    if (res.affected_rows() == static_cast<std::uint64_t>(-1))
+        throw sql_error("execute failed");
+}
+
+// ---------- 2. 执行整个SQL脚本 ----------
+awaitable<void> MySQLDB::execute_script(const std::string& script_path) {
+    std::ifstream ifs(script_path);
+    if(!ifs){
+        throw std::runtime_error("cannot open " + script_path + " this file");
     }
-    // 可以在这里添加更多登录后的处理逻辑
-}
-
-awaitable<void> Reader::login_captcha(const std::string& email, const std::string& captcha) {
-    // 使用db_执行验证码登录的SQL语句
-    auto result = co_await db_.query("SELECT * FROM users WHERE email_ = ? AND captcha = ?", email, captcha);
-    if (result.rows().empty()) {
-        throw std::runtime_error("Invalid email or captcha");
+    std::ostringstream oss;
+    oss<<ifs.rdbuf();
+    std::string content = oss.str();
+    std::vector<std::string_view> stmts = split_script(content);
+    for (const auto& stmt : stmts) {
+        if (!stmt.empty()) {
+            co_await execute(stmt);
+        }
     }
-    // 可以在这里添加更多登录后的处理逻辑
 }
 
-awaitable<void> Reader::register_account(const User& user_info) {
-    // 使用db_执行账户注册的SQL语句
-    co_await db_.execute("INSERT INTO users (name_, password_, permission_, created_at_, email_, is_available_) VALUES ('" + 
-        user_info.name_ + "', '" + user_info.password_ + "', '" + user_info.permission_ + "', '" + 
-        user_info.created_at_ + "', '" + user_info.email_ + "', " + (user_info.is_available_ ? "1" : "0") + ")");
-}
+awaitable<void> MySQLDB::execute_multi(std::string_view sql_batch) {
+    auto executor = co_await boost::asio::this_coro::executor;
+    std::vector<std::string_view> statements;
 
-awaitable<void> Reader::borrow_book(const std::string& title, const std::string& author) {
-    // 使用db_执行借书的SQL语句
-    // 这里需要检查书籍是否可借，更新书籍状态等
-    co_await db_.execute("UPDATE books SET lending = lending + 1, remain = remain - 1 WHERE title = '" + title + "' AND author = '" + author + "'");
-}
+    size_t start = 0;
+    bool in_statement = false;
 
-awaitable<void> Reader::return_book(const std::string& title, const std::string& author) {
-    // 使用db_执行还书的SQL语句
-    // 这里需要检查书籍是否匹配，更新书籍状态等
-    co_await db_.execute("UPDATE books SET lending = lending - 1, remain = remain + 1 WHERE title = '" + title + "' AND author = '" + author + "'");
-}
-
-awaitable<void> Reader::self_checking() {
-    // 使用db_执行自我检查的SQL语句
-    // 可以查询用户的借书记录等信息
-}
-
-awaitable<void> Reader::change_password() {
-    // 使用db_执行修改密码的SQL语句
-    // 这里需要具体的实现逻辑
-}
-
-awaitable<void> Librarian::show_book_info(const std::string& code) {
-    // 使用db_执行查询书籍信息的SQL语句
-    auto result = co_await db_.query("SELECT * FROM books WHERE code = ?", code);
-    if (result.rows().empty()) {
-        throw std::runtime_error("Book not found");
+    // 手动解析：跳过空白，按 ';' 拆分
+    for (size_t i = 0; i <= sql_batch.size(); ++i) {
+        if (i < sql_batch.size()) {
+            char c = sql_batch[i];
+            if (!std::isspace(static_cast<unsigned char>(c))) {
+                if (!in_statement) {
+                    start = i;
+                    in_statement = true;
+                }
+            }
+            if (c == ';' && in_statement) {
+                size_t len = i - start;
+                if (len > 0) {
+                    statements.emplace_back(sql_batch.substr(start, len));
+                }
+                in_statement = false;
+            }
+        } else {
+            if (in_statement) {
+                size_t len = sql_batch.size() - start;
+                statements.emplace_back(sql_batch.substr(start, len));
+            }
+        }
     }
-    // 可以在这里添加处理查询结果的逻辑
+    for (auto& stmt : statements) {
+        auto trimmed = boost::trim_copy(std::string(stmt));
+        if (!trimmed.empty()){
+            co_await execute(stmt);
+        }
+    }
+    co_return;
 }
 
-awaitable<void> Librarian::add_book() {
-    // 使用db_执行添加书籍的SQL语句
-    // 需要具体的实现逻辑
+// ---------- 5. 事务操作 ----------
+awaitable<void> MySQLDB::begin() { co_await execute("START TRANSACTION"); }
+awaitable<void> MySQLDB::commit() { co_await execute("COMMIT"); }
+awaitable<void> MySQLDB::rollback() { co_await execute("ROLLBACK"); }
+
+// ---------- 6. 关闭连接 ----------
+awaitable<void> MySQLDB::close() noexcept {
+    boost::system::error_code ec;
+    co_await conn_.async_close(asio::redirect_error(use_awaitable, ec));
 }
 
-awaitable<void> Librarian::remove_book() {
-    // 使用db_执行删除书籍的SQL语句
-    // 需要具体的实现逻辑
-}
-
-awaitable<void> Librarian::edit_book_info() {
-    // 使用db_执行编辑书籍信息的SQL语句
-    // 需要具体的实现逻辑
-}
-
-awaitable<void> SystemAdmin::change_permission() {
-    // 使用db_执行修改权限的SQL语句
-    // 需要具体的实现逻辑
-}
-
-awaitable<void> SystemAdmin::set_announcement() {
-    // 使用db_执行发布公告的SQL语句
-    // 需要具体的实现逻辑
+// 分割SQL脚本为多个语句
+std::vector<std::string_view> MySQLDB::split_script(const std::string& script) {
+    std::vector<std::string_view> statements;
+    size_t start = 0;
+    size_t pos = 0;
+    
+    while (pos < script.length()) {
+        // 查找分号
+        pos = script.find(';', start);
+        if (pos == std::string_view::npos) {
+            pos = script.length();
+        }
+        
+        // 提取语句
+        std::string_view stmt = script.substr(start, pos - start);
+        
+        // 去除首尾空白字符
+        while (!stmt.empty() && (stmt.front() == ' ' || stmt.front() == '\t' || stmt.front() == '\n' || stmt.front() == '\r')) {
+            stmt.remove_prefix(1);
+        }
+        while (!stmt.empty() && (stmt.back() == ' ' || stmt.back() == '\t' || stmt.back() == '\n' || stmt.back() == '\r')) {
+            stmt.remove_suffix(1);
+        }
+        
+        if (!stmt.empty()) {
+            statements.push_back(stmt);
+        }
+        start = pos + 1;
+    }
+    
+    return statements;
 }
 ```
 示例使用：

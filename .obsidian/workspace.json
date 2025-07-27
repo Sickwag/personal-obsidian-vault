@@ -36,6 +36,21 @@
               "icon": "lucide-file",
               "title": "软考"
             }
+          },
+          {
+            "id": "2a55a12e6acbc2e7",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/Language/SQL/MySQL.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "MySQL"
+            }
           }
         ]
       }
@@ -211,16 +226,16 @@
   },
   "active": "8be06d862bcb3588",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/C C++/Boost库文档学习.md",
-    "学习/Language/SQL/MySQL.md",
     "软考.md",
+    "学习/Language/SQL/MySQL.md",
+    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
+    "学习/ProjectsStudy/C C++/Boost库文档学习.md",
     "Files & LongText/Attachments/Pasted image 20250726170227.png",
     "Files & LongText/Attachments/Pasted image 20250726170154.png",
     "Files & LongText/Attachments/Pasted image 20250726165726.png",
     "Files & LongText/Attachments/Pasted image 20250726165318.png",
     "学习/4Bases&Work/开发情景&面试题/面试题.md",
     "学习/其他专业书/Modern C++.md",
-    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "学习/ProjectsStudy/C C++/CodeLineCounter.md",
     "Files & LongText/Attachments/source 1.zip",
     "学习/4Bases&Work/开发情景&面试题/处理海量数据.md",
