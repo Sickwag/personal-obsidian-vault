@@ -240,118 +240,230 @@ void utils::register_user() {
 - **支持多规则组合**：内部维护一个验证器链表，链表每一个节点存储一个链式调用中规定的输入验证规则，最后实现一个 render 函数遍历链表中的所有逻辑
 - **支持类型泛化**：适用于 `int`, `std::string`, `double` 等
 ```cpp
-#pragma once
-#include <ctime>
-#include "user.h"
-#include <functional>
-#include <regex>
-
-template<typename T>
+template <typename T>
 class InputValidator {
-private:
-	std::string prompt_;
-	std::vector < std::pair < std::function<bool(const T&)>, std::string >> validators_;
-	std::string general_error_msg = "Invalid input, please try again.";
-	void handle_input_error(const std::string error_msg = general_error_msg) const;
+   public:
+    using ValidatorFunc = std::function<bool(const T&)>;
+    using ValidatorPair = std::pair<ValidatorFunc, std::string>;
+    InputValidator();
+    bool validate(const T& input) const;
+    InputValidator& prompt(const std::string& prompt);
+    InputValidator& enum_str(const std::vector<std::string>& allowed, const std::string& error_msg = "You must input one of ({}).");
+    
+    template <typename U = T, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    InputValidator& range(U min, U max, const std::string& error_fmt = "Must be between {} and {}.");
+    InputValidator& regex(const std::string& pattern, const std::string& error_msg = "Input does not match the required pattern.");
+    InputValidator& length_range(size_t min, size_t max, const std::string& error_fmt = "Length must be between {} and {}.");
+    InputValidator& not_emtpy(const std::string& error_msg = "Input cannot be empty.");
+    InputValidator& not_contains(const std::vector<std::string>& not_allowed, const std::string& error_msg = "Input must not contain ({}).");
+    InputValidator& contains(const std::vector<std::string>& must_contains, const std::string& error_msg = "Input must contain ({}).");
+    InputValidator& custom(ValidatorFunc condition, const std::string& error_msg);
+    InputValidator& yes_or_no(const std::string& error_msg = "Please input yes (Y, Yes, YES) or no (N, No, NO).");
+    InputValidator& email(const std::string& error_msg = "Invalid email format.");
+    InputValidator& url(const std::string& error_msg = "Invalid URL format.");
+    InputValidator& numeric(const std::string& error_msg = "Input must be a valid number.");
+    InputValidator& date(const std::string& error_msg = "Invalid date format. Use YYYY-MM-DD.");
+    InputValidator& password_strength(const std::string& error_msg = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character.");
+    T render() const;
 
-public:
-	InputValidator& prompt(const std::string& prompt);
-	InputValidator& range(int min, int max, const std::string& error_fmt = "Must be between {} and {}.");
-	InputValidator& regex(const std::string& pattern, const std::string& error_msg = "Input does not match pattern.");
-	InputValidator& length(size_t min, size_t max, const std::string& error_fmt = "Length must be between {} and {}.");
-	InputValidator& not_empty(const std::string& error_msg = "Input cannot be empty.");
-	InputValidator& custom(const std::function<bool(const T&)>& condition, const std::string& error_msg);
-	T render() const;
+   private:
+    std::string prompt_;
+    std::string general_error_msg_;
+    std::vector<ValidatorPair> validators_;
+    void handleInputError(const std::string& error_msg) const;
 };
 ```
 #### 验证器实现
 如果每一个输入项都使用 while 循环会导致繁琐切工作量大，可以通过实现一个类进行验证
 ```cpp
-template<typename T>
-inline void InputValidator<T>::handle_input_error(const std::string error_msg) const {
-	std::cin.clear();
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	std::cout << error_msg << std::endl;
+template <typename T>
+InputValidator<T>::InputValidator()
+    : prompt_("Input: "), general_error_msg_("Invalid input, please try again.") {}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::prompt(const std::string& prompt) {
+    if (!prompt.empty()) {
+        prompt_ = prompt;
+    }
+    return *this;
 }
 
-template<typename T>
-inline InputValidator<T>& InputValidator<T>::prompt(const std::string& prompt) {
-	prompt_ = prompt;
-	return *this;
+template <typename T>
+InputValidator<T>& InputValidator<T>::enum_str(const std::vector<std::string>& allowed, const std::string& error_msg) {
+    if (allowed.empty()) {
+        throw std::invalid_argument("Allowed list cannot be empty.");
+    }
+    std::string allowed_str = std::accumulate(allowed.begin() + 1, allowed.end(), allowed[0],
+                                              [](const std::string& a, const std::string& b) { return a + ", " + b; });
+    std::string msg = std::format(error_msg, allowed_str);
+    validators_.emplace_back(
+        [allowed](const std::string& s) {
+            return std::find(allowed.begin(), allowed.end(), s) != allowed.end();
+        },
+        msg);
+    return *this;
 }
 
-template<typename T>
-inline InputValidator<T>& InputValidator<T>::range(int min, int max, const std::string& error_fmt) {
-	std::string msg = std::vformat(error_fmt, std::make_format_args(min, max));
-	validators_.emplace_back(
-		[min, max](const int& value) { return value >= min && value <= max; },
-		msg
-	);
-	return *this;
+template <typename T>
+template <typename U, typename>
+InputValidator<T>& InputValidator<T>::range(U min, U max, const std::string& error_fmt) {
+    std::string msg = std::format(error_fmt, min, max);
+    validators_.emplace_back(
+        [min, max](const U& value) { return value >= min && value <= max; },
+        msg);
+    return *this;
 }
 
-template<typename T>
-inline InputValidator<T>& InputValidator<T>::regex(const std::string& pattern, const std::string& error_msg) {
-	std::regex re(pattern);
-	validators_.emplace_back(
-		[&re](const std::string& s) { return std::regex_match(s, re); },
-		error_msg
-	);
-	return *this;
+template <typename T>
+InputValidator<T>& InputValidator<T>::regex(const std::string& pattern, const std::string& error_msg) {
+    std::regex re(pattern);
+    validators_.emplace_back(
+        [re](const std::string& s) { return std::regex_match(s, re); },
+        error_msg);
+    return *this;
 }
 
-template<typename T>
-inline InputValidator<T>& InputValidator<T>::length(size_t min, size_t max, const std::string& error_fmt) {
-	std::string msg = std::vformat(error_fmt, std::make_format_args(min, max));
-	validators_.emplace_back(
-		[min, max](const std::string& s) {return (s.size() >= min && s.size() <= max); },
-		msg
-	);
-	return *this;
+template <typename T>
+InputValidator<T>& InputValidator<T>::length_range(size_t min, size_t max, const std::string& error_fmt) {
+    std::string msg = std::format(error_fmt, min, max);
+    validators_.emplace_back(
+        [min, max](const std::string& s) { return s.size() >= min && s.size() <= max; },
+        msg);
+    return *this;
 }
 
-template<typename T>
-inline InputValidator<T>& InputValidator<T>::not_empty(const std::string& error_msg) {
-	validators_.emplace_back(
-		[](const std::string& s) {return !s.empty(); },
-		error_msg
-	);
-	return *this;
+template <typename T>
+InputValidator<T>& InputValidator<T>::not_emtpy(const std::string& error_msg) {
+    validators_.emplace_back(
+        [](const std::string& s) { return !s.empty(); },
+        error_msg);
+    return *this;
 }
 
-template<typename T>
-inline InputValidator<T>& InputValidator<T>::custom(const std::function<bool(const T&)>& condition, const std::string& error_msg) {
-	validators_.emplace_back(condition, error_msg);
-	return *this;
+template <typename T>
+InputValidator<T>& InputValidator<T>::not_contains(const std::vector<std::string>& not_allowed, const std::string& error_msg) {
+    if (not_allowed.empty())
+        return *this;
+    std::string not_allowed_str = std::accumulate(not_allowed.begin() + 1, not_allowed.end(), not_allowed[0],
+                                                  [](const std::string& a, const std::string& b) { return a + ", " + b; });
+    std::string msg = std::format(error_msg, not_allowed_str);
+    validators_.emplace_back(
+        [not_allowed](const std::string& s) {
+            return std::none_of(not_allowed.begin(), not_allowed.end(),
+                                [&s](const std::string& str) { return s.find(str) != std::string::npos; });
+        },
+        msg);
+    return *this;
 }
 
-template<typename T>
-inline T InputValidator<T>::render() const {
-	T value{};
-	while (true) {
-		std::cout << prompt_;
-		std::cin >> value;
-		if (std::cin.fail()) {
-			handle_input_error(general_error_msg);
-			continue;
-		}
-		bool valid = true;
-		for (const auto& [cond, msg] : validators_) {
-			if (!cond(value)) {
-				std::cout << msg << '\n';
-				handle_input_error(msg);
-				valid = false;
-				break;
-			}
-		}
-		if (valid) break;
-	}
-	return T();
+template <typename T>
+InputValidator<T>& InputValidator<T>::contains(const std::vector<std::string>& must_contains, const std::string& error_msg) {
+    if (must_contains.empty())
+        return *this;
+    std::string must_contains_str = std::accumulate(must_contains.begin() + 1, must_contains.end(), must_contains[0],
+                                                    [](const std::string& a, const std::string& b) { return a + ", " + b; });
+    std::string msg = std::format(error_msg, must_contains_str);
+    validators_.emplace_back(
+        [must_contains](const std::string& s) {
+            return std::all_of(must_contains.begin(), must_contains.end(),
+                               [&s](const std::string& str) { return s.find(str) != std::string::npos; });
+        },
+        msg);
+    return *this;
 }
-```
-支持长度，正则验证，使用方法
-```cpp
 
+template <typename T>
+InputValidator<T>& InputValidator<T>::custom(ValidatorFunc condition, const std::string& error_msg) {
+    validators_.emplace_back(condition, error_msg);
+    return *this;
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::yes_or_no(const std::string& error_msg) {
+    validators_.emplace_back(
+        [](const std::string& s) {
+            std::string lower_s = s;
+            std::transform(lower_s.begin(), lower_s.end(), lower_s.begin(), ::tolower);
+            return lower_s == "y" || lower_s == "yes" || lower_s == "n" || lower_s == "no";
+        },
+        error_msg);
+    return *this;
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::email(const std::string& error_msg) {
+    return regex(R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)", error_msg);
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::url(const std::string& error_msg) {
+    return regex(R"(^(https?://)?([a-zA-Z0-9.-]+)(\.[a-zA-Z]{2,})(:\d+)?(/.*)?$)", error_msg);
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::numeric(const std::string& error_msg) {
+    return regex(R"(^-?\d+(\.\d+)?([eE][-+]?\d+)?$)", error_msg);
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::date(const std::string& error_msg) {
+    return regex(R"(^\d{4}-\d{2}-\d{2}$)", error_msg);
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::password_strength(const std::string& error_msg) {
+    validators_.emplace_back(
+        [](const std::string& s) {
+            bool has_upper = std::any_of(s.begin(), s.end(), ::isupper);
+            bool has_lower = std::any_of(s.begin(), s.end(), ::islower);
+            bool has_digit = std::any_of(s.begin(), s.end(), ::isdigit);
+            bool has_special = std::any_of(s.begin(), s.end(), [](char c) { return !std::isalnum(c); });
+            return has_upper && has_lower && has_digit && has_special;
+        },
+        error_msg);
+    return *this;
+}
+
+template <typename T>
+bool InputValidator<T>::validate(const T& input) const {
+    for (const auto& validator_pair : validators_) {
+        if (!validator_pair.first(input)) {
+            return false;
+        }
+    }
+    return true;
+}
+template <typename T>
+T InputValidator<T>::render() const {
+    T value;
+    while (true) {
+        std::cout << prompt_;
+        std::cin >> value;
+        if (std::cin.fail()) {
+            handleInputError(general_error_msg_);
+            continue;
+        }
+        bool valid = true;
+        for (const auto& [cond, msg] : validators_) {
+            if (!cond(value)) { // Changed from cond(value) to cond(value)
+                std::cout << msg << '\n';
+                handleInputError(msg);
+                valid = false;
+                break;
+            }
+        }
+        if (valid)
+            break;
+    }
+    return value;
+}
+
+template <typename T>
+void InputValidator<T>::handleInputError(const std::string& error_msg) const {
+    std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cout << error_msg << std::endl;
+}
 ```
 ### format 使用限制
 从 [P2216R3](https://wg21.link/P2216R3) 起，`std::format` 会对格式字符串进行编译时检查（通过辅助类型 std:: format_string 或 std::wformat_string）。如果发现格式字符串与要格式化的实参类型不匹配，则会发出编译错误。如果格式字符串不能作为编译时常量，或者需要避免编译时检查，请使用 std:: vformat 或 fmt 上的 [`std::runtime_format`](mk:@MSITStore:E:\file_storage\Files\各种配置和工具\cppreference-zh-20240915手册.chm::/chmhelp/cpp-utility-format-runtime_format.html) (C++26 起)代替。
@@ -405,7 +517,6 @@ bar(std::string("a")); // (3) 错误！临时对象是右值
 - 字面量和 `std::string("a")` 都是临时对象（右值），无法绑定到非 `const` 左值引用（否则会导致悬垂引用问题）。
 
 ---
-
 ### 3. 扩展：哪些参数类型只能接受对象（不能接受字面量）？
 (1) 非 `const` 左值引用 (`T&`)
 ```cpp
@@ -779,15 +890,15 @@ awaitable<void> Reader::login_with_pwd(const std::string& name, const std::strin
     // 可以在这里添加更多登录后的处理逻辑
 }
 ```
-### 服务注册管理
-#### 问题背景
+## 服务注册管理
+### 问题背景
 - 有一些“模块类”（如 Reader，Librarian 这些类）需要一些“服务类”（如 MySQLDB 提供数据库连接，Logger 提供日志记录）提供的功能
 - 由于这些类的功能大多比较复杂，往往只需要其中的部分功能，如果在每一个模块类中都加上这些服务对象成员，这样会导致实例化资源浪费、连接爆炸、难以管理
 - 如果每个“模块类”中的“服务类”对象都使用引用传递，这样可以解决资源浪费问题，但是每个“模块类”实例化都需要
 	- 提前创建***生命周期长于模块类对象***的服务类对象，将对象传入模块类的构造函数中
 	- 如果模块类需要的服务很多，构造函数需要传入很多参数，可读性降低，不好维护
 	- 新增模块类的时候需要了解底层实现，了解各类服务都是什么
-#### 解决方案
+### 解决方案
 创建服务管理类对象，统一管理所有服务，为**所有模块**提供服务
 ```cpp
 #pragma once
@@ -837,7 +948,7 @@ inline std::mutex ServiceLocator::mtx_;
 inline std::unordered_map<std::type_index, std::shared_ptr<void>> ServiceLocator::services_;
 ```
 
-#### 注意事项和使用
+### 注意事项和使用
 - 函数模板实现放在头文件中，否则会引发 LNK 2019 错误 ![[BookManageSystem+mysql#^quxnvg]]
 - 类型指针和引用转换
 	- 因为 services_中存储的“服务”是任意类型的，所以 `it->second` → 类型是 `std::shared_ptr<void>`，它是一个“类型擦除”的智能指针，**指向一个 `T` 类型的对象，但编译器不知道具体类型**
@@ -853,5 +964,194 @@ class Reader {
 public:
     Reader() : db_(ServiceLocator::get<MySQLDB>()) {}
     /* 其他方法 */
+}
+```
+
+## 邮件发送
+### 问题背景
+需要实现验证码功能，这里使用邮箱实现
+### 实现方法
+#### 使用 C++ libcurl 库实现
+定义
+```cpp
+#pragma once
+#include <string>
+
+class SimpleEmailSender {
+   public:
+    static bool send_email(const std::string& smtp_server,
+                           int port,
+                           const std::string& username,
+                           const std::string& password,
+                           const std::string& from,
+                           const std::string& to,
+                           const std::string& subject,
+                           const std::string& body);
+};
+```
+实现
+```cpp
+#include "email_sender.h"
+#include <curl/curl.h>
+#include <curl/easy.h>
+#include <iostream>
+#include <string>
+#include <vector>
+
+struct EmailData {
+    std::string content;
+    size_t pos;
+};
+
+size_t payload_source(void* ptr, size_t size, size_t nmemb, void* userp) {
+    EmailData* data = static_cast<EmailData*>(userp);
+    size_t max_size = size * nmemb;
+    size_t available = data->content.size() - data->pos;
+
+    if (available <= 0)
+        return 0;
+
+    size_t copy_size = (available < max_size) ? available : max_size;
+    memcpy(ptr, data->content.data() + data->pos, copy_size);
+    data->pos += copy_size;
+
+    return copy_size;
+}
+
+bool SimpleEmailSender::send_email(const std::string& smtp_server,
+                                   int port,
+                                   const std::string& username,
+                                   const std::string& password,
+                                   const std::string& from,
+                                   const std::string& to,
+                                   const std::string& subject,
+                                   const std::string& body) {
+    CURL* curl;
+    CURLcode res = CURLE_OK;
+    struct curl_slist* recipients = NULL;
+
+    curl = curl_easy_init();
+    if (curl) {
+        std::string url = "smtp://" + smtp_server + ":" + std::to_string(port);
+
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
+        curl_easy_setopt(curl, CURLOPT_USERNAME, username.c_str());
+        curl_easy_setopt(curl, CURLOPT_PASSWORD, password.c_str());
+
+        curl_easy_setopt(curl, CURLOPT_MAIL_FROM, from.c_str());
+        recipients = curl_slist_append(recipients, to.c_str());
+        curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
+
+        // 构造邮件内容 - 注意必须以 .\r\n 结尾
+        std::string mail_content =
+            "From: " + from + "\r\n"
+            "To: " + to + "\r\n"
+            "Subject: " + subject + "\r\n"
+            "\r\n" + body +"\r\n"
+            ".\r\n";
+
+        // 设置读取函数和数据
+        EmailData email_data{mail_content, 0};
+        curl_easy_setopt(curl, CURLOPT_READFUNCTION, payload_source);
+        curl_easy_setopt(curl, CURLOPT_READDATA, &email_data);
+        curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
+        res = curl_easy_perform(curl);
+
+        if (res != CURLE_OK)
+            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+
+        curl_slist_free_all(recipients);
+        curl_easy_cleanup(curl);
+    }
+
+    return res == CURLE_OK;
+}
+```
+
+### 使用 python 脚本实现
+#### 脚本实现
+```cpp
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+
+
+def send_mail(sender_email, receiver_email, sender_password):
+    # 创建邮件
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = receiver_email
+    message["Subject"] = "带附件的邮件示例"
+
+    # 添加邮件正文
+    message.attach(MIMEText("这是一封带附件的邮件。", "plain"))
+
+    # 添加附件
+    with open("附件文件.txt", "rb") as attachment:
+        part = MIMEApplication(attachment.read(), Name="附件文件.txt")
+        part["Content-Disposition"] = 'attachment; filename="附件文件.txt"'
+        message.attach(part)
+
+    # 连接到SMTP服务器并发送邮件
+    try:
+        with smtplib.SMTP("smtp.126.com", 25) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, receiver_email, message.as_string())
+        print("带附件的邮件已发送成功！")
+    except smtplib.SMTPAuthenticationError:
+        print(
+            "认证失败：请检查邮箱地址和授权码是否正确，并确认已在126邮箱设置中开启SMTP服务"
+        )
+    except smtplib.SMTPException as e:
+        print(f"发送邮件时出错：{e}")
+    except Exception as e:
+        print(f"发生未知错误：{e}")
+
+
+def main():
+    # 发件人和收件人信息
+    # sender_email = "3540825116@qq.com"
+    sender_email = "AzzatoWaydell@126.com"
+    receiver_email = "Sickwag@outlook.com"
+    # 注意：这里需要填写126邮箱的授权码，而不是登录密码
+    # 请在126邮箱设置中开启SMTP服务并获取授权码
+    password = "HRUyUsZP3RwgnFz4"  # 请替换为实际的授权码
+    send_mail(sender_email, receiver_email, password)
+```
+这样会将参数硬编码在代码中，如果需要参数执行，需要先用 C++调用 python 脚本，然后输入参数
+#### C++调用 python 方法
+命令行调用
+```cpp
+#include <cstdlib>
+
+int main() {
+    // 直接拼接命令字符串
+    const char* cmd = "python script.py arg1 arg2";
+    int status = std::system(cmd); // 执行命令
+    if (status != 0) {
+        std::cerr << "Python脚本执行失败" << std::endl;
+    }
+    return 0;
+}
+```
+使用boost.python 实现
+```cpp
+#include <boost/python.hpp>
+
+int main() {
+    Py_Initialize();
+    
+    boost::python::object module = boost::python::import("script");
+    boost::python::object result = module.attr("main")("arg1", "arg2");
+    
+    std::cout << "Result: " << boost::python::extract<std::string>(result) << std::endl;
+    
+    Py_Finalize();
+    return 0;
 }
 ```
