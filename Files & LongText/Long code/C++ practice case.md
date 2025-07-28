@@ -1,3 +1,4 @@
+## 算法题解
 ### 敲桌子
 ```C++
 #include<iostream>
@@ -383,8 +384,8 @@ void truncateinfo(Addressbooks *abs)
     }
 ```
 
-### C++ Prime Plus 
-#### 第五章编程练习题
+## C++ Prime Plus 
+### 第五章编程练习题
 ```cpp
 //chapter 5 practice
 
@@ -495,7 +496,7 @@ int main(){
 }
 ```
 
-### 读写二进制文件
+## 读写二进制文件
 ```cpp
 struct Record {
     int id;
@@ -567,3 +568,738 @@ int main() {
     return 0;
 }
 ```
+
+## 发送邮件程序
+### python 版本
+[[Python#发送邮件脚本]]，分[[Python#发送邮件脚本#简易硬编码参数版本|硬编码]] 和[[Python#发送邮件脚本#命令行解析参数版本|参数解析]]版本
+### C++ curl 库版本
+#### 定义
+```cpp
+#pragma once
+#include <string>
+#include <vector>
+
+struct EmailData {
+    std::vector<std::string> parts;
+    size_t current_part;
+    size_t pos_in_part;
+};
+
+class SimpleEmailSender {
+   public:
+    /**
+     * @note 建议主函数开头使用curl_global_init(CURL_GLOBAL_DEFAULT)，发送完邮件之后使用curl_global_cleanup()，释放资源，不建议纳入send_email函数中，否则建立连接和释放连接开销较大
+     */
+    bool send_email(const std::string& smtp_server,
+                           int port,
+                           const std::string& username,
+                           const std::string& password,
+                           const std::string& from,
+                           const std::string& to,
+                           const std::string& subject,
+                           const std::string& body,
+                           const std::vector<std::string>& attachments);
+   private:
+    std::string simple_base64_encode(const std::string& data);
+    std::vector<std::string> encode_file_chunks(const std::string& filepath);
+    std::string get_filename(const std::string& filepath);
+    void prepare_email_content(EmailData& email_data,
+                               const std::string& from,
+                               const std::string& to,
+                               const std::string& subject,
+                               const std::string& body,
+                               const std::vector<std::string>& attachments);
+    size_t payload_source(void* ptr, size_t size, size_t nmemb, void* userp);
+};
+```
+添加了 base 64 简易文件加密
+#### 实现
+```cpp
+#include "email_sender.h"
+#include <curl/curl.h>
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
+// 简单的base64编码（简化版）
+std::string SimpleEmailSender::simple_base64_encode(const std::string& data) {
+    static const char* chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string result;
+    int val = 0, valb = -6;
+
+    for (unsigned char c : data) {
+        val = (val << 8) + c;
+        valb += 8;
+        while (valb >= 0) {
+            result.push_back(chars[(val >> valb) & 0x3F]);
+            valb -= 6;
+        }
+    }
+    if (valb > -6)
+        result.push_back(chars[((val << 8) >> (valb + 8)) & 0x3F]);
+    while (result.size() % 4)
+        result.push_back('=');
+    return result;
+}
+
+// 分块读取文件并编码
+std::vector<std::string> SimpleEmailSender::encode_file_chunks(const std::string& filepath) {
+    std::vector<std::string> chunks;
+    std::ifstream file(filepath, std::ios::binary);
+    if (!file.is_open()) {
+        throw std::runtime_error("Cannot open file: " + filepath);
+    }
+
+    const size_t chunk_size = 57;  // base64编码后为76字符
+    char buffer[chunk_size];
+
+    while (file.read(buffer, chunk_size) || file.gcount() > 0) {
+        std::string chunk(buffer, file.gcount());
+        chunks.push_back(simple_base64_encode(chunk) + "\r\n");
+    }
+
+    return chunks;
+}
+
+std::string SimpleEmailSender::get_filename(const std::string& filepath) {
+    size_t pos = filepath.find_last_of("/\\");
+    return (pos != std::string::npos) ? filepath.substr(pos + 1) : filepath;
+}
+
+// 准备邮件内容
+void SimpleEmailSender::prepare_email_content(EmailData& email_data,
+                                              const std::string& from,
+                                              const std::string& to,
+                                              const std::string& subject,
+                                              const std::string& body,
+                                              const std::vector<std::string>& attachments) {
+    std::string boundary = "----=_NextPart_SimpleBoundary";
+
+    if (attachments.empty()) {
+        // 简单邮件
+        std::stringstream ss;
+        ss << "From: " << from << "\r\n"
+           << "To: " << to << "\r\n"
+           << "Subject: " << subject << "\r\n"
+           << "\r\n"
+           << body << "\r\n"
+           << ".\r\n";
+        email_data.parts.push_back(ss.str());
+    } else {
+        std::stringstream ss;
+        ss << "From: " << from << "\r\n"
+           << "To: " << to << "\r\n"
+           << "Subject: " << subject << "\r\n"
+           << "MIME-Version: 1.0\r\n"
+           << "Content-Type: multipart/mixed; boundary=" << boundary << "\r\n"
+           << "\r\n"
+           << "This is a multi-part message in MIME format.\r\n"
+           << "--" << boundary << "\r\n"
+           << "Content-Type: text/plain; charset=UTF-8\r\n"
+           << "\r\n"
+           << body << "\r\n";
+        email_data.parts.push_back(ss.str());
+
+        // 每个附件
+        for (const auto& filepath : attachments) {
+            try {
+                // 附件分隔符
+                std::stringstream header_ss;
+                header_ss << "\r\n--" << boundary << "\r\n"
+                          << "Content-Type: application/octet-stream\r\n"
+                          << "Content-Transfer-Encoding: base64\r\n"
+                          << "Content-Disposition: attachment; filename=\"" << get_filename(filepath) << "\"\r\n"
+                          << "\r\n";
+                email_data.parts.push_back(header_ss.str());
+
+                // 附件内容（分块添加）
+                auto chunks = encode_file_chunks(filepath);
+                for (const auto& chunk : chunks) {
+                    email_data.parts.push_back(chunk);
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Warning: Failed to process attachment " << filepath << ": " << e.what() << std::endl;
+            }
+        }
+
+        // 结束边界
+        std::stringstream end_ss;
+        end_ss << "\r\n--" << boundary << "--\r\n.\r\n";
+        email_data.parts.push_back(end_ss.str());
+    }
+}
+
+size_t SimpleEmailSender::payload_source(void* ptr, size_t size, size_t nmemb, void* userp) {
+    EmailData* data = static_cast<EmailData*>(userp);
+    size_t max_size = size * nmemb;
+    size_t copied = 0;
+    char* buffer = static_cast<char*>(ptr);
+
+    while (data->current_part < data->parts.size() && copied < max_size) {
+        const std::string& part = data->parts[data->current_part];
+        size_t part_remaining = part.size() - data->pos_in_part;
+
+        if (part_remaining > 0) {
+            // size_t to_copy = std::min(max_size - copied, part_remaining);
+            size_t to_copy = max_size - copied > part_remaining ? part_remaining : max_size - copied;
+            memcpy(buffer + copied, part.data() + data->pos_in_part, to_copy);
+            data->pos_in_part += to_copy;
+            copied += to_copy;
+        }
+
+        if (data->pos_in_part >= part.size()) {
+            data->current_part++;
+            data->pos_in_part = 0;
+        }
+    }
+    return copied;
+}
+
+bool SimpleEmailSender::send_email(const std::string& smtp_server,
+                                   int port,
+                                   const std::string& username,
+                                   const std::string& password,
+                                   const std::string& from,
+                                   const std::string& to,
+                                   const std::string& subject,
+                                   const std::string& body,
+                                   const std::vector<std::string>& attach_files) {
+    CURL* curl = curl_easy_init();
+    if (!curl)
+        return false;
+
+    CURLcode res = CURLE_OK;
+    struct curl_slist* recipients = nullptr;
+
+    // 设置基本SMTP参数
+    std::string url = "smtp://" + smtp_server + ":" + std::to_string(port);
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
+    curl_easy_setopt(curl, CURLOPT_USERNAME, username.c_str());
+    curl_easy_setopt(curl, CURLOPT_PASSWORD, password.c_str());
+    curl_easy_setopt(curl, CURLOPT_MAIL_FROM, from.c_str());
+
+    recipients = curl_slist_append(recipients, to.c_str());
+    curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
+
+    // 准备邮件数据
+    EmailData email_data = {};
+    email_data.current_part = 0;
+    email_data.pos_in_part = 0;
+
+    try {
+        prepare_email_content(email_data, from, to, subject, body, attach_files);
+    } catch (const std::exception& e) {
+        std::cerr << "Error preparing email: " << e.what() << std::endl;
+        curl_slist_free_all(recipients);
+        curl_easy_cleanup(curl);
+        return false;
+    }
+
+    // 设置数据读取回调
+    curl_easy_setopt(curl, CURLOPT_READFUNCTION, payload_source);
+    curl_easy_setopt(curl, CURLOPT_READDATA, &email_data);
+    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // send email process debug
+
+    res = curl_easy_perform(curl);
+
+    if (res != CURLE_OK) {
+        std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+    }else {
+        std::cout << "send email from " + from + " to " + to + " successfully!";
+    }
+
+    curl_slist_free_all(recipients);
+    curl_easy_cleanup(curl);
+
+    return res == CURLE_OK;
+}
+```
+## MySQL 数据库程序
+### boost.mysql 异步连接版本
+#### 定义
+```cpp
+#pragma once
+
+#include <boost/asio.hpp>
+#include <boost/mysql.hpp>
+#include <boost/mysql/pfr.hpp>
+#include <string_view>
+#include <vector>
+#include <stdexcept>
+namespace mysql = boost::mysql;
+namespace asio = boost::asio;
+using asio::awaitable;
+using asio::use_awaitable;
+
+// 连接配置结构体
+struct conn_cfg {
+    std::string host;
+    std::uint16_t port = 3306;
+    std::string user;
+    std::string password;
+    std::string database;
+    mysql::ssl_mode ssl = mysql::ssl_mode::disable;
+};
+
+// SQL错误异常类
+struct sql_error : std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
+
+// 用户结构体示例
+struct user {
+    std::optional<int> id;
+    std::optional<std::string> name;
+};
+
+// MySQL数据库操作类
+class MySQLDB {
+public:
+    MySQLDB() = delete;
+
+    /**
+     * @param ex 通常传入io_context对象的executor，如果传入asio::this_coro::executor表示当前协程被 co_spawn 时绑定的那个 executor
+     * @waring param ex 的生命周期必须要比MySQLDB类对象的长，否则会引发悬空引用
+     */
+    explicit MySQLDB(asio::any_io_executor ex) : conn_(ex) {}
+    awaitable<void> connect(const conn_cfg& cfg);
+    awaitable<size_t> execute(std::string_view sql);
+    awaitable<size_t> execute_script(const std::string& script);
+    awaitable<void> execute_multi(std::string_view sql_batch);
+
+    template <typename... Args>
+    awaitable<mysql::results> query(std::string_view sql, Args&&... args) {
+        auto stmt = co_await conn_.async_prepare_statement(sql, use_awaitable);
+        mysql::results res;
+        co_await conn_.async_execute(stmt.bind(std::forward<Args>(args)...), res, use_awaitable);
+        co_return res;
+    }
+
+    template <typename T>
+    awaitable<std::vector<T>> query_into(std::string_view sql) {
+        mysql::static_results<mysql::pfr_by_name<T>> res;
+        co_await conn_.async_execute(sql, res);
+        std::vector<T> results;
+        if(res.rows().empty()) {
+            throw std::runtime_error("sql matched nothing.");
+            co_return std::vector<T>();
+        }else{
+            for(const auto& row : res.rows()){
+                const T& res_struct = row;
+                results.emplace_back(res_struct);
+            }
+        }
+        co_return results;
+    }
+    awaitable<void> begin();
+    awaitable<void> commit();
+    awaitable<void> rollback();
+    awaitable<void> close() noexcept;
+
+private:
+    mysql::any_connection conn_;
+    static std::vector<std::string_view> split_script(const std::string& script);
+};
+```
+#### 实现
+```cpp
+// MySQLDB.cpp
+#include "MySQLDB.h"
+#include <iostream>
+#include <fstream>
+#include <boost/algorithm/string/trim.hpp>
+
+namespace mysql = boost::mysql;
+namespace asio = boost::asio;
+using asio::awaitable;
+using asio::use_awaitable;
+
+// 连接到数据库
+awaitable<void> MySQLDB::connect(const conn_cfg& cfg) {
+    mysql::connect_params params;
+    params.server_address.emplace_host_and_port(cfg.host, cfg.port);
+    params.username = cfg.user;
+    params.password = cfg.password;
+    params.database = cfg.database;
+    params.ssl = cfg.ssl;
+
+    co_await conn_.async_connect(params, use_awaitable);
+}
+
+// ---------- 1. 执行单条语句 ----------
+awaitable<size_t> MySQLDB::execute(std::string_view sql) {
+    mysql::results res;
+    auto stmt = co_await conn_.async_prepare_statement(sql, use_awaitable);
+    co_await conn_.async_execute(stmt.bind(), res, use_awaitable);
+    if (res.affected_rows() == static_cast<std::uint64_t>(-1)){
+        throw sql_error("execute failed");
+    }
+    co_return res.affected_rows();
+}
+
+// ---------- 2. 执行整个SQL脚本 ----------
+awaitable<size_t> MySQLDB::execute_script(const std::string& script_path) {
+    size_t total_affected = 0;
+    std::ifstream ifs(script_path);
+    if(!ifs){
+        throw std::runtime_error("cannot open " + script_path + " this file");
+    }
+    std::ostringstream oss;
+    oss<<ifs.rdbuf();
+    std::string content = oss.str();
+    std::vector<std::string_view> stmts = split_script(content);
+    for (const auto& stmt : stmts) {
+        if (!stmt.empty()) {
+            total_affected += co_await execute(stmt);
+        }
+    }
+    co_return total_affected;
+}
+
+awaitable<void> MySQLDB::execute_multi(std::string_view sql_batch) {
+    auto executor = co_await boost::asio::this_coro::executor;
+    std::vector<std::string_view> statements;
+
+    size_t start = 0;
+    bool in_statement = false;
+
+    // 手动解析：跳过空白，按 ';' 拆分
+    for (size_t i = 0; i <= sql_batch.size(); ++i) {
+        if (i < sql_batch.size()) {
+            char c = sql_batch[i];
+            if (!std::isspace(static_cast<unsigned char>(c))) {
+                if (!in_statement) {
+                    start = i;
+                    in_statement = true;
+                }
+            }
+            if (c == ';' && in_statement) {
+                size_t len = i - start;
+                if (len > 0) {
+                    statements.emplace_back(sql_batch.substr(start, len));
+                }
+                in_statement = false;
+            }
+        } else {
+            if (in_statement) {
+                size_t len = sql_batch.size() - start;
+                statements.emplace_back(sql_batch.substr(start, len));
+            }
+        }
+    }
+    for (auto& stmt : statements) {
+        auto trimmed = boost::trim_copy(std::string(stmt));
+        if (!trimmed.empty()){
+            co_await execute(stmt);
+        }
+    }
+    co_return;
+}
+
+// ---------- 5. 事务操作 ----------
+awaitable<void> MySQLDB::begin() { co_await execute("START TRANSACTION"); }
+awaitable<void> MySQLDB::commit() { co_await execute("COMMIT"); }
+awaitable<void> MySQLDB::rollback() { co_await execute("ROLLBACK"); }
+
+// ---------- 6. 关闭连接 ----------
+awaitable<void> MySQLDB::close() noexcept {
+    boost::system::error_code ec;
+    co_await conn_.async_close(asio::redirect_error(use_awaitable, ec));
+}
+
+// 分割SQL脚本为多个语句
+std::vector<std::string_view> MySQLDB::split_script(const std::string& script) {
+    std::vector<std::string_view> statements;
+    size_t start = 0;
+    size_t pos = 0;
+    
+    while (pos < script.length()) {
+        // 查找分号
+        pos = script.find(';', start);
+        if (pos == std::string_view::npos) {
+            pos = script.length();
+        }
+        
+        // 提取语句
+        std::string_view stmt = script.substr(start, pos - start);
+        
+        // 去除首尾空白字符
+        while (!stmt.empty() && (stmt.front() == ' ' || stmt.front() == '\t' || stmt.front() == '\n' || stmt.front() == '\r')) {
+            stmt.remove_prefix(1);
+        }
+        while (!stmt.empty() && (stmt.back() == ' ' || stmt.back() == '\t' || stmt.back() == '\n' || stmt.back() == '\r')) {
+            stmt.remove_suffix(1);
+        }
+        
+        if (!stmt.empty()) {
+            statements.push_back(stmt);
+        }
+        start = pos + 1;
+    }
+    
+    return statements;
+}
+```
+
+## 输入验证器
+### 对象实例化版本
+#### 定义
+```cpp
+#pragma once
+#include <algorithm>
+#include <format>  // C++20
+#include <functional>
+#include <iostream>
+#include <limits>
+#include <regex>
+#include <string>
+#include <numeric>
+#include <algorithm>
+#include <format>
+#include <functional>
+#include <iostream>
+#include <limits>
+#include <regex>
+#include <string>
+#include <vector>
+
+/**
+ * @brief A versatile input validator class template.
+ *
+ * This class provides a flexible way to validate user inputs of various types.
+ * It supports a wide range of built-in validators and allows for custom validation functions.
+ * The class is designed to be used in a chainable manner for ease of use.
+ *
+ * @tparam T The type of the input to be validated.
+ */
+template <typename T>
+class InputValidator {
+   public:
+    using ValidatorFunc = std::function<bool(const T&)>;
+    using ValidatorPair = std::pair<ValidatorFunc, std::string>;
+    InputValidator();
+    bool validate(const T& input) const;
+    InputValidator& prompt(const std::string& prompt);
+    InputValidator& enum_str(const std::vector<std::string>& allowed, const std::string& error_msg = "You must input one of ({}).");
+    
+    template <typename U = T, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
+    InputValidator& range(U min, U max, const std::string& error_fmt = "Must be between {} and {}.");
+    InputValidator& regex(const std::string& pattern, const std::string& error_msg = "Input does not match the required pattern.");
+    InputValidator& length_range(size_t min, size_t max, const std::string& error_fmt = "Length must be between {} and {}.");
+    InputValidator& not_emtpy(const std::string& error_msg = "Input cannot be empty.");
+    InputValidator& not_contains(const std::vector<std::string>& not_allowed, const std::string& error_msg = "Input must not contain ({}).");
+    InputValidator& contains(const std::vector<std::string>& must_contains, const std::string& error_msg = "Input must contain ({}).");
+    InputValidator& custom(ValidatorFunc condition, const std::string& error_msg);
+    InputValidator& yes_or_no(const std::string& error_msg = "Please input yes (Y, Yes, YES) or no (N, No, NO).");
+    InputValidator& email(const std::string& error_msg = "Invalid email format.");
+    InputValidator& url(const std::string& error_msg = "Invalid URL format.");
+    InputValidator& numeric(const std::string& error_msg = "Input must be a valid number.");
+    InputValidator& date(const std::string& error_msg = "Invalid date format. Use YYYY-MM-DD.");
+    InputValidator& password_strength(const std::string& error_msg = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character.");
+    T render() const;
+
+   private:
+    std::string prompt_;
+    std::string general_error_msg_;
+    std::vector<ValidatorPair> validators_;
+    void handleInputError(const std::string& error_msg) const;
+};
+
+template <typename T>
+InputValidator<T>::InputValidator()
+    : prompt_("Input: "), general_error_msg_("Invalid input, please try again.") {}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::prompt(const std::string& prompt) {
+    if (!prompt.empty()) {
+        prompt_ = prompt;
+    }
+    return *this;
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::enum_str(const std::vector<std::string>& allowed, const std::string& error_msg) {
+    if (allowed.empty()) {
+        throw std::invalid_argument("Allowed list cannot be empty.");
+    }
+    std::string allowed_str = std::accumulate(allowed.begin() + 1, allowed.end(), allowed[0],
+                                              [](const std::string& a, const std::string& b) { return a + ", " + b; });
+    std::string msg = std::format(error_msg, allowed_str);
+    validators_.emplace_back(
+        [allowed](const std::string& s) {
+            return std::find(allowed.begin(), allowed.end(), s) != allowed.end();
+        },
+        msg);
+    return *this;
+}
+
+template <typename T>
+template <typename U, typename>
+InputValidator<T>& InputValidator<T>::range(U min, U max, const std::string& error_fmt) {
+    std::string msg = std::format(error_fmt, min, max);
+    validators_.emplace_back(
+        [min, max](const U& value) { return value >= min && value <= max; },
+        msg);
+    return *this;
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::regex(const std::string& pattern, const std::string& error_msg) {
+    std::regex re(pattern);
+    validators_.emplace_back(
+        [re](const std::string& s) { return std::regex_match(s, re); },
+        error_msg);
+    return *this;
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::length_range(size_t min, size_t max, const std::string& error_fmt) {
+    std::string msg = std::format(error_fmt, min, max);
+    validators_.emplace_back(
+        [min, max](const std::string& s) { return s.size() >= min && s.size() <= max; },
+        msg);
+    return *this;
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::not_emtpy(const std::string& error_msg) {
+    validators_.emplace_back(
+        [](const std::string& s) { return !s.empty(); },
+        error_msg);
+    return *this;
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::not_contains(const std::vector<std::string>& not_allowed, const std::string& error_msg) {
+    if (not_allowed.empty())
+        return *this;
+    std::string not_allowed_str = std::accumulate(not_allowed.begin() + 1, not_allowed.end(), not_allowed[0],
+                                                  [](const std::string& a, const std::string& b) { return a + ", " + b; });
+    std::string msg = std::format(error_msg, not_allowed_str);
+    validators_.emplace_back(
+        [not_allowed](const std::string& s) {
+            return std::none_of(not_allowed.begin(), not_allowed.end(),
+                                [&s](const std::string& str) { return s.find(str) != std::string::npos; });
+        },
+        msg);
+    return *this;
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::contains(const std::vector<std::string>& must_contains, const std::string& error_msg) {
+    if (must_contains.empty())
+        return *this;
+    std::string must_contains_str = std::accumulate(must_contains.begin() + 1, must_contains.end(), must_contains[0],
+                                                    [](const std::string& a, const std::string& b) { return a + ", " + b; });
+    std::string msg = std::format(error_msg, must_contains_str);
+    validators_.emplace_back(
+        [must_contains](const std::string& s) {
+            return std::all_of(must_contains.begin(), must_contains.end(),
+                               [&s](const std::string& str) { return s.find(str) != std::string::npos; });
+        },
+        msg);
+    return *this;
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::custom(ValidatorFunc condition, const std::string& error_msg) {
+    validators_.emplace_back(condition, error_msg);
+    return *this;
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::yes_or_no(const std::string& error_msg) {
+    validators_.emplace_back(
+        [](const std::string& s) {
+            std::string lower_s = s;
+            std::transform(lower_s.begin(), lower_s.end(), lower_s.begin(), ::tolower);
+            return lower_s == "y" || lower_s == "yes" || lower_s == "n" || lower_s == "no";
+        },
+        error_msg);
+    return *this;
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::email(const std::string& error_msg) {
+    return regex(R"(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)", error_msg);
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::url(const std::string& error_msg) {
+    return regex(R"(^(https?://)?([a-zA-Z0-9.-]+)(\.[a-zA-Z]{2,})(:\d+)?(/.*)?$)", error_msg);
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::numeric(const std::string& error_msg) {
+    return regex(R"(^-?\d+(\.\d+)?([eE][-+]?\d+)?$)", error_msg);
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::date(const std::string& error_msg) {
+    return regex(R"(^\d{4}-\d{2}-\d{2}$)", error_msg);
+}
+
+template <typename T>
+InputValidator<T>& InputValidator<T>::password_strength(const std::string& error_msg) {
+    validators_.emplace_back(
+        [](const std::string& s) {
+            bool has_upper = std::any_of(s.begin(), s.end(), ::isupper);
+            bool has_lower = std::any_of(s.begin(), s.end(), ::islower);
+            bool has_digit = std::any_of(s.begin(), s.end(), ::isdigit);
+            bool has_special = std::any_of(s.begin(), s.end(), [](char c) { return !std::isalnum(c); });
+            return has_upper && has_lower && has_digit && has_special;
+        },
+        error_msg);
+    return *this;
+}
+
+template <typename T>
+bool InputValidator<T>::validate(const T& input) const {
+    for (const auto& validator_pair : validators_) {
+        if (!validator_pair.first(input)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template <typename T>
+T InputValidator<T>::render() const {
+    T value;
+    while (true) {
+        std::cout << prompt_;
+        std::cin >> value;
+        if (std::cin.fail()) {
+            handleInputError(general_error_msg_);
+            continue;
+        }
+        bool valid = true;
+        for (const auto& [cond, msg] : validators_) {
+            if (!cond(value)) { // Changed from cond(value) to cond(value)
+                std::cout << msg << '\n';
+                handleInputError(msg);
+                valid = false;
+                break;
+            }
+        }
+        if (valid)
+            break;
+    }
+    return value;
+}
+
+template <typename T>
+void InputValidator<T>::handleInputError(const std::string& error_msg) const {
+    std::cin.clear();
+    std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+    std::cout << error_msg << std::endl;
+}
+
+```
+#### 实现
+由于这是头文件模板类，模板定义放在头文件中
