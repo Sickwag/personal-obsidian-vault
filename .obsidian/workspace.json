@@ -36,8 +36,19 @@
               "icon": "lucide-file",
               "title": "C++ practice case"
             }
+          },
+          {
+            "id": "076af83bcae71e0b",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -210,10 +221,10 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "4646398531edfc1a",
+  "active": "076af83bcae71e0b",
   "lastOpenFiles": [
-    "Files & LongText/Long code/C++ practice case.md",
     "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
+    "Files & LongText/Long code/C++ practice case.md",
     "Files & LongText/Long code/Python.md",
     "学习/Language/SQL/MySQL.md",
     "Files & LongText/ChatLogWithAi/对AI解释的理解.md",
