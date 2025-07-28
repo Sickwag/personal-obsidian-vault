@@ -19,8 +19,11 @@ target_compile_options(BookManagePlus PRIVATE "/std:c++20" "/Zc:__cplusplus")
 
 这时需要在环境变量 path 中调整 vcpkg 安装目录变量到 anaconda 上方，并且删除原有 build 目录，重新通过 cmake 生成工程，即可解决问题
 ## 杂项
+### 语法规定
 static 成员函数中不允许使用 const 修饰**方法体**
 同样，使用 const 修饰方法体的函数无法调用其他不用 const 修饰方法体的函数
+如果一个类中有结构体/联合体**非静态**成员，在**类内**访问这些结构体需要使用 `this->struct_name`，而不能使用 `.` 访问
+### 编译和连接问题
 模板函数（使用 template 的）必须要在 `.h` 中定义和实现，如果实现放在 `cpp` 文件会出现 `LNK2019` 报错，连接错误。信息类似于 ^quxnvg
 ```powershell
 error LNK2019: 无法解析的外部符号 "public: static class MySQLDB & __cdecl ServiceLocator::get<class MySQLDB>(void)"
