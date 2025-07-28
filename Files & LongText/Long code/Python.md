@@ -1,9 +1,4 @@
-### 两种字符串逆序方法
-使用切片器,
-使用reverse()方法
-
 # 第四章
-
 ## 循环外else循环确认循环是否跑完
 
 当for循环没有执行则执行else(可以用if not :达到相同效果)中的语句
@@ -1380,4 +1375,10 @@ with open('villains.csv', 'w', newline='') as csvfile:
     # 就算data已经是dictreader的格式,但他不是dictreader对象,还需要指定filenames
     # 写入表头
     writer.writeheader()
+```
+
+# 杂项
+## 发送邮件脚本
+### 简易版本
+```python
 ```
