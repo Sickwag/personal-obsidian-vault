@@ -20,9 +20,10 @@ target_compile_options(BookManagePlus PRIVATE "/std:c++20" "/Zc:__cplusplus")
 这时需要在环境变量 path 中调整 vcpkg 安装目录变量到 anaconda 上方，并且删除原有 build 目录，重新通过 cmake 生成工程，即可解决问题
 ## 杂项
 ### 语法规定
-static 成员函数中不允许使用 const 修饰**方法体**
-同样，使用 const 修饰方法体的函数无法调用其他不用 const 修饰方法体的函数
-如果一个类中有结构体/联合体**非静态**成员，在**类内**访问这些结构体需要使用 `this->struct_name`，而不能使用 `.` 访问
+- static 成员函数中不允许使用 const 修饰**方法体**
+- 同样，使用 const 修饰方法体的函数无法调用其他不用 const 修饰方法体的函数
+- 如果一个类中有结构体/联合体**非静态**成员，在**类内**访问这些结构体需要使用 `this->struct_name`，而不能使用 `.` 访问
+- 如果需要将一个元素插入到 `vector` 的任意位置，可以使用 `insert(位置迭代器, 插入元素)` 或者 `emplace(位置迭代器, 插入元素)` 两种方法，emplace 就地构造要快一点。如果是频繁地插入建议使用 `deque` 队列实现
 ### 编译和连接问题
 模板函数（使用 template 的）必须要在 `.h` 中定义和实现，如果实现放在 `cpp` 文件会出现 `LNK2019` 报错，连接错误。信息类似于 ^quxnvg
 ```powershell
@@ -177,7 +178,7 @@ std::cout << "Formatted time: " << now_str << std::endl;
 还可以通过封装结构体和字符串的方式
 ```cpp
 // C++11
-std::pair<tm, std::string> utils::get_current_time() {
+std::pair<tm, std::string> get_current_time() {
 	auto now = std::chrono::system_clock::now();
 	auto now_c = std::chrono::system_clock::to_time_t(now);
 	std::tm now_tm = *std::localtime(&now_c);
