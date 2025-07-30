@@ -442,7 +442,7 @@ else(boolean_expression2){  //else可选
 #### switch case
 switch 语句用于基于不同的条件执行不同的代码块，它通常用来**替代一系列的 if-else** 语句
 ![202](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240805092821.jpg)
-- 即使 `default` 分支位于 `switch` 语句的中间位置，它仍然只会在没有其他 `case` 匹配时执行。 ^e 1 df 0 e
+- 即使 `default` 分支位于 `switch` 语句的中间位置，它仍然只会在没有其他 `case` 匹配时执行。 ^e1df0e
 - 通常建议在每个 `case` 分支的末尾使用 `break` 语句，以防止代码执行“穿透”到下一个 `case` 分支。如果缺少 `break`，程序将继续执行下一个 `case`，这叫做"贯穿"。但 `default` 分支不需要 `break`，因为它是 `switch` 语句的最后一个部分。
 - **执行时机**: 只有当没有任何 `case` 标签匹配时，`default` 分支才会执行。如果有一个 `case` 标签匹配，即使没有 `break` 语句，`default` 分支也不会执行。
 - Switch case 执行效率比 if else 语句要高，但是 Switch 的参数只能是字符型（单个字符，可以推断出也是转换为数字编码来判断的）或整形
