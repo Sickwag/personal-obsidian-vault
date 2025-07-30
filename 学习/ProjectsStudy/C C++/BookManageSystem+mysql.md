@@ -24,7 +24,20 @@ target_compile_options(BookManagePlus PRIVATE "/std:c++20" "/Zc:__cplusplus")
 - 同样，使用 const 修饰方法体的函数无法调用其他不用 const 修饰方法体的函数
 - 如果一个类中有结构体/联合体**非静态**成员，在**类内**访问这些结构体需要使用 `this->struct_name`，而不能使用 `.` 访问
 - 如果需要将一个元素插入到 `vector` 的任意位置，可以使用 `insert(位置迭代器, 插入元素)` 或者 `emplace(位置迭代器, 插入元素)` 两种方法，emplace 就地构造要快一点。如果是频繁地插入建议使用 `deque` 队列实现
-- 如果
+- 如果一个函数返回引用，最好也用 `auto&` 类型变量接收，像[[#服务注册管理|访问注册器]]中返回类型为引用，如果使用普通变量接受则是通过引用类型（右值）赋值给普通变量（对象）左值，这样不会对变量内部产生实质性影响
+  ```cpp
+// 正确方法
+auto& db_config = ServiceLocator::get<DBConfig>();
+db_config.host = "mysql2.sqlpub.com";
+db_config.port = 3307;
+db_config.user = "sickwag";
+db_config.password = "LqX9jBDqvDJYeooE";
+db_config.database = "sickwag_learning";
+db_config.ssl = mysql::ssl_mode::enable;
+// 如果使用普通变量，那么get函数返回的配置仍然是空的
+auto db_config = ServiceLocator::get<DBConfig>();
+  ```
+
 ### 编译和连接问题
 模板函数（使用 template 的）必须要在 `.h` 中定义和实现，如果实现放在 `cpp` 文件会出现 `LNK2019` 报错，连接错误。信息类似于 ^quxnvg
 ```powershell
@@ -429,7 +442,9 @@ int main() {
 ```
 纯粹字符处理，每个结果存放在 tokenizer 中
 
-### 异步链接数据库
+## 异步链接
+### mysql 数据库异步链接（boost. mysql）
+需要注意，如果链接通过协程实现，则需要 `io_context` 链接句柄生命周期长于 mysql 服务模块，可以参考[[#服务注册管理]]，一个统一的协程管理对象管理所有的**需要用到协程的服务**，所以这个管理者的生命周期必须长于所有服务，这个对象在 main.cpp 中创建。
 代码参考： [[C++ practice case#boost.mysql 异步连接版本]]
 如果运行连接数据库功能时，提示 ssl plugin 缺失，需要传入 `mysql::ssl_mode ssl = mysql::ssl_mode::disable;` 打开 ssl 开关
 其中 query 支持预处理传参，其实现依赖的是[[Modern C++#Note：完美转发|完美转发]]
@@ -580,3 +595,5 @@ int main() {
     return 0;
 }
 ```
+
+## 异步连接，协程管理
