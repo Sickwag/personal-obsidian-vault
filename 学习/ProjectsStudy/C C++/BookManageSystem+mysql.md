@@ -24,6 +24,7 @@ target_compile_options(BookManagePlus PRIVATE "/std:c++20" "/Zc:__cplusplus")
 - 同样，使用 const 修饰方法体的函数无法调用其他不用 const 修饰方法体的函数
 - 如果一个类中有结构体/联合体**非静态**成员，在**类内**访问这些结构体需要使用 `this->struct_name`，而不能使用 `.` 访问
 - 如果需要将一个元素插入到 `vector` 的任意位置，可以使用 `insert(位置迭代器, 插入元素)` 或者 `emplace(位置迭代器, 插入元素)` 两种方法，emplace 就地构造要快一点。如果是频繁地插入建议使用 `deque` 队列实现
+- 如果
 ### 编译和连接问题
 模板函数（使用 template 的）必须要在 `.h` 中定义和实现，如果实现放在 `cpp` 文件会出现 `LNK2019` 报错，连接错误。信息类似于 ^quxnvg
 ```powershell
