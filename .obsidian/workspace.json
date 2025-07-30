@@ -66,9 +66,19 @@
               "icon": "lucide-file",
               "title": "MySQL"
             }
+          },
+          {
+            "id": "5236eea1ddd8bed2",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -241,13 +251,13 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "0f1ab1b9b1ed78be",
+  "active": "5236eea1ddd8bed2",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "Files & LongText/Long code/C++ practice case.md",
     "学习/Language/SQL/MySQL.md",
     "Files & LongText/Long code/MySQL Long Code Practice.md",
     "Files & LongText/Long code/Python.md",
-    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "Files & LongText/ChatLogWithAi/对AI解释的理解.md",
     "软考.md",
     "学习/ProjectsStudy/C C++/Boost库文档学习.md",
