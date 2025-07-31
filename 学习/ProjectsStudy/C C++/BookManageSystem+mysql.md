@@ -37,6 +37,21 @@ db_config.ssl = mysql::ssl_mode::enable;
 // 如果使用普通变量，那么get函数返回的配置仍然是空的
 auto db_config = ServiceLocator::get<DBConfig>();
   ```
+- 非模板函数不能放在头文件中，否则会出现类似"多重定义"某个符号的 msvc 生成错误：
+  ```cpp
+[build]   正在生成代码...
+  [build] identities.obj : error LNK2005: "void __cdecl get_weather(void)" (?get_weather@@YAXXZ) 已经在 main.obj 中定义 [D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\BookManagePlus.vcxproj]
+  [build] utils.obj : error LNK2005: "void __cdecl get_weather(void)" (?get_weather@@YAXXZ) 已经在 main.obj 中定义 [D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\BookManagePlus.vcxproj]
+  [build] D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\Release\BookManagePlus.exe : fatal error LNK1169: 找到一个或多个多重定义的符号 [D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\BookManagePlus.vcxproj]
+  [proc] 命令“D:\Program\Cmake\bin\cmake.EXE --build "D:/Code Files/vscode/CCpp/projects/BookManagePlus/build" --config Release --target BookManagePlus --”已退出，代码为 1
+  ```
+- 无法解析的外部符号多半是 `CMakeLists.txt` 文件中没有在 `add_executable` 中添加对应的 cpp 文件
+  ```cmake
+  [build] main.obj : error LNK2019: 无法解析的外部符号 "public: __cdecl Menu::Menu(void)" (??0Menu@@QEAA@XZ)，函数 main 中引用了该符号 [D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\BookManagePlus.vcxproj]
+  [build] main.obj : error LNK2019: 无法解析的外部符号 "public: void __cdecl Menu::start_menu(void)const " (?start_menu@Menu@@QEBAXXZ)，函数 main 中引用了该符号 [D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\BookManagePlus.vcxproj]
+  [build] D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\Release\BookManagePlus.exe : fatal error LNK1120: 2 个无法解析的外部命令 [D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\BookManagePlus.vcxproj]
+  [proc] 命令“D:\Program\Cmake\bin\cmake.EXE --build "D:/Code Files/vscode/CCpp/projects/BookManagePlus/build" --config Release --target BookManagePlus --”已退出，代码为 1
+  ```
 
 ### 编译和连接问题
 模板函数（使用 template 的）必须要在 `.h` 中定义和实现，如果实现放在 `cpp` 文件会出现 `LNK2019` 报错，连接错误。信息类似于 ^quxnvg
