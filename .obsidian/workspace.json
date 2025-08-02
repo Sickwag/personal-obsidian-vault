@@ -51,8 +51,19 @@
               "icon": "lucide-file",
               "title": "MySQL"
             }
+          },
+          {
+            "id": "e9e41d2657926c1c",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -225,12 +236,12 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "4646398531edfc1a",
+  "active": "e9e41d2657926c1c",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "学习/Language/SQL/MySQL.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Language/C C++/C++ Basics.md",
-    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "Files & LongText/Long code/C++ practice case.md",
     "Files & LongText/Long code/MySQL Long Code Practice.md",
     "Files & LongText/Long code/Python.md",
