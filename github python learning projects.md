@@ -1,0 +1,136 @@
+## 一、教练，我想学 Python
+
+> 车上有座，坐满就发车。
+### 1.1 有编程基础：explore-python
+- 项目地址：[https://github.com/ethan-funny/explore-python](https://github.com/ethan-funny/explore-python)
+- 在线阅读：[https://funhacks.gitbooks.io/explore-python/content/](https://funhacks.gitbooks.io/explore-python/content/)
+#### 函数
+##### 函数参数魔法
+- 定义可变参数
+```python
+>>> def add(*numbers):
+...     sum = 0
+...     for i in numbers:
+...         sum += i
+...     print 'numbers:', numbers
+...     return sum
+```
+可以输入任意个数参数
+- 关键字参数
+可变参数允许你将不定数量的参数传递给函数，而**关键字参数**则允许你将不定长度的**键值对**, 作为参数传递给一个函数。
+```python
+>>> def add(**kwargs):
+    return kwargs
+>>> add()            # 没有参数，kwargs 为空字典
+{}
+>>> add(x=1)         # x=1 => kwargs={'x': 1}
+{'x': 1}
+>>> add(x=1, y=2)    # x=1, y=2 => kwargs={'y': 2, 'x': 1}
+{'y': 2, 'x': 1}
+```
+kwargs 可以接收不定长度的键值对，加 `**` 在函数内部，它会表示成一个 dict。
+```python
+>>> def add(x, y, z):
+...     return x + y + z
+...
+>>> dict1 = {'z': 3, 'x': 1, 'y': 6}
+>>> add(dict1['x'], dict1['y'], dict1['z'])    # 这样传参很累赘
+10
+>>> add(**dict1)        # 使用 **dict1 来传参，等价于上面的做法
+10
+```
+#### 函数式编程
+##### 高阶函数
+一个函数接收另一个函数作为参数，这种函数称之为**高阶函数（Higher-order Functions**）
+```python
+def func(g, arr):
+    return [g(x) for x in arr]
+```
+###### map/reduce/filter
+`map` 函数的使用形式如下：
+```python
+map(function, sequence)
+```
+**解释**：对 sequence 中的 item 依次执行 function(item)，并将结果组成一个 List 返回，也就是：
+```python
+[function(item1), function(item2), function(item3), ...]
+```
+使用实例：
+```python
+>>> map(lambda x: x * x, [1, 2, 3, 4])   # 使用 lambda
+[1, 4, 9, 16]
+
+def double(x):
+    return 2 * x
+
+def triple(x):
+    return 3 *x
+
+def square(x):
+    return x * x
+
+funcs = [double, triple, square]  # 列表元素是函数对象
+# 相当于 [double(4), triple(4), square(4)]
+value = list(map(lambda f: f(4), funcs))
+```
+---
+`filter` 函数用于过滤元素，它的使用形式如下：
+```python
+filter(function, sequnce)
+```
+**解释**：将 function 依次作用于 sequnce 的每个 item，即 function(item)，将返回值为 True 的 item 组成一个 List/String/Tuple (**取决于 sequnce 的类型**，python3 统一返回迭代器) 返回。
+
+`reduce` 函数的使用形式如下：
+```python
+reduce(function, sequence[, initial])
+```
+**解释**：先将 sequence 的前两个 item 传给 function，即 function(item1, item2)，函数的返回值和 sequence 的下一个 item 再传给 function，即 function(function(item1, item2), item3)，如此迭代，直到 sequence 没有元素，如果有 initial，则作为初始值调用。
+
+也就是说：
+
+```python
+reduece(f, [x1, x2, x3, x4]) = f(f(f(x1, x2), x3), x4)
+```
+
+##### 携带状态的闭包
+一个函数返回了一个内部函数，该内部函数引用了外部函数的相关参数和变量，我们把该返回的内部函数称为**闭包（Closure）**。
+**“带着自己出生环境（外层局部变量）一起跑路的函数”**；它的本质是**把代码（函数对象）和当时捕获到的变量环境一起打包成一个新的可调用对象**。
+```python
+from math import pow
+
+def make_pow(n):
+    def inner_func(x):     # 嵌套定义了 inner_func
+        return pow(x, n)   # 注意这里引用了外部函数的 n
+    return inner_func
+```
+闭包的最大特点就是引用了自由变量，即使生成闭包的环境已经释放，闭包仍然存在
+```python
+>>> pow2 = make_pow(2)  # pow2 是一个函数，参数 2 是一个自由变量
+>>> pow2
+<function inner_func at 0x10271faa0>
+>>> pow2(6)
+36.0
+>>> del make_pow         # 删除 make_pow
+>>> pow3 = make_pow(3)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'make_pow' is not defined
+>>> pow2(9)     # pow2 仍可正常调用，自由变量 2 仍保存在 pow2 中
+81.0
+```
+最大的作用是：
+1. **延迟计算 / 惰性求值**：把参数先部分填好，真正要用时再给剩余参数。
+2. **信息隐藏**：用闭包代替类，保护内部状态不被外部直接修改。
+3. **减少重复传参**：把公共配置提前“绑死”。
+4. C/C++ 语言中，函数返回后，栈帧销毁，局部变量就消失；无法在异步/回调中记住“当时状态”，想调用函数需要考虑各种函数需要的变量的生命周期必须要长于函数本身。
+常见误区是：
+```python
+def count():
+    funcs = []
+    for i in [1, 2, 3]:
+        def f():
+            return i
+        funcs.append(f)
+    return funcs
+```
+原因在于上面的函数 `f` 引用了变量 `i`，但函数 `f` 并非立刻执行，当 `for` 循环结束时，此时变量 `i` 的值是3，`funcs` 里面的函数引用的变量都是 3，最终结果也就全为 3。
