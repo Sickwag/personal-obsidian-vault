@@ -129,8 +129,151 @@ def count():
     funcs = []
     for i in [1, 2, 3]:
         def f():
-            return i
+            return i  # 注意这里return i
         funcs.append(f)
     return funcs
 ```
-原因在于上面的函数 `f` 引用了变量 `i`，但函数 `f` 并非立刻执行，当 `for` 循环结束时，此时变量 `i` 的值是3，`funcs` 里面的函数引用的变量都是 3，最终结果也就全为 3。
+原因在于上面的函数 `f` 引用了变量 `i`，但函数 `f` 并非立刻执行，当 `for` 循环结束时，此时变量 `i` 的值是3，`funcs` 里面的函数引用的变量都是 3，最终结果也就全为 3。 
+
+> [!note]
+>闭包 = 函数 + 当时的环境快照，用得好是“轻量级的状态机”，用不好则成为“隐晦的内存坑”。
+
+当时的**环境快照**指的是创建函数
+1. 闭包确实保存了“当时的环境”，但环境里放的是 _变量 `i` 的引用_，而不是 _整数值 0、1、2_
+2. 循环过程中 `i` 的值在不断变化，而闭包里的代码只有在 **真正调用 `f()`** 时才去查这个引用。此时循环早已结束，`i` 已固定为 2。
+
+想要“拍快照”就必须在创建 `lambda` 时把当时的值 **按默认参数** 传进去，这样闭包里就存的是常量而不是变量
+```python
+funcs = [lambda i=i: i for i in range(3)]
+print([f() for f in funcs])   # [0, 1, 2]
+```
+#### 装饰器
+```python
+def hello():
+    return 'hello world'
+    
+def makeitalic(func):
+    def wrapped():
+        return "<i>" + func() + "</i>"
+    return wrapped
+    
+>>> hello = makeitalic(hello)  # 将 hello 函数传给 makeitalic
+>>> hello()
+'<i>hello world</i>'
+>>> hello.__name__
+'wrapped'
+```
+函数型装饰器可以带有参数，参数定义在对应的函数签名位置。
+类装饰器：
+```cpp
+class Bold(object):
+    def __init__(self, func):
+        self.func = func
+
+    def __call__(self, *args, **kwargs):
+        return '<b>' + self.func(*args, **kwargs) + '</b>'
+
+@Bold
+def hello(name):
+    return 'hello %s' % name
+
+>>> hello('world')
+'<b>hello world</b>'
+```
+类装饰器的参数写在装饰器上：
+```python
+class Tag(object):
+    def __init__(self, tag):
+        self.tag = tag
+
+    def __call__(self, func):
+        def wrapped(*args, **kwargs):
+            return "<{tag}>{res}</{tag}>".format(
+                res=func(*args, **kwargs), tag=self.tag
+            )
+        return wrapped
+
+@Tag('b')
+def hello(name):
+    return 'hello %s' % name
+```
+使用装饰器有一个瑕疵，就是被装饰的函数，它的函数名称已经不是原来的名称
+```python
+def makeitalic(func):
+    def wrapped():
+        return "<i>" + func() + "</i>"
+    return wrapped
+
+@makeitalic
+def hello():
+    return 'hello world'
+```
+函数 `hello` 被 `makeitalic` 装饰后，它的函数名称已经改变了：
+```python
+>>> hello.__name__
+'wrapped'
+```
+解决方法是在内部装饰其中提供Python 中的 functools 包提供了 wraps 装饰器
+```python
+from functools import wraps
+
+def makeitalic(func):
+    @wraps(func)       # 加上 wraps 装饰器
+    def wrapped():
+        return "<i>" + func() + "</i>"
+    return wrapped
+
+@makeitalic
+def hello():
+    return 'hello world'
+
+>>> hello.__name__
+'hello'
+```
+#### partial 函数
+`functools.partial` 就是“**提前把一部分参数喂给函数，剩下来的以后再喂**”，本质是**把一个已有函数及其部分参数打包成一个可调用对象**，从而得到一个新的“简化版”函数。
+```python
+def multiply(x, y):
+    return x * y
+```
+通过下面方式可以绑定 exp 参数值为 2
+```python
+from functools import partial
+ 
+def power(base, exp):
+    return base ** exp
+ 
+square = partial(power, exp=2)   # 把 exp 绑成 2
+print(square(5))   
+```
+注意：
+1. **位置参数必须按顺序绑定**，一旦绑错无法“跳过”。
+2. **关键字参数会覆盖后续同名关键字**。
+3. **可变性陷阱**：如果绑定了一个可变对象（如列表、dict），所有 `partial` 实例共享同一对象，易踩坑。
+   ```python
+from functools import partial
+   
+def append_and_sort(x, items):
+#	items = [] if items is None else items # 添加这一行即可解决
+   items.append(x)
+   items.sort()
+   return items
+
+# ❌ 错误示范：列表字面量只在定义 partial 时生成一次
+bad_sort = partial(append_and_sort, items=[])
+
+print(bad_sort(3))   # [3]
+print(bad_sort(1))   # [1, 3]  <-- 继续用同一个列表！
+print(bad_sort(2))   # [1, 2, 3]
+   ```
+4. 绑定参数之后**不能解绑**，但可以**复制提取**其中对象。
+	```python
+original = power   # 提前备份是一种方法
+square = partial(power, exp=2)
+# 想恢复时直接用 original
+# -------------------------------------或者
+ original = square.func   # 原函数获取
+ fixed_args = square.args      # 已绑定的位置参数
+ fixed_kwargs = square.keywords   # 已绑定的关键字参数
+ # 调用时手动剔除
+	```
