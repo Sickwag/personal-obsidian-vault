@@ -250,24 +250,22 @@ print(square(5))
 1. **位置参数必须按顺序绑定**，一旦绑错无法“跳过”。
 2. **关键字参数会覆盖后续同名关键字**。
 3. **可变性陷阱**：如果绑定了一个可变对象（如列表、dict），所有 `partial` 实例共享同一对象，易踩坑。
-   ```python
+```python
 from functools import partial
    
 def append_and_sort(x, items):
-#	items = [] if items is None else items # 添加这一行即可解决
    items.append(x)
    items.sort()
    return items
-
-# ❌ 错误示范：列表字面量只在定义 partial 时生成一次
+# 错误示范：列表字面量只在定义 partial 时生成一次
 bad_sort = partial(append_and_sort, items=[])
 
 print(bad_sort(3))   # [3]
 print(bad_sort(1))   # [1, 3]  <-- 继续用同一个列表！
 print(bad_sort(2))   # [1, 2, 3]
-   ```
+```
 4. 绑定参数之后**不能解绑**，但可以**复制提取**其中对象。
-	```python
+```python
 original = power   # 提前备份是一种方法
 square = partial(power, exp=2)
 # 想恢复时直接用 original
@@ -276,4 +274,161 @@ square = partial(power, exp=2)
  fixed_args = square.args      # 已绑定的位置参数
  fixed_kwargs = square.keywords   # 已绑定的关键字参数
  # 调用时手动剔除
-	```
+```
+### 类
+使用 `type(obj)` 来获取对象的相应类型：
+使用 `isinstance(obj, type)` 判断对象是否为指定的 type 类型的实例：
+使用 `hasattr/getattr/setattr`    
+- 使用 `hasattr(obj, attr)` 判断对象是否具有指定属性/方法；
+- 使用 `getattr(obj, attr[, default])` 获取属性/方法的值, 要是没有对应的属性则返回 default 值（前提是设置了 default），否则会抛出 AttributeError 异常；
+- 使用 `setattr(obj, attr, value)` 设定该属性/方法的值，类似于 obj.attr=value；
+- 使用 `dir(obj)` 可以获取相应对象的**所有**属性和方法名的列表：
+#### 魔法方法
+在 Python 中，当我们创建一个类的实例时，类会先调用 `__new__(cls[, ...])` 来创建实例，然后 `__init__` 方法再对该实例（self）进行初始化。
+`__str__` 方法定义出使用类似 `print()` 函数打印**类的实例**时显示的信息
+`__repr__` 方法定义直接应用函数时显示的信息
+```python
+class Foo(object):
+    def __init__(self, name):
+        self.name = name
+    def __str__(self):
+        return 'Foo object (name: %s) by print' % self.name
+    def __repr__(self):
+        return 'Foo object (name: %s) by refer' % self.name
+
+>>> Foo('ethan')
+'Foo object (name: ethan) by refer' # 否则显示内存地址<__main__.Foo at 0x10c37a490>
+>>> print(Foo('ethan'))
+'Foo object (name: ethan) by print' # <__main__.Foo object at 0x10c37aa50> 
+```
+
+在某些情况下，我们希望实例对象可被用于 `for...in` 循环，这时我们需要在类中定义 `__iter__` 和 `next`（在 Python3 中是 `__next__`）方法，其中，`__iter__` 返回一个迭代对象，`next` 返回容器的下一个元素，在没有后续元素时抛出 `StopIteration` 异常。
+```python
+class Fib(object):
+    def __init__(self):
+        self.a, self.b = 0, 1
+
+    def __iter__(self):  # 返回迭代器对象本身
+        return self      
+
+    def next(self):      # 返回容器下一个元素
+        self.a, self.b = self.b, self.a + self.b
+        return self.a    
+
+>>> fib = Fib()
+>>> for i in fib:
+...     if i > 10:
+...         break
+...     print i
+...
+```
+
+希望可以使用 `obj[n]` 这种方式对实例对象进行取值，比如对斐波那契数列，我们希望可以取出其中的某一项，这时我们需要在类中实现 `__getitem__` 方法
+```python
+class Fib(object):
+    def __getitem__(self, n):
+        a, b = 1, 1
+        for x in xrange(n):
+            a, b = b, a + b
+        return a
+
+>>> fib = Fib()
+>>> fib[0], fib[1], fib[2], fib[3], fib[4], fib[5] # 本质上是像数组一样访问类中对象
+(1, 1, 2, 3, 5, 8)
+```
+支持切片操作
+```python
+class Fib(object):
+    def __getitem__(self, n):
+        if isinstance(n, slice):   # 如果 n 是 slice 对象
+            a, b = 1, 1
+            start, stop = n.start, n.stop
+            L = []
+            for i in xrange(stop):
+                if i >= start:
+                    L.append(a)
+                a, b = b, a + b
+            return L
+        if isinstance(n, int):     # 如果 n 是 int 型
+            a, b = 1, 1
+            for i in xrange(n):
+                a, b = b, a + b
+            return a
+```
+#### 动态绑定属性
+```python
+class Point(object):    
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
+
+>>> p = Point(3, 4)
+>>> p.z = 5    # 绑定了一个新的属性
+```
+python 允许给实例动态绑定属性，这会造成管理困难并且消耗内存：
+- **slots** 魔法：限定允许绑定的属性.
+- `__slots__` 设置的属性仅对当前类有效，对继承的子类不起效，除非子类也定义了 slots，这样，子类允许定义的属性就是自身的 slots 加上父类的 slots。
+python 会将所有属性通过 `__dict__` 属性，也就是一个字典来存储，设置 `__slots__` 就是“**把类变成 C 语言里的结构体**”，本质是用**固定数组**而不是**可变字典**来存放实例属性，从而省内存、限属性、加速访问
+它的作用&影响
+- **省内存**：没有每个实例都带一个 `__dict__`，大量小对象时差异明显。
+- **防拼写错**：写错属性名立即抛异常，而不是悄悄新建一个键。
+- **查找更快**：数组偏移访问比哈希表 O(1) 更稳定、CPU cache 友好。
+- **限制随意加属性**：接口更“契约化”。
+- **不能再动态增删属性**，除非把名字提前写进 `__slots__`。
+- **多重继承麻烦**：  
+    - 若父类有 `__dict__` 而子类想用 `__slots__`，必须显式在子类再声明 `'__dict__'` 才能继续动态加属性；否则 `AttributeError`。
+- **弱引用 & 私有变量**：  
+    - 需要 `__weakref__` 时得显式加入 `__slots__ = ('x', '__weakref__')`。
+- **与 `@dataclass(slots=True)` 混用**：Python 3.10+ 原生支持，避免手写冗长列表。
+- **调试信息变少**：`vars(obj)` 会失败；需要 `obj.__slots__` 才能看有哪些槽位。
+- **子类不继承父类 slots**；想继续省内存，要在子类再写一遍。
+- **pickle/拷贝**：大多数序列化库对 `__slots__` 支持良好，但若自己实现 `__getstate__/__setstate__` 需手动处理槽位。
+#### 其他功能
+##### @property 装饰器
+“**把方法伪装成属性**”，本质是一个**数据描述符（data descriptor）**，让你用“点号取值/赋值/删值”的简洁语法，背后却跑着你写的 Python 代码。
+```python
+class Celsius:
+    def __init__(self, temperature=0):
+        self._t = temperature
+
+    @property                 # 读，默认为设置getter
+    def temperature(self):
+        print('get')
+        return self._t
+
+    @temperature.setter       # 写，如果不定义，则_t为可读
+    def temperature(self, value):
+        if value < -273.15:
+            raise ValueError('Too cold')
+        print('set', value)
+        self._t = value
+
+    @temperature.deleter      # 删
+    def temperature(self):
+        print('del')
+        del self._t
+
+c = Celsius()
+c.temperature = 37   # 触发 setter
+print(c.temperature) # 触发 getter
+del c.temperature    # 触发 deleter
+```
+##### 使用 `type` 创建类
+下面这两种声明类的方法等价：
+```python
+class Foo(object):
+    foo = True
+    def greet(self):
+        print 'hello world'
+        print self.foo
+# ------------------------------
+def greet(self):
+    print 'hello world'
+    print self.foo
+
+Foo = type('Foo', (object, ), {'foo': True, 'greet': greet})
+```
+- 第 1 个参数是字符串 'Foo'，表示类名
+- 第 2 个参数是元组 (object, )，表示所有的父类
+- 第 3 个参数是字典，这里是一个空字典，表示没有定义属性和方法
+实际上第二种方法和第一种有一点不同的是，`greet` 函数会作为匿名函数创建，最后赋值到一个名为 greet 的对象中。不然 greet 函数的作用于（生命周期）**不会局限在 Fool 类中**
