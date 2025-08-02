@@ -432,3 +432,21 @@ Foo = type('Foo', (object, ), {'foo': True, 'greet': greet})
 - 第 2 个参数是元组 (object, )，表示所有的父类
 - 第 3 个参数是字典，这里是一个空字典，表示没有定义属性和方法
 实际上第二种方法和第一种有一点不同的是，`greet` 函数会作为匿名函数创建，最后赋值到一个名为 greet 的对象中。不然 greet 函数的作用于（生命周期）**不会局限在 Fool 类中**
+##### 元类
+元类（metaclass）就是「类的类」——**你写的 `class` 语句在解释器眼里其实是一次函数调用，真正创建并返回这个类对象的是元类**。
+1. 本质
+- 所有类都是 `type` **或其子类** 的实例。
+- `type(name, bases, dict)` 才是解释器在背后执行的那一步。
+- 你自定义一个 `MyMeta(type)`，就可以拦截并改造「工厂图纸」，决定新类长什么样。
+- 当你发现“**对每个类都想偷偷干点什么**”的时候，就是元类出场的时候；否则，十有八九用类装饰器或 `__init_subclass__` 就够了。
+```python
+class PrefixMetaclass(type):
+    def __new__(cls, name, bases, attrs):
+        # 给所有属性和方法前面加上前缀 my_
+        _attrs = (('my_' + name, value) for name, value in attrs.items())  
+
+        _attrs = dict((name, value) for name, value in _attrs)  # 转化为字典
+        _attrs['echo'] = lambda self, phrase: phrase  # 增加了一个 echo 方法
+
+        return type.__new__(cls, name, bases, _attrs)  # 返回创建后的类
+```
