@@ -1994,7 +1994,7 @@ std::set<IPv4> white_list;   // 直接塞
 ```
 `uint16_t` 对象支持比较，所以 `operator<=>(const IPv4&) const` 调用它的比较逻辑，为 IPv4 类生成六类比较重载函数。
 #### 对象实际的比较逻辑
-##### 定义比较的方法
+
 ```cpp
 struct Version { int major,minor,patch; };
 auto operator<=>(const Version& l, const Version& r) {
@@ -2025,6 +2025,15 @@ struct Ratio {
 };
 ```
 比较的顺序是**变量定义的顺序**，如果类中有**不可比较的成员变量**（• **没有自己的 `<=>`**  或者 `ambiguous / deleted` ）如果定义 `constexpr/auto operator<=>(…) = default` **直接编译报错** (`deleted function`)。）
+```cpp
+struct Boom {
+    std::mutex mtx;  // 天生没有比较
+    int id;
+    auto operator<=>(const Boom&) const = default; // ❌ 编译器报错
+private:
+    double tmp;      // private 也无济于事，还是报错
+};
+```
 ### 注意事项
 1. **对指针 & 浮点 用**  
     float 型请 `std::partial_ordering`，对付 NaN：`std::partial_ordering cmp = f1 <=> f2;`
@@ -2052,3 +2061,55 @@ auto operator<=>(const LabelPoint& l, const LabelPoint& r) {
     C++20 之前已写 `operator==` 会继续生效，没写则必须给 `default` 否则 `<=>` 不会包办 `==`。
 6. **零开销不能直接序列化成 JSON**  
     ordering 对象本身仅供比较，若想输出 “< 0”, “> 0” 之类需再 `std::format("{}", static_cast<int>(ord))`。
+7. 要为三向操作符返回类型包含 `<compare>` 头文件
+8. `<=>` 的优先级高于其他比较运算符，因此它总是先求值。所有比较运算符都从左到右计算。
+## `<version>` 头文件——查找特性测试宏
+#未完成 
+看不懂，也不常用，先跳过
+## 概念 (concept) 和约束 (constraint)——创建更安全的模板
+### 概念
+#### 定义和特性
+concept = “给**模板参数类型**打的**标签**”。
+#### 问题背景
+模板对于编写适用于不同类型的代码非常有用。例如，此函数将适用于任何数字类型:
+```cpp
+template <typename T>
+T arg 42 (const T & arg) {
+	return arg + 42;
+}
+```
+当尝试用非数字类型调用它时，会发生什么呢?
+```cpp
+const char * n = "7";
+cout << "result is " << arg 42 (n) << "\n";
+```
+输出为:
+```bash
+Result is ion
+```
+这样编译和运行没有错误，但结果无法预测。该调用非常危险，很容易造成崩溃或成为漏洞。我更希望编译器生成一个错误消息，这样就可以提前修复代码。
+#### 解决方法
+
+| 项目         | concept                                                                                           | constraint                                            |
+| ---------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| **通俗本质**   | 一个 **Boolean 型 constexpr 变量模板** `template<typename T> constexpr bool xxx_v = ...` 的语法糖、还能出现在函数签名里 | 用来描述 concept 的“规则表达式”本身：`requires (T t) { t.foo(); }` |
+| **解决痛点**   | 以前模板错几百行；现在 `requires Integral<T>`，错一行定位到调用点                                                      | 把“能不能跑”和“实现代码”彻底隔开                                    |
+| **语法糖关键字** | `concept My = …;`                                                                                 | `requires` 小括号/花括号/分号                                 |
+| **用在哪**    | 1. `template<My T>`<br>2. `requires My<T>`                                                        | 到处都是：`requires` 表达式、**requires-clause**               |
+`require` 关键字是 C++20 的新特性，将约束应用于模板。
+```cpp
+#include <concepts>
+template <typename T>
+concept Numeric = std::integral<T> || std::floating_point<T>;
+
+template <typename T>
+requires Numeric<T>
+T arg42(const T & arg) {
+    return arg + 42;
+}
+```
+Numeric 是一个只接受整数和浮点类型的概念的名称。现在，当用非数字参数编译这段代码时，就会得到编译错误:
+```bash
+error: 'arg42': no matching overloaded function found
+error: 'arg42': the associated constraints are not satisfied
+```
