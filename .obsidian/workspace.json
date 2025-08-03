@@ -85,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "constexpr",
                 "matchingCase": true,
                 "explainSearch": false,
                 "collapseAll": false,
