@@ -159,6 +159,11 @@ ref 的作用是获取一个**表达式**并使用 `reference_wrapper<T>` 包装
 C++ **不允许**直接将 `void *` 隐式转换到其他类型，从而 `((void*)0)` 不是 `NULL` 的合法实现。
 C++11 引入了 `nullptr` 关键字，专门用来区分空指针、`0`。而 `nullptr` 的类型为 `nullptr_t`
 ### constexpr
+#### 定义和特性
+
+> [!note]
+> `constexpr` 就是告诉编译器：“**这个函数/变量你如果能提前算出来，就提前帮我算出来，否则就退化为普通函数（变量）在运行时算。**”，本质上是一个“允许但不强制编译期求值”的修饰符，它让函数或变量在**常量表达式上下文中自动提升到编译期**，从而优化性能并提高类型安全性。
+
 参考下面例子
 ```cpp
 #define LEN 10
@@ -188,7 +193,28 @@ C++11 提供了 `constexpr` 让用户显式的声明函数或对象构造函�
 	    - `array`、`tuple` 等固定大小的容器
 	    - 用户定义的类型（UDT），前提是其构造函数也是 `constexpr`
 - **函数体限制**：函数体内不能包含运行时特征（如 I/O、异常抛出、`volatile` 访问等）
----
+#### 检查是否可以编译期计算
+如果传入函数的参数（或者变量值的定义表达式）是一个常量，则说明**这个量是可以再编译期计算的不变的量**，这个时候就会加快代码运行速度，将对应代码转化为常量表达式。否则就是普通函数调用。
+方法 1：`static_assert` 强制编译期检查
+```cpp
+static_assert(factorial(5) == 120);  // 如果失败，说明不能在编译期算
+```
+方法 2：用在常量表达式上下文（比如数组大小）
+```cpp
+int arr[factorial(3)];  // OK（如果函数是 constexpr 并在编译期可求值）
+```
+方法 3：`std::is_constant_evaluated()`（C++20 起）
+```cpp
+constexpr int magic(int x) {
+    if (std::is_constant_evaluated()) {
+        return x * 42;
+    } else {
+        // 运行期的逻辑可以不同
+        return heavy_runtime_function(x);
+    }
+}
+```
+#### 注意事项
 如果将 constexpr 应用于 if 的条件分支中，会导致**部分分支不会被检查**
 
 | 特性           | `if`          | `if constexpr`      |
@@ -199,6 +225,46 @@ C++11 提供了 `constexpr` 让用户显式的声明函数或对象构造函�
 | 对编译速度的影响？    | 较小            | 很可能增加编译时间（但优化性能）    |
 | 是否影响运行速度？    | 会影响（分支是运行时判断） | 不影响（只保留一个分支）        |
 
+| `constexpr` 函数在编译期一定会执行  | 错！只有在调用时所有参数都是常量表达式时，它才会在编译期执行              |
+| ------------------------ | ------------------------------------------- |
+| `constexpr` 函数不能有循环或复杂逻辑 | 错！C++20 开始支持复杂逻辑，只要能静态推导                    |
+| 一定要是固定值才能用 `constexpr`   | 错！只要能由常量参数推导出结果即可                           |
+| 只有返回值是编译期的常量             | 错！函数体中也可以有局部变量、条件分支、循环等                     |
+| `constexpr` 一定能被用作模板参数   | 错！只有在 `consteval` / `constinit` 情况下才强制编译期求值 |
+C++20 开始，标准 string 和 vector 类具有限定的构造函数和析构函数，这是可在编译时使用的前提。所以，分配给 string 或 vector 对象的内存，也**必须在编译时释放**。
+例如，constexpr 函数返回一个 vector，编译时不会出错:
+```cpp
+constexpr auto use_vector() {
+	vector<int> vec{ 1, 2, 3, 4, 5};
+	return vec;
+}
+```
+但在运行期就会出**在常量求值期间分配内存的错误**：因为在编译期间分配和释放了 vector 对象，所以该对象在运行时不可用
+```cpp
+int main(){
+	constexpr auto vec = use_vector();
+	return vec[0];
+}
+```
+正确的用法是将在编译期将需要的值计算出来，然后用运行期能够存在的变量保存他们。
+除此之外还有这种情况
+```cpp
+const auto use_vector(){
+    std::vector<int> vec{1, 2, 3, 4};
+    return vec;
+}
+
+int main(){
+    constexpr auto vec_size = use_vector().size();
+    return vec_size;
+}
+```
+![[Pasted image 20250803160434.png]]
+由于 size 函数是 const 限定的，所以表达式可以在编译时求值。
+
+- 构造的对象必须在 `constexpr` 上下文中被析构（内存必须编译期释放）
+- 不能“逃逸”出编译期（比如返回一个带有堆内存的对象）
+- 你可以在编译期用它计算结果，但**不能在运行期使用编译期动态分配的对象**
 ### if/switch 变量声明强化
 现在 if 和 Switch语句的 `()` 中可以定义临时变量，作用域仅仅在对应语句中
 ```cpp
@@ -1842,3 +1908,147 @@ int main() {
 }
 ```
 本质上是因为 list 容器不支持随机访问迭代器，sort 需要访问随机访问迭代器才能排序，**C++ 是静态类型语言，模板推导只能在编译时完成**，且 `std::sort` 是一个高度泛型的，使用到了大量底层的模板函数模板（即编译期间才开始校验可用性）。
+
+# ------------分割-----------
+C++ 20 stl 书籍内容
+# 第 1 章 C++ 20 的新特性
+## 格式化文本
+`std::print` 函数在 C++23 中已将完美移植 python 的语法到 C++中，mingw 在 15 版本之后才完整支持，14.2 中 `#include<print>` 直接执行下面代码会出现报错。
+```cpp
+std::string name {"C++ 23"};
+print("hello, {}", name);
+```
+
+## constexpr——使用编译时 vector 和字符串
+已将内容新增至 [[#constexpr]] 中
+## 安全地比较不同类型的整数
+### 问题背景
+```cpp
+int main(){
+    int x{-3};
+    unsigned y{7};
+    // std::cout << static_cast<unsigned>(x) << std::endl;
+    if(x < y)
+        std::cout << true;
+    else
+        std::cout << false;
+}
+```
+代码运行得到 false，这显然不符合常理，但是标准规定（[C++23 §7.6.9/2]）：
+
+> [!note]
+> 若操作数的算术类型不同，则所有小于 **`int`** 的整数先被提升到 **`int`**；
+> **若两个类型仍然不同（一个有符号、一个无符号，且范围不能互相覆盖）**，则拥有符号的那个值会先转换成 **无符号** 类型后再比较。
+
+`-3` 被转换为 **`unsigned int`**  → 按照二进制无符号规则，其值为：
+```cpp
+(unsigned)(-3) == UINT_MAX - 2   // 在 32 位系统下大约是 4 294 967 293
+```
+C++20 标准在 `<utility>` 头文件中包含了一组整数安全的比较函数
+```cpp
+cmp_equal(x, y) 		// x == y is false
+cmp_not_equal(x, y) 	// x != y is true
+cmp_less(x, y) 			// x < y is true
+cmp_less_equal(x, y) 	// x <= y is true
+cmp_greater(x, y) 		// x > y is false
+cmp_greater_equal(x, y) // x >= y is false
+```
+实现原理：
+```cpp
+template< class T, class U >
+constexpr bool cmp_less( T t, U u ) noexcept {
+	using UT = make_unsigned_t<T>;
+	using UU = make_unsigned_t<U>;
+	if constexpr (is_signed_v<T> == is_signed_v<U>)
+	    // 1. 同为 *有符号* 或 同为 *无符号*          —— 直接比较即可
+	    return t < u;
+	else if constexpr (is_signed_v<T>)
+	    // 2. *T 有符号，U 无符号*                  —— 只有这里是本行判断的覆盖范围
+	    return t < 0 ? true : UT(t) < u;
+	else
+	    // 3. *T 无符号，U 有符号*                  —— 上一行没命中，这里兜底
+	    return u < 0 ? false : t < UU(u);
+}
+```
+## 三向比较运算符 <=>——进行三种比较
+### 定义和特性
+“三向比较”就是“一次运算→**一次给出三种结果**”，本质是一个 **返回序关系对象** 的运算符，让后续所有 `< > <= >= == !=` 的重复劳动全部消失。
+三项比较运算符：
+- 本质上：帮助程序员省去写类之间比较操作中需要用到的**六个比较符号在对应类中的重载函数**，减少工作量
+- 返回类型上：
+
+| 返回类型                  | 值（前面加上 `std::对应返回类型::`）      | 算法含义                                                                             |
+| --------------------- | ---------------------------- | -------------------------------------------------------------------------------- |
+| std::strong_ordering  | `less` / `equal` / `greater` | **等价即互换**：`a==b ⇒ swap(a,b)` 语义不变，要求 **严格全序**。例如 `int, std::string`。             |
+| std::weak_ordering    | 同上，`equal` → `equivalent`    | **等价可能不互换**：`a==b` 时调换顺序可能得到不同结果。例子：“忽略大小写的文本比较” → 等价≠可互换。                       |
+| std::partial_ordering | 再加一个 `unordered`             | **存在“不可比较”值**（如 NaN）。如果你坚持用 `<=>` 比较两个 NaN，会得到 `unordered`；此时任何比较结果都是未定义或 false。 |
+### 实现原理
+#### 对象可排序（比较）化
+将类中的**所有 public 并且可比较的成员**分别实现默认的六项比较，如果这些成员的类型定义中有内置的比较方法，则调用它们。
+```cpp
+struct IPv4 {
+    std::uint16_t a,b,c,d;
+    auto operator<=>(const IPv4&) const = default;
+};
+std::set<IPv4> white_list;   // 直接塞
+```
+`uint16_t` 对象支持比较，所以 `operator<=>(const IPv4&) const` 调用它的比较逻辑，为 IPv4 类生成六类比较重载函数。
+#### 对象实际的比较逻辑
+##### 定义比较的方法
+```cpp
+struct Version { int major,minor,patch; };
+auto operator<=>(const Version& l, const Version& r) {
+    return std::tie(l.major, l.minor, l.patch) <=>
+           std::tie(r.major, r.minor, r.patch);
+}
+// 或者设定对象比较逻辑
+struct Person {
+    std::string name;
+    unsigned age;
+    auto operator<=>(const Person& rhs) const {
+        return std::tie(name, age) <=> std::tie(rhs.name, rhs.age);
+    }
+};
+std::vector<Person> v = …;
+std::ranges::sort(v);   // 用光默认比较
+// 或者完全自定义比较返回结果
+struct Ratio {
+    long num, den;
+    auto operator<=>(const Ratio& r) const {
+        using L = long;
+        // 防止溢出, 用 128bit 作为中介
+        __int128 c = __int128(num) * r.den - __int128(r.num) * den;
+        if (c < 0)      return std::partial_ordering::less;
+        if (c > 0)      return std::partial_ordering::greater;
+        return std::partial_ordering::equivalent;
+    }
+};
+```
+比较的顺序是**变量定义的顺序**，如果类中有**不可比较的成员变量**（• **没有自己的 `<=>`**  或者 `ambiguous / deleted` ）如果定义 `constexpr/auto operator<=>(…) = default` **直接编译报错** (`deleted function`)。）
+### 注意事项
+1. **对指针 & 浮点 用**  
+    float 型请 `std::partial_ordering`，对付 NaN：`std::partial_ordering cmp = f1 <=> f2;`
+2. **返回类型要匹配强度**  
+    如果你逻辑等价≠值等价，别返回 `strong_ordering`，否则会违反 **可替代律**。
+3. **自动生成只对公开成员有效，私有成员不会推导**。
+4. **基类需要链式比较**
+	```cpp
+struct LabelPoint : Point { std::string label; };
+auto operator<=>(const LabelPoint& l, const LabelPoint& r) {
+     // 1. 先把基类部分拿出来，用 Point 的<=>比较
+     if (auto cmp = static_cast<const Point&>(l) <=> static_cast<const Point&>(r);
+         cmp != 0)
+         return cmp;                    // 2. 只要不相等就提前返回
+     return l.label <=> r.label;        // 3. 基类相等了，再比较派生成员
+ }
+ // 等价旧写法
+ std::tie(l.x, l.y) <  std::tie(r.x, r.y)    ||
+ std::tie(l.x, l.y) == std::tie(r.x, r.y) && l.label < r.label;
+	```
+	- `LabelPoint` **继承**了 `Point`，而 `Point` 里有 `x`、`y`。
+	- **继承 ≠ 成员**，默认 `operator<=> = default` **绝不会把基类算进去**，只会比 **当前类里的数据成员**（label）。
+	- 于是 `LabelPoint` 必须手动把 **基类部分** 先取出来再比：
+5. **老代码仍需 `operator==`**  
+    C++20 之前已写 `operator==` 会继续生效，没写则必须给 `default` 否则 `<=>` 不会包办 `==`。
+6. **零开销不能直接序列化成 JSON**  
+    ordering 对象本身仅供比较，若想输出 “< 0”, “> 0” 之类需再 `std::format("{}", static_cast<int>(ord))`。
