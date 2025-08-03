@@ -106,12 +106,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -225,11 +225,11 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "031df488609bdede",
+  "active": "d1e212fee3e1649e",
   "lastOpenFiles": [
     "学习/Language/Python/DeepLearning From Scratch.md",
-    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "github python learning projects.md",
+    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "Files & LongText/Long code/HTML.md",
     "Files & LongText/Long code/C++ practice case.md",
     "学习/Language/Python/Form Scratch to Practice.md",

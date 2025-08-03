@@ -450,3 +450,146 @@ class PrefixMetaclass(type):
 
         return type.__new__(cls, name, bases, _attrs)  # 返回创建后的类
 ```
+使用实例：
+```python
+class Foo(metaclass=PrefixMetaclass):
+    name = 'foo'
+    def bar(self):
+        print 'bar'
+```
+注意事项：
+1. **99% 场景用不到**——优先用类装饰器、`__init_subclass__`、dataclass。
+2. **多重继承冲突**：如果一个类试图继承两个带不同元类的基类，会抛 `TypeError: metaclass conflict`。
+3. **破坏可读性**：调试时栈里会出现 `MyMeta.__new__`/`__init__`，不熟悉的人看不懂。
+4. **与 `__slots__` / `__init_subclass__` 混用**：先后顺序要清楚，否则属性会被覆盖。
+5. 这种元类派生出子类的方式是**隐式继承**的
+### 高级特性
+#### 迭代
+**在 Python 中，迭代器是指遵循迭代器协议（iterator protocol）的对象。**
+可迭代对象（Iterable）＝“**能被 for 循环的东西**”；  
+迭代器（Iterator）＝“**真正干活的运输小车**”，它记住当前位置，每次 `next()` 吐一个元素。
+
+python 协议只有两条：
+- 只要类实现了 `__iter__` → 可迭代；
+- 如果 `__iter__` 返回自身且还有 `__next__` → 就是迭代器。
+内置 list 是可迭代对象：
+
+```python
+# 内置 list 是可迭代对象
+books = ['py', 'go', 'rust']
+it = iter(books)     # 书架→借书小车
+next(it)             # 'py'
+next(it)             # 'go'
+```
+可以使用两种方法判断一个对象是否可以迭代：
+```python
+>>> hasattr((), '__iter__')
+True
+>>> from collections import Iterable
+>>> isinstance((), Iterable)        # 元组
+True
+```
+自定义结构让它可迭代
+方案 A：把实例变成“迭代器”
+```python
+class Squares:
+    def __init__(self, n):
+        self.i = 0
+        self.n = n
+    def __iter__(self):       # 迭代器协议
+        return self
+    def __next__(self):       # 迭代器协议
+        if self.i >= self.n:
+            raise StopIteration
+        val = self.i ** 2
+        self.i += 1
+        return val
+for x in Squares(5):
+    print(x, end=' ')   # 0 1 4 9 16
+```
+方案 B：把实例变成“可迭代对象”，每次返回新迭代器（更常见、可多次遍历）
+```python
+class Node:
+    def __init__(self, value, left=None, right=None):
+        self.value, self.left, self.right = value, left, right
+    def __iter__(self):
+        """中序遍历二叉树：可迭代对象返回生成器迭代器"""
+        if self.left:
+            yield from self.left
+        yield self.value
+        if self.right:
+            yield from self.right
+tree = Node(2, Node(1), Node(3))
+print(list(tree))   # [1, 2, 3]
+```
+为什么不用 `print(tree)`？因为 print 会默认查找对象的 `__str__` 方法，Node 对象没有定义这个方法（没有就退而求其次 `__repr__()`），所以会返回内存地址。而 List 化的 Node 对象。只要传进 list 的对象满足**可迭代协议**（即实现了 `__iter__`），`list()` 就能通过 `iter()` / `next()` 把元素逐个拿光，再组装成一个新的列表返回。
+两个函数的解释：
+- `__iter__` 的职责只有一句：  
+	“请 return 给我一个 **迭代器**”。
+- `__next__` 的职责也只有一句：  
+	“把下一项 return 给我，没了就抛 `StopIteration`”。  
+	因此不存在“**iter** 设置迭代器迭代到下一个对象”这种说法；它只是**返回**迭代器，而“下一个对象”由迭代器自己决定。
+
+`for` 循环就是先通过对象的成员函数 `iter()` 获得一个迭代器，然后不断调用 `next()` 函数实现。
+
+#### 生成器
+##### 方法一：将列表生成式的 `[]` 改为 `()` 
+```python
+>>> L = [x * x for x in range(10)]
+>>> L
+[0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+>>> g = (x * x for x in range(10))
+>>> g
+<generator object <genexpr> at 0x1022ef630>
+```
+每一个 generator 对象，都支持 `__next__` 方法，所以可以通过 `next()` 内置函数查找到下一个对象。
+```python
+>>> next(g)
+0
+>>> next(g)
+1
+>>> next(g)
+4
+>>> next(g)
+9
+>>> next(g)
+16
+>>> next(g)
+25
+>>> next(g)
+36
+>>> next(g)
+49
+>>> next(g)
+64
+>>> next(g)
+81
+>>> next(g)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+StopIteration
+```
+斐波那契数列可以通过下面实现
+```python
+def fib(max):
+    n, a, b = 0, 0, 1
+    while n < max:
+        print(b)
+        a, b = b, a + b
+        n = n + 1
+    return 'done'
+```
+
+赋值语句：
+```python
+a, b = b, a + b
+```
+相当于：
+```python
+t = (b, a + b) # t是一个tuple
+a = t[0]
+b = t[1]
+```
+`fib` 函数实际上是定义了斐波拉契数列的推算规则，可以从第一个元素开始，推算出后续任意的元素，这种逻辑其实非常类似generator。这就是方案二的做法。
+##### 方案二：添加 `yield` 关键字
+要把 `fib` 函数变成generator函数，只需要把 `print(b)` 改为 `yield b` 就可以了
