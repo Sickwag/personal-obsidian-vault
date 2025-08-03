@@ -2067,7 +2067,7 @@ auto operator<=>(const LabelPoint& l, const LabelPoint& r) {
 #未完成 
 看不懂，也不常用，先跳过
 ## 概念 (concept) 和约束 (constraint)——创建更安全的模板
-### 概念
+### 概念(concept)
 #### 定义和特性
 concept = “给**模板参数类型**打的**标签**”。
 #### 问题背景
@@ -2090,12 +2090,12 @@ Result is ion
 这样编译和运行没有错误，但结果无法预测。该调用非常危险，很容易造成崩溃或成为漏洞。我更希望编译器生成一个错误消息，这样就可以提前修复代码。
 #### 解决方法
 
-| 项目         | concept                                                                                           | constraint                                            |
-| ---------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| **通俗本质**   | 一个 **Boolean 型 constexpr 变量模板** `template<typename T> constexpr bool xxx_v = ...` 的语法糖、还能出现在函数签名里 | 用来描述 concept 的“规则表达式”本身：`requires (T t) { t.foo(); }` |
-| **解决痛点**   | 以前模板错几百行；现在 `requires Integral<T>`，错一行定位到调用点                                                      | 把“能不能跑”和“实现代码”彻底隔开                                    |
-| **语法糖关键字** | `concept My = …;`                                                                                 | `requires` 小括号/花括号/分号                                 |
-| **用在哪**    | 1. `template<My T>`<br>2. `requires My<T>`                                                        | 到处都是：`requires` 表达式、**requires-clause**               |
+| 项目         | concept                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| **通俗本质**   | 一个 **Boolean 型 constexpr 变量模板** `template<typename T> constexpr bool xxx_v = ...` 的语法糖、还能出现在函数签名里 |
+| **解决痛点**   | 以前模板错几百行；现在 `requires Integral<T>`，错一行定位到调用点                                                      |
+| **语法糖关键字** | `concept My = …;`                                                                                 |
+| **用在哪**    | 1. `template<My T>`<br>2. `requires My<T>`                                                        |
 `require` 关键字是 C++20 的新特性，将约束应用于模板。
 ```cpp
 #include <concepts>
