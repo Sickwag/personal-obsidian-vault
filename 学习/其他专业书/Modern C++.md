@@ -2417,8 +2417,16 @@ int main() {
 - 📈 生成（generate、iota）
 这些都不用你手动写循环，也不需要创建新的临时容器，**所有操作都是延迟执行的** —— 本质上，就是 **函数式的“数据流编程”**。
 **视图（view） = 只读的、可组合的、延迟求值的容器惰性操作表达方式**，加载过程是根据迭代过程实现的。所以如果要形成容器中的第 i 个元素到第 j 个元素构成的视图，只能通过
+```cpp
+std::vector<int> get_sub_range(const std::vector<int>& v, size_t start, size_t stop) {
+    return v 
+        | std::views::drop(start) 
+        | std::views::take(stop - start);
+        // | std::ranges::to<std::vector>; // 可选
+}
 ```
-```
+需要遍历 j 次，性能敏感场景还是使用 vector 这种支持下标访问的方法最好
+视图**不支持随机访问**，不能通过下标访问，只能迭代。
 #### 可写视图
 一个 view 是否只读，取决于底层迭代的 range 是否为 const。如果你用的是对原 vector 的 view，那通常可以写；但某些像 `transform_view` 返回的是中间值，不可写。
 7. `views::filter`, `views::transform`, `views::reverse` 返回的 view 是 **不可变的**（只读）**某些 view 是可写的**，前提是底层 range 可引用并可变：
@@ -2427,6 +2435,49 @@ int main() {
     - `ranges::owning_view`
     - `std::views::take
       本质上他们的底层实现是引用
+判断视图是否可写
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+方法一：看视图的 value_type 是否为引用或可变类型
+```cpp
+template <typename R>
+void check_lvalue(R&& range) {
+    auto begin = std::ranges::begin(range);
+    using value_type = std::ranges::range_value_t<decltype(range)>;
+    using reference = decltype(*begin);
+    std::cout << "value_type: " << typeid(value_type).name() << "\n";
+    std::cout << "reference type: " << typeid(reference).name() << "\n";
+}
+```
+
+### 方法二：使用 range 概念判断可写性
+```cpp
+static_assert(std::ranges::random_access_range<decltype(vec | views::drop(2))>);
+
+static_assert(!std::ranges::borrowed_range<decltype(vec | views::filter(...))>);
+```
 ### 使用方法
 最大的优点就是像流一样处理数据的同时只操纵数据的**可读视窗**。搞笑获取数据内容兼顾了语法和性能，同时提高了代码兼容性，不必考虑不同数据类型存储细节
 
