@@ -2067,9 +2067,66 @@ auto operator<=>(const LabelPoint& l, const LabelPoint& r) {
 #未完成 
 看不懂，也不常用，先跳过
 ## 概念 (concept) 和约束 (constraint)——创建更安全的模板
+### 两个特性出现的原因
+#### SFINAE 地狱出现
+SFINAE(**Substitution Failure Is Not An Error**) 是一种“失败即忽略”的机制。当你调用模板函数时，如果模板参数替换过程中某段代码无法通过，就“假装看不见这个模板” —— 并不是一个真正的错误。
+因为要用 SFINAE 实现“某个模板只能用于 int 类型”的简单要求，代码复杂到像写汇编一样，比如这行：
+```cpp
+template<typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+void do_something(T t);
+```
+写个模板函数，还要搞出 `std::enable_if`、`std::is_integral`，再加上一大堆 `typename` 和默认参数，逻辑绕得很，而且编译器一旦报错，错误信息常常非常晦涩，像是：
+```error
+error: no matching function for call to ‘do_something<std::__basic_string<char> >::f(...)’
+```
+而不是清晰地说：“这个函数只支持整数。”，这种写法虽然可以解决问题，但它太绕、太原始，于是人们管这种技术叫 “SFINAE 地狱”。
+
+#### 模板报错内容晦涩
+最初的模板使用没有任何类型限制，
+```cpp
+template<typename T>
+void print(T x) {
+    std::cout << x.value();
+}
+```
+模板在在未展开的**编辑代码阶段**不会有错误提示，有点类似于
+![[Pasted image 20250804144323.png]]
+list 模板额没有实现迭代器检查概念，这就导致了 sort 函数要求容器对象必须要实现迭代器，list 由于是模板类，在没有展开的时候无法判断他是否实现了迭代器，所以编译器不报错，但是无法通过编译。**编译器错误长达几百行**
+有了概念和约束之后，**模板参数推导中，如果某些条件不符合，别直接爆一脸错误，而是把这套模板扔掉**（让它不参与匹配），让编译器安静点。
+有了概念和约束之后，错误信息能直接定位到概念和约束的相关代码上，非常清晰。
+这一点在[[#第 10 章展望：C++20 简介#概念与约束]]中有提到
 ### 概念(concept)
 #### 定义和特性
-concept = “给**模板参数类型**打的**标签**”。
+concept 是一种**编译期谓词（compile-time predicate）**，它定义了一组关于类型的要求（如支持哪些操作、属于哪种类别等）。当用于模板参数时，它起到“类型守门员”的作用：只有满足该谓词的类型才能通过编译。
+
+> [!metaphor]
+> 想像去食堂，门口有一块大招牌：  
+> “**今天只收 1 元现金**”。  
+> 任何硬币、银行卡、手机支付统统被挡回去。  
+> concept 就是那块大牌——**把你的参数类型先挡住**，不合牌子规则的直接进不来，连后厨都不用解释。
+
+```cpp
+// ① 立牌子：只有整数才能用
+template<typename T>
+concept IntOnly = std::integral_v<T>;   // 定义一个名为IntOnly的概念“类型”
+
+// ② 领牌子：把牌子挂到模板前面
+template<IntOnly T>              // <将这个“类型”应用于T参数
+T add(T a, T b) {                //         别的类型直接报错
+    return a + b;
+}
+// 等价于
+template<typename T>
+	requires IntOnly<T>
+T add(T a, T b){
+	return a + b;
+}
+```
+- 先定义一个 named concept（名字清晰）；
+- 再把它放在模板参数中直接使用，就像限制函数的输入类型一样。
+- 标签不是“强制转换”，concept 只负责挡，不帮你把浮点变整数
+- `requires` 关键字像 C++ 的“检查清单”，告诉编译器“我这个模板或者函数的参数 **必须满足下面这些条件**”。你可以把它理解为一种“静态 if 语句”，**只在编译期运行**。
+---
 #### 问题背景
 模板对于编写适用于不同类型的代码非常有用。例如，此函数将适用于任何数字类型:
 ```cpp
@@ -2081,7 +2138,7 @@ T arg 42 (const T & arg) {
 当尝试用非数字类型调用它时，会发生什么呢?
 ```cpp
 const char * n = "7";
-cout << "result is " << arg 42 (n) << "\n";
+cout << "result is " << arg + 42 << "\n";
 ```
 输出为:
 ```bash
@@ -2090,12 +2147,12 @@ Result is ion
 这样编译和运行没有错误，但结果无法预测。该调用非常危险，很容易造成崩溃或成为漏洞。我更希望编译器生成一个错误消息，这样就可以提前修复代码。
 #### 解决方法
 
-| 项目         | concept                                                                                           |
-| ---------- | ------------------------------------------------------------------------------------------------- |
-| **通俗本质**   | 一个 **Boolean 型 constexpr 变量模板** `template<typename T> constexpr bool xxx_v = ...` 的语法糖、还能出现在函数签名里 |
-| **解决痛点**   | 以前模板错几百行；现在 `requires Integral<T>`，错一行定位到调用点                                                      |
-| **语法糖关键字** | `concept My = …;`                                                                                 |
-| **用在哪**    | 1. `template<My T>`<br>2. `requires My<T>`                                                        |
+| 项目         | concept                                                                                                                                                                                                                                              |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **通俗本质**   | `concept` 是一个**编译期可求值的类型约束谓词**，它基于类型特征（如 `std::integral<T>`）或表达式可行性（如 `requires(T t) { t.size(); }`）来判断某个类型是否符合预期。<br><br>虽然它的效果类似于 `template<typename T> constexpr bool MyConcept = ...;`，但它不是后者的语法糖，而是 C++20 新增的语言特性，具有更强的功能（如支持直接用于模板参数、参与重载决议等）。 |
+| **解决痛点**   | 以前模板错几百行；现在 `requires Integral<T>`，错一行定位到调用点                                                                                                                                                                                                         |
+| **语法糖关键字** | `concept My = …;`                                                                                                                                                                                                                                    |
+| **用在哪**    | 1. `template<My T>`<br>2. `requires My<T>`                                                                                                                                                                                                           |
 `require` 关键字是 C++20 的新特性，将约束应用于模板。
 ```cpp
 #include <concepts>
@@ -2113,3 +2170,126 @@ Numeric 是一个只接受整数和浮点类型的概念的名称。现在，当
 error: 'arg42': no matching overloaded function found
 error: 'arg42': the associated constraints are not satisfied
 ```
+### 约束(constrain)
+#### 定义和特性
+> [!metaphor]
+> 回到食堂里。窗口有张细纸条写着：  
+> “**肉夹馍必须 ≥100 克，配料不能含花生**”。  
+> concept 是门口的“收 1 元现金大牌子”；  
+> constraint 就是这张细纸条的**具体内容**（肉≥100g、无花生）。  
+> 翻译到 C++：约束 = **把“能否接受”拆成一条条小条件**。
+使用 `requires` 关键字定义
+
+#### 使用方法
+`requires` 语法用于引入一个子句或者表达式来**细化描述**concept
+出现在模板声明中，用来限制模板参数：
+
+##### 🔹 A. requires 子句（Clause）
+```cpp
+template<typename T>
+    requires std::integral<T> && requires(T t) { *t; }
+T add(T a, T b) { return a + b; }
+```
+这个函数只能被整数类型调用（如 int, long 等），不能用 std:: string 或 double
+如果使用子句形式，那么所有的条件使用 `&&` 连接
+
+##### 🔹 B. requires 表达式（Expression）
+`requires` **就是一个编译期 Boolean 求值器**：
+- `( )` 里是**约束变量表**；
+- `{ }` 里是“**必须要能编译通过**”的迷你代码块；
+	- 所有表达式都能通过语法和语义分析（如函数存在、操作合法）→ `requires` 表达式为 `true`
+	- 任意一条表达式不合法（如成员函数不存在、操作不支持）→ `requires` 表达式为 `false`
+- `->` 是“**给返回值附加额外条件**”的语法糖。
+写一个具体的“表达式式约束”，告诉编译器“我期望某个类型能做某些事情”：
+```cpp
+auto operator<=>(...) = default;
+ 
+template<typename T>
+concept HasSize = requires(T x) {
+    x.size();  // 必须有 size() 成员函数
+    { x[0] } -> std::same_as<int>; // x[0]表达式的返回值必须是int类型
+};
+```
+requires 表达式中的每一条句子**不管返回值是多少但是需要能够通过编译**，如果需要验证句子返回值，那么使用  `->` 验证返回值类型
+需要注意的是：
+- `x[0]` 的返回类型可能是 `int&`、`int&&` 或 `int`，而 `std::same_as<int>` 仅匹配 `int`，不匹配引用类型。
+- 若 `x` 是 `std::vector<int>`，`x[0]` 返回 `int&`，会导致 `std::same_as<int>` 判断失败，即使语义上是“整数访问”。
+可以使用更宽松的匹配：
+```cpp
+{ x[0] } -> std::convertible_to<int>;  // 可转换为 int
+// 或
+{ x[0] } -> std::same_as<int&>;        // 明确接受左值引用
+// 或更通用：
+requires(T x) {
+    { x[0] } -> std::integral;         // 要求返回整数类型
+};
+```
+#### 🔹C. 函数签名中使用 require 关键字
+```cpp
+template<typename T>
+T arg42(const T & arg) requires Numeric<T> {
+	return arg + 42;
+}
+```
+#### 🔹D. 参数列表中使用概念简化函数模板
+```cpp
+auto arg42(Numeric auto & arg) {
+	return arg + 42;
+}
+```
+### 两者之间的关系
+“标签 → 清单”的关系，concept 关键字定义类型需要满足一个名为 `IntOnly` 的标签，标签内容用 `=` 划定或者使用 requires 关键字划定。
+concept 是模板参数的“门禁牌”，requires 是“门禁牌背后的检测标准”。
+concept = “牌子”
+requires = “牌子上的具体内容 + 试镜剧本”
+```cpp
+concept 牌子名 = 老宏判断
+   && requires (变量表){ 试台词 1; { 试台词 2 } -> 精确返回 int; };
+```
+
+### 使用实例
+可以使用 `<type_traits>` 头文件中预定义的特性，或者自定义的特性，就像模板变量一样。为了在约束中使用，该变量必须返回 constexpr bool。例如:
+```cpp
+template<typename T>
+constexpr bool is_gt_byte{ sizeof(T) > 1 };
+// 这定义了一个名为 is_gt_byte 的类型特征，该特性使用 sizeof 操作符来测试类型 T 是否大于 1 字节。概念只是一组命名的约束。例如:
+template<typename T>
+concept Numeric = is_gt_byte<T> && (integral<T> || floating_point<T>);
+```
+这定义了一个名为 Numeric 的概念，使用 is_gt_byte 约束，以及 `<concepts>` 头文件中的
+floating_point 和 integral 概念
+
+### 注意事项：
+1. **不能把 concept 当作运行期的判断**：它是编译期的限制，不生成任何代码运行；
+2. **requires 不能随便嵌套用**：比如不能写 `requires (requires(T x) { ... })`，会报错；
+3. **requires 表达式中的变量声明要简单**：不要写复杂的初始化语句，只写形如 `x.func()`、`x.size()` 这样；
+4. **concept 和 requires 允许重载函数选择**：比如你可以为 `Integral && Unsigned` 做一个比 `Integral` 更具体的版本；
+   ```cpp
+template<std::integral T>
+void foo(T);  // 接受所有整数类型
+
+template<std::unsigned_integral T>
+void foo(T);  // 只接受无符号整数，更具体
+
+foo(42u);  // 调用第二个版本
+   ```
+6. **concept 并不是继承逻辑**：`MyConcept<T>` 成立 ≠ `T` 是从某个类派生的；
+7. **写 requires 表达式要小心返回类型**：要用 `{ expr } -> constraint;` 的形式，否则无法检查语义是否正确
+8. sfinae 转化到 C++20 concept 的具体对照表可以参考 [[C++ practice case#C++11 SFINAE 与 C++20 Concept 对照表]]
+## 模块——避免重新编译模板库
+### 问题背景
+- 随着 STL 多年的发展，这些头文件的体积也在不断增长。目前这种情况已经难以处理，并且可扩展性越来越差。
+- 头文件通常包含比模板更多的内容，通常包含系统所需的配置宏和其他符号。随着头文件数量的增加，符号冲突的机率也在增加。
+- 考虑到使用宏时，它们不受命名空间的限制，也不受其他形式的类型安全限制
+大部分头文件结构为：
+```cpp
+#ifndef BW_MATH
+#define BW_MATH
+namespace bw {
+template<typename T>
+T add(T lhs, T rhs) {
+	return lhs + rhs;
+}
+#endif // BW_MATH
+```
+因为是模板，每次使用 `add()` 时，编译器需要进行特化。模板函数每次调用时，都需要解析和特化。这就是为什么**模板实现要放在头文件中**的原因，**源代码必须在编译时可见**。随着 STL 的发展和壮大，现在已经有许多大型模板类和函数，这就成为了一个可扩展性的问题。

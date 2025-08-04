@@ -1303,3 +1303,52 @@ void InputValidator<T>::handleInputError(const std::string& error_msg) const {
 ```
 #### 实现
 由于这是头文件模板类，模板定义放在头文件中
+
+## C++11 SFINAE 与 C++20 Concept 对照表
+| 约束需求              | C++11/14/17 SFINAE 写法                      | C++20 Concept 等价写法                                     | 白话解释              |                |      |                 |     |
+| ----------------- | ------------------------------------------ | ------------------------------------------------------ | ----------------- | -------------- | ---- | --------------- | --- |
+| **基础类型约束**        | ```cpp                                     | ```cpp                                                 | 只允许整数类型           |                |      |                 |     |
+| (只允许整型)           | template<typename T,                       | template<std::integral T>                              |                   |                |      |                 |     |
+|                   | typename = std::enable_if_t<               | void foo(T);                                           |                   |                |      |                 |     |
+|                   | std::is_integral<T>::value                 | ```                                                    |                   |                |      |                 |     |
+|                   | >                                          |                                                        |                   |                |      |                 |     |
+|                   | > void foo(T);                             |                                                        |                   |                |      |                 |     |
+|                   | ```                                        |                                                        |                   |                |      |                 |     |
+| **复合类型约束**        | ```cpp                                     | ```cpp                                                 | 要求可迭代&&返回int      |                |      |                 |     |
+| (可遍历+返回整型)        | template<typename T,                       | template<typename T>                                   |                   |                |      |                 |     |
+|                   | typename = std::enable_if_t<               | requires {                                             |                   |                |      |                 |     |
+|                   | std::is_integral<                          | requires std::integral<decltype(*begin(T{}))>;         |                   |                |      |                 |     |
+|                   | decltype(*std::declval<T>().begin())       | { begin(std::declval<T>()) } -> std::forward_iterator; |                   |                |      |                 |     |
+|                   | >::value                                   | }                                                      |                   |                |      |                 |     |
+|                   | >                                          | void print_first(T container) { /*...*/ }              |                   |                |      |                 |     |
+|                   | > void print_first(T container);           | ```                                                    |                   |                |      |                 |     |
+|                   | ```                                        |                                                        |                   |                |      |                 |     |
+| **表达式存在性约束**      | ```cpp                                     | ```cpp                                                 | 要求类型有.size()方法    |                |      |                 |     |
+| (是否有 size() 方法)   | template<typename T>                       | template<typename T>                                   |                   |                |      |                 |     |
+|                   | auto get_size(T obj)                       | requires requires(T t) { t.size(); }                   |                   |                |      |                 |     |
+|                   | -> decltype(obj.size(), void())            | auto get_size(T obj) { return obj.size(); }            |                   |                |      |                 |     |
+|                   | { return obj.size(); }                     | ```                                                    |                   |                |      |                 |     |
+|                   | ```                                        |                                                        |                   |                |      |                 |     |
+| **返回值类型约束**       | ```cpp                                     | ```cpp                                                 | 要求+操作返回相同类型       |                |      |                 |     |
+| (加法返回相同类型)        | template<typename T>                       | template<typename T>                                   |                   |                |      |                 |     |
+|                   | auto add(T a, T b)                         | requires requires(T x, T y) {                          |                   |                |      |                 |     |
+|                   | -> decltype(a + b, std::declval<T>())      | { x + y } -> std::same_as<T>;                          |                   |                |      |                 |     |
+|                   | { return a + b; }                          | }                                                      |                   |                |      |                 |     |
+|                   | ```                                        | T add(T a, T b) { return a + b; }                      |                   |                |      |                 |     |
+|                   |                                            | ```                                                    |                   |                |      |                 |     |
+| **嵌套类型约束**        | ```cpp                                     | ```cpp                                                 | 要求有::iterator嵌套类型 |                |      |                 |     |
+| (是否有 iterator 类型) | template<typename C>                       | template<typename C>                                   |                   |                |      |                 |     |
+|                   | void process_container(C& c)               | requires requires {                                    |                   |                |      |                 |     |
+|                   | typename C::iterator;  // 触发 SFINAE        | typename C::iterator;                                  |                   |                |      |                 |     |
+|                   | // 函数实现...                                 | }                                                      |                   |                |      |                 |     |
+|                   | ```                                        | void process_container(C& c) { /*...*/ }               |                   |                |      |                 |     |
+|                   |                                            | ```                                                    |                   |                |      |                 |     |
+| **多条件复合约束**       | ```cpp                                     | ```cpp                                                 | 整数 && (32位        |                | 64位) |                 |     |
+| (复杂类型组合)          | template<typename T>                       | template<typename T>                                   |                   |                |      |                 |     |
+|                   | using Enable = std::enable_if_t<           | requires {                                             |                   |                |      |                 |     |
+|                   | std::is_integral_v<T> &&                   | requires std::integral<T>;                             |                   |                |      |                 |     |
+|                   | (sizeof(T) == 4                            |                                                        | sizeof(T) == 8)   | sizeof(T) == 4 |      | sizeof(T) == 8; |     |
+|                   | >;                                         | }                                                      |                   |                |      |                 |     |
+|                   | template<typename T, typename = Enable<T>> | void handle_int(T);                                    |                   |                |      |                 |     |
+|                   | void handle_int(T);                        | ```                                                    |                   |                |      |                 |     |
+|                   | ```                                        |                                                        |                   |                |      |                 |     |

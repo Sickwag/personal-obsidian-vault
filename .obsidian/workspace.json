@@ -36,9 +36,23 @@
               "icon": "lucide-file",
               "title": "Modern JavaScript"
             }
+          },
+          {
+            "id": "977a082cf5cece72",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Files & LongText/Long code/C++ practice case.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "C++ practice case"
+            }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -193,7 +207,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -209,10 +224,16 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "d47bb783b076bc54",
+  "active": "031df488609bdede",
   "lastOpenFiles": [
-    "学习/Language/TypeScript/From Official.md",
+    "Files & LongText/Long code/C++ practice case.md",
     "学习/其他专业书/Modern C++.md",
+    "Files & LongText/Attachments/Pasted image 20250804144323.png",
+    "学习/Language/JavaScript/Modern JavaScript.md",
+    "学习/algorithm/分析优化.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/Language/C C++/C++ prime plus.md",
+    "学习/Language/TypeScript/From Official.md",
     "学习/Language/TypeScript",
     "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "学习/Language/Python/DeepLearning From Scratch.md",
@@ -221,14 +242,12 @@
     "学习/algorithm/用法导向知识.md",
     "github python learning projects.md",
     "Files & LongText/Long code/HTML.md",
-    "Files & LongText/Long code/C++ practice case.md",
     "学习/Language/Python/Form Scratch to Practice.md",
     "学习/Language/Python/Python Basics.md",
     "学习/Language/Python/Learn Python in A Hard Way.md",
     "学习/Language/Python/Python Official Docs.md",
     "学习/Language/Python/xiaojiayu from scratch.md",
     "学习/Language/SQL/MySQL.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Language/C C++/C++ Basics.md",
     "Files & LongText/Long code/MySQL Long Code Practice.md",
     "Files & LongText/Long code/Python.md",
@@ -240,16 +259,11 @@
     "Files & LongText/Attachments/Pasted image 20250726165726.png",
     "Files & LongText/Attachments/Pasted image 20250726165318.png",
     "学习/4Bases&Work/开发情景&面试题/面试题.md",
-    "学习/ProjectsStudy/C C++/CodeLineCounter.md",
     "Files & LongText/Attachments/source 1.zip",
-    "学习/4Bases&Work/开发情景&面试题/处理海量数据.md",
-    "学习/ProjectsStudy/C C++/2048CLI.md",
-    "学习/Language/C C++/Entrance of docs.md",
     "Files & LongText/Attachments/source.zip",
     "Files & LongText/Attachments/Pasted image 20250722152355.png",
     "Files & LongText/Attachments/Pasted image 20250722004106.png",
     "Files & LongText/Attachments/Pasted image 20250722004123.png",
-    "Files & LongText/Attachments/Pasted image 20250722003147.png",
     "学习/ProjectsStudy/C C++",
     "学习/4Bases&Work/软考",
     "copilot-conversations",
