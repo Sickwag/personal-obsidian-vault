@@ -312,7 +312,7 @@ int main() {
 - **类型一致性**：`initializer_list` 中的元素类型必须与声明的模板参数类型一致（如 `int`、`double`、`string` 等）。
 - **性能考虑**：频繁使用 `initializer_list` 可能引入额外的复制或移动操作，需权衡使用场景。
 - **容器支持**：标准库容器（如 `vector`、`list`）已内置支持 `initializer_list` 构造函数，简化了初始化过程。
-### 结构化绑定
+### 结构化绑定（modern cpp）
 C++中如果要一个函数返回多个返回值，一般用 `tuple<返回值类型1, 返回值类型2,......>`，虽然可以，但是但缺陷是，C++11/14 并没有提供一种简单的方法**直接从**元组中拿到并定义元组中的元素。
 
 - 使用 `tie` 解包，则**需要先定义变量**
@@ -2472,7 +2472,7 @@ void check_lvalue(R&& range) {
 }
 ```
 
-### 方法二：使用 range 概念判断可写性
+方法二：使用 range 概念判断可写性
 ```cpp
 static_assert(std::ranges::random_access_range<decltype(vec | views::drop(2))>);
 
@@ -2555,6 +2555,27 @@ for(int i : flat) {
     cout << i << " ";  // 1 2 3 4 5 6
 }
 ```
+#### 比传统方法更好的视图算法
+要对 vector 的一部分排序时的情况。可以用老方法来做:
+```cpp
+sort (v.begin () + 5, v.end ());
+```
+这将对 vector 的前 5 个元素进行排序。范围版本中，可以使用视图来跳过前 5 个元素:
+```cpp
+ranges:: sort (views:: drop (v, 5));
+```
+甚至可以组合视图:
+```cpp
+ranges:: sort (views:: drop (views:: reverse (v), 5));
+```
+也可以使用范围适配器作为 ranges:: sort 的参数:
+```cpp
+ranges::sort(v | views::reverse | views::drop(5));
+```
+用传统的排序算法和 vector 迭代器来完成:
+```cpp
+ranges::sort(v.rbegin() + 5, v.rend());
+```
 ### 注意事项
 1. ✅ **视图本质是不可变的**，除非你特地复制出来（比如用 `to<std::vector>()`）
 2. ❌ **不能直接修改视图中的元素**（除非你是可写视图）
@@ -2568,3 +2589,83 @@ for(auto& x : container | views::filter(even)) {
 4. ❗ **视图不是容器！** 你不能调用 `.size()`，除非有 `.data()` 方法
 5. ⚠️ **某些视图只读，不可随机访问**，`filter_view` 不支持随机访问
 6. ⚠️ **视图不是容器：不能用 vector<...> 构造它**，要用 `to<>` 收集结果
+从 C++20 开始，`<algorithm>` 头文件中的大多数算法都会基于范围。这些版本在 `<algorithm>` 头文件中，但是在 std:: ranges 命名空间中，这将它们与传统算法区别开来。
+
+# 第 2 章 STL 的泛型特性
+## span 类——使 C 语言数组更安全
+`std::span` 类是一个包装器，可在连续的对象序列上创建视图。span 没有属于自己的数据，其引用底层结构中的数据。可以把它看作 C 数组的 string_view，底层结构可以是 C 数组、vector 或 STL array。
+
+> [!note]
+> “span 是一种轻量化的安全数组/容器视图，它不拥有数据，而是对已存在连续内存上的一块‘有范围’的只读引用”
+
+| 类                   | 比喻                                      |
+| ------------------- | --------------------------------------- |
+| `std::span<T>`      | 一块你看得见的矩形数据区域：不知道它是怎么来的，但你对它的类型和上下限非常清楚 |
+| `T*` 和 `size_t len` | 就相当于凌乱拿着一个指针，并被告知“那里有 5 个元素”，但并无完整结构判断  |
+| `std::vector<T>`    | 可修改、可拥有的动态数组，内存自动回收                     |
+| `std::array<T, N>`  | 固定大小的紧凑数组                               |
+### 定义特性
+`std::span` 是泛型容器接口简化项目的一个飞跃，也是安全访问原始内存、去除 raw pointer practice（裸指针习惯） 的关键工具。
+它最有用的地方，在于将vector，C数组，array这种**任意连续内存内存块存储数据的结构**统一用一种包装类封装，**只包含对目标内存块的引用**（原始内存块的指针和长度）和数据访问（因为是只读的，所以不能对数据进行操作）的api，并且由于的数据存储是连续的，所以他**支持视图操作**。
+
+- `std::span<T>` 是可读写的视图 `std::span<const T>` 是只读的，不能修改数据
+- span开销小，不需要像vector一样控制容量和动态拓展，他只是指向内存地址，是一种引用已经存在的内存数据的一种不包含数据的封装
+- span 解决了旧 C 代码中函数传递数组作为参数时指针操作容易出错和必须传入数组大小的这些弊端。
+- span 支持 `span<type, const_num>` 和 `span<type>` 两种方法，第一种会多一个编译期大小检查操作，相当于更严格的**非惰性加载**视图。
+使用方式是将 C 数组变量，vector 等连续容器对象放在 span 构造函数中即可将容器升级为 span 对象。
+### 注意事项
+底层实现只有一个指针和数组大小
+```cpp
+template<typename T, size_t Extent = std::dynamic_extent>
+class span {
+private:
+	T * data;
+	size_t count;
+public:
+	...
+}
+```
+- `std::span<T>`：表示对连续数据的视图，**大小在运行期**决定
+- `std::dynamic_extent`：一个特殊值，表示“这个 span 的大小不是编译期固定”）。
+- `span<type, const_num>` 和 `span<type>` 两种方法创建的对象**在类型上不同**，一个是编译期确定长度，一个运行期确定。若作为参数传入需注意类型。
+所有成员函数都是 constexpr 和 const 限定的，包括：
+![[Pasted image 20250805133844.png]] ![[Pasted image 20250805133915.png]]
+span 类只是一个简单的包装器，不执行边界检查。若尝试访问 n 个元素中的元素 n+1，结果就是**未定义的**，所以最好不要这样做。
+#### C++26 提案中的 `mdspan`
+`std::mdspan` 是一个多维视图 —— 通俗地说：本地坐标的张量式内存访问封装（针对多维数据结构）
+- `span` —— 是一维切片（如 `.subspan(i, len)`），是长方形式视图 API 封装
+- `mdspan` —— 是“多维切片”（如 `.subspan(0, 3, 0, 4)`），是 table, matrix, volume 形式的**多维度视图**封装。访问矩阵、缓冲图像行/列、音频帧结构，甚至深度学习数据。
+
+## 结构化绑定（C++20 stl cookbook）
+基本内容[[#结构化绑定（modern cpp）]]
+结构化绑定使用自动类型推断，所以类型**必须是 auto**（如果不想复制可以带有引用）。
+## if 和 switch 语句中初始化变量
+### 问题背景
+```cpp
+const string artist{ "Jimi Hendrix" };
+size_t pos{ artist.find("Jimi") };
+if(pos != string::npos) {
+	ut << "found\n";
+} else {
+	cout << "not found\n";
+}
+```
+这样的代码会将 pos 暴露在 if 条件之外，为防止命名冲突，if 和 switch 语句中新增一个**初始化变量语句**位置，保证安全。
+
+### 解决方法
+```cpp
+std::string artist{"shiloh dynasty"};
+if (size_t pos = artist.find("dynasty") /*这里不能使用{}引入代码块*/; pos != std::string::npos) {
+	// code
+}
+```
+限制锁定互斥锁的 lock_guard 的作用域。使用初始化表达式，会让代码变得
+更简单:
+```cpp
+if (lock_guard<mutex> lg{ my_mutex }; condition) {
+	// interesting things happen here
+}
+```
+lock_guard 在构造函数中锁定互斥量，在析构函数中解锁互斥量。过去，必须删除它或将整个if 语句括在一个额外的大括号块中。现在，当 lock_guard 超出 if 语句的作用域时，将自动销毁。
+## 模板参数推导
+当模板函数或类模板构造函数 (C++17 起) 的实参类型足够清楚，无需使用模板实参，编译器就能理解时，就会进行模板实参推导。
