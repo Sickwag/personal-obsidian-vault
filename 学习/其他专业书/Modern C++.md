@@ -2787,3 +2787,20 @@ v.erase(std::remove(v.begin(), v.end(), 2), v.end());
 ```
 第一个 2 并没有被移除，而是放在容器最后，将 end 迭代器移动到他之前。
 如果想要移除某个元素，那么直接使用 `erase(迭代器)` 移除对应迭代器位置元素
+
+## 安全地访问 vector 元素
+### 问题背景
+这段代码不会报错：
+```cpp
+std::vector<int> vec{1, 2, 3, 4, 5};
+auto& i = vec[5];
+std::cout << i << std::endl;
+std::cout << std::format("element is {}\n", i);
+// [] 操作符会无声地允许对超出 vector 结尾的位置进行写入:
+vector v{ 19, 71, 47, 192, 4004 };
+v[5] = 2001;
+auto & i = v[5];
+cout << format("element is {}\n", i);
+```
+### 解决方案
+通过 `at()` 函数访问容器中的元素
