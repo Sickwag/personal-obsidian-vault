@@ -2804,3 +2804,40 @@ cout << format("element is {}\n", i);
 ```
 ### 解决方案
 通过 `at()` 函数访问容器中的元素
+## 高效地将元素插入到 map 中
+使用 `emplace` 时，不会检查构造的对象（即容器中的值对象，map 容器值对象为 `pair<const key, value>`）是否已经存在。
+`emplace` 的行为是直接将参数**转发**给值对象的构造函数。即使在不需要对象时，也会构造对象。这包括调用构造函数、分配内存、移动数据，然后丢弃临时对象
+通常情况下，key 是较为简单的有区分功能的对象（变量），value 则是真正存储数据的对象（有效负载）。要搜索一个现有的键，`try_emplace()` 函数必须构造键对象，但不需要构造有效负载对象，除非需要插入到 map 中。
+emplace 和 try_emplace 函数签名：
+```cpp
+pair<iterator, bool> try_emplace( const Key& k, Args&&... args );
+pair<iterator,bool> emplace( Args&&... args );
+```
+由于 `try_emplace` 函数将 key 作为单独的形参，这允许在构造时隔离，先构造键，如果有冲突就避免了构造值造成的资源浪费。应该首选 `try_emplace()`，而非 `emplace()`
+## 高效地修改 map 项的键值
+### 问题背景
+容器是按键排序的。键必须是唯一的，并且是 const 限定的，所以不能更改。传统方法中如果需要修改键，必须先删除键值对
+C++17 及之后，`std::map` 和 `std::unordered_map` 提供了一个新的函数叫做 **`extract()`**，可以移除一个键值对（元素）并返回一个 node handle（节点句柄）。
+```cpp
+std::map<int, std::string> m = {{1, "one"}, {2, "two"}, {3, "three"}};
+
+auto nh = m.extract(2);  // 把 key=2 的节点提取出来
+```
+`nh` 是一个 `map<int, std::string>::node_type`（节点句柄）， 它**拿出了那个元素，但没有复制或移动其内容**（所以叫“zero-copy”）。
+“节点句柄”是 C++17 引入的一种机制，它的本质是一个轻量包装器，用来：
+- 持有某个从[[#STL 容器类型的概述|关联容器]] 提取出的键值对（node）
+- 支持在不触发复制、不重新分配内存的前提下：
+    - 修改键（key）
+    - 插回容器或其他兼容容器中
+```cpp
+auto nh = m.extract(2);  // nh 是节点句柄
+nh.key() = 20;           // 修改键
+m.insert(std::move(nh)); // 插入修改后的键值对
+```
+把原来 key=2 的节点“撕下来”，不做复制，保持 value 的状态 `insert(std::move(nh))`：把它插入回去（移动而不是复制）。
+方法对比：
+
+| 操作方式                                        | 是否复制 value？ | 是否需要临时构造？ | 是否转移节点？ |
+| ------------------------------------------- | ----------- | --------- | ------- |
+| `erase(key)` + 构造新 entry                    | yes（先复制）    | yes       | 不能转移    |
+| `extract()` → `nh.key() = ...` → `insert()` | no          | no        | 可直接转移   |
