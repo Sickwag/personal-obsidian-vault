@@ -2668,4 +2668,122 @@ if (lock_guard<mutex> lg{ my_mutex }; condition) {
 ```
 lock_guard 在构造函数中锁定互斥量，在析构函数中解锁互斥量。过去，必须删除它或将整个if 语句括在一个额外的大括号块中。现在，当 lock_guard 超出 if 语句的作用域时，将自动销毁。
 ## 模板参数推导
+### 问题背景
+在 C++ 模板编程的早期，模板参数必须**显式给出类型**，即使是明显“可以通过传入参数猜出具体类型”的情况。
 当模板函数或类模板构造函数 (C++17 起) 的实参类型足够清楚，无需使用模板实参，编译器就能理解时，就会进行模板实参推导。
+### 解决方案
+现代 C++ 支持变量和类的类型推导
+```cpp
+template<typename T1, typename T2, typename T3>
+class Thing {
+	T1 v1{};
+	T2 v2{};
+	T3 v3{};
+public:
+	explicit Thing(T1 p1, T2 p2, T3 p3) : v1{p1}, v2{p2}, v3{p3} {}
+	string print() {
+		return format("{}, {}, {}\n",
+		typeid(v1).name(),
+		typeid(v2).name(),
+		typeid(v3).name()
+	);
+	}
+};
+// 原本应该
+Things<int, double, string> thing1{1, 47.0, "three" }
+// 现在只需
+Things thing1{1, 47.0, "three" }
+// C++17 之前的写法：
+std::pair<int, std::string> p(10, "C++98-style");  // ❌ 推导前写法
+// C++17 后你这么写即可：
+std::pair p(10, "modern lightweight");
+```
+使用 deduction guideline 手动设置模板推导方向。
+```cpp
+// 自定义容器类，例如一个简单的 Arr2
+template <typename T>
+class MyPair {
+    T x, y;
+public:
+    MyPair(T a, T b) : x(a), y(b) {}
+};
+// 默认推导无法处理不同 T？
+// MyPair p(1, 2.5); // x = int, y = double？但是模板 T 是什么呢？
+// 所以我们写 deduction guide 显式地告诉编译器：我允许传入两个类型，最后 deduce 出一种类型即可
+// ✨ 比如一律 cast 为第一类型
+MyPair(T a, U b) -> MyPair<T>;
+// 最终会变为MyPair<int>
+```
+
+### 注意事项
+有些推导并不按预期来，特别是带引用、万能引用的函数模板。
+concept 判断传入是否合理，而模板推导判断具体是合理范围内哪一个类型
+
+## if constexpr——简化编译时决策
+### 问题背景
+**传统的运行期 if 无法屏蔽非法模板代码分支**，在模板编程中，经常需要根据模板参数选择性地执行不同的逻辑
+### 主要作用
+- 代码主要的**速度瓶颈在分支跳转语句中**，使用 `if constexpr` 在编译时计算分值表达式，提高代码速度。
+- 未选中的分支不参与编译，因此你可以在一个模板函数中编写带有不同类型约束的分支，而无需担心未选分支是否对当前类型不合法
+  ```cpp
+template <typename T>
+void print_info(T value) {
+  if constexpr (std::is_integral_v<T>) { // 整型类型
+	  std::cout << "Integral type, size in bits: " << sizeof(T)*8 << std::endl;
+  } else if constexpr (std::is_floating_point_v<T>) { // 浮点类型
+	  std::cout << "Floating-point type" << std::endl;
+  } else {
+	  std::cout << "Some other type" << std::endl;
+  }
+}
+  ```
+对于 `int`，`std::is_integral_v<int>` 为真，只有第一个块被编译。
+对于 `float`，`std::is_integral_v<float>` 是假，第一个块不会编译也不会报错
+### 实现原理
+在模板实例化**时**，所有代码体都会进行**语法检查**（即使 `if` 条件在运行时不成立）。旧C++只能通过enable_if来区分开类型不一致的情况，并没有跳过语法正确性检查
+普通 `if` 不但不会改变编译路径选择，**所有分支都会被编译器检查语法正确性**，即使运行期根本无法执行到那里。
+```cpp
+template <typename T>
+void printInfo(T value) {
+	if(std::is_same<T, std::string>){
+		std::cout << value.size();
+	}else if (std::is_same<T, ErrorStruct>){
+		std::cout << value.error_code();
+	}
+}
+```
+这段代码没有使用 if constrexpr，就会导致如果传 `std::string` 类型，那么第二个分支在进行语法检查时会出现没有 `error_code()` 成员函数错误，并且由于这是模板，会出现 SFNIAE 现象，大量报错难以 debug。
+旧 C++中只能通过 enable_if，写好几个模板特化或者函数重载函数来对应每一个分支来解决这一问题。
+```cpp
+template <typename T>
+std::enable_if_t<std::is_same_v<T, std::string>> printInfo(T value) {
+    std::cout << value.size();
+}
+
+template <typename T>
+std::enable_if_t<std::is_same_v<T, ErrorStruct>> printInfo(T value) {
+    std::cout << value.error_code();
+}
+```
+# 第 3 章 STL 容器
+### STL 容器类型的概述
+- 顺序容器：元素按顺序排列。虽然可以按顺序使用元素，但其中一些容器使用连续存储，而其他容器则不使用
+- 关联容器：将一个键与每个元素关联起来。元素是通过键来引用的，而不是其在容器中的位置
+- 容器适配器：容器适配器是封装底层容器的类，容器类提供了一组特定的成员函数来访问底层容器元素。
+	- stack：底层容器可以是 vector、deque 或 list 中的一种。若没有指定底层容器，默认为 deque
+	- queue：底层容器可以是 deque 或 list 容器之一。若没有指定底层容器，默认为 deque。
+	- priority_queue：底层容器可以是 vector 或 deque 中的一个。若没有指定底层容器，默认为 vector
+### 使用擦除函数从容器中删除项
+- `std::remove` **不会真正从容器中删除元素**（尤其不是通过 `erase()` 那样的方式删除）。**仅重排元素**，有返回值，是容器末尾的迭代器
+- 它是一个 **算法函数**，只操作对象，**不关心它所在的容器的具体类型**。
+remove 移除元素的常用用法是：
+```cpp
+std::vector<int> v{1,2,3,4,5};
+std::remove(v, 2);
+[1, 3, 4, 5, 4, 2, 5, 2]
+                   ↑ new_end
+// 正确的移除元素方式
+v.erase(std::remove(v.begin(), v.end(), 2), v.end());
+```
+第一个 2 并没有被移除，而是放在容器最后，将 end 迭代器移动到他之前。
+如果想要移除某个元素，那么直接使用 `erase(迭代器)` 移除对应迭代器位置元素
