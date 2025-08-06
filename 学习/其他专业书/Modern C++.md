@@ -2891,3 +2891,11 @@ cpp20feature.cpp:8:6: note: constraints not satisfied
 In file included from D:/Program/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/compare:40,
 ...................
 ```
+### 自定义支持迭代器的数据结构
+必须组件：
+1. 一个 `.begin()` 成员
+2. 一个 `.end()` 成员，**两个成员返回的类型必须一致**，返回类型为 iterator
+3. 必须重载 iterator 中的
+    1. `operator*()`   ——解引用，否则无法访问对应元素的值，只能拿到地址
+    2. `operator++()` ——前置 `++`
+    3. `operator==` / `!=`
