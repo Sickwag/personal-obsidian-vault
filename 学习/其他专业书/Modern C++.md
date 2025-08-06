@@ -997,6 +997,7 @@ int main() {
 
 > 移动语义（Move Semantics）是指：**将资源从一个对象“移动”到另一个对象，而非复制它**。它通过**右值引用（rvalue reference）** 和 `std::move()` 机制实现。
 
+![[Pasted image 20250806163633.png]]
 ```cpp
 std::vector<int> v = heavy_computation(); // heavy_computation 返回一个局部 vector，传统拷贝代价峰值高
 ```
@@ -1049,7 +1050,7 @@ int main() {
 	- 虽然 `v` 是 `int&&` 类型，pass函数中将v传入reference的过程中给1赋予了一个"v"的名字，所以在上下文中，v是一个左值
 - 对于 `pass(l) -> 右值`：
 	- `l` 已经被命名，`T&&` 通过[[Modern C++#Note：万能引用|万能引用]]解析出传递的参数是一个左值 
-	- 然后调起对应的左值 reference 哈数
+	- 然后调起对应的左值 reference 
 
 ### Note：mutable 
 ```cpp
@@ -2892,10 +2893,78 @@ In file included from D:/Program/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/inclu
 ...................
 ```
 ### 自定义支持迭代器的数据结构
-必须组件：
+#### 必须组件
 1. 一个 `.begin()` 成员
 2. 一个 `.end()` 成员，**两个成员返回的类型必须一致**，返回类型为 iterator
 3. 必须重载 iterator 中的
     1. `operator*()`   ——解引用，否则无法访问对应元素的值，只能拿到地址
-    2. `operator++()` ——前置 `++`
+    2. `operator++()` ——前置 `++`，如果不实现则无法支持 min_element，sort 这些算法函数，因为 `min_element` 函数签名为：
+       ```cpp
+template<class ForwardIterator>
+ForwardIterator min_element(ForwardIterator first, ForwardIterator last);
+// 需要传入了类型支持前向迭代器概念，概念定义可以再crefer中查到
+       ```
+![[Pasted image 20250806171459.png]]
     3. `operator==` / `!=`
+代码实现参考 [[C++ practice case#支持 for-range 的自定义 vector 数据结构]]
+
+| 缺失操作                  | 导致什么失败？                             | 具体例子                     |
+| --------------------- | ----------------------------------- | ------------------------ |
+| `operator*`           | 所有都失败                               | `for :`、`min_element` 报错 |
+| `operator++()` 前置     | 所有都失败                               | 迭代无法进行                   |
+| `operator!=(it, end)` | `for :`、几乎所有算法都失败                   | 无法判断是否到结尾                |
+| `operator++(int)` 后置  | `std::min_element`, `std::find` 等失败 | 因为它们使用 `*it++`           |
+| `operator==`          | 有些实现会失败                             | 特别是 `== end()` 判断        |
+#### 注意事项
+- 解引用 `&` 和 `->` 操作符的返回类型
+  ```cpp
+T* ptr_ = nullptr;
+T& operator*() const { return *ptr_; } 
+T* operator->() const { return ptr_; } 
+  ```
+- 自增自减操作有前后缀之分，C++规定参数列表添加 int 为后缀类型重载
+  ```cpp
+iterator& operator++() {         // 必须
+      ++ptr_;
+      return *this;
+  }
+iterator operator++(int) {       // 后置自增，可选，因为迭代使用前置
+  iterator tmp{ptr_};
+  ++ptr_;
+  return tmp;
+}
+  ```
+- `==` 和 `!=` 可以设置为成员函数或者友元函数，具体原理参考 [[C++ Runoob Tutoral#运算符重载的本质]]
+  ```cpp
+friend bool operator==(const iterator& a, const iterator& b)  { return a.ptr_ == b.ptr_; }  // 必须
+friend bool operator!=(const iterator& a, const iterator& b) { return a.ptr_ != b.ptr_; }  // 必须
+// 可以将这两个函数作为成员函数，实现为：
+// bool operator==(const iterator& mv) const {
+//     return this->ptr_ == mv.ptr_;
+// }
+// bool operator!=(const iterator& mv) const {
+//     return this->ptr_ != mv.ptr_;
+//     return !(*this == other); // 复用==函数
+// }
+// ps：作为成员函数时最好加上const修饰函数体，所有基本的数组操作，delete，delete[]，size()都应该使用const noexcept。这些原子操作不会返回错误
+  ```
+- 赋值移动语义中容易犯一个错误
+  ```cpp
+MyVector& operator=(MyVector&& other) noexcept{
+  if(this != &other){
+	  delete[] data_;
+	  data_ = other.data_;
+	  size_ = other.size_;
+	  capacity_ = other.capacity_;
+	  // delete[] other.data_
+	  other.data_ = nullptr;
+	  other.size_ = 0;
+	  other.capacity_ = 0;
+  }
+  // 或者将上面if语句中全部内容替换为swap(*this, other);
+  return *this;
+}
+  ```
+  移动语义的核心是新的对象**接管**旧的对象数据，具体原理可以参考 [[Modern C++#移动语义]]，原本 `other.data_` 并不会删除，而是在新对象中用 `data_` 的内存地址修改为 `other.data_` 的地址。
+  `delete[]` 是对内存的操作而不是对对象的操作。所以只需要将 `other.data_` 不再指向原地址即可。具体原因可以参考 ![[Pasted image 20250806163725.png]]
+  
