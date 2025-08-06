@@ -23,7 +23,22 @@
             }
           },
           {
-            "id": "f09da1bb5e924d3e",
+            "id": "f7cac6afade9e686",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/algorithm/用法导向知识.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "用法导向知识"
+            }
+          },
+          {
+            "id": "196f6e60695af4ec",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -38,22 +53,21 @@
             }
           },
           {
-            "id": "f7cac6afade9e686",
+            "id": "e5c52b98ce6f09ec",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/algorithm/用法导向知识.md",
+                "file": "学习/ProjectsStudy/报错日志分析.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "用法导向知识"
+              "title": "报错日志分析"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -106,8 +120,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -226,11 +239,17 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "f09da1bb5e924d3e",
+  "active": "f0f4fdde46064fc7",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/报错日志分析.md",
+    "Files & LongText/Attachments/Pasted image 20250805235325.png",
+    "学习/其他专业书/Modern C++.md",
+    "Files & LongText/Attachments/Pasted image 20250805232401.png",
+    "Files & LongText/Attachments/Pasted image 20250805231729.png",
+    "Files & LongText/Attachments/Pasted image 20250805231720.png",
     "学习/algorithm/用法导向知识.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/其他专业书/Modern C++.md",
+    "Files & LongText/Attachments/Pasted image 20250805231439.png",
     "Files & LongText/Long code/C++ practice case.md",
     "Files & LongText/Attachments/Pasted image 20250805133915.png",
     "Files & LongText/Attachments/Pasted image 20250805133844.png",
@@ -258,14 +277,8 @@
     "Files & LongText/ChatLogWithAi/对AI解释的理解.md",
     "软考.md",
     "学习/ProjectsStudy/C C++/Boost库文档学习.md",
-    "Files & LongText/Attachments/Pasted image 20250726170227.png",
-    "Files & LongText/Attachments/Pasted image 20250726170154.png",
-    "Files & LongText/Attachments/Pasted image 20250726165726.png",
-    "Files & LongText/Attachments/Pasted image 20250726165318.png",
-    "学习/4Bases&Work/开发情景&面试题/面试题.md",
     "Files & LongText/Attachments/source 1.zip",
     "Files & LongText/Attachments/source.zip",
-    "Files & LongText/Attachments/Pasted image 20250722152355.png",
     "学习/ProjectsStudy/C C++",
     "学习/4Bases&Work/软考",
     "copilot-conversations",

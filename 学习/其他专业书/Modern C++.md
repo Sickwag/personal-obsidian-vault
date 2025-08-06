@@ -2849,3 +2849,45 @@ m.insert(std::move(nh)); // 插入修改后的键值对
     - 桶的结构也不会重新调整（unordered_map 也是稳定的）
     - 得到了一个 node handle，包含完整的 `<key, value>` 对，这块内存地址不变，value 还在等待操作
 - 通过 `.key() = xxx` 和 `.mapped() = xxx` 返回键和值的引用
+
+# 第 4 章兼容迭代器
+## 迭代器
+### 定义特性
+基本内容参考 [[C++ Runoob Tutoral#迭代]]
+新增内容参考 [[C++ Runoob Tutoral#基于范围的 for 循环]]
+总结图
+![[Pasted image 20250805231439.png]]
+
+### 对迭代器使用概念和约束
+所有的迭代器约束概念都在 `std::` 命名空间中
+![[Pasted image 20250805231720.png]]
+![[Pasted image 20250805231729.png]]
+```cpp
+template<typename T>
+requires std::random_access_iterator<typename T::iterator>
+void printc(const T & c) {
+	for(auto e : c) {
+		cout << format("{} ", e);
+	}
+	cout << '\n';
+	cout << format("element 0: {}\n", c[0]);
+}
+```
+函数需要一个 random_access_iterator。若用非随机访问容器的列表使用时，编译器会报错:
+编辑时就会出现报错
+![[Pasted image 20250805232401.png]]
+编译器立刻返回报错，完整报错内容分析可参考--> [[报错日志分析#C++#约束不匹配报错|约束不匹配]]
+```cpp
+cpp20feature.cpp: In function 'int main()':
+cpp20feature.cpp:19:11: error: no matching function for call to 'printc(std::__cxx11::list<int>&)'
+   19 |     printc(c); // 这里知名没有对应的重载函数
+      |     ~~~~~~^~~
+cpp20feature.cpp:8:6: note: candidate: 'template<class T>  requires  random_access_iterator<typename T::iterator> void printc(const T&)'
+    8 | void printc(const T& c) { // 指明不满足require要求
+      |      ^~~~~~
+// 下面是关于cpp20feature.cpp:8:6:文件中note标签标记的错误追踪
+cpp20feature.cpp:8:6: note:   template argument deduction/substitution failed:
+cpp20feature.cpp:8:6: note: constraints not satisfied
+In file included from D:/Program/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/c++/compare:40,
+...................
+```
