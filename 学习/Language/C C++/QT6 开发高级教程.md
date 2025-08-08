@@ -113,3 +113,68 @@ else if (result == Discard) { ... }
 else if (result == Cancel) { ... }
 ```
 这是一种位运算的方式，巧妙地实现可读性和代码性能的提升用，一个参数就能传多个布尔选项
+# QT Widgets
+## Widgets Tutorial - Nested Layouts
+创建一个类似这样表格应用
+![[Pasted image 20250808104506.png]]
+```cpp
+#include <QtWidgets>
+
+int main(int argc, char *argv[]) {
+  QApplication app(argc, argv);
+  QWidget window;
+
+  QLabel *queryLabel =
+      new QLabel(QApplication::translate("nestedlayouts", "Query:"));
+  QLineEdit *queryEdit = new QLineEdit();
+  QStandardItemModel model;
+  model.setHorizontalHeaderLabels(
+      {QApplication::translate("nestedlayouts", "Name"),
+       QApplication::translate("nestedlayouts", "Office")});
+  const QStringList rows[] = {
+      QStringList{QStringLiteral("Verne Nilsen"), QStringLiteral("123")},
+      QStringList{QStringLiteral("Carlos Tang"), QStringLiteral("77")},
+      QStringList{QStringLiteral("Bronwyn Hawcroft"), QStringLiteral("119")},
+      QStringList{QStringLiteral("Alessandro Hanssen"), QStringLiteral("32")},
+      QStringList{QStringLiteral("Andrew John Bakken"), QStringLiteral("54")},
+      QStringList{QStringLiteral("Vanessa Weatherley"), QStringLiteral("85")},
+      QStringList{QStringLiteral("Rebecca Dickens"), QStringLiteral("17")},
+      QStringList{QStringLiteral("David Bradley"), QStringLiteral("42")},
+      QStringList{QStringLiteral("Knut Walters"), QStringLiteral("25")},
+      QStringList{QStringLiteral("Andrea Jones"), QStringLiteral("34")}};
+  QList<QStandardItem *> items;
+  for (const auto &row : rows) {
+    items.clear();
+    for (const auto &text : row) {
+      items.append(new QStandardItem(text));
+    }
+    model.appendRow(items);
+  }
+  QTableView *resultView = new QTableView();
+  resultView->setModel(&model);
+  resultView->verticalHeader()->hide(); // 隐藏最左侧的序号列
+  resultView->horizontalHeader()->setStretchLastSection(true);
+
+  QHBoxLayout *queryLayout = new QHBoxLayout();
+  queryLayout->addWidget(queryLabel);
+  queryLayout->addWidget(queryEdit);
+
+  QVBoxLayout *mainLayout = new QVBoxLayout();
+  mainLayout->addLayout(queryLayout);
+  mainLayout->addWidget(resultView);
+
+  window.setLayout(mainLayout);
+  window.setWindowTitle(
+      QApplication::translate("nestedlayouts", "Nested layouts"));
+  window.show();
+  return app.exec();
+}
+```
+如果注释掉 `item.clear()`，则会出现这种错误
+![[Pasted image 20250808104557.png]]
+
+## Model/View Programming 模型/视图编程
+## Qt Widgets Examples
+### Analog Clock
+效果图
+![[Pasted image 20250808105222.png]]
