@@ -337,3 +337,4 @@ property("minValue")
 → QMetaProperty::read(this) 
 → getMinValue()
 ```
+
