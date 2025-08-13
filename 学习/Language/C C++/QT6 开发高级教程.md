@@ -338,3 +338,12 @@ property("minValue")
 → getMinValue()
 ```
 
+# qt 案例开发
+参考链接 [【Qt入门向】认识Qt对象模型，创建第一个Qt程序：九九乘法表_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1meU6YQEF1/?spm_id_from=333.337.search-card.all.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
+## 九九乘法表
+QMainWindow 对象可以设置各种 show
+![[Pasted image 20250812171723.png]]
+
+- `setWindowTitle` ，接收参数为 QString，传入 C 风格字符串会隐式转换为 QString
+- `setFixedSize` 将窗口固定大小，运行之后程序不允许调整大小
+- `setGeometry` 设置出现的位置和默认的大小

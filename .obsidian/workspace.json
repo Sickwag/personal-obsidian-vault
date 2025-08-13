@@ -193,7 +193,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -211,6 +212,8 @@
   },
   "active": "74f42b32f80a147d",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/PixPin_2025-08-12_17-18-44.mp4",
+    "Files & LongText/Attachments/Pasted image 20250812171723.png",
     "Files & LongText/Attachments/Pasted image 20250808105222.png",
     "Files & LongText/Attachments/Pasted image 20250808104557.png",
     "Files & LongText/Attachments/Pasted image 20250808104506.png",
@@ -225,8 +228,6 @@
     "学习/ProjectsStudy/报错日志分析.md",
     "Files & LongText/Attachments/Pasted image 20250805235325.png",
     "Files & LongText/Attachments/Pasted image 20250805232401.png",
-    "Files & LongText/Attachments/Pasted image 20250805231729.png",
-    "Files & LongText/Attachments/Pasted image 20250805231720.png",
     "学习/algorithm/用法导向知识.md",
     "学习/Language/JavaScript/Modern JavaScript.md",
     "学习/algorithm/分析优化.md",
