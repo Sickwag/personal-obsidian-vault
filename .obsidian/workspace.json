@@ -51,9 +51,24 @@
               "icon": "lucide-file",
               "title": "MySQL"
             }
+          },
+          {
+            "id": "24c16377ebf8b7ca",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Redis.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "Redis"
+            }
           }
         ],
-        "currentTab": 2
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -225,8 +240,12 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "cfae25de023710a7",
+  "active": "24c16377ebf8b7ca",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/Pasted image 20250813163032.png",
+    "Files & LongText/Attachments/Pasted image 20250813162457.png",
+    "Redis.md",
+    "学习/Language/SQL/MySQL.md",
     "学习/Language/C C++/QT6 开发高级教程.md",
     "Files & LongText/Attachments/PixPin_2025-08-12_17-18-44.mp4",
     "Files & LongText/Attachments/Pasted image 20250812171723.png",
@@ -243,7 +262,6 @@
     "Files & LongText/Attachments/Pasted image 20250806163633.png",
     "学习/ProjectsStudy/报错日志分析.md",
     "Files & LongText/Attachments/Pasted image 20250805235325.png",
-    "Files & LongText/Attachments/Pasted image 20250805232401.png",
     "学习/algorithm/用法导向知识.md",
     "学习/Language/JavaScript/Modern JavaScript.md",
     "学习/algorithm/分析优化.md",
@@ -259,12 +277,9 @@
     "学习/Language/Python/Learn Python in A Hard Way.md",
     "学习/Language/Python/Python Official Docs.md",
     "学习/Language/Python/xiaojiayu from scratch.md",
-    "学习/Language/SQL/MySQL.md",
     "学习/Language/C C++/C++ Basics.md",
     "Files & LongText/Long code/MySQL Long Code Practice.md",
     "Files & LongText/Long code/Python.md",
-    "Files & LongText/ChatLogWithAi/对AI解释的理解.md",
-    "软考.md",
     "Files & LongText/Attachments/source 1.zip",
     "Files & LongText/Attachments/source.zip",
     "学习/ProjectsStudy/C C++",

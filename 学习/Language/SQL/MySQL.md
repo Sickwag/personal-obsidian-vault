@@ -2961,6 +2961,8 @@ SQL 引擎会首先按照 `ORDER BY` 子句中 **最先列出的列 (`column_hig
 
 ---
 ### 排名排序
+**窗口函数执行阶段在 `GROUP BY` 之后、在 `SELECT` 之后**；因此 `RANK()`（或其他窗口函数）**不依赖也不产生 GROUP BY**。
+语法模板：`函数() OVER (PARTITION BY … ORDER BY … [ASC|DESC])`
 #### Over 字句
 - `OVER()` 子句是所有窗口函数的核心。它定义了窗口函数操作的**数据集范围**（window），也就是函数计算时所依据的**数据分区**和**排序方式**。
     
