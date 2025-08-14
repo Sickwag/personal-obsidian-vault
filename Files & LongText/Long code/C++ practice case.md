@@ -1485,7 +1485,8 @@ class MyVector {
 |                   |                                            |                                                        |                   |                |      |                 |     |
 
 
-## tcp 连接 redis
+## redis
+### tcp 连接
 ```cpp
 #include <boost/asio.hpp>
 #include <iostream>
@@ -1588,4 +1589,349 @@ int main() {
 
     return 0;
 }
+```
+### boost. redis 和 boost. asio 连接
+```cpp
+#include <boost/redis.hpp>
+#include <boost/redis/src.hpp>
+#include <boost/asio.hpp>
+#include <iostream>
+#include <string>
+
+using namespace boost;
+
+int main() try
+{
+    std::cout << "Starting Redis client..." << std::endl;
+
+    // 配置连接到远程 Redis 服务器
+    redis::config cfg;
+    cfg.addr.host = "121.43.98.198";  // 远程 Redis 服务器地址
+    cfg.addr.port = "6379";           // Redis 默认端口
+    cfg.username = "default";         // 用户名，默认为 "default"
+    cfg.password = "123456";          // Redis 服务器密码
+    
+    std::cout << "Connecting to Redis server at " << cfg.addr.host << ":" << cfg.addr.port 
+              << " with password authentication" << std::endl;
+
+    // 创建 io_context 和连接
+    asio::io_context ioc;
+    auto conn = std::make_shared<redis::connection>(ioc);
+    
+    // 启动连接并等待连接完成
+    std::cout << "Starting connection..." << std::endl;
+    conn->async_run(cfg, {}, [&](boost::system::error_code ec) {
+        if (ec) {
+            std::cerr << "Connection error: " << ec.message() << std::endl;
+        } else {
+            std::cout << "Connected successfully!" << std::endl;
+        }
+    });
+
+    // PING 命令测试连接
+    std::cout << "Sending PING command..." << std::endl;
+    redis::request req;
+    req.push("PING");
+
+    conn->async_exec(req, redis::ignore, [&](boost::system::error_code ec, std::size_t) {
+        if (ec) {
+            std::cerr << "PING command error: " << ec.message() << std::endl;
+        } else {
+            std::cout << "PING command executed successfully!" << std::endl;
+        }
+    });
+
+    // 运行 io_context 来处理异步操作
+    std::cout << "Running io_context..." << std::endl;
+    ioc.run();
+
+    std::cout << "Redis client finished." << std::endl;
+
+    return 0;
+} catch (const std::exception& e) {
+    std::cerr << "Exception: " << e.what() << std::endl;
+    return 1;
+}
+```
+### boost. redis 常用 api 参考
+```cpp
+#include <boost/redis.hpp>
+#include <boost/redis/src.hpp>
+#include <boost/asio.hpp>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <functional>
+
+using namespace boost;
+
+class RedisDemo {
+private:
+    asio::io_context ioc;
+    std::shared_ptr<redis::connection> conn;
+    redis::config cfg;
+    
+public:
+    RedisDemo() {
+        // 配置连接到远程 Redis 服务器
+        cfg.addr.host = "121.43.98.198";  // 远程 Redis 服务器地址
+        cfg.addr.port = "6379";           // Redis 默认端口
+        cfg.username = "default";         // 用户名，默认为 "default"
+        cfg.password = "123456";          // Redis 服务器密码
+        
+        conn = std::make_shared<redis::connection>(ioc);
+    }
+    
+    void connect() {
+        std::cout << "Connecting to Redis server at " << cfg.addr.host << ":" << cfg.addr.port 
+                  << " with password authentication" << std::endl;
+        
+        conn->async_run(cfg, {}, [this](boost::system::error_code ec) {
+            if (ec) {
+                std::cerr << "Connection error: " << ec.message() << std::endl;
+            } else {
+                std::cout << "Connected successfully!" << std::endl;
+            }
+        });
+    }
+    
+    void run() {
+        ioc.run();
+    }
+    
+    asio::io_context& getIoContext() {
+        return ioc;
+    }
+    
+    // 1. PING 命令模块
+    void testPing() {
+        std::cout << "\n=== PING Command Test ===" << std::endl;
+        redis::request req;
+        req.push("PING");
+        
+        conn->async_exec(req, redis::ignore, [](boost::system::error_code ec, std::size_t) {
+            if (ec) {
+                std::cerr << "PING error: " << ec.message() << std::endl;
+            } else {
+                std::cout << "PING command executed successfully!" << std::endl;
+            }
+        });
+    }
+    
+    // 2. 字符串操作模块
+    void testStringOperations() {
+        std::cout << "\n=== String Operations Test ===" << std::endl;
+        
+        // SET 命令
+        redis::request set_req;
+        set_req.push("SET", "test_key", "Hello Redis from C++!");
+        conn->async_exec(set_req, redis::ignore, [this](boost::system::error_code ec, std::size_t) {
+            if (ec) {
+                std::cerr << "SET error: " << ec.message() << std::endl;
+            } else {
+                std::cout << "SET command executed successfully!" << std::endl;
+                
+                // GET 命令
+                redis::request get_req;
+                get_req.push("GET", "test_key");
+                conn->async_exec(get_req, redis::ignore, [](boost::system::error_code ec, std::size_t) {
+                    if (ec) {
+                        std::cerr << "GET error: " << ec.message() << std::endl;
+                    } else {
+                        std::cout << "GET command executed successfully!" << std::endl;
+                    }
+                });
+            }
+        });
+    }
+    
+    // 3. 哈希操作模块
+    void testHashOperations() {
+        std::cout << "\n=== Hash Operations Test ===" << std::endl;
+        
+        // HSET 命令
+        redis::request hset_req;
+        hset_req.push("HSET", "user:1000", "name", "Alice", "age", "25", "city", "Beijing");
+        conn->async_exec(hset_req, redis::ignore, [this](boost::system::error_code ec, std::size_t) {
+            if (ec) {
+                std::cerr << "HSET error: " << ec.message() << std::endl;
+            } else {
+                std::cout << "HSET command executed successfully!" << std::endl;
+                
+                // HGET 命令
+                redis::request hget_req;
+                hget_req.push("HGET", "user:1000", "name");
+                conn->async_exec(hget_req, redis::ignore, [](boost::system::error_code ec, std::size_t) {
+                    if (ec) {
+                        std::cerr << "HGET error: " << ec.message() << std::endl;
+                    } else {
+                        std::cout << "HGET command executed successfully!" << std::endl;
+                    }
+                });
+            }
+        });
+    }
+    
+    // 4. 列表操作模块
+    void testListOperations() {
+        std::cout << "\n=== List Operations Test ===" << std::endl;
+        
+        // LPUSH 命令
+        redis::request lpush_req;
+        lpush_req.push("LPUSH", "fruits", "apple", "banana", "orange");
+        conn->async_exec(lpush_req, redis::ignore, [this](boost::system::error_code ec, std::size_t) {
+            if (ec) {
+                std::cerr << "LPUSH error: " << ec.message() << std::endl;
+            } else {
+                std::cout << "LPUSH command executed successfully!" << std::endl;
+                
+                // LRANGE 命令
+                redis::request lrange_req;
+                lrange_req.push("LRANGE", "fruits", "0", "-1");
+                conn->async_exec(lrange_req, redis::ignore, [](boost::system::error_code ec, std::size_t) {
+                    if (ec) {
+                        std::cerr << "LRANGE error: " << ec.message() << std::endl;
+                    } else {
+                        std::cout << "LRANGE command executed successfully!" << std::endl;
+                    }
+                });
+            }
+        });
+    }
+    
+    // 5. 集合操作模块
+    void testSetOperations() {
+        std::cout << "\n=== Set Operations Test ===" << std::endl;
+        
+        // SADD 命令
+        redis::request sadd_req;
+        sadd_req.push("SADD", "languages", "C++", "Python", "JavaScript");
+        conn->async_exec(sadd_req, redis::ignore, [this](boost::system::error_code ec, std::size_t) {
+            if (ec) {
+                std::cerr << "SADD error: " << ec.message() << std::endl;
+            } else {
+                std::cout << "SADD command executed successfully!" << std::endl;
+                
+                // SMEMBERS 命令
+                redis::request smembers_req;
+                smembers_req.push("SMEMBERS", "languages");
+                conn->async_exec(smembers_req, redis::ignore, [](boost::system::error_code ec, std::size_t) {
+                    if (ec) {
+                        std::cerr << "SMEMBERS error: " << ec.message() << std::endl;
+                    } else {
+                        std::cout << "SMEMBERS command executed successfully!" << std::endl;
+                    }
+                });
+            }
+        });
+    }
+    
+    // 6. 有序集合操作模块
+    void testSortedSetOperations() {
+        std::cout << "\n=== Sorted Set Operations Test ===" << std::endl;
+        
+        // ZADD 命令
+        redis::request zadd_req;
+        zadd_req.push("ZADD", "scores", "90", "Alice", "85", "Bob", "95", "Charlie");
+        conn->async_exec(zadd_req, redis::ignore, [this](boost::system::error_code ec, std::size_t) {
+            if (ec) {
+                std::cerr << "ZADD error: " << ec.message() << std::endl;
+            } else {
+                std::cout << "ZADD command executed successfully!" << std::endl;
+                
+                // ZRANGE 命令
+                redis::request zrange_req;
+                zrange_req.push("ZRANGE", "scores", "0", "-1", "WITHSCORES");
+                conn->async_exec(zrange_req, redis::ignore, [](boost::system::error_code ec, std::size_t) {
+                    if (ec) {
+                        std::cerr << "ZRANGE error: " << ec.message() << std::endl;
+                    } else {
+                        std::cout << "ZRANGE command executed successfully!" << std::endl;
+                    }
+                });
+            }
+        });
+    }
+    
+    // 7. 其他常用命令模块
+    void testOtherCommands() {
+        std::cout << "\n=== Other Common Commands Test ===" << std::endl;
+        
+        // EXISTS 命令
+        redis::request exists_req;
+        exists_req.push("EXISTS", "test_key");
+        conn->async_exec(exists_req, redis::ignore, [this](boost::system::error_code ec, std::size_t) {
+            if (ec) {
+                std::cerr << "EXISTS error: " << ec.message() << std::endl;
+            } else {
+                std::cout << "EXISTS command executed successfully!" << std::endl;
+                
+                // TTL 命令
+                redis::request ttl_req;
+                ttl_req.push("TTL", "test_key");
+                conn->async_exec(ttl_req, redis::ignore, [this](boost::system::error_code ec, std::size_t) {
+                    if (ec) {
+                        std::cerr << "TTL error: " << ec.message() << std::endl;
+                    } else {
+                        std::cout << "TTL command executed successfully!" << std::endl;
+                        
+                        // DEL 命令
+                        redis::request del_req;
+                        del_req.push("DEL", "test_key");
+                        conn->async_exec(del_req, redis::ignore, [](boost::system::error_code ec, std::size_t) {
+                            if (ec) {
+                                std::cerr << "DEL error: " << ec.message() << std::endl;
+                            } else {
+                                std::cout << "DEL command executed successfully!" << std::endl;
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+};
+
+int main() try {
+    std::cout << "Starting Redis client demo with modular design..." << std::endl;
+    
+    RedisDemo demo;
+    demo.connect();
+    
+    // 等待连接建立
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    
+    // 依次执行各个测试模块
+    demo.testPing();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    
+    demo.testStringOperations();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    
+    demo.testHashOperations();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    
+    demo.testListOperations();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    
+    demo.testSetOperations();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    
+    demo.testSortedSetOperations();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    
+    demo.testOtherCommands();
+    // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    
+    std::cout << "\nRunning io_context to process all async operations..." << std::endl;
+    demo.run();
+    
+    std::cout << "\nAll Redis operations completed successfully!" << std::endl;
+    
+    return 0;
+} catch (const std::exception& e) {
+    std::cerr << "Exception: " << e.what() << std::endl;
+    return 1;
+}
+
 ```
