@@ -148,17 +148,6 @@ QUEUED
 这种方式直接通过 tcp 连接到主机，进入 6379 端口后就会直接到达 redis-client 交互界面，通过 `make_resp` 函数将 `vector<string>` 包裹的命令转化为命令行输入。
 `net::write` 将命令输入到终端，`socket.readsome` 将命令输出读取
 ### boost. redis 连接
-连接之前需要注意：
-- 服务器安全组放开 6379 端口
-- redis.conf 文件中将 bind 设置为需要连接主机的 ip 地址，或者设置为 `0.0.0.0` 允许所有 ip 介入 redis 服务
-- 使用 `ufw status | grep 6379` 检查防火墙是否允许 6379 端口流量进入，如果没有则使用
-```bash
-ufw allow 6379/tcp
-systemctl restart ufw
-
-```
-放行并重启防火墙（ufw[^1]）
+连接上出现的问题参考
 代码参考：[[C++ practice case#boost. redis 和 boost. asio 连接]]
 常用 api 使用代码参考：[[C++ practice case#boost. redis 常用 api 参考]]
-
-[^1]: `ufw`（Uncomplicated Firewall）是一个用户友好的前端界面，用于管理 `iptables` 防火墙规则。它是为了简化 `iptables` 过复杂的规则和命令而设计的。
