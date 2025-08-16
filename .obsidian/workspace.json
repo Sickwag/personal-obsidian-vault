@@ -52,8 +52,7 @@
               "title": "Modern C++"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -226,8 +225,9 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "9dc4330811483e7f",
+  "active": "30b4820988bc2c0a",
   "lastOpenFiles": [
+    "学习/其他专业书/Modern C++.md",
     "重点题型.md",
     "Files & LongText/Attachments/Pasted image 20250815115705.png",
     "Files & LongText/Attachments/Pasted image 20250815115553.png",
@@ -250,7 +250,6 @@
     "Files & LongText/Attachments/PixPin_2025-08-12_17-18-44.mp4",
     "教资.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/其他专业书/Modern C++.md",
     "学习/ProjectsStudy/报错日志分析.md",
     "学习/algorithm/用法导向知识.md",
     "学习/Language/JavaScript/Modern JavaScript.md",
