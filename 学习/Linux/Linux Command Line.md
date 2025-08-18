@@ -10,7 +10,6 @@ shell 就是一个程序，它接受从键盘输入的命令，然后
 - shell 和终端区别
 **Shell** 是一个命令行解释器，它作为用户和操作系统之间的接口。用户通过输入命令，Shell 解释这些命令并调用相应的程序或脚本。
 **终端**（或终端模拟器）是一个程序，它提供了一个用户界面，允许用户与Shell交互。
-
 ## 文件系统中跳转
 ### 文件树
 - 不像 Windows ，每个存储设备都有一个独自的文件系统。
@@ -29,7 +28,6 @@ shell 就是一个程序，它接受从键盘输入的命令，然后
 3. **文件内容的元数据**：对于一些文件类型，`file` 命令还会检查文件内部的元数据，例如可执行文件中的ELF头信息，或者PDF文件中的特定标记。
 4. **文件系统的元数据**：在某些情况下，`file` 命令还会参考文件系统的元数据，比如文件权限、创建时间等，但**主要还是依据文件内容**。
 `file` 命令使用一个内置的数据库，这个数据库包含了各种文件类型的魔法数字和识别规则。当你运行 `file 文件名` 命令时，它会读取这个数据库，并根据文件内容的特征来判断文件类型。
-
 ## 文件操作系统
 - ascii 编码是最简单的键盘字符到数字的**映射编码**，是标准信息交换码
 - linux 中文本是简单的字符与数字之间的一对一映射。它非常紧凑。五十个字符的文本翻译成五十个字节的数据。文本只是包含简单的字符到数字的映射，。
@@ -50,12 +48,10 @@ shell 就是一个程序，它接受从键盘输入的命令，然后
 
 **apropos 命令**
 显示命令名称在手册中的搜索结果
-
 **info 命令**
 显示命令行程序的说明
 - info 提供交互式页面
 ![Pasted image 20240923123251.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240923123251.png)
-
 ### 其他命令
 #### alias 命名命令
 可以用分号分开不同的命令，linux 会按照顺序执行，使用 alias 为这一段连续的命令组赋予别名
@@ -70,3 +66,102 @@ alias foo='cd /usr ; ls ; cd'# 注意不要在等号两端写空格
 type 命令查看自定义命令
 ![Pasted image 20240923124403.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240923124403.png)
 也可以使用 unalias 解除命名
+## 常用命令
+### 解压命令
+1. ZIP 文件
+```bash
+unzip 文件名.zip         # 解压到当前目录
+unzip 文件名.zip -d 目录  # 解压到指定目录
+```
+1. RAR 文件
+```
+unrar x 文件名.rar       # 解压（需安装 `unrar`）
+```
+1. TAR 文件
+```bash
+解压 .tar
+tar -xvf 文件名.tar
+解压 .tar.gz 或 .tgz
+tar -xzvf 文件名.tar.gz
+解压 .tar.bz2
+tar -xjvf 文件名.tar.bz2
+解压 .tar.xz
+tar -xJvf 文件名.tar.xz
+```
+1. 7Z 文件
+```bash
+7z x 文件名.7z          # 解压（需安装 `p7zip`）
+```
+常用选项说明
+- `-x`：解压
+- `-v`：显示解压过程（可选）
+- `-f`：指定文件
+- `-z`：处理 gzip 压缩（如 .tar.gz）
+- `-j`：处理 bzip2 压缩（如 .tar.bz2）
+- `-J`：处理 xz 压缩（如 .tar.xz）
+### 安装包命令
+| 操作          | Yum (CentOS/RHEL)                           | APT (Ubuntu/Debian)                |
+| ----------- | ------------------------------------------- | ---------------------------------- |
+| **更新包列表**   | `sudo yum makecache`                        | `sudo apt update`                  |
+| **安装包**     | `sudo yum install 包名`                       | `sudo apt install 包名`              |
+| **卸载包**     | `sudo yum remove 包名`                        | `sudo apt remove 包名`               |
+| **升级包**     | `sudo yum update 包名`                        | `sudo apt upgrade 包名`              |
+| **自动升级所有包** | `sudo yum update`                           | `sudo apt upgrade`                 |
+| **搜索包**     | `sudo yum search 关键词`                       | `sudo apt search 关键词`              |
+| **查看包信息**   | `sudo yum info 包名`                          | `sudo apt show 包名`                 |
+| **清理缓存**    | `sudo yum clean all`                        | `sudo apt clean`                   |
+| **修复依赖问题**  | `sudo yum deplist 包名`                       | `sudo apt --fix-broken install`    |
+| **安装开发工具包** | `sudo yum groupinstall "Development Tools"` | `sudo apt install build-essential` |
+|             |                                             |                                    |
+### 防火墙命令
+. 查看已放行的端口
+```bash
+sudo firewall-cmd --list-ports  # 查看已放行的端口列表
+sudo firewall-cmd --list-all    # 查看所有规则（包括服务、端口等）
+```
+2. 添加放行端口
+临时添加（重启后失效）
+```bash
+sudo firewall-cmd --add-port=端口号/协议 --permanent
+```
+例如放行 TCP 端口 8080：
+```bash
+sudo firewall-cmd --add-port=8080/tcp --permanent
+```
+永久添加（需重载防火墙生效）
+```bash
+sudo firewall-cmd --add-port=8080/tcp --permanent
+sudo firewall-cmd --reload  # 重载防火墙规则
+```
+3. 移除放行端口
+临时移除
+```bash
+sudo firewall-cmd --remove-port=端口号/协议
+```
+永久移除
+```bash
+sudo firewall-cmd --remove-port=8080/tcp --permanent
+sudo firewall-cmd --reload  # 重载生效
+```
+4. 其他实用命令
+检查端口是否已放行：
+```bash
+sudo firewall-cmd --query-port=8080/tcp
+```
+返回 yes 表示已放行，no 表示未放行。
+放行服务（如 HTTP/HTTPS）：
+```bash
+sudo firewall-cmd --add-service=http --permanent
+sudo firewall-cmd --reload
+```
+5. 注意事项
+协议类型：需明确端口使用的协议（如 tcp/udp）。
+持久化：不加 --permanent 的规则会在重启后失效。
+区域（Zone）：默认操作针对 public 区域，可通过 --zone= 指定其他区域。
+CentOS 6 或更早版本：使用 iptables，需直接编辑 /etc/sysconfig/iptables。
+6. 验证规则
+
+```bash
+sudo firewall-cmd --list-all | grep ports  # 确认端口已生效
+```
+通过以上步骤，你可以轻松管理 CentOS 的防火墙端口规则。
