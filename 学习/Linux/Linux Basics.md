@@ -67,7 +67,6 @@
 ## 操作系统概述
 计算机由硬件和软件组成
 操作系统出现的目的就是更好地调动硬件工作，满足用户要求
-  
 ## 认识Linux
 ### linux内核
 linux由系统内核和系统及应用程序（系统出厂自带程序）
@@ -91,7 +90,6 @@ WSL直接连宿主机的硬件, 性能远超虚拟机
 类似于windows的回溯点
 虚拟机关机之后创建关机比较安全
 ![Untitled 1 41.png](../../../Files%20&%20LongText/Attachments/Untitled%201%2041.png)
-  
 # 第二章
 ## Linux基础命令
 ### Linux目录结构
@@ -108,7 +106,6 @@ WSL直接连宿主机的硬件, 性能远超虚拟机
 ![Untitled 5 23.png](../../../Files%20&%20LongText/Attachments/Untitled%205%2023.png)
 上面平铺,下面列表
 ![Untitled 6 22.png](../../../Files%20&%20LongText/Attachments/Untitled%206%2022.png)
-  
 - 通过指令混写同时进行两种命令的选项,表示同时进行all和list命令, 列表全展示
 - 参数和指令也可以混写
     
@@ -123,7 +120,6 @@ WSL直接连宿主机的硬件, 性能远超虚拟机
 cd /home/itheima/Desktop  
 cd Desktop  
 ### 特殊路径符
-
 |   |   |
 |---|---|
 |**.**|表示当前目录，比如cd./Desktop表示切换到当前目录下的Desktop目录内，和cdDesktop效果一致|
@@ -141,7 +137,6 @@ mkdir [OPTION]... DIRECTORY...
 - `DIRECTORY...` 表示 `DIRECTORY` 是必须的参数，但可以指定多个。你可以一次性创建多个目录，只需在命令行中列出所有想要创建的目录名称即可。
 `mkdir -p dir1 dir2 dir3`
 这个命令会创建三个目录：`dir1`、`dir2` 和 `dir3`。每个目录都会被创建，如果它们的父目录不存在，`-p` 参数会确保它们被创建
-
 > 要在/home/user/a/b/c/d/file folder这样的目录,a,b,c,d,file folder文件夹都不存在.我需要执行以下命令,  
 > mkdir -p /home/a/b/c/d/file\ folder  
 >   
@@ -236,7 +231,6 @@ less -20 filename
 ```
 按空格键可以查看下一页内容，按 `Enter` 键可以查看下一行内容。
 这些命令在Linux和类Unix系统中非常常见，是处理文件和查看内容的基本工
-
 ### rpm 命令
 作用
 - **安装软件包**：使用 `rpm` 安装 `.rpm` 格式的软件包。
@@ -254,7 +248,6 @@ less -20 filename
 - `--force`：强制执行某些操作，即使它可能覆盖文件或违反依赖关系。
 ### ls 与 ll 命令
 `ls` 命令是 Linux 中用于列出目录内容的常用命令。`ll` 并不是一个独立的命令，而是 `ls -l` 的别名，通常在 Bash shell 中预定义，用于以长格式列出目录内容。
-
 - `-l`：以长格式列出信息，包括权限、所有者、文件大小和最后修改时间等。
 - `-a` 或 `--all`：列出所有文件，包括以点（`.`）开头的隐藏文件。
 - `-h` 或 `--human-readable`：以易于阅读的格式（例如 KB、MB）显示文件大小。
@@ -410,10 +403,7 @@ ls -l | cat > test4.txt
 # 将ls -l命令结果写入test4.txt
 ```
 这个命令会列出当前目录的内容，并通过 `more` 命令逐页显示这些内容。
-  
-  
  **文件操作命令2（cp、mv、rm）**
-
 > cp [-r] 参数1 参数2
 > 
 > - r选项， 可选，用于复制文件夹使用，表示递归
@@ -440,14 +430,12 @@ ls -l | cat > test4.txt
 > - _test_
 使用su root 并输入密码使当前用户进入管理员模式,exit命令退出
 ### grepi\\wc\\管道符
-
 > 从文件中通过关键字过滤文件行  
 > grep [-n] 关键字 文件路径(或者内容输入)  
 
 在文件中过滤相匹配的内容
 ![Pasted image 20240813113115.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813113115.png)
 ![Pasted image 20240813113134.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813113134.png)
-
 > 统计文件的行数、单词数量  
 > wc [-c -m -l -w] 文件路径  
 > 
@@ -458,14 +446,12 @@ ls -l | cat > test4.txt
 > - 参数，文件路径，被统计的文件，可作为内容输入端口
 
 首先要使用cat链接当前文件,才能使用grep second是字符串, 字符串中用空格必须使用引号,没有可以不用
-  
 **wc(word count)单词计数命令**
 `wc` 命令的输出顺序是固定的，它总是按照以下顺序输出统计结果：
 1.行数（`-l`）
 2.单词数（`-w`）
 3.字节数（`-c`）
 4.字符数（`-m`）
-  
 **管道符**
 左边的cat将读取到的所有内容作为grep的内容输入参数
 ![Untitled 9 19.png](../../../Files%20&%20LongText/Attachments/Untitled%209%2019.png)
@@ -481,20 +467,14 @@ ls -l | cat > test4.txt
 [sickwag@192 folder]$ cat test.txt | grep "line" | wc -w
 12
 ```
-  
-  
 ### echo\\tail命令
-
 类似于print函数将echo的参数返回到屏幕中
 **反引号**
 反引号包围的内容会被作为命令执行
 **重定向符**
-
 \> 将左侧命令的结果，覆盖写入到符号右侧指定的文件中  
 \>> 将左侧命令的结果，追加写入到符号右侧指定的文件中  
 ![Pasted image 20240813113520.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813113520.png)
-
-
 tail命令查看文件尾部内容
 ```C++
 [sickwag@192 folder]$ ls > test.txt       //将当前目录文件信息写入test
@@ -532,7 +512,6 @@ var
 ```
 -f 自动追踪命令会使当前标签页持续运行,在其他任何地方进行的改动会在标签也中内容自动变化
 ctrl+c强制停止当前命令
-  
 ## 使用vi/vim编辑器
 ![Untitled 14 17.png](../../../Files%20&%20LongText/Attachments/Untitled%2014%2017.png)
 - 命令模式下所有的键盘输入都被理解为命令
@@ -548,21 +527,17 @@ ctrl+c强制停止当前命令
 ![Untitled 17 16.png](../../../Files%20&%20LongText/Attachments/Untitled%2017%2016.png)
 ![Untitled 18 15.png](../../../Files%20&%20LongText/Attachments/Untitled%2018%2015.png)
 使用vim对该文件进行编辑, 命令模式下可以看到文件的内容, 键盘移动光标,输入i可以再光标位置插入内容
-
 # 第三章
 ## linux 用户权限
 `su - root` 表示切换当前用户到 root 用户，su 命令表示 Switch user
 ![输入密码时不可见](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813113920.png)
 ![Pasted image 20240813114033.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813114033.png)
-
 **临时超级用户权限获取：sudo**
-
 语法：sudo 其它命令
 在其它命令之前，带上 sudo，即可为这一条命令临时赋予 root 授权
 但是并不是所有的用户，都有权利使用 sudo，我们需要为普通用户**配置 sudo 认证**
 配置方法
 ![visudo不是vi sudo](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813114442.png)
-
 ### 用户和用户组
 ![Pasted image 20240916203726.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240916203726.png)
 #### 用户组相关命令
@@ -574,23 +549,17 @@ Linux 中关于权限的管控级别有 2 个级别，分别是：
 删除用户组 `groupdel 用户组名`
 #### 用户相关命令
 以下命令需 root 用户执行
-
 - 创建用户`useradd[-g-d]用户名`
 选项：-g 指定用户的组，不指定-g，会创建**同名组**并自动加入，指定-g 需要组已经存在，如已存在同名组，**必须使用-g**
 选项：-d 指定用户 HOME 路径，不指定，HOME 目录默认在：/home/用户名
-
 - 删除用户`userdel[-r]用户名`
 选项：-r，删除用户的 HOME 目录，不使用 -r，删除用户时，HOME 目录**保留**
-
 - 查看用户所属组`id[用户名]`
 参数：用户名，被查看的用户，如果不提供则查看自身修改用户所属组
-
 - 修改用户所属组
 `usermod-aG 用户组名 用户名` 将指定用户加入用户组
-
 - 切换用户
 `su - 用户名`
-
 ### 文件和权限
 #### 查看文件权限
 ![Pasted image 20240916211937.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240916211937.png) ![Pasted image 20240916212211.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240916212211.png)
@@ -607,14 +576,11 @@ Linux 中关于权限的管控级别有 2 个级别，分别是：
 针对文件夹，可以在文件夹**内**：创建、删除、改名等操作
 - `x`，针对文件表示可以将文件作为程序执行
 针对文件夹，表示可以更改工作目录到此文件夹，即 cd 进入
-
 对文件（夹）进行操作时，首先判断当前登录用户是否是文件所属用户（第二组槽位）, 然后判断当前登录用户是否属于其用户组（第三组槽位），最后判断是否是其他权限
-
 #### 修改文件权限
 首要注意：只有文件夹，文件所属用户或者 root 用户可以修改文件的权限信息
 命令 `chmod [-R] 权限 文件或文件夹`
 选项：-R，对文件夹**内的全部内容**应用同样的操作
-
 `chmod u=rwx, g=rx, 0=x hello.txt`，将文件权限修改为: rwxr-x--x
 其中：u 表示 user 所属用户权限，g 表示 group 组权限，o 表示 other 其它用户权限
 `chmod-R u=rwx, g=rx, O=x test`，将文件夹 test 以及文件夹内全部内容权限设置为：rwxr-x--x
@@ -631,7 +597,6 @@ Linux 中关于权限的管控级别有 2 个级别，分别是：
 - 6: 有 r 和 w 权限即 rW-
 - 7: 有全部权限即 rwx
 所以 751 表示: rwx (7) r-x (5)--x (1)
-
 #### chown 修改文件所属权限
 语法: `chown[-R]【用户][：][用户组】文件或文件夹`
 选项，-R，同chmod，对文件夹内全部内容应用相同规则
@@ -722,14 +687,12 @@ lrwxrwxrwx. 1 root root 8 9月  16 20:49 test.txt -> test.txt
 2024-09-16 21:27:16
 ```
 ![Pasted image 20240917122753.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917122753.png) 
-
 -d 参数用于计算日期
 ![Pasted image 20240917152716.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917152716.png)
 ```bash
 [root@localhost learnlinux]# date -d "+3month" "+%y-%m-%d     %H:%M:%S"
 24-12-16     23:31:35
 ```
-
 ##### 修改时区
 Linux 中时区文件存储在 `/usr/share/zoneinfo/` 文件夹中即其子目录汇总，通过软连接形式链接到 `/etc/localtime`，通过下面命令首先移除现有的软连接，再链接新的中国（东八区文件）
 ```bash
@@ -762,7 +725,6 @@ ens160: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         RX errors 0  dropped 0  overruns 0  frame 0
         TX packets 695916  bytes 215597374 (205.6 MiB)
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-
 lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
         inet 127.0.0.1  netmask 255.0.0.0
         inet6 ::1  prefixlen 128  scopeid 0x10<host>
@@ -771,7 +733,6 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
         RX errors 0  dropped 0  overruns 0  frame 0
         TX packets 0  bytes 0 (0.0 B)
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-
 virbr0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
         inet 192.168.122.1  netmask 255.255.255.0  broadcast 192.168.122.255
         ether 52:54:00:7b:da:36  txqueuelen 1000  (Ethernet)
@@ -788,7 +749,6 @@ Linux 中主机名同 Windows 一样可以查看和修改
 `hostnamectl set-hostname 主机名` 修改主机名需要 root 权限
 重启 finalshell 既可看到用户名
 ![主机名被修改](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917155859.png)
-
 ##### 域名解析原理
 ![Pasted image 20240917160651.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917160651.png)
 - 首先访问本地 host 文件查找网站域名接入的 IP 地址然后浏览器访问 ip 地址
@@ -798,7 +758,6 @@ Linux 中主机名同 Windows 一样可以查看和修改
 域名解析原理得知 Windows 首先查找本地 IP 地址映射，这里修改本地 host 文件将主机名映射到IP 地址
 ![Pasted image 20240917204900.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917204900.png)
 在 host 文件中添加主机名和 IP 地址之后在 finnalshell 中可以将主机名作为映射连接到相应的 IP 地址
-
 ##### 配置 vm 的固定 IP 地址
 配置固定 IP 地址使其不用每次都连接
 1. 在 VMwareWorkstation（或 Fusion）中配置 IP 地址网关和网段（IP 地址的范围）
@@ -820,7 +779,6 @@ PING ba 1 du. com (39.156.66.20) 56（84) bytes of data
 结果表示联通，延迟 8 ms 左右
 ###### wget 命令
  `wget [-b ] url` 表示将将链接中的文件下载到当前工作目录，-b 表示后台下载，后台下载的下载进度会保存在 wgetlog 文件中，使用 `tail -f wget log` 持续跟踪下载进度
- 
 ###### curl 命令
 curl 可以发送 http 网络请求，可用于：下载文件、获取信息等
 语法：curl[-o]url
@@ -832,11 +790,8 @@ cip. cc 可以返回主机的 IP 地址，对普通的网站使用请求将返�
 IP      : 223.160.147.210
 地址    : 中国  北京
 运营商  : chinabtn.com
-
 数据二  : 中国吉林 | 广电网
-
 数据三  : 中国北京北京市 | 广电
-
 URL     : http://www.cip.cc/223.160.147.210
 [root@sickwag ~]# curl www.baidu.com
 <!DOCTYPE html>
@@ -863,7 +818,6 @@ PORT    STATE SERVICE
 22/tcp  open  ssh
 111/tcp open  rpcbind
 631/tcp open  ipp
-
 Nmap done: 1 IP address (1 host up) scanned in 1.67 seconds
 ```
 使用本机地址扫描端口
@@ -876,7 +830,6 @@ tcp6       0      0 :::111                  :::*                    LISTEN      
 .............................................。
 ```
 LISTEN 表示端口正在监听，netstat 命令可以搜索层序名或者端口号，所以可以用来判断端口是否空闲
-
 ### 进程管理
 为管理运行的程序，每一个程序在运行的时候，便被操作系统注册为系统中的一个进程分配一个独有的：进程 ID（进程号）
 #### ps 命令
@@ -900,7 +853,6 @@ time 表示累计占用 CPU 的之间，cmd 表示启动命令
 [root@sickwag ~]# ps -ef | grep tail
 root      209416    2291  0 16:58 pts/0    00:00:00 grep --color=auto tail
 ```
-
 #### kill 命令
 在 Windows 系统中，可以通过任务管理器选择进程后，点击结束进程从而关闭它。
 同样，在 Linux 中，可以通过 kill 命令关闭进程。
@@ -1002,7 +954,6 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
 [root@sickwag ~]# echo ${PATH} sickwag
 /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin sickwag
 ```
-
 #### 自定义临时变量
 临时设置，语法：`export 变量名=变量值`，换一个会话或者重启消失
 永久生效：
@@ -1026,19 +977,16 @@ sickwag
 [root@sickwag folder]# vim aprograme
 [root@sickwag folder]# ll
 总用量 4 # aprograme 中内容是 echo “Hello world”
-
 -rw-r--r--. 1 root root 19 9月  18 18:17 aprograme #运行文件需要x权限
 [root@sickwag folder]# chmod 755 aprograme
 [root@sickwag folder]# ll
 总用量 4
 -rwxr-xr-x. 1 root root 19 9月  18 18:17 aprograme
-
 ---------------# 将运行文件放入环境变量中--------------------
 [root@sickwag folder]# pwd
 /home/sickwag/folder
 [root@sickwag folder]# vim /etc/profile
 [root@sickwag folder]# source /etc/profile
-
 -------------------# 新的环境变量中已经记录新的路径------------------
 [root@sickwag folder]# echo $PATH
 /root/.local/bin:/root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/home/sickwag/folder
@@ -1051,7 +999,6 @@ finalshell 中自带上传下载功能，选中文件右键下载，Windows 中�
 rz、sz 命令需要安装，可以通过：`yum-y install lrzsz`，即可安装。
 `rz/sz 需要上传或下载的文件名` 文件名可以不加后缀
 rz 上传文件可以不用写路径，用会弹出窗口选择，这种方式上传速度很慢，sz 必须要路径
-
 ### 文件压缩解压
 #### 压缩格式
 - zip 格式：Linux、Windows、MacOS，常用
@@ -1074,7 +1021,6 @@ Linux 和 Mac 系统常用有 2 种压缩格式，后缀名分别是：
 `-f`，要创建的文件，或要解压的文件，-f 选项必须在所有选项中位置处于最后一个
 `-z`, gzip 模式，不使用-z 就是普通的 tarball 格式
 `-C`，选择解压的目的地，用于解压模式
-
 实例
 tar 的常用组合为：
 `tar-cvf test.tar 1.txt 2.txt 3.txt`
@@ -1098,7 +1044,6 @@ tar 的常用组合为：
 `tar-zxvftest. tar. gz-C/home/itheima`
 以 Gzip 模式解压 test. tar. gz，将文件解压至指定目录
 *一般将 `-C` 单独写在最后，`-z` 写在开头* 保持命令可读性
-
 解压到指定位置
 ```bash
 [root@sickwag ~]# tar -xvf test.tar -C /home/sickwag
@@ -1118,14 +1063,12 @@ lrwxrwxrwx. 1 root root   12 9月  17 11:51 yum.conf -> etc/yum.conf
 总用量 92
 -rw-r--r--. 1 root    81004 9月  18 17:22 1.txt
 ```
-
 需要解压 tar --- `tar -cvf`,
 需要解压 gz --- `tar -zcvf`
 ##### zip
 `unzip [-d] 参数`
 -d，指定要解压去的位置，同 tar 的-C 选项
 参数，被解压的 zip 压缩包文件
-
 # 第五章
 ## linux 部署软件
 文档参考： [Linux系统软件安装](../../../Files%20&%20LongText/Attachments/Linux系统软件安装.md)
@@ -1178,7 +1121,6 @@ tcp6       0      0 :::8080                 :::*                    LISTEN      
 # 方式1（推荐），关闭防火墙
 systemctl stop firewalld		# 关闭
 systemctl disable firewalld		# 关闭开机自启
-
 # 方式2，放行5672 25672端口
 firewall-cmd --add-port=5672/tcp --permanent		# 放行tcp规则下的5672端口，永久生效
 firewall-cmd --add-port=15672/tcp --permanent		# 放行tcp规则下的15672端口，永久生效
@@ -1187,29 +1129,24 @@ firewall-cmd --reload								# 重新加载防火墙规则
 ```
 - 启动 RabbitMQ 控制台命令
 `rabbitmq-plugins enable rabbitmq_management`
-
 配置用户密码
 ```bash
 # 设置控制台用户名(admin)和密码(sickwag)
 [root@sickwag server]# rabbitmqctl add_user admin 'sickwag' 
 Adding user "admin" ...
 Done. Don't forget to grant the user permissions to some virtual hosts! See 'rabbitmqctl help set_permissions' to learn more.
-
 # 设置账号权限
 [root@sickwag server]# rabbitmqctl set_permissions -p "/" "admin" ".*" ".*" ".*"
 Setting permissions for user "admin" in vhost "/" ...
-
 # 标记admin用户的管理员标签
 [root@sickwag server]# rabbitmqctl set_user_tags admin administrator
 Setting tags for user "admin" to [administrator] ...
 ```
 在 [RabbitMQ Management](http://192.168.179.128:15672/#/) 中输入账号密码即可
-
 ### redis
 同上
 ### elasticsearch
 按照文档走，但是还未解决无法连接上[主机 IP 地址:9200](连接主机控制台) 问题
-
 ### 集群化环境前置准备
 创建多台虚拟机之后 [Linux long text explanation \> centos 修改 linuxIP 地址](../../../Files%20&%20LongText/Long%20code/Linux%20long%20text%20explanation.md#centos%20修改%20linuxIP%20地址)
 在修改 IP 地址时，由于没有实现设置静态 IP，所以 ifcfg 文件中内容与视频中不一样，并且 centos 8 以上版本中**重启网络服务旧命令已被弃用**
@@ -1226,7 +1163,6 @@ UUID=b01de10d-1d51-48f3-bd7f-4927155f 9dba
 ```
 在 Windows 中配置 host 文件方便外部访问，linux 中配置 host（在/etc/hosts）方便 ssh 跳转
 在多台虚拟机 finnalshell 终端中使用 ssh 跳转链接命令 `ssh 账户名@hostname`
-
 ### scp 命令
 #### 语法
 scp [-r] 参数1 参数2
@@ -1237,10 +1173,8 @@ scp [-r] 参数1 参数2
 `scp -r /export/server/jdk root@node2 :/export/server/`
 将本机上的jdk文件夹， 以root的身份复制到node2的/export/server/内
 同SSH登陆一样，账户名可以省略（使用本机当前的同名账户登陆）
-
 `scp -r node2:/export/server/jdk /export/server/`
 将远程node2的jdk文件夹，复制到本机的/export/server/内
-
 #### 高级用法
 ```shell
 cd /export/server
@@ -1259,13 +1193,10 @@ scp -r jdk node2:$PWD      # 将本机当前路径的jdk文件夹，复制到nod
 - nohup 命令后接受的所有参数（程序执行路径）都表示会在后台运行，用 `&` 符号表示结束
 ```shell
 # 请先确保Zookeeper已经启动了
-
 # 方式1：【前台启动】分别在node1、2、3上执行如下语句
 /export/server/kafka/bin/kafka-server-start.sh /export/server/kafka/config/server.properties
-
 # 方式2：【后台启动】分别在node1、2、3上执行如下语句
 nohup /export/server/kafka/bin/kafka-server-start.sh /export/server/kafka/config/server.properties 2>&1 >> /export/server/kafka/kafka-server.log &
-
 # 出现重定向错误时，使用下面的命令
 nohup /export/server/kafka/bin/kafka-server-start.sh /export/server/kafka/config/server.properties 2>&1 >> /export/server/kafka/kafka-server.log 2>&1 &
 ```
@@ -1276,7 +1207,6 @@ nohup /export/server/kafka/bin/kafka-server-start.sh /export/server/kafka/config
 # 在node1执行，创建一个主题
 /export/server/kafka_2.12-2.4.1/bin/kafka-topics.sh --create --zookeeper node1:2181 --replication-factor 1 --partitions 3 --topic test
 ```
-
 2. 运行测试，请在 FinalShell 中打开 2 个 node 1 的终端页面
 
 ```shell
@@ -1285,6 +1215,152 @@ nohup /export/server/kafka/bin/kafka-server-start.sh /export/server/kafka/config
 # 再打开一个新的finnalshell终端页面（node2），在启动一个模拟的数据消费者
 /export/server/kafka_2.12-2.4.1/bin/kafka-console-consumer.sh --bootstrap-server node1:9092 --topic test --from-beginning
 ```
-
 这样在数据产生者窗口中输入的内容、文件会从数据消费者中出来
 ### hadoop
+### 用户切换与管理
+#### 1. 切换用户
+```bash
+# 切换到 root 用户
+su -  # 输入 root 密码后进入
+# 切换到其他用户（如 user1）
+su - user1  # 输入目标用户密码
+```
+#### 2. 修改密码
+```bash
+# 修改当前用户密码
+passwd
+# 修改其他用户密码（需 root 权限）
+sudo passwd 用户名
+```
+#### 3. 创建用户
+```bash
+# 创建新用户（如 user2）
+sudo useradd user2
+# 创建用户并指定家目录、初始组、UID 等
+sudo useradd -d /home/user2 -g users -u 1002 user2
+```
+#### 4. 删除用户
+```bash
+# 仅删除用户（保留家目录）
+sudo userdel user2
+# 删除用户及家目录
+sudo userdel -r user2
+```
+#### 5. 用户组管理
+```bash
+# 查看当前用户所属组
+groups
+# 查看所有组及成员
+getent group
+# 创建组
+sudo groupadd devteam
+# 将用户添加到组
+sudo usermod -aG devteam user1
+```
+
+---
+### 移动文件
+#### 1. 基础移动
+```bash
+# 将文件 file.txt 移动到 /home/user/
+mv file.txt /home/user/
+# 移动并重命名文件
+mv file.txt /home/user/newfile.txt
+```
+#### 2. 移动目录
+```bash
+# 移动整个目录（自动递归）
+mv my_folder/ /backup/
+```
+#### 3. 强制移动与覆盖
+```bash
+# 覆盖目标路径同名文件时不提示
+mv -f file.txt /backup/
+# 若目标存在但非目录，提示错误
+mv -T file.txt /backup/
+```
+
+---
+### 复制文件
+#### 1. 复制单个文件
+```bash
+# 复制 file.txt 到 /backup/
+cp file.txt /backup/
+# 保留原文件权限和时间戳
+cp -a file.txt /backup/
+```
+#### 2. 复制目录
+```bash
+# 递归复制整个目录（必需选项）
+cp -r my_folder/ /backup/
+# 压缩传输（适用于远程复制）
+scp -r my_folder user@server:/backup/
+```
+#### 3. 复制时重命名
+```bash
+# 复制并重命名文件
+cp file.txt /backup/newfile.txt
+```
+
+---
+### 删除文件
+#### 1. 删除文件
+```bash
+# 删除单个文件（需确认）
+rm file.txt
+# 强制删除且不提示
+rm -f file.txt
+```
+#### 2. 删除目录
+```bash
+# 递归删除目录及内容
+rm -r my_folder/
+# 强制删除（不提示 + 递归）
+rm -rf my_folder/
+```
+#### 3. 删除时保留目录结构
+```bash
+# 删除目录中所有内容但保留目录本身
+rm -rf my_folder/* my_folder/.* 2>/dev/null
+```
+
+---
+### 修改文件权限
+#### 1. 修改权限（符号模式）
+```bash
+# 允许所有用户读取 file.txt
+chmod a=r file.txt
+# 为用户（u）和组（g）添加写权限
+chmod ug+w file.txt
+```
+#### 2. 修改权限（数字模式）
+```bash
+# 设置所有者可读写执行，组只读，其他用户无权限
+chmod 740 file.txt
+```
+#### 3. 修改文件属主和属组
+```bash
+# 修改文件所有者为 user1
+sudo chown user1 file.txt
+# 修改文件所有者为 user1，属组为 staff
+sudo chown user1:staff file.txt
+# 递归修改目录及其内容的所有者
+sudo chown -R user1:staff my_folder/
+```
+#### 4. 查看权限
+```bash
+# 查看文件详细权限
+ls -l file.txt
+# 查看目录权限（包括隐藏文件）
+ls -la my_folder/
+```
+
+---
+### 总结
+- **用户管理**：`su`, `passwd`, `useradd`, `userdel`, `groupadd`, `usermod`
+- **移动**：`mv`（-f 强制覆盖）
+- **复制**：`cp`（-r 递归复制目录）
+- **删除**：`rm`（-r 删除目录，-f 强制）
+- **权限**：`chmod`（符号/数字），`chown`（属主/属组）
+
+通过上述命令，可完成 Linux 系统中的用户管理、文件操作和权限控制任务。
