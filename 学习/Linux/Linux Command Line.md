@@ -165,3 +165,191 @@ CentOS 6 或更早版本：使用 iptables，需直接编辑 /etc/sysconfig/ipta
 sudo firewall-cmd --list-all | grep ports  # 确认端口已生效
 ```
 通过以上步骤，你可以轻松管理 CentOS 的防火墙端口规则。
+### 搜索命令
+#### 1. 按文件名搜索
+##### `find` 命令（精确搜索）
+find /路径 -name "文件名"
+- **示例**：
+    
+    find /home -name "example.txt"      # 在 /home 下搜索名为 example.txt 的文件
+    
+    find / -type f -name "*.conf"       # 搜索全盘所有 .conf 后缀的文件
+    
+- **关键选项**：  
+    `-type f`（文件）、`-type d`（目录）、`-iname`（忽略大小写）。
+
+##### `locate` 命令（快速模糊搜索）
+sudo updatedb       # 先更新文件数据库（首次使用前或文件更新后执行）
+locate "关键词"
+- **示例**：
+    
+    locate nginx.conf  # 快速定位所有包含 nginx.conf 的文件路径
+    
+- **特点**：基于数据库检索（更快），但结果可能非实时。
+
+---
+#### 2. 按文件内容搜索
+##### `grep` 命令
+grep -r "关键词" /路径
+- **示例**：
+    
+    grep -r "error" /var/log/          # 在 /var/log 下递归搜索含 "error" 的文件
+    
+    grep -ri "debug" /etc/             # 忽略大小写搜索
+    
+- **选项**：  
+    `-r`（递归）、`-i`（忽略大小写）、`-l`（仅显示文件名）。
+
+---
+#### 3. 按文件大小/时间/权限搜索
+##### `find` 高级用法
+find /路径 -size +10M                # 搜索大于 10MB 的文件
+find /var/log -mtime -7              # 搜索 7 天内修改过的文件
+find /etc -perm 644                  # 搜索权限为 644 的文件
+
+---
+#### 4. 组合条件搜索
+```bash
+find / -type f -name "*.log" -size +1G -exec ls -lh {} \;  # 搜索大于 1GB 的日志文件并显示详情
+```
+#### 常用命令总结
+
+|场景|命令示例|
+|---|---|
+|按文件名搜索|`find /etc -name "nginx.conf"`|
+|快速模糊搜索|`locate *.jpg`|
+|按内容搜索|`grep -r "192.168.1.1" /etc/`|
+|按大小搜索|`find /var -size +500M`|
+掌握这些命令后，可以高效定位 CentOS 中的任何文件！
+### 程序后台运行命令
+#### nohup 命令
+##### 后端服务（例如 Go 程序）
+```bash
+nohup ./main > backend.log 2>&1 &
+```
+**说明**：
+- `nohup`：让进程在终端关闭后继续运行。
+- `> backend.log`：将标准输出重定向到日志文件。
+- `2>&1`：将错误输出合并到标准输出。
+- `&`：将进程放入后台运行。
+
+##### 前端服务（例如 npm 项目）
+```bash
+cd your-frontend-dir && nohup npm run dev > frontend.log 2>&1 &
+```
+#### 方案 2：使用 `tmux` 分屏终端
+1. **创建会话**：
+   ```bash
+   tmux new -s project
+   ```
+2. **启动后端服务**（按 `Enter` 执行）：
+   ```bash
+   ./main
+   ```
+3. **分屏并启动前端服务**：
+   - 按 `Ctrl+B`，再按 `"`（水平分屏）或 `%`（垂直分屏）。
+   - 切换分屏后运行：
+     ```bash
+     cd your-frontend-dir && npm run dev
+     ```
+1. **退出 tmux 但保持运行**：
+   - 按 `Ctrl+B`，再按 `D`（detach）。
+   - 重新连接会话：
+     ```bash
+     tmux attach -t project
+     ```
+#### 方案 3：使用 `systemd` 部署为守护进程（推荐）
+##### 1. 创建后端服务单元文件
+```bash
+sudo vim /etc/systemd/system/backend.service
+```
+内容如下：
+```ini
+[Unit]
+Description=Backend Service
+After=network.target
+
+[Service]
+Type=simple
+User=your_username
+WorkingDirectory=/path/to/backend
+ExecStart=/path/to/backend/main
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+##### 2. 创建前端服务单元文件
+```bash
+sudo vim /etc/systemd/system/frontend.service
+```
+内容如下：
+```ini
+[Unit]
+Description=Frontend Service
+After=network.target
+
+[Service]
+Type=simple
+User=your_username
+WorkingDirectory=/path/to/frontend
+ExecStart=/usr/local/bin/npm run dev
+Restart=always
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target
+```
+
+##### 3. 启动并启用服务
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start backend frontend
+sudo systemctl enable backend frontend  # 开机自启
+```
+
+---
+
+#### 方案 4：使用进程管理工具 `pm2`（前端专用）
+如果前端是 Node. js 项目，可以更优雅地用 `pm2` 管理：
+```bash
+npm install -g pm2
+cd your-frontend-dir
+pm2 start npm -- run dev
+pm2 save  # 保存配置，重启后自动恢复
+```
+## 注意事项
+1. 确保服务监听 `0.0.0.0`
+   - 后端需绑定 `0.0.0.0:端口`（如 `app.listen(3000, '0.0.0.0')`），否则无法通过端口转发访问。
+
+1. 防火墙开放端口（如需要外部访问）
+   ```bash
+   sudo firewall-cmd --add-port=3000/tcp --permanent
+   sudo firewall-cmd --reload
+   ```
+
+2. 检查进程是否后台运行
+   ```bash
+   ps aux | grep main
+   ps aux | grep npm
+   ```
+
+3. 查看日志
+   ```bash
+   tail -f backend.log
+   tail -f frontend.log
+   ```
+
+---
+
+## 总结
+
+| 方法        | 优点                      | 缺点                      |
+|-------------|---------------------------|---------------------------|
+| `nohup`     | 简单快捷                  | 无法监控日志，管理分散    |
+| `tmux`      | 可交互调试，实时看日志    | 会话关闭后进程会终止      |
+| `systemd`   | 稳定、自启、集中管理      | 需配置单元文件            |
+| `pm2`       | Node. js 项目专用，支持集群   | 仅适用于前端，需额外安装  |
+
+如需长期稳定运行，**推荐使用 `systemd`**；如临时调试，用 `tmux` 更灵活。
