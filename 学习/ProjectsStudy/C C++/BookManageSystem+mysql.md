@@ -18,6 +18,27 @@ target_compile_options(BookManagePlus PRIVATE "/std:c++20" "/Zc:__cplusplus")
 ```
 
 这时需要在环境变量 path 中调整 vcpkg 安装目录变量到 anaconda 上方，并且删除原有 build 目录，重新通过 cmake 生成工程，即可解决问题
+
+如果在 linux 中，在 find_package 函数中查找库路径，可以在括号最后面添加 `PATH path/to/boost` 来指定查找路径，也可以手动设置这个库的 include 和 lib 目录
+```cmake
+set(BOOST_ROOT "/usr/local/boost-1.89")
+set(Boost_INCLUDE_DIR "/usr/local/boost-1.89/include")
+set(Boost_LIBRARY_DIRS "/usr/local/boost-1.89/lib")
+find_package(Boost REQUIRED COMPONENTS headers context json regex url)
+```
+如果不指定 path，则 linux 会自动搜索：
+
+| 头文件路径                                       |     |
+| ------------------------------------------- | --- |
+| `/usr/include`                              |     |
+| `/usr/local/include`                        |     |
+| `/usr/local/boost*/include`                 |     |
+| `/opt/boost*/include`                       |     |
+| 库文件路径                                       |     |
+| `/usr/lib`  <br>`/usr/lib/x86_64-linux-gnu` |     |
+| `/usr/local/lib`  <br>`/usr/local/lib64`    |     |
+| `/opt/boost*/lib`                           |     |
+如果是 windows ，则会搜索环境变量
 ## 杂项
 ### 语法规定
 - static 成员函数中不允许使用 const 修饰**方法体**
