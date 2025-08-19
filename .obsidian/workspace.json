@@ -23,21 +23,6 @@
             }
           },
           {
-            "id": "ddffdb972d3c780b",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/ProjectsStudy/C C++/2048CLI.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "2048CLI"
-            }
-          },
-          {
             "id": "b1a7eb504fa3820d",
             "type": "leaf",
             "state": {
@@ -51,9 +36,24 @@
               "icon": "lucide-file",
               "title": "servertect-chat"
             }
+          },
+          {
+            "id": "9d1872dac82eb32c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/Language/C C++/C++ Basics.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "C++ Basics"
+            }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -106,7 +106,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -227,13 +228,14 @@
   },
   "active": "b1a7eb504fa3820d",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/C C++/2048CLI.md",
+    "学习/Language/C C++/C++ Basics.md",
     "servertect-chat.md",
-    "学习/ProjectsStudy/C C++/CLI11.md",
     "学习/其他专业书/Modern C++.md",
-    "学习/Linux/Linux Command Line.md",
-    "学习/ProjectsStudy/Python/github python learning projects.md",
     "学习/ProjectsStudy/网络连接问题解决.md",
+    "学习/Linux/Linux Command Line.md",
+    "学习/ProjectsStudy/C C++/2048CLI.md",
+    "学习/ProjectsStudy/C C++/CLI11.md",
+    "学习/ProjectsStudy/Python/github python learning projects.md",
     "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "学习/ProjectsStudy/C C++/Boost库文档学习.md",
     "Files & LongText/Attachments/Pasted image 20250818153747.png",
@@ -263,7 +265,6 @@
     "学习/Language/JavaScript/Modern JavaScript.md",
     "学习/algorithm/分析优化.md",
     "学习/Language/C C++/C++ prime plus.md",
-    "学习/Language/TypeScript/From Official.md",
     "学习/Language/TypeScript",
     "Files & LongText/Attachments/source 1.zip",
     "Files & LongText/Attachments/source.zip",

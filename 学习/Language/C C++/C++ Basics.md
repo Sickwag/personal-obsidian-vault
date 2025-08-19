@@ -772,7 +772,7 @@ int main() {
 最好的解决办法是：**在写重载函数时不定义默认参数**
 ### 类和对象
 大部分内容在 [C++ Runoob Tutoral \> 类和对象](C++%20Runoob%20Tutoral.md#类和对象)中，这里补充
-#### **封装**
+#### 封装
 同其他编程语言，将属性变量和成员操作封装在一个类中
 可以参考 [Python Basics \> 封装](Python%20Basics.md#封装)
 ##### 访问权限
@@ -1024,7 +1024,7 @@ void test01()
 
 #### 符号重载
 [C++ Runoob Tutoral \> 重载运算符和重载函数](C++%20Runoob%20Tutoral.md#重载运算符和重载函数)
-#### **继承**
+#### 继承
 ##### 继承中的细节
 - 问题：从父类继承过来的成员，哪些属于子类对象中？
 父类中私有成员也是被子类继承下去了，只是由编译器给隐藏后访问不到
@@ -1056,6 +1056,100 @@ cout << "Son  下 m_A = " << Son::m_A << endl;
 cout << "Base 下 m_A = " << Son::Base::m_A << endl;
 ```
 - 多继承一般不会轻易使用，多继承中如果父类中出现了同名情况，子类使用时候要加作用域
+##### 不同访问修饰符继承
+```cpp
+class Base {
+protected:
+    int protectedVar;
+private:
+    int privateVar;
+public:
+    int publicVar;
+    
+    void publicMethod() { cout << "Base public method" << endl; }
+protected:
+    void protectedMethod() { cout << "Base protected method" << endl; }
+private:
+    void privateMethod() { cout << "Base private method" << endl; }
+};
+```
+
+| 基类成员        | 公有继承      | 保护继承      | 私有继承    |
+| ----------- | --------- | --------- | ------- |
+| public成员    | public    | protected | private |
+| protected成员 | protected | protected | private |
+| private成员   | 不可访问      | 不可访问      | 不可访问    |
+|             |           |           |         |
+1. **private成员永远不可访问**：无论哪种继承方式，基类的private成员都不能被派生类直接访问
+2. **访问权限逐级降低**：
+    - 公有继承：保持原有访问级别
+    - 保护继承：public成员变为protected
+    - 私有继承：所有可访问成员都变为private
+```cpp
+// 公有继承
+class PublicDerived : public Base {
+public:
+    void test() {
+        publicVar = 10;        // ✓ 可访问
+        protectedVar = 20;     // ✓ 可访问
+        // privateVar = 30;    // ✗ 不可访问
+        
+        publicMethod();        // ✓ 可调用
+        protectedMethod();     // ✓ 可调用
+        // privateMethod();    // ✗ 不可调用
+    }
+};
+
+// 外部访问
+int main() {
+    PublicDerived obj;
+    obj.publicVar = 100;       // ✓ 可访问
+    // obj.protectedVar = 200; // ✗ 不可访问
+    // obj.privateVar = 300;   // ✗ 不可访问
+    
+    obj.publicMethod();        // ✓ 可调用
+    // obj.protectedMethod();  // ✗ 不可调用
+}
+// 保护继承
+class ProtectedDerived : protected Base {
+public:
+    void test() {
+        publicVar = 10;        // ✓ 可访问（变为protected）
+        protectedVar = 20;     // ✓ 可访问
+        // privateVar = 30;    // ✗ 不可访问
+        
+        publicMethod();        // ✓ 可调用（变为protected）
+        protectedMethod();     // ✓ 可调用
+    }
+};
+
+// 外部访问
+int main() {
+    ProtectedDerived obj;
+    // obj.publicVar = 100;    // ✗ 不可访问（已变为protected）
+    // obj.publicMethod();     // ✗ 不可访问（已变为protected）
+}
+// 私有继承
+class PrivateDerived : private Base {
+public:
+    void test() {
+        publicVar = 10;        // ✓ 可访问（变为private）
+        protectedVar = 20;     // ✓ 可访问（变为private）
+        // privateVar = 30;    // ✗ 不可访问
+        
+        publicMethod();        // ✓ 可调用（变为private）
+        protectedMethod();     // ✓ 可调用（变为private）
+    }
+};
+
+// 外部访问
+int main() {
+    PrivateDerived obj;
+    // obj.publicVar = 100;    // ✗ 不可访问（已变为private）
+    // obj.publicMethod();     // ✗ 不可访问（已变为private）
+}
+```
+
 ##### 菱形继承
 ![clip\_image002.jpg](../../../Files%20&%20LongText/Attachments/clip_image002.jpg)
 1. 羊继承了动物的数据，驼同样继承了动物的数据，当草泥马使用数据时，就会产生二义性。
@@ -1101,7 +1195,7 @@ class Derived : public Left, public Right { /* ... */ };
 
 虚继承确保了即使在复杂的继承体系中，基类也只有一份实例。这使得虚继承特别适用于设计需要多重继承但又想避免菱形继承问题的类层次结构。
 
-#### **多态**
+#### 多态
 ==多态是一种允许不同类的对象对同一消息做出响应的能力。==
 ### 多态基本使用
 多态分为两类
