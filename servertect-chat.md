@@ -21,10 +21,11 @@
 cmake . -DCMAKE_CXX_STANDARD=17 && make
 ```
 出现 main 文件之后继续按照指引即可
-## 代码分析（按文件）
-### server
-#### src.util
-##### error. cpp
+# 代码分析（按文件）
+## server
+### src.util
+### src/error. cpp & include/error.hpp
+#### 问题
 - 为什么 `to_string` 和 `chat_category` 对象 `cat` 要放在匿名命名空间中？
   匿名命名空间（`namespace { ... }`）的作用是**将符号（函数、变量等）限制在当前编译单元（Translation Unit）内**，相当于C语言中的 `static` 修饰符，避免全局命名冲突。
 	- `to_string` 是一个辅助函数，仅在 `chat_category::message(int)` 中被调用，不需要暴露给外部代码。
@@ -41,4 +42,40 @@ struct is_error_code_enum<chat::errc> {
 };
 ```
 模板类型名称一定要为 `struct is_error_code_enum`，才能够将 `chat::errc` 中的错误类型假入 boost:: system 管理。
-自定义的错误类型如果继承自 `boost::system::error_category` 那么这个错误类型的 `has_location` 方法会被 boost:: system 接管，一旦源码中有位置调用了 `static constexpr auto loc = BOOST_CURRENT_LOCATION;` 所创建的 loc 对象，源码的位置就会被 `has_location` 记录下来，对吗？
+#### 整体结构
+1. error. hpp 中定义 enum class errc 定义所有可能出现的错误，error. cpp 中使用 `BOOST_DESCIBE_ENUM` 描述 to_string 之后的信息。
+2. to_string 创建转换规则，将 `char::ec`；类型对应的 BOOST_DESCIBE_ENUM 类型对应，转换为对应字符串。和 chat_category 将自定义错误注册让 boost:: system 来管理。to_strng 名为了避免冲突，并且他只服务于 chat_category 中，所以放在匿名 namespace 中。
+3. 注册还有一个步骤是在 boost:: system 中创建一个特化模板(is_error_code_num)，表示 chat:: errc 已经是其中一员。
+4. 两个宏定义让外部**需要返回 error_code 类型的函数**使用他们时，传入错误，即可创建附带位置的 error_code 对象直接中断函数，return 出现的错误。如果
+5. 所有的错误**日志输出**都需要通过 log_error 函数处理
+```mermaid
+graph TD
+    A[创建 error_code] --> B{是否需要记录日志？}
+    B -->|是| C[调用 log_error]
+    B -->|否| D[传递 error_code 供后续处理]
+    C --> E[控制台输出错误信息]
+```
+可以看到 src/listen. cpp 中，accept_loop 函数中，返回值为 void，代码中就使用：
+```cpp
+if (ec)
+    return chat::log_error(ec, "accept");
+```
+在 src/api/aip_types. cpp 的 parse_client_event 函数中，大量直接使用宏的场景
+```cpp
+chat::any_client_event chat::parse_client_event(std::string_view from) {
+    error_code ec;
+
+    // Parse the JSON
+    auto msg = boost::json::parse(from, ec);
+    if (ec)
+        CHAT_RETURN_ERROR(ec)
+    // 其他代码
+}
+```
+其返回值为：
+```cpp
+using any_client_event = boost::variant2::variant<
+    error_code,  // Invalid, used to report errors
+    client_messages_event,
+    request_room_history_event>;
+```
