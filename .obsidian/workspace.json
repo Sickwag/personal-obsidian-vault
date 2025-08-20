@@ -68,7 +68,7 @@
             }
           }
         ],
-        "currentTab": 3
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -242,12 +242,12 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "5cc7d7c4f2747ea3",
+  "active": "b1a7eb504fa3820d",
   "lastOpenFiles": [
-    "servertect-chat.md",
     "学习/Language/C C++/C++ Basics.md",
-    "学习/其他专业书/Modern C++.md",
     "学习/ProjectsStudy/网络连接问题解决.md",
+    "servertect-chat.md",
+    "学习/其他专业书/Modern C++.md",
     "学习/Linux/Linux Command Line.md",
     "学习/ProjectsStudy/C C++/2048CLI.md",
     "学习/ProjectsStudy/C C++/CLI11.md",
