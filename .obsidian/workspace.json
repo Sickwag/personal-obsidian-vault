@@ -38,6 +38,18 @@
             }
           },
           {
+            "id": "efbeb4760d483175",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.9.10"
+              },
+              "icon": "lucide-book-up",
+              "title": "版本说明 1.9.10"
+            }
+          },
+          {
             "id": "9d1872dac82eb32c",
             "type": "leaf",
             "state": {
@@ -53,7 +65,7 @@
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -214,6 +226,7 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "bases:创建新数据库": false,
       "switcher:打开快速切换": false,
       "graph:查看关系图谱": false,
       "daily-notes:打开/创建今天的日记": false,
@@ -226,7 +239,7 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "b1a7eb504fa3820d",
+  "active": "efbeb4760d483175",
   "lastOpenFiles": [
     "学习/Language/C C++/C++ Basics.md",
     "servertect-chat.md",
