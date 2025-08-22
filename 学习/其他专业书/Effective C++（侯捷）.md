@@ -497,3 +497,28 @@ std::string* ps = pss; // 合法（派生类→基类隐式转换）
 delete ps; // 灾难性操作
 
 ```
+C++标准文档中说明：
+
+> **"If a class has a base class with a virtual destructor, its destructor is virtual."** 并在备注中强调："The destructor of a standard library class is not virtual unless documented otherwise."
+
+标准容器中析构函数都是 non-virtual 的，不要继承（**"Never inherit from standard containers."**）“给 base classes 一个 virtual 析构函数”，这个规则只适用千 polymorphic （带多态性质的） base classes 身上。这种 base classes 的设计目的是为了用来“通过 base class接口处理 derived class 对象”。
+所以不是被用于作为多态用途的类，就不应该被继承，并设置 virtual 函数
+
+#### 需要记住
+- polymorphic （带多态性质的）base classes 应该声明一个 virtual 析构函数。如果class 带有任何 virtual 函数，它就应该拥有一个 virtual 析构函数。
+- 析构函数的运作方式是，最深层派生(most derived) 的那个 class 其析构函数最先被调用，然后是其每一个 base class 的析构函数被调用。
+- Classes 的设计目的如果不是作为baseclasses 使用，或不是为了具备多态性(polymorphically) ，就不该声明 virtual 析构函数。
+
+## 条款 08：别让异常逃离析构函数
+#### 问题背景
+C+＋并不禁止析构函数吐出异常，但它不鼓励你这样做。
+如果析构函数中的操作可能会引起异常，通常有两种方法解决：
+- 中断程序->异常不会传播出这个类（代码块）
+- 吞下异常->程序继续运行，但是压下错误信息会导致难以 debug
+但这些都无法法对“导致 close 抛出异常”的情况做出反应。
+解决方法是，自己设计一个接口，将可能会出现异常的操作封装在这个接口中，并在析构函数中调用这个接口。
+看似这种做法将出错责任转移到了**函数调用者**的身上，但析构函数吐出异常只会引来“过早结束程序”或“发生不明确行为＂的风险。将错误封锁在函数中，总比脱离类作用范围要好。
+
+#### 需要记住
+- 析构函数绝对不要吐出异常。如果一个被析构函数调用的函数可能抛出异常，析构函数应该**捕捉任何异常，然后吞下它们**（不传播）或结束程序。
+- ·如果客户需要对某个操作函数运行期间抛出的异常做出反应，那么class 应该提供一个普通函数（而非在析构函数中）执行该操作。
