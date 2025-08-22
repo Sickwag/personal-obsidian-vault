@@ -419,3 +419,81 @@ public:
 };
 ```
 ## 条款 07：为多态基类声明 virtual 析构函数
+### 问题出线和解决方法
+
+> 当 derived class 对象经由一个 baseclass 指针被删除，而该 base class 带着一个 non-virtual 析构函数，其结果**未有定义**
+
+明白一点说就是：derived class派生类继承base类，如果base类中没有将析构函数设置为virtual，那么在通过子类构造函数创建父类对象的指针之后想要删除指针，调用delete命令之后就会出现派生类对象无法释放内存而导致内存泄漏问题
+场景复现：
+```cpp
+class Base {
+public:
+    ~Base() { cout << "Base dtor" << endl; }
+};
+
+class Derived : public Base {
+public:
+    ~Derived() { 
+        cout << "Derived dtor" << endl;
+        delete[] dynamicData; // 假设分配了1024字节内存
+    }
+private:
+    char* dynamicData = new char[1024];
+};
+
+Base* pb = new Derived();
+delete pb; // 仅执行到 ~Base()
+```
+- 内存泄漏：`dynamicData`分配的1024字节永远不会被释放
+- 资源管理：若`dynamicData`指向文件句柄/锁等资源更危险
+- 未定义行为：部分编译器可能引发段错误（如涉及虚继承布局）
+为防止**局部析构**和**资源泄漏**问题，通常在设计 base 类时，要将析构函数设置为 virtual，这样使用 delete 后，编译器会自动调用父类析构函数
+### 虚函数实现原理
+#### “虚对象”结构
+**虚函数表**：欲实现出virtual 函数，对象必须携带某些信息用来在运行期决定哪一个virtual 函数该被调用。这份信息通常是由一个所谓 vptr (virtual table pointer) 指针指出。 vptr 指向一个由函数指针构成的数组，称为 vtbl (virtual table) ；
+**虚函数指针**：每一个带有 virtual函数的 class 都有一个相应的 vtb| 。当对象调用某一 virtual 函数，实际被调用的函数取决千该对象的 vptr 所指的那个 vtbl 一编译器在其中寻找适当的函数指针。
+**虚函数对类对象大小影响**：如果 class 内含 virtual 函数，其对象的体积会增加：在 32-bit 计算机体系结构中将占用 64 bits （为了存放两个 ints)至 96 bits （两个 ints 加上 vptr) ； 64-bit 中可能占用 64-128 its,因为指针在这样的计算机结构中占 64bits 。
+**虚析构函数会改变二进制布局**：
+
+| 类型          | 成员布局                    | 32 位系统体积 | 64 位系统体积 | 跨语言传递风险 |
+|---------------|-----------------------------|-------------|-------------|----------------|
+| Point         | [x][y]                      | 8 字节       | 8 字节       | 可无缝传输     |
+| PointWithVptr | [vptr][x][y]                | 12 字节      | **16 字节**  | ❌ 用途受阻     |
+
+**Scott Meyers的约束公式**
+```cpp
+if (存在任何virtual函数) {
+    宣告virtual析构函数; // 总体积增大代价可接受
+} else if(存在多态行为) {
+    if(有跨语言或内存序列化需求) {
+        拒绝+警告(使用虚析构会破坏结构);
+    } else {
+        权衡体积增长与析构安全性;
+    }
+}
+```
+#### STL 中的 non-virtual 设计
+- `std::string`**故意不设计虚函数**以维持二进制兼容性
+- 所有STL容器（`vector`/`list`/`map`）都遵循这一设计原则
+- 它们的内存布局必须与C兼容（如 `strlen()` 可直接操作 `std::string::c_str()`）
+特洛伊木马式内存泄漏
+```cpp
+class SpecialString : public std::string {
+public:
+    SpecialString(const char* s) : std::string(s), m_cryptoKey(0xABCD1234U) {
+        m_data = new char[8192]; // 假设存储加密数据
+    }
+    ~SpecialString() {
+        delete[] m_data; // 清理关键资源
+        decrypt(m_cryptoKey); // 释放加密资源
+    }
+private:
+    char* m_data;
+    uint32_t m_cryptoKey;
+};
+
+SpecialString* pss = new SpecialString("Secret Message");
+std::string* ps = pss; // 合法（派生类→基类隐式转换）
+delete ps; // 灾难性操作
+
+```
