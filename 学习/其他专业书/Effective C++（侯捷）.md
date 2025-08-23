@@ -335,7 +335,7 @@ Empty e2(el);	//copy构造函数
 e2 = el;		//copyassignment操作符
 ```
 编译器产出的析构函数是个 non-virtual 除非这个 class 的 base class 自身声明有 virtual 析构函数（这种情况下这个函数的虚属性； virtualness; 主要来自 base class)
-copy 构造函数和 copy assignment 操作符，编译器创建的版本只是单纯地将来源对象的每一个non-static 成员变量拷贝到目标对象。
+copy 构造函数和 copy assignment 操作符，编译器创建的版本只是单纯地将来源对象的每一个 non-static 成员变量拷贝到目标对象。
 ### 默认构造带来的陷阱
 下面两段代码
 ```cpp
@@ -375,11 +375,11 @@ code 1 代码一切正常，因为 nameValue 是 p 和 s 各自的成员变量�
 - 两个对象的 nameValue 是字符串引用对象，mark 之前的代码两个 nameValue 分别指向 newDog 和 oldDog 两个字符串变量
 - 使用编译器**默认生成的拷贝构造操作符（不是拷贝构造函数）**实现两个对象的**拷贝赋值会单纯地将来源对象的每一个 non-static 成员变量拷贝到目标对象。**，`p.nameValue = &newDog` 拷贝值到 `s.nameValue = &oldDog`，但是 C+＋并不允许“让 reference 改指向不同对象，这样就会导致编译器在类中寻找**自定义 copy assignment 操作符**，即 `NameObject& operator=(const NameObject& rhs) {}`，如果未定义，就会终止赋值操作代码。
 
-## 条款06：若不想使用编译器自动生成的函数，就该明确拒绝
-通常如果你不希望 class 支待某一特定机能，只要不声明对应函数就是了。但这个策略对copy 构造函数和copy assignment 操作符却不起作用，因为[[Effective C++（侯捷）#条款 05：了解 C+＋默默编写并调用哪些函数|条款5]]  已经指出，如果你不声明它们，而**某些人尝试调用它们，编译器会为你声明它们**
+## 条款 06：若不想使用编译器自动生成的函数，就该明确拒绝
+通常如果你不希望 class 支待某一特定机能，只要不声明对应函数就是了。但这个策略对 copy 构造函数和 copy assignment 操作符却不起作用，因为[[Effective C++（侯捷）#条款 05：了解 C+＋默默编写并调用哪些函数|条款5]]  已经指出，如果你不声明它们，而**某些人尝试调用它们，编译器会为你声明它们**
 所有编译器产出的函数都是 public 。为阻止这些函数被创建出来，你得自行声明它们可以阻止他们生成，***将 copy assignment 和 copy constructor 放在 private 中，就可以组织编译器自动创建 public 版本***，又由于这些函数是 private 的无法从外部调用，所以最终 class 就相当于仅用了这些放在 private 中的内容
 
->  但是member 函数和 friend 函数还是可以调用你的 private 函数。除非你够聪明，不去定义它们，那么如果某些入不慎调用任何一个，会获得一个连接错误(linkage error)
+>  但是 member 函数和 friend 函数还是可以调用你的 private 函数。除非你够聪明，不去定义它们，那么如果某些入不慎调用任何一个，会获得一个连接错误 (linkage error)
 
 所以为了安全，**将成员函数声明为 private 而且故意不实现它们**为大家接受
 ```cpp
@@ -423,7 +423,7 @@ public:
 
 > 当 derived class 对象经由一个 baseclass 指针被删除，而该 base class 带着一个 non-virtual 析构函数，其结果**未有定义**
 
-明白一点说就是：derived class派生类继承base类，如果base类中没有将析构函数设置为virtual，那么在通过子类构造函数创建父类对象的指针之后想要删除指针，调用delete命令之后就会出现派生类对象无法释放内存而导致内存泄漏问题
+明白一点说就是：derived class 派生类继承 base 类，如果 base 类中没有将析构函数设置为 virtual，那么在通过子类构造函数创建父类对象的指针之后想要删除指针，调用 delete 命令之后就会出现派生类对象无法释放内存而导致内存泄漏问题
 场景复现：
 ```cpp
 class Base {
@@ -444,15 +444,15 @@ private:
 Base* pb = new Derived();
 delete pb; // 仅执行到 ~Base()
 ```
-- 内存泄漏：`dynamicData`分配的1024字节永远不会被释放
-- 资源管理：若`dynamicData`指向文件句柄/锁等资源更危险
+- 内存泄漏：`dynamicData` 分配的 1024 字节永远不会被释放
+- 资源管理：若 `dynamicData` 指向文件句柄/锁等资源更危险
 - 未定义行为：部分编译器可能引发段错误（如涉及虚继承布局）
 为防止**局部析构**和**资源泄漏**问题，通常在设计 base 类时，要将析构函数设置为 virtual，这样使用 delete 后，编译器会自动调用父类析构函数
 ### 虚函数实现原理
 #### “虚对象”结构
-**虚函数表**：欲实现出virtual 函数，对象必须携带某些信息用来在运行期决定哪一个virtual 函数该被调用。这份信息通常是由一个所谓 vptr (virtual table pointer) 指针指出。 vptr 指向一个由函数指针构成的数组，称为 vtbl (virtual table) ；
-**虚函数指针**：每一个带有 virtual函数的 class 都有一个相应的 vtb| 。当对象调用某一 virtual 函数，实际被调用的函数取决千该对象的 vptr 所指的那个 vtbl 一编译器在其中寻找适当的函数指针。
-**虚函数对类对象大小影响**：如果 class 内含 virtual 函数，其对象的体积会增加：在 32-bit 计算机体系结构中将占用 64 bits （为了存放两个 ints)至 96 bits （两个 ints 加上 vptr) ； 64-bit 中可能占用 64-128 its,因为指针在这样的计算机结构中占 64bits 。
+**虚函数表**：欲实现出 virtual 函数，对象必须携带某些信息用来在运行期决定哪一个 virtual 函数该被调用。这份信息通常是由一个所谓 vptr (virtual table pointer) 指针指出。 vptr 指向一个由函数指针构成的数组，称为 vtbl (virtual table) ；
+**虚函数指针**：每一个带有 virtual 函数的 class 都有一个相应的 vtb| 。当对象调用某一 virtual 函数，实际被调用的函数取决千该对象的 vptr 所指的那个 vtbl 一编译器在其中寻找适当的函数指针。
+**虚函数对类对象大小影响**：如果 class 内含 virtual 函数，其对象的体积会增加：在 32-bit 计算机体系结构中将占用 64 bits （为了存放两个 ints) 至 96 bits （两个 ints 加上 vptr) ； 64-bit 中可能占用 64-128 its, 因为指针在这样的计算机结构中占 64 bits 。
 **虚析构函数会改变二进制布局**：
 
 | 类型          | 成员布局                    | 32 位系统体积 | 64 位系统体积 | 跨语言传递风险 |
@@ -460,7 +460,7 @@ delete pb; // 仅执行到 ~Base()
 | Point         | [x][y]                      | 8 字节       | 8 字节       | 可无缝传输     |
 | PointWithVptr | [vptr][x][y]                | 12 字节      | **16 字节**  | ❌ 用途受阻     |
 
-**Scott Meyers的约束公式**
+**Scott Meyers 的约束公式**
 ```cpp
 if (存在任何virtual函数) {
     宣告virtual析构函数; // 总体积增大代价可接受
@@ -474,8 +474,8 @@ if (存在任何virtual函数) {
 ```
 #### STL 中的 non-virtual 设计
 - `std::string`**故意不设计虚函数**以维持二进制兼容性
-- 所有STL容器（`vector`/`list`/`map`）都遵循这一设计原则
-- 它们的内存布局必须与C兼容（如 `strlen()` 可直接操作 `std::string::c_str()`）
+- 所有 STL 容器（`vector` / `list` / `map`）都遵循这一设计原则
+- 它们的内存布局必须与 C 兼容（如 `strlen()` 可直接操作 `std::string::c_str()`）
 特洛伊木马式内存泄漏
 ```cpp
 class SpecialString : public std::string {
@@ -501,13 +501,13 @@ C++标准文档中说明：
 
 > **"If a class has a base class with a virtual destructor, its destructor is virtual."** 并在备注中强调："The destructor of a standard library class is not virtual unless documented otherwise."
 
-标准容器中析构函数都是 non-virtual 的，不要继承（**"Never inherit from standard containers."**）“给 base classes 一个 virtual 析构函数”，这个规则只适用千 polymorphic （带多态性质的） base classes 身上。这种 base classes 的设计目的是为了用来“通过 base class接口处理 derived class 对象”。
+标准容器中析构函数都是 non-virtual 的，不要继承（**"Never inherit from standard containers."**）“给 base classes 一个 virtual 析构函数”，这个规则只适用千 polymorphic （带多态性质的） base classes 身上。这种 base classes 的设计目的是为了用来“通过 base class 接口处理 derived class 对象”。
 所以不是被用于作为多态用途的类，就不应该被继承，并设置 virtual 函数
 
 #### 需要记住
-- polymorphic （带多态性质的）base classes 应该声明一个 virtual 析构函数。如果class 带有任何 virtual 函数，它就应该拥有一个 virtual 析构函数。
-- 析构函数的运作方式是，最深层派生(most derived) 的那个 class 其析构函数最先被调用，然后是其每一个 base class 的析构函数被调用。
-- Classes 的设计目的如果不是作为baseclasses 使用，或不是为了具备多态性(polymorphically) ，就不该声明 virtual 析构函数。
+- polymorphic （带多态性质的）base classes 应该声明一个 virtual 析构函数。如果 class 带有任何 virtual 函数，它就应该拥有一个 virtual 析构函数。
+- 析构函数的运作方式是，最深层派生 (most derived) 的那个 class 其析构函数最先被调用，然后是其每一个 base class 的析构函数被调用。
+- Classes 的设计目的如果不是作为 baseclasses 使用，或不是为了具备多态性 (polymorphically) ，就不该声明 virtual 析构函数。
 
 ## 条款 08：别让异常逃离析构函数
 #### 问题背景
@@ -521,5 +521,129 @@ C+＋并不禁止析构函数吐出异常，但它不鼓励你这样做。
 
 #### 需要记住
 - 析构函数绝对不要吐出异常。如果一个被析构函数调用的函数可能抛出异常，析构函数应该**捕捉任何异常，然后吞下它们**（不传播）或结束程序。
-- ·如果客户需要对某个操作函数运行期间抛出的异常做出反应，那么class 应该提供一个普通函数（而非在析构函数中）执行该操作。
+- ·如果客户需要对某个操作函数运行期间抛出的异常做出反应，那么 class 应该提供一个普通函数（而非在析构函数中）执行该操作。
 ## 条款 09：绝不在构造和析构过程中调用 virtual 函数
+### 问题背景
+当**派生类对象对象处于构造或析构过程中**时，C++会将其视为“尚未完成的**基类**对象”，此时虚函数机制会强制绑定到当前构造层级的基类实现上，而非派生类的实现——这种行为违反程序员的直觉预期，极易引发未定义行为。
+在 derived class 对象的 base class 构造期间，对象的类型是 base class 而不是 derived class 。不只 virtual 函数会被编译器解析至 (resolve to) base class,若使用运行期类型信息 (runtime type information，也会把对象视为 base class 类型。
+
+1️⃣ **子类对象构造时**：
+- 程序先执行基类构造函数 → 此时**派生类成员尚未初始化**，使用他们是不安全的。因为尽管这个时候代码的最终目的是构建一个子类对象，但是在子类构造函数尚未结束时，他还是一个基类对象。
+- 虚表指针（vptr）**仅指向基类虚表**（派生类虚表尚未建立）
+- _结果：调用子类的虚函数 `virtual func()` 实际执行父类的虚函数 `Base::func()` _
+
+2️⃣ **析构时**：
+- 程序先执行派生类析构函数 → **销毁派生类成员后**，对象内的 derived class 成员变量便呈现未定义值，所以 C++ 视它们仿佛不再存在
+- 虚表指针**回退指向基类虚表**（派生类虚表已失效）
+- _结果：调用子类的虚函数  `virtual func()` 实际执行父类的虚函数 `Base::func()` _
+
+由于设计上的原因导致这样的行为**和直觉相反**，容易出现错误。
+侦测“构造函数或析构函数运行期间是否调用 virtual 函数”并不总是这般轻松。如果 Transaction 有多个构造函数，每个都需执行某些相同工作。则常规做法是这些工作（可能包含虚函数调用）放入一个普通成员函数中。并在构造，析构时调用它。这样提高代码复用的做法又会出现问题：
+```cpp
+class Transaction{
+public:
+    Transaction() { init(); }        // ← 问题的根源
+    virtual void logTransaction() const; // ← 非纯虚
+    virtual void logTransaction() const = 0; // ← 纯虚函数
+private:
+    void init() { logTransaction(); } // ← 静默崩溃
+};
+```
+如果基类构造中调用的函数时纯虚函数，那么程序会直接终止运行或者编译阶段 fatal error。但如果是非纯虚函数 (impure virtual)，那么由于他给出了实现，程序会继续运行。也就是会出现构造子类对象，子类对象中调用 override 的子类虚函数时，会调用本不应该调用的父类虚函数实现。
+
+```cpp
+class Transaction {
+public:
+    Transaction() {
+        init();
+    }
+private:
+    void init() {
+        logTransaction(); // 调用虚函数
+    }
+protected:
+    virtual void logTransaction() const {  // 给出实现，非纯虚函数
+        std::cout << "WARNING: Default transaction log!\n"; 
+    }
+};
+
+class BuyTransaction : public Transaction {
+public:
+	BuyTransaction() : amount(1234) { /* 成员初始化操作 */};
+	void logTransaction() const override {
+	    std::cout << "金额: " << std::fixed << amount_ << "\n";
+	}
+private:
+    double amount_; // 交易金额（未初始化！）
+};
+
+int main() {
+    BuyTransaction bt;
+}
+```
+这样的代码不会报错，但是由于 logTransaction 函数是非纯虚，其中的操作可能间接改变业务逻辑，而 debug 调用过程中又显示正常调用子类的 logTransaction 函数。错误操作难以察觉。
+
+
+### 需要记住
+构造和析构期间不要调用 virtual 函数，因为这类调用从不下降至 derived class（比起当前执行构造函数和析构函数的那层）。
+
+## 条款 10：令 operator= 返回—个 reference to \*this
+一个约定性质的条款，主要目的是为了实现"连锁赋值"和链式调用
+```cpp
+int x, y, z;
+x = y = Z = 15; // 赋值连锁形
+x = (y = (z = 15)); // 赋值采用右结合律
+```
+## 条款 11 ：在 operator= 中处理“自我赋值”
+### 问题背景
+```cpp
+a[i) =a[j);
+*px = *py;
+```
+这些潜在的自我赋值不太容易看出来，但大多数情况下 C++会自动处理，但如果：
+- 两个对象来自同一个继承体系，它们甚至不需声明为相同类型就可能造成“别名”, 因为一个 base class 的 reference 或 pointer 可以指向一个 derived class 对象
+- 写一个用于资源管理的 class ，自我赋值可能会导致错误
+```cpp
+class Bitmap {...}；
+class Widget {
+private:
+	Bitmap* pb;//指针，指向一个从heap分配而得的对象
+}；
+
+Widget&
+Widget::operator=(const Widget& rhs) { //一份不安全的operator=实现版本
+	// if (this== &rhs) return *this; 
+	delete pb;					//停止使用当前的bitmap，
+	pb = new Bitmap(*rhs.pb);	//使用rhs'sbitmap的副本（复件）。
+	return *this;				//见条款10。
+}
+```
+operator= 函数内的＊ this （赋值的目的端）和 rhs 如果是同一个对象，delete 就会删除赋值动作发送端和目的端的内容。导致指针悬空。所以要解开注释。
+- 不解开注释不仅不具备“自我赋值安全性”，也不具备“异常安全性”
+- 解开注释解决了“自我赋值安全性”，但是仍有异常问题：
+  如果 new Bitmap，导致异常（不论是因为分配时内存不足或因为 Bitmap 的copy 构造函数抛出异常），Widget 最终会持有一个指针指向一块被删除的 Bitmap 这样的指针有害。你无法安全地删除它们，甚至无法安全地读取它们。
+```cpp
+Widget& Widget::operator=(const Widget& rhs) {
+	// if (this== &rhs) return *this; 
+	Bitmap* pOrig = pb;//记住原先的pb
+	pb = new Bitmap(*rhs.pb);//令 pb指向 *pb 的一个复件（副本)
+	delete pOrig;//删除原先的pb
+	return *this;
+}
+```
+这种方法解决了异常问题，但会导致资源复制，性能下降。如果将注释解开，避免自我赋值过程中的无效资源复制，同时会让代码变大一些（包括原始码和目标码）并导入一个新的控制流 (control flow) 分支，而两者都会降低执行速度。 
+
+两者兼得做法是 copy-and-swap：
+```cpp
+Widget & Widget::operator=(const Widget& rhs) {
+	Widget temp(rhs);  // 为 rhs 数据制作一份复件（副本）
+	swap (temp) ;
+	return *this;
+}
+```
+如果可以确定 Widget 对象的拷贝赋值函数是值传递，甚至可以直接不制作副本
+
+### 需要记住
+- 确保当对象自我赋值时 operator= 有良好行为。其中技术包括比较”来源对象”和“目标对象”的地址、精心周到的语句顺序、以及 copy-and-swap 。
+- 确定任何函数如果操作一个以上的对象，而其中多个对象是同一个对象时，其行为仍然正确。
+## 条款 12：复制对象时勿忘其每—个成分
