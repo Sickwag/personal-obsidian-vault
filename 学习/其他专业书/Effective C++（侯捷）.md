@@ -254,10 +254,10 @@ C+＋有着十分固定的“成员初始化次序”。初始化次序总是相
 ```cpp
 class Directory { ／／由程序库客户建立
 public:
-	Direc七ory (params);
+	Directory (params);
 	/* code */
 };
-Direc七ory :: Directory (params) {
+Directory :: Directory (params) {
 	std::size t disks= tfs.numDjsk:3();
 }		//使用 tfs 对象
 ```
@@ -314,7 +314,7 @@ int main() {
 - 一个 default 构造函数（如果没有声明任何构造函数）
 如果你写下：
 ```cpp
-class Ernp七y { };
+class Ernpty { };
 ```
 这就好像你写下这样的代码：
 ```cpp
@@ -647,3 +647,57 @@ Widget & Widget::operator=(const Widget& rhs) {
 - 确保当对象自我赋值时 operator= 有良好行为。其中技术包括比较”来源对象”和“目标对象”的地址、精心周到的语句顺序、以及 copy-and-swap 。
 - 确定任何函数如果操作一个以上的对象，而其中多个对象是同一个对象时，其行为仍然正确。
 ## 条款 12：复制对象时勿忘其每—个成分
+### 问题背景
+如果声明自己的拷贝构造函数和赋值构造函数，那么改动代码（通常是增删成员） 时，**如果没有同时修改这两个函数和所有构造函数**（见[[#条款 04：确定对象被使用前已先被初始化|条款4]] ( 和[[#条款 45：运用成员函数模板接受所有兼容类型|条款 45]]），即使你在“最高警告级别“（见[[#条款 53 ：不要轻忽编译器的警告|条款 53]]）中，编译器仍然不会有任何提示：
+
+> 既然你拒绝它们为你写出 copying 函数，如果你的代码不完全，它们也不告诉你。
+
+```cpp
+class PriorityCustomer: public Customer {
+public:
+	//一个 derived class
+	PriorityCustomer(const PriorityCust omer& rhs);
+	PriorityCustomer&
+	operator=(const PriorityCustomer& rhs);
+private:
+	int priority;
+};
+
+PriorityCustomer::PriorityCustomer(const PriorityCustomer& rhs) : priority(rhs.priority) {
+	logCall("PriorityCustomer copy constructor");
+}
+
+PriorityCustomer& Priori tyCustomer: : operator=(const PriorityCustomer& rhs) {
+	logCall("PriorityCustomer copy assignment operator");
+	priority= rhs.priority;
+	return *this;
+}
+```
+PriortyCustomer 的 copying 函数看起来好像复制了 PriorityCustomer 内的每一样东西，但是事实上只复制了子类 PriorityCustomer 类的所有成员而忽略了父类。
+PriorityCustomer 的 copy 构造函数并没有指定实参传给其 base class 构造函数，因此只会执行父类的 default 构造函数。
+
+所以，任何时候只要你承担起“为 derived class 撰写 copying 函数”的重责大任，必须很小心地也复制其 base class 成分。那些成分往往是 private （见[[#条款 22：将成员变置声明为 private|条款 22]]) 
+```cpp
+PriorityCustomer::PriorityCustomer(const PriorityCustomer& rhs) : Customer(rhs), priority(rhs.priority) { // 调用 base class 的 copy 构造函数
+	logCall("PriorityCustomer copy constructor");
+}
+PriorityCustomer& PriorityCustomer::operator=(const PriorityCustorner& rhs) {
+	logCall("PriorityCustorner copy assignment operator");
+	Customer::operator=(rhs); // 对 base class 成分进行赋值动作
+	priority= rhs.priority;
+	return *this;
+}
+```
+### 需要记住
+- 复制所有 local 成员变量
+- 调用所有 base classes 内的适当的 copying 函数。
+- 令 copy assignment 操作符调用 copy 构造函数是不合理的，因为这就像试图构造一个已经存在的对象。反方向令 copy 构造函数调用 copy assignment 操作符同样无意义
+- copy 和 copy assignment 函数**一般而言**有类似的结构，不要尝试以某个 copying 函数实现另一个 copying 函数。应该将共同机能放进第三个函数中，并由两个 coping 函数共同调用。
+
+> 构造函数用来初始化新对象，而 assignment 操作符只施行于已初始化对象身上。对一个尚未构造好的对象赋值，就像在一个尚未初始化的对象身上做“只对已初始化对象才有意义”的事一样。
+
+# 资源管理
+## 条款 22：将成员变置声明为 private
+## 条款 45：运用成员函数模板接受所有兼容类型
+
+## 条款 53 ：不要轻忽编译器的警告
