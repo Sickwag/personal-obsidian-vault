@@ -68,7 +68,7 @@
             }
           }
         ],
-        "currentTab": 3
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -242,10 +242,10 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "ff84287d3f44e2f0",
+  "active": "01097f87ef689cb7",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "Files & LongText/Long code/C++ practice case.md",
+    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
     "学习/其他专业书/Modern C++.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
