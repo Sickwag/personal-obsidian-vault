@@ -36,19 +36,9 @@
               "icon": "lucide-file",
               "title": "Modern C++"
             }
-          },
-          {
-            "id": "f25f3f6869d4c31c",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "新标签页"
-            }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -221,7 +211,7 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "f25f3f6869d4c31c",
+  "active": "99d4ea4454b1a233",
   "lastOpenFiles": [
     "学习/其他专业书/Effective C++（侯捷）.md",
     "学习/其他专业书/Modern C++.md",
