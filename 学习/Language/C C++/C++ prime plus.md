@@ -1130,13 +1130,13 @@ variable +1 ;// nosense
 指针的加减和正常运算一致，参考 [C++ Basics \> 指针的步长](C++%20Basics.md#指针的步长)
 
 #### 逗号运算符
-- 逗号运算符最常见的用途是将**更多的表达式放到 for 循环表达式中**。不过 C++还为这个运算符提供了另外两个特性。
 - 它确保先计算第一个**表达式（注意不是语句，逗号连接两个语句可能会报错）**，然后计算第二个表达式（换句话说，逗号运算符是**一个顺序点**）
-![Pasted image 20241026192819.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026192819.jpg)
+- 先计算左边的表达式，再计算右边的表达式，整个表达式的结果是“右边表达式的值
+![Pasted image 20241026192819.jpg](Files%20&%20LongText/Attachments/Pasted%20image%2020241026192819.jpg)
 ![Pasted image 20241026192943.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026192943.png)
 使用逗号注意事项：
 - 在所有运算符中，逗号运算符的优先级是最低的。
-![Pasted image 20241026193037.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026193037.jpg) 被解释为 ![Pasted image 20241026193042.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026193042.jpg)
+![Pasted image 20241026193037.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026193037.jpg) 被解释为 ![Pasted image 20241026193042.jpg](Files%20&%20LongText/Attachments/Pasted%20image%2020241026193042.jpg)
 - 在 for 循环中如果使用赋值运算符在第二个参数位置，可能会出现难以察觉的错误
 ```cpp
 int main (){
