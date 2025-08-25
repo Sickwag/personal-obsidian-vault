@@ -2917,13 +2917,13 @@ ForwardIterator min_element(ForwardIterator first, ForwardIterator last);
 | `operator==`          | 有些实现会失败                             | 特别是 `== end()` 判断        |
 #### 注意事项
 - 解引用 `&` 和 `->` 操作符的返回类型
-  ```cpp
+```cpp
 T* ptr_ = nullptr;
 T& operator*() const { return *ptr_; } 
 T* operator->() const { return ptr_; } 
   ```
 - 自增自减操作有前后缀之分，C++规定参数列表添加 int 为后缀类型重载
-  ```cpp
+```cpp
 iterator& operator++() {         // 必须
       ++ptr_;
       return *this;
@@ -2935,7 +2935,7 @@ iterator operator++(int) {       // 后置自增，可选，因为迭代使用�
 }
   ```
 - `==` 和 `!=` 可以设置为成员函数或者友元函数，具体原理参考 [[C++ Runoob Tutoral#运算符重载的本质]]
-  ```cpp
+```cpp
 friend bool operator==(const iterator& a, const iterator& b)  { return a.ptr_ == b.ptr_; }  // 必须
 friend bool operator!=(const iterator& a, const iterator& b) { return a.ptr_ != b.ptr_; }  // 必须
 // 可以将这两个函数作为成员函数，实现为：
@@ -2947,9 +2947,9 @@ friend bool operator!=(const iterator& a, const iterator& b) { return a.ptr_ != 
 //     return !(*this == other); // 复用==函数
 // }
 // ps：作为成员函数时最好加上const修饰函数体，所有基本的数组操作，delete，delete[]，size()都应该使用const noexcept。这些原子操作不会返回错误
-  ```
+```
 - 赋值移动语义中容易犯一个错误
-  ```cpp
+```cpp
 MyVector& operator=(MyVector&& other) noexcept{
   if(this != &other){
 	  delete[] data_;
@@ -2964,7 +2964,7 @@ MyVector& operator=(MyVector&& other) noexcept{
   // 或者将上面if语句中全部内容替换为swap(*this, other);
   return *this;
 }
-  ```
+```
   移动语义的核心是新的对象**接管**旧的对象数据，具体原理可以参考 [[Modern C++#移动语义]]，原本 `other.data_` 并不会删除，而是在新对象中用 `data_` 的内存地址修改为 `other.data_` 的地址。
   `delete[]` 是对内存的操作而不是对对象的操作。所以只需要将 `other.data_` 不再指向原地址即可。具体原因可以参考 ![[Pasted image 20250806163725.png]]
 ## 使用迭代器适配器填充 STL 容器
