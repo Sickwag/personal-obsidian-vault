@@ -121,12 +121,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -241,7 +241,7 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "da273356db199107",
+  "active": "d1e212fee3e1649e",
   "lastOpenFiles": [
     "学习/其他专业书/Modern C++.md",
     "学习/Language/C C++/C++ prime plus.md",
