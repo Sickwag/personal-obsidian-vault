@@ -36,9 +36,19 @@
               "icon": "lucide-file",
               "title": "Modern C++"
             }
+          },
+          {
+            "id": "da273356db199107",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -211,10 +221,10 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "99d4ea4454b1a233",
+  "active": "da273356db199107",
   "lastOpenFiles": [
-    "学习/其他专业书/Effective C++（侯捷）.md",
     "学习/其他专业书/Modern C++.md",
+    "学习/其他专业书/Effective C++（侯捷）.md",
     "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "Files & LongText/Long code/C++ practice case.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
