@@ -38,18 +38,13 @@
             }
           },
           {
-            "id": "da273356db199107",
+            "id": "3dbe4edd03c064cc",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/ProjectsStudy/C C++/args库（3000行）.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "args库（3000行）"
+              "title": "新标签页"
             }
           }
         ],
@@ -106,8 +101,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -226,14 +220,14 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "da273356db199107",
+  "active": "3dbe4edd03c064cc",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "学习/其他专业书/Modern C++.md",
+    "Files & LongText/Long code/C++ practice case.md",
     "学习/ProjectsStudy/C C++/args库（3000行）.md",
+    "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
     "学习/Language/C C++/C++ prime plus.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "Files & LongText/Long code/C++ practice case.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
     "学习/ProjectsStudy/C C++/servertect-chat.md",
     "学习/Language/C C++/C++ Basics.md",
