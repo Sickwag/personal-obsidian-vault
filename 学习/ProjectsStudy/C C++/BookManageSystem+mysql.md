@@ -68,12 +68,12 @@ auto db_config = ServiceLocator::get<DBConfig>();
   [proc] 命令“D:\Program\Cmake\bin\cmake.EXE --build "D:/Code Files/vscode/CCpp/projects/BookManagePlus/build" --config Release --target BookManagePlus --”已退出，代码为 1
   ```
 - 无法解析的外部符号多半是 `CMakeLists.txt` 文件中没有在 `add_executable` 中添加对应的 cpp 文件
-  ```cmake
+```cmake
   [build] main.obj : error LNK2019: 无法解析的外部符号 "public: __cdecl Menu::Menu(void)" (??0Menu@@QEAA@XZ)，函数 main 中引用了该符号 [D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\BookManagePlus.vcxproj]
   [build] main.obj : error LNK2019: 无法解析的外部符号 "public: void __cdecl Menu::start_menu(void)const " (?start_menu@Menu@@QEBAXXZ)，函数 main 中引用了该符号 [D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\BookManagePlus.vcxproj]
   [build] D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\Release\BookManagePlus.exe : fatal error LNK1120: 2 个无法解析的外部命令 [D:\Code Files\vscode\CCpp\projects\BookManagePlus\build\BookManagePlus.vcxproj]
   [proc] 命令“D:\Program\Cmake\bin\cmake.EXE --build "D:/Code Files/vscode/CCpp/projects/BookManagePlus/build" --config Release --target BookManagePlus --”已退出，代码为 1
-  ```
+```
 
 ### 编译和连接问题
 模板函数（使用 template 的）必须要在 `.h` 中定义和实现，如果实现放在 `cpp` 文件会出现 `LNK2019` 报错，连接错误。信息类似于 ^quxnvg

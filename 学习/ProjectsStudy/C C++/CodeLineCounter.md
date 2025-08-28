@@ -8,18 +8,18 @@
 	选择对应的编译器，或者 cmake 工程中的配置文件配置
 3. 当一个类中有引用类型变量时，必须在类中初始化或者在构造函数初始化列表中初始化
 4. 对于下面这段代码：
-   ```cpp
+```cpp
 std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 // and
 std::string content(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
-   ```
+```
    粗看两者相同，但是第一行会被解释为构造一个 string 对象，第二个会被解释为返回值为 string 的函数声明，这样会导致再使用
 5. 如果通过头文件引入第三方库，为了防止 `F2` 重构名称或者其他批量操作时影响库文件，可以在 `settings.json` 中添加：
-   ```json
+```json
 "files.readonlyInclude": {
        "include/CLI11/CLI11.hpp": true
    }
-   ```
+```
    保护文件为只读
 6. vscode 写代码时，如果想通过 cmake 传入参数，在 launch. json 中设置的 args 会被 settings. json 中的 `cmake.DebugConfig。args` 覆盖
 # API 使用
