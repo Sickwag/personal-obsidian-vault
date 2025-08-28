@@ -1,4 +1,4 @@
-# 写项目的发现
+# 简单实现
 1. 在一个类中，如果类中的函数方法体用 `const` 修饰，说明这个方法不会改变类的状态，所以返回值如果要返回类名&引用，则需要加上 const，变为 `const class_name& func()`
 2. 如果写着写着发现 vscode 的提示抽风，明明没有错误的代码出现 `此声明没有存储类类型说明符` 这样的报错，并且：
 	- 使用 `using` 自定义的类型 vscode 在输入时无提示
@@ -118,3 +118,65 @@ Caught in main: Error in func3
 
 已经实现的完整代码：
 ![[source 1.zip]]
+
+# 改良实现
+## 各种功能的实现
+### 获取系统时间
+config. cpp
+```cpp
+auto now = std::chrono::system_clock::now();
+std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+std::string now_str = ctime(&now_c);
+```
+### 自动转化 json 值类型
+```cpp
+template <typename T>
+static T get_key(const json::value& json, const std::string& key) {
+    bool is_exist = json.is_object() && json.as_object().contains(key);
+    if (is_exist) {
+        return json::value_to<T>(json.as_object().at(key));
+    } else {
+        return T();
+    }
+}
+Config read_config(json::value& j) {
+    Config cfg;
+    cfg.include = get_key<std::string>(j, "include");
+    cfg.exclude = get_key<std::string>(j, "exclude");
+    cfg.file_sum = get_key<bool>(j, "file_sum");
+    cfg.comment_sum = get_key<bool>(j, "comment_line_sum");
+    cfg.code_sum = get_key<bool>(j, "code_sum");
+    cfg.blank_line_sum = get_key<bool>(j, "blank_line_sum");
+    return cfg;
+}
+```
+### 去除 utf-8 BOM 前缀
+```cpp
+static void remove_utf8_bom(std::string& content) {
+    if (content.size() >= 3 &&
+        static_cast<unsigned char>(content[0]) == 0xEF &&
+        static_cast<unsigned char>(content[1]) == 0xBB &&
+        static_cast<unsigned char>(content[2]) == 0xBF) {
+        content = content.substr(3);
+    }
+}
+json::value get_config_file(std::string& file_path) {
+    std::ifstream file(file_path);
+    if (!file.is_open()) {
+        throw std::runtime_error("cannot open file: " + file_path);
+    }
+    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    remove_utf8_bom(content);
+    return json::parse(content);
+}
+```
+一般使用在读取文件时将内容转化为字符流之前（字符流更能被其他类型直接使用）
+### 真正做到按照字符串分割另一个字符串
+```cpp
+std::vector<std::string> results;
+boost::split(results, reg, boost::is_any_of(","),boost::token_compress_off);
+for(auto& s : results){
+    boost::trim(s);
+}
+```
+    
