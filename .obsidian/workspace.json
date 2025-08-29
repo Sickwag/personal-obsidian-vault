@@ -121,8 +121,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -241,7 +240,7 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "30338aca46f7ba2d",
+  "active": "fb472bc440e7a387",
   "lastOpenFiles": [
     "学习/ProjectsStudy/C C++/CodeLineCounter.md",
     "学习/ProjectsStudy/C C++/BookManageSystem+mysql.md",
