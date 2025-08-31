@@ -324,7 +324,20 @@ int generate_bitmask(const json::object& section_obj) {
     return bitmask;
 }
 ```
+- 创建开关组初始值 `int bitmask = 0;` 
+- 新增开关状态使用 ` bitmask |= static_cast<int>(枚举值)`
+- 验证开关组中某个开关是否打开 `bool flag = bitmask & static_cast<int>(枚举值)`
 ## 踩坑
+### 避免 git 跟踪和提交无意义文件
+```gitignore
+**/build/ # 避免匹配构建编译目录
+**/*.exe  # 编译文件
+**/*.obj  # 对象文件
+**/*.vcxproj  # vs工程文件，也是纯文本
+**/out/build/
+**/.vscode/
+```
+其中的匹配规则符合 glob 语法规则，对于已经被 git 跟踪的文件，再写就没有意义了
 ### 不要把密钥明文写入代码中
 git 提交是不可删除的，除非将整个 git 存储目录重置（删除 .git 目录），如果所有修改的提交记录如下
 ```bash
@@ -358,7 +371,10 @@ using Row_t = std::vector<variant<std::string, const char *, string_view, Table>
 无法自动根据插入内容调整宽度，如果 `add_row({"1","2“,”3","4"})`，下一行插入一个 5 列数据的行，程序会直接崩溃，Microsoft runtime C++弹窗提示**程序使用 `abort()` 函数强制中断**，给出内存错误地址，而不是在终端返回错误原因。
 如果想要返回
 ![[Pasted image 20250901001120.png]]
-这种格式，表头必须写为 `table.add_row("head", "", "")`，在不写转换函数的情况下**无法用动态数据（比如某个 vector 的 size）来初始化每一行的项数**。这又与它**动态**的设计相反
+这种格式，表头必须写为 `table.add_row("head", "", "")`，不写转换函数的情况下****无法用动态数据（比如某个 vector 的 size）来初始化每一行的项数***。这又与它**动态**的设计相反。
+#### 使用 `std::regex` 要保存原字符串数据
+- `std::regex` 设计为轻量级的正则表达式引擎，它只存储编译后的有限状态机，不存储原始字符串节省内存和提高性能。
+- `boost.regex` 同样不支持
 ### 事先计划非常重要
 #### 1. 粗建框架
 - 先规划后程序所有的模块
@@ -370,7 +386,7 @@ using Row_t = std::vector<variant<std::string, const char *, string_view, Table>
 - 加载配置
 - 根据配置作出处理
 - 结束动作
-- 最外层错误处理
+- 最外层**一定要有错误捕获处理机制**
 ```cpp
 #include "arg_parse.h"
 #include "config.h"
@@ -426,11 +442,11 @@ struct CodeStats {
 };
 ```
 - 理清功能，函数之间的依赖关系，最小化 include 依赖链条
+- 调整 api 参数，缩短参数传递链条
 #### 4. 设置文件布局
 - 是细节而不是主要逻辑实现的函数放在 uitls 中
 - 常用的辅助类函数使用 inline 优化
 - 精简每一个头文件，只暴露其他文件中必要的接口
-
 #### 5. 实现每个模块的异常处理和测试
 - 可能有错误一定要 try-catch 已知的错误，没有错误务必声明 `noexcept`
 - 让每一个函数都返回想要的结果
