@@ -124,9 +124,16 @@ Caught in main: Error in func3
 ### 获取系统时间
 config. cpp
 ```cpp
-auto now = std::chrono::system_clock::now();
-std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-std::string now_str = ctime(&now_c);
+std::string get_current_time_str() {
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+    std::string time_str = std::ctime(&now_c);
+    // 移除末尾的换行符
+    if (!time_str.empty() && time_str.back() == '\n') {
+        time_str.pop_back();
+    }
+    return time_str;
+}
 ```
 ### 自动转化 json 值类型
 ```cpp
@@ -141,7 +148,6 @@ static T get_key(const json::value& json, const std::string& key) {
 }
 Config read_config(json::value& j) {
     Config cfg;
-    cfg.include = get_key<std::string>(j, "include");
     cfg.exclude = get_key<std::string>(j, "exclude");
     cfg.file_sum = get_key<bool>(j, "file_sum");
     cfg.comment_sum = get_key<bool>(j, "comment_line_sum");
@@ -178,5 +184,255 @@ boost::split(results, reg, boost::is_any_of(","),boost::token_compress_off);
 for(auto& s : results){
     boost::trim(s);
 }
+
+// 反过来将一个vector<string> 转化为一个字符串
+#include <boost::algorithm::join.hpp>
+boost::join(vec, ", ");
 ```
-    
+### glob 字符串转化为 regex 正则表达式
+```cpp
+std::string glob_to_regex(const std::string& glob) {
+    static const std::unordered_map<char, std::string> replacements = {
+        {'*', ".*"}, {'?', "."}, {'.', "\\."}, {'\\', "\\\\"}, {'+', "\\+"}, {'^', "\\^"}, {'$', "\\$"}, {'(', "\\("}, {')', "\\)"}, {'|', "\\|"}, {'{', "\\{"}, {'}', "\\}"}, {'[', "\\["}, {']', "\\]"}};
+    std::string result;
+    result.reserve(glob.size() * 2);
+    for (char c : glob) {
+        if (auto it = replacements.find(c); it != replacements.end()) {
+            result += it->second;
+        } else {
+            result += c;
+        }
+    }
+    return "^" + result + "$";
+}
+```
+### 获取编译后可执行文件所在位置
+```cpp
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+std::string get_exec_path() {
+    char path[MAX_PATH];
+    GetModuleFileNameA(NULL, path, MAX_PATH);
+    return std::string(path);
+}
+#elif defined(__linux__)
+#include <limits.h>
+#include <unistd.h>
+std::string get_exec_path() {
+    char path[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", path, PATH_MAX);
+    if (count != -1) {
+        path[count] = '\0';
+        return std::string(path);
+    } else {
+        throw std::runtime_error("Error getting executable path");
+    }
+}
+#else
+#error "Unsupported platform"
+#endif
+```
+
+## 设计技巧
+### 位掩码设计开关
+```cpp
+constexpr static int OUTPUT = 3;
+enum class Output_type {
+    CSV = 1 << 0,
+    JSON = 1 << 1,
+    TERMINAL = 1 << 2,
+};
+
+constexpr static int SORT = 6;
+enum class Sort_method {
+    FILEPATH = 1 << 3,
+    TOTAL_SUM = 1 << 4,
+    CODE_SUM = 1 << 5,
+    COMMENT_SUM = 1 << 6,
+    BLANK_SUM = 1 << 7,
+    MIXED_SUM = 1 << 8,
+};
+
+constexpr static int DISPLAY = 4;
+enum class Display_column {
+    TOTAL = 1 << 9,
+    CODE = 1 << 10,
+    COMMENT = 1 << 11,
+    BLANK = 1 << 12,
+};
+```
+- 每一个枚举值代表一个功能的开启状态
+- 这样的紧凑的位掩码设计不利于添加功能，应该优化为不同枚举值之间有空格
+- 标准库中没有反射机制，所以不借助 boost 的情况下需要手动实现 `enum_to_str` 函数
+```cpp
+template <typename EnumT>
+struct EnumMapping;
+
+template <>
+struct EnumMapping<Output_type> {
+    static constexpr std::array<std::pair<const char*, Output_type>, 3> values = {{{"csv", Output_type::CSV},
+    {"json", Output_type::JSON},
+    {"terminal", Output_type::TERMINAL}}};
+};
+
+template <>
+struct EnumMapping<Sort_method> {
+    static constexpr std::array<std::pair<const char*, Sort_method>, 6> values = {{{"filepath", Sort_method::FILEPATH},
+       {"total_sum", Sort_method::TOTAL_SUM},
+       {"code_sum", Sort_method::CODE_SUM},
+       {"comment_sum", Sort_method::COMMENT_SUM},
+       {"blank_sum", Sort_method::BLANK_SUM},
+       {"mixed_sum", Sort_method::MIXED_SUM}}};
+};
+
+template <>
+struct EnumMapping<Display_column> {
+    static constexpr std::array<std::pair<const char*, Display_column>, 4> values = {{{"TOTAL", Display_column::TOTAL},
+          {"CODE", Display_column::CODE},
+          {"COMMENT", Display_column::COMMENT},
+          {"BLANK", Display_column::BLANK}}};
+};
+```
+- 无论是字符串还是 `const char*`（也可以再 array 的模板参数中填入 `const std::string`）让整个模板特化都常量化，从而使用 `constexpr` 关键字加快运行速度。将这些常量计算提前至编译期。
+- 如果有开关对应的函数，还可以将函数放入，完成**枚举值->枚举字符串->开关回调函数**映射
+```cpp
+template <typename EnumT>
+const char* enum_to_str(EnumT e) {
+    for (const auto& mapping : EnumMapping<EnumT>::values) {
+        if (mapping.second == e) {
+            return mapping.first;
+        }
+    }
+    return "";
+}
+```
+- 由于配置开关一般放在 json 文件中，这里就需要一个将 json 对象解析为位掩码（表示一组开关的状态）的函数
+```cpp
+template <typename EnumT>
+int generate_bitmask(const json::object& section_obj) {
+    int bitmask = 0;
+
+    for (const auto& mapping : EnumMapping<EnumT>::values) {
+        auto it = section_obj.find(mapping.first);
+        if (it != section_obj.end() &&
+            it->value().is_bool() &&
+            it->value().as_bool()) {
+            bitmask |= static_cast<int>(mapping.second);
+        }
+    }
+
+    return bitmask;
+}
+```
+## 踩坑
+### 不要把密钥明文写入代码中
+git 提交是不可删除的，除非将整个 git 存储目录重置（删除 .git 目录），如果所有修改的提交记录如下
+```bash
+-- no api key(meaningless)
+-- fix bugs(first found key leaked out version)
+-- fix bugs1
+-- fix bugs2(first contains key)
+-- cannot run version
+```
+因为提交 no api key 版本不会影响之前的提交记录，所以有以下几种方法解决
+- 最好的方法就是更改密钥。
+- 删除本地 ,git 目录，然后使用 `git init && git push --force` 将本地代码覆盖远程仓库，这回清空所有提交记录
+- 使用专业工具解析 git 本地记录文件，删除记录中的所有密钥字符串然后提交，这样比较复杂，而且只能全字匹配密钥字符串。
+### api 使用
+#### boost. json 不支持格式化文件
+boost. json 对象在使用 `file << boost::json::serialize(json_object)` 写入文件之后是未格式化的版本。不能在代码层面中使用锁紧格式化，也不支持在文件中插入注释。
+#### tabulate 库各种限制
+tabulate 库创建表格不支持跨行/列居中合并单元格的操作。创建一行数据时不支持使用
+```cpp
+vector<int> vec = {1,2,3,4};
+tab::Row row(vec);
+// 或
+tab::Row row(vec.begin(), vec.end());
+// 不能通过
+tab::Row row({1,2,3,4})  // 同理table对象的add_row函数
+// 每一个插入table的的函数类型，通过add_row方法，必须能够被构造为
+using Row_t = std::vector<variant<std::string, const char *, string_view, Table>>;
+```
+需要自己写转换函数，非常麻烦
+所有 row 的**横向长度**，table 的**纵向长度**都是动态的，**无法在编译期写死**
+无法自动根据插入内容调整宽度，如果 `add_row({"1","2“,”3","4"})`，下一行插入一个 5 列数据的行，程序会直接崩溃，Microsoft runtime C++弹窗提示**程序使用 `abort()` 函数强制中断**，给出内存错误地址，而不是在终端返回错误原因。
+如果想要返回
+![[Pasted image 20250901001120.png]]
+这种格式，表头必须写为 `table.add_row("head", "", "")`，在不写转换函数的情况下**无法用动态数据（比如某个 vector 的 size）来初始化每一行的项数**。这又与它**动态**的设计相反
+### 事先计划非常重要
+#### 1. 粗建框架
+- 先规划后程序所有的模块
+- 模块中应该有哪些功能
+- 功能之间的联系
+#### 2. 想象中程序的运行流程
+建一个 mian. cpp，写出主要流程，按顺序从上到下：
+- 初始化
+- 加载配置
+- 根据配置作出处理
+- 结束动作
+- 最外层错误处理
+```cpp
+#include "arg_parse.h"
+#include "config.h"
+#include "count.h"
+#include "output.h"
+// 包含所有功能模块，辅助模块时在功能模块中使用的，不用在主函数中，主函数不考虑实现细节
+
+int main(int argc, char** argv) {
+    try {
+        ParsedArgs args = arg_parse(argc, argv);
+        Config cfgs = read_config(args.config_file_path);
+        Counter counter(cfgs, args);
+        counter.start();
+        Outputer out(cfgs, counter.get_count_result(), args);
+        out.start();
+    } catch (const std::exception& e) {
+        std::cerr << "exception found: " << e.what() << std::endl;
+        return 1;
+    } catch (...) {
+        std::cerr << "unknow error occurs.";
+    }
+}
+```
+#### 3. 细化框架
+- 细化每一个功能有没有现成的 api，框架可以使用，先网上查一查
+- 所有包含数据的结构体和类，对数据的处理逻辑函数也应该放在其中
+```cpp
+struct CodeStats {
+   private:
+    std::string to_string(const std::string& delimiter);
+
+   public:
+    std::string file_path;
+    int total_lines = 0;
+    int code_lines = 0;
+    int comment_lines = 0;
+    int blank_lines = 0;
+    int mixed_lines = 0;
+
+    boost::json::object to_json_object();
+    std::string to_csv_row();
+    void add_to_terminal_row(tab::Table& parent);
+    void add_to_terminal_col(tab::Table& parent);
+
+    CodeStats& operator+=(const CodeStats& other) {
+        this->blank_lines += other.blank_lines;
+        this->code_lines += other.code_lines;
+        this->comment_lines += other.comment_lines;
+        this->mixed_lines += other.mixed_lines;
+        this->total_lines += other.total_lines;
+        return *this;
+    }
+};
+```
+- 理清功能，函数之间的依赖关系，最小化 include 依赖链条
+#### 4. 设置文件布局
+- 是细节而不是主要逻辑实现的函数放在 uitls 中
+- 常用的辅助类函数使用 inline 优化
+- 精简每一个头文件，只暴露其他文件中必要的接口
+
+#### 5. 实现每个模块的异常处理和测试
+- 可能有错误一定要 try-catch 已知的错误，没有错误务必声明 `noexcept`
+- 让每一个函数都返回想要的结果
+#### 6. 实现过程中不要加需求
+- 规划完成严格按照计划步骤实现，增删过程会导致不确定性和大量的重写
