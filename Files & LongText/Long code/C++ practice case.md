@@ -2128,3 +2128,148 @@ int main() try {
 }
 
 ```
+## 计算文件哈希码
+### C++方法汇总
+| 方法                | 执行时间 | 内存占用 | 跨平台 | 依赖        |
+| ----------------- | ---- | ---- | --- | --------- |
+| OpenSSL           | 2.1s | 16KB | ✓   | libcrypto |
+| Windows CryptoAPI | 2.3s | 16KB | ✗   | 系统自带      |
+| PicoSHA2 (纯头文件)   | 3.8s | 全文件  | ✓   | 无         |
+| Boost.Uuid (不推荐)  | >10s | 全文件  | ✓   | Boost     |
+
+| 方法                | 执行时间 | 内存占用 | 跨平台 | 依赖        |
+| ----------------- | ---- | ---- | --- | --------- |
+| OpenSSL           | 2.1s | 16KB | ✓   | libcrypto |
+| Windows CryptoAPI | 2.3s | 16KB | ✗   | 系统自带      |
+| PicoSHA2 (纯头文件)   | 3.8s | 全文件  | ✓   | 无         |
+| Boost.Uuid (不推荐)  | >10s | 全文件  | ✓   | Boost     |
+
+#### OpenSSL 加密方式
+```cpp
+#include <openssl/md5.h>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <vector>
+
+// 计算文件的 MD5 哈希值
+std::string calculateMD5(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        throw std::runtime_error("无法打开文件: " + filename);
+    }
+
+    MD5_CTX md5Context;
+    MD5_Init(&md5Context);
+
+    // 分块读取文件（处理大文件）
+    std::vector<char> buffer(16384); // 16KB 缓冲区
+    while (file.read(buffer.data(), buffer.size()) || file.gcount()) {
+        MD5_Update(&md5Context, buffer.data(), file.gcount());
+    }
+
+    unsigned char digest[MD5_DIGEST_LENGTH];
+    MD5_Final(digest, &md5Context);
+
+    // 转换为十六进制字符串
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+    for (int i = 0; i < MD5_DIGEST_LENGTH; ++i) {
+        ss << std::setw(2) << static_cast<int>(digest[i]);
+    }
+
+    return ss.str();
+}
+
+// 使用示例
+int main() {
+    try {
+        std::string hash = calculateMD5("example.txt");
+        std::cout << "MD5: " << hash << std::endl;
+        // 输出示例：d41d8cd98f00b204e9800998ecf8427e
+    } catch (const std::exception& e) {
+        std::cerr << "错误: " << e.what() << std::endl;
+    }
+    return 0;
+}
+```
+#### windows API
+```cpp
+#include <windows.h>
+#include <wincrypt.h>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+
+std::string getFileMD5Win(const std::string& filename) {
+    HCRYPTPROV hProv = 0;
+    HCRYPTHASH hHash = 0;
+    HANDLE hFile = NULL;
+    constexpr DWORD BUFSIZE = 16384;
+    BYTE rgbFile[BUFSIZE];
+    DWORD cbRead = 0;
+    
+    // 打开文件
+    hFile = CreateFileA(filename.c_str(), GENERIC_READ, FILE_SHARE_READ, 
+                       NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+    if (INVALID_HANDLE_VALUE == hFile) {
+        throw std::runtime_error("文件打开失败");
+    }
+
+    // 初始化加密上下文
+    if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+        CloseHandle(hFile);
+        throw std::runtime_error("加密上下文初始化失败");
+    }
+
+    if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash)) {
+        CryptReleaseContext(hProv, 0);
+        CloseHandle(hFile);
+        throw std::runtime_error("哈希创建失败");
+    }
+
+    // 读取文件并更新哈希
+    while (ReadFile(hFile, rgbFile, BUFSIZE, &cbRead, NULL) && (cbRead > 0)) {
+        if (!CryptHashData(hHash, rgbFile, cbRead, 0)) {
+            CryptDestroyHash(hHash);
+            CryptReleaseContext(hProv, 0);
+            CloseHandle(hFile);
+            throw std::runtime_error("哈希计算失败");
+        }
+    }
+
+    // 获取哈希值
+    DWORD dwHashLen = MD5_DIGEST_LENGTH;
+    BYTE rgbHash[MD5_DIGEST_LENGTH];
+    if (!CryptGetHashParam(hHash, HP_HASHVAL, rgbHash, &dwHashLen, 0)) {
+        throw std::runtime_error("获取哈希值失败");
+    }
+
+    // 清理资源
+    CryptDestroyHash(hHash);
+    CryptReleaseContext(hProv, 0);
+    CloseHandle(hFile);
+
+    // 转换为十六进制字符串
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0');
+    for (DWORD i = 0; i < dwHashLen; i++) {
+        oss << std::setw(2) << static_cast<int>(rgbHash[i]);
+    }
+    return oss.str();
+}
+
+```
+#### 使用 C++17 标准库 + 第三方头文件（无外部依赖）
+```cpp
+// 使用 https://github.com/okdshin/PicoSHA2 单头文件方案
+#include "picosha2.h"
+#include <fstream>
+#include <iterator>
+
+std::string calculateMD5_PicoSHA(const std::string& filename) {
+    std::ifstream f(filename, std::ios::binary);
+    std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(f), {});
+    return picosha2::hash256_hex_string(buffer);
+}
+```

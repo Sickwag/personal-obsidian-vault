@@ -28,13 +28,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Competitions/数学建模/AI工具使用详情.md",
+                "file": "Files & LongText/Long code/C++ practice case.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "AI工具使用详情"
+              "title": "C++ practice case"
             }
           },
           {
@@ -110,7 +110,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -227,8 +228,8 @@
   },
   "active": "0cf355558cc8b306",
   "lastOpenFiles": [
-    "Competitions/数学建模/支撑材料源代码及其作用说明.md",
     "Competitions/数学建模/AI工具使用详情.md",
+    "Competitions/数学建模/支撑材料源代码及其作用说明.md",
     "Competitions/数学建模/Mathematical Modeling.md",
     "Competitions/数学建模",
     "学习/ProjectsStudy/报错日志分析.md",
