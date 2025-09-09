@@ -289,7 +289,7 @@ void utils::register_user() {
 #### 验证器声明
 需要注意：
 - 每个函数体声明为 const 的函数只能调用其他函数体声明为 const 的函数（**const 修饰函数体**的函数不能修改对象的状态，为保证安全所以 C++作此限制）
-- 其中 length 和 range 函数的实现中使用了较新的 C++特性 format，让 C++ 能够像 python 一样格式化字符串，需要注意 [[#format 使用限制]]
+- 其中 length 和 range 函数的实现中使用了较新的 C++特性 format，让 C++ 能够像 python 一样格式化字符串，需要注意 [[#format 使用限制|format 使用限制]]
 需要实现**链式调用+组合方法**，一般的设计规则为：
 - **允许链式调用**：每个验证方法返回当前对象引用
 - **支持多规则组合**：内部维护一个验证器链表，链表每一个节点存储一个链式调用中规定的输入验证规则，最后实现一个 render 函数遍历链表中的所有逻辑
@@ -481,7 +481,7 @@ int main() {
 
 ## 异步链接
 ### mysql 数据库异步链接（boost. mysql）
-需要注意，如果链接通过协程实现，则需要 `io_context` 链接句柄生命周期长于 mysql 服务模块，可以参考[[#服务注册管理]]，一个统一的协程管理对象管理所有的**需要用到协程的服务**，所以这个管理者的生命周期必须长于所有服务，这个对象在 main.cpp 中创建。
+需要注意，如果链接通过协程实现，则需要 `io_context` 链接句柄生命周期长于 mysql 服务模块，可以参考[[#服务注册管理|服务注册管理]]，一个统一的协程管理对象管理所有的**需要用到协程的服务**，所以这个管理者的生命周期必须长于所有服务，这个对象在 main.cpp 中创建。
 代码参考： [[C++ practice case#boost.mysql 异步连接版本]]
 如果运行连接数据库功能时，提示 ssl plugin 缺失，需要传入 `mysql::ssl_mode ssl = mysql::ssl_mode::disable;` 打开 ssl 开关
 其中 query 支持预处理传参，其实现依赖的是[[Modern C++#Note：完美转发|完美转发]]
@@ -571,7 +571,7 @@ inline std::unordered_map<std::type_index, std::shared_ptr<void>> ServiceLocator
 ```
 
 ### 注意事项和使用
-- 函数模板实现放在头文件中，否则会引发 LNK 2019 错误 ![[BookManageSystem+mysql#^quxnvg]]
+- 函数模板实现放在头文件中，否则会引发 LNK 2019 错误 ![[#^quxnvg|^quxnvg]]
 - 类型指针和引用转换
 	- 因为 services_中存储的“服务”是任意类型的，所以 `it->second` → 类型是 `std::shared_ptr<void>`，它是一个“类型擦除”的智能指针，**指向一个 `T` 类型的对象，但编译器不知道具体类型**
 	- `static_pointer_cast` 是 `shared_ptr` 的类型转换工具,它不改变引用计数，只做指针转换（类似 `static_cast<T*>(ptr)`）,转换后得到：`std::shared_ptr<T>`
