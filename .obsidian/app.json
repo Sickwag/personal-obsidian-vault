@@ -13,7 +13,12 @@
     "includeName": true,
     "pageSize": "A4",
     "landscape": false,
+<<<<<<< HEAD
     "margin": "0",
     "downscalePercent": 100
+=======
+    "margin": "2",
+    "downscalePercent": 70
+>>>>>>> 035b40efc510dbdf75916601d2cebe96f9b7e536
   }
 }

@@ -2127,6 +2127,7 @@ int main() try {
     return 1;
 }
 
+<<<<<<< HEAD
 ```
 ## 计算文件哈希码
 ### C++方法汇总
@@ -2273,3 +2274,6 @@ std::string calculateMD5_PicoSHA(const std::string& filename) {
     return picosha2::hash256_hex_string(buffer);
 }
 ```
+=======
+```
+>>>>>>> 035b40efc510dbdf75916601d2cebe96f9b7e536

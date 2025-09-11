@@ -1,2 +1,7 @@
 .obsidian
 .trash
+
+.obsidian/workspace.json
+.obsidian/workspaces.json
+.obsidian/plugins/*/data.json
+.obsidian\copilot-index-184aa077df08b90ac9fe282cceaa325e.json
