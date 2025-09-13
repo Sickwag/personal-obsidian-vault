@@ -1,3 +1,9 @@
 {
-  "promptDelete": false
+  "promptDelete": false,
+  "readableLineLength": false,
+  "trashOption": "local",
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "current",
+  "attachmentFolderPath": "Files & LongText/Attachments",
+  "newLinkFormat": "relative"
 }

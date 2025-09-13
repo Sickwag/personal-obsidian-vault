@@ -1,3 +1,8 @@
 {
-  "cssTheme": "Blue Topaz"
+  "cssTheme": "Blue Topaz",
+  "accentColor": "#2dcdb2",
+  "interfaceFontFamily": "Cascadia Mono,JetBrains Mono",
+  "monospaceFontFamily": "JetBrains Mono",
+  "baseFontSizeAction": true,
+  "nativeMenus": false
 }
