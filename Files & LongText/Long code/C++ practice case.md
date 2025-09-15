@@ -496,7 +496,8 @@ int main(){
 }
 ```
 
-## 读写二进制文件
+## 读写文件
+### C++读写二进制文件
 ```cpp
 struct Record {
     int id;
@@ -568,7 +569,81 @@ int main() {
     return 0;
 }
 ```
+### 目录中所有代码文件整理为 md 文件
+```cpp
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <algorithm>
+#include <string>
+#include <vector>
 
+namespace fs = std::filesystem;
+
+bool mergeFilesInDirectory(const std::string& sourceDir,
+                           const std::string& outputFile) {
+    if (!fs::exists(sourceDir) || !fs::is_directory(sourceDir)) {
+        std::cerr << "错误：源目录不存在或不是目录" << std::endl;
+        return false;
+    }
+
+    std::ofstream outFile(outputFile, std::ios::binary);
+    if (!outFile.is_open()) {
+        std::cerr << "错误：无法创建输出文件" << std::endl;
+        return false;
+    }
+
+    const size_t bufferSize = 65536;  // 64KB
+    std::vector<char> buffer(bufferSize);
+
+    size_t fileCount = 0;
+
+    for (const auto& entry : fs::recursive_directory_iterator(sourceDir)) {
+        if (entry.is_regular_file()) {
+            std::string relativePath = fs::relative(entry.path(), sourceDir).string();
+
+            std::ifstream inFile(entry.path(), std::ios::binary);
+            if (!inFile.is_open()) {
+                std::cerr << "警告：无法打开文件 " << relativePath << "，跳过" << std::endl;
+                continue;
+            }
+            outFile << "\n文件名: " << relativePath << "\n```cpp\n";
+            while (inFile.read(buffer.data(), bufferSize)) {
+                outFile.write(buffer.data(), bufferSize);
+            }
+            if (inFile.gcount() > 0) {
+                outFile.write(buffer.data(), inFile.gcount());
+            }
+            outFile << "\n```\n";
+
+            inFile.close();
+            fileCount++;
+
+            std::cout << "已处理文件: " << relativePath << std::endl;
+        }
+    }
+    outFile << "\n```\n\n";
+
+    outFile.close();
+
+    std::cout << "完成！共处理 " << fileCount << " 个文件" << std::endl;
+    return true;
+}
+
+int main(int argc, char** argv) {
+    std::string sourceDirectory = argv[1];  // 源目录
+    std::string outputFile = "./merged_output.txt";  // 输出文件
+
+    if (mergeFilesInDirectory(sourceDirectory, outputFile)) {
+        std::cout << "文件合并成功完成！" << std::endl;
+    } else {
+        std::cout << "文件合并失败！" << std::endl;
+    }
+    return 0;
+}
+
+```
+- 并没有实现 exclude 排除规则，默认读取文件夹中所有文件。
 ## 发送邮件程序
 ### python 版本
 [[Python#发送邮件脚本]]，分[[Python#发送邮件脚本#简易硬编码参数版本|硬编码]] 和[[Python#发送邮件脚本#命令行解析参数版本|参数解析]]版本
@@ -2130,6 +2205,463 @@ int main() try {
 <<<<<<< HEAD
 <<<<<<< HEAD
 ```
+## 通用文件遍历接口
+### C++实现
+文件名: include/Logger. h
+```cpp
+#ifndef LOGGER_H
+#define LOGGER_H
+
+#include <string>
+#include <memory>
+
+// Abstract base class for logger implementations
+class Logger {
+public:
+    virtual ~Logger() = default;
+
+    // Log levels
+    enum class Level {
+        DEBUG,
+        INFO,
+        WARNING,
+        ERROR
+    };
+
+    // Pure virtual function for logging messages
+    virtual void log(Level level, const std::string& message) = 0;
+
+    // Convenience methods for different log levels
+    void debug(const std::string& message) { log(Level::DEBUG, message); }
+    void info(const std::string& message) { log(Level::INFO, message); }
+    void warning(const std::string& message) { log(Level::WARNING, message); }
+    void  error(const std::string& message) { log(Level::ERROR, message); }
+};
+
+// Default console logger implementation
+class ConsoleLogger : public Logger {
+public:
+    void log(Level level, const std::string& message) override;
+};
+
+// Factory for creating loggers
+class LoggerFactory {
+public:
+    static std::unique_ptr<Logger> createConsoleLogger();
+};
+
+#endif // LOGGER_H
+```
+
+文件名: include/File_processor. h
+```cpp
+#ifndef FILE_PROCESSOR_H
+#define FILE_PROCESSOR_H
+
+#include <filesystem>
+#include <functional>
+#include <string>
+#include <vector>
+#include <memory>
+#include "Logger.h"
+#include "Error_handler.h"
+
+namespace fs = std::filesystem;
+
+class FileProcessor {
+public:
+    // Type alias for processor function (can return any value)
+    template<typename ReturnType>
+    using ProcessorFunc = std::function<ReturnType(const fs::path&)>;
+
+    // Type alias for callback function
+    using CallbackFunc = std::function<void(const fs::path&)>;
+
+    // Process a single file
+    template<typename ReturnType>
+    static void process_single_file(
+        const fs::path& filepath,
+        ProcessorFunc<ReturnType> processor,
+        const std::string& exclude = "",
+        CallbackFunc callback = [](const fs::path&) {},
+        std::unique_ptr<ErrorHandler> error_handler = ErrorHandlerFactory::createDefaultHandler(),
+        std::unique_ptr<Logger> logger = LoggerFactory::createConsoleLogger()
+    );
+
+    // Process a directory recursively
+    template<typename ReturnType>
+    static void process_directory(
+        const fs::path& dirpath,
+        ProcessorFunc<ReturnType> processor,
+        const std::string& exclude = "",
+        CallbackFunc callback = [](const fs::path&) {},
+        std::unique_ptr<ErrorHandler> error_handler = ErrorHandlerFactory::createDefaultHandler(),
+        std::unique_ptr<Logger> logger = LoggerFactory::createConsoleLogger()
+    );
+
+private:
+    // Helper function to match exclude pattern
+    static bool matches_exclude_pattern(const fs::path& path, const std::string& exclude);
+};
+
+#include "File_processor.tpp"
+
+#endif // FILE_PROCESSOR_H
+```
+
+文件名: include/Error_handler. h
+```cpp
+#pragma once
+
+#include <string>
+#include <vector>
+#include <memory>
+#include <iostream>
+
+// Abstract base class for error types
+class Error {
+public:
+    virtual ~Error() = default;
+    virtual std::string getMessage() const = 0;
+    virtual std::string getType() const = 0;
+};
+
+// Concrete error types
+class FileError : public Error {
+private:
+    std::string message;
+
+public:
+    explicit FileError(const std::string& msg) : message(msg) {}
+    std::string getMessage() const override { return "File Error: " + message; }
+    std::string getType() const override { return "FileError"; }
+};
+
+class ProcessingError : public Error {
+private:
+    std::string message;
+
+public:
+    explicit ProcessingError(const std::string& msg) : message(msg) {}
+    std::string getMessage() const override { return "Processing Error: " + message; }
+    std::string getType() const override { return "ProcessingError"; }
+};
+
+// Abstract base class for error handlers
+class ErrorHandler {
+public:
+    virtual ~ErrorHandler() = default;
+    virtual void handle(const Error& error) = 0;
+    virtual std::vector<std::string> getErrorMessages() const = 0;
+    virtual void clearErrors() = 0;
+};
+
+// Default error handler implementation
+class DefaultErrorHandler : public ErrorHandler {
+private:
+    std::vector<std::string> errorMessages;
+
+public:
+    void handle(const Error& error) override;
+    std::vector<std::string> getErrorMessages() const override { return errorMessages; }
+    void clearErrors() override { errorMessages.clear(); }
+};
+
+// Factory for creating error handlers
+class ErrorHandlerFactory {
+public:
+    static std::unique_ptr<ErrorHandler> createDefaultHandler();
+};
+
+```
+
+文件名: include/File_processor. tpp
+```cpp
+#include <iostream>
+#include "File_processor.h"
+
+template <typename ReturnType>
+void FileProcessor::process_single_file(
+    const fs::path& filepath,
+    ProcessorFunc<ReturnType> processor,
+    const std::string& exclude,
+    CallbackFunc callback,
+    std::unique_ptr<ErrorHandler> error_handler,
+    std::unique_ptr<Logger> logger) {
+    if (matches_exclude_pattern(filepath, exclude)) {
+        return;
+    }
+    try {
+        if (!fs::exists(filepath)) {
+            throw FileError("File does not exist: " + filepath.string());
+        }
+
+        processor(filepath);
+        logger->info("Successfully processed file: " + filepath.string());
+
+        callback(filepath);
+    } catch (const Error& e) {
+        // Handle known errors
+        error_handler->handle(e);
+        logger->error("[Known Error] Failed to process file: " + filepath.string() + " - " + e.getMessage());
+    } catch (const std::exception& e) {
+        // Handle standard exceptions
+        ProcessingError pe(e.what());
+        error_handler->handle(pe);
+        logger->error("[Std Error] Failed to process file: " + filepath.string() + " - " + std::string(e.what()));
+    } catch (...) {
+        // Handle unknown exceptions
+        ProcessingError pe("Unknown error occurred");
+        error_handler->handle(pe);
+        logger->error("[Unknown Error] Failed to process file: " + filepath.string() + " - Unknown error occurred");
+    }
+}
+
+/**
+ * \brief Process files in a directory recursively
+ */
+template <typename ReturnType>
+void FileProcessor::process_directory(
+    const fs::path& dirpath,
+    ProcessorFunc<ReturnType> processor,
+    const std::string& exclude,
+    CallbackFunc callback,
+    std::unique_ptr<ErrorHandler> error_handler,
+    std::unique_ptr<Logger> logger) {
+    // Check if directory exists
+    if (!fs::exists(dirpath) || !fs::is_directory(dirpath)) {
+        FileError error("Directory does not exist or is not a directory: " + dirpath.string());
+        error_handler->handle(error);
+        logger->error("Failed to process directory: " + dirpath.string());
+        return;
+    }
+
+    try {
+        error_handler->clearErrors();
+        for (auto it = fs::recursive_directory_iterator(dirpath); it != fs::recursive_directory_iterator(); ++it) {
+            const fs::path& entry_path = it->path();
+            
+            if (!exclude.empty() && fs::is_regular_file(entry_path) && matches_exclude_pattern(entry_path, exclude)) {
+                continue;
+            }
+            if (!exclude.empty() && fs::is_directory(entry_path) && matches_exclude_pattern(entry_path, exclude)) {
+                it.disable_recursion_pending();
+                continue;
+            }
+            if (fs::is_regular_file(entry_path)) {
+                // Process the file
+                process_single_file<ReturnType>(
+                    entry_path,
+                    processor,
+                    exclude,
+                    callback,
+                    ErrorHandlerFactory::createDefaultHandler(),
+                    LoggerFactory::createConsoleLogger()
+                );
+            }
+        }
+
+        // Report results
+        auto errors = error_handler->getErrorMessages();
+        if (errors.empty()) {
+            logger->info("Successfully processed all files in directory: " + dirpath.string());
+        } else {
+            logger->warning("Finished processing directory with " + std::to_string(errors.size()) + " errors: " + dirpath.string());
+            for (const auto& error : errors) {
+                logger->error(error);
+            }
+        }
+    } catch (const std::exception& e) {
+        ProcessingError error(e.what());
+        error_handler->handle(error);
+        logger->error("Failed to process directory: " + dirpath.string() + " - " + std::string(e.what()));
+    } catch (...) {
+        ProcessingError error("Unknown error occurred");
+        error_handler->handle(error);
+        logger->error("Failed to process directory: " + dirpath.string() + " - Unknown error occurred");
+    }
+}
+
+bool FileProcessor::matches_exclude_pattern(const fs::path& path, const std::string& exclude) {
+    if (exclude.empty()) {
+        return false;
+    }
+
+    // Simple pattern matching implementation
+    // This is a simplified version - in a real implementation, you might want to use
+    // a more robust glob matching library
+
+    std::string path_str = path.string();
+    // Check if the exclude pattern is in the path
+    return path_str.find(exclude) != std::string::npos;
+}
+```
+
+文件名: src/Logger. cpp
+```cpp
+#include "Logger.h"
+#include <ctime>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
+
+void ConsoleLogger::log(Logger::Level level, const std::string& message) {
+    // Get current time
+    auto now = std::time(nullptr);
+    auto local_time = std::localtime(&now);
+
+    // Format time
+    std::ostringstream time_stream;
+    time_stream << std::put_time(local_time, "%Y-%m-%d %H:%M:%S");
+
+    // Map level to string
+    std::string level_str;
+    switch (level) {
+        case Level::DEBUG:
+            level_str = "DEBUG";
+            break;
+        case Level::INFO:
+            level_str = "INFO";
+            break;
+        case Level::WARNING:
+            level_str = "WARNING";
+            break;
+        case Level::ERROR:
+            level_str = "ERROR";
+            break;
+    }
+
+    // Print log message
+    std::cout << "[" << time_stream.str() << "] [" << level_str << "] " << message << std::endl;
+}
+
+std::unique_ptr<Logger> LoggerFactory::createConsoleLogger() {
+    return std::make_unique<ConsoleLogger>();
+}
+```
+
+文件名: src/Error_handler. cpp
+```cpp
+#include "Error_handler.h"
+#include <iostream>
+
+void DefaultErrorHandler::handle(const Error& error) {
+    std::string errorMessage = error.getMessage();
+    errorMessages.push_back(errorMessage);
+    std::cerr << errorMessage << std::endl;
+}
+
+std::unique_ptr<ErrorHandler> ErrorHandlerFactory::createDefaultHandler() {
+    return std::make_unique<DefaultErrorHandler>();
+}
+```
+
+文件处理器提供了处理文件和目录的工具。
+
+#### 设计模式
+- **模板设计**：支持任何具有不同返回类型的处理器函数
+- **策略模式**：处理器函数可以为不同操作定制
+- **观察者模式**：回调函数用于后处理操作
+
+#### 特性
+1. `process_single_file`：使用自定义处理器函数处理单个文件
+2. `process_directory`：递归处理目录中的所有文件
+3. 排除模式支持，跳过某些文件/目录
+4. 回调支持，用于后处理操作
+5. 集成错误处理和日志记录
+
+#### 使用方法
+```cpp
+// 处理单个文件
+FileProcessor::process_single_file(
+    filepath,
+    processor_function,
+    callback_function,
+    error_handler,
+    logger
+);
+
+// 处理目录
+FileProcessor::process_directory(
+    dirpath,
+    processor_function,
+    exclude_pattern,
+    callback_function,
+    error_handler,
+    logger
+);
+```
+
+#### 实现细节
+
+#### 文件处理器中的模板设计
+
+文件处理器使用模板来处理任何处理器函数返回类型：
+
+```cpp
+template<typename ReturnType>
+using ProcessorFunc = std::function<ReturnType(const fs::path&)>;
+
+template<typename ReturnType>
+static void process_single_file(
+    const fs::path& filepath,
+    ProcessorFunc<ReturnType> processor,
+    CallbackFunc callback = [](const fs::path&) {},
+    std::unique_ptr<ErrorHandler> error_handler = ErrorHandlerFactory::createDefaultHandler(),
+    std::unique_ptr<Logger> logger = LoggerFactory::createConsoleLogger()
+);
+```
+
+这种设计允许文件处理器与返回任何类型的处理器函数配合使用，同时保持类型安全。
+
+#### 与工具的集成
+
+在工具中使用工具库：
+
+1. 在 CMakeLists. txt 中添加库作为依赖：
+```cmake
+target_link_libraries(your_tool PRIVATE utils)
+```
+
+2. 包含必要的头文件：
+```cpp
+#include "File_processor.h"
+#include "Logger.h"
+#include "Error_handler.h"
+```
+
+3. 根据需要使用组件：
+```cpp
+auto logger = LoggerFactory::createConsoleLogger();
+auto error_handler = ErrorHandlerFactory::createDefaultHandler();
+
+FileProcessor::process_single_file(
+    filepath,
+    processor_function,
+    callback_function,
+    std::move(error_handler),
+    std::move(logger)
+);
+```
+
+在代码中使用组件示例
+```cpp
+// 创建日志记录器和错误处理器
+auto logger = LoggerFactory::createConsoleLogger();
+auto error_handler = ErrorHandlerFactory::createDefaultHandler();
+
+// 处理文件
+FileProcessor::process_single_file<ReturnType>(
+    filepath,
+    your_processor_function,
+    "exclude_pattern",  // 可选的排除模式
+    your_callback_function,  // 可选的回调函数
+    std::move(error_handler),
+    std::move(logger)
+);
+```
+
 ## 计算文件哈希码
 ### C++方法汇总
 | 方法                | 执行时间 | 内存占用 | 跨平台 | 依赖        |
@@ -2275,9 +2807,3 @@ std::string calculateMD5_PicoSHA(const std::string& filename) {
     return picosha2::hash256_hex_string(buffer);
 }
 ```
-=======
-```
->>>>>>> 035b40efc510dbdf75916601d2cebe96f9b7e536
-=======
-```
->>>>>>> 035b40efc510dbdf75916601d2cebe96f9b7e536
