@@ -1,8 +1,0 @@
-.obsidian
-<<<<<<< HEAD
-.trash
-
-.obsidian\copilot-index-184aa077df08b90ac9fe282cceaa325e.json
-.trash
-
-
