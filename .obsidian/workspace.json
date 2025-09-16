@@ -67,8 +67,7 @@
               "title": "刷题路线"
             }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "vertical"
@@ -241,7 +240,7 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "10f61217b1dee613",
+  "active": "f4227ad9e43760be",
   "lastOpenFiles": [
     "学习/algorithm/刷题路线.md",
     "学习/algorithm/题型分类.md",
