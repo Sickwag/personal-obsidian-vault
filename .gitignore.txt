@@ -2,10 +2,7 @@
 <<<<<<< HEAD
 .trash
 
-.obsidian/workspace.json
-.obsidian/workspaces.json
-.obsidian/plugins/*/data.json
 .obsidian\copilot-index-184aa077df08b90ac9fe282cceaa325e.json
-=======
 .trash
->>>>>>> 035b40efc510dbdf75916601d2cebe96f9b7e536
+
+
