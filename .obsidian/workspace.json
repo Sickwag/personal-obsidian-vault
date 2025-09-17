@@ -52,7 +52,8 @@
               "title": "刷题路线"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -235,11 +236,11 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "66277f87dfa6808f",
+  "active": "10f61217b1dee613",
   "lastOpenFiles": [
+    "学习/algorithm/用法导向知识.md",
     "学习/algorithm/刷题路线.md",
     "学习/algorithm/题型分类.md",
-    "学习/algorithm/用法导向知识.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Files & LongText/Attachments/Pasted image 20250917093842.png",
     "Files & LongText/Attachments/Pasted image 20250917092227.png",
