@@ -2201,9 +2201,6 @@ int main() try {
     std::cerr << "Exception: " << e.what() << std::endl;
     return 1;
 }
-
-<<<<<<< HEAD
-<<<<<<< HEAD
 ```
 ## 通用文件遍历接口
 ### C++实现
