@@ -52,8 +52,7 @@
               "title": "刷题路线"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -215,13 +214,11 @@
               "title": "Advanced Tables"
             }
           }
-        ],
-        "currentTab": 6
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -238,10 +235,10 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "10f61217b1dee613",
+  "active": "66277f87dfa6808f",
   "lastOpenFiles": [
-    "学习/algorithm/题型分类.md",
     "学习/algorithm/刷题路线.md",
+    "学习/algorithm/题型分类.md",
     "学习/algorithm/用法导向知识.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Files & LongText/Attachments/Pasted image 20250917093842.png",
