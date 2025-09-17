@@ -4,5 +4,6 @@
   "interfaceFontFamily": "Cascadia Mono,JetBrains Mono",
   "monospaceFontFamily": "JetBrains Mono",
   "baseFontSizeAction": true,
-  "nativeMenus": false
+  "nativeMenus": false,
+  "baseFontSize": 17
 }
