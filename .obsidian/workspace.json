@@ -38,18 +38,18 @@
             }
           },
           {
-            "id": "10f61217b1dee613",
+            "id": "1f698623bfbc7da8",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "未命名.md",
+                "file": "学习/algorithm/刷题路线.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "未命名"
+              "title": "刷题路线"
             }
           }
         ],
@@ -85,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "startIndex",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -106,11 +106,13 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -217,7 +219,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -234,11 +237,12 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "10f61217b1dee613",
+  "active": "1f698623bfbc7da8",
   "lastOpenFiles": [
-    "学习/algorithm/刷题路线.md",
-    "学习/algorithm/用法导向知识.md",
     "学习/algorithm/题型分类.md",
+    "学习/algorithm/用法导向知识.md",
+    "学习/algorithm/刷题路线.md",
+    "未命名.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Files & LongText/Attachments/Pasted image 20250917093842.png",
     "Files & LongText/Attachments/Pasted image 20250917092227.png",
@@ -262,7 +266,6 @@
     "学习/ProjectsStudy/FromProjects/servertech-chat.md",
     "学习/ProjectsStudy/FromDocs/FTXui 库.md",
     "学习/ProjectsStudy/FromProjects/httpd.md",
-    "未命名.md",
     "temp-clone/Files & LongText/Attachments/Tic-Tac-Toe.cpp",
     "temp-clone/Files & LongText/Attachments/PixPin_2025-08-12_17-18-44.mp4",
     "temp-clone/Files & LongText/Attachments/PixPin_2025-01-15_23-00-32.mp4",
