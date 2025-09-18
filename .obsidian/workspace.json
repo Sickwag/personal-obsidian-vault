@@ -43,13 +43,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/algorithm/刷题路线.md",
+                "file": "未命名.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "刷题路线"
+              "title": "未命名"
             }
           }
         ],
@@ -106,13 +106,11 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -238,8 +236,8 @@
   },
   "active": "10f61217b1dee613",
   "lastOpenFiles": [
-    "学习/algorithm/用法导向知识.md",
     "学习/algorithm/刷题路线.md",
+    "学习/algorithm/用法导向知识.md",
     "学习/algorithm/题型分类.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Files & LongText/Attachments/Pasted image 20250917093842.png",
