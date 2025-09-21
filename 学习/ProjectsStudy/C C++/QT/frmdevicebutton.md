@@ -64,4 +64,17 @@ private:
 ```
 在这个例子中，value 是一个整数属性，可以通过 `object->setProperty ("value", 42)` 或 QML 中的绑定来设置和读取。当值变化时，会发出 valueChanged 信号。
 ### 总结
-  
+
+| 参数         | 作用                   | 使用场景        |
+| ---------- | -------------------- | ----------- |
+| READ       | 指定读取属性值的函数           | 必须          |
+| WRITE      | 指定写入属性值的函数           | 可选（只读属性不需要） |
+| NOTIFY     | 指定属性变化时发出的信号         | 属性绑定、QML 集成 |
+| RESET      | 指定重置属性的函数            | Qt Designer |
+| DESIGNABLE | 控制 Qt Designer 中是否可见 | UI 设计       |
+| SCRIPTABLE | 控制脚本引擎中是否可见          | 脚本集成        |
+| STORED     | 控制是否存在属性值            | 序列化         |
+| USER       | 标记用户可见的主要属性          | Qt Designer |
+| CONSTANT   | 表示只读常量属性             | 配置信息        |
+| FINAL      | 表示属性不会被重写            | 性能优化        |
+| REQUIRED   | 表示 QML 中必需的属性        | QML 组件      |
