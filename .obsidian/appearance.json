@@ -6,7 +6,5 @@
   "baseFontSizeAction": true,
   "nativeMenus": false,
   "baseFontSize": 16,
-  "enabledCssSnippets": [
-    "export-to-pdf"
-  ]
+  "enabledCssSnippets": []
 }
