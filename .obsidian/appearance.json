@@ -5,5 +5,8 @@
   "monospaceFontFamily": "JetBrains Mono",
   "baseFontSizeAction": true,
   "nativeMenus": false,
-  "baseFontSize": 16
+  "baseFontSize": 16,
+  "enabledCssSnippets": [
+    "export-to-pdf"
+  ]
 }

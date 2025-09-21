@@ -1,0 +1,34 @@
+/* 专门针对打印（PDF导出）的样式 */
+@media print {
+  
+  /* 将页边距设置为最小 */
+  .print {
+    margin: 0 !important;
+    padding: 0.5in !important; /* 可选：为内容增加一点内边距，避免贴边 */
+  }
+  
+  /* 调整页面大小和方向（A4纵向是默认值） */
+  /* 如果你想强制横向打印，可以取消注释下面的代码 */
+  /*
+  @page {
+    size: landscape;
+  }
+  */
+  
+  /* 确保代码块等元素有背景色（浏览器打印时默认会忽略） */
+  pre, code, table {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* 调整字体大小，以便在更小的页面空间内容纳更多内容 */
+  body {
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+  }
+  
+  /* 隐藏一些不需要打印的元素，比如侧边栏、编辑按钮等 */
+  .sidebar, .view-action, .community-plugin-search-modal {
+    display: none !important;
+  }
+}

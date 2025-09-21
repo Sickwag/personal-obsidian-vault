@@ -6,5 +6,11 @@
   "newFileLocation": "current",
   "attachmentFolderPath": "Files & LongText/Attachments",
   "newLinkFormat": "relative",
-  "spellcheck": false
+  "spellcheck": false,
+  "pdfExportSettings": {
+    "pageSize": "A4",
+    "landscape": false,
+    "margin": "1",
+    "downscalePercent": 100
+  }
 }
