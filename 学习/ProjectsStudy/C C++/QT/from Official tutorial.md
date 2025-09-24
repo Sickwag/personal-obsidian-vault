@@ -238,3 +238,58 @@ private:
 - 可以使用 `QMetaObject::Connection` 接收 connect 函数的结果，`if(!conn)` 判断链接结果成功与否
 - Qt 的信号槽连接是"一对多"的，一个信号可以连接到多个槽函数。当信号发出时，Qt 会依次调用所有连接的槽函数，但槽函数本身并不知道是通过哪个信号触发的。
 - 槽函数可以是任意一个 `doSomething` 函数，甚至可以是 lambda 表达式
+## QCalendarWidget
+[Calendar Widget Example | Qt Widgets | Qt 6.9.1](https://doc.qt.io/qt-6/zh/qtwidgets-widgets-calendarwidget-example.html)
+主要学习嵌套布局
+### 嵌套布局中布局
+本项目有有这几个 GUI 显示区域
+![[../../../../Files & LongText/Attachments/Pasted image 20250924105442.png]]
+左上角的可显示区域由于实时渲染，调整右侧的一些选项（如 `Grid`）是否勾选，会导致左侧布局大小改变带动整个窗口改变，所以在构造函数中需要**根据需要限制**，确保更新时不调整大小。
+#### qt 中基础 GUI 组件
+一、基础控件 (Basic Widgets)
+1. QLabel - 标签
+2. QPushButton - 按钮
+3. QCheckBox - 复选框
+4. QRadioButton - 单选按钮
+5. QLineEdit - 单行文本框
+6. QTextEdit - 多行文本编辑框
+二、选择控件 (Selection Widgets)
+7. QComboBox - 组合框，下拉选框
+8. QSpinBox - 数值选择框
+9. QDoubleSpinBox - 浮点数选择框
+10. QSlider - 滑块
+11. QProgressBar - 进度条
+三、显示控件 (Display Widgets)
+12. QLCDNumber - LCD 数字显示器
+13. QProgressBar - 进度条
+14. QCalendarWidget - 日历控件
+四、容器控件 (Container Widgets)
+15. QGroupBox - 组框
+16. QFrame - 框架
+17. QScrollArea - 滚动区域
+18. QToolBox - 工具箱
+19. QTabWidget - 标签页控件
+五、布局控件 (Layout Widgets)
+20. QLayout - 布局管理器
+21. QSplitter - 分割条
+六、数据控件 (Data Widgets)
+22. QTableWidget - 表格控件
+23. QTreeWidget - 树形控件
+24. QListWidget - 列表控件
+七、重要 Qt 概念说明
+25. QLocale - 本地化类
+26. QDate - 日期类
+27. QDateEdit - 日期编辑控件
+#### 组件助记符
+在 Qt 中，&符号在文本中有着特殊的含义，它用于创建键盘快捷键（Keyboard Accelerator）或助记符（Mnemonic），如果在创建组件时，在它的显示文本中使用 `&`
+```cpp
+selectionModeLabel = new QLabel(tr("&Selection mode:"));
+selectionModeLabel->setBuddy(selectionModeCombo);
+```
+- 文本显示为："Selection mode: "（没有&符号）
+- 字母 "S" 会带下划线显示
+- 用户可以按 Alt + S 快速将焦点移到 selectionModeCombo 下拉框上
+如果想要显示 "&" 字符，则需要代码中写入 `&&`，如果要在 windows 中没有显示出下划线（一般 windows 10/11 之后默认不显示，只有按下 ALT + 激活按键之后才会显示）则需要在控制面板中设置"•	控制面板 → 轻松使用 → 使键盘更易于使用 → “启用以便于访问的下划线快捷键”
+
+![[../../../../Files & LongText/Attachments/Pasted image 20250924120532.png]]
+
