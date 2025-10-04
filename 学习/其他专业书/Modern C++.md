@@ -265,6 +265,41 @@ int main(){
 - 构造的对象必须在 `constexpr` 上下文中被析构（内存必须编译期释放）
 - 不能“逃逸”出编译期（比如返回一个带有堆内存的对象）
 - 你可以在编译期用它计算结果，但**不能在运行期使用编译期动态分配的对象**
+#### 补充：consteval 关键字
+1. constexpr 函数
+- 可能在编译期求值，也可能在运行时求值
+- 编译期：当用在常量表达式上下文中
+- 运行时：当用在非常量表达式上下文中
+```cpp
+constexpr int square(int x) {
+    return x * x;
+}
+
+int main() {
+    // 这些会在编译期计算
+    constexpr int a = square(5);     // ✅ 编译期
+    int arr[square(4)];              // ✅ 编译期作为数组大小
+ 	// 这个会在运行时计算
+    int runtime_value = 10;
+    int result = square (runtime_value);  // ✅ 运行时（因为参数不是常量表达式）
+}
+```
+
+2. consteval 函数
+- 必须在编译期求值
+- 如果不能在编译期求值，编译失败
+```cpp
+consteval int compile_time_only(int x) {
+    return x * x;
+}
+int main() {
+    constexpr int a = compile_time_only(5);  // ✅ 编译期
+    int runtime_value = 10;
+    // int result = compile_time_only(runtime_value);  // ❌ 编译错误！
+     // 因为 runtime_value 不是编译期常量，无法在编译期求值
+}
+```
+
 ### if/switch 变量声明强化
 现在 if 和 Switch语句的 `()` 中可以定义临时变量，作用域仅仅在对应语句中
 ```cpp

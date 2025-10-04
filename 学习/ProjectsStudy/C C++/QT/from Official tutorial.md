@@ -241,7 +241,7 @@ private:
 ## QCalendarWidget
 [Calendar Widget Example | Qt Widgets | Qt 6.9.1](https://doc.qt.io/qt-6/zh/qtwidgets-widgets-calendarwidget-example.html)
 主要学习嵌套布局
-### 嵌套布局中布局
+### 嵌套布局中的组件排布
 本项目有有这几个 GUI 显示区域
 ![[../../../../Files & LongText/Attachments/Pasted image 20250924105442.png]]
 左上角的可显示区域由于实时渲染，调整右侧的一些选项（如 `Grid`）是否勾选，会导致左侧布局大小改变带动整个窗口改变，所以在构造函数中需要**根据需要限制**，确保更新时不调整大小。
@@ -292,4 +292,222 @@ selectionModeLabel->setBuddy(selectionModeCombo);
 如果想要显示 "&" 字符，则需要代码中写入 `&&`，如果要在 windows 中没有显示出下划线（一般 windows 10/11 之后默认不显示，只有按下 ALT + 激活按键之后才会显示）则需要在控制面板中设置"•	控制面板 → 轻松使用 → 使键盘更易于使用 → “启用以便于访问的下划线快捷键”
 
 ![[../../../../Files & LongText/Attachments/Pasted image 20250924120532.png]]
+
+#### QWidget 组件的 addItem 方法
+QComboBox:: addItem 方法的第二个参数是一个 QVariant 类型的用户数据，用于存储与该选项关联的自定义数据。
+```cpp
+// 假设我们做一个语言选择的下拉框
+QComboBox *comboBox = new QComboBox();
+
+// 方法2：添加文本和自定义数据（推荐）
+comboBox->addItem("中文", QVariant("zh_CN"));    // 第二个参数是内部语言代码
+comboBox->addItem("English", QVariant("en_US"));  // 第二个参数是内部语言代码
+comboBox->addItem("Español", QVariant("es_ES"));  // 第二个参数是内部语言代码
+
+connect(comboBox, &QComboBox::currentIndexChanged, this, &Window::languageChanged);
+```
+第一个参数，也就是下拉选项，只需要显示一个名称
+
+> 所以只填入一个 QString 对象即可
+
+然后程序，或者说界面组件如何知道 Combo 组件状态发生改变这一信息？
+
+> 这个选项**被选中时**，整个 QCombo 对象的状态会改变（自身 currentIndex 变量发生改变的同时发出 `QCombo::currentIndexChanged(currentIndex)` 信号）
+
+`currentIndexChange` 函数具体 change 到了哪一个 index ？
+
+> 我们为一个 QComobox addItem 之后，相当于添加了一个**具有自定义标签数值**的选项，如果选中了这个选项，QComboBox 组件会自动将自身状态中的 `currentIndex`（可以通过调用同名函数返回其副本）更新为组件的自定义标签数值，并将其作为参数传给 connect 连接的槽函数中
+> 第二个参数的作用：
+> - 它不是让"第一个参数具有值"
+> - 而是让当前索引位置关联一个额外的数据
+> - 这个数据可以通过 `QCombo::itemData(index)` 获取
+```cpp
+// 索引 0: text="Monday", userData=Qt::Monday
+// 索引 1: text="Tuesday", userData=Qt::Tuesday
+comboBox->addItem ("Monday", Qt::Monday);
+comboBox->addItem ("Tuesday", Qt::Tuesday);
+// 1. 存储业务逻辑ID
+comboBox->addItem("管理员", QVariant(1));  	// 管理员权限ID
+comboBox->addItem("用户", QVariant(2));  	// 用户权限ID
+comboBox->addItem("访客", QVariant(3));  	// 访客权限ID
+
+// 在槽函数中使用
+void onUserTypeChanged(int index) {
+    int userType = comboBox->itemData
+      (index).toInt(); // 获取权限ID
+    switch(userType) {
+        case 1: setupAdminFeatures(); break;
+        case 2: setupUserFeatures(); break;
+        case 3: setupGuestFeatures(); break;
+    }
+}
+
+// 2. 存储配置信息
+struct LocaleConfig {
+    QString languageCode;
+    QString countryCode;
+    QString displayName;
+    QFont font;
+};
+
+// 注册自定义类型
+Q_DECLARE_METATYPE(LocaleConfig)
+// 添加项目时存储完整配置
+LocaleConfig config1 = {"zh", "CN", "中文", QFont("SimSun")};
+QVariant var1 = QVariant::fromValue(config1);
+comboBox->addItem("中文", var1);
+
+// 3. 避免字符串比较的性能问题，不用字符串比较（低效且容易出错）
+void onTextChanged(const QString& text) {
+    if(text == "English (US)") { /* ... */ }  // 依赖精确字符串匹配
+    else if(text == "中文") { /* ... */ }
+}
+
+// 使用QVariant存储的ID（高效且安全）
+void onIndexChanged(int index) {
+    int languageId = comboBox->itemData(index).toInt();
+    switch(languageId) {
+        case LANG_EN_US: loadEnglishUSResources(); 			break;
+        case LANG_ZH_CN: loadChineseSimplifiedResources(); 	break;
+    }
+}
+
+// 4. 实际应用场景示例
+class LanguageSettings : public QWidget {
+    Q_OBJECT
+private:
+    QComboBox *languageCombo;
+
+public:
+    LanguageSettings() { setupLanguageCombo(); }
+private:
+    void setupLanguageCombo() {
+        // 添加语言选项，每个都关联对应的locale字符串
+        languageCombo->addItem("English", QVariant("en_US"));
+        languageCombo->addItem("简体中文", QVariant("zh_CN"));
+        languageCombo->addItem("繁體中文", QVariant("zh_TW"));
+        languageCombo->addItem("日本語", QVariant("ja_JP"));
+        connect(languageCombo, QOverload<      int>::of(&QComboBox::currentIndexChanged), this, &LanguageSettings::changeApplicationLanguage);
+        }
+private slots:
+    void changeApplicationLanguage(int index) {
+        QString locale = languageCombo->itemData(index).toString();
+        if (!translator.load(":/translations/app_" + locale)) {
+            qDebug() << "Failed to load translation for" << locale;
+        }
+        qApp->installTranslator(&translator);
+        QLocale::setDefault(QLocale(locale));
+    }
+};
+```
+
+由于槽函数在本项目中只使用了函数指针，并没有暴露函数的签名，那么再有多个槽函数重载的情况下编译器如何确定使用哪一个重载？
+
+> 有两种方法：
+> 1. 编译器进行类型匹配，从 QT 元对象的链接表中自动遍历所有名为 `languageChanged` 的槽函数，信号函数会将这个索引广播出去 `languageChanged(itemData(currentIndex).toInt())`，由于 `itemDate()` 返回值为 `auserData`，是一个 `QVariant` 类型需要转换为 int，编译器找到类型匹配（接受 int 参数）的那一个重载（使用 SFINAE 机制在编译期查找）。
+> 2. 如果有多个接受相同参数的重载函数，比如 `QVariant` 是 int 类型，槽函数有 `int\long` 类型重载，**则会报错**
+> 
+> 可以通过多种方式指定需要使用哪一个重载函数处理发送过来的信号  
+1. 旧式字符串语法：
+```cpp
+connect (comboBox, SIGNAL (currentIndexChanged (int)),
+	  this, SLOT (WindowlocaleChanged (int)));
+```
+2. 现代函数指针语法：
+```cpp
+// 需要使用 qOverload 来指明使用哪个重载版本
+connect (comboBox, QOverload<int>:: of (&QComboBox::currentIndexChanged), this, qOverload<int>(&Window::WindowlocaleChanged));
+```
+3. 使用 lambda 表达式明确指定
+```cpp
+// 如果 WindowlocaleChanged 有多个重载版本
+void Window:: WindowlocaleChanged (int index);
+void Window:: WindowlocaleChanged (const QString &text);
+
+connect (comboBox, &QComboBox:: currentIndexChanged, this, this (int index) { this->WindowlocaleChanged (index); });
+```
+4. 使用强制类型转换
+```cpp
+// 需要显式指定使用哪个版本
+connect(firstDayCombo, &QComboBox::currentIndexChanged, this, static_cast<void (Window::*)(int)>(&Window::firstDayChanged));
+```
+### 组件和布局初始化
+可以观察到，每一个 `create.....GroupBox` 函数需要
+- 开始创建所有组件
+- 组装所有组件
+- 设置组件之间的联系，包括 connect 函数连接和槽函数设计
+- 将所有组件排列放入布局中
+- **初始化组件和布局默认值**
+以 `createGenralGroupBox` 为例：
+```cpp
+void Window::createGeneralOptionsGroupBox() {
+	generalOptionsGroupBox = new QGroupBox(tr("General Options"));
+	// 设置每一个标签和下拉列表
+	localeLabel = new QLabel(tr("&Locale"));
+	// 组装组件
+	localeLabel->setBuddy(localeCombo);
+
+	// 设置组件之间的联系
+	connect(localeCombo, &QComboBox::currentIndexChanged,
+			this, &Window::localeChanged);
+	// 设置子布局，复选框组装设置和布局设置，最终会被当做"组件"添加到外部布局中，叫做outerLayout
+	QHBoxLayout* checkBoxLayout = new QHBoxLayout;
+	checkBoxLayout->addWidget(gridCheckBox);
+	checkBoxLayout->addStretch();
+	checkBoxLayout->addWidget(navigationCheckBox);
+	
+	// 将所有组件放入布局中
+	QGridLayout* outerLayout = new QGridLayout;
+	outerLayout->addWidget(localeLabel, 0, 0);
+	generalOptionsGroupBox->setLayout(outerLayout);
+
+	// 手动初始化空间中的默认值，即程序打开后行为
+	firstDayChanged(firstDayCombo->currentIndex());
+	selectionModeChanged(selectionModeCombo->currentIndex());
+	horizontalHeaderChanged(horizontalHeaderCombo->currentIndex());
+	verticalHeaderChanged(verticalHeaderCombo->currentIndex());
+}
+```
+由于 connect 函数只负责连接信号和槽，而信号是在**运行时用户发出动作**之后广播。所有组件刚打开时显示的是**连接组件时的默认值**，而实际值**由初始化函数定义**
+![[Pasted image 20250925103623.png|正常显示]]
+```cpp
+	firstDayChanged(firstDayCombo->currentIndex()+1);
+	selectionModeChanged(selectionModeCombo->currentIndex()+1);
+	horizontalHeaderChanged(horizontalHeaderCombo->currentIndex()+1);
+	verticalHeaderChanged(verticalHeaderCombo->currentIndex()+1);
+```
+![[Pasted image 20250925103614.png|将所有index+1]]
+如果下拉 Week starts on，仍旧选择 Sunday，则会恢复正常。
+
+## TextFinder
+[Tutorial: Qt Widgets application | Qt Creator Documentation](https://doc.qt.io/qtcreator/zh/creator-writing-program.html)
+### QT 自动连接信号和槽
+
+Qt 中的自动信号和槽连接机制：
+在 Qt 中，如果你的槽函数遵循特定的命名约定`on_<object_name>_<signal_name>()`，Qt会自动将信号和槽连接
+- UI 文件中有一个名为 `findButton` 的按钮（在 `TextFinder.ui` 中定义）
+- 头文件中有一个名为 `on_findButton_clicked()` 的槽函数
+Qt 会自动将 findButton 的 clicked() 信号连接到`on_findButton_clicked()` 槽函数。这是一种 Qt的约定，称为自动连接（Auto-Connection）。
+关于高亮显示文本：
+
+> [!NOTE]
+> Qt 的 QTextEdit::find() 方法本身就会高亮显示找到的文本。当 `find()`方法找到匹配的文本时，它会：
+> 1. 将文本编辑器的光标移动到找到的文本位置
+> 2. 自动选择（高亮）该文本段
+> 这是 Qt 的内置行为，您无需额外编写代码来实现高亮效果。
+
+### QT 资源文件在 MSBuild 环境下的连接方式
+如果是常规 CMake 或者 Qmake 构建系统创建的项目，引入资源文件之后需要在 CMakeLists.txt 文件中写入
+```cmake
+set(PROJECT_SOURCES
+        main.cpp
+        textfinder.cpp
+        textfinder.h
+        textfinder.ui
+        ${TS_FILES}
+        textfinder.qrc
+)
+```
+才能够将文件引入项目，打包到二进制文件中
+在 MSBuild 中，在 qrc 和 ui 文件中编辑之后，**一定要按 Ctrl+s**保存，之后 vxproj 文件中会自动将这两个文件中的内容引入。不需要写 CMakeLists. txt，并且写了 MSBuild 也无法读取
 
