@@ -72,3 +72,8 @@ started 3 plugins.
 "C_Cpp.intelliSenseEngine": "default", // 调整为
 "C_Cpp.intelliSenseEngine": "disabled",
 ```
+
+## 关闭 ipch 文件生成
+2025 年 10 月 9 日13:20:38
+参考： [VisualStudio 产生的.sdf和.ipch文件删除、不生成 - 悟透 - 博客园](https://www.cnblogs.com/wutou/p/18367491)
+据说删除之后会影响 intellisense 的速度

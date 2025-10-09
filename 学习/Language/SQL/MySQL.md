@@ -3623,11 +3623,13 @@ catch (sql::SQLException& e) {
 }
 ```
 
-    CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-	    name varchar(255) not null,
-	     age int not null
-    );
+```sql
+CREATE TABLE IF NOT EXISTS users (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	name varchar(255) not null,
+	 age int not null
+);
+```
 #### 8. 直接提交 sql 脚本
 ```cpp
 void MySQLDB::executeFromFile(const std::string& filePath) {
