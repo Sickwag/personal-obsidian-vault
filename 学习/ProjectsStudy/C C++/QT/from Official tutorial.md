@@ -199,14 +199,38 @@ button.installEventFilter(&filter);
 - 用户可见字符串通常会被翻译，并通过 [QObject::tr](https://doc.qt.io/qt-6/zh/qobject.html#tr) () 函数传递。该函数接收字符串字面量（const char 数组），并按照所有用户界面元素的要求返回带有 **UTF-16 编码的 [QString](https://doc.qt.io/qt-6/zh/qstring.html)** 。如果不使用翻译基础结构，则应在整个应用程序中使用 UTF-16 编码。字符串字面量 `u"foo"` 创建 UTF-16 字符串字面量，或使用 Qt XML 特有的字面量 `u"foo"_s` 直接创建 [QString](https://doc.qt.io/qt-6/zh/qstring.html)，和使用 `QString` 构造函数创建的对象一致，都使用 UTF-16
 - 在处理 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 的部分内容时，不要将每部分内容复制到自己的 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 对象中，而是创建 [QStringView](https://doc.qt.io/qt-6/zh/qstringview.html) 对象。这些对象可以使用 [QStringView::toString](https://doc.qt.io/qt-6/zh/qstringview.html#toString) () 转换回 [QString](https://doc.qt.io/qt-6/zh/qstring.html) ，但应尽量避免这样做。如果函数返回 [QStringView](https://doc.qt.io/qt-6/zh/qstringview.html) ，那么尽可能继续使用该类是最有效的做法。API 类似于常量 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 。
 ### QT 中的字符串编码
+参阅[Qt 中的 Unicode 支持信息](https://doc.qt.io/qt-6/zh/unicode.html)。
 编码方面，Qt 以某种形式支持 UTF-16、UTF-8、Latin-1（ISO 8859-1）和 US-ASCII（即 Latin-1 和 UTF-8 的通用子集）。
 - Latin-1 是一种字符编码，每个字符使用一个字节，这使它成为最有效但也是最有限的编码。
 - UTF-8 是一种可变长度字符编码，使用一至四个字节对所有字符进行编码。它向后兼容 US-ASCII，是源代码和类似文件的常用编码。Qt 假定源代码使用 UTF-8 编码。
 - UTF-16 是一种可变长度编码，每个字符使用两个或四个字节。它是 Qt 中用户公开文本的常用编码。
 
-更多信息，请参阅[Qt 中的 Unicode 支持信息](https://doc.qt.io/qt-6/zh/unicode.html)。
+其他编码以单个函数（如 [QString::fromUcs4](https://doc.qt.io/qt-6/zh/qstring.html#fromUcs4) () 或 [QStringConverter](https://doc.qt.io/qt-6/zh/qstringconverter.html) 类）的形式提供支持。此外，Qt 还提供了一个与编码无关的数据容器 [QByteArray](https://doc.qt.io/qt-6/zh/qbytearray.html) ，该容器非常适合存储二进制数据。
 
-其他编码以单个函数（如[QString::fromUcs4](https://doc.qt.io/qt-6/zh/qstring.html#fromUcs4)() 或[QStringConverter](https://doc.qt.io/qt-6/zh/qstringconverter.html) 类）的形式提供支持。此外，Qt 还提供了一个与编码无关的数据容器[QByteArray](https://doc.qt.io/qt-6/zh/qbytearray.html) ，该容器非常适合存储二进制数据。
+不同编码之间的转换成本很高，因此应尽量避免。另一方面，**更紧凑的编码**（尤其是字符串字面量而不是字符串对象）可以减少二进制文件的大小，从而提高性能。
+### 字符串视图和字符串对象区别
+字符串类可根据其支持的功能进一步区分。其中一个主要区别是：**字符串类是拥有并控制其数据，还是仅仅引用其他地方的数据**，这就为了对象和视图两个概念
+- 前者称为**拥有器**，后者称为**非拥有容器**或视图。非自有容器类型通常只记录一个指向数据起始位置及其大小的指针，因此轻便而廉价，但只要数据仍然可用，它就一直有效。
+- 视图通常支持所有者字符串功能的子集，但无法修改底层数据。
+### 字符串字面量
+C++标准中定义的字符串字面量在**编译期实现**，由语言定义，或者由 qt 告诉。
+标准 C++中支持的前缀，以 `R`、`u`、`U`、`LR`、`u8`、`u8R` 等形式出现。qt 告诉的比标准多一个后缀，
+
+| 前缀 | 类型 | 说明 | 示例 |
+| :--- | :--- | :--- | :--- |
+| `(无)` | `const char[]` | 普通/窄字符串，编码取决于编译器，通常是本地编码（如 Windows-1252, Latin-1）或 UTF-8。 | `"Hello"` |
+| `u8` | `const char8_t[]` (C++20) | UTF-8 编码的窄字符串。**从 C++20 开始，`char8_t` 是独立的字符类型**。在 C++17 及之前，它产生的类型是 `const char[]`。 | `u8"你好"` |
+| `u` | `const char16_t[]` | UTF-16 编码的字符串。通常用于 Windows API 或其他原生使用 UTF-16 的系统。 | `u"Привет"` (俄语 "你好") |
+| `U` | `const char32_t[]` | UTF-32 编码的字符串。拥有固定宽度的字符，便于处理任意字符。 | `U"こんにちは"` (日语 "你好") |
+qt 中有如 `u"foo"_s` （用于 [QString](https://doc.qt.io/qt-6/zh/qstring.html) ）、`"foo"_L1` （用于 [QLatin1StringView](https://doc.qt.io/qt-6/zh/qlatin1stringview.html) ）和 `u"foo"_ba` （用于 [QByteArray](https://doc.qt.io/qt-6/zh/qbytearray.html) ）。这些都是通过使用 [StringLiterals Namespace](https://doc.qt.io/qt-6/zh/qt-literals-stringliterals.html) 提供的，需要使用 `using namespace Qt::Literals::StringLiterals;` 才能够使用
+
+| 编码     | C++ 字符串字面 | Qt 用户定义字面量 | C++ 字符    | Qt 字符                                                     | 自有字符串                                                   | 非所有字符串                                                                |
+| ------ | --------- | ---------- | --------- | --------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------- |
+| 拉丁-1   | -         | ""_L1      | -         | [QLatin1Char](https://doc.qt.io/qt-6/zh/qlatin1char.html) | -                                                       | [QLatin1StringView](https://doc.qt.io/qt-6/zh/qlatin1stringview.html) |
+| UTF-8  | u8""      | -          | char8_t   | -                                                         | -                                                       | [QUtf8StringView](https://doc.qt.io/qt-6/zh/qutf8stringview.html)     |
+| UTF-16 | u""       | u""_s      | char16_t  | [QChar](https://doc.qt.io/qt-6/zh/qchar.html)             | [QString](https://doc.qt.io/qt-6/zh/qstring.html)       | [QStringView](https://doc.qt.io/qt-6/zh/qstringview.html)             |
+| 二进制/无  | -         | ""_ba      | std::byte | -                                                         | [QByteArray](https://doc.qt.io/qt-6/zh/qbytearray.html) | [QByteArrayView](https://doc.qt.io/qt-6/zh/qbytearrayview.html)       |
+| 灵活     | 任何        | -          | -         | -                                                         | -                                                       | [QAnyStringView](https://doc.qt.io/qt-6/zh/qanystringview.html)       |
 # 项目实例
 ## AnalogClock
 ### QPainter 设置绘制原点和缩放
