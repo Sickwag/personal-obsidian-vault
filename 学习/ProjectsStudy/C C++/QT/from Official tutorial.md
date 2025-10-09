@@ -1,3 +1,40 @@
+# QT 官方文档原理讲解
+## 信号与插槽
+### 槽函数重载在 connect 函数中的表示方法
+[Signals & Slots | Qt Core | Qt 6.10.0](https://doc.qt.io/qt-6/zh/signalsandslots.html)
+当信号或槽被重载时（有多个不同参数的版本），需要使用函数指针语法明确指定要连接的版本。您可以使用[qOverload](https://doc.qt.io/qt-6/zh/qoverload.html#qOverload)() 或`static_cast` 来区分：
+```cpp
+// Connect to the int overload of QComboBox::currentIndexChanged(int)
+// 这一版本会自动在重载列表中寻找
+connect(comboBox, qOverload<int>(&QComboBox::currentIndexChanged),
+        this, &MyClass::handleIndexChanged);
+
+// Or select QLCDNumber::display(int) when connecting from QSlider::valueChanged(int)
+// 指定需要int类型作为参数的重载
+connect(slider, &QSlider::valueChanged,
+        lcd, qOverload<int>(&QLCDNumber::display));
+
+// Using static_cast (more verbose):
+/** static_cast转换，强调需要
+ * - 我要取的是 `QComboBox` 类的成员函数指针
+ * - 该函数返回 `void`
+ * - 接收 `int` 类型参数
+ */
+connect(comboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+        this, &MyClass::handleIndexChanged);
+
+// Or using a lambda to call the correct overload:
+// 最清晰的方法，自定义度和灵活性很高
+connect(slider, &QSlider::valueChanged,
+        this, [lcd](int value) { lcd->display(value); });
+```
+
+| 连接方式          | 可读性    | 安全性     | Qt 版本兼容性   | IDE 提示   |
+| ------------- | ------ | ------- | ---------- | -------- |
+| `static_cast` | ❌ 复杂语法 | ✅ 显式指定  | ✅ Qt 5+    | ⚠️ 智能提示弱 |
+| `QOverload`   | ✅ 类型安全 | ✅ 显式指定  | ✅ Qt 5.13+ | ✅        |
+| Lambda 包装     | ✅ 最清晰  | ❌ 多一层调用 | ✅ 全版本      | ✅        |
+### 带有默认参数的信号和插槽
 # 项目实例
 ## AnalogClock
 ### QPainter 设置绘制原点和缩放
