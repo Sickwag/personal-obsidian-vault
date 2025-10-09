@@ -35,6 +35,178 @@ connect(slider, &QSlider::valueChanged,
 | `QOverload`   | ✅ 类型安全 | ✅ 显式指定  | ✅ Qt 5.13+ | ✅        |
 | Lambda 包装     | ✅ 最清晰  | ❌ 多一层调用 | ✅ 全版本      | ✅        |
 ### 带有默认参数的信号和插槽
+信号和槽的签名可能包含参数，而参数可以有默认值。考虑[QObject::destroyed](https://doc.qt.io/qt-6/zh/qobject.html#destroyed)()：
+```cpp
+void destroyed(QObject* = nullptr);
+```
+当[QObject](https://doc.qt.io/qt-6/zh/qobject.html) 被删除时，它会发出[QObject::destroyed](https://doc.qt.io/qt-6/zh/qobject.html#destroyed)() 信号。我们要捕获这个信号，因为我们可能有一个指向已删除[QObject](https://doc.qt.io/qt-6/zh/qobject.html) 的悬空引用，这样我们就可以清理它。合适的槽签名可能是
+```cpp
+void objectDestroyed(QObject* obj = nullptr);
+```
+为了将信号连接到槽，我们使用[QObject::connect](https://doc.qt.io/qt-6/zh/qobject.html#connect)() 。有几种方法可以连接信号和槽。第一种是使用函数指针：
+```cpp
+connect(sender, &QObject::destroyed, this, &MyObject::objectDestroyed);
+```
+这仅限于 QT 6 风格的 connect 函数，如果使用旧版的 `SIGNAL` 和 `SLOT` 宏来**调用重载的方法**不行
+```cpp
+connect(sender, SIGNAL(destroyed(QObject*)), this, SLOT(objectDestroyed(Qbject*)));
+connect(sender, SIGNAL(destroyed(QObject*)), this, SLOT(objectDestroyed()));
+connect(sender, SIGNAL(destroyed()), this, SLOT(objectDestroyed()));
+connect(sender, SIGNAL(destroyed()), this, SLOT(objectDestroyed(QObject*))); // no way
+```
+如果需要细致调节 connect 函数执行的线程，则可以通过 connect 函数的第一个和第三个参数来调整，
+因为插槽期待的是 [QObject](https://doc.qt.io/qt-6/zh/qobject.html) ，而信号不会发送。该连接将报告运行时错误。在使用 [QObject::connect](https://doc.qt.io/qt-6/zh/qobject.html#connect) () 重载时，编译器不会检查信号和槽参数（使用 lambda 或者 dynamic_static 可以避免）。
+
+## 可绑定属性
+[Qt Bindable Properties | Qt Core | Qt 6.10.0](https://doc.qt.io/qt-6/zh/bindableproperties.html)
+### 实现示例
+Qt 的可绑定属性是一种**机制**，允许你将一个对象的属性（比如一个 `QString` 变量、一个 `int` 值、一个颜色等）与另一个对象的属性**连接**”或“**绑定**”在一起。
+#### qt 5 时期的属性绑定
+一个对象要成为一个“可绑定的属性”源，它需要满足下面的条件：
+1. **使用 `Q_PROPERTY` 宏声明属性**：它告诉 Qt 这个变量是一个可以被系统识别和访问的属性。具体参考 [[frmdevicebutton#Q_PROPERITY 属性声明宏|Q_PROPERITY 属性声明宏]]
+	- `READ`: 获取属性值的函数（必须有）。
+	- `WRITE`: 设置属性值的函数（可选，如果只有 READ，则属性是只读的）。
+	- `NOTIFY`: 当属性值被 `WRITE` 函数修改后，自动发出的信号（可选，但强烈推荐，没有它就无法实现绑定的自动更新）。
+	- `RESET`: 重置属性值的函数（可选）。
+	- 其他如 `SCRIPTABLE`, `DESIGNABLE`, `USER` 等。
+2. **提供 `READ` 和 `WRITE` 函数** 对于上面的 `name` 属性，我们需要在实现文件中定义 `name()` 和 `setName()` 函数。
+	- **关键点**：在 `setName()` 函数中，当值真的发生改变时，必须**发出 `nameChanged` 信号**。这绑定机制工作的核心。
+具体代码：
+```cpp
+// person.h
+#include <QObject>
+#include <QString>
+
+class Person : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+
+public:
+    explicit Person(QObject *parent = nullptr);
+
+    QString name() const;
+    void setName(const QString &newName);
+
+signals:
+    void nameChanged(const QString &newName);
+
+private:
+    QString m_name;
+};
+```
+需要时手动编写 setter 和 getter，并且手动 connect
+#### 现代 QT 6 写法
+```cpp
+```cpp
+QProperty<QString> firstname("John");
+QProperty<QString> lastname("smith");
+QProperty<int>age(41);
+QProperty<QString> fullname;
+fullname.setBinding([&]() {return firstname.value()+ " " +lastname.value() + " age: " QString::number(age.value()); })；
+qDebug() << fullname.value(); // Prints "John Smith age: 41"
+
+firstname= "Emma";// 触发绑定重新评估
+qDebug() << fullname.value(); // Prints the new value "Emma Smith age: 41"
+
+// 生日快到了age.setValue(age.value()+ 1);// 触发重新评估
+qDebug() << fullname.value(); // Prints "Emma Smith age: 42"
+```
+可以手动将一个**对象 A**标记为 Property，并附加在别的对象 B 上，使得 B 对象根据 A 对象动态更新，通常由于 `setBinding` 函数签名为：
+```cpp
+template <typename T>
+void QProperty<T>::setBinding(std::function<T()> bindingFunction);
+```
+lambda 函数编写**最好需要**遵循下面的要求
+
+| 法则          | 要求                  | 示例                                                                |
+| ----------- | ------------------- | ----------------------------------------------------------------- |
+| **无参数**     | 必须是 `[](){...}` 形式  | ✅ `[=](){ return price * quantity; }`<br>❌ `[](int value)`        |
+| **只读依赖**    | 仅读取其他属性，不修改         | ✅ `return price * quantity;`<br>❌ `price = 100; return quantity;` |
+| **无副作用**    | 不做网络请求/文件读写等        | ✅ `<int>()`                                                       |
+| **类型匹配**    | 返回值类型必须与属性一致        | ✅ `QProperty<double>` 接收 `double` 返回值                             |
+| **不可以循环绑定** | A 绑定给 B，那么 B 就不能绑回来 |                                                                   |
+还可以使用 `QBindable` 来实现属性绑定
+```cpp
+QBindable<T> bindable = QBindable<T>(&MyObject::age, this, &MyObject::ageChanged);
+```
+这段代码将this这个对象中的age属性和ageChanged函数绑定在一起，表示一旦age变量发生变化，就会执行ageChanged函数的逻辑。他必须和 `Q_PROPERTY` 一起才能发挥功能，且：
+1. **`Q_PROPERTY` 必须存在**：你必须在类中使用 `Q_PROPERTY` 宏声明该属性。
+2. **该属性必须有对应的信号**：即 `Q_PROPERTY` 声明时需要有 `NOTIFY` 标记的信号。
+#### 两者对比
+| 特性        | 传统 Q_PROPERTY   | 可绑定属性         |
+| --------- | --------------- | ------------- |
+| **变化通知**  | 需手动 emit signal | **自动触发**更新    |
+| **依赖管理**  | 需手动 connect     | **自动追踪**依赖关系  |
+| **计算属性**  | 需重写 setter      | **声明式**定义计算逻辑 |
+| **UI 更新** | 需调用 update ()   | **自动刷新**关联 UI |
+## 事件系统
+[The Event System | Qt Core | Qt 6.10.0](https://doc.qt.io/qt-6/zh/eventsandfilters.html)
+事件是从抽象的 [QEvent](https://doc.qt.io/qt-6/zh/qevent.html) 类派生出来的对象，代表应用程序内部发生的事情，或者是应用程序需要了解的外部活动的结果。[QObject](https://doc.qt.io/qt-6/zh/qobject.html) 子类的任何实例都可以接收和处理事件
+### 简单使用
+大部分事件类型以 `Event` 结尾，这样可以很容易分辨，下面处理键盘事件，返回值表示是否接收到了 tab 键按下
+```cpp
+bool MyWidget::event(QEvent *event) {
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+        if (ke->key() == Qt::Key_Tab) {
+            // special tab handling here
+            return true;
+        }
+    } else if (event->type() == MyCustomEventType) {
+        MyCustomEvent *myEvent = static_cast<MyCustomEvent *>(event);
+        // custom event handling here
+        return true;
+    }
+
+    return QWidget::event(event);
+}
+```
+### 事件过滤器
+所谓事件过滤器就是一个**继承自 QObject 的类对象**，并且重写（标明 `override`）eventFilter 函数
+```cpp
+class MyEventFilter : public QObject {
+    Q_OBJECT
+public:
+    bool eventFilter(QObject *obj, QEvent *event) override {
+        if (event->type() == QEvent::KeyPress) {
+            QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+            qDebug() << "按键事件： " << keyEvent->key();
+            if (keyEvent->key() == Qt::Key_Enter) {
+                qDebug() << "Enter 键被拦截";
+                return true; // 不传递事件
+            }
+        }
+        return QObject::eventFilter(obj, event); // 传递给默认处理
+    }
+};
+
+MyButton button;
+MyEventFilter filter;
+button.installEventFilter(&filter);
+```
+对于继承自 `QObject` 的对象，都有一个 `installEventFilter` 函数，可以用它安装事件过滤器。需要注意：
+- 事件过滤器对象不能被 install 到 QObject 元对象上
+- 事件过滤器类必须继承自 QObject 并重写 eventFilter 函数
+- 事件过滤器只能拦截和处理 `QEvent` 类型的事件，不能处理其他类型的事件。应使用 `event->type()` 来判断具体的事件类型，如 `QEvent::KeyPress`、`QEvent::MouseButtonPress` 等。
+- 多个对象可以使用同一过滤器
+- 过滤对象必须与此对象处于同一线程。如果_filterObj_ 在不同的线程中，则此函数不会执行任何操作。如果 `filterObj` 或此对象在调用此函数后被移动到不同的线程中，事件过滤器将不会被调用，直到两个对象再次拥有相同的线程亲和性（它_不会_被删除）
+## 字符串数据类
+[Classes for string data | Qt Core | Qt 6.10.0](https://doc.qt.io/qt-6/zh/string-processing.html)
+### 字符串使用规则
+一般来说，[QString](https://doc.qt.io/qt-6/zh/qstring.html) 可以随处使用而且性能良好。提供处理多种编码的 API（ [QString::fromLatin1](https://doc.qt.io/qt-6/zh/qstring.html#fromLatin1) () ）。
+以下规则可在**不增加太多复杂性情况下大幅改进字符串处理**。这些规则可在大多数情况下获得接近最佳性能：
+- 所有只包含 ASCII 字符的字符串（例如日志信息）都可以使用 Latin-1 编码。使用 [string literal](https://doc.qt.io/qt-6/zh/qlatin1char.html#operator-22-22_L1)（[[Modern C++#自定义字符串字面量|自定义字符串字面量]]） `"foo"_L1` 。如果没有这个后缀，源代码中的字符串字面量会被假定为 UTF-8 编码，**处理速度会变慢**。一般来说，尽量使用最严格的编码，在很多情况下都是 Latin-1。
+- 用户可见字符串通常会被翻译，并通过 [QObject::tr](https://doc.qt.io/qt-6/zh/qobject.html#tr) () 函数传递。该函数接收字符串字面量（const char 数组），并按照所有用户界面元素的要求返回带有 **UTF-16 编码的 [QString](https://doc.qt.io/qt-6/zh/qstring.html)** 。如果不使用翻译基础结构，则应在整个应用程序中使用 UTF-16 编码。字符串字面量 `u"foo"` 创建 UTF-16 字符串字面量，或使用 Qt XML 特有的字面量 `u"foo"_s` 直接创建 [QString](https://doc.qt.io/qt-6/zh/qstring.html)，和使用 `QString` 构造函数创建的对象一致，都使用 UTF-16
+- 在处理 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 的部分内容时，不要将每部分内容复制到自己的 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 对象中，而是创建 [QStringView](https://doc.qt.io/qt-6/zh/qstringview.html) 对象。这些对象可以使用 [QStringView::toString](https://doc.qt.io/qt-6/zh/qstringview.html#toString) () 转换回 [QString](https://doc.qt.io/qt-6/zh/qstring.html) ，但应尽量避免这样做。如果函数返回 [QStringView](https://doc.qt.io/qt-6/zh/qstringview.html) ，那么尽可能继续使用该类是最有效的做法。API 类似于常量 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 。
+### QT 中的字符串编码
+编码方面，Qt 以某种形式支持 UTF-16、UTF-8、Latin-1（ISO 8859-1）和 US-ASCII（即 Latin-1 和 UTF-8 的通用子集）。
+- Latin-1 是一种字符编码，每个字符使用一个字节，这使它成为最有效但也是最有限的编码。
+- UTF-8 是一种可变长度字符编码，使用一至四个字节对所有字符进行编码。它向后兼容 US-ASCII，是源代码和类似文件的常用编码。Qt 假定源代码使用 UTF-8 编码。
+- UTF-16 是一种可变长度编码，每个字符使用两个或四个字节。它是 Qt 中用户公开文本的常用编码。
+
+更多信息，请参阅[Qt 中的 Unicode 支持信息](https://doc.qt.io/qt-6/zh/unicode.html)。
+
+其他编码以单个函数（如[QString::fromUcs4](https://doc.qt.io/qt-6/zh/qstring.html#fromUcs4)() 或[QStringConverter](https://doc.qt.io/qt-6/zh/qstringconverter.html) 类）的形式提供支持。此外，Qt 还提供了一个与编码无关的数据容器[QByteArray](https://doc.qt.io/qt-6/zh/qbytearray.html) ，该容器非常适合存储二进制数据。
 # 项目实例
 ## AnalogClock
 ### QPainter 设置绘制原点和缩放
