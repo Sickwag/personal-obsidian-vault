@@ -371,7 +371,7 @@ timer->stop();       // 停止
 timer->start(500);   // 以不同间隔重新启动
 ```
 ### 按照系统主题颜色设置组件颜色
-![[../../../../Files & LongText/Attachments/Pasted image 20250921113557.png|一套代码，多个主题]]
+![[Pasted image 20250921113557.png|一套代码，多个主题]]
 ```cpp
 const QColor hourColor(palette().color(QPalette::Text)); // 使用palette绘制的颜色会自动适应系统主题颜色，这里使用内置的自适应文本颜色
 const QColor minuteColor(palette().color(QPalette::Text));
@@ -476,7 +476,7 @@ private:
 主要学习嵌套布局
 ### 嵌套布局中的组件排布
 本项目有有这几个 GUI 显示区域
-![[../../../../Files & LongText/Attachments/Pasted image 20250924105442.png]]
+![[Pasted image 20250924105442.png|../../../../Files & LongText/Attachments/Pasted image 20250924105442.png]]
 左上角的可显示区域由于实时渲染，调整右侧的一些选项（如 `Grid`）是否勾选，会导致左侧布局大小改变带动整个窗口改变，所以在构造函数中需要**根据需要限制**，确保更新时不调整大小。
 #### qt 中基础 GUI 组件
 一、基础控件 (Basic Widgets)
@@ -524,7 +524,7 @@ selectionModeLabel->setBuddy(selectionModeCombo);
 - 用户可以按 Alt + S 快速将焦点移到 selectionModeCombo 下拉框上
 如果想要显示 "&" 字符，则需要代码中写入 `&&`，如果要在 windows 中没有显示出下划线（一般 windows 10/11 之后默认不显示，只有按下 ALT + 激活按键之后才会显示）则需要在控制面板中设置"•	控制面板 → 轻松使用 → 使键盘更易于使用 → “启用以便于访问的下划线快捷键”
 
-![[../../../../Files & LongText/Attachments/Pasted image 20250924120532.png]]
+![[Pasted image 20250924120532.png|../../../../Files & LongText/Attachments/Pasted image 20250924120532.png]]
 
 #### QWidget 组件的 addItem 方法
 QComboBox:: addItem 方法的第二个参数是一个 QVariant 类型的用户数据，用于存储与该选项关联的自定义数据。

@@ -87,7 +87,7 @@ QIODevice::WriteOnly | QIODevice::Text
 👉 这个结果表示：“**同时启用 WriteOnly 和 Text 模式**”。
 函数 `open()` 收到 `0x0006` 后，会检查每一位，知道你要“只写 + 文本模式”。
 ✅ 所以：`|` 是“**我都要**”的意思。
-## 🔍 二、`QMessageBox::Save | Discard | Cancel` 到底发生了什么？
+## `QMessageBox::Save | Discard | Cancel` 到底发生了什么？
 ```cpp
 QMessageBox::question(this, "提示", "保存吗？",
 QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
@@ -337,13 +337,3 @@ property("minValue")
 → QMetaProperty::read(this) 
 → getMinValue()
 ```
-
-# qt 案例开发
-参考链接 [【Qt入门向】认识Qt对象模型，创建第一个Qt程序：九九乘法表_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1meU6YQEF1/?spm_id_from=333.337.search-card.all.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
-## 九九乘法表
-QMainWindow 对象可以设置各种 show
-![[Pasted image 20250812171723.png]]
-
-- `setWindowTitle` ，接收参数为 QString，传入 C 风格字符串会隐式转换为 QString
-- `setFixedSize` 将窗口固定大小，运行之后程序不允许调整大小
-- `setGeometry` 设置出现的位置和默认的大小
