@@ -181,6 +181,8 @@ to 开头将字符串转换为基本类型，其他用来将字符串格式化�
 str = str.setNum(val, 8);         //显示八进制
 ```
 
+> "**f**是定妆术，**e**是科技范，**g**是聪明人，**c**是ASCII密码"
+
 ## QString常用的功能函数的介绍和用法
 参考 https://xmuli.blog.csdn.net/article/details/100860030
 注意：QString 只要赋值，就在字符串的末尾自动加上“\0”
@@ -193,3 +195,14 @@ str = str.setNum(val, 8);         //显示八进制
 - `section()` 从字符串中提取以“子字符串”作为分隔符，从 start 到 end 端的字符串
 - `simplified()` 不仅去掉字符串的所首尾空格，中间连续的空格也用一个空格替换
 - `trimmed()` 去掉字符串首尾的空格
+- `isNull()` 判断字符串是否为空。（若是只有“\0”，isNull返回false； 只有未赋值的字符串，isNull返回true）
+- `isEmpty()` 判断字符串是否为空.（若是只有“\0”，isEmpty返回true）
+```cpp
+QString strl,str2=""；
+N=str1.isNul1()；     //N=true未赋值字符串变量
+N=str2.isNull()；     //N=false只有“\\0”的字符串，也不是Nul1
+N=strl.isEmpty();     //N=true
+N=str2.isEmpty()；    //N=true
+```
+
+## 滑动条QSlider和QAbstractSlider的介绍和用法
