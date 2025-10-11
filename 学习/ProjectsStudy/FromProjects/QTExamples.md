@@ -206,3 +206,92 @@ N=str2.isEmpty()；    //N=true
 ```
 
 ## 滑动条QSlider和QAbstractSlider的介绍和用法
+参考：[QSlider + QScrollBar + QProgressBar （ 移动条、滚动条 、进度条）的联动_qprogressbar循环滚动-CSDN博客](https://xmuli.blog.csdn.net/article/details/101003081)
+
+![[245c8ae377a072b353ad4d7666e363bc.gif]]
+
+需要注意的是信号槽机制，不同的信号哈数可以发送参数，具体发送参数的含义可以通过查询文档了解
+![[Pasted image 20251011193421.png]]
+QSlider 的 valueChange 信号会将更改之后的值作为 value 参数发送出去，根据valueChange 的签名可知，它的槽函数必须要接受一个**兼容** int 类型的参数，如果有多个参数，那么顺序也必须要保持一致。
+
+qt 还有循环信号保全机制：当组件的值已经等于要设置的值时不会发出 valueChanged 信号
+例如：
+- 滑块当前值为 50
+- 代码设置 `slider->setValue(50)`
+- Qt 检测到值未改变，不会发出信号
+- 避免了无限循环
+这个组件比较简单，六个 bar 同步更新，所以槽函数可以这样写
+```cpp
+void bar_collection::on_bar_value_changed(int value) {
+	ui.h_slider->setValue(value);
+	ui.v_slider->setValue(value);
+	ui.h_scroll_bar->setValue(value);
+	ui.v_scroll_bar->setValue(value);
+	ui.h_progress_bar->setValue(value);
+	ui.v_progress_bar->setValue(value);
+
+	bar_value = value;
+}
+```
+如果要区分是哪一个组件调用了 `on_bar_value_change` 函数，可以使用下面的代码区分
+```cpp
+void bar_collection::on_bar_value_changed(int value) {
+	QObject* sender_obj = QObject::sender(); // 获取调用这个函数的对象
+	if (sender_obj == ui.v_progress_bar) {
+		// code 
+	}
+	// code
+}
+```
+## QSlider 仪表盘 + QLCD_NUmber 数值显示的介绍及用法
+参考：[仪表盘 QSlider + 数值显示 QLCD_NUmber 的介绍及用法_qt slider 显示数字-CSDN博客](https://xmuli.blog.csdn.net/article/details/101003115)
+![[20190918200740.gif]]
+### QDial属性：
+- QDial是仪表盘式的组件，通过旋转表盘获得输入值。QDial的特有的属性包括以下两种。
+
+|       属性       |     含义      |
+| :------------: | :---------: |
+| notchesVisible | 表盘的小刻度是否可见  |
+|  notchTarget   | 表盘刻度间的间隔像素值 |
+
+### QLCDNumber属性：
+
+- QLCDNumber是模拟LCD显示数字的组件，可以显示整数或小数，但就如实际的LCD一样，要设定显示数字的个数。显示整数时，还可以选择以不同进制来显示，如十进制、二进制、十六进制。其主要属性如下。
+
+|        属性         |                                                     含义                                                      |
+| :---------------: | :---------------------------------------------------------------------------------------------------------: |
+|    digitCount     |                                           显示的数的位数，如果是小数，小数点也算一个数位                                           |
+| smallDecimalPoint |                                            是否有小数点，如果有小数点，就可以显示小数                                            |
+|       mode        |          数的显示进制，通过调用函数setDecMode）、setBinMode（）、setOctMode）、setHexMode（）可以设置为常用的十进制、二进制、八进制、十六进制格式。          |
+|       value       | 返回显示值，浮点数。若设置为显示整数，会自动四舍五入后得到整数，设置为intValue的值。如果smallDecimalPoint=true，设置value时可以显示小数，但是数的位数不能超过digitCount。 |
+|     intValue      |                                                  返回显示的整数值                                                   |
+
+若 `smallDecimalPoint==true`，`digitCount==3`，设置 `value=2.36`，则界面上LCDNumber组件会显示为2.4；
+若设置 `value=1456.25`，则界面上LCDNumber组件只会显示145。所以，用QLCDNumber作为显示组件时，应注意这些属性的配合。
+
+总之比较简单，根据 ide 提示补全就可以完成
+```cpp
+void dash_board::on_dial_valueChanged(int value) {
+	ui.dial->setValue(value);
+	ui.lcd_number_display->display(value);
+}
+```
+
+## QTimer和QDateTime的讲解和使用
+参考：[QTimer和QDateTime的讲解和使用_qdateediter单击弹出-CSDN博客](https://xmuli.blog.csdn.net/article/details/101040841)
+![[2883c1621230299f4e6326632434d4e7.gif]]
+
+### 时间日期相关的类：
+
+**时间日期是经常遇到的数据类型，Qt中时间日期类型的类如下。**
+
+- **QTime**：时间数据类型，仅表示时间，如15:2313。
+- **QDate**：日期数据类型，仅表示日期，如2017-4-5。
+- **QDateTime**:日期时间数据类型，表示日期和时间，如2017-03-230812:43。
+
+Qt 中有专门用于日期、时间编辑和显示的界面组件，介绍如下。
+
+- **QTimeEdit**:编辑和显示时间的组件。
+- **QDateEdit**:编辑和显示日期的组件。
+- **QDateTimeEdit**：编辑和显示日期时间的组件。
+- **OCalendarWidget**:一个用日历形式选择日期的组件。
