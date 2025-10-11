@@ -55,7 +55,7 @@ QString filePath = QFileDialog::getOpenFileName(
     "文本文件 (*.txt);;所有文件 (*)"
 );
 ```
-### 🔹 `QIODevice` 是 Qt 中所有 I/O 设备的基类
+### `QIODevice` 是 Qt 中所有 I/O 设备的基类
 - 包括：`QFile`、`QSerialPort`、`QTcpSocket` 等。
 - 它定义了一组 **访问模式（Access Mode）**，用于指定打开设备的方式。
 

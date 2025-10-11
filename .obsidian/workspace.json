@@ -21,8 +21,39 @@
               "icon": "lucide-file",
               "title": "C++开发范式"
             }
+          },
+          {
+            "id": "821281bcbf4cddfc",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/ProjectsStudy/FromProjects/QTExamples.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "QTExamples"
+            }
+          },
+          {
+            "id": "675a3f43f1c52f38",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/ProjectsStudy/FromProjects/QTExamples.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "QTExamples"
+            }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -54,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "4Base",
+                "query": "qobject_cast",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -75,7 +106,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -205,13 +237,14 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "71054dca4a941f71",
+  "active": "675a3f43f1c52f38",
   "lastOpenFiles": [
-    "学习/Base-Paradigms-Patterns/操作系统/王道考研操作系统（OS）.md",
     "学习/Base-Paradigms-Patterns/开发范式/C++开发范式.md",
+    "学习/ProjectsStudy/FromProjects/QTExamples.md",
+    "学习/Language/C C++/QT6 开发高级教程.md",
+    "学习/Base-Paradigms-Patterns/操作系统/王道考研操作系统（OS）.md",
     "学习/Base-Paradigms-Patterns/开发范式",
     "学习/Base-Paradigms-Patterns/操作系统/操作系统.md",
-    "学习/ProjectsStudy/FromBlogs/QT 工作原理杂记.md",
     "学习/CS self-taugh/Docker.md",
     "学习/ProjectsStudy/FromBlogs",
     "学习/CS self-taugh/missing semester.md",
@@ -225,7 +258,6 @@
     "学习/ProjectsStudy/C C++/2048CLI.md",
     "学习/ProjectsStudy/WriteByMyself/2048CLI.md",
     "学习/ProjectsStudy/C C++/args库（3000行）.md",
-    "学习/Language/C C++/QT6 开发高级教程.md",
     "Daily/Observations/工作职场.md",
     "文章/文学/2003年关于中国辩论的思考.md",
     "Daily/Observations/正常交际.md",
