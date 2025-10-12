@@ -218,8 +218,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -238,6 +237,11 @@
   },
   "active": "821281bcbf4cddfc",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/Pasted image 20251012164856.png",
+    "Files & LongText/Attachments/Pasted image 20251012154101.png",
+    "Files & LongText/Attachments/Pasted image 20251012154031.png",
+    "Files & LongText/Attachments/Pasted image 20251012153638.png",
+    "Files & LongText/Attachments/Pasted image 20251012153023.png",
     "Files & LongText/Attachments/Pasted image 20251012145405.png",
     "Files & LongText/Attachments/Pasted image 20251012120715.png",
     "Files & LongText/Attachments/Pasted image 20251012120655.png",
@@ -247,10 +251,6 @@
     "学习/ProjectsStudy/FromProjects/QTExamples.md",
     "Files & LongText/Attachments/2883c1621230299f4e6326632434d4e7.gif",
     "Files & LongText/Attachments/20190918200740.gif",
-    "Files & LongText/Attachments/245c8ae377a072b353ad4d7666e363bc.gif",
-    "Files & LongText/Attachments/Pasted image 20251011193421.png",
-    "Files & LongText/Attachments/Pasted image 20251011193306.png",
-    "Files & LongText/Attachments/Pasted image 20251011153910.png",
     "学习/Language/C C++/QT6 开发高级教程.md",
     "学习/Base-Paradigms-Patterns/操作系统/王道考研操作系统（OS）.md",
     "学习/Base-Paradigms-Patterns/开发范式",
@@ -281,7 +281,6 @@
     "学习/Scattered knowlegde/编程相关/操作经验",
     "学习/Scattered knowlegde/编程相关/基本知识",
     "学习/Scattered knowlegde/面试八股",
-    "Files & LongText/Attachments/Pasted image 20251002103816.png",
     "学习/Scattered knowlegde/编程相关",
     "学习/ProjectsStudy/C C++/QT",
     "未命名.canvas",

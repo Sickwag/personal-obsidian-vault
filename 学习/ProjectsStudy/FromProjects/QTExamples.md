@@ -304,6 +304,33 @@ Qt 中有专门用于日期、时间编辑和显示的界面组件，介绍如�
 # QComboBox和QPlainTextEdit的讲解和使用
 参考 [QComboBox和QPlainTextEdit的讲解和使用_qt富文本下拉插入-CSDN博客](https://xmuli.blog.csdn.net/article/details/101127870)
 ## 一些 qt creater 使用经验
+### 杂项
+如果调用一个对象函数，这个函数明明在文档里有些，但是 ide（creator）没有提示，可能是这个对象（控件）必须单独 include，而不是靠 ide 提示自动补全头文件
+### 添加 qrc 资源管理
+![[Pasted image 20251012153023.png]]
+添加完之后如果显示添加失败，需要到 cmake 中查看是否将 qrc 文件引入到项目中
+需要在 `target_link_libraries` 之前引入
+```cmake
+qt_add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} resource.qrc) 
+```
+`resource.qrc` 是管理资源文件的**文件**名称，在其中管理所有的资源文件
+![[Pasted image 20251012153638.png|464]]
+虽然看起来有一个名为 image 的文件夹，但在本地文件管理中是看不到的，其中内容为：
+```qrc
+<RCC>
+    <qresource prefix="/images">
+        <file>github.ico</file>
+        <file>gril.ico</file>
+        <file>qt.ico</file>
+    </qresource>
+</RCC>
+```
+file 标签引入两个文件夹相对于 project_source 宏的位置，即项目根目录
+![[Pasted image 20251012154031.png]]
+可以看到，在项目视图下是看不到这几个图片文件的
+![[Pasted image 20251012154101.png]]
+
+### 添加组件和类
 qt creater 不像 vs，能够在添加继承自 widget 的类的同时选择是否添加 ui 文件，而是需要自己添加完 h\cpp 文件之后自己再添加一次 ui 文件
 ![[Pasted image 20251012120655.png]]
 ![[Pasted image 20251012120715.png]] 然后还需要： ^6zk649
@@ -336,3 +363,57 @@ signals:
 - 对于这段代码 `Ui::combobox_and_plainClass* ui;` 如果提示 Ui 中找不到 `combobox_and_plain`，则说明 ui 文件**所属的类**有问题，在[[QTExamples#^6zk649|创建ui文件时给ui类命名时用了别的名字]]（且极有可能名为 `Form.ui`）
 - 应该填入 UI 编辑器中的最上面一层的名字
 ![[Pasted image 20251012145405.png]]
+
+### 组件命名规范
+- 一般以组件类型名称为开头，下划线链接不同语义
+- 功能性描述内容用下划线分开单词
+- 如果其中提到其他的组件，则不使用下划线分开
+
+> 像这样：
+> `button_add_plaintextedit_to_combo` 表示添加 plaintextedit 组件中的内容到 combo，其中 button 表示组件类型是 button，功能是 add something to combo，指代的组件名为 plaintextedit
+
+### 代码编写
+#### QMap 使用
+老的qt 版本（qt 5）可能会使用 `foreach` 宏，让代码看起来有点怪
+```cpp
+void ExQcomboBox::on_btnRightInit_clicked()
+{
+    QIcon ico;
+    ico.addFile(":/images/gril.ico");
+
+    QMap<QString, QString> map;
+    map.insert("张投", "16岁");
+    map.insert("张我", "17岁");
+    map.insert("张以", "18岁");
+    map.insert("张木", "19岁");
+    map.insert("张李", "20岁");
+    map.insert("张，", "21岁");
+    map.insert("张报", "22岁");
+    map.insert("张之", "23岁");
+    map.insert("张以", "24岁");
+    map.insert("张琼", "25岁");
+    map.insert("张玖", "26岁");
+    map.insert("张。", "27岁");
+
+    ui->comBoxRight->clear();
+    foreach(QString str, map.keys()){
+        ui->comBoxRight->addItem(ico, str, map.value(str));
+    }
+}
+```
+这其实在语法上等价于
+```cpp
+for(item : container) {}
+```
+C++11 之前不存在这样的语法，所以有了这个宏，但是随着标准更新，这个宏被发现性能问题，表意也不如标准库语法，所以废弃。
+
+#### QPlain TextEdit属性：
+
+`QPlainTextEdit`是一个多行文本编辑器，用于显示和编辑多行简单文本。另外，还有一个**QTextEdit**  
+组件，是一个所见即所得的可以编辑带格式文本的组件，以**HTML**格式标记符定义文本格式。
+
+`QPlainTextEdit` 提供cut( )、copy( )、paste( )、undo( )、redo( )、clear( )、selectAll( )标准编辑功能的槽函数，`QPlainTextEdit`还提供一个标准的右键快捷菜单。
+`QPlainTextEdit`的文字内容以**QTextDocument**类型存储，函数`document()`返回这个文档对象的指针。  
+**QTextDocument**是内存中的文本对象，以文本块的方式存储，一个文本块就是一个段落，每个段落以回车符结束。**QTextDocument**提供一些函数实现对文本内容的存取。
+可以通过观察 ide 提示，知道他的工作原理
+![[Pasted image 20251012164856.png]]
