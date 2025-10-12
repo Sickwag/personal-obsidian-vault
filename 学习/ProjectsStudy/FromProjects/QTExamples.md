@@ -340,7 +340,7 @@ qt creater 不像 vs，能够在添加继承自 widget 的类的同时选择是�
 - 将 ui 文件名修改成类名同名
 - 对应 CMakeLists.txt add_executeable 项中添加 ui 文件（前提 `set(CMAKE_AUTOUIC ON)`）
 - 保存文件，重新使用 cmake 构建（不然没 moc 构建出来的 ui. h 文件）
-- 在类的. h 文件中加上 `#include <ui_wiget.h>` 文件
+- 在类的. h 文件中加上 `#include <ui_wiget.h>` 文件，点击点击运行一次（编译过程中 moc 会创建对应的 ui_widget. h 文件）
 - 添加命名空间和 ui 对象指针（也可以使用继承，普通对象的方式创建 ui 对象）
 ```cpp
 #include <QWidget>
@@ -420,3 +420,27 @@ C++11 之前不存在这样的语法，所以有了这个宏，但是随着标�
 **QTextDocument**是内存中的文本对象，以文本块的方式存储，一个文本块就是一个段落，每个段落以回车符结束。**QTextDocument**提供一些函数实现对文本内容的存取。
 可以通过观察 ide 提示，知道他的工作原理
 ![[Pasted image 20251012164856.png]]
+## 列表控件QListWidget和工具按钮QToolButton的和用法
+参考： [列表控件QListWidget和工具按钮QToolButton的和用法_qlistwidgetitem button-CSDN博客](https://xmuli.blog.csdn.net/article/details/101314908)
+### QListWidget 组件注意事项
+![[Pasted image 20251012190342.png]]
+移除其中的一个 item 使用的是 `takeItem` 函数
+根据这个函数的文档：
+![[Pasted image 20251012194440.png]]
+需要知道`takeItem()` 的行为是**将 `QListWidgetItem` 从 `QListWidget` 中“提取”出来**，但**它不会删除这个 item 的内存**。换句话说，你只是“移除”了它在列表中的显示，并没有销毁它的内部数据。所以，你需要手动释放这个 item 所占用的内存，否则会导致**内存泄漏**。
+
+这个函数返回的是指针，指向**提取出来的 item 组件**，如果不需要了，则需要手动删除这个指针 `delete item` 释放内存，也可以使用智能指针管理：
+```cpp
+auto item = std::unique_ptr<QListWidgetItem>(ui->qlistwidget->takeItem(row));
+// delete item; // 不需要显式删除，unique_ptr 会自动处理
+```
+qt 中其他组件也是用这样的逻辑
+
+| 控件           | Item 类                          | takeItem() 行为 | 是否需要手动 delete |
+| ------------ | ------------------------------- | ------------- | ------------- |
+| QListWidget  | QListWidgetItem                 | 移除 item，不释放内存 | ✅ 需要          |
+| QTreeWidget  | QTreeWidgetItem                 | 移除 item，不释放内存 | ✅ 需要          |
+| QTableWidget | QTableWidgetItem                | 移除 item，不释放内存 | ✅ 需要          |
+| QComboBox    | QStandardItem 或 QListWidgetItem | 移除 item，不释放内存 | ✅ 需要          |
+|              |                                 |               |               |
+|              |                                 |               |               |
