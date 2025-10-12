@@ -303,7 +303,36 @@ Qt 中有专门用于日期、时间编辑和显示的界面组件，介绍如�
 ![[Pasted image 20251012100626.png]] 
 # QComboBox和QPlainTextEdit的讲解和使用
 参考 [QComboBox和QPlainTextEdit的讲解和使用_qt富文本下拉插入-CSDN博客](https://xmuli.blog.csdn.net/article/details/101127870)
-这一期有一些 qt creater 使用经验
+## 一些 qt creater 使用经验
 qt creater 不像 vs，能够在添加继承自 widget 的类的同时选择是否添加 ui 文件，而是需要自己添加完 h\cpp 文件之后自己再添加一次 ui 文件
 ![[Pasted image 20251012120655.png]]
-![[Pasted image 20251012120715.png]]
+![[Pasted image 20251012120715.png]] 然后还需要： ^6zk649
+- 将 ui 文件名修改成类名同名
+- 对应 CMakeLists.txt add_executeable 项中添加 ui 文件（前提 `set(CMAKE_AUTOUIC ON)`）
+- 保存文件，重新使用 cmake 构建（不然没 moc 构建出来的 ui. h 文件）
+- 在类的. h 文件中加上 `#include <ui_wiget.h>` 文件
+- 添加命名空间和 ui 对象指针（也可以使用继承，普通对象的方式创建 ui 对象）
+```cpp
+#include <QWidget>
+#include <ui_combobox_and_plain.h>
+
+// 新增命名空间
+QT_BEGIN_NAMESPACE
+namespace Ui { class combobox_and_plainClass; };
+QT_END_NAMESPACE
+
+
+class combobox_and_plain : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit combobox_and_plain(QWidget *parent = nullptr);
+    
+private:
+    Ui::combobox_and_plainClass* ui; // 添加ui指针
+signals:
+};
+```
+- 对于这段代码 `Ui::combobox_and_plainClass* ui;` 如果提示 Ui 中找不到 `combobox_and_plain`，则说明 ui 文件**所属的类**有问题，在[[QTExamples#^6zk649|创建ui文件时给ui类命名时用了别的名字]]（且极有可能名为 `Form.ui`）
+- 应该填入 UI 编辑器中的最上面一层的名字
+![[Pasted image 20251012145405.png]]
