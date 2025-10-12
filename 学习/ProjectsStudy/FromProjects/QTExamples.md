@@ -300,4 +300,10 @@ Qt 中有专门用于日期、时间编辑和显示的界面组件，介绍如�
 获取 calendar_widget 中的**选中日期**，使用 selectDate 函数，返回 `QDate` 类型。
 
 常用日期显示格式：
-![[Pasted image 20251012100626.png]]
+![[Pasted image 20251012100626.png]] 
+# QComboBox和QPlainTextEdit的讲解和使用
+参考 [QComboBox和QPlainTextEdit的讲解和使用_qt富文本下拉插入-CSDN博客](https://xmuli.blog.csdn.net/article/details/101127870)
+这一期有一些 qt creater 使用经验
+qt creater 不像 vs，能够在添加继承自 widget 的类的同时选择是否添加 ui 文件，而是需要自己添加完 h\cpp 文件之后自己再添加一次 ui 文件
+![[Pasted image 20251012120655.png]]
+![[Pasted image 20251012120715.png]]
