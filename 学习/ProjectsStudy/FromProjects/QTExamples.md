@@ -295,3 +295,9 @@ Qt 中有专门用于日期、时间编辑和显示的界面组件，介绍如�
 - **QDateEdit**:编辑和显示日期的组件。
 - **QDateTimeEdit**：编辑和显示日期时间的组件。
 - **OCalendarWidget**:一个用日历形式选择日期的组件。
+简单通过 setText，setDate，setTime 函数就能够完成，这些函数只能接受对应类型的参数，比如 setDate 只能接受 QDate ，setTime 只能接受 QTime。
+而 qt 中对应的类也有对应的函数，比如 QDateTime 可以使用 `.date()` 返回 QDate，`.time()` 返回 QTime，然后可以使用 `.toString(QString formatstring)` 函数来格式化日期字符串
+获取 calendar_widget 中的**选中日期**，使用 selectDate 函数，返回 `QDate` 类型。
+
+常用日期显示格式：
+![[Pasted image 20251012100626.png]]
