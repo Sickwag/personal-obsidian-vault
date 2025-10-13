@@ -3701,6 +3701,91 @@ int MySQLDB::prepare_execute(const std::string& sql, const std::vector<std::vari
 }
 ```
 更有拓展性的方法是：
+# C++数据库编程（qt:qmysql）
+## 准备工作
+qt 如何连接 mysql 可以参考[[软件使用错误#Qt 缺少 mysql 驱动导致无法连接 mysql]]
+## 代码编写
+### 数据库和查询配置
+```cpp
+QSqlQuery query(db);
+// 设置query对象连接的数据
+QSqlDatabase db1 = QSqlDatabase::addDatabase("QMYSQL" /*驱动名称*/, "conn1");
+db1.setHostName("localhost");
+db1.setDatabaseName("db1");
+db1.setUserName("root");
+db1.setPassword("password1");
+QSqlQuery q (QSqlDatabase::database("conn1"));
+// query.exe()可以直接执行sql语句
+query.exec("create table newUser (id int primary key,username varchar(20))");
+
+// 方法一：命名绑定
+query.prepare("INSERT INTO newUser (id, username) VALUES (:id, :username)");
+query.bindValue(":id", userid);
+query.bindValue(":username", name);
+query.exec();
+
+// 方法二：位置绑定
+query.prepare("INSERT INTO employee (id, name, salary) "
+			  "VALUES (?, ?, ?)");
+query.addBindValue(1001);
+query.addBindValue("Thad Beaumont");
+query.addBindValue(65000);
+query.exec();
+```
+使用预处理语句好处是：
+- 防止 sql 注入
+- 可以**提高多条记录同时插入的性能**
+- 占位符的是可以轻松指定任意值，而不必担心特殊字符的转义。
+[QSqlQuery](https://doc.qt.io/qt-6/zh/qsqlquery.html) 构造函数接受一个可选的 [QSqlDatabase](https://doc.qt.io/qt-6/zh/qsqldatabase.html) 对象，用于指定要使用的数据库连接。在上面的示例中，如果没有指定任何连接（`QSqlQuery query;`）则使用的是默认连接。
+### 查询 api 逻辑
+[QSqlQuery](https://doc.qt.io/qt-6/zh/qsqlquery.html) 提供了对结果集一条记录一条记录的访问。调用 [exec](https://doc.qt.io/qt-6/zh/qsqlquery.html#exec) () 后，[QSqlQuery](https://doc.qt.io/qt-6/zh/qsqlquery.html) 的内部**指针位于第一条记录_之前的一个位置**。我们必须调用一次 [QSqlQuery::next](https://doc.qt.io/qt-6/zh/qsqlquery.html#next) () 来前进到第一条记录，然后重复调用 [next](https://doc.qt.io/qt-6/zh/qsqlquery.html#next) () 来访问其他记录，直到返回 `false` 。
+```cpp
+while(query.next()) {
+    QString name = query.value(0).toString();
+    int salary = query.value(1).toInt();
+    qDebug() << name << salary;
+}
+```
+[QSqlQuery::value](https://doc.qt.io/qt-6/zh/qsqlquery.html#value) () 函数返回当前记录中字段的值。字段指定为基于零的索引。返回一个 [QVariant](https://doc.qt.io/qt-6/zh/qvariant.html) ，该类型可容纳各种 C++ 和 Qt Core 数据类型，不同的数据库类型会自动映射为最接近的 Qt 对应类型。在代码片段中，我们调用 [QVariant::toString](https://doc.qt.io/qt-6/zh/qvariant.html#toString) () 和 [QVariant::toInt](https://doc.qt.io/qt-6/zh/qvariant.html#toInt) () 将变体转换为 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 和 `int` 。
+### 事务执行
+
+### 记录和结果集
+**结果集（result set）** 指的是 **一个 `SELECT` 查询返回的所有行的集合**，和标准 SQL 语义一致。
+一条 sql 语句只能返回一个查询结果，这个结果是以一张表形式呈现的，每一行成为一个 result 结果，整张表成为 result set 结果集。以下所有命令都是以结果集作为参考。
+
+| 区分      | 函数名            | 描述                           |
+| ------- | -------------- | ---------------------------- |
+| 执行命令    | `exec()`       | 执行sql语句                      |
+| 具有的特性判断 | `hasFeature()` | 判断是否有某种特性                    |
+| 定位      | `seek(int n)`  | 指向结果集的第n条记录                  |
+| 定位      | `first()`      | 指向结果集的第一条记录                  |
+| 定位      | `last()`       | 指向结果集的最后一条记录                 |
+| 定位      | `next()`       | 指向下一条记录，每执行一次该函数，便指向相邻的下一条记录 |
+| 定位      | `previous()`   | 指向上一条记录，每执行一次该函数，便指向相邻的上一条记录 |
+| 获取记录    | `record()`     | 获得当前指向的记录                    |
+| 取值      | `value(int n)` | 获得属性的值                       |
+| 获取记录编号  | `at()`         | 获取当前记录在结果集中的编号               |
+| 获取总行数   | `size()`       | 返回结果中的总行数                    |
+
+如果数据库查询时，**只需要前向查询**，则可以在调用 exec() 之前调用[QSqlQuery::setForwardOnly](https://doc.qt.io/qt-6/zh/qsqlquery.html#setForwardOnly)(true)。这是一种简单的优化方法，在操作大型结果集时，可以显著加快查询速度
+### 数据库支持功能查询
+要确定数据库驱动程序是否支持给定功能，请使用 [QSqlDriver::hasFeature](https://doc.qt.io/qt-6/zh/qsqldriver.html#hasFeature) () 。在下面的示例中，如果底层数据库支持该功能，我们会调用 [QSqlQuery::size](https://doc.qt.io/qt-6/zh/qsqlquery.html#size) () 来确定结果集的大小；否则，我们会导航到最后一条记录，并使用查询的位置来告诉我们有多少条记录。
+```cpp
+QSqlQuery query;
+    int numRows;
+    query.exec("SELECT name, salary FROM employee WHERE salary > 50000");
+
+    QSqlDatabase defaultDB = QSqlDatabase::database();
+    if (defaultDB.driver()->hasFeature(QSqlDriver::QuerySize)) {
+        numRows = query.size();
+    } else {
+        // this can be very slow
+        query.last();
+        numRows = query.at() + 1;
+    }
+```
+
+
 # C++数据库编程（Boost:mysql）
 参考链接：[Boost 入门 - 1.88.0 - Boost C++ 函数库](https://boost.ac.cn/doc/libs/1_88_0/more/getting_started/index.html)
 ## 准备工作
@@ -3776,14 +3861,13 @@ int main(int argc, char** argv) {
 #### result 结果集容器
 `boost::mysql::results` 是 Boost.MySQL 提供的 **结果集容器**，用于存储 SQL 查询的返回数据。其中的方法支持链式调用，支持显式类型转换，但 **不自动转换**
 `.rows()`
-- 返回一个包含所有 **结果集** 的数组。
-- 一个 SQL 查询可能返回多个结果集（如存储过程执行多个 `SELECT`）。
+- 返回一个包含所有 **结果** 的数组。
+- 一个 SQL 查询可能返回多个结果集（如存储过程执行多个 `SELECT`），但  （截至 Boost 1.84，2025年）并不支持多结果集，可能需要调用 C 的一些库才能实现对应的功能
+- **主流的 C++ 高层封装库（包括 Qt 和 Boost.MySQL）都不支持多结果集！**
 `.row().at(0).at(0)`
 **row 表示结果集合数组行**
 - `.rows().at(0).at(0)`：访问第一个结果集（`rows_view`）的第一行（`row_view`）的第一个字段（`field_view`）。
-- `.rows()` 返回一个 `rows_view`，表示一个结果集，包含多行（`row_view`）。
-- `.rows(1).at(2).at(3)`：访问 **第二个结果集** 的第三行第四列。
-- `rows(i)` 返回第 `i+1` 个结果集（`rows_view`）。也可以写 `rows<1>()` 
+- `.rows()` 返回一个 `rows_view`，表示一个结果集**的所有行数据部分**，包含多行（`row_view`）。
 
 > [!NOTICE]
 > 
