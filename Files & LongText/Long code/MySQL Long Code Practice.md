@@ -937,6 +937,161 @@ BEGIN
 END $
 ```
 ## C++数据库编程
+### qt QSQL 编程
+```cpp
+#ifndef MYSQL_LOGIN_PAGE_H
+#define MYSQL_LOGIN_PAGE_H
+
+#include <QWidget>
+#include <QtSql/QSqlDatabase>
+
+
+QT_BEGIN_NAMESPACE
+namespace Ui {
+class mysql_login_page;
+}
+QT_END_NAMESPACE
+
+class mysql_login_page : public QWidget
+{
+    Q_OBJECT
+
+public:
+    mysql_login_page(QWidget *parent = nullptr);
+    ~mysql_login_page();
+
+private:
+    Ui::mysql_login_page *ui;
+    QSqlDatabase default_db;
+
+
+private slots:
+    void on_button_login_clicked();
+    void on_button_register_clicked();
+};
+#endif // MYSQL_LOGIN_PAGE_H
+
+
+#include "./ui_mysql_login_page.h"
+#include "mysql_login_page.h"
+#include <QDebug>
+#include <QSqlError>
+#include <QMessageBox>
+#include <QCryptographicHash>
+#include <QSqlQuery>
+
+mysql_login_page::mysql_login_page(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::mysql_login_page), default_db(QSqlDatabase::addDatabase("QMYSQL", "default mysql db"))
+{
+    ui->setupUi(this);
+    ui->lineedit_account->setMaxLength(11);
+    ui->lineedit_password->setEchoMode(QLineEdit::EchoMode::Password);
+    ui->lineedit_password->setMaxLength(8);
+
+    // mysql -h mysql2.sqlpub.com -P 3307 -usickwag -pLqX9jBDqvDJYeooE
+
+    default_db.setHostName("mysql2.sqlpub.com");
+    default_db.setPort(3307);
+    default_db.setDatabaseName("sickwag_learning");
+    default_db.setUserName("sickwag");
+    default_db.setPassword("LqX9jBDqvDJYeooE");
+
+    if (!default_db.open()) {
+        qDebug() << "MySQL connect failed:";
+        qDebug() << "Error:" << default_db.lastError().text();
+        qDebug() << "Error Code:" << default_db.lastError();
+        qDebug() << "Connection name:" << default_db.connectionName();
+        qDebug() << "Host:" << default_db.hostName();
+        qDebug() << "Port:" << default_db.port();
+        qDebug() << "Database:" << default_db.databaseName();
+        qDebug() << "Username:" << default_db.userName();
+    } else {
+        qDebug() << "MySQL connected successfully!";
+    }
+}
+
+mysql_login_page::~mysql_login_page()
+{
+    delete ui;
+}
+
+
+void mysql_login_page::on_button_login_clicked()
+{
+    QString account = ui->lineedit_account->text();
+    QString password = ui->lineedit_password->text();
+    if(account.isEmpty() || password.isEmpty()){
+        QMessageBox::warning(this, "error","account or password cannot be empty.");
+        return;
+    }
+
+    QString password_hash = QString::fromUtf8(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256).toHex());
+
+    qDebug() << "Login attempt - Account:" << account;
+    qDebug() << "Login attempt - Password hash:" << password_hash;
+    qDebug() << "Login attempt - Password hash length:" << password_hash.length();
+
+    QSqlQuery query(default_db);
+    QString sql_string = "select id, password_hash from qt_examples qe where qe.account = :account";
+    query.prepare(sql_string);
+    query.bindValue(":account", account);
+
+    if(query.exec() && query.next()){
+        QString stored_hash = query.value("password_hash").toString();
+        qDebug() << "Stored hash from database:" << stored_hash;
+        qDebug() << "Stored hash length:" << stored_hash.length();
+        qDebug() << "Hashes match:" << (stored_hash == password_hash);
+
+        if(stored_hash == password_hash){
+            QMessageBox::information(this,"success","login successed");
+        }else{
+            QMessageBox::warning(this,"error","login failed");
+        }
+    }else{
+        QMessageBox::warning(this,"error","login failed - account not found");
+    }
+}
+
+void mysql_login_page::on_button_register_clicked()
+{
+    QString account = ui->lineedit_account->text();
+    QString password = ui->lineedit_password->text();
+    if(account.isEmpty() || password.isEmpty()){
+        QMessageBox::warning(this,"error", "account or password cannot be empty.");
+        return;
+    }
+
+    // 使用指定的数据库连接
+    QSqlQuery query(default_db);
+    QString sql_string = "select id from qt_examples qe where qe.account = ?";
+    query.prepare(sql_string);
+    query.addBindValue(account);
+
+    if(query.exec() && query.size() == 0){
+        qDebug() << QString(account + " is not in db, enable to register");
+        // 现在我们使用.toHex()转换，确保和登录时一致
+        QString password_hash = QString::fromUtf8(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256).toHex());
+        qDebug() << "Register - Password hash to store:" << password_hash;
+        qDebug() << "Register - Password hash length:" << password_hash.length();
+
+        QString register_string = "insert into qt_examples(account, password_hash) values(?,?)";
+        QSqlQuery reg_query(default_db);  // 使用指定的数据库连接
+        reg_query.prepare(register_string);
+        reg_query.addBindValue(account);
+        reg_query.addBindValue(password_hash);
+
+        if(reg_query.exec() && reg_query.numRowsAffected() == 1){
+            QMessageBox::information(this,"success","register successed");
+        } else {
+            QMessageBox::warning(this,"error", QString("register failed: %1").arg(reg_query.lastError().text()));
+        }
+    } else {
+        QMessageBox::warning(this,"error", "register failed, this account already existed.");
+    }
+}
+
+```
 ### mysql-connector-cpp 链接模板
 ```cpp
 // mysql_db.h

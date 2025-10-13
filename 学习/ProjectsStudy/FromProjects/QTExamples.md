@@ -35,7 +35,7 @@ timer->inherits ("QAbstractButton");//返回false. 不是QAbatractButton的子�
 ```
 - `QObject::tr()` 和 `Qbjet::trUtf8()` 函数可翻译字符串，用于多语言界面设计。
 - `QObjct:setProperty()` 和 `Q0bjct:property()` 函数通过属性名称动态设置和获取属性值。
-- 专门为 QObject 对象设计的动态投射（`qobject_cast`），拓展于 `dynamic_cast`，[[from Official tutorial#QT 框架中的 qobject_cast|参考]]
+- 专门为 QObject 对象设计的动态投射（`qobject_cast`），拓展于 `dynamic_cast`，[[Qt Official Tutorial#QT 框架中的 qobject_cast|参考]]
 ### 元对象属性
 **元对象系统由以下三个基础组成：**
 - QObject 类是所有使用元对象系统的类的基类。

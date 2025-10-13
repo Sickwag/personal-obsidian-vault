@@ -3748,7 +3748,20 @@ while(query.next()) {
 ```
 [QSqlQuery::value](https://doc.qt.io/qt-6/zh/qsqlquery.html#value) () 函数返回当前记录中字段的值。字段指定为基于零的索引。返回一个 [QVariant](https://doc.qt.io/qt-6/zh/qvariant.html) ，该类型可容纳各种 C++ 和 Qt Core 数据类型，不同的数据库类型会自动映射为最接近的 Qt 对应类型。在代码片段中，我们调用 [QVariant::toString](https://doc.qt.io/qt-6/zh/qvariant.html#toString) () 和 [QVariant::toInt](https://doc.qt.io/qt-6/zh/qvariant.html#toInt) () 将变体转换为 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 和 `int` 。
 ### 事务执行
+如果底层数据库引擎支持事务，[QSqlDriver::hasFeature](https://doc.qt.io/qt-6/zh/qsqldriver.html#hasFeature) ([QSqlDriver::Transactions](https://doc.qt.io/qt-6/zh/qsqldriver.html#DriverFeature-enum)) 将返回 true。可以使用 [QSqlDatabase::transaction](https://doc.qt.io/qt-6/zh/qsqldatabase.html#transaction) () 启动事务，然后输入要在事务上下文中执行的 SQL 命令，最后使用 [QSqlDatabase::commit](https://doc.qt.io/qt-6/zh/qsqldatabase.html#commit) () 或 [QSqlDatabase::rollback](https://doc.qt.io/qt-6/zh/qsqldatabase.html#rollback) () 启动事务。使用事务时，必须在创建查询之前启动事务。
 
+```cpp
+QSqlDatabase::database().transaction();
+QSqlQuery query;
+query.exec("SELECT id FROM employee WHERE name = 'Torild Halvorsen'");
+if (query.next()) {
+	int employeeId = query.value(0).toInt();
+	query.exec("INSERT INTO project (id, name, ownerid) "
+			   "VALUES (201, 'Manhattan Project', "
+			   + QString::number(employeeId) + ')');
+}
+QSqlDatabase::database().commit();
+```
 ### 记录和结果集
 **结果集（result set）** 指的是 **一个 `SELECT` 查询返回的所有行的集合**，和标准 SQL 语义一致。
 一条 sql 语句只能返回一个查询结果，这个结果是以一张表形式呈现的，每一行成为一个 result 结果，整张表成为 result set 结果集。以下所有命令都是以结果集作为参考。
@@ -3784,7 +3797,51 @@ QSqlQuery query;
         numRows = query.at() + 1;
     }
 ```
+### 代码实例
+```cpp
+#ifndef MYSQL_LOGIN_PAGE_H
+#define MYSQL_LOGIN_PAGE_H
 
+#include <QWidget>
+#include <QtSql/QSqlDatabase>
+
+
+QT_BEGIN_NAMESPACE
+namespace Ui {
+class mysql_login_page;
+}
+QT_END_NAMESPACE
+
+class mysql_login_page : public QWidget
+{
+    Q_OBJECT
+
+public:
+    mysql_login_page(QWidget *parent = nullptr);
+    ~mysql_login_page();
+
+private:
+    Ui::mysql_login_page *ui;
+    QSqlDatabase default_db;
+
+
+private slots:
+    void on_button_login_clicked();
+    void on_button_register_clicked();
+};
+#endif // MYSQL_LOGIN_PAGE_H
+```
+具体实现代码可以参考：[[MySQL Long Code Practice#C++数据库编程#qt QSQL 编程|QSql编程]]
+其中还是用了加密技术，关键代码：
+```cpp
+QString password_hash = QString::fromUtf8(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256).toHex());
+```
+`toHex()` 函数返回的是一个 `QByteArray` 对象，但是他可以被转换成 `QString`，参考 [[Qt Official Tutorial#QT 中的字符串编码|QString字符编码]]，如果只使用了 `QString::fromUtf8(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256)`， ：
+1. QCryptographicHash:: hash()返回一个 QByteArray，它包含 32 字节的二进制哈希数据
+2. QString:: fromUtf 8 () 尝试将这些二进制数据解释为 UTF-8 编码的字符串
+这会将**二进制转换为 utf-8 编码字符串**，结果是一串乱码，所以需要在后面添加 `.toHex()` 函数，将这串**本质上还是二进制数据的内容**转换为 16 进制表示的字符串
+代码中采用本地加密密码字符串方式，将 16 进制加密字符串上传到服务器的方式。服务器端永远**不知道明文密码是什么**
+还有一种方式，在 sql 语句中使用 `select * from table where password_hash = SHA256(password)`，在服务器端加密字符串，**服务器也看不到明文，但是网络传输截获的数据包中包含的密码是明文**
 
 # C++数据库编程（Boost:mysql）
 参考链接：[Boost 入门 - 1.88.0 - Boost C++ 函数库](https://boost.ac.cn/doc/libs/1_88_0/more/getting_started/index.html)

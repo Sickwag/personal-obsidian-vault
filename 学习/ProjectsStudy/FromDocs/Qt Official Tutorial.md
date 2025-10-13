@@ -1,4 +1,4 @@
-# QT 官方文档原理讲解
+# Qt 核心
 ## 信号与插槽
 ### 槽函数重载在 connect 函数中的表示方法
 [Signals & Slots | Qt Core | Qt 6.10.0](https://doc.qt.io/qt-6/zh/signalsandslots.html)
@@ -231,6 +231,82 @@ qt 中有如 `u"foo"_s` （用于 [QString](https://doc.qt.io/qt-6/zh/qstring.h
 | UTF-16 | u""       | u""_s      | char16_t  | [QChar](https://doc.qt.io/qt-6/zh/qchar.html)             | [QString](https://doc.qt.io/qt-6/zh/qstring.html)       | [QStringView](https://doc.qt.io/qt-6/zh/qstringview.html)             |
 | 二进制/无  | -         | ""_ba      | std::byte | -                                                         | [QByteArray](https://doc.qt.io/qt-6/zh/qbytearray.html) | [QByteArrayView](https://doc.qt.io/qt-6/zh/qbytearrayview.html)       |
 | 灵活     | 任何        | -          | -         | -                                                         | -                                                       | [QAnyStringView](https://doc.qt.io/qt-6/zh/qanystringview.html)       |
+## Qt 模块
+### Qt SQL
+https://doc.qt.io/qt-6/zh/qtsql-index.html
+#### qt 连接 mysql 方法
+参考[[软件使用错误#Qt 缺少 mysql 驱动导致无法连接 mysql]]
+#### SQL 编程
+##### 连接数据库 + 执行 sql 语句
+参考 [[MySQL#C++数据库编程（qt qmysql）]] 中的[[MySQL#代码编写#代码实例|代码实例：编写一个简单的登录注册页面]]
+##### 使用 SQL 模型类
+除了[QSqlQuery](https://doc.qt.io/qt-6/zh/qsqlquery.html) 之外，Qt 还提供了三个用于访问数据库的高级类。这些类是[QSqlQueryModel](https://doc.qt.io/qt-6/zh/qsqlquerymodel.html) 、[QSqlTableModel](https://doc.qt.io/qt-6/zh/qsqltablemodel.html) 和[QSqlRelationalTableModel](https://doc.qt.io/qt-6/zh/qsqlrelationaltablemodel.html) 。
+
+| [QSqlQueryModel](https://doc.qt.io/qt-6/zh/qsqlquerymodel.html)                     | 基于任意 SQL 查询的只读模型。                                                        |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| [QSqlTableModel](https://doc.qt.io/qt-6/zh/qsqltablemodel.html)                     | 基于单个表的读写模式。                                                              |
+| [QSqlRelationalTableModel](https://doc.qt.io/qt-6/zh/qsqlrelationaltablemodel.html) | 支持外键的[QSqlTableModel](https://doc.qt.io/qt-6/zh/qsqltablemodel.html) 子类。 |
+##### SQL 查询模型（只读）
+```cpp
+QSqlQueryModelmodel;
+model.setQuery("SELECT * FROM employee");
+for(int i= 0; i<model.rowCount();++i) {
+	int id = model.record(i).value("id").toInt();
+	QStringname = model.record(i).value("name").toString();
+	qDebug() << id << name;
+}
+```
+注意 QSqlQueryModelmodel 的文档说明
+![[Pasted image 20251013172953.png]] 从签名可以看出使用之前是需要设置 QSqlQuery 对象的，如果直接填入 sql 语句字符串，也是可以转换的。`query()` 返回已经设置的 query 对象。`setQuery()` 要注意:
+
+> ***void QSqlQueryModel:: setQuery (QSqlQuery &&query)***
+> - Resets the model and sets the data provider to be the given query. Note that the query must be active and must not be isForwardOnly ().
+> - lastError () can be used to retrieve verbose information if there was an error setting the query.
+> 
+> ***QSqlRecord QSqlQueryModel:: record (int row) const***
+> - Returns the record containing information about the fields of the current query. If row is the index of a valid row, the record will be populated with values from that row
+> - If the model is not initialized, an empty record will be returned.    
+
+##### SQL 表模型（可修改）
+```cpp
+QSqlTableModelmodel;
+model.setTable("employee");
+model.setFilter("salary > 50000");
+model.setSort(2、 Qt::DescendingOrder);
+model.select();
+for (inti = 0; i < model.rowCount(); ++i) {
+    QStringname = model.record(i).value("name").toString();
+    intsalary = model.record(i).value("salary").toInt();
+    qDebug() << name << salary;
+}
+```
+一种 QSqlQuery 的上位替代，代码量较少而且不需要 SQL 语法知识。可以使用**面向对象方法**的 setter，getter 函数操作数据库
+```cpp
+for (int i = 0; i < model.rowCount(); ++i) {
+	QSqlRecord record = model.record(i);
+	double salary = record.value("salary").toInt();
+	salary *= 1.1;
+	record.setValue("salary", salary);
+	model.setRecord(i, record);
+}
+model.submitAll();
+```
+完成记录更改后，应始终调用[QSqlTableModel::submitAll](https://doc.qt.io/qt-6/zh/qsqltablemodel.html#submitAll)() 以确保更改已写入数据库。
+何时以及是否_需要_调用 submitAll() 取决于表的 [edit strategy](https://doc.qt.io/qt-6/zh/qsqltablemodel.html#editStrategy) 。默认策略是 [QSqlTableModel::OnRowChange](https://doc.qt.io/qt-6/zh/qsqltablemodel.html#EditStrategy-enum) ，它规定当用户选择不同的记录时，待处理的更改将应用到数据库。其他策略有 [QSqlTableModel::OnManualSubmit](https://doc.qt.io/qt-6/zh/qsqltablemodel.html#EditStrategy-enum) （所有更改都缓存在模型中，直到调用 submitAll()）和 [QSqlTableModel::OnFieldChange](https://doc.qt.io/qt-6/zh/qsqltablemodel.html#EditStrategy-enum) （不缓存更改）。
+##### SQL 关系表模型（表间关系）
+[QSqlRelationalTableModel](https://doc.qt.io/qt-6/zh/qsqlrelationaltablemodel.html) 扩展了 [QSqlTableModel](https://doc.qt.io/qt-6/zh/qsqltablemodel.html) ，为外键提供了支持。
+因为 qt 不支持多结果集，所以如果需要多表之间的数据互通，可以使用关系表模型类来实现
+```cpp
+model->setTable("employee");
+
+model->setRelation(2, QSqlRelation("city", "id", "name"));
+model->setRelation(3, QSqlRelation("country", "id", "name"));
+```
+> The setRelation () function calls establish a relationship between two tables. The first call specifies that column 2 in table employee is a foreign key that maps with field id of table city, and that the view should present the city's name field to the user. The second call does something similar with column 3.
+> The setRelation () call specifies that column 2 in table employee is a foreign key that maps with field id of table city, and that the view should present the city's name field to the user.
+> 
+> 第一个 setRelation 表示将 employee 表的第 2 列设置一个外键，链接到 city 表中的 id 列，最终将 city 表中 id 列与 employee 表中的第 2 列相等的记录的 city 表中的 name 属性显示在 id 表中的 city 列
+> 
 # 项目实例
 ## AnalogClock
 ### QPainter 设置绘制原点和缩放
@@ -743,4 +819,3 @@ set(PROJECT_SOURCES
 ```
 才能够将文件引入项目，打包到二进制文件中
 在 MSBuild 中，在 qrc 和 ui 文件中编辑之后，**一定要按 Ctrl+s**保存，之后 vxproj 文件中会自动将这两个文件中的内容引入。不需要写 CMakeLists. txt，并且写了 MSBuild 也无法读取
-
