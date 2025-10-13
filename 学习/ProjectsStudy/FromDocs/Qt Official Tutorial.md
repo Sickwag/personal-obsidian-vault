@@ -231,21 +231,22 @@ qt 中有如 `u"foo"_s` （用于 [QString](https://doc.qt.io/qt-6/zh/qstring.h
 | UTF-16 | u""       | u""_s      | char16_t  | [QChar](https://doc.qt.io/qt-6/zh/qchar.html)             | [QString](https://doc.qt.io/qt-6/zh/qstring.html)       | [QStringView](https://doc.qt.io/qt-6/zh/qstringview.html)             |
 | 二进制/无  | -         | ""_ba      | std::byte | -                                                         | [QByteArray](https://doc.qt.io/qt-6/zh/qbytearray.html) | [QByteArrayView](https://doc.qt.io/qt-6/zh/qbytearrayview.html)       |
 | 灵活     | 任何        | -          | -         | -                                                         | -                                                       | [QAnyStringView](https://doc.qt.io/qt-6/zh/qanystringview.html)       |
-## Qt 模块
-### Qt SQL
+# Qt 模块
+## Qt SQL
 https://doc.qt.io/qt-6/zh/qtsql-index.html
-#### qt 连接 mysql 方法
+### qt 连接 mysql 方法
 参考[[软件使用错误#Qt 缺少 mysql 驱动导致无法连接 mysql]]
 #### SQL 编程
-##### 连接数据库 + 执行 sql 语句
+#### 连接数据库 + 执行 sql 语句
 参考 [[MySQL#C++数据库编程（qt qmysql）]] 中的[[MySQL#代码编写#代码实例|代码实例：编写一个简单的登录注册页面]]
-##### 使用 SQL 模型类
+#### 使用 SQL 模型类
 除了[QSqlQuery](https://doc.qt.io/qt-6/zh/qsqlquery.html) 之外，Qt 还提供了三个用于访问数据库的高级类。这些类是[QSqlQueryModel](https://doc.qt.io/qt-6/zh/qsqlquerymodel.html) 、[QSqlTableModel](https://doc.qt.io/qt-6/zh/qsqltablemodel.html) 和[QSqlRelationalTableModel](https://doc.qt.io/qt-6/zh/qsqlrelationaltablemodel.html) 。
 
 | [QSqlQueryModel](https://doc.qt.io/qt-6/zh/qsqlquerymodel.html)                     | 基于任意 SQL 查询的只读模型。                                                        |
 | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | [QSqlTableModel](https://doc.qt.io/qt-6/zh/qsqltablemodel.html)                     | 基于单个表的读写模式。                                                              |
 | [QSqlRelationalTableModel](https://doc.qt.io/qt-6/zh/qsqlrelationaltablemodel.html) | 支持外键的[QSqlTableModel](https://doc.qt.io/qt-6/zh/qsqltablemodel.html) 子类。 |
+#### 在表视图中显示数据
 ##### SQL 查询模型（只读）
 ```cpp
 QSqlQueryModelmodel;
@@ -293,6 +294,31 @@ model.submitAll();
 ```
 完成记录更改后，应始终调用[QSqlTableModel::submitAll](https://doc.qt.io/qt-6/zh/qsqltablemodel.html#submitAll)() 以确保更改已写入数据库。
 何时以及是否_需要_调用 submitAll() 取决于表的 [edit strategy](https://doc.qt.io/qt-6/zh/qsqltablemodel.html#editStrategy) 。默认策略是 [QSqlTableModel::OnRowChange](https://doc.qt.io/qt-6/zh/qsqltablemodel.html#EditStrategy-enum) ，它规定当用户选择不同的记录时，待处理的更改将应用到数据库。其他策略有 [QSqlTableModel::OnManualSubmit](https://doc.qt.io/qt-6/zh/qsqltablemodel.html#EditStrategy-enum) （所有更改都缓存在模型中，直到调用 submitAll()）和 [QSqlTableModel::OnFieldChange](https://doc.qt.io/qt-6/zh/qsqltablemodel.html#EditStrategy-enum) （不缓存更改）。
+
+文档中写：
+
+> 1. QSqlTableModel:: OnFieldChange 在这种情况下，SubmitAll()似乎可以实现永远不需要显式 调用 submitAll()的承诺。但这有两个隐患：
+> 
+
+| 编号  | 类型                   | 修改提交行为                   | 内部原理     |
+| --- | -------------------- | ------------------------ | -------- |
+| A   | `OnFieldChange` (默认) | 对每一字段修改立即提交 <-- ⚠️隐患源头   | 无缓存，实时写入 |
+| B   | `OnRowChange`        | 在整行修改且换行后才提交             | 行缓存更新    |
+| C   | `OnManualSubmit`     | 须手动调用 `submitAll()` 统一提交 | 所有变更暂存   |
+最容易影响性能的是 `onFieldChange`
+```cpp
+model->setEditStrategy(QSqlTableModel::OnFieldChange);
+```
+- Qt 对每次**字段变更**都会立即执行 SQL `UPDATE`
+- 修改每个字段 = 一次数据库 round-trip（网络请求）
+- 如果有 4 个字段改动 = 4 次 SQL 提交 = 4 × 网络延迟 + 4 × 数据锁 + 4 × 查询执行
+- 而不是累计在内存中，待用户按下“保存”按钮一次性提交。
+
+
+
+> 2. 在没有任何缓存的情况下，性能可能会大幅下降。如果你修改了主键，当你试图填充它时，记录可能会从你的指缝中溜走。
+
+
 ##### SQL 关系表模型（表间关系）
 [QSqlRelationalTableModel](https://doc.qt.io/qt-6/zh/qsqlrelationaltablemodel.html) 扩展了 [QSqlTableModel](https://doc.qt.io/qt-6/zh/qsqltablemodel.html) ，为外键提供了支持。
 因为 qt 不支持多结果集，所以如果需要多表之间的数据互通，可以使用关系表模型类来实现
@@ -306,7 +332,9 @@ model->setRelation(3, QSqlRelation("country", "id", "name"));
 > The setRelation () call specifies that column 2 in table employee is a foreign key that maps with field id of table city, and that the view should present the city's name field to the user.
 > 
 > 第一个 setRelation 表示将 employee 表的第 2 列设置一个外键，链接到 city 表中的 id 列，最终将 city 表中 id 列与 employee 表中的第 2 列相等的记录的 city 表中的 name 属性显示在 id 表中的 city 列
-> 
+
+
+
 # 项目实例
 ## AnalogClock
 ### QPainter 设置绘制原点和缩放

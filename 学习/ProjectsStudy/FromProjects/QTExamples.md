@@ -304,6 +304,8 @@ Qt 中有专门用于日期、时间编辑和显示的界面组件，介绍如�
 # QComboBox和QPlainTextEdit的讲解和使用
 参考 [QComboBox和QPlainTextEdit的讲解和使用_qt富文本下拉插入-CSDN博客](https://xmuli.blog.csdn.net/article/details/101127870)
 ## 一些 qt creater 使用经验
+### 下载 qt 官方示例代码文件
+
 ### 杂项
 如果调用一个对象函数，这个函数明明在文档里有些，但是 ide（creator）没有提示，可能是这个对象（控件）必须单独 include，而不是靠 ide 提示自动补全头文件
 ### 添加 qrc 资源管理
