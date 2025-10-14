@@ -306,6 +306,25 @@ Qt 中有专门用于日期、时间编辑和显示的界面组件，介绍如�
 ## 一些 qt creater 使用经验
 ### 下载 qt 官方示例代码文件
 
+![[Pasted image 20251013195329.png]]
+一个个文件复制粘贴太麻烦了，可以看到这是一个 git 仓库，使用 git，curl 方法可以将文件拉取下来。
+也使用脚本
+![[download_qt_example.bat]]
+
+![[download_qt_example.py]]
+
+![[download_qt_example_full.py]]
+
+![[download_qt_example_simple.py]]
+
+这几个文件说明 [[README]]
+
+qt 官方也将内容打包好了放在 [Index of /official_releases](https://download.qt.io/official_releases/) 中，
+找到对应版本号 [Index of /official_releases/qt/6.8/6.8.0](https://download.qt.io/official_releases/qt/6.8/6.8.0/)
+![[Pasted image 20251013195552.png]]
+submodules 分模块下载，single 是所有模块文件打包下载，压缩包有 1.5 G，解压会有 8~9 G，所以一般分模块下载
+大部分使用核心组件的教程代码会放在 `qtbase-everywhere-src-6.8.0.zip` 这种名称的代码包里
+
 ### 杂项
 如果调用一个对象函数，这个函数明明在文档里有些，但是 ide（creator）没有提示，可能是这个对象（控件）必须单独 include，而不是靠 ide 提示自动补全头文件
 ### 添加 qrc 资源管理

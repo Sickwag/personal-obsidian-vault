@@ -319,7 +319,7 @@ model->setEditStrategy(QSqlTableModel::OnFieldChange);
 > 2. 在没有任何缓存的情况下，性能可能会大幅下降。如果你修改了主键，当你试图填充它时，记录可能会从你的指缝中溜走。
 
 
-##### SQL 关系表模型（表间关系）
+##### SQL 关系表模型（表间关系展示，只读）
 [QSqlRelationalTableModel](https://doc.qt.io/qt-6/zh/qsqlrelationaltablemodel.html) 扩展了 [QSqlTableModel](https://doc.qt.io/qt-6/zh/qsqltablemodel.html) ，为外键提供了支持。
 因为 qt 不支持多结果集，所以如果需要多表之间的数据互通，可以使用关系表模型类来实现
 ```cpp
