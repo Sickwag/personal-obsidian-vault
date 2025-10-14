@@ -51,8 +51,19 @@
               "icon": "lucide-file",
               "title": "MySQL Long Code Practice"
             }
+          },
+          {
+            "id": "dc97c96c30d82830",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -236,8 +247,10 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "71054dca4a941f71",
+  "active": "dc97c96c30d82830",
   "lastOpenFiles": [
+    "Files & LongText/Long code/MySQL Long Code Practice.md",
+    "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "Files & LongText/Attachments/README.md",
     "学习/ProjectsStudy/FromProjects/QTExamples.md",
     "Files & LongText/Attachments/README 1.md",
@@ -248,8 +261,6 @@
     "Files & LongText/Attachments/Pasted image 20251013195552.png",
     "Files & LongText/Attachments/Pasted image 20251013195329.png",
     "学习/Language/SQL/MySQL.md",
-    "Files & LongText/Long code/MySQL Long Code Practice.md",
-    "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "Files & LongText/Attachments/Pasted image 20251013175336.png",
     "Files & LongText/Attachments/Pasted image 20251013175325.png",
     "Files & LongText/Attachments/Pasted image 20251013172953.png",
