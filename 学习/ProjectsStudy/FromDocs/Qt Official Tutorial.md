@@ -847,3 +847,38 @@ set(PROJECT_SOURCES
 ```
 才能够将文件引入项目，打包到二进制文件中
 在 MSBuild 中，在 qrc 和 ui 文件中编辑之后，**一定要按 Ctrl+s**保存，之后 vxproj 文件中会自动将这两个文件中的内容引入。不需要写 CMakeLists. txt，并且写了 MSBuild 也无法读取
+
+
+## Books
+来自 qt 官方文档 https://code.qt.io/cgit/qt/qtbase.git/tree/examples/sql/books?h=6.10 并且 qt creater 中内置
+### 初始化数据库部分(initDB. h)
+由于 sql 语句是全 ascii 的，所以使用 `QLatin1String` 减少编译时间，并同意用一个实现功能的函数将字符串**预处理**并执行，高效&优雅
+
+本项目使用 sqlite **嵌入式数据库**作为数据库程序：
+#### sqlite 和客户端数据库的去呗
+  SQLite 是嵌入式数据库，不是客户端-服务器数据库：
+
+- 客户端-服务器数据库（如 MySQL, PostgreSQL, SQL Server）:
+	 - 需要独立的服务进程在服务器上运行
+	 - 客户端通过网络协议连接到服务器
+	 - 需要指定主机名、端口、用户名、密码等连接参数
+	 - 例如："host=localhost; user=user; password=pwd; database=mydb"
+- SQLite 是嵌入式数据库:
+	 - 数据库引擎直接链接到应用程序中
+	 - 不需要独立的服务器进程
+	 - 数据存储在单个文件中（或内存中）
+	 - 因此不需要域名、用户名、密码等连接参数
+	 - `QSqlDatabase:: addDatabase ("QSQLITE")` 创建了一个 SQLite 数据库连接
+	 - `db.setDatabaseName (":memory: ")` 指定使用内存数据库（特殊语法），数据库数据直接存放在内存中，所以不需要设置连接配置
+-  ":memory: "特殊含义：
+	- `:memory:` 是SQLite的一个特殊标识符
+	- 它告诉SQLite在内存中创建一个临时数据库
+	- 这个数据库只存在于当前应用程序运行期间
+	- 不需要用户名/密码因为它是应用程序内部的
+	-  使用 `:memory:` 表示数据存储在内存中
+	- 每次程序重启，内存中的数据会完全消失，`initDb()` 函数会在程序启动时重新创建表结构并插入示例数据
+- 如果你想让数据永久保存：
+	- 将` db.setDatabaseName (":memory: "); `改为文件路径
+	- 例如：`db.setDatabaseName ("books. db");`
+	- 这样数据会保存在名为 "books. db" 的文件中
+	- 重启程序后数据依然存在

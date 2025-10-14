@@ -354,6 +354,21 @@ file 标签引入两个文件夹相对于 project_source 宏的位置，即项�
 1. 物理路径：qrc 文件中`<file>`标签指定的文件路径（相对于 qrc 文件位置）
 2. 虚拟路径：通过 prefix 定义的虚拟文件系统路径
 3. 访问路径：代码中使用:/前缀/文件路径的格式访问
+如果不使用 qrc 文件引入图片，也可以在 cmake 中使用下面方式引入
+```cpp
+set(books_resource_files
+    "images/star.svg"
+    "images/star-filled.svg"
+)
+
+qt_add_resources(books "books"
+    PREFIX
+        "/"
+    FILES
+        ${books_resource_files}
+)
+```
+这样就要求项目文件目录下必须要有一个真实存在的 image 文件夹，并在其中放入相应的图片
 ### 添加组件和类
 qt creater 不像 vs，能够在添加继承自 widget 的类的同时选择是否添加 ui 文件，而是需要自己添加完 h\cpp 文件之后自己再添加一次 ui 文件
 ![[Pasted image 20251012120655.png]]
