@@ -936,7 +936,7 @@ if (!model->select()) {
 > ***QSqlRelationalTableModel:: QSqlRelationalTableModel (QObject *parent = nullptr, const QSqlDatabase &db = QSqlDatabase ())***
 > Creates an empty QSqlRelationalTableModel and sets the parent to parent and the database connection to db. If db is not valid, the default database connection will be used.
 
-其中说明一旦调用了 QSqlRelationTableMode 构造函数，那么链接到 db（第二个参数）指向的数据库，如果没有设置，自动调用 `QSqlDataBase()` 构造函数获取，这里指创建了一个对象（其实多个数据库也不会报错，调用的第一个），就默认连接第一个。
+其中说明一旦调用了 QSqlRelationTableMode 构造函数，那么链接到 db（第二个参数）指向的数据库，如果没有设置，自动调用 `QSqlDataBase()` 构造函数获取，项目中只创建了一个数据库对象（其实多个数据库也不会报错，调用的第一个），就默认连接第一个。
 
 文档中还可以看到，只有 sql 数据模型才有 `select()` 函数重载，其他数据模型没有。
 `select()` 函数被调用时，会自动根据之前 `setRelation` 等设置关系的函数设置的参数来构建发送给数据库的 select 语句，并在函数调用时发送给数据库
@@ -997,6 +997,15 @@ LEFT JOIN authors a ON b.author = a.id
 LEFT JOIN genres g ON b.genre = g.id
 ```
 
+#### 通过关系数据模型获取混合数据
+对于 `QSqlRelationTableMode` 对象，通过各种 set 函数[[#最终显示视图和数据模型视图|设置其中规则]]并[[#数据模型获取数据库数据|调用`select`函数]]之后，由于这个模型**只保存 setTable设置的参照表引用和各项施加于参照表的规则**，所以有两种获取“混合数据表”中数据的方法：
+- 获取参照表的数据
+	- `model.fieldIndex(Qstring str)`，通过列`名返回这列数据在表中的 index
+	- `model.record().fieldName(int index)`，通过 index 返回列名
+	- `model.data(index)` 通过 index 获取列信息`
+- 获取参照表中**外键链接的表数据**
+	- `model->relationModel(authorIdx)` 会返回外键**指向的表的完整数据**（QSqlTableModel）
+	- 
 同时由于 `authorComboBox` 和 `genrComboBox` 中的内容是根据数据库中对应列的内容来的，所以必须要设置
 ```cpp
 authorComboBox->setModel (model->relationModel (authorIdx));
@@ -1004,4 +1013,62 @@ authorComboBox->setModelColumn (model->relationModel (authorIdx)->fieldIndex ("n
 genreComboBox->setModel (model->relationModel (genreIdx));
 genreComboBox->setModelColumn (model->relationModel (genreIdx)->fieldIndex ("name"));
 ```
-#### 铜鼓
+先 setModel 告诉 combobox 的数据从哪一个数据模型中来，再使用 setModelColumn 告诉 combobox 数据来源于数据模型中的哪一列
+
+#### 数据模型和 UI 控件同步
+QDataWidgetMapper 是Qt中实现UI控件与数据模型双向绑定的关键类，它实现了MVVM（Model-View-ViewModel）设计模式中的数据映射功能。
+
+核心功能
+1. 双向数据同步
+	- 模型→UI：当模型中的当前行改变时，自动将数据填充到对应的UI控件
+	- UI→模型：当用户编辑UI控件时，自动将更改保存回模型
+2. 数据映射机制
+```cpp
+mapper->addMapping(mySpinBox, 0);      // mySpinBox ←→ 模型的第0列
+mapper->addMapping(myLineEdit, 1);     // myLineEdit ←→ 模型的第1列
+mapper->addMapping(myCountryChooser, 2); // myCountryChooser ←→ 模型的第2列
+```
+`QDataWidgetMapper` 是一个"桥梁"，它**将表单控件（如输入框、组合框）与数据模型的特定列自动同步**。注意控件是和数据模型链接，而不是直接和数据库连接，数据库和数据模型之间的连接关系式由 `setEditStrategy()` 定义
+```cpp
+model->setEditStrategy(QSqlTableModel::OnManualSubmit);
+```
+查阅文档可知：
+
+| Constant                         | Value | Description                                                                                    |
+| -------------------------------- | ----- | ---------------------------------------------------------------------------------------------- |
+| `QSqlTableModel::OnFieldChange`  | 0     | All changes to the model will be applied immediately to the database.                          |
+| `QSqlTableModel::OnRowChange`    | 1     | Changes to a row will be applied when the user selects a different row.                        |
+| `QSqlTableModel::OnManualSubmit` | 2     | All changes will be cached in the model until either `submitAll()` or `revertAll()` is called. |
+这样函数就很好理解了
+```cpp
+void BookWindow::createMappings() {
+    QDataWidgetMapper *mapper = new QDataWidgetMapper(this);
+    mapper->setModel(model);
+    
+    // 设置自定义委托，用于特殊显示（如星级评分）
+    mapper->setItemDelegate(new BookDelegate(this));
+    mapper->addMapping(titleLineEdit, model->fieldIndex("title"));
+    mapper->addMapping(yearSpinBox, model->fieldIndex("year"));
+    mapper->addMapping(authorComboBox, authorIdx);
+    mapper->addMapping(genreComboBox, genreIdx);
+    mapper->addMapping(ratingComboBox, model->fieldIndex("rating"), "currentIndex");
+    
+    // 表格中选择的行改变 → 更新mapper的当前索引 → 在修改ui或者数据库中的内容是更新表单控件或者数据库数据
+    connect(tableView->selectionModel(),
+            &QItemSelectionModel::currentRowChanged,
+            mapper,
+            &QDataWidgetMapper::setCurrentModelIndex
+            );
+}
+```
+### 设置委托机制
+##### 委托机制 www？
+委托就像是一个"UI 设计师"，它告诉 Qt 表格"**这个数据该怎么画出来**"和"**如果要编辑这个数据该用什么工具**"。
+自定义一个委托类，继承自 qt 的内置委托类型，可以通过查阅文档来知道**必须要重写什么函数**，委托类可以应用于**任何基于项(item)的视图组件**
+项目中的视图主要是 sql 数据视图，所以这里委托类继承 QSqlRelatioalDelegate
+```cpp
+class BookDelegate : public QSqlRelationalDelegate
+```
+- 每个组件用什么风格绘制（`paint()`）
+- 组件如何修改组件的内容或者状态（`createEditor()`）
+- 修改后的效果如何（`setEditorData()`）
