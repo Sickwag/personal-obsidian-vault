@@ -855,7 +855,7 @@ set(PROJECT_SOURCES
 由于 sql 语句是全 ascii 的，所以使用 `QLatin1String` 减少编译时间，并同意用一个实现功能的函数将字符串**预处理**并执行，高效&优雅
 
 本项目使用 sqlite **嵌入式数据库**作为数据库程序：
-#### sqlite 和客户端数据库的去呗
+#### sqlite 和客户端数据库的区别
   SQLite 是嵌入式数据库，不是客户端-服务器数据库：
 
 - 客户端-服务器数据库（如 MySQL, PostgreSQL, SQL Server）:
@@ -882,3 +882,39 @@ set(PROJECT_SOURCES
 	- 例如：`db.setDatabaseName ("books. db");`
 	- 这样数据会保存在名为 "books. db" 的文件中
 	- 重启程序后数据依然存在
+#### sql 预处理优化可读性
+对于简单的 sql 功能，只有 ascill 字符情况下可以**使用 `constexpre QLatin1String` 预编译字符串**，再将字符串的 sql 预编译，参数绑定，sql 执行封装一个函数中，比如代码中的 addAuthor，addGene 等
+#### QSqlQuery 复用陷阱
+1. 每次调用 `exec()` 时，会清空之前的 SQL 语句和绑定内容
+2. 绑定值：每次调用 `addBindValue()` 时，会累积绑定值，不会自动清空
+3. `exec()` 执行：执行当前准备好的 SQL 语句
+在每一次执行 addAuthor 等封装好的函数之前，项目中都使用了
+```cpp
+if (!q.prepare(INSERT_BOOK_SQL))
+    return q.lastError();
+```
+不是每使用一次 sql 语句执行就需要创建一个 QSqlQuery 对象，这个对象可以复用
+### 构建窗口部分（bookwindow. h）
+#### 最终显示视图和数据模型视图
+要查阅并允许修改数据库数据，所以项目中使用了 `QSqLRelationTableMode* model` 将最终需要显示出的数据都存放在 model 指针中，然后通过：
+- 表与表之间的链接关系（`setRelation()` 将不同表中的数据关联起来）
+- 表的列名字符串不再显示为数据库中的名称（`setHeaderData()` 设置 model 的“显示值”，并不会改动数据库中的元信息）
+- model 设置的是由数据库中各张表**根据 `setRelation()` 设置的规则**组合出来的“混合数据表”，别的 TableView 组件可以通过 `setModel()` 来获取这张“表"中的信息（qt 中讲这种行为称为***获取数据模型***）并显示在 gui 界面上。
+
+最终显示在 gui 程序中的图标是通过 `QTableView* tableView` 组件实现的，数据库中的数据经过 model 加工设置之后，显示在 tableView gui中
+
+- configureWidgets 函数中设置的是 tableView 组件的样式
+- createModel 函数中设置的是显示数据的内容。
+#### 数据模型获取数据库数据
+在代码中并没有看到 model 对象在哪里和 sqlite 的 `:memory:` 数据库信息交互，但并不是 model 
+
+
+
+
+同时由于 `authorComboBox` 和 `genrComboBox` 中的内容是根据数据库中对应列的内容来的，所以必须要设置
+```cpp
+authorComboBox->setModel (model->relationModel (authorIdx));
+authorComboBox->setModelColumn (model->relationModel (authorIdx)->fieldIndex ("name"));
+genreComboBox->setModel (model->relationModel (genreIdx));
+genreComboBox->setModelColumn (model->relationModel (genreIdx)->fieldIndex ("name"));
+```
