@@ -906,10 +906,96 @@ if (!q.prepare(INSERT_BOOK_SQL))
 - configureWidgets 函数中设置的是 tableView 组件的样式
 - createModel 函数中设置的是显示数据的内容。
 #### 数据模型获取数据库数据
-在代码中并没有看到 model 对象在哪里和 sqlite 的 `:memory:` 数据库信息交互，但并不是 model 
+在代码中并没有看到 model 对象在哪里和 sqlite 的 `:memory:` 数据库信息交互，但 model 并不是凭空而来的，可以看到 BookWindow 构造函数中有这样一段代码：
+```cpp
+if (!model->select()) {
+    showError(model->lastError());
+    return;
+}
+```
+`select()` 函数 select 了什么？
+这就需要知道 sql数据模型和数据库的交互逻辑了，查阅文档：
 
+> ***bool QSqlTableModel::select()***
+> Populates the model with data from the table that was set via `setTable()`, using the specified filter and sort condition, and returns true if successful; otherwise returns false.
+> 
+> Note: Calling `select()` will revert any unsubmitted changes and remove any inserted columns.
+> 
+>  ***void QSqlTableModel::setTable(const QString &tableName)***
+>  Sets the database table on which the model operates to tableName. Does not select data from the table, but fetches its field information.
+>  To populate the model with the table's data, call `select()`.
+>  Error information can be retrieved with `lastError()`.
 
+可以知道，在调用 `model->select()` 函数前，model 不会存储任何数据库中的数据，有的只是一堆规则，`setTable`，`setRelation` 都只是告诉 model**应该怎样将数据***组织成数据模型***的规则**
+并且调用 `select()` 函数之前必须要使用 `setTable(table_name_str)` 告诉需要调用哪一个表
 
+`select()` 如何知道 sql 语句的数据库执行对象？
+
+查阅文档：
+
+> ***QSqlRelationalTableModel:: QSqlRelationalTableModel (QObject *parent = nullptr, const QSqlDatabase &db = QSqlDatabase ())***
+> Creates an empty QSqlRelationalTableModel and sets the parent to parent and the database connection to db. If db is not valid, the default database connection will be used.
+
+其中说明一旦调用了 QSqlRelationTableMode 构造函数，那么链接到 db（第二个参数）指向的数据库，如果没有设置，自动调用 `QSqlDataBase()` 构造函数获取，这里指创建了一个对象（其实多个数据库也不会报错，调用的第一个），就默认连接第一个。
+
+文档中还可以看到，只有 sql 数据模型才有 `select()` 函数重载，其他数据模型没有。
+`select()` 函数被调用时，会自动根据之前 `setRelation` 等设置关系的函数设置的参数来构建发送给数据库的 select 语句，并在函数调用时发送给数据库
+如果这样设置：
+```cpp
+model->setTable("books");                    // 目标表
+model->setRelation(authorIdx, QSqlRelation("authors", "id", "name"));  // 关系1
+model->setRelation(genreIdx, QSqlRelation("genres", "id", "name"));    // 关系2
+```
+QSqlRelation 的文档说：
+
+>  ***void QSqlRelationalTableModel:: setRelation (int column, const QSqlRelation &relation)*** 
+>  Lets the specified column be a foreign index specified by relation.
+>  Example:
+> 
+>  model->setTable ("employee");
+>  model->setRelation(2, QSqlRelation("city", "id", "name"));
+> 
+> The `setRelation()` call specifies that column 2 in table employee is a foreign key that maps with field id of table city, and that the view should present the city's name field to the user.
+> Note: The table's primary key may not contain a relation to another table.
+
+也就是说，代码 `model->setRelation(authorIdx, QSqlRelation("authors", "id", "name"));` ：
+- 将 books（`setTable` 设置的参考表）中的第 `authorIdx` 列**标记为为外键**（能够与别的表中列数据对应的列）
+- 用外键链接到 `authors` 表，链接依据是 `books.author == author.id` 
+- 连接之后将数据表中的 authorIdx 列数据显示为 `author.name` 中的数据
+
+```sql
+-- books 表实际存储：
+id | title       | author | ...
+1  | Qt Guide    | 101    | ...
+2  | C++ Primer  | 102    | ...
+
+-- authors 表：
+id | name
+101| John Smith
+102| Jane Doe
+
+-- 在表格中显示为：
+Title       | Author      | ...
+Qt Guide    | John Smith  | ...  ← 显示 name 而不是 101
+C++ Primer  | Jane Doe    | ...  ← 显示 name 而不是 102
+```
+
+最终得到的 sql 语句会是这样的：
+```sql
+-- 内部构建的SQL可能是：
+SELECT
+	b.id,
+	b.title,
+	b.author,
+	b.genre,
+	b.year,
+	b.rating,
+	a.name as author_name,
+	g.name as genre_name
+FROM books b
+LEFT JOIN authors a ON b.author = a.id
+LEFT JOIN genres g ON b.genre = g.id
+```
 
 同时由于 `authorComboBox` 和 `genrComboBox` 中的内容是根据数据库中对应列的内容来的，所以必须要设置
 ```cpp
@@ -918,3 +1004,4 @@ authorComboBox->setModelColumn (model->relationModel (authorIdx)->fieldIndex ("n
 genreComboBox->setModel (model->relationModel (genreIdx));
 genreComboBox->setModelColumn (model->relationModel (genreIdx)->fieldIndex ("name"));
 ```
+#### 铜鼓
