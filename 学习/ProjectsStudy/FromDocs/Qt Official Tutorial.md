@@ -1002,7 +1002,15 @@ LEFT JOIN genres g ON b.genre = g.id
 - 获取参照表的数据
 	- `model.fieldIndex(Qstring str)`，通过列`名返回这列数据在表中的 index
 	- `model.record().fieldName(int index)`，通过 index 返回列名
-	- `model.data(index)` 通过 index 获取列信息`
+	- `model.data(index)` 通过 index 获取列信息
+data 还可以填入角色内容这一参数，不同的内容会**看**到不同的数据内容，：查阅文档可知，
+```cpp
+// Qt::DisplayRole - 显示给用户看的文本
+// Qt::EditRole - 用于编辑的值
+// Qt::ToolTipRole - 工具提示
+// Qt::UserRole - 自定义数据
+```
+
 - 获取参照表中**外键链接的表数据**
 	- `model->relationModel(authorIdx)` 会返回外键**指向的表的完整数据**（QSqlTableModel）
 	- 
@@ -1062,7 +1070,7 @@ void BookWindow::createMappings() {
 }
 ```
 ### 设置委托机制
-##### 委托机制 www？
+#### 委托机制 www？
 委托就像是一个"UI 设计师"，它告诉 Qt 表格"**这个数据该怎么画出来**"和"**如果要编辑这个数据该用什么工具**"。
 自定义一个委托类，继承自 qt 的内置委托类型，可以通过查阅文档来知道**必须要重写什么函数**，委托类可以应用于**任何基于项(item)的视图组件**
 项目中的视图主要是 sql 数据视图，所以这里委托类继承 QSqlRelatioalDelegate
@@ -1072,3 +1080,10 @@ class BookDelegate : public QSqlRelationalDelegate
 - 每个组件用什么风格绘制（`paint()`）
 - 组件如何修改组件的内容或者状态（`createEditor()`）
 - 修改后的效果如何（`setEditorData()`）
+委托（Delegate）负责控制数据项的显示和编辑方式。
+```md
+模型（Model） ←→ 委托（Delegate） ←→ 视图（View）
+   数据           显示/编辑策略        用户界面
+```
+#### 使用前后区别
+![[Pasted image 20251015101506.png]]
