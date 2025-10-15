@@ -1122,11 +1122,8 @@ QTableView::paintEvent() →
         ...
         delegate->paint(painter, option, 单元格索引)
 ```
-绘制时需要的大小提示信息通过 `sizeHint` 函数获取，editorEvent 发生在控件值发生改变时，这里 bookdelegate 类将除了评分行的点击事件全部交给父类默认 editorEvent 执行。只会在 tableView 组件的 rating 列被 editor 时才会触发。
+绘制时需要的大小提示信息通过 `sizeHint` 函数获取，editorEvent 发生在控件值发生改变时，这里 bookdelegate 类将除了评分行的点击事件全部交给父类默认 editorEvent 执行。
 
-
-
-下面是我对你的回答的理解和问题, 请你对他们逐条做出回答, 解释或者评价, 有错误的话请提出修改
 - mapper 和 tableView 对象都设置 `setItemDelegate()`，这就导致了 mapper 和 tableView 控件中的任何一个 item 只要发生了**用户对控件的编辑事件**，就会触发调用 `editorEvent()` 调用，同理，如果两者之中的任何一个 item 发生了**用户想要创建对没有编辑框组件的编辑操作事件**（比如对 tableView 中的只读单元格使用双击操作） `createEditor()` 就会被调用
 - 由于 mapper 中存在将控件映射到数据模型中数据的关系，那么这些控件中的数据更改一半由数据模型通知 ui 和数据库同事更改。如果后面 mapper 映射的控件中如果有**不可编辑**但**能够被创建编辑**的功能的**可点击区域**就会触发 `editorEvent()` 或者 `createEditor()`
 - tableView 中的单元格在双击时会触发数据 createEditor 创建编辑框操作，因为这些组件**在视觉上和逻辑上**是不支持编辑的，用户想要编辑，就会触发对应的操作，在**用户想要编辑一个不可编辑的组件时**发生的行为被 bookDelegate 代理。
@@ -1147,4 +1144,26 @@ QWidget *BookDelegate::createEditor(QWidget *parent,
     return sb;
 }
 ```
-其他列会被 `QSqlRelationalDelegate::createEditor` 中的默认行为接管，查阅文档可以看到
+其他列会被 `QSqlRelationalDelegate::createEditor` 中的默认行为接管，查阅文档可可知 `QSqlRelationalDelagate` 会将外键列的创建编辑框行为默认创建为下拉列表，而其他列则创建默认文本编辑框可以通过注释代码，将所有列的行为交给 `QSqlRelationalDelagate::createEditor` 处理
+```cpp
+QWidget *BookDelegate::createEditor(QWidget *parent,
+                                    const QStyleOptionViewItem &option,
+                                    const QModelIndex &index) const
+{
+    // if (index.column() != 4)
+    //     return QSqlRelationalDelegate::createEditor(parent, option, index);
+
+    // // For editing the year, return a spinbox with a range from -1000 to 2100.
+    // QSpinBox *sb = new QSpinBox(parent);
+    // sb->setFrame(false); // 不显示边框
+    // sb->setMaximum(2100);
+    // sb->setMinimum(-1000);
+
+    // return sb;
+    return QSqlRelationalDelegate::createEditor(parent, option, index);
+}
+```
+![[Pasted image 20251015180605.png]]
+![[Pasted image 20251015180620.png]]
+![[Pasted image 20251015180703.png]]
+可以看到，外检 author 和 gener 还是下拉列表，yer 和 title 被设置为了文本编辑框
