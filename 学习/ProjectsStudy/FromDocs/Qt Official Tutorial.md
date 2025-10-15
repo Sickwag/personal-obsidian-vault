@@ -1087,3 +1087,16 @@ class BookDelegate : public QSqlRelationalDelegate
 ```
 #### 使用前后区别
 ![[Pasted image 20251015101506.png]]
+
+#### 自定义委托机制实现规则
+可以看到代码中对于不是想要实现渲染的列（如 rating 列需要由数字渲染成星星图案），会调用父类默认方法进行渲染
+```cpp
+if (index.column() != 5) {
+	// 如果不是数据库中的第5列，使用父类的标准渲染方法（一般是渲染文字内容，rating栏只会显示星星数量)
+	QSqlRelationalDelegate::paint(painter, option, index);
+} else { /* code */ }
+```
+在文档中并没有看到除了析构函数之外的 virtual 函数，说明只需要**选择性地重写需要改变行为的方法**
+
+
+托管类对象可以应用于**任何基于项 (item) 的视图组件**，这是否说明
