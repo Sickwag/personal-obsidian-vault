@@ -1097,6 +1097,54 @@ if (index.column() != 5) {
 } else { /* code */ }
 ```
 在文档中并没有看到除了析构函数之外的 virtual 函数，说明只需要**选择性地重写需要改变行为的方法**
+它封装了**它正在绘制的 item 的**所需的所有视觉状态信息。在一个以 item 组成的组件中，如果对他设置委托对象，那么在绘制这个组件时，就会通过**遍历所有 item**，对每一个 item 使用 paint 绘制方法。
+```cpp
+class QStyleOptionViewItem {
+public:
+	QRect rect;                    // 项目矩形区域（位置和大小）
+	QPalette palette;              // 颜色调色板
+	QStyle::State state;           // 控件状态（选中、启用、聚焦等）
+	Qt::Alignment displayAlignment; // 显示对齐方式
+	Qt::CheckState checkState;      // 复选框状态
+	QIcon icon;                    // 图标
+	QString text;                   // 显示文本
+	QFont font;                    // 字体信息
+	// ... 更多
+ };
+```
+```cpp
+QTableView::paintEvent() →
+    扫描可视区域中的所有单元格 →
+    对于每个单元格：
+        创建 QStyleOptionViewItem
+        option.rect = 单元格的实际矩形区域
+        option.state = 单元格的状态（是否选中、是否激活等）
+        ...
+        delegate->paint(painter, option, 单元格索引)
+```
+绘制时需要的大小提示信息通过 `sizeHint` 函数获取，editorEvent 发生在控件值发生改变时，这里 bookdelegate 类将除了评分行的点击事件全部交给父类默认 editorEvent 执行。只会在 tableView 组件的 rating 列被 editor 时才会触发。
 
 
-托管类对象可以应用于**任何基于项 (item) 的视图组件**，这是否说明
+
+下面是我对你的回答的理解和问题, 请你对他们逐条做出回答, 解释或者评价, 有错误的话请提出修改
+- mapper 和 tableView 对象都设置 `setItemDelegate()`，这就导致了 mapper 和 tableView 控件中的任何一个 item 只要发生了**用户对控件的编辑事件**，就会触发调用 `editorEvent()` 调用，同理，如果两者之中的任何一个 item 发生了**用户想要创建对没有编辑框组件的编辑操作事件**（比如对 tableView 中的只读单元格使用双击操作） `createEditor()` 就会被调用
+- 由于 mapper 中存在将控件映射到数据模型中数据的关系，那么这些控件中的数据更改一半由数据模型通知 ui 和数据库同事更改。如果后面 mapper 映射的控件中如果有**不可编辑**但**能够被创建编辑**的功能的**可点击区域**就会触发 `editorEvent()` 或者 `createEditor()`
+- tableView 中的单元格在双击时会触发数据 createEditor 创建编辑框操作，因为这些组件**在视觉上和逻辑上**是不支持编辑的，用户想要编辑，就会触发对应的操作，在**用户想要编辑一个不可编辑的组件时**发生的行为被 bookDelegate 代理。
+- 想要编辑首先要能够编辑，所以要创建可编辑组件，年份单元格我们想要他被编辑时弹出的可编辑框是一个 spinbox 而不是一个简单的文本编辑框，就使用 if 分支特化处理
+```cpp
+QWidget *BookDelegate::createEditor(QWidget *parent,
+                                    const QStyleOptionViewItem &option,
+                                    const QModelIndex &index) const
+{
+    if (index.column() != 4)
+        return QSqlRelationalDelegate::createEditor(parent, option, index);
+
+    // For editing the year, return a spinbox with a range from -1000 to 2100.
+    QSpinBox *sb = new QSpinBox(parent);
+    sb->setFrame(false); // 不显示边框
+    sb->setMaximum(2100);
+    sb->setMinimum(-1000);
+    return sb;
+}
+```
+其他列会被 `QSqlRelationalDelegate::createEditor` 中的默认行为接管，查阅文档可以看到
