@@ -70,7 +70,7 @@
 ## 认识Linux
 ### linux内核
 linux由系统内核和系统及应用程序（系统出厂自带程序）
-![Untitled 229.png](../../../Files%20&%20LongText/Attachments/Untitled%20229.png)
+![Untitled 229.png](Untitled%20229.png)
 任何用户端的操作都是由程序通过操作指令调用内核，内核调动相应硬件，最终完成动作
 **linux发行版**
 任何人都可以在网站上下载到内核源码，通过自定义系统程序并把它和内核封装在一起，就是一个linux发行版。
@@ -89,27 +89,27 @@ WSL直接连宿主机的硬件, 性能远超虚拟机
 ### 虚拟机快照
 类似于windows的回溯点
 虚拟机关机之后创建关机比较安全
-![Untitled 1 41.png](../../../Files%20&%20LongText/Attachments/Untitled%201%2041.png)
+![Untitled 1 41.png](Untitled%201%2041.png)
 # 第二章
 ## Linux基础命令
 ### Linux目录结构
 没有盘符, (顶级目录 ),所有文件都在根目录下
 路径书写方式,我windows使用\ , Linux是/ linux路径描述开头为/根目录,后面的/表示层级关系
 ### linux命令
-![Untitled 2 33.png](../../../Files%20&%20LongText/Attachments/Untitled%202%2033.png)
+![Untitled 2 33.png](Untitled%202%2033.png)
 **ls命令**
-![Untitled 3 30.png](../../../Files%20&%20LongText/Attachments/Untitled%203%2030.png)
+![Untitled 3 30.png](Untitled%203%2030.png)
 系统启动时默认将home目录作为当前工作目录, 使用任何命令都对当前工作目录有效, 一般默认在`/HOME/用户名`所在文件夹中
-![Untitled 4 26.png](../../../Files%20&%20LongText/Attachments/Untitled%204%2026.png)
+![Untitled 4 26.png](Untitled%204%2026.png)
 -a选项all表示将所有文件\文件夹全部列出(包括隐藏内容)
 -l表示list列表形式显示文件\文件夹,不使用ls的平铺
-![Untitled 5 23.png](../../../Files%20&%20LongText/Attachments/Untitled%205%2023.png)
+![Untitled 5 23.png](Untitled%205%2023.png)
 上面平铺,下面列表
-![Untitled 6 22.png](../../../Files%20&%20LongText/Attachments/Untitled%206%2022.png)
+![Untitled 6 22.png](Untitled%206%2022.png)
 - 通过指令混写同时进行两种命令的选项,表示同时进行all和list命令, 列表全展示
 - 参数和指令也可以混写
     
-    ![Untitled 7 22.png](../../../Files%20&%20LongText/Attachments/Untitled%207%2022.png)
+    ![Untitled 7 22.png](Untitled%207%2022.png)
     
 -h表示通过易于阅读的样式列出文件, 只能和-l命令一起使用将字节大小转换为kb等易于阅读的单位制
 **cd命令(不是选项)** 是change directory 没有参数表示回到home, 有路径表示进入路径
@@ -434,8 +434,8 @@ ls -l | cat > test4.txt
 > grep [-n] 关键字 文件路径(或者内容输入)  
 
 在文件中过滤相匹配的内容
-![Pasted image 20240813113115.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813113115.png)
-![Pasted image 20240813113134.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813113134.png)
+![Pasted image 20240813113115.png](Pasted%20image%2020240813113115.png)
+![Pasted image 20240813113134.png](Pasted%20image%2020240813113134.png)
 > 统计文件的行数、单词数量  
 > wc [-c -m -l -w] 文件路径  
 > 
@@ -454,13 +454,13 @@ ls -l | cat > test4.txt
 4.字符数（`-m`）
 **管道符**
 左边的cat将读取到的所有内容作为grep的内容输入参数
-![Untitled 9 19.png](../../../Files%20&%20LongText/Attachments/Untitled%209%2019.png)
+![Untitled 9 19.png](Untitled%209%2019.png)
 统计usr/bin文件夹内一共有多少个文件
-![Untitled 10 17.png](../../../Files%20&%20LongText/Attachments/Untitled%2010%2017.png)
+![Untitled 10 17.png](Untitled%2010%2017.png)
 管道符嵌套
-![Untitled 11 17.png](../../../Files%20&%20LongText/Attachments/Untitled%2011%2017.png)
+![Untitled 11 17.png](Untitled%2011%2017.png)
 练习
-![Untitled 12 17.png](../../../Files%20&%20LongText/Attachments/Untitled%2012%2017.png)
+![Untitled 12 17.png](Untitled%2012%2017.png)
 ```C++
 [sickwag@192 folder]$ cat test.txt | grep "line" | wc -l
 6
@@ -474,7 +474,7 @@ ls -l | cat > test4.txt
 **重定向符**
 \> 将左侧命令的结果，覆盖写入到符号右侧指定的文件中  
 \>> 将左侧命令的结果，追加写入到符号右侧指定的文件中  
-![Pasted image 20240813113520.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813113520.png)
+![Pasted image 20240813113520.png](Pasted%20image%2020240813113520.png)
 tail命令查看文件尾部内容
 ```C++
 [sickwag@192 folder]$ ls > test.txt       //将当前目录文件信息写入test
@@ -513,33 +513,33 @@ var
 -f 自动追踪命令会使当前标签页持续运行,在其他任何地方进行的改动会在标签也中内容自动变化
 ctrl+c强制停止当前命令
 ## 使用vi/vim编辑器
-![Untitled 14 17.png](../../../Files%20&%20LongText/Attachments/Untitled%2014%2017.png)
+![Untitled 14 17.png](Untitled%2014%2017.png)
 - 命令模式下所有的键盘输入都被理解为命令
 - 输入同理,底线模式对文件进行整体操作
 - 三个模式输入模式和底线模式不能直接相互进入, 进入模式是一个命令,只能通过命令模式进入
 - 进入vim时默认是命令模式
-![Untitled 15 17.png](../../../Files%20&%20LongText/Attachments/Untitled%2015%2017.png)
+![Untitled 15 17.png](Untitled%2015%2017.png)
 - 命令模式下按下i键进入输入模式
 - 左下角会显示文件转台和现在所处的模式
 - 输入模式按下:wq表示保存并退出
 - 命令模式 dd表示删除一整行, u表示撤销输入,yy表示复制一整行
-![Untitled 16 16.png](../../../Files%20&%20LongText/Attachments/Untitled%2016%2016.png)
-![Untitled 17 16.png](../../../Files%20&%20LongText/Attachments/Untitled%2017%2016.png)
-![Untitled 18 15.png](../../../Files%20&%20LongText/Attachments/Untitled%2018%2015.png)
+![Untitled 16 16.png](Untitled%2016%2016.png)
+![Untitled 17 16.png](Untitled%2017%2016.png)
+![Untitled 18 15.png](Untitled%2018%2015.png)
 使用vim对该文件进行编辑, 命令模式下可以看到文件的内容, 键盘移动光标,输入i可以再光标位置插入内容
 # 第三章
 ## linux 用户权限
 `su - root` 表示切换当前用户到 root 用户，su 命令表示 Switch user
-![输入密码时不可见](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813113920.png)
-![Pasted image 20240813114033.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813114033.png)
+![输入密码时不可见](Pasted%20image%2020240813113920.png)
+![Pasted image 20240813114033.png](Pasted%20image%2020240813114033.png)
 **临时超级用户权限获取：sudo**
 语法：sudo 其它命令
 在其它命令之前，带上 sudo，即可为这一条命令临时赋予 root 授权
 但是并不是所有的用户，都有权利使用 sudo，我们需要为普通用户**配置 sudo 认证**
 配置方法
-![visudo不是vi sudo](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240813114442.png)
+![visudo不是vi sudo](Pasted%20image%2020240813114442.png)
 ### 用户和用户组
-![Pasted image 20240916203726.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240916203726.png)
+![Pasted image 20240916203726.png](Pasted%20image%2020240916203726.png)
 #### 用户组相关命令
 Linux 中关于权限的管控级别有 2 个级别，分别是：
 - 针对用户的权限控制
@@ -562,7 +562,7 @@ Linux 中关于权限的管控级别有 2 个级别，分别是：
 `su - 用户名`
 ### 文件和权限
 #### 查看文件权限
-![Pasted image 20240916211937.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240916211937.png) ![Pasted image 20240916212211.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240916212211.png)
+![Pasted image 20240916211937.png](Pasted%20image%2020240916211937.png) ![Pasted image 20240916212211.png](Pasted%20image%2020240916212211.png)
 文件所属用户权限分为十个权限槽，分为四个组
 对于各种文件权限缩写含义
 那么，rwx 到底代表什么呢？
@@ -584,7 +584,7 @@ Linux 中关于权限的管控级别有 2 个级别，分别是：
 `chmod u=rwx, g=rx, 0=x hello.txt`，将文件权限修改为: rwxr-x--x
 其中：u 表示 user 所属用户权限，g 表示 group 组权限，o 表示 other 其它用户权限
 `chmod-R u=rwx, g=rx, O=x test`，将文件夹 test 以及文件夹内全部内容权限设置为：rwxr-x--x
-![Pasted image 20240917095149.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917095149.png)
+![Pasted image 20240917095149.png](Pasted%20image%2020240917095149.png)
 #### 通过数字修改权限
 权限可以用 3 位数字分别代表用户权限，用户组权限，其它用户权限。
 数字的细节如下: **r 记为 4, w 记为 2, x 记为 1**，可以有:
@@ -614,7 +614,7 @@ Linux 中关于权限的管控级别有 2 个级别，分别是：
 - Ctrl+D 可以退出特定程序的专属页面（不能退出 vim），python 解释器、退出当前用户也可以用
 - exit 退出当前登录的用户，（如果在 finnalshell 中使用将断开主机连接）
 - history 查看最近输入的 1000 条命令，存储在 `~/.bash_history` 文件中，可以通过 vim 修改
-[关于history命令详细内容](../../../Files%20&%20LongText/Long%20code/Linux%20long%20text%20explanation.md#history%20命令)
+[关于history命令详细内容](Linux%20long%20text%20explanation.md#history%20命令)
 - 使用 `!string` 表示在 history 记录中从下到上搜索以 string 开头的命令并执行（一次）
  - ctrl + R 可以输入内容匹配历史命令，回车执行，左右键移动光标（不需要事先使用 history）
 - ctrl+a，跳到命令开头
@@ -630,7 +630,7 @@ yum：RPM 包软件管理器，用于自动化安装配置 Linux 软件，并可
 选项：-y，自动确认，无需手动确认安装或卸载过程
 yum 命令需要 root 权限哦，可以 su 切换到 root，或使用 sudo 提权。需要联网
 Ubuntu 中自动化安装软件程序不一致，使用 apt 命令安装，语法同 yum 一致
-![Pasted image 20240917113234.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917113234.png)
+![Pasted image 20240917113234.png](Pasted%20image%2020240917113234.png)
 ##### 控制软件
 `systemctl` 命令控制软件启动，停止和开机自启
 Linux 系统很多软件（内置或第三方）均支持使用 systemctl 命令控制：启动、停止、开机自启
@@ -662,14 +662,14 @@ test.txt
 总用量 0
 lrwxrwxrwx. 1 root root 8 9月  16 20:49 test.txt -> test.txt
 ```
-![Pasted image 20240917115401.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917115401.png)
+![Pasted image 20240917115401.png](Pasted%20image%2020240917115401.png)
 #### date 命令
 ##### 时间格式化和计算
 通过 date 命令可以在命令行中查看系统的时间
 语法：`date [-d] [+格式化字符串]`
 -d 按照给定的字符串显示日期，一般用于日期计算
-格式化字符串：通过特定的字符串标记，来控制显示的日期格式，类似于 [Mysql日期格式化](学习/Language/SQL/MySQL.md#日期类型)
-![Pasted image 20240917122219.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917122219.png)
+格式化字符串：通过特定的字符串标记，来控制显示的日期格式，类似于 [Mysql日期格式化](MySQL.md#日期类型)
+![Pasted image 20240917122219.png](Pasted%20image%2020240917122219.png)
 - %Y 年
 - %y 年份后两位数字（00,99）
 - %M 月份（01,12)
@@ -686,9 +686,9 @@ lrwxrwxrwx. 1 root root 8 9月  16 20:49 test.txt -> test.txt
 [root@localhost learnlinux]# date +"%Y-%m-%d %H:%M:%S"
 2024-09-16 21:27:16
 ```
-![Pasted image 20240917122753.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917122753.png) 
+![Pasted image 20240917122753.png](Pasted%20image%2020240917122753.png) 
 -d 参数用于计算日期
-![Pasted image 20240917152716.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917152716.png)
+![Pasted image 20240917152716.png](Pasted%20image%2020240917152716.png)
 ```bash
 [root@localhost learnlinux]# date -d "+3month" "+%y-%m-%d     %H:%M:%S"
 24-12-16     23:31:35
@@ -702,7 +702,7 @@ Linux 中时区文件存储在 `/usr/share/zoneinfo/` 文件夹中即其子目�
 2024年 09月 17日 星期二 15:35:08 CST
 ```
 ##### 使用 ntp 自动更新时间
-[CSDN Linux \> 无法安装 ntp 服务](../../../Files%20&%20LongText/Long%20code/CSDN%20Linux.md#无法安装%20ntp%20服务)
+[CSDN Linux \> 无法安装 ntp 服务](CSDN%20Linux.md#无法安装%20ntp%20服务)
 使用新的安装方法并设置为自启动，定时自动联网校准时间
 ```bash
 yum install chrony -y&& \
@@ -714,7 +714,7 @@ systemctl restart chronyd.service
 #### IP 地址和主机名
 ##### IP 地址
 `ifconfig` 可以查看当前主机 IP 地址
-![Pasted image 20240917154953.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917154953.png)
+![Pasted image 20240917154953.png](Pasted%20image%2020240917154953.png)
 ```bash
 [root@localhost learnlinux]# ifconfig
 ens160: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
@@ -742,21 +742,21 @@ virbr0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 ```
 其中 ens 160 表示本机网卡，lo 表示本地网卡，virbr 0 表示虚拟机网卡
-![Pasted image 20240917155145.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917155145.png)
+![Pasted image 20240917155145.png](Pasted%20image%2020240917155145.png)
 ##### 主机名
 Linux 中主机名同 Windows 一样可以查看和修改
 `hostname` 查看主机名
 `hostnamectl set-hostname 主机名` 修改主机名需要 root 权限
 重启 finalshell 既可看到用户名
-![主机名被修改](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917155859.png)
+![主机名被修改](Pasted%20image%2020240917155859.png)
 ##### 域名解析原理
-![Pasted image 20240917160651.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917160651.png)
+![Pasted image 20240917160651.png](Pasted%20image%2020240917160651.png)
 - 首先访问本地 host 文件查找网站域名接入的 IP 地址然后浏览器访问 ip 地址
 - 本地不存在则访问 DNS 服务器（即 114.114.114.114）这种域名解析网站查找，没有结果则会**404**
 
 ##### IP 地址和主机名映射设置
 域名解析原理得知 Windows 首先查找本地 IP 地址映射，这里修改本地 host 文件将主机名映射到IP 地址
-![Pasted image 20240917204900.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240917204900.png)
+![Pasted image 20240917204900.png](Pasted%20image%2020240917204900.png)
 在 host 文件中添加主机名和 IP 地址之后在 finnalshell 中可以将主机名作为映射连接到相应的 IP 地址
 ##### 配置 vm 的固定 IP 地址
 配置固定 IP 地址使其不用每次都连接
@@ -803,7 +803,7 @@ URL     : http://www.cip.cc/223.160.147.210
 物理端口：又可称之为接口，是可见的端口，如 USB 接口，RJ 45 网口，HDMI 端口等
 虚拟端口：是指计算机内部的端口，是不可见的，是用来操作系统和外部进行交互使用的
 IP 地址只能访问主机，需要锁定计算机中某个程序时需要端口确定
-![Pasted image 20240918155952.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240918155952.png)
+![Pasted image 20240918155952.png](Pasted%20image%2020240918155952.png)
 Linux 系统是一个超大号小区，可以支持 65535 个端口，分 3 类使用：
 - **公认端口**：1~1023，通常用于一些系统内置或知名程序的预留使用，如 SSH 服务的 22 端口，HTTPS 服务的 443 端口，非特殊需要，不要占用这个范围的端口
 - **注册端口**：1024~49151，通常可以随意使用，用于松散的绑定一些程序\服务
@@ -846,7 +846,7 @@ root           2       0  0 15:39 ?        00:00:00 [kthreadd]
 root           3       2  0 15:39 ?        00:00:00 [rcu_gp]
 root           4       2  0 15:39 ?        00:00:00 [rcu_par_gp]
 ```
-![Pasted image 20240918165534.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240918165534.png)
+![Pasted image 20240918165534.png](Pasted%20image%2020240918165534.png)
 time 表示累计占用 CPU 的之间，cmd 表示启动命令
 组合命令 `ps -ef | grep tail` 表示过滤出 tail 有关的进程信息，过滤字符串可以是任意一个**字段**
 ```bash
@@ -867,11 +867,11 @@ root      233286    2291  0 17:07 pts/0    00:00:00 grep --color=auto tail
 [root@sickwag ~]# ps -ef | grep tail
 root      235891    2291  0 17:07 pts/0    00:00:00 grep --color=auto tail
 ```
-![另外一个窗口被终止的tail](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240918170851.png)
+![另外一个窗口被终止的tail](Pasted%20image%2020240918170851.png)
 ### 主机状态
 `top` 不加任何参数的任务管理器，查看系统任务运行状态，每五秒刷新一次，用 q 键或 ctrl+c 退出
-![Pasted image 20240918171343.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240918171343.png)
-![Pasted image 20240918171549.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240918171549.png)
+![Pasted image 20240918171343.png](Pasted%20image%2020240918171343.png)
+![Pasted image 20240918171549.png](Pasted%20image%2020240918171549.png)
 #### top 命令参数列表
 - `-p 进程id` 只显示某个进程的信息
 - `-d 秒数` 讼置刷新时间，默认是 5 s
@@ -1071,7 +1071,7 @@ lrwxrwxrwx. 1 root root   12 9月  17 11:51 yum.conf -> etc/yum.conf
 参数，被解压的 zip 压缩包文件
 # 第五章
 ## linux 部署软件
-文档参考： [Linux系统软件安装](../../../Files%20&%20LongText/Attachments/Linux系统软件安装.md)
+文档参考： [Linux系统软件安装](Linux系统软件安装.md)
 注意所有 IP 地址访问软件页面 IP 地址是虚拟机的 IP 地址，可以在虚拟机中使用 `127.0.0.1:端口` 访问，但在外部 Windows 中不能用本机回环地址，要用虚拟机的 192 地址
 ### MySQL 
 使用 8. x 版本安装
@@ -1148,7 +1148,7 @@ Setting tags for user "admin" to [administrator] ...
 ### elasticsearch
 按照文档走，但是还未解决无法连接上[主机 IP 地址:9200](连接主机控制台) 问题
 ### 集群化环境前置准备
-创建多台虚拟机之后 [Linux long text explanation \> centos 修改 linuxIP 地址](../../../Files%20&%20LongText/Long%20code/Linux%20long%20text%20explanation.md#centos%20修改%20linuxIP%20地址)
+创建多台虚拟机之后 [Linux long text explanation \> centos 修改 linuxIP 地址](Linux%20long%20text%20explanation.md#centos%20修改%20linuxIP%20地址)
 在修改 IP 地址时，由于没有实现设置静态 IP，所以 ifcfg 文件中内容与视频中不一样，并且 centos 8 以上版本中**重启网络服务旧命令已被弃用**
 `systemctl restart network` 已被弃用，改用 `nmcli c reload`
 使用前面的命令会出现错误提示

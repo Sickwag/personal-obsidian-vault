@@ -1005,7 +1005,7 @@ LEFT JOIN genres g ON b.genre = g.id
 	- `model.data(index)` 通过 index 获取列信息
 data 还可以填入角色内容这一参数，不同的内容会**看**到不同的数据内容，：查阅文档可知，
 ```cpp
-// Qt::DisplayRole - 显示给用户看的文本
+/ Qt::DisplayRole - 显示给用户看的文本
 // Qt::EditRole - 用于编辑的值
 // Qt::ToolTipRole - 工具提示
 // Qt::UserRole - 自定义数据

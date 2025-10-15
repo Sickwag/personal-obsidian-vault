@@ -6,10 +6,10 @@
 - `s` 从当前光标当前位置直到下一个单词起始处，不包括它的第一个字符
 - `e` 从当前光标当前位置直到单词末尾，包括最后一个字符。
   英文状态下会忽略空格
-  ![recording 5.gif](../../Files%20&%20LongText/Attachments/recording%205.gif)
+  ![recording 5.gif](recording%205.gif)
   在中文内容中 `e` 用标点符号区分“单词”，每个标点符号也是单词
 	中文语境中，删除到单词末尾，和删除到单词开头，是一样的，在一段用标点符号分割的话中使用 de 或者 dw 都是删除到下一段话的标点符号之前
-	![recording 4.gif](../../Files%20&%20LongText/Attachments/recording%204.gif)
+	![recording 4.gif](recording%204.gif)
 - `$` 从当前光标当前位置直到当前行末。
 
 使用计数指定动作：在**动作**前输入数字可以让动作重复做，也可以在一个操作语句前加上数字表示重复操作次数
@@ -18,7 +18,7 @@
 
 **撤销类命令**：输入 u 来撤消最后执行的命令，输入 U 来撤消对整行的修改，ctrl+R 重做一次
 **插入类命令**：每次用 d 操作删除的内容会放在 vim 中一个寄存器内，光标放在需要插入内容的前一个字符位置，使用 p 将其中内容插入
-![recording 6.gif](../../Files%20&%20LongText/Attachments/recording%206.gif)
+![recording 6.gif](recording%206.gif)
 **替换类命令**：输入 r 再输入需要替换的字符可以光标位置字符替换
 **更改命令**：改变文本到一个单词的末尾，输入 ce（ change end），按下 esc 结束修改
 	这个操作其实是删除光标位置到文本末尾，然后进入插入模式。
@@ -28,20 +28,20 @@
 	- 输入 G 跳转到文件最后一行，gg 跳转到文件第一行
 	 - 输入您曾停留的行号，然后输入大写 G。这样就可以返回到您第一次按下CTRL-G 时所在的行了。
 **搜索类命令**：/ 加一个字符串在当前文件中查找该字符串，输入 n 、N 查找下一个结果或者上一个结果
-![425](../../Files%20&%20LongText/Attachments/recording%207.gif)
+![425](recording%207.gif)
 逆向查找字符方法时输入? 代替/
 回退光标位置使用 Ctrl+O ，也可以用在查找字符中
 
 **查找符号配对的符号**：
-![375](../../Files%20&%20LongText/Attachments/recording%208.gif)
+![375](recording%208.gif)
 
 **行替换命令**：
 `: s/old/new/g` 可以替换 old 为 new。，在本行内搜索所有匹配对象并替换，
 : 符号表示将光标移动到屏幕底部，将要输入 vim 的一长串命令的，不输入/g 参数只替换一个对象
-![350](../../Files%20&%20LongText/Attachments/recording%209.gif)
+![350](recording%209.gif)
 **外部命令使用**：
 `:!` 表示后面将要输入外部命令, 根据系统使用 shell 命令
-![375](../../Files%20&%20LongText/Attachments/recording%2010.gif)
+![375](recording%2010.gif)
 
 **写入文件**
 按下 v 进入可选择模式，选中文字之后按下：看到屏幕底部会出现 : '<,'>  后面跟操作指令，如 w filename 表示即将选中内容吸入到 filename 文件中，文件路径在当前工作目录，可以通过:`! dir `查看
@@ -55,7 +55,7 @@
 - 输入 a 再光标后添加内容
 - i，a，A 都会进入插入模式，区别在于插入位置 i 在光标前，a 在光标后
 - 输入 R 进行替换操作
-	![300](../../Files%20&%20LongText/Attachments/recording%2011.gif)
+	![300](recording%2011.gif)
 **复制粘贴操作**
 通过 v 选中，y 复制，p 粘贴
 y 是一个操作符，yw 表示复制一个单词
@@ -74,7 +74,7 @@ ic 表示搜索忽略大小写 `: set ic`
 	- 按下 \<F1> 键 (如果键盘上有的话)
 	- 输入	: help <回车> help 后可加命令，会返回相应的解释
 	- 使用 Ctrl+W 实现窗口跳转, 在对应的窗口输入: q 关闭窗口
-![recording 15.gif](../../Files%20&%20LongText/Attachments/recording%2015.gif)
+![recording 15.gif](recording%2015.gif)
 
 保存文件命令为 `:write`
 

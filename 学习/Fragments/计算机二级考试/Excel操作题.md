@@ -3,7 +3,7 @@
         
         一定要记住，一旦使用了排序功能，就一定要记住锁定单元格
         
-        ![Untitled 191.png](../../../Files%20&%20LongText/Attachments/Untitled%20191.png)
+        ![Untitled 191.png](Untitled%20191.png)
         
         而且一般成绩由高到低排序是升序 ，最后一个参数是0
         
@@ -12,43 +12,43 @@
         
         因为多次修改的过程中，每一次的修改操作都是新增新的条件作为新的格式累加，扣分
         
-        ![Untitled 1 15.png](../../../Files%20&%20LongText/Attachments/Untitled%201%2015.png)
+        ![Untitled 1 15.png](Untitled%201%2015.png)
         
     - 用另一种颜色的字体
         
         文字游戏表示方法
         
-        ![Untitled 2 14.png](../../../Files%20&%20LongText/Attachments/Untitled%202%2014.png)
+        ![Untitled 2 14.png](Untitled%202%2014.png)
         
           
         
 - 真题5
     - 跨列居中陷阱
         
-        ![Untitled 3 13.png](../../../Files%20&%20LongText/Attachments/Untitled%203%2013.png)
+        ![Untitled 3 13.png](Untitled%203%2013.png)
         
         虽然但是这里跨列合并后居中，也就数合并单元格后居中（也是一个坑）
         
     - 设置对单元格的数据区域有时候说是除标题以外的，有时候是包括标题，保险起见对标题也设置
         
-        ![Untitled 4 13.png](../../../Files%20&%20LongText/Attachments/Untitled%204%2013.png)
+        ![Untitled 4 13.png](Untitled%204%2013.png)
         
 - 真题6
     - 对数据透视表调整排序
         - 手动排序
             
-            ![Untitled 5 13.png](../../../Files%20&%20LongText/Attachments/Untitled%205%2013.png)
+            ![Untitled 5 13.png](Untitled%205%2013.png)
             
         - 自动排序
             
-            ![Untitled 6 12.png](../../../Files%20&%20LongText/Attachments/Untitled%206%2012.png)
+            ![Untitled 6 12.png](Untitled%206%2012.png)
             
 - 真题7
     - 从网页中扒下来的表格标题
         
-        ![Untitled 7 12.png](../../../Files%20&%20LongText/Attachments/Untitled%207%2012.png)
+        ![Untitled 7 12.png](Untitled%207%2012.png)
         
-        ![Untitled 8 12.png](../../../Files%20&%20LongText/Attachments/Untitled%208%2012.png)
+        ![Untitled 8 12.png](Untitled%208%2012.png)
         
     - 以什么为关键字对哪一行/列进行排序
         
@@ -56,31 +56,31 @@
         意思是你只需要排这一行或者列，  
         **而不是要顾及其他列或者行**
         
-        ![Untitled 9 11.png](../../../Files%20&%20LongText/Attachments/Untitled%209%2011.png)
+        ![Untitled 9 11.png](Untitled%209%2011.png)
         
           
         
     - 适当调整数字格式
         - 有百分号的地方一定要设置为数值，百分比，一般较大的数，前面的题目中要求了有千分位标识，在调整的时候也要设置
             
-            ![Untitled 10 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2010%209.png)
+            ![Untitled 10 9.png](Untitled%2010%209.png)
             
     - 排序数据分析表中的元素
         
-        ![Untitled 11 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2011%209.png)
+        ![Untitled 11 9.png](Untitled%2011%209.png)
         
-        ![Untitled 12 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2012%209.png)
+        ![Untitled 12 9.png](Untitled%2012%209.png)
         
 - 真题8
     - 设置单元格格式自动在末尾添加星期几
         
-        ![Untitled 13 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2013%209.png)
+        ![Untitled 13 9.png](Untitled%2013%209.png)
         
     - 使用if or weekday函数
         
         计算星期几需要做什么
         
-        ![Untitled 14 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2014%209.png)
+        ![Untitled 14 9.png](Untitled%2014%209.png)
         
     - VLOOKUP函数
         
@@ -88,11 +88,11 @@
         
     - 填写多参数公式注意事项
         
-        ![Untitled 15 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2015%209.png)
+        ![Untitled 15 9.png](Untitled%2015%209.png)
         
     - 计算某短时间内周末的花钱总数
         
-        ![Untitled 16 8.png](../../../Files%20&%20LongText/Attachments/Untitled%2016%208.png)
+        ![Untitled 16 8.png](Untitled%2016%208.png)
         
         首先筛选出星期几（一）
         
@@ -119,7 +119,7 @@
         
         一定要老老实实地在选项中调整，输入数值的那种，默认输入行高18，列宽15，一般不会错
         
-        ![Untitled 17 8.png](../../../Files%20&%20LongText/Attachments/Untitled%2017%208.png)
+        ![Untitled 17 8.png](Untitled%2017%208.png)
         
     - 分类汇总注意事项
         
@@ -127,16 +127,16 @@
         
         求出每个部门的综合，也就是要把相同部门数据放在一起（需要事先筛选）
         
-        ![Untitled 18 7.png](../../../Files%20&%20LongText/Attachments/Untitled%2018%207.png)
+        ![Untitled 18 7.png](Untitled%2018%207.png)
         
-        ![Untitled 19 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2019%206.png)
+        ![Untitled 19 6.png](Untitled%2019%206.png)
         
-        ![Untitled 20 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2020%206.png)
+        ![Untitled 20 6.png](Untitled%2020%206.png)
         
 - 真题10
     - 截取一串数字特定意义的数字并替换文字
         
-        ![Untitled 21 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2021%206.png)
+        ![Untitled 21 6.png](Untitled%2021%206.png)
         
         这两个数字是班级信息
         
@@ -222,25 +222,25 @@
         
         同一个行列汇总上面的项是下面项的上级，内容会被上级折叠
         
-        ![Untitled 22 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2022%206.png)
+        ![Untitled 22 6.png](Untitled%2022%206.png)
         
     - 数据分析表清洗数据
         
-        ![Untitled 23 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2023%206.png)
+        ![Untitled 23 6.png](Untitled%2023%206.png)
         
-        ![Untitled 24 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2024%206.png)
+        ![Untitled 24 6.png](Untitled%2024%206.png)
         
     - 数据分析表中字段设置
         
-        ![Untitled 25 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2025%206.png)
+        ![Untitled 25 6.png](Untitled%2025%206.png)
         
-        ![Untitled 26 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2026%206.png)
+        ![Untitled 26 6.png](Untitled%2026%206.png)
         
-        ![Untitled 27 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2027%206.png)
+        ![Untitled 27 6.png](Untitled%2027%206.png)
         
-        ![Untitled 28 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2028%206.png)
+        ![Untitled 28 6.png](Untitled%2028%206.png)
         
-        ![Untitled 29 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2029%206.png)
+        ![Untitled 29 6.png](Untitled%2029%206.png)
         
         但因为数据分析表是链接原表格的，所以，剔除数据只能在原表格中通过筛选去除
         
@@ -248,7 +248,7 @@
         
     - sumif函数日期限定方式
         
-        ![Untitled 30 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2030%206.png)
+        ![Untitled 30 6.png](Untitled%2030%206.png)
         
         输入日期限定条件需要
         
@@ -262,7 +262,7 @@
         
     - 添加汇总行
         
-        ![Untitled 31 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2031%206.png)
+        ![Untitled 31 6.png](Untitled%2031%206.png)
         
 - 真题12
     - 分列操作
@@ -271,22 +271,22 @@
         
     - 清除超链接
         
-        ![Untitled 32 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2032%206.png)
+        ![Untitled 32 6.png](Untitled%2032%206.png)
         
     - 清除表的外部链接
         
         一般用于从外部文件导入的内容 生成的表格
         
-        ![Untitled 33 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2033%206.png)
+        ![Untitled 33 6.png](Untitled%2033%206.png)
         
     - 命名表格
         
-        ![Untitled 34 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2034%206.png)
+        ![Untitled 34 6.png](Untitled%2034%206.png)
         
     - 根据身份证号确定男女
         - 首先取得身份证号中的男女识别码
             
-            ![Untitled 35 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2035%206.png)
+            ![Untitled 35 6.png](Untitled%2035%206.png)
             
             ===MID([@身份证号码],17,1)==
             
@@ -294,13 +294,13 @@
             
             使用取余函数mod用1和0分别表示男和女
             
-            ![Untitled 36 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2036%206.png)
+            ![Untitled 36 6.png](Untitled%2036%206.png)
             
             =MOD(MID([@身份证号码],17,1),2)
             
         - 使用if函数替换文本
             
-            ![Untitled 37 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2037%206.png)
+            ![Untitled 37 6.png](Untitled%2037%206.png)
             
             因为这里的if函数条件句只能得到1或者0，所以分别代表了条件句的返回值ture和false，后面直接跟上执行动作
             
@@ -334,14 +334,14 @@
         - 如果要求保留小数位数使用rounddown函数，最后一个数字表示要**==向下舍入==**到多少位数，等于0是取整，ROUNDUP向上取整
     - 使表格打印居中
         
-        ![Untitled 38 6.png](../../../Files%20&%20LongText/Attachments/Untitled%2038%206.png)
+        ![Untitled 38 6.png](Untitled%2038%206.png)
         
 - 真题13
     - 数据透视表恶心操作
         
         一旦选择插入数据透视表，Excel会自己选好几个字段放在候选字段里面，如果没看清楚勾选之后就会扣分（尤其在窗口比较小时）
         
-        ![Untitled 39 5.png](../../../Files%20&%20LongText/Attachments/Untitled%2039%205.png)
+        ![Untitled 39 5.png](Untitled%2039%205.png)
         
     - 求出第几大的值
         
@@ -349,7 +349,7 @@
         
         large函数
         
-        ![Untitled 40 5.png](../../../Files%20&%20LongText/Attachments/Untitled%2040%205.png)
+        ![Untitled 40 5.png](Untitled%2040%205.png)
         
           
         
@@ -358,7 +358,7 @@
         - 出车时间-进入时间不难，关键是计算其中有几个小时  
             当不同度量的日期格式的单元格值运算时，得出的结果会自动按照更精细的单位度量显示结果，日期和时间运算，得到时间  
             
-            ![Untitled 41 5.png](../../../Files%20&%20LongText/Attachments/Untitled%2041%205.png)
+            ![Untitled 41 5.png](Untitled%2041%205.png)
             
         - 计算有几个小时
             
@@ -369,7 +369,7 @@
             
             所以天*24*60=多少分钟
             
-            ![Untitled 42 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2042%204.png)
+            ![Untitled 42 4.png](Untitled%2042%204.png)
             
         
         - 自定义日期格式
@@ -388,11 +388,11 @@
 - 真题15
     - 调整数据分析表字段显示方式
         
-        ![Untitled 43 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2043%204.png)
+        ![Untitled 43 4.png](Untitled%2043%204.png)
         
     - 数据透视表中计数项设置
         
-        ![Untitled 44 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2044%204.png)
+        ![Untitled 44 4.png](Untitled%2044%204.png)
         
     - 图表话术
         
@@ -402,34 +402,34 @@
         
         - 主坐标轴和次坐标轴
             
-            ![Untitled 45 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2045%204.png)
+            ![Untitled 45 4.png](Untitled%2045%204.png)
             
-            ![Untitled 46 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2046%204.png)
+            ![Untitled 46 4.png](Untitled%2046%204.png)
             
-            ![Untitled 47 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2047%204.png)
+            ![Untitled 47 4.png](Untitled%2047%204.png)
             
 - 真题16
     - 删除重复值
         
         首先需要将一个区域转化为表格
         
-        ![Untitled 48 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2048%204.png)
+        ![Untitled 48 4.png](Untitled%2048%204.png)
         
     - 筛选数据透视表中的字段显示内容
         
-        ![Untitled 49 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2049%204.png)
+        ![Untitled 49 4.png](Untitled%2049%204.png)
         
-        ![Untitled 50 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2050%204.png)
+        ![Untitled 50 4.png](Untitled%2050%204.png)
         
-        ![Untitled 51 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2051%204.png)
+        ![Untitled 51 4.png](Untitled%2051%204.png)
         
-        ![Untitled 52 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2052%204.png)
+        ![Untitled 52 4.png](Untitled%2052%204.png)
         
         **==功能上没有问题，只是两种方式显示的方式和命名上有区别，（考试）按照示例来就行==**
         
     - 以显示精度代替数值计算
         
-        ![Untitled 53 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2053%204.png)
+        ![Untitled 53 4.png](Untitled%2053%204.png)
         
         如果不使用这个，有些计算结果会与答案有微小误差，扣分
         
@@ -437,24 +437,24 @@
         
         将符合某种条件的数据行列筛选出来并且填充颜色（和条件格式区分，条件格式的对象是一个个单元格，满足条件就设定相应的单元格格式）。这个是筛选出行或者列，将他们标记
         
-        ![Untitled 54 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2054%204.png)
+        ![Untitled 54 4.png](Untitled%2054%204.png)
         
         选中一个条件之后，确定，填充好颜色后再次右键勾选全选，筛选之后设置的单元格格式就能保留下来
         
-        ![Untitled 55 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2055%204.png)
+        ![Untitled 55 4.png](Untitled%2055%204.png)
         
-        ![Untitled 56 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2056%204.png)
+        ![Untitled 56 4.png](Untitled%2056%204.png)
         
 - 真题17
     - 设置跨列居中（不合并单元格的情况下居中文本）
         
-        ![Untitled 57 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2057%204.png)
+        ![Untitled 57 4.png](Untitled%2057%204.png)
         
         **==在这个窗口中设置字体会设置所有框选中的单元格的字体，如果题目只要求了设置有文本框的单元格调整字体，这样设置就会扣分==**
         
     - 设置日期只显示月和日
         
-        ![Untitled 58 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2058%204.png)
+        ![Untitled 58 4.png](Untitled%2058%204.png)
         
         ==**在自定义中输入m/d也可以，但是会扣分**==
         
@@ -462,7 +462,7 @@
         
     - 为表设置特定格式的序号
         
-        ![Untitled 59 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2059%204.png)
+        ![Untitled 59 4.png](Untitled%2059%204.png)
         
         - 现将需要显示序号的行列调节为文本单元格格式，然后输入001，下一个单元格写002，自动填充即可
         - 也可以设定单元格格式为自定义，填写000就可以被识别为输入的数字会变成3位数字
@@ -475,12 +475,12 @@
         
         因为没有叫做“季度”的字段，所以只能从日期下手，也可以从月下手，因为日期是由年月日季度这些成分组成
         
-        ![Untitled 60 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2060%204.png)
+        ![Untitled 60 4.png](Untitled%2060%204.png)
         
 - 真题18
     - 去掉外部数据的链接
         
-        ![Untitled 61 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2061%204.png)
+        ![Untitled 61 4.png](Untitled%2061%204.png)
         
         从外部导入的数据2021版excel会自动创建一个表格区域（旧版是只创建数据区域）
         
@@ -610,7 +610,7 @@
         
     - 三列或者多列表格数据查询
         
-        ![Untitled 62 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2062%204.png)
+        ![Untitled 62 4.png](Untitled%2062%204.png)
         
         因为第一列条件往往使用文字书序条件，所以只能先用if函数将条件转化为excel能识别的语言
         
@@ -632,7 +632,7 @@
         
         也就是说是这样的
         
-        ![Untitled 63 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2063%204.png)
+        ![Untitled 63 4.png](Untitled%2063%204.png)
         
         而且每两个人之间需要有空行
         
@@ -657,13 +657,13 @@
         
         不是套用表格样式
         
-        ![Untitled 64 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2064%204.png)
+        ![Untitled 64 4.png](Untitled%2064%204.png)
         
         - lookup函数拓展
             
             多对一的条件查找并替换
             
-            ![Untitled 65 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2065%204.png)
+            ![Untitled 65 4.png](Untitled%2065%204.png)
             
             1~3月是第一个季度，需要在季度这一列中填上1季度，下面同理
             
@@ -680,11 +680,11 @@
             
             不要选择右键菜单的排序
             
-            ![Untitled 66 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2066%204.png)
+            ![Untitled 66 4.png](Untitled%2066%204.png)
             
             即使你没有选中下面的单元格，这样，的排序（选择了拓展区域排序）还是会对着整个表中的所有元素（如果你只选中了一行或者一列就只对行列排序）都进行排序
             
-            ![Untitled 67 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2067%204.png)
+            ![Untitled 67 4.png](Untitled%2067%204.png)
             
             需要选中想要排序的表格，然后选择关键字段和条件
             
@@ -699,42 +699,42 @@
             - 每个季度：做完了表格之后要折叠每个小组
             - 各类开支：统计的内容是开支的总金额，列标签是各类项目
             
-            ![Untitled 68 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2068%204.png)
+            ![Untitled 68 4.png](Untitled%2068%204.png)
             
-            ![Untitled 69 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2069%204.png)
+            ![Untitled 69 4.png](Untitled%2069%204.png)
             
         - 建立图表时题目文字转化为图表内容
             
-            ![Untitled 70 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2070%204.png)
+            ![Untitled 70 4.png](Untitled%2070%204.png)
             
             **==很细，仔细看每一个字（可以通过转换行列来切换系列和水平坐标轴的内容==**
             
-            ![Untitled 71 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2071%204.png)
+            ![Untitled 71 4.png](Untitled%2071%204.png)
             
     - 真题20
         - 按笔画排序
             
-            ![Untitled 72 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2072%204.png)
+            ![Untitled 72 4.png](Untitled%2072%204.png)
             
         - 复制表格（题中一般说是合并表格）
             
             简单的复制粘贴，但是要注意如果没有说位置，就是按照原位置添加进去
             
-            ![Untitled 73 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2073%204.png)
+            ![Untitled 73 4.png](Untitled%2073%204.png)
             
         - 给表格设置保护
             - 先选中整个表格
                 
-                ![Untitled 74 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2074%204.png)
+                ![Untitled 74 4.png](Untitled%2074%204.png)
                 
             - 选中需要设置保护的单元格位置并将他们按照上面的设置锁定
             - 设置密码和权限
                 
-                ![Untitled 75 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2075%204.png)
+                ![Untitled 75 4.png](Untitled%2075%204.png)
                 
             - 理论上可以选定区域之后使用 允许编辑区域 这个选项锁定，但是会扣分
                 
-                ![Untitled 76 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2076%204.png)
+                ![Untitled 76 4.png](Untitled%2076%204.png)
                 
         - 设置对齐
             
@@ -744,46 +744,46 @@
             
         - 设置插入图标的数据引用
             
-            ![Untitled 77 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2077%204.png)
+            ![Untitled 77 4.png](Untitled%2077%204.png)
             
   
   
 - 真题38
     - 条件格式中公式条件
         
-        ![Untitled 78 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2078%204.png)
+        ![Untitled 78 4.png](Untitled%2078%204.png)
         
         这里会对所有的单元格进行条件匹配
         
-        ![Untitled 79 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2079%204.png)
+        ![Untitled 79 4.png](Untitled%2079%204.png)
         
     - 单元格插入超链接
         
-        ![Untitled 80 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2080%204.png)
+        ![Untitled 80 4.png](Untitled%2080%204.png)
         
     - 单元格中插入链接和公式链接区别
         
-        ![Untitled 81 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2081%204.png)
+        ![Untitled 81 4.png](Untitled%2081%204.png)
         
         没有在公式中链接的结果是就是即使显示无需填写点击仍然能够跳转
         
-        ![Untitled 82 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2082%204.png)
+        ![Untitled 82 4.png](Untitled%2082%204.png)
         
         使用公式虽然显示能够跳转，但是条件不对时会报错
         
-        ![Untitled 83 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2083%204.png)
+        ![Untitled 83 4.png](Untitled%2083%204.png)
         
     - 为形状添加链接
         
-        ![Untitled 84 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2084%204.png)
+        ![Untitled 84 4.png](Untitled%2084%204.png)
         
     - 隐藏单元格中的公式
         
-        ![Untitled 85 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2085%204.png)
+        ![Untitled 85 4.png](Untitled%2085%204.png)
         
         新版题目对每个操作的范围都有规定，所以不能再随意全选，能用鼠标尽量用鼠标
         
-        ![Untitled 86 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2086%204.png)
+        ![Untitled 86 4.png](Untitled%2086%204.png)
         
         只对I3:K22和K23设置，要求可以编辑，所以也要设定可编辑区域  
           
@@ -791,20 +791,20 @@
         
         又因为其他区域都要能够在解锁之后正常编辑
         
-        ![Untitled 87 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2087%204.png)
+        ![Untitled 87 4.png](Untitled%2087%204.png)
         
 - 2021年3月
     - 定义和引用名称
         
-        ![Untitled 88 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2088%204.png)
+        ![Untitled 88 4.png](Untitled%2088%204.png)
         
     - 自然语言描述颜色
         
-        ![Untitled 89 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2089%204.png)
+        ![Untitled 89 4.png](Untitled%2089%204.png)
         
     - 隔行填充颜色
         
-        ![Untitled 90 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2090%204.png)
+        ![Untitled 90 4.png](Untitled%2090%204.png)
         
         公式条件格式的使用
         
@@ -812,47 +812,47 @@
         
         用不同的显示方式
         
-        ![Untitled 91 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2091%204.png)
+        ![Untitled 91 4.png](Untitled%2091%204.png)
         
-        ![Untitled 92 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2092%204.png)
+        ![Untitled 92 4.png](Untitled%2092%204.png)
         
     - 数据透视表样式设置示例
         
         - 设置图标标题同步
             
-            ![Untitled 93 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2093%204.png)
+            ![Untitled 93 4.png](Untitled%2093%204.png)
             
         - 设置字段
             
-            ![Untitled 94 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2094%204.png)
+            ![Untitled 94 4.png](Untitled%2094%204.png)
             
         - 图例样式
             
-            ![Untitled 95 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2095%204.png)
+            ![Untitled 95 4.png](Untitled%2095%204.png)
             
         
         - 数据标签设计
             
-            ![Untitled 96 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2096%204.png)
+            ![Untitled 96 4.png](Untitled%2096%204.png)
             
         
         - 表格背景
             
-            ![Untitled 97 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2097%204.png)
+            ![Untitled 97 4.png](Untitled%2097%204.png)
             
         
         - 对整个表的数据显示方式设置
             
-            ![Untitled 98 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2098%204.png)
+            ![Untitled 98 4.png](Untitled%2098%204.png)
             
         - 图例设置
             
-            ![Untitled 99 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2099%204.png)
+            ![Untitled 99 4.png](Untitled%2099%204.png)
             
 - 2021第三套
     - 不规范的日期数据录入
         
-        ![Untitled 100 4.png](../../../Files%20&%20LongText/Attachments/Untitled%20100%204.png)
+        ![Untitled 100 4.png](Untitled%20100%204.png)
         
     - datedif函数调整精度
         
@@ -873,17 +873,17 @@
         
         一个图表中用多种共用主坐标轴的方法
         
-        ![Untitled 101 4.png](../../../Files%20&%20LongText/Attachments/Untitled%20101%204.png)
+        ![Untitled 101 4.png](Untitled%20101%204.png)
         
     - 隐藏单元格真实值
         
         设置单元格格式隐藏可显示区域，但是在公式栏中可见
         
-        ![Untitled 102 4.png](../../../Files%20&%20LongText/Attachments/Untitled%20102%204.png)
+        ![Untitled 102 4.png](Untitled%20102%204.png)
         
     - 设置打印区域
         
-        ![Untitled 103 4.png](../../../Files%20&%20LongText/Attachments/Untitled%20103%204.png)
+        ![Untitled 103 4.png](Untitled%20103%204.png)
         
 - 2021年3月第四套
     - 保存数据进入数据模型
@@ -900,12 +900,12 @@
         
         - 修改数据模型名字
             
-            ![Untitled 104 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20104%203.png)
+            ![Untitled 104 3.png](Untitled%20104%203.png)
             
         
         - 导入、修改数据源名称
             
-            ![Untitled 105 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20105%203.png)
+            ![Untitled 105 3.png](Untitled%20105%203.png)
             
         - powerquery编辑启动器
             
@@ -913,12 +913,12 @@
             
             - 进入方式
                 
-                ![Untitled 106 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20106%203.png)
+                ![Untitled 106 3.png](Untitled%20106%203.png)
                 
 - 2021年9月2套
     - 真假字体
         
-        ![Untitled 107 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20107%203.png)
+        ![Untitled 107 3.png](Untitled%20107%203.png)
         
     - 二维表的两个参数都是条件
         
@@ -926,7 +926,7 @@
         
         =HLOOKUP([@类型],折扣表!$B$2:$E$6,IF(D4<1000,2,IF(D4<1500,3,IF(D4<2000,4,5))),0))
         
-        ![Untitled 108 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20108%203.png)
+        ![Untitled 108 3.png](Untitled%20108%203.png)
         
         - 更高级的方法是使用offset函数配合match，但不适合用offset函数来自动填充，
             
@@ -939,18 +939,18 @@
             
         - 题目说明可以修改就可以讲条件转换为excel语言
             
-            ![Untitled 109 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20109%203.png)
+            ![Untitled 109 3.png](Untitled%20109%203.png)
             
     - 大分类小分类数据透视表
         
-        ![Untitled 110 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20110%203.png)
+        ![Untitled 110 3.png](Untitled%20110%203.png)
         
           
         
 - 2021年9月3套
     - 计算个人所得税，题目有错
         
-        ![Untitled 111 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20111%203.png)
+        ![Untitled 111 3.png](Untitled%20111%203.png)
         
         80001的个人所得不是下面这样计算的
         
@@ -960,7 +960,7 @@
         
         沙雕题目
         
-        ![Untitled 112 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20112%203.png)
+        ![Untitled 112 3.png](Untitled%20112%203.png)
         
 - 2022年3月新增
     - 对满足某种条件的不规范填写数据的单元格所在的数据行条件格式
@@ -971,7 +971,7 @@
             
             直接使用条件格式先对不规范的单元格下手，然后格式刷到其他单元格中(前提是这些单元格是默认格式，**不然会刷掉原来的格式**)
             
-            ![Untitled 113 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20113%203.png)
+            ![Untitled 113 3.png](Untitled%20113%203.png)
             
         - 是单元格格式引起的不规范
             
@@ -981,14 +981,14 @@
             
         - 用人工肉眼或者在其他行另起公式计算出分界线，再使用条件格式设置这些分界线
             
-            ![Untitled 114 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20114%203.png)
+            ![Untitled 114 3.png](Untitled%20114%203.png)
             
-            ![Untitled 115 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20115%203.png)
+            ![Untitled 115 3.png](Untitled%20115%203.png)
             
         
         - 数据透视表排序
             
-            ![Untitled 116 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20116%203.png)
+            ![Untitled 116 3.png](Untitled%20116%203.png)
             
     - 对于rank函数设置第几名
         
@@ -997,40 +997,40 @@
 - 2022年3月
     - 间断性重复填写内容
         
-        ![Untitled 117 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20117%203.png)
+        ![Untitled 117 3.png](Untitled%20117%203.png)
         
         - 选中所有需要填写数据的单元格，不要选中多余的
         - 使用Ctrl+G定位（选定所有的空值单元格，类似于Word中的选定所有类似样式的内容）
             
-            ![Untitled 118 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20118%203.png)
+            ![Untitled 118 3.png](Untitled%20118%203.png)
             
-            ![Untitled 119 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20119%203.png)
+            ![Untitled 119 3.png](Untitled%20119%203.png)
             
             输入之后按下ctrl+enter表示对所有单元格（数组操作）使用公式，enter只会对选中的单元格使用
             
     - 数据验证中的下拉箭头
         
-        ![Untitled 120 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20120%203.png)
+        ![Untitled 120 3.png](Untitled%20120%203.png)
         
     - 使用排名公式给数据行设置条件格式
         
-        ![Untitled 121 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20121%203.png)
+        ![Untitled 121 3.png](Untitled%20121%203.png)
         
         本题中只认rank公式，所以能用公式就用
         
     - 系列线
         
-        ![Untitled 122 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20122%203.png)
+        ![Untitled 122 3.png](Untitled%20122%203.png)
         
-        ![Untitled 123 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20123%203.png)
+        ![Untitled 123 3.png](Untitled%20123%203.png)
         
     - 不显示轴刻度线和不显示轴线条
         
-        ![Untitled 124 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20124%203.png)
+        ![Untitled 124 3.png](Untitled%20124%203.png)
         
     - 图表标题“样式“设计
         
-        ![Untitled 125 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20125%203.png)
+        ![Untitled 125 3.png](Untitled%20125%203.png)
         
         也可以使用插入文本框编辑文字
         
@@ -1038,28 +1038,28 @@
         
     - 自定义页眉页脚
         
-        ![Untitled 126 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20126%203.png)
+        ![Untitled 126 3.png](Untitled%20126%203.png)
         
     - 打印表的每一页都显示标题行
         
-        ![Untitled 127 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20127%203.png)
+        ![Untitled 127 3.png](Untitled%20127%203.png)
         
     - 图表工作表
         
-        ![Untitled 128 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20128%203.png)
+        ![Untitled 128 3.png](Untitled%20128%203.png)
         
     - 图表假标题
         
-        ![Untitled 129 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20129%203.png)
+        ![Untitled 129 3.png](Untitled%20129%203.png)
         
 - 2022年3月3套
     - 调整单元格文本方向
         
-        ![Untitled 130 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20130%203.png)
+        ![Untitled 130 3.png](Untitled%20130%203.png)
         
         但是这样调整的是文字书写方向文字以左边的边框作为底边
         
-        ![Untitled 131 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20131%203.png)
+        ![Untitled 131 3.png](Untitled%20131%203.png)
         
         这样才会让文字横着写竖着排（前提是之前的文本必须要设置跨列水平和竖直居中）
         
@@ -1067,36 +1067,36 @@
         
         根据销往地区确定国家
         
-        ![Untitled 132 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20132%203.png)
+        ![Untitled 132 3.png](Untitled%20132%203.png)
         
-        ![Untitled 133 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20133%203.png)
+        ![Untitled 133 3.png](Untitled%20133%203.png)
         
     - 见机行事自动填充锁定
         
-        ![Untitled 134 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20134%203.png)
+        ![Untitled 134 3.png](Untitled%20134%203.png)
         
     - 设定名称，从而间接引用
         
-        ![Untitled 135 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20135%203.png)
+        ![Untitled 135 3.png](Untitled%20135%203.png)
         
-        ![Untitled 136 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20136%203.png)
+        ![Untitled 136 3.png](Untitled%20136%203.png)
         
 - 2022年3月4套
     - 隐藏工作表无法找到
         
-        ![Untitled 137 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20137%203.png)
+        ![Untitled 137 3.png](Untitled%20137%203.png)
         
     - 另存图表为模板
         
-        ![Untitled 138 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20138%203.png)
+        ![Untitled 138 3.png](Untitled%20138%203.png)
         
     - 设置图标的锁定
         
-        ![Untitled 139 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20139%203.png)
+        ![Untitled 139 3.png](Untitled%20139%203.png)
         
     - 设置打印区域
         
-        ![Untitled 140 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20140%203.png)
+        ![Untitled 140 3.png](Untitled%20140%203.png)
         
     - 在已经分类汇总的表格中使用ctrl+shift+方向不会全选所有数据
 ---
@@ -1105,11 +1105,11 @@
     - 如果要在文本中使用超链接，一般使用hyperlink函数而用选项卡链接的形式  
         hyperlink的location参数工作表名称开头需要加上 # ，并且双引号括起  
         
-        ![Untitled 141 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20141%203.png)
+        ![Untitled 141 3.png](Untitled%20141%203.png)
         
     - 对表格某个部分使用条件格式注意括号的使用
         
-        ![Untitled 142 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20142%203.png)
+        ![Untitled 142 3.png](Untitled%20142%203.png)
         
 - 真题41（2021年9月）
     - 计算日期时间差（有超过24小时的）
@@ -1120,28 +1120,28 @@
         - 计算时间需要计算超过24小时以上的（见上面）
         - 时间单元格得到的值是这段时间占一天24小时的比例
             
-            ![Untitled 143 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20143%203.png)
+            ![Untitled 143 3.png](Untitled%20143%203.png)
             
             所以需要调整
             
         - 计算出总共有多少分钟
             
-            ![Untitled 144 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20144%203.png)
+            ![Untitled 144 3.png](Untitled%20144%203.png)
             
         - 至于四舍五入
             
             使用ROUNDUP函数，最后一个参数是如何舍入，一般都是填0
             
-            ![Untitled 145 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20145%203.png)
+            ![Untitled 145 3.png](Untitled%20145%203.png)
             
-            ![Untitled 146 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20146%203.png)
+            ![Untitled 146 3.png](Untitled%20146%203.png)
             
 - 真题43（2021年9月新增真题）
     - 数据透视表中的分类汇总
         
-        ![Untitled 147 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20147%203.png)
+        ![Untitled 147 3.png](Untitled%20147%203.png)
         
-        ![Untitled 148 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20148%203.png)
+        ![Untitled 148 3.png](Untitled%20148%203.png)
         
 - 真题45
     
@@ -1151,55 +1151,55 @@
     
     间隔单元格按组标题填充
     
-    ![Untitled 149 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20149%203.png)
+    ![Untitled 149 3.png](Untitled%20149%203.png)
     
     定位中选中定位条件，条件中选中标题
     
-    ![Untitled 150 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20150%203.png)
+    ![Untitled 150 3.png](Untitled%20150%203.png)
     
     注意按下Ctrl+enter而不是直接按enter
     
     - 打印时重复标题行
         
-        ![Untitled 151 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20151%203.png)
+        ![Untitled 151 3.png](Untitled%20151%203.png)
         
 - 真题47
     - 设置奇怪的数字格式
         
-        ![Untitled 152 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20152%203.png)
+        ![Untitled 152 3.png](Untitled%20152%203.png)
         
     - 改变文字排列方式
         
-        ![Untitled 153 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20153%203.png)
+        ![Untitled 153 3.png](Untitled%20153%203.png)
         
     - 根据内容设置名称
         
-        ![Untitled 154 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20154%203.png)
+        ![Untitled 154 3.png](Untitled%20154%203.png)
         
     - 间接引用，引用名称所引用的区域
         
-        ![Untitled 155 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20155%203.png)
+        ![Untitled 155 3.png](Untitled%20155%203.png)
         
     - 用公式设置图表数据来源
         
-        ![Untitled 156 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20156%203.png)
+        ![Untitled 156 3.png](Untitled%20156%203.png)
         
-        ![Untitled 157 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20157%203.png)
+        ![Untitled 157 3.png](Untitled%20157%203.png)
         
 - 真题48
     - 无法取消隐藏工作表
         
-        ![Untitled 158 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20158%203.png)
+        ![Untitled 158 3.png](Untitled%20158%203.png)
         
     - 设置图表的查看属性
         
-        ![Untitled 159 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20159%203.png)
+        ![Untitled 159 3.png](Untitled%20159%203.png)
         
-        ![Untitled 160 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20160%203.png)
+        ![Untitled 160 3.png](Untitled%20160%203.png)
         
     - 设置坐标轴不显示线条
         
-        ![Untitled 161 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20161%203.png)
+        ![Untitled 161 3.png](Untitled%20161%203.png)
         
           
         
@@ -1208,6 +1208,6 @@
 - 38
     - 自定义序列，修改切片器只能升降序排序
         
-        ![Untitled 162 3.png](../../../Files%20&%20LongText/Attachments/Untitled%20162%203.png)
+        ![Untitled 162 3.png](Untitled%20162%203.png)
         
         这样同时会修改所有不能自定义排序的功能，在没有自定义排序功能的选项中选择升序就可以调用这个功能

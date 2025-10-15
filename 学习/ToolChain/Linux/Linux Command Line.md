@@ -33,13 +33,13 @@ shell 就是一个程序，它接受从键盘输入的命令，然后
 - linux 中文本是简单的字符与数字之间的一对一映射。它非常紧凑。五十个字符的文本翻译成五十个字节的数据。文本只是包含简单的字符到数字的映射，。
 - inux 采用 utf 8 编辑纯文本文件，纯文本文件不包含格式化信息，如字体、颜色、大小等。这意味着文本文件是跨平台的，可以在不同的操作系统和文本编辑器中无损地打开和编辑。
 - **less&more 命令**：less 属于 “页面调度器” 类程序，这些程序允许以逐页方式轻松浏览长文本文档。more 程序只能向前翻页，而 less 程序允许前后翻页，提供了更好的交互和性能。
-- [Linux long text explanation \> linux 中各种目录作用](../../../Files%20&%20LongText/Long%20code/Linux%20long%20text%20explanation.md#linux%20中各种目录作用)
+- [Linux long text explanation \> linux 中各种目录作用](Linux%20long%20text%20explanation.md#linux%20中各种目录作用)
 - [参考链接：中文FHS文件目录分类](https://blog.csdn.net/yup1212/article/details/82152106)
 - [FHS文件目录分类规定：英文pdf](http://www.pathname.com/fhs/)
 - 图片表示
-![Pasted image 20240922125030.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240922125030.png)
-![Pasted image 20240922125042.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240922125042.png)
-![Pasted image 20240922125122.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240922125122.png)
+![Pasted image 20240922125030.png](Pasted%20image%2020240922125030.png)
+![Pasted image 20240922125042.png](Pasted%20image%2020240922125042.png)
+![Pasted image 20240922125122.png](Pasted%20image%2020240922125122.png)
 ## 各种命令
 ### 手册信息查看命令
 **whatis**
@@ -51,7 +51,7 @@ shell 就是一个程序，它接受从键盘输入的命令，然后
 **info 命令**
 显示命令行程序的说明
 - info 提供交互式页面
-![Pasted image 20240923123251.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240923123251.png)
+![Pasted image 20240923123251.png](Pasted%20image%2020240923123251.png)
 ### 其他命令
 #### alias 命名命令
 可以用分号分开不同的命令，linux 会按照顺序执行，使用 alias 为这一段连续的命令组赋予别名
@@ -64,7 +64,7 @@ bash type foo :not found # foo命令没有被占用
 alias foo='cd /usr ; ls ; cd'# 注意不要在等号两端写空格
 ```
 type 命令查看自定义命令
-![Pasted image 20240923124403.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240923124403.png)
+![Pasted image 20240923124403.png](Pasted%20image%2020240923124403.png)
 也可以使用 unalias 解除命名
 ## 常用命令
 ### 解压命令

@@ -2,12 +2,12 @@
     
     一次性显现列表内容的方法
     
-    ![Untitled 179.png](../../../Files%20&%20LongText/Attachments/Untitled%20179.png)
+    ![Untitled 179.png](Untitled%20179.png)
     
 - PowerPoint中的层级
     - 节和幻灯片
         
-        ![Untitled 1 9.png](../../../Files%20&%20LongText/Attachments/Untitled%201%209.png)
+        ![Untitled 1 9.png](Untitled%201%209.png)
         
         如果需要选中整个节中所有的幻灯片，只需要点节的标题即可
         
@@ -16,15 +16,15 @@
 - 讲义
     - 生成讲义
         
-        ![Untitled 2 8.png](../../../Files%20&%20LongText/Attachments/Untitled%202%208.png)
+        ![Untitled 2 8.png](Untitled%202%208.png)
         
     - 修改讲义格式、母版
         
-        ![Untitled 3 8.png](../../../Files%20&%20LongText/Attachments/Untitled%203%208.png)
+        ![Untitled 3 8.png](Untitled%203%208.png)
         
 - 自定义放映
     
-    ![Untitled 4 8.png](../../../Files%20&%20LongText/Attachments/Untitled%204%208.png)
+    ![Untitled 4 8.png](Untitled%204%208.png)
     
 - 插入大纲
     
@@ -32,18 +32,18 @@
       
     **在Word中将教案大纲发送到PowerPoint**
     
-    ![Untitled 5 8.png](../../../Files%20&%20LongText/Attachments/Untitled%205%208.png)
+    ![Untitled 5 8.png](Untitled%205%208.png)
     
     导入的结果是，PowerPoint会根据Word中标题样式和分层结构生成不同的幻灯片。具体导入规则
     
-    ![Untitled 6 7.png](../../../Files%20&%20LongText/Attachments/Untitled%206%207.png)
+    ![Untitled 6 7.png](Untitled%206%207.png)
     
 - 概念
     - 主题  
         由颜色、字体、和效果组成，称为主题三要素。主题还包括背景样式，背景样式可以理解为背景图片，可以选择渐变色背景，也可以选择填充图片作为背景。通过主题设置，可以快速改变幻片的字体、颜色、背景、图片和形状的效果，能形成统一的PPT风格。  
           
         
-        ![Untitled 7 7.png](../../../Files%20&%20LongText/Attachments/Untitled%207%207.png)
+        ![Untitled 7 7.png](Untitled%207%207.png)
         
     - 对象  
         在PowerPoint演示文稿中，可以插入的对象有：表格、公式、图表、文档、演示文稿、图片、超链接、声音、视频。但不能插入书签对象。  
@@ -66,7 +66,7 @@
         
         在需要对每一张幻灯片进行一些机械性操作时候，就需要使用母版，然后套用就可以
         
-        ![Untitled 8 7.png](../../../Files%20&%20LongText/Attachments/Untitled%208%207.png)
+        ![Untitled 8 7.png](Untitled%208%207.png)
         
           
         
@@ -84,7 +84,7 @@
         
 - 查看幻灯片模式
     
-    ![Untitled 9 6.png](../../../Files%20&%20LongText/Attachments/Untitled%209%206.png)
+    ![Untitled 9 6.png](Untitled%209%206.png)
     
     浏览视图是对整体的操作
     
@@ -92,17 +92,17 @@
     
 - 旋转图片的方式
     
-    ![Untitled 10 5.png](../../../Files%20&%20LongText/Attachments/Untitled%2010%205.png)
+    ![Untitled 10 5.png](Untitled%2010%205.png)
     
 - 排练计时
     
-    ![Untitled 11 5.png](../../../Files%20&%20LongText/Attachments/Untitled%2011%205.png)
+    ![Untitled 11 5.png](Untitled%2011%205.png)
     
 - 插入水印
     
     PowerPoint中**没有直接内置水印**功能，完成需要借助Word或者其他工具
     
-    ![Untitled 12 5.png](../../../Files%20&%20LongText/Attachments/Untitled%2012%205.png)
+    ![Untitled 12 5.png](Untitled%2012%205.png)
     
     因为每张幻灯片都需要水印，所以一般在幻灯片母版里面设置
     
@@ -112,11 +112,11 @@
     
 - 调整smartart元素动画
     
-    ![Untitled 13 5.png](../../../Files%20&%20LongText/Attachments/Untitled%2013%205.png)
+    ![Untitled 13 5.png](Untitled%2013%205.png)
     
-    ![Untitled 14 5.png](../../../Files%20&%20LongText/Attachments/Untitled%2014%205.png)
+    ![Untitled 14 5.png](Untitled%2014%205.png)
     
-    ![Untitled 15 5.png](../../../Files%20&%20LongText/Attachments/Untitled%2015%205.png)
+    ![Untitled 15 5.png](Untitled%2015%205.png)
     
     这里的逐一调整和上面的两个不一样
     
@@ -130,7 +130,7 @@
     
     一般使用不同的ppt演示文稿介绍不同类的产品
     
-    ![Untitled 16 5.png](../../../Files%20&%20LongText/Attachments/Untitled%2016%205.png)
+    ![Untitled 16 5.png](Untitled%2016%205.png)
     
     BC两个选项的意思就是将不同类的产品ppt放在一个文稿文件中
     
@@ -141,21 +141,21 @@
 - 吹毛求疵
     - 新建幻灯片
         
-        ![Untitled 17 5.png](../../../Files%20&%20LongText/Attachments/Untitled%2017%205.png)
+        ![Untitled 17 5.png](Untitled%2017%205.png)
         
-        ![Untitled 18 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2018%204.png)
+        ![Untitled 18 4.png](Untitled%2018%204.png)
         
     - 复制幻灯片
         
-        ![Untitled 19 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2019%203.png)
+        ![Untitled 19 3.png](Untitled%2019%203.png)
         
 - 修改启动页面展示方式
     
-    ![Untitled 20 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2020%203.png)
+    ![Untitled 20 3.png](Untitled%2020%203.png)
     
 - 重用幻灯片
     
-    ![Untitled 21 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2021%203.png)
+    ![Untitled 21 3.png](Untitled%2021%203.png)
     
 - PowerPoint编辑大纲
     
@@ -180,16 +180,16 @@
     
     插入背景会自动铺满整张幻灯片，需要看题目要求
     
-    ![Untitled 22 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2022%203.png)
+    ![Untitled 22 3.png](Untitled%2022%203.png)
     
 - smartart图块等级和层级
     
-    ![Untitled 23 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2023%203.png)
+    ![Untitled 23 3.png](Untitled%2023%203.png)
     
     需要临时添加层级时，在文本窗格上添加（像是修改大纲）  
     点选需要添加层级的一行文本之前，按回车  
     
-    ![Untitled 24 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2024%203.png)
+    ![Untitled 24 3.png](Untitled%2024%203.png)
     
 - 文本转化为smartart
     
@@ -197,44 +197,44 @@
     
     可以类比幕布的笔记大纲转换为思维导图的功能
     
-    ![Untitled 25 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2025%203.png)
+    ![Untitled 25 3.png](Untitled%2025%203.png)
     
 - 隐藏幻灯片中的背景图
     
     不能在母版中设置，全选所有的幻灯片之后设置隐藏背景图形功能
     
-    ![Untitled 26 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2026%203.png)
+    ![Untitled 26 3.png](Untitled%2026%203.png)
     
     看题目要求，意思是需要暂时隐藏
     
-    ![Untitled 27 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2027%203.png)
+    ![Untitled 27 3.png](Untitled%2027%203.png)
     
 - 压缩图片
     
-    ![Untitled 28 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2028%203.png)
+    ![Untitled 28 3.png](Untitled%2028%203.png)
     
 - 新建相册
     
-    ![Untitled 29 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2029%203.png)
+    ![Untitled 29 3.png](Untitled%2029%203.png)
     
 - 幻灯片编号
     
     实际应用场景
     
-    ![Untitled 30 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2030%203.png)
+    ![Untitled 30 3.png](Untitled%2030%203.png)
     
-    ![Untitled 31 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2031%203.png)
+    ![Untitled 31 3.png](Untitled%2031%203.png)
     
 - 关于图表
     
     有结构展示的图表一般使用smartart制作  
     展示数据的图表在 插入 选项卡 的 图表功能组中可以使用，两者分别独立  
     
-    ![Untitled 32 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2032%203.png)
+    ![Untitled 32 3.png](Untitled%2032%203.png)
     
     插入的叫做图表
     
-    ![Untitled 33 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2033%203.png)
+    ![Untitled 33 3.png](Untitled%2033%203.png)
     
     制作的叫做图形
     
@@ -242,13 +242,13 @@
     
 ---
 考试错题
-![Untitled 34 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2034%203.png)
+![Untitled 34 3.png](Untitled%2034%203.png)
 背景比母版好用
-![Untitled 35 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2035%203.png)
+![Untitled 35 3.png](Untitled%2035%203.png)
 选项卡比右键好用
-![Untitled 36 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2036%203.png)
+![Untitled 36 3.png](Untitled%2036%203.png)
 文档部件不在不同文件中通用
-![Untitled 37 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2037%203.png)
+![Untitled 37 3.png](Untitled%2037%203.png)
 调整smartart升级层次，升级字面意思，上移一层是图层，上移是和上一行排列
-![Untitled 38 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2038%203.png)
+![Untitled 38 3.png](Untitled%2038%203.png)
 smartart右键比选项卡更简单

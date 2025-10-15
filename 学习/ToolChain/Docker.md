@@ -6,20 +6,20 @@ CI/CD 是持续集成（Continuous Integration）和持续部署（Continuous De
 2. **持续交付（CD）**：在持续集成的基础上，确保软件可以快速且稳定地发布到生产环境。这意味着每次代码变更通过所有测试后，都可以立即部署到生产环境。
 3. **持续部署**：是持续交付的进一步延伸，它自动将通过所有测试的代码变更部署到生产环境，无需人工干预。
 ## Docker 简介
-![Pasted image 20240913205607.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240913205607.png)
+![Pasted image 20240913205607.png](Pasted%20image%2020240913205607.png)
 将各种应用程序打包成一个个“集装箱”，通过图标上的鲸鱼运动到任何需要的地方
 将软件运行所需要的所有依赖文件封装在一起，配置好所有内容只等一键使用
-![Pasted image 20240913205809.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240913205809.png)
-![Pasted image 20240913205908.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240913205908.png)
+![Pasted image 20240913205809.png](Pasted%20image%2020240913205809.png)
+![Pasted image 20240913205908.png](Pasted%20image%2020240913205908.png)
 ## Docker 和虚拟机的区别
-![Pasted image 20240913211152.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240913211152.png)
+![Pasted image 20240913211152.png](Pasted%20image%2020240913211152.png)
 ### 虚拟机
 Windows，macos 等都是完整的操作系统，在这些操作系统中虚拟化环境通过 hypervisor 虚拟化功能创建虚拟机，创建虚拟的运行环境
-![Pasted image 20240913210101.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240913210101.png)
+![Pasted image 20240913210101.png](Pasted%20image%2020240913210101.png)
 - 虚拟机可以将一台物理机的资源分配给多个虚拟机，同时提供多个环境或服务
 - 缺点是需要重复占用硬件资源，启动资源
 - 每个软件需要不同的环境，一个环境一个虚拟机，启动所有软件相当于启动所有操作系统的全部功能
-![Pasted image 20240913210144.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240913210144.png)
+![Pasted image 20240913210144.png](Pasted%20image%2020240913210144.png)
 
 ### Docker
 Docker 和容器（container）不是一个概念，容器只有应用程序和依赖文件
@@ -44,12 +44,12 @@ Docker 中
 `
 - 安装之后在系统设置中启动 Docker，设置中开启 *hyper-v*功能之后可以在命令行中使用 Docker 代码
 ## Docker 运行逻辑
-![Pasted image 20240913212559.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240913212559.png)
+![Pasted image 20240913212559.png](Pasted%20image%2020240913212559.png)
 - docker daemon 是服务端守护进程，用来管理服务端资源，client 中的操作（终端输入 docker 指令）由 client 发送给 docker daemon 处理之后将返回结果发送回 client（执行结果）
 - docker daemon 是一个后台服务进程，类似 mysql 80
 - client 和 docker host 之间通过 socket 或 restful API 通信
 ## 容器化和 dockerfile
-![Pasted image 20240913213157.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240913213157.png)
+![Pasted image 20240913213157.png](Pasted%20image%2020240913213157.png)
 dockerfile 是镜像创建指导文件，告诉 docker 如何创建这个程序的操作系统环境（一般是精简的）、第三方库、依赖文件、编译器、环境变量等
 ## 实战
 vscode 中安装 Docker 插件，在工作目录中创建一个 `Dockerfile` 文件（没有拓展名） 
@@ -109,7 +109,7 @@ sudo systemctl restart docker
 - 更便捷的升级和扩缩容
 - 更简的系统运维
 - 更高效的计算资源利用
-![Pasted image 20241019113309.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020241019113309.png)
+![Pasted image 20241019113309.png](Pasted%20image%2020241019113309.png)
 
 ### 3. 名词解释
 

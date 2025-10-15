@@ -7,13 +7,13 @@
 - 关于筛选
     - 自定义筛选
         
-        ![Untitled 178.png](../../../Files%20&%20LongText/Attachments/Untitled%20178.png)
+        ![Untitled 178.png](Untitled%20178.png)
         
-        ![Untitled 1 8.png](../../../Files%20&%20LongText/Attachments/Untitled%201%208.png)
+        ![Untitled 1 8.png](Untitled%201%208.png)
         
     - 高级筛选
         
-        ![Untitled 2 7.png](../../../Files%20&%20LongText/Attachments/Untitled%202%207.png)
+        ![Untitled 2 7.png](Untitled%202%207.png)
         
 - 合并表格
     
@@ -27,7 +27,7 @@
         
         插入对象的实质是插入链接到其他内容的超链接，并在Excel以打开的形式展现，当原始文件发生改变时，插入的对象也会发生改变
         
-        ![Untitled 3 7.png](../../../Files%20&%20LongText/Attachments/Untitled%203%207.png)
+        ![Untitled 3 7.png](Untitled%203%207.png)
         
     
     两者区别
@@ -53,7 +53,7 @@
     
     双击单元格填充柄或者退拽操作中，双击比拖拽要简单（WTF）
     
-    ![Untitled 4 7.png](../../../Files%20&%20LongText/Attachments/Untitled%204%207.png)
+    ![Untitled 4 7.png](Untitled%204%207.png)
     
 - year函数和mid函数
     
@@ -73,11 +73,11 @@
     
     需要整理已经写好的材料并替换其中的错误信息，就需要使用条件格式
     
-    ![Untitled 5 7.png](../../../Files%20&%20LongText/Attachments/Untitled%205%207.png)
+    ![Untitled 5 7.png](Untitled%205%207.png)
     
 - 计算工作年限或者工时
     
-    ![Untitled 6 6.png](../../../Files%20&%20LongText/Attachments/Untitled%206%206.png)
+    ![Untitled 6 6.png](Untitled%206%206.png)
     
     简单地对日期/365会得到序列号数值,需要编辑单元格格式调整为日期识别
     
@@ -97,14 +97,14 @@
     
     在引用的时候写上相应的工作表名称之后加上!然后写上坐标
     
-    ![Untitled 7 6.png](../../../Files%20&%20LongText/Attachments/Untitled%207%206.png)
+    ![Untitled 7 6.png](Untitled%207%206.png)
     
 - ==int,round系列系列取整函数==
     - **int作用是把数字向下取整,**
         
         可以联合if函数做到截取小数部分
         
-        ![Untitled 8 6.png](../../../Files%20&%20LongText/Attachments/Untitled%208%206.png)
+        ![Untitled 8 6.png](Untitled%208%206.png)
         
     - round函数系列有up&down和普通的round函数
         
@@ -126,7 +126,7 @@
 - Excel中能做的事
     - 能插入折线图,柱形图,盈亏图等
         
-        ![Untitled 9 5.png](../../../Files%20&%20LongText/Attachments/Untitled%209%205.png)
+        ![Untitled 9 5.png](Untitled%209%205.png)
         
     - 连续区域和不连续区域选中
         
@@ -134,11 +134,11 @@
         
 - 更改新建工作簿的默认字体和字号
     
-    ![Untitled 10 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2010%204.png)
+    ![Untitled 10 4.png](Untitled%2010%204.png)
     
 - 对比查看（自动重排）
     
-    ![Untitled 11 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2011%204.png)
+    ![Untitled 11 4.png](Untitled%2011%204.png)
     
 - 拆分窗口
     
@@ -160,7 +160,7 @@
     
     PS ：如果需要同时选中空的单元格
     
-    ![Untitled 12 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2012%204.png)
+    ![Untitled 12 4.png](Untitled%2012%204.png)
     
 - 选中多个工作表的多个区域
     
@@ -172,21 +172,21 @@
     
 - 自动填充
     
-    ![Untitled 13 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2013%204.png)
+    ![Untitled 13 4.png](Untitled%2013%204.png)
     
-    ![Untitled 14 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2014%204.png)
+    ![Untitled 14 4.png](Untitled%2014%204.png)
     
 - 一次性输入
     
-    ![Untitled 15 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2015%204.png)
+    ![Untitled 15 4.png](Untitled%2015%204.png)
     
 - 复制查找还要教
     
-    ![Untitled 16 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2016%204.png)
+    ![Untitled 16 4.png](Untitled%2016%204.png)
     
-    ![Untitled 17 4.png](../../../Files%20&%20LongText/Attachments/Untitled%2017%204.png)
+    ![Untitled 17 4.png](Untitled%2017%204.png)
     
 ---
 考试错题
-![Untitled 18 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2018%203.png)
+![Untitled 18 3.png](Untitled%2018%203.png)
 一个单元格内输入多行内容，excel不是notion，shift+enter跳转到上一行单元格
