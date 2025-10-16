@@ -36,7 +36,10 @@ C 程序源文件到可执行文件需要经过：
 ## 基本规范
 ### 配置书写顺序
 - 注意所有 `set(CMAKE_…..)` 的设置cmake配置的代码应该放在设置cmake版本代码之后，在project之前。
-- `project()` 之前，CMake 不知道你要用什么语言，也不知道编译器是谁 CMake 在 `project()` 时才会：设置默认编译器（如 MSVC / GCC），***所有的 set 语句设置的变量直到 project 语句时才会执行***
+- `project()` 之前，CMake 不知道你要用什么语言，也不知道编译器是谁 CMake 在 `project()` 时才会：设置默认编译器（如 MSVC / GCC），***所有的 set 语句和 cmake_... 语句设置的变量直到 project 语句时才会执行***，更准确的说法是：
+
+> `set(...)` 和 `cmake_...` 命令在它们出现时**立即执行**，但它们对 CMake 行为的影响，可能要在 `project()` 后才“生效”或“被使用”。
+
 - `find_package()` 必须放在 `project()` 之后，因为 CMake 需要**先初始化项目环境（编译器、语言、架构）**，才能正确查找和链接外部库。
 
 ### 工具链文件预处理逻辑
@@ -74,6 +77,59 @@ include(vcpkg.cmake)  # 或者 set(CMAKE_TOOLCHAIN_FILE "vcpkg.cmake")
 ```
 不影响系统环境，只对当前项目生效
 更适合多项目共存、不同版本依赖、CI 构建等场景。我自己使用 vcpkg 进行包管理，但是别人不是，所以关于 vcpkg 的配置只有我需要做，所以我需要将我对 vcpkg 的设置单独分开来，不然别人使用我混合有 vcpkg 配置的 `CMakeLists.txt` 文件会导致问题
+
+### 语句执行流程
+```md
+1. cmake_minimum_required()         ← 必须第一个调用
+2. set() / cmake_policy() / option() ← 设置变量、策略，立即执行
+3. project()                        ← 初始化项目，激活工具链、编译器、语言
+4. find_package() / enable_language() ← 查找依赖、启用语言
+5. add_executable() / add_library() ← 定义目标
+6. target_link_libraries() / target_include_directories() ← 配置目标属性
+7. install() / add_custom_command() ← 构建后操作
+8. message() / include()            ← 辅助调试或引入模块
+```
+- `cmake_policy (SET CMPxxx NEW/OLD)`
+作用：设置 CMake 兼容性策略
+立即执行，但只对后续代码生效
+常用于避免旧版兼容问题（如 CMP 0167）
+- `option (VARIABLE "Description" ON/OFF)`
+作用：定义用户可选的开关变量（常用于 GUI 或命令行）
+立即执行，可在 project () 之前或之后使用
+- `include (CMakeLists. txt) 或 include (Module. cmake)`
+作用：包含其他 CMake 文件
+立即执行，内容会被“内联”到当前脚本中
+- `target_include_directories (TARGET PRIVATE|PUBLIC|INTERFACE DIR...)`
+作用：为目标添加头文件搜索路径
+必须在 add_executable 或 add_library 之后调用
+- `target_compile_definitions (TARGET PRIVATE|PUBLIC|INTERFACE DEFINITION...)`
+作用：为目标添加预处理器宏
+必须在 add_executable 或 add_library 之后调用
+- `target_compile_options (TARGET PRIVATE|PUBLIC|INTERFACE OPTION...)`
+作用：为目标添加编译选项
+必须在 add_executable 或 add_library 之后调用
+target_compile_options (main PRIVATE "-Wall" "-Wextra")
+适用于特定目标的优化或警告设置。
+- `install (TARGETS ... DESTINATION ...) / install (DIRECTORY ... DESTINATION ...)`
+作用：定义安装规则
+通常放在脚本末尾
+不影响构建，只影响 make install 或 cmake --install
+```cmake
+install (TARGETS main DESTINATION bin)
+install (DIRECTORY include/ DESTINATION include)
+```
+- `add_custom_command () / add_custom_target ()`
+作用：定义自定义构建步骤或目标
+必须在 project () 之后调用
+```cmake
+add_custom_command (
+    OUTPUT generated. h
+    COMMAND python generate. py > generated. h
+    DEPENDS generate. py
+)
+```
+add_custom_target (generate ALL DEPENDS generated. h)
+✅ 用于生成代码、资源文件等。
 ## 引入第三方库出现的问题
 ### `CMP0167` 警告
 - 从 CMake 3.13 开始，官方推荐使用 **Config 模式**（即通过 `FindPackageConfig.cmake`）寻找某个模块的位置，如寻找 boost 库就会通过在库的安装目录寻找 `FindBoostConfig.cmake` 文件来引入 boost 库中的对应模块
@@ -85,6 +141,11 @@ if(POLICY CMP0167)
 endif()
 ```
 如果不使用这段代码，就会**使用 `FindPackageConfig.cmake` 中定义的方式来寻找模块**，这也就是为什么虽然这时候使用 `find_package` 不出现报错了，但是构建时会出现
+如果一个库支持 config 调用，那么可以使用
+```cmake
+find_package(Boost REQUIRED COMPONENTS system)
+```
+方式强制使用 config 方式引入库，添加 `if(POLICY CMP0167)` 作用只是为了兼容老项目
 ### cmake 不在指定目录中寻找 boost 库
 #### 构建正常场景
 ```cmake
@@ -131,10 +192,8 @@ target_link_libraries(learn_dll_lib PRIVATE
     Boost::system
 )
 ```
-由于 find_package 在 project 之前，并且由于 ***[[#基本规范#配置书写顺序|所有的 set 语句设置的变量直到 project 语句时才会执行]]***，所以 cmake 在不知道使用什么语言和编译器的情况下被告知**需要寻找 boost 库**，
-
-
-cmake 在 Anaconda 的 Boost 库中的 BoostDetectToolset-1.82.0. cmake 中的
+由于 find_package 在 project 之前，并且由于 ***[[#基本规范#配置书写顺序|所有的 set 语句设置的变量直到 project 语句时才会执行]]***，所以 cmake 在不知道使用什么语言和编译器的情况下 （unknow toolsest）被告知**需要寻找 boost 库**，CMake fallback 到 FindBoost.cmake（虽然设了 CMP0167 NEW，但在` project()` 之前无效）
+这就会导致 cmake 在 Anaconda 的 Boost 库中的 BoostDetectToolset-1.82.0. cmake 中的
 ```cmake
 string(REGEX MATCHALL "[0-9]+" _BOOST_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
 ```
@@ -151,3 +210,4 @@ Call Stack (most recent call first):
   D:/Program/Cmake/share/cmake-4.0/Modules/FindBoost.cmake:609 (find_package)
   CMakeLists.txt:7 (find_package)
 ```
+这有两个原因，首先由于 toolset 位置，cmake 不知道有 vcpkg 的存在，第二是因为 cmake fallback 了，没有使用 config 方式寻找配置，而是使用了 findboost，所以才可以看到语法错误，cmake 需要 `at least 5 arguments total` 5 个参数进行正则查找，但是并没有满足
