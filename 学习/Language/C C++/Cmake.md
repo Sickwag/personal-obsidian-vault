@@ -31,3 +31,123 @@ C 程序源文件到可执行文件需要经过：
 - make 命令在当前项目中执行 makefile 文件中的命令
 - 执行 makefile 中的命令会调用 gcc，clang 等编译工具进行**预处理，编译，汇编，链接**等操作得到**可执行文件或者动静态链接库**
 不暴露源代码或者源代码文件数量过多不好管理的情况下，可以将一个或者多个 c/cpp 文件打包成动静态链接库方便调用
+
+# CMake 编写规范
+## 基本规范
+### 配置书写顺序
+- 注意所有 `set(CMAKE_…..)` 的设置cmake配置的代码应该放在设置cmake版本代码之后，在project之前。
+- `project()` 之前，CMake 不知道你要用什么语言，也不知道编译器是谁 CMake 在 `project()` 时才会：设置默认编译器（如 MSVC / GCC），***所有的 set 语句设置的变量直到 project 语句时才会执行***
+- `find_package()` 必须放在 `project()` 之后，因为 CMake 需要**先初始化项目环境（编译器、语言、架构）**，才能正确查找和链接外部库。
+
+### 工具链文件预处理逻辑
+
+> 作用：全局集成（推荐用于个人开发环境）
+
+在安装 vcpkg 之后，通常需要输入：
+```powershell
+vcpkg integrate project
+```
+- 会将 vcpkg 的库路径注册到 **系统环境变量** 或 **CMake 全局配置** 中
+- 使得 **所有 CMake 项目** 在不显式设置 `CMAKE_TOOLCHAIN_FILE` 的情况下，也能自动找到 vcpkg 安装的包
+- 实现方式：
+    - 修改 `CMAKE_PREFIX_PATH`（Windows 上通常通过注册表或用户环境变量）
+    - 在 `%APPDATA%\vcpkg\registries` 中写入信息
+    - 对 Visual Studio 用户，还会让 VS 自动识别 vcpkg 包
+- 使用场景
+	- 在本机开发多个项目，都使用 vcpkg
+	- 简化 CMakeLists.txt，不每次都写 `set(CMAKE_TOOLCHAIN_FILE ...)`
+	- 用 Qt Creator / VSCode / Visual Studio 等 IDE，希望自动识别依赖
+使用这句之后，在 cmake 项目中即使不写 `CMAKE_TOOLCHAIN_FILE` cmake 仍然能够正确识别 vcpkg 中安装的库，而不是在别的地方寻找
+
+> [!NOTE]
+> 可以通过运行 `vcpkg integrate remove` 清除全局集成
+
+```bash
+vcpkg integrate install
+```
+
+> 作用：项目级集成（推荐用于团队协作或 CI/CD）
+
+会在当前项目的根目录生成一个 .cmake 文件（通常是 vcpkg.cmake）只需在 CMakeLists.txt 中添加一行：
+```cmake
+include(vcpkg.cmake)  # 或者 set(CMAKE_TOOLCHAIN_FILE "vcpkg.cmake")
+```
+不影响系统环境，只对当前项目生效
+更适合多项目共存、不同版本依赖、CI 构建等场景。我自己使用 vcpkg 进行包管理，但是别人不是，所以关于 vcpkg 的配置只有我需要做，所以我需要将我对 vcpkg 的设置单独分开来，不然别人使用我混合有 vcpkg 配置的 `CMakeLists.txt` 文件会导致问题
+## 引入第三方库出现的问题
+### `CMP0167` 警告
+- 从 CMake 3.13 开始，官方推荐使用 **Config 模式**（即通过 `FindPackageConfig.cmake`）寻找某个模块的位置，如寻找 boost 库就会通过在库的安装目录寻找 `FindBoostConfig.cmake` 文件来引入 boost 库中的对应模块
+- 在没有设置工具链的情况下，CMake 会 fallback 到系统默认的 `FindBoost.cmake` —— 这个模块在 CMake 3.13+ 中已被标记为“废弃”，为了兼容没有删除，所以会报 **CMP0167 警告**。
+可以使用下面的代码强制使用 config 模式寻找模块
+```cpp
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+```
+如果不使用这段代码，就会**使用 `FindPackageConfig.cmake` 中定义的方式来寻找模块**，这也就是为什么虽然这时候使用 `find_package` 不出现报错了，但是构建时会出现
+### cmake 不在指定目录中寻找 boost 库
+#### 构建正常场景
+```cmake
+#  这是能够正常通过构建的代码
+cmake_minimum_required(VERSION 3.10.0)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+# if(POLICY CMP0167)
+#     cmake_policy(SET CMP0167 NEW)
+# endif()
+
+project(learn_dll_lib VERSION 0.1.0 LANGUAGES C CXX)
+find_package(Boost REQUIRED COMPONENTS system) # find_package在project之后
+
+add_library(learn_dll_lib learn_dll_lib.cpp)
+
+target_link_libraries(learn_dll_lib PRIVATE
+    Boost::system
+)
+```
+会出现警告，但成功构建，由于之前已经使用 `vcpkg integrate install` 将 vcpkg 集成到 cmake 中，所以这里还是会到 vcpkg 目录中寻找 boost，并且通过 `FindBoostConfig.cmake` 方式寻找，cmake 会抛出一个警告
+```bash
+[cmake]   Policy CMP0167 is not set: The FindBoost module is removed.  Run "cmake
+```
+如果解开 `CMP0167` 警告，使用 config 方式寻找 `BoostConfig.cmake` 文件进行配置，就不会出现警告，不使用 `FindBoostConfig.cmake` 的而使用 config 方式寻找引入逻辑。
+#### 构建错误场景
+```cmake
+#  这是不能正常通过构建的代码
+cmake_minimum_required(VERSION 3.10.0)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+# if(POLICY CMP0167)
+#     cmake_policy(SET CMP0167 NEW)
+# endif()
+
+find_package(Boost REQUIRED COMPONENTS system) # find_package在project之前
+project(learn_dll_lib VERSION 0.1.0 LANGUAGES C CXX)
+
+add_library(learn_dll_lib learn_dll_lib.cpp)
+
+target_link_libraries(learn_dll_lib PRIVATE
+    Boost::system
+)
+```
+由于 find_package 在 project 之前，并且由于 ***[[#基本规范#配置书写顺序|所有的 set 语句设置的变量直到 project 语句时才会执行]]***，所以 cmake 在不知道使用什么语言和编译器的情况下被告知**需要寻找 boost 库**，
+
+
+cmake 在 Anaconda 的 Boost 库中的 BoostDetectToolset-1.82.0. cmake 中的
+```cmake
+string(REGEX MATCHALL "[0-9]+" _BOOST_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+```
+这一行出现
+```bash
+发生异常: FATAL_ERROR
+CMake Error at D:/Program/Anaconda/Library/lib/cmake/BoostDetectToolset-1.82.0.cmake:5 (string):
+  string sub-command REGEX, mode MATCHALL needs at least 5 arguments total to
+  command.
+Call Stack (most recent call first):
+  D:/Program/Anaconda/Library/lib/cmake/boost_system-1.82.0/boost_system-config.cmake:29 (include)
+  D:/Program/Anaconda/Library/lib/cmake/Boost-1.82.0/BoostConfig.cmake:141 (find_package)
+  D:/Program/Anaconda/Library/lib/cmake/Boost-1.82.0/BoostConfig.cmake:262 (boost_find_component)
+  D:/Program/Cmake/share/cmake-4.0/Modules/FindBoost.cmake:609 (find_package)
+  CMakeLists.txt:7 (find_package)
+```
