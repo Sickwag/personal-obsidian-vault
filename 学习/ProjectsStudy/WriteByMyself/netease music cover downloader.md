@@ -3,8 +3,8 @@ source: https://github.com/sickwag/netease_music_cover_downloader
 created: 2025年10月4日16:49:16
 ---
 # cover_downloader. cpp
-### ssl 验证逻辑
-最重要的下载逻辑
+## 网络请求发送部分
+### http 和 htttps 分流
 首先解析 http 或者 https 链接中的主机地址和文件路径
 ```cpp
 std::string host, path;
@@ -33,6 +33,7 @@ if (url.substr(0, 8) == "https://") {
 }
 ```
 然后如果是 https，[[零碎但需要知道的#http和https协议区别#1. SSL/TLS 加密 (安全性)|就需要进行 ssl/tsl 验证]]，这也是为什么需要在这里区分，验证部分在 for 循环中执行
+### ssl 验证逻辑
 ```cpp
 ssl::context ctx{ssl::context::tlsv12_client};
 ctx.set_verify_mode(ssl::verify_none); // In a real application, set appropriate verification
