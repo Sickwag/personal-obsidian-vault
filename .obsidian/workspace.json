@@ -13,13 +13,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Files & LongText/Long code/HTML.md",
+                "file": "Files & LongText/Long code/CSDN Linux.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "HTML"
+              "title": "CSDN Linux"
             }
           },
           {
@@ -109,7 +109,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -236,6 +237,7 @@
   },
   "active": "63ba7d7570bfbfd9",
   "lastOpenFiles": [
+    "Files & LongText/Long code/HTML.md",
     "学习/Language/SQL/MySQL.md",
     "Files & LongText/Attachments/1460000018156726.webp",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
