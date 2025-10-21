@@ -75,12 +75,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -202,11 +202,14 @@
       "workspaces:管理工作区布局": false,
       "table-editor-obsidian:Advanced Tables Toolbar": false,
       "obsidian-git:Open Git source control": false,
-      "copilot:Open Copilot Chat": false
+      "copilot:Open Copilot Chat": false,
+      "quiz-generator:Open generator": false
     }
   },
-  "active": "6713cf255a18324d",
+  "active": "d1e212fee3e1649e",
   "lastOpenFiles": [
+    "Files & LongText/ChatLogWithAi/AiQuiz/Quiz 1.md",
+    "Files & LongText/ChatLogWithAi/AiQuiz",
     "Files & LongText/Attachments/Pasted image 20251020205938.png",
     "Files & LongText/Attachments/Pasted image 20251020205916.png",
     "学习/其他专业书/QT6开发指南.md",
@@ -247,12 +250,10 @@
     "Files & LongText/Attachments/Pasted image 20251013195552.png",
     "Files & LongText/Attachments/Pasted image 20251013195329.png",
     "Files & LongText/Attachments/Pasted image 20251013175336.png",
-    "Files & LongText/Attachments/Pasted image 20251013175325.png",
     "学习/Bases/开发范式",
     "学习/ProjectsStudy/FromBlogs",
     "Daily/Observations",
     "all_objects.txt",
-    "学习/ProjectsStudy/C C++/未命名.base",
     "未命名.canvas",
     "未命名 1.canvas"
   ]
