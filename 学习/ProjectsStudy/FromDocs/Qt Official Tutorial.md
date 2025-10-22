@@ -1167,3 +1167,67 @@ QWidget *BookDelegate::createEditor(QWidget *parent,
 ![[Pasted image 20251015180620.png]]
 ![[Pasted image 20251015180703.png]]
 可以看到，外检 author 和 gener 还是下拉列表，yer 和 title 被设置为了文本编辑框
+
+## Screenshot
+
+### qt 类编写规范
+在头文件中只暴露必要的成员和接口
+如果一个 qt 类中某些（控件）对象
+- 生命周期不是和整个类的生命周期一样长
+- 在程序运行过程中只会在**被调用几次次的特定的函数中被使用**，
+- 临时部件是更复杂的类的实例，并且它们的头文件包含了一些你不想暴露给 `screenshot.h` 的使用方的依赖
+- 不需要被其他控件使用（比如如果其他类需要这个组件的字体信息，大小设置，**不需要使用 setter 和 getter 来被其他类获取**）
+那么这些（控件）对象就没必要出现在头文件中（即使是 private 修饰）。不必担心这些控件的依赖关系混乱或者生命周期问题导致的悬空引用
+Qt 的对象树模型: Qt 使用对象树来管理内存。当 new 一个 QObject时，如果指定了父对象（例如 `new QGroupBox(tr("Options"), this)` 中的 this），那么当父对象被销毁时，所有子对象也会被自动销毁。对于布局管理器来说，它们通常被设置为父部件的布局，因此它们的生命周期由父部件管理，不需要（有时也不建议）额外的成员变量指针来管理。
+
+通常，UI 对象只会初始化一次显示在屏幕上，ui 控件的状态通过函数修改。如果小对象频繁被创建和销毁会导致性能问题，但如果调用次数不多（或者仅仅初始化一次）就可以忽略。
+代码中
+```cpp
+QLabel *screenshotLabel;
+QSpinBox *delaySpinBox;
+QCheckBox *hideThisWindowCheckBox;
+QPushButton *newScreenshotButton;
+```
+- screenshotLable 不必多说，程序运行过程中他一直存在，程序的状态（窗口大小，截屏按钮按下）时刻改变着这个 label
+- delaySpinbox 有数据调整功能，和程序运行过程中其他内容交互
+- checkbox 有变灰的视觉效果
+- newScreenshotButton 需要暴露接口给其他的
+
+### qt 对象树基本特性
+#### 什么是对象树
+大部分 qt 控件（**尤其是可见 qt 控件**）在初始化时（无论是 new 指针初始化还是对象栈初始化）都可选在**最后一个参数位置**传入 `QObject* parent` 类型参数。这个参数制定了这个对象的父对象是谁。
+父对象**最重要的功能是通过对象树管控子对象的生命周期**：
+
+> [!note]
+> 自动删除: 当一个父 QObject 被 delete 时，Qt 会自动删除该父对象的所有子对象。这个过程会**递归进行**，即父对象的子对象被删除时，子对象的子对象也会被删除，以此类推，***形成一个完整的树状结构***
+> 
+> 这种***子对象不能比父对象活得更久***的约束机制，当父对象被销毁时，其所有子对象也必须被销毁，极大地简化了内存管理，开发者只需要关心父对象的生命周期，而不需要记住去手动删除每一个子对象，避免内存泄漏。
+> 
+> 如果想要子对象脱离父对象管控，可以调用 `setParent(nullptr)` 或 `setParent(newParent)`）。子对象就**脱离了原来的对象树**，不再由原来的父对象管理，需要手动 delete
+
+其次：
+1. 层级结构 (Hierarchical Structure):
+   * 创建了一个 QObject 的层级树。这个树形结构是 Qt
+	 事件传递、对象查找、信号槽连接等机制的基础。
+   * 子对象在逻辑上属于其父对象。
+2. 事件传播 (Event Propagation):
+   * 某些事件（如 QResizeEvent 会发送给窗口部件本身，窗口内的布局会根据新尺寸调整子部件）。QChildEvent 类型的事件（如 `QEvent::ChildAdded` 等，见上文修改）会通知父对象其子对象的变化。鼠标、键盘等输入事件可以在部件层级间传递 (Delivery)，从顶层部件传递给子部件。
+   * QChildEvent 用于通知对象其子对象发生了变化
+3. 对象查找 (Object Lookup):
+   * `QObject::findChild<T>()`, `QObject::findChildren<T>()` 等方法可以在父子关系形成的层级树中递归搜索子对象。
+   * `QObject::parent()` 和 `QObject::children()` 方法允许遍历对象树。
+4. 信号槽连接 (Signal-Slot Connections):
+   * 可以方便地在父子对象之间建立信号槽连接。
+   * `Qt::QueuedConnection` 和 `Qt::BlockingQueuedConnection` 涉及事件队列，对象树关系会影响事件的分发和接收。
+5. 布局管理 (Layout Management):
+   * 对于 QWidget，将部件添加到布局 (`layout->addWidget(widget)`)         时，**布局通常会隐式地将该部件的父对象设置为布局所附加的父部件**。这 是布局系统工作的重要部分。
+   * 对于 QLayout，将其设置给 QWidget (`widget->setLayout(layout)`) 时，widget 会隐式地成为 layout 的父对象*，管理 layout 的生命周期
+6. 坐标系统 (Coordinate System): (主要针对 QWidget)
+   * 子部件的 pos()（位置）是相对于其父部件的坐标系统而言的。
+#### 不指定父对象
+  Qt QObject** **不会自动识别或分配**一个父对象给一个没有显式指定 parent 的
+  QObject 实例。
+创建一个 QObject或其子类时，如果没有在构造函数中指定 parent 参数：
+* 拥有一个 `nullptr` 的父对象指针。它的 `parent()` 函数会返回 nullptr。
+* 不隶属于任何 Qt 对象树。它独立存在，Qt 的对象树内存管理机制不会自动管理它的生命周期。**也就是说脱离之后他自己不会成为一个新的对象树**
+* 需要手动管理内存。必须在适当的时机调用 delete 来释放其占用的内存，否则会导致内存泄漏。

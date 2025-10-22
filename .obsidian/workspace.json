@@ -13,13 +13,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/Fragments/编程相关/操作经验/网络连接问题解决.md",
+                "file": "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "网络连接问题解决"
+              "title": "Qt Official Tutorial"
             }
           }
         ]
@@ -79,7 +79,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -186,7 +187,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -206,8 +208,10 @@
   },
   "active": "6713cf255a18324d",
   "lastOpenFiles": [
-    "学习/其他专业书/QT6开发指南.md",
+    "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
+    "学习/Fragments/编程相关/操作经验/网络连接问题解决.md",
     "Files & LongText/ChatLogWithAi/AiQuiz/Quiz 1.md",
+    "学习/其他专业书/QT6开发指南.md",
     "Files & LongText/ChatLogWithAi/AiQuiz",
     "Files & LongText/Attachments/Pasted image 20251020205938.png",
     "Files & LongText/Attachments/Pasted image 20251020205916.png",
@@ -219,10 +223,8 @@
     "Files & LongText/Long code/CSDN Linux.md",
     "Files & LongText/Long code/HTML.md",
     "Files & LongText/Attachments/1460000018156726.webp",
-    "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "学习/Fragments/编程相关/基本知识/报错日志和代码异常分析.md",
     "学习/Fragments/编程相关/基本知识/零碎但需要知道的.md",
-    "学习/Fragments/编程相关/操作经验/网络连接问题解决.md",
     "学习/Fragments/编程相关/操作经验/使用adb禁用应用.md",
     "学习/Fragments/编程相关/操作经验/乱码对照表及其解决方法.md",
     "Files & LongText/Attachments/Pasted image 20251015180703.png",
