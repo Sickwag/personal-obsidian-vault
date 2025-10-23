@@ -548,18 +548,170 @@ Linux 中关于权限的管控级别有 2 个级别，分别是：
 创建用户组名 `groupadd 用户组名`
 删除用户组 `groupdel 用户组名`
 #### 用户相关命令
-以下命令需 root 用户执行
-- 创建用户`useradd[-g-d]用户名`
-选项：-g 指定用户的组，不指定-g，会创建**同名组**并自动加入，指定-g 需要组已经存在，如已存在同名组，**必须使用-g**
-选项：-d 指定用户 HOME 路径，不指定，HOME 目录默认在：/home/用户名
-- 删除用户`userdel[-r]用户名`
-选项：-r，删除用户的 HOME 目录，不使用 -r，删除用户时，HOME 目录**保留**
-- 查看用户所属组`id[用户名]`
-参数：用户名，被查看的用户，如果不提供则查看自身修改用户所属组
-- 修改用户所属组
-`usermod-aG 用户组名 用户名` 将指定用户加入用户组
-- 切换用户
-`su - 用户名`
+在 CentOS 系统上管理用户，我来为您详细介绍相关命令和操作：
+
+创建用户
+
+1. 创建用户并设置 home 目录
+```bash
+# 创建用户并自动创建home目录
+useradd username
+
+# 创建用户并指定home目录路径
+useradd -d /path/to/home username
+
+# 创建用户并指定用户组
+useradd -g groupname username
+```
+
+2. 设置/修改用户密码
+```bash
+# 设置用户密码
+passwd username
+```
+系统会提示您输入两次密码进行确认。
+
+3. 允许密码登录
+默认情况下，新创建的用户是允许密码登录的。如果需要确保 SSH 允许密码登录，检查 SSH 配置：
+```bash
+vi /etc/ssh/sshd_config
+```
+确保有以下配置：
+```
+PasswordAuthentication yes
+ChallengeResponseAuthentication yes
+```
+然后重启 SSH 服务：
+```bash
+systemctl restart sshd
+```
+
+完整创建用户示例
+```bash
+# 创建用户
+useradd -m -s /bin/bash john
+
+# 设置密码
+passwd john
+
+# 确保SSH允许密码登录
+systemctl restart sshd
+```
+
+查看用户信息
+
+1. 列出所有用户
+```bash
+# 列出所有用户（包括系统用户）
+cat /etc/passwd
+
+# 只列出普通用户（UID >= 1000）
+awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd
+
+# 使用getent命令
+getent passwd
+```
+
+2. 查看特定用户信息
+```bash
+# 查看用户基本信息
+id username
+
+# 查看用户详细信息
+finger username
+
+# 查看用户登录信息
+who username
+
+# 查看用户所属组
+groups username
+```
+
+3. 查看用户配置文件
+```bash
+# 查看/etc/passwd中的用户信息
+grep username /etc/passwd
+
+# 查看/etc/shadow中的密码信息（需要root权限）
+grep username /etc/shadow
+
+# 查看/etc/group中的组信息
+grep username /etc/group
+```
+
+删除用户
+
+1. 删除用户但保留 home 目录
+```bash
+userdel username
+```
+
+2. 删除用户同时删除 home 目录
+```bash
+userdel -r username
+```
+
+3. 强制删除（即使用户已登录）
+```bash
+userdel -f -r username
+```
+
+其他有用的用户管理命令
+
+修改用户属性
+```bash
+# 修改用户home目录
+usermod -d /new/home/dir username
+
+# 修改用户登录名
+usermod -l newname oldname
+
+# 修改用户UID
+usermod -u new_uid username
+
+# 锁定用户账户
+usermod -L username
+
+# 解锁用户账户
+usermod -U username
+```
+
+查看用户登录情况
+```bash
+# 查看当前登录用户
+who
+
+# 查看用户登录历史
+last username
+
+# 查看用户最近登录信息
+lastlog -u username
+```
+
+安全建议
+
+1. **设置强密码策略**：
+```bash
+# 编辑密码策略
+vi /etc/security/pwquality.conf
+```
+
+2. **定期检查用户**：
+```bash
+# 检查空密码用户
+awk -F: '($2 == "") {print $1}' /etc/shadow
+
+# 检查非活动用户
+lastlog -b 90
+```
+
+3. **限制用户权限**：
+- 避免将普通用户加入 wheel 组（sudo 权限）
+- 使用适当的文件权限
+
+这些命令应该能帮助您有效地管理 CentOS 服务器上的用户账户。记得在删除用户前备份重要数据！
+
+
 ### 文件和权限
 #### 查看文件权限
 ![Pasted image 20240916211937.png](Pasted%20image%2020240916211937.png) ![Pasted image 20240916212211.png](Pasted%20image%2020240916212211.png)
