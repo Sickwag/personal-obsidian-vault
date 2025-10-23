@@ -1308,3 +1308,32 @@ fileDialog.setDefaultSuffix(format);
 这三条语句可以看做是 `QFileDialog filedialog(this,tr("Save As"),initialPath /*, "" */);` 第四个参数的**细化\拓展表示**
 
 QDir 中提供了 toNativeSeparators 函数，可以返回操作系统中路径字符串的对应显示方法，windows 中用 `\`，unix 类系统使用 `/` ，但是内部处理路径时这两种表示方法都会统一处理
+
+### 截屏操作
+```cpp
+QScreen* screen = QGuiApplication::primaryScreen();
+if(const QWindow* window = windowHandle()){
+    screen = window->screen();
+}
+```
+首先获取指向主屏幕的指针，然后使用 QWindow 对象存储屏幕信息，然后使用 `windowHandle()`: 这是 QWidget 类的一个成员函数。它的作用是获取当前 `QWidget` 实例（即`Screenshot` 对象）所关联的底层 `QWindow` 对象的指针。QWindow 是 Qt中一个更接近底层窗口系统的类，通常用于 OpenGL 相关操作或需要更直接的窗口管理时。
+
+如果是多屏幕设备，可以使用这样的代码来获取所有屏幕信息：
+```cpp
+int main(int argc, char* argv[]){
+    QGuiApplication app(argc, argv);   // mark
+    std::cout << "Hello, from temporal_qt_draft!\n";
+    const QList<QScreen*> allScreens = QGuiApplication::screens();
+    qDebug() << "number of screens: " << allScreens.size();
+    for(const auto& screen : allScreens){
+        qDebug() << "screen name: " << screen->name();
+        qDebug() << "screen geometry: " << screen->geometry();
+        qDebug() << "screen size: " << screen->size();
+        qDebug() << "screen available geometry: " << screen->availableGeometry();
+        qDebug() << "is primary screen: " << (QGuiApplication::primaryScreen() == screen);
+        qDebug() << "------------------------------------";
+    }
+}
+```
+屏幕管理这一功能需要首先创建 `QGuiApplication` 对象，不然无法通过这个对象来获取屏幕信息，注释 mark 位置，会返回 `number of screens： 0`
+然后将**从屏幕中抓取的像素信息（不是窗口像素信息）** 存放在位图中 `originalPixmap = screen->grabWindow(0);`
