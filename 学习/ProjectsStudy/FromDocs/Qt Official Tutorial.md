@@ -1069,7 +1069,7 @@ void BookWindow::createMappings() {
             );
 }
 ```
-### 设置委托机制
+### 设置委托机制（booksdelegate. cpp）
 #### 委托机制 www？
 委托就像是一个"UI 设计师"，它告诉 Qt 表格"**这个数据该怎么画出来**"和"**如果要编辑这个数据该用什么工具**"。
 自定义一个委托类，继承自 qt 的内置委托类型，可以通过查阅文档来知道**必须要重写什么函数**，委托类可以应用于**任何基于项(item)的视图组件**
@@ -1196,6 +1196,17 @@ QPushButton *newScreenshotButton;
 布局是不可见的**管理器**，控制其中对象的排列规则，管理部件几何形状和位置，不关心**其父对象**中有多少子对象，子对象是什么。
 控件**大多是可见的**，能够 `addxxx()` 的控件可以看做是一个 container，他只关心其中有什么，不关心其中的东西如何排列。
 如果一个控件是 layout，那么它支持**在构造函数中使用 parent 参数指向父对象**，前提是父对象是一个 container，设置好父对象之后，对这个 layout 中的操作（如 addWidget）都会自动纳入父对象中作为子对象
+```cpp
+QGridLayout *optionsGroupBoxLayout = new QGridLayout(optionsGroupBox);
+optionsGroupBoxLayout->addWidget(new QLabel(tr("Screenshot Delay:"), this), 0, 0);
+optionsGroupBoxLayout->addWidget(delaySpinBox,0,1);
+optionsGroupBoxLayout->addWidget(hideThisWindowCheckBox,1,0,1,2);
+mainLayout->addWidget(optionsGroupBox);  // addWidget
+// mainLayout->addLayout(optionsGroupBoxLayout);  // addLayout
+```
+代码中，`optionGroupBoxLayout` 在第一句就已经设置为为 `optionGroupBox` 管理布局，所以 mainlayout 中只需要将 optionGroupBox 即可，不需要设置。
+如果将 addWidget 替换为 addLayout，就能清晰看到两者的**可见和不可见区别**
+![[Pasted image 20251022201110.png|addLayout]] ![[Pasted image 20251022201138.png|addWidget]]
 ### qt 对象树基本特性
 #### 什么是对象树
 大部分 qt 控件（**尤其是可见 qt 控件**）在初始化时（无论是 new 指针初始化还是对象栈初始化）都可选在**最后一个参数位置**传入 `QObject* parent` 类型参数。这个参数制定了这个对象的父对象是谁。
@@ -1234,3 +1245,64 @@ QPushButton *newScreenshotButton;
 * 拥有一个 `nullptr` 的父对象指针。它的 `parent()` 函数会返回 nullptr。
 * 不隶属于任何 Qt 对象树。它独立存在，Qt 的对象树内存管理机制不会自动管理它的生命周期。**也就是说脱离之后他自己不会成为一个新的对象树**
 * 需要手动管理内存。必须在适当的时机调用 delete 来释放其占用的内存，否则会导致内存泄漏。
+### 文件对话框简单用法（QFileDialog）
+#### 设置基本参数
+```cpp
+QFileDialog filedialog(this,tr("Save As"),initialPath /*, "" */);
+filedialog.setAcceptMode(QFileDialog::AcceptSave);
+filedialog.setFileMode(QFileDialog::AnyFile);
+filedialog.setDirectory(initialPath);
+```
+构造函数设置了文件对话框父对象，窗口标题，打开文件位置，文件筛选器（file-filter），是一个 Qstring 对象，它的编写方式需要遵循一定格式：
+过滤器字符串遵循特定的格式：`"DisplayName(*.extension 1 *.extension 2 ...)"`。
+```md
+"Images (*.png *.jpg *.bmp)": 显示名为 "Images" 的过滤器，只显示.png, .jpg, .bmp 格式的文件。
+"Text Files (*.txt)": 显示名为 "Text Files" 的过滤器，只显示 .txt文件。
+"All Files (*)": 显示名为 "All Files" 的过滤器，显示所有文件。
+"Image Files (*.png *.xpm *.jpg);;Text Files (*.txt)": 使用 ;;分隔多个过滤器选项。
+```
+`filedialog.setDirectory(initialPath); ` 相当于再设置了一遍第二个参数
+AcceptMode：定义了文件对话框的意图：是用于选择文件来打开还是指定文件名来保存在硬盘上
+* `QFileDialog::AcceptOpen`: 对话框用于打开一个或多个现有文件。按钮通常显示为 "Open"。
+* `QFileDialog::AcceptSave`: 对话框用于保存文件。如果用户选择了已存在的文件，通常会提示是否覆盖。按钮通常显示为 "Save" 或 "Save As"。
+`fileMode`: 定义了用户在文件对话框中选择文件的方式。
+* 主要选项:
+   * `QFileDialog::AnyFile`:
+	 允许用户选择任意文件，包括不存在的文件名。这常用于 "Save As" 对话框，因为用户可能要创建一个新文件。
+   * `QFileDialog::ExistingFile`: 允许用户选择一个已存在的文件。这常用于"Open File" 对话框。
+   * `QFileDialog::Directory`: 允许用户选择一个目录 (文件夹)。
+   * `QFileDialog::ExistingFiles`: 允许用户选择一个或多个已存在的文件。
+
+#### 获取路径中的文件（filter）
+- 获取系统默认图片存储位置（windows 一般是 C:/Users/username/picture）
+```cpp
+QString initialPath = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+```
+- 获取当前运行的可执行程序所在的目录，这比[[CodeLineCounter#获取编译后可执行文件所在位置|使用windows.h提供的api和获取符号表]]的方式高效且清晰，并且跨平台
+```cpp
+QDir::currentPath()；
+```
+- 最终显示对话框的代码是 `fileDialog.exec()`，会返回用户在窗口中的选择结果
+	* 如果用户点击 "Cancel"返回 `QDialog::Rejected`），函数返回，不执行保存。
+	* 如果用户点击 "Save"返回 `QDialog::Accepted`），获取用户输入或选择的完整文件路径 (fileName)。
+
+
+```cpp
+fileDialog.setMimeTypeFilters(mimeTypes);
+fileDialog.selectMimeTypeFilter("image/" + format);
+fileDialog.setDefaultSuffix(format);
+```
+
+> [!question]
+> qt 中表示字符串可以通过 Qstrong，也可以通过 QByteArray 保存，代码中还要先创建 ` QStringList`（是 `QList<QString>` 的封装），然后创建 ` QList<QByteArray>`，再通过 `QImageWriter:: supportedMimeTypes (); ` 将所有支持的格式的字符串一个个放入 mimeTypes 中
+> 
+>> [!anwser] 这一操作通常出于性能和底层实现的考虑，QByteArray 直接对应 C 风格的字节流。`QFileDialog::setMimeTypeFilters(const QStringList &filters)` 期望接收 `QStringList`。所以必须进行类型转换，将 QByteArray 列表转换为 QStringLIst。`QLatin1String(bf)` 对于 MIME 类型使用 Latin-1 编码，是一种高效和安全的做法
+
+一个 QFileDialog 对象不可多次调用 `selectMimeTypeFilter (const QString &filter)`，但可以设置一个过滤器列表，。也就是说填入其中的可以是一个字符串，其中内容是列**使用 `,` 分割的字符串表**，也可以传入一个 `QStringList`，每个元素都是一个过滤器。
+`fileDialog.selectMimeTypeFilter("image/" + format); ` 中的"image/"是一种标准 MIME 文件类型写法：
+  "image/“ 是 MIME 类型标准的一部分。
+
+* MIME 类型通常由两部分组成：主类型/子类型 (major-type/sub-type)。
+* 对于图片，主类型是 image。
+* `QImageWriter::supportedMimeTypes()` 返回的就是这种标准的 MIME 类型字符串列表
+这三条语句可以看做是 `QFileDialog filedialog(this,tr("Save As"),initialPath /*, "" */);` 第四个参数的**细化\拓展表示**
