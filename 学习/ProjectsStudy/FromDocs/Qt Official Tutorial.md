@@ -1306,3 +1306,5 @@ fileDialog.setDefaultSuffix(format);
 * 对于图片，主类型是 image。
 * `QImageWriter::supportedMimeTypes()` 返回的就是这种标准的 MIME 类型字符串列表
 这三条语句可以看做是 `QFileDialog filedialog(this,tr("Save As"),initialPath /*, "" */);` 第四个参数的**细化\拓展表示**
+
+QDir 中提供了 toNativeSeparators 函数，可以返回操作系统中路径字符串的对应显示方法，windows 中用 `\`，unix 类系统使用 `/` ，但是内部处理路径时这两种表示方法都会统一处理
