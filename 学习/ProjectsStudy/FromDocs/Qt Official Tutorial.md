@@ -216,12 +216,12 @@ button.installEventFilter(&filter);
 C++标准中定义的字符串字面量在**编译期实现**，由语言定义，或者由 qt 告诉。
 标准 C++中支持的前缀，以 `R`、`u`、`U`、`LR`、`u8`、`u8R` 等形式出现。qt 告诉的比标准多一个后缀，
 
-| 前缀 | 类型 | 说明 | 示例 |
-| :--- | :--- | :--- | :--- |
-| `(无)` | `const char[]` | 普通/窄字符串，编码取决于编译器，通常是本地编码（如 Windows-1252, Latin-1）或 UTF-8。 | `"Hello"` |
-| `u8` | `const char8_t[]` (C++20) | UTF-8 编码的窄字符串。**从 C++20 开始，`char8_t` 是独立的字符类型**。在 C++17 及之前，它产生的类型是 `const char[]`。 | `u8"你好"` |
-| `u` | `const char16_t[]` | UTF-16 编码的字符串。通常用于 Windows API 或其他原生使用 UTF-16 的系统。 | `u"Привет"` (俄语 "你好") |
-| `U` | `const char32_t[]` | UTF-32 编码的字符串。拥有固定宽度的字符，便于处理任意字符。 | `U"こんにちは"` (日语 "你好") |
+| 前缀    | 类型                        | 说明                                                                                  | 示例                    |
+| :---- | :------------------------ | :---------------------------------------------------------------------------------- | :-------------------- |
+| `(无)` | `const char[]`            | 普通/窄字符串，编码取决于编译器，通常是本地编码（如 Windows-1252, Latin-1）或 UTF-8。                           | `"Hello"`             |
+| `u8`  | `const char8_t[]` (C++20) | UTF-8 编码的窄字符串。**从 C++20 开始，`char8_t` 是独立的字符类型**。在 C++17 及之前，它产生的类型是 `const char[]`。 | `u8"你好"`              |
+| `u`   | `const char16_t[]`        | UTF-16 编码的字符串。通常用于 Windows API 或其他原生使用 UTF-16 的系统。                                  | `u"Привет"` (俄语 "你好") |
+| `U`   | `const char32_t[]`        | UTF-32 编码的字符串。拥有固定宽度的字符，便于处理任意字符。                                                   | `U"こんにちは"` (日语 "你好")  |
 qt 中有如 `u"foo"_s` （用于 [QString](https://doc.qt.io/qt-6/zh/qstring.html) ）、`"foo"_L1` （用于 [QLatin1StringView](https://doc.qt.io/qt-6/zh/qlatin1stringview.html) ）和 `u"foo"_ba` （用于 [QByteArray](https://doc.qt.io/qt-6/zh/qbytearray.html) ）。这些都是通过使用 [StringLiterals Namespace](https://doc.qt.io/qt-6/zh/qt-literals-stringliterals.html) 提供的，需要使用 `using namespace Qt::Literals::StringLiterals;` 才能够使用
 
 | 编码     | C++ 字符串字面 | Qt 用户定义字面量 | C++ 字符    | Qt 字符                                                     | 自有字符串                                                   | 非所有字符串                                                                |
@@ -1169,14 +1169,14 @@ QWidget *BookDelegate::createEditor(QWidget *parent,
 可以看到，外检 author 和 gener 还是下拉列表，yer 和 title 被设置为了文本编辑框
 
 ## Screenshot
-
+[Taking a Screenshot | Qt Widgets | Qt 6.10.0](https://doc.qt.io/qt-6/zh/qtwidgets-desktop-screenshot-example.html)
 ### qt 类编写规范
 在头文件中只暴露必要的成员和接口
 如果一个 qt 类中某些（控件）对象
 - 生命周期不是和整个类的生命周期一样长
-- 在程序运行过程中只会在**被调用几次次的特定的函数中被使用**，
+- 在程序运行过程中只会在**被调用几次的特定的函数中被使用**，
 - 临时部件是更复杂的类的实例，并且它们的头文件包含了一些你不想暴露给 `screenshot.h` 的使用方的依赖
-- 不需要被其他控件使用（比如如果其他类需要这个组件的字体信息，大小设置，**不需要使用 setter 和 getter 来被其他类获取**）
+- 不需要被其他控件使用（比如其他类需要这个组件的字体信息，大小设置，**不需要使用 setter 和 getter 来让其他类获取**）
 那么这些（控件）对象就没必要出现在头文件中（即使是 private 修饰）。不必担心这些控件的依赖关系混乱或者生命周期问题导致的悬空引用
 Qt 的对象树模型: Qt 使用对象树来管理内存。当 new 一个 QObject时，如果指定了父对象（例如 `new QGroupBox(tr("Options"), this)` 中的 this），那么当父对象被销毁时，所有子对象也会被自动销毁。对于布局管理器来说，它们通常被设置为父部件的布局，因此它们的生命周期由父部件管理，不需要（有时也不建议）额外的成员变量指针来管理。
 
@@ -1190,8 +1190,8 @@ QPushButton *newScreenshotButton;
 ```
 - screenshotLable 不必多说，程序运行过程中他一直存在，程序的状态（窗口大小，截屏按钮按下）时刻改变着这个 label
 - delaySpinbox 有数据调整功能，和程序运行过程中其他内容交互
-- checkbox 有变灰的视觉效果
-- newScreenshotButton 需要暴露接口给其他的
+- checkbox 有变灰的视觉效果，其状态在多个函数中被读取
+- newScreenshotButton 的状态在 `newScreenshot` 和 `shootScreen` 函数中被修改（禁用/启用）
 ### 布局和控件关系
 布局是不可见的**管理器**，控制其中对象的排列规则，管理部件几何形状和位置，不关心**其父对象**中有多少子对象，子对象是什么。
 控件**大多是可见的**，能够 `addxxx()` 的控件可以看做是一个 container，他只关心其中有什么，不关心其中的东西如何排列。
@@ -1204,12 +1204,12 @@ optionsGroupBoxLayout->addWidget(hideThisWindowCheckBox,1,0,1,2);
 mainLayout->addWidget(optionsGroupBox);  // addWidget
 // mainLayout->addLayout(optionsGroupBoxLayout);  // addLayout
 ```
-代码中，`optionGroupBoxLayout` 在第一句就已经设置为为 `optionGroupBox` 管理布局，所以 mainlayout 中只需要将 optionGroupBox 即可，不需要设置。
+代码中，`optionGroupBoxLayout` 在第一句就已经设置为为 `optionGroupBox` 的布局管理器，所以 mainlayout 中只需要 `mainLayout->addWidget(optionGroupBox)` 即可
 如果将 addWidget 替换为 addLayout，就能清晰看到两者的**可见和不可见区别**
 ![[Pasted image 20251022201110.png|addLayout]] ![[Pasted image 20251022201138.png|addWidget]]
 ### qt 对象树基本特性
 #### 什么是对象树
-大部分 qt 控件（**尤其是可见 qt 控件**）在初始化时（无论是 new 指针初始化还是对象栈初始化）都可选在**最后一个参数位置**传入 `QObject* parent` 类型参数。这个参数制定了这个对象的父对象是谁。
+几乎所有 Qt 对象（QObject 及其派生类，包括可见控件如 QWidget 和不可见对象如 QTimer）在 new 动态分配时，都接受一个可选的 `QObject* parent = nullptr` 参数（通常是最后一个）。这个参数制定了这个对象的父对象是谁。
 父对象**最重要的功能是通过对象树管控子对象的生命周期**：
 
 > [!note]
@@ -1226,8 +1226,8 @@ mainLayout->addWidget(optionsGroupBox);  // addWidget
    * 子对象在逻辑上属于其父对象。
 2. 事件传播 (Event Propagation):
    * 某些事件（如 QResizeEvent 会发送给窗口部件本身，窗口内的布局会根据新尺寸调整子部件）。QChildEvent 类型的事件（如 `QEvent::ChildAdded` 等，见上文修改）会通知父对象其子对象的变化。鼠标、键盘等输入事件可以在部件层级间传递 (Delivery)，从顶层部件传递给子部件。
-   * QChildEvent 用于通知对象其子对象发生了变化
-3. 对象查找 (Object Lookup):
+   * `QEvent::ChildAdded`, `QEvent::ChildRemoved `等事件用于通知对象其子对象发生了变化
+1. 对象查找 (Object Lookup):
    * `QObject::findChild<T>()`, `QObject::findChildren<T>()` 等方法可以在父子关系形成的层级树中递归搜索子对象。
    * `QObject::parent()` 和 `QObject::children()` 方法允许遍历对象树。
 4. 信号槽连接 (Signal-Slot Connections):
@@ -1256,11 +1256,12 @@ filedialog.setDirectory(initialPath);
 构造函数设置了文件对话框父对象，窗口标题，打开文件位置，文件筛选器（file-filter），是一个 Qstring 对象，它的编写方式需要遵循一定格式：
 过滤器字符串遵循特定的格式：`"DisplayName(*.extension 1 *.extension 2 ...)"`。
 ```md
-"Images (*.png *.jpg *.bmp)": 显示名为 "Images" 的过滤器，只显示.png, .jpg, .bmp 格式的文件。
+"Images (*.png *.jpg *.bmp)": 在过滤器下拉列表中显示名为 "Images"的选项标签，当选择此选项时，文件对话框将只列出扩展名为 .png, .jpg, .bmp 的文件。
 "Text Files (*.txt)": 显示名为 "Text Files" 的过滤器，只显示 .txt文件。
 "All Files (*)": 显示名为 "All Files" 的过滤器，显示所有文件。
 "Image Files (*.png *.xpm *.jpg);;Text Files (*.txt)": 使用 ;;分隔多个过滤器选项。
 ```
+![[PixPin_2025-10-23_17-05-34.png]]
 `filedialog.setDirectory(initialPath); ` 相当于再设置了一遍第二个参数
 AcceptMode：定义了文件对话框的意图：是用于选择文件来打开还是指定文件名来保存在硬盘上
 * `QFileDialog::AcceptOpen`: 对话框用于打开一个或多个现有文件。按钮通常显示为 "Open"。
@@ -1278,9 +1279,11 @@ AcceptMode：定义了文件对话框的意图：是用于选择文件来打开�
 ```cpp
 QString initialPath = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
 ```
-- 获取当前运行的可执行程序所在的目录，这比[[CodeLineCounter#获取编译后可执行文件所在位置|使用windows.h提供的api和获取符号表]]的方式高效且清晰，并且跨平台
+- 获取当前运行的可执行程序所在的目录和当前进程的工作目录（pwd），这比[[CodeLineCounter#获取编译后可执行文件所在位置|使用windows.h提供的api和获取符号表]]的方式高效且清晰，并且跨平台
 ```cpp
-QDir::currentPath()；
+QCoreApplication::applicationDirPath(); // 当前可执行程序的文件路径
+QCoreApplication::applicationFilePath(); // 另一种写法
+QDir::currentPath(); // 获取pwd
 ```
 - 最终显示对话框的代码是 `fileDialog.exec()`，会返回用户在窗口中的选择结果
 	* 如果用户点击 "Cancel"返回 `QDialog::Rejected`），函数返回，不执行保存。
@@ -1298,7 +1301,8 @@ fileDialog.setDefaultSuffix(format);
 > 
 >> [!anwser] 这一操作通常出于性能和底层实现的考虑，QByteArray 直接对应 C 风格的字节流。`QFileDialog::setMimeTypeFilters(const QStringList &filters)` 期望接收 `QStringList`。所以必须进行类型转换，将 QByteArray 列表转换为 QStringLIst。`QLatin1String(bf)` 对于 MIME 类型使用 Latin-1 编码，是一种高效和安全的做法
 
-一个 QFileDialog 对象不可多次调用 `selectMimeTypeFilter (const QString &filter)`，但可以设置一个过滤器列表，。也就是说填入其中的可以是一个字符串，其中内容是列**使用 `,` 分割的字符串表**，也可以传入一个 `QStringList`，每个元素都是一个过滤器。
+一个 QFileDialog 对象不可多次调用 `selectMimeTypeFilter (const QString &filter)`，但可以设置一个过滤器列表，。也就是说填入其中的可以是一个字符串，这个参数必须是 `setMimeTypeFilters` 设置的列表中的一个具体过滤器字符串（通常是 MIME 类型）。**它不是用逗号分隔的列表**
+`selectMimeTypeFilter (const QString &filter)` 只能选择一个已经通过 `setMimeTypeFilters` 设置好的过滤器作为当前默认选中项。它不能添加新过滤器。参数必须是 setMimeTypeFilters 列表中的一个具体的过滤器字符串（如 "image/png"）。
 `fileDialog.selectMimeTypeFilter("image/" + format); ` 中的"image/"是一种标准 MIME 文件类型写法：
   "image/“ 是 MIME 类型标准的一部分。
 
@@ -1335,5 +1339,5 @@ int main(int argc, char* argv[]){
     }
 }
 ```
-屏幕管理这一功能需要首先创建 `QGuiApplication` 对象，不然无法通过这个对象来获取屏幕信息，注释 mark 位置，会返回 `number of screens： 0`
-然后将**从屏幕中抓取的像素信息（不是窗口像素信息）** 存放在位图中 `originalPixmap = screen->grabWindow(0);`
+屏幕管理这一功能需要首先创建 `QGuiApplication` 对象，不然无法通过这个对象来获取屏幕信息，注释 mark 行代码，会返回 `number of screens： 0`，虽然 `QGuiApplication::screens()` 是一个静态成员函数，但它的执行依赖于 QGuiApplication实例在初始化时设置的全局状态。
+然后将**从整个屏幕中抓取的像素信息（不是窗口像素信息）** 存放在位图中 `originalPixmap = screen->grabWindow(0);`
