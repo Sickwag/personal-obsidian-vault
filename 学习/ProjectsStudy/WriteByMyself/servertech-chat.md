@@ -36,6 +36,58 @@ target_link_libraries(
 cmake . -DCMAKE_CXX_STANDARD=17 && make
 ```
 出现 main 文件之后继续按照指引即可
+如果使用 `npm run dev` 出现缺少依赖的问题：
+```bash
+sickwag@VM-20-9-ubuntu:~/code_files/servertech-chat/client$ npm run dev
+npm warn Unknown global config "--init.module". This will stop working in the next major version of npm.
+
+> dev
+> next dev
+
+- ready started server on 0.0.0.0:3000, url: http://localhost:3000
+- info Loaded env from /home/sickwag/code_files/servertech-chat/client/.env.development
+npm warn Unknown env config "_-init.module". This will stop working in the next major version of npm.
+npm warn Unknown global config "--init.module". This will stop working in the next major version of npm.
+- event compiled client and server successfully in 239 ms (18 modules)
+- wait compiling...
+- event compiled client and server successfully in 124 ms (18 modules)
+(node:1219745) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+- wait compiling / (client and server)...
+- error ./node_modules/@emotion/styled/base/dist/emotion-styled-base.browser.esm.js:4:0
+Module not found: Can't resolve '@emotion/react'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./node_modules/@emotion/styled/dist/emotion-styled.browser.esm.js
+./node_modules/@mui/styled-engine/index.js
+./node_modules/@mui/system/esm/index.js
+./node_modules/@mui/material/styles/index.js
+./node_modules/@mui/material/index.js
+./pages/index.tsx
+- wait compiling /_error (client and server)...
+- error ./node_modules/@emotion/styled/base/dist/emotion-styled-base.browser.esm.js:4:0
+Module not found: Can't resolve '@emotion/react'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./node_modules/@emotion/styled/dist/emotion-styled.browser.esm.js
+./node_modules/@mui/styled-engine/index.js
+./node_modules/@mui/system/esm/index.js
+./node_modules/@mui/material/styles/index.js
+./node_modules/@mui/material/index.js
+./pages/index.tsx
+```
+可以询问 ai 到底是哪一个模块缺少，然后将安装命令运行一次
+如果
+```bash
+# 更新npm并设置更新源
+npm config set registry https://registry.npmmirror.com
+npm install -g npm@11.6.2 # 或者latest
+# 然后安装包
+```
 # 代码分析（按文件）
 ## server
 ### src/util/cookie. cpp & include/util/cookie. hpp
