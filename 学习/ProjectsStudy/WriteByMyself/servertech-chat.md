@@ -16,6 +16,21 @@
 - 项目使用boost 1.74，最新的 boost 1.89 已经将 `time.expires_from_now()` 舍弃，所以需要替换为 `time.expires_after()`，位置在 servertech-chat/server/src/services/mysql_client. cpp:182:23。
 - 根据指引 pdf 中将 mysql 服务的账号密码设置正确
 - 在本机的 redis.conf 文件中将 requirepass 设置为 `""` 空，项目只能接受密码为空值的 redis 服务，否则前端无法和后端交互
+- 其 cmake 文件中引入的 charconv 库大小写有问题，并且没有通过 find_package 函数包含
+```cmake
+find_package(Boost REQUIRED COMPONENTS headers context json regex url)
+# 改为
+find_package(Boost REQUIRED COMPONENTS headers context json regex url charconv) 
+target_link_libraries(
+    servertech_chat
+    PUBLIC
+	....
+    ICU::uc
+    # 原本是boost::charconv， 改为
+    Boost::charconv
+    pthread
+)
+```
 - 在进入 serve 目录之后使用
 ```bash
 cmake . -DCMAKE_CXX_STANDARD=17 && make
