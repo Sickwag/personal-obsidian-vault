@@ -8,18 +8,13 @@
         "type": "tabs",
         "children": [
           {
-            "id": "e9c5e48c883fcc46",
+            "id": "67df1d1515610359",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/ProjectsStudy/WriteByMyself/servertech-chat.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "servertech-chat"
+              "title": "新标签页"
             }
           }
         ]
@@ -207,8 +202,9 @@
       "quiz-generator:Open generator": false
     }
   },
-  "active": "e9c5e48c883fcc46",
+  "active": "67df1d1515610359",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/WriteByMyself/servertech-chat.md",
     "学习/ToolChain/Linux/Linux Basics.md",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "Files & LongText/Attachments/PixPin_2025-10-23_17-05-34.png",
@@ -244,7 +240,6 @@
     "Files & LongText/Long code/MySQL Long Code Practice.md",
     "Files & LongText/Long code/Linux long text explanation.md",
     "学习/CS self-taugh/MIT-The Missing Session.md",
-    "学习/ToolChain/Docker.md",
     "学习/ToolChain",
     "Files & LongText/Attachments/Pasted image 20251015101506.png",
     "Files & LongText/Attachments/download_qt_example_simple.py",
