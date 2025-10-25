@@ -204,7 +204,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -224,17 +225,17 @@
   },
   "active": "520cce1a58c50974",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/PixPin_2025-10-25_16-18-21.png",
+    "Files & LongText/Attachments/PixPin_2025-10-25_15-16-02.png",
+    "Files & LongText/Attachments/PixPin_2025-10-25_15-14-35.png",
+    "Files & LongText/Attachments/PixPin_2025-10-25_15-12-11.png",
+    "Files & LongText/Attachments/PixPin_2025-10-25_14-58-05.png",
+    "Files & LongText/Attachments/PixPin_2025-10-25_14-49-24.png",
     "Files & LongText/Attachments/PixPin_2025-10-25_14-26-26.png",
     "Files & LongText/Attachments/PixPin_2025-10-25_14-03-43.png",
     "Files & LongText/Attachments/PixPin_2025-10-25_13-57-38.png",
     "Files & LongText/Attachments/PixPin_2025-10-25_13-25-19.png",
     "Files & LongText/Attachments/PixPin_2025-10-25_13-23-03 1.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_13-23-03.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_11-42-53.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_11-36-10.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_11-06-25.png",
-    "Files & LongText/Attachments/Pasted image 20251025110438.png",
-    "Files & LongText/Attachments/Pasted image 20251025105854.png",
     "学习/Bases/计算机组成原理/计组期末考试.md",
     "Chores/软考--高项系统架构师.md",
     "学习/ProjectsStudy/WriteByMyself/servertech-chat.md",
