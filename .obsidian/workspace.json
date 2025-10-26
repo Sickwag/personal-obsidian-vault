@@ -199,7 +199,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200.5
+    "width": 200.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -219,18 +220,19 @@
   },
   "active": "520cce1a58c50974",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/PixPin_2025-10-26_17-45-30.png",
+    "Files & LongText/Attachments/PixPin_2025-10-26_17-42-53.png",
+    "Files & LongText/Attachments/PixPin_2025-10-26_17-41-20.png",
+    "Files & LongText/Attachments/PixPin_2025-10-26_17-39-01.png",
+    "Files & LongText/Attachments/PixPin_2025-10-26_17-38-37.png",
     "学习/Bases/计算机网络/OSI七层模型.md",
+    "Files & LongText/Attachments/PixPin_2025-10-26_17-16-15.png",
+    "Files & LongText/Attachments/PixPin_2025-10-26_17-11-07.png",
     "Chores/软考--高项系统架构师.md",
+    "Files & LongText/Attachments/PixPin_2025-10-26_17-01-13.png",
+    "Files & LongText/Attachments/PixPin_2025-10-26_16-49-10.png",
+    "Files & LongText/Attachments/PixPin_2025-10-26_16-45-50.png",
     "Files & LongText/Attachments/PixPin_2025-10-26_09-21-52.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_21-22-00.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_21-02-27.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_20-39-18.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_20-36-46.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_20-33-41.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_20-21-57.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_19-16-10.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_19-10-12.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_18-04-27.png",
     "学习/Bases/计算机组成原理/计组期末考试.md",
     "学习/ProjectsStudy/WriteByMyself/servertech-chat.md",
     "学习/ToolChain/Linux/Linux Basics.md",
@@ -255,7 +257,6 @@
     "学习/其他专业书/Modern C++.md",
     "configurations.md",
     "学习/CS self-taugh/missing semester.md",
-    "Files & LongText/Long code/configurations.md",
     "学习/ToolChain",
     "Files & LongText/Attachments/download_qt_example_simple.py",
     "Files & LongText/Attachments/download_qt_example_full.py",
