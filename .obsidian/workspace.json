@@ -138,7 +138,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "学习/algorithm/分析优化.md",
+                "file": "Chores/软考--高项系统架构师.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -148,7 +148,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "分析优化 的反向链接列表"
+              "title": "软考--高项系统架构师 的反向链接列表"
             }
           },
           {
@@ -157,16 +157,16 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "学习/Language/Android/Android Development.md",
+                "file": "Chores/软考--高项系统架构师.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Android Development 的出链列表"
+              "title": "软考--高项系统架构师 的出链列表"
             }
           },
           {
-            "id": "6bfea65807e3c8f4",
+            "id": "45b2322fcde8e5d1",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -181,46 +181,25 @@
             }
           },
           {
-            "id": "4ddd46f3beb1b2ee",
+            "id": "1dc0287f246b794e",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "未命名.md",
+                "file": "Chores/软考--高项系统架构师.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "未命名 的大纲"
-            }
-          },
-          {
-            "id": "e54f850cd75592ed",
-            "type": "leaf",
-            "state": {
-              "type": "copilot-chat-view",
-              "state": {},
-              "icon": "lucide-ghost",
-              "title": "copilot-chat-view"
-            }
-          },
-          {
-            "id": "280315b701b7545b",
-            "type": "leaf",
-            "state": {
-              "type": "advanced-tables-toolbar",
-              "state": {},
-              "icon": "lucide-ghost",
-              "title": "advanced-tables-toolbar"
+              "title": "软考--高项系统架构师 的大纲"
             }
           }
         ]
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200.5
   },
   "left-ribbon": {
     "hiddenItems": {
