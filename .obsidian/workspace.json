@@ -36,6 +36,21 @@
               "icon": "lucide-file",
               "title": "软考--高项系统架构师"
             }
+          },
+          {
+            "id": "f4e1475924067c6d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/Bases/计算机网络/OSI七层模型.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "OSI七层模型"
+            }
           }
         ],
         "currentTab": 1
@@ -225,6 +240,9 @@
   },
   "active": "520cce1a58c50974",
   "lastOpenFiles": [
+    "学习/Bases/计算机网络/OSI七层模型.md",
+    "Chores/软考--高项系统架构师.md",
+    "Files & LongText/Attachments/PixPin_2025-10-26_09-21-52.png",
     "Files & LongText/Attachments/PixPin_2025-10-25_21-22-00.png",
     "Files & LongText/Attachments/PixPin_2025-10-25_21-02-27.png",
     "Files & LongText/Attachments/PixPin_2025-10-25_20-39-18.png",
@@ -234,10 +252,7 @@
     "Files & LongText/Attachments/PixPin_2025-10-25_19-16-10.png",
     "Files & LongText/Attachments/PixPin_2025-10-25_19-10-12.png",
     "Files & LongText/Attachments/PixPin_2025-10-25_18-04-27.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_17-53-59.png",
-    "Files & LongText/Attachments/PixPin_2025-10-25_17-49-48.png",
     "学习/Bases/计算机组成原理/计组期末考试.md",
-    "Chores/软考--高项系统架构师.md",
     "学习/ProjectsStudy/WriteByMyself/servertech-chat.md",
     "学习/ToolChain/Linux/Linux Basics.md",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
