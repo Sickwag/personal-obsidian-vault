@@ -199,8 +199,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200.5,
-    "collapsed": true
+    "width": 200.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -220,6 +219,10 @@
   },
   "active": "520cce1a58c50974",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/PixPin_2025-10-26_20-08-58.png",
+    "Files & LongText/Attachments/PixPin_2025-10-26_20-08-00.png",
+    "Files & LongText/Attachments/PixPin_2025-10-26_19-47-22.png",
+    "Files & LongText/Attachments/PixPin_2025-10-26_19-44-32.png",
     "Files & LongText/Attachments/PixPin_2025-10-26_17-45-30.png",
     "Files & LongText/Attachments/PixPin_2025-10-26_17-42-53.png",
     "Files & LongText/Attachments/PixPin_2025-10-26_17-41-20.png",
@@ -229,10 +232,6 @@
     "Files & LongText/Attachments/PixPin_2025-10-26_17-16-15.png",
     "Files & LongText/Attachments/PixPin_2025-10-26_17-11-07.png",
     "Chores/软考--高项系统架构师.md",
-    "Files & LongText/Attachments/PixPin_2025-10-26_17-01-13.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_16-49-10.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_16-45-50.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_09-21-52.png",
     "学习/Bases/计算机组成原理/计组期末考试.md",
     "学习/ProjectsStudy/WriteByMyself/servertech-chat.md",
     "学习/ToolChain/Linux/Linux Basics.md",
