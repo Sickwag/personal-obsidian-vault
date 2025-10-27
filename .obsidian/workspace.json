@@ -53,7 +53,7 @@
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -217,8 +217,9 @@
       "quiz-generator:Open generator": false
     }
   },
-  "active": "520cce1a58c50974",
+  "active": "f4e1475924067c6d",
   "lastOpenFiles": [
+    "Chores/软考--高项系统架构师.md",
     "Files & LongText/Attachments/PixPin_2025-10-26_20-08-58.png",
     "Files & LongText/Attachments/PixPin_2025-10-26_20-08-00.png",
     "Files & LongText/Attachments/PixPin_2025-10-26_19-47-22.png",
@@ -230,8 +231,6 @@
     "Files & LongText/Attachments/PixPin_2025-10-26_17-38-37.png",
     "学习/Bases/计算机网络/OSI七层模型.md",
     "Files & LongText/Attachments/PixPin_2025-10-26_17-16-15.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_17-11-07.png",
-    "Chores/软考--高项系统架构师.md",
     "学习/Bases/计算机组成原理/计组期末考试.md",
     "学习/ProjectsStudy/WriteByMyself/servertech-chat.md",
     "学习/ToolChain/Linux/Linux Basics.md",
