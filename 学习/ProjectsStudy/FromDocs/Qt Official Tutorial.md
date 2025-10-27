@@ -1341,3 +1341,47 @@ int main(int argc, char* argv[]){
 ```
 屏幕管理这一功能需要首先创建 `QGuiApplication` 对象，不然无法通过这个对象来获取屏幕信息，注释 mark 行代码，会返回 `number of screens： 0`，虽然 `QGuiApplication::screens()` 是一个静态成员函数，但它的执行依赖于 QGuiApplication实例在初始化时设置的全局状态。
 然后将**从整个屏幕中抓取的像素信息（不是窗口像素信息）** 存放在位图中 `originalPixmap = screen->grabWindow(0);`
+
+## DocumentViewer
+### 从项目的 cmake 构建开始
+#### 根目录的 CMakeLists. txt 
+```cmake
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets
+             OPTIONAL_COMPONENTS PrintSupport Pdf PdfWidgets Quick3D)
+qt_standard_project_setup(REQUIRES 6.8)
+```
+- `OPTIONAL_COMPONENTS` 表示后面的模块时可选的，如果没有找到不影响程序的构建和编译，只是编译后的 exe 没有对应功能，这些会体现在代码对这种**缺失情况的处理**上
+```cpp
+// 在abstractviewer.h中：
+#ifdef QT_DOCUMENTVIEWER_PRINTSUPPORT
+protected:
+    virtual void printDocument(QPrinter *) const {};
+#endif
+// 在txtviewer.cpp中：
+#ifdef QT_DOCUMENTVIEWER_PRINTSUPPORT
+void TxtViewer::printDocument(QPrinter *printer) const {
+	if (!hasContent())
+	 return;
+	m_textEdit->print(printer);
+}
+#endif // QT_DOCUMENTVIEWER_PRINTSUPPORT
+```
+代码中检查，如果定义了对应的宏，就实现对应函数的功能。
+```cmake
+add_compile_definitions(QT_NO_CAST_FROM_ASCII)
+```
+`add_compile_definitions` 的作用是在编译时定义预处理器宏，使整个翻译单元都可以使用该宏。在生成的预处理器输出中，它相当于在代码开头添加 `#define`
+`QT_NO_CAST_FROM_ASCII` 的宏定义作用是：
+ - 禁止 `const char*`到 QString 的隐式转换
+- 仍可以使用字符串字面量，但应该使用现代 Qt 的字符串字面量后缀
+-  `"text"_L1` 使用`_L1`后缀（Qt 6.0+中的`Qt::Literals:: operator""_L1`）
+- `QLatin1String("text")` - 显式使用QLatin1String
+- `QStringLiteral("text")` - 使用QStringLiteral
+
+```cmake
+if(TARGET Qt6::PrintSupport)
+    add_compile_definitions(QT_DOCUMENTVIEWER_PRINTSUPPORT)
+endif()
+```
+和可选模块语句配合，如果有 `find_package` 找到了对应模块就添加对应的宏
+### app/CMakeLists. txt
