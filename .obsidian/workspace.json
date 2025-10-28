@@ -70,7 +70,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": ".zip",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -91,8 +91,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -212,7 +211,7 @@
       "quiz-generator:Open generator": false
     }
   },
-  "active": "d1e212fee3e1649e",
+  "active": "fb472bc440e7a387",
   "lastOpenFiles": [
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "Files & LongText/Attachments/PixPin_2025-10-28_14-04-51.png",
