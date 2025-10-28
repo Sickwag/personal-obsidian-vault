@@ -1385,3 +1385,134 @@ endif()
 ```
 和可选模块语句配合，如果有 `find_package` 找到了对应模块就添加对应的宏
 ### app/CMakeLists. txt
+#### 预编译
+```cmake
+qt_add_library()
+```
+用来将一些代码**预编译**之后作为库文件，分为静态库（. a/. lib）和动态库（. so/.dll/. dylib）
+`include_directories` 方式：
+- 只是告诉编译器在哪里找到头文件
+- 每次编译使用该头文件的源文件时，都会重新编译整个头文件内容
+- 没有预编译的二进制代码，只提供声明
+库目标方式：
+- 将源代码编译成二进制格式（静态库或动态库）
+- 提供预编译的二进制代码，不需要每次都重新编译
+- 提供完整的实现，而不仅仅是声明，最重要的功能是**减少编译时间和代码模块化**
+#### 不同平台的编译程序设置
+```cmake
+set_target_properties(documentviewer PROPERTIES
+    WIN32_EXECUTABLE TRUE    # Windows平台：创建GUI应用，不显示控制台窗口
+    MACOSX_BUNDLE TRUE       # macOS平台：打包为.app应用程序包
+)
+```
+设置不同平台的编译结果
+```cmake
+set_target_properties(documentviewer PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
+```
+#### 条件编译&库文件处理
+```cmake
+if(QT6_IS_SHARED_LIBS_BUILD)
+    add_dependencies(documentviewer ${plugin_targets})
+else()
+    target_link_libraries(documentviewer PRIVATE ${plugin_targets})
+endif()
+```
+Qt 可以以两种方式构建：
+- Qt 本身可以编译为静态库或动态库
+- 这会影响你的应用程序如何与 Qt 交互
+- `QT6_IS_SHARED_LIBS_BUILD` 检查 Qt 是否以动态库方式构建
+不同的编译方法会触发不同的程序逻辑：
+```cpp
+// abstractviewer中的代码
+#if defined(QT_SHARED) || !defined(QT_STATIC) // 如果是动态连接方式
+  if defined(BUILD_ABSTRACTVIEWER_LIB)
+    define ABSTRACTVIEWER_EXPORT Q_DECL_EXPORT
+  else
+    define ABSTRACTVIEWER_EXPORT Q_DECL_IMPORT
+  endif
+#else  // 否则使用静态连接方式，只将符号链接到程序中，不说明导出
+  define ABSTRACTVIEWER_EXPORT
+#endif
+```
+- `QT_SHARED`：如果定义，表示 Qt 库以动态库形式构建
+- `!defined(QT_STATIC)`：如果没有定义 QT_STATIC，也认为是动态库模式
+接下来判断现在执行到的 abstractviewer 代码是否是在构建库本身
+```cpp
+// 第2-6行：嵌套条件 - 判断当前是否在构建库本身
+  #if defined(BUILD_ABSTRACTVIEWER_LIB)  // 如果定义了这个宏，说明正在构建库
+    #define ABSTRACTVIEWER_EXPORT Q_DECL_EXPORT  // 定义为导出（导出符号）
+  #else
+    #define ABSTRACTVIEWER_EXPORT Q_DECL_IMPORT  // 否则定义为导入（导入符号）
+  #endif
+```
+- `Q_DECL_EXPORT` =` __declspec(dllexport)` (Windows) 或其他导出标识
+- `Q_DECL_IMPORT` = `__declspec(dllimport)` (Windows) 或其他导入标识
+- linux/macos 默认导出库文件中的所有可见符号，如果需要控制需要在链接阶段通过调整**链接选项**实现。
+- windows 如果要导出库中的符号，需要使用 `__deslspec(dllexport/dllimport)`，然后编译器会根据这些内容来决定那些符号可见
+- `target_compile_definitions (abstractviewer PRIVATE BUILD_ABSTRACTVIEWER_LIB)` 只影响 abstractviewer 这个目标（库）的编译。
+- 然后 abstractviewer 这个**库**执行 `#ifdefined（BUILD_ABSTRACTVIEWER_LIB）#defineABSTRACTVIEWER_EXPORT Q_DECL_EXPORT` 命令，将 abstractviewer 类中所有带有 `ABSTRACTVIEWER_EXPORT` 宏修饰的符号导出。而其他库代码由于看不见 `BUILD_ABSTRACTVIEWER_LIB` 宏，所以看会执行 else 逻辑，将所有带有 ABSTRACTVIEWER_EXPORT 修饰的符号在动静态库中查找（导入符号）
+
+
+工作流程
+场景1: 构建库本身 (BUILD_ABSTRACTVIEWER_LIB被定义)
+```cpp
+// 情况: Qt_SHARED被定义 (Qt动态库) + BUILD_ABSTRACTVIEWER_LIB被定义
+// 结果: ABSTRACTVIEWER_EXPORT = Q_DECL_EXPORT
+// 作用: 将AbstractViewer类标记为要导出的符号
+class __declspec(dllexport) AbstractViewer : public QObject { ... };
+```
+场景2: 使用库 (BUILD_ABSTRACTVIEWER_LIB未定义)
+```cpp
+// 情况: Qt_SHARED被定义 (Qt动态库) + BUILD_ABSTRACTVIEWER_LIB未定义
+// 结果: ABSTRACTVIEWER_EXPORT = Q_DECL_IMPORT
+// 作用: 将AbstractViewer类标记为要导入的符号
+class __declspec(dllimport) AbstractViewer : public QObject { ... };
+```
+场景3: 静态链接
+```cpp
+// 情况: Qt_STATIC被定义 (Qt静态库)
+// 结果: ABSTRACTVIEWER_EXPORT = 空 (什么都不加)
+// 作用: 不需要导入导出标记，符号直接链接到程序中
+class AbstractViewer : public QObject { ... };
+```
+由于 qt 的宏设计是跨平台的，所以**不使用 `__declspec()` 而使用 qt 专用宏**无论在什么平台上都能得到想要的效果
+#### 安装命令
+```cmake
+install(TARGETS documentviewer
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(TARGETS abstractviewer
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+```
+ install 命令定义了安装规则，当运行 cmake --install 或 make install 时，这些规则定义了哪些文件被安装到系统的哪个位置。安装规则允许用户将程序安装到系统目录或指定目录，便于部署和分发。
+关键词含义：
+- RUNTIME：指可执行文件（. exe, 可执行程序）
+- LIBRARY：指库文件（. dll, .so, .dylib 等共享库）
+- BUNDLE：指 macOS 应用程序包（. app）
+- DESTINATION：指定安装的目标路径
+
+预定义变量：
+- CMAKE_INSTALL_BINDIR：二进制文件安装目录（通常是 bin）
+- CMAKE_INSTALL_LIBDIR：库文件安装目录（通常是 lib）
+
+#### 杂项设置
+用于明确说明这个程序在不同的环境下会编译为不同的可执行文件，对吗？
+```cmake
+if(TARGET pdfviewer)
+    list(APPEND plugin_targets pdfviewer)
+endif()
+
+if(TARGET Q3Dviewer)
+    list(APPEND plugin_targets Q3Dviewer)
+endif()
+```
+- 因为之前 `set(plugin_targets jsonviewer txtviewer)`，plugin_targets 变量变成了一个列表，`list(append ...)` 相当于在列表后面添加内容
+- 它用于动态管理插件列表
