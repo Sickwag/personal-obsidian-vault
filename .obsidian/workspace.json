@@ -190,13 +190,11 @@
               "title": "Advanced Tables"
             }
           }
-        ],
-        "currentTab": 5
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 200.5,
-    "collapsed": true
+    "width": 200.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -216,6 +214,7 @@
   },
   "active": "ac4f8af020df2a9f",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/PixPin_2025-10-28_14-04-51.png",
     "Chores/软考--高项系统架构师.md",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "学习/ProjectsStudy/FromProjects/QTExamples.md",

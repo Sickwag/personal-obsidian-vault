@@ -1423,7 +1423,6 @@ endif()
 Qt 可以以两种方式构建：
 - Qt 本身可以编译为静态库或动态库
 - 这会影响你的应用程序如何与 Qt 交互
-- `QT6_IS_SHARED_LIBS_BUILD` 检查 Qt 是否以动态库方式构建
 不同的编译方法会触发不同的程序逻辑：
 ```cpp
 // abstractviewer中的代码
@@ -1453,30 +1452,47 @@ Qt 可以以两种方式构建：
 - linux/macos 默认导出库文件中的所有可见符号，如果需要控制需要在链接阶段通过调整**链接选项**实现。
 - windows 如果要导出库中的符号，需要使用 `__deslspec(dllexport/dllimport)`，然后编译器会根据这些内容来决定那些符号可见
 - `target_compile_definitions (abstractviewer PRIVATE BUILD_ABSTRACTVIEWER_LIB)` 只影响 abstractviewer 这个目标（库）的编译。
-- 然后 abstractviewer 这个**库**执行 `#ifdefined（BUILD_ABSTRACTVIEWER_LIB）#defineABSTRACTVIEWER_EXPORT Q_DECL_EXPORT` 命令，将 abstractviewer 类中所有带有 `ABSTRACTVIEWER_EXPORT` 宏修饰的符号导出。而其他库代码由于看不见 `BUILD_ABSTRACTVIEWER_LIB` 宏，所以看会执行 else 逻辑，将所有带有 ABSTRACTVIEWER_EXPORT 修饰的符号在动静态库中查找（导入符号）
-
-
-工作流程
-场景1: 构建库本身 (BUILD_ABSTRACTVIEWER_LIB被定义)
-```cpp
-// 情况: Qt_SHARED被定义 (Qt动态库) + BUILD_ABSTRACTVIEWER_LIB被定义
-// 结果: ABSTRACTVIEWER_EXPORT = Q_DECL_EXPORT
-// 作用: 将AbstractViewer类标记为要导出的符号
-class __declspec(dllexport) AbstractViewer : public QObject { ... };
+- 然后 abstractviewer 这个**库**执行 `#ifdefined（BUILD_ABSTRACTVIEWER_LIB）#defineABSTRACTVIEWER_EXPORT Q_DECL_EXPORT` 命令，将 abstractviewer 类中所有带有 `ABSTRACTVIEWER_EXPORT` 宏（**被定义为导出符号**）修饰的符号导出。而其他库代码由于看不见 `BUILD_ABSTRACTVIEWER_LIB` 宏，所以看会执行 else 逻辑，将所有带有 ABSTRACTVIEWER_EXPORT 修饰的符号在动静态库中查找（导入符号）
+#### 链接可见性选项
+```cmake
+if(TARGET Qt6::PrintSupport)
+    target_link_libraries(documentviewer PRIVATE Qt6::PrintSupport)
+    target_link_libraries(abstractviewer PRIVATE Qt6::PrintSupport)
+    add_compile_definitions(QT_DOCUMENTVIEWER_PRINTSUPPORT)
+endif()
 ```
-场景2: 使用库 (BUILD_ABSTRACTVIEWER_LIB未定义)
-```cpp
-// 情况: Qt_SHARED被定义 (Qt动态库) + BUILD_ABSTRACTVIEWER_LIB未定义
-// 结果: ABSTRACTVIEWER_EXPORT = Q_DECL_IMPORT
-// 作用: 将AbstractViewer类标记为要导入的符号
-class __declspec(dllimport) AbstractViewer : public QObject { ... };
+- `QT6_IS_SHARED_LIBS_BUILD` 检查 Qt 是否以动态库方式构建，如果是动态库，会添加**依赖构建**，静态库，会使用 `target_link_library` 直接将库文件链接到主程序中。两种连接方式不同，所以要使用不同的函数命令
+- `if(TARGET ...)` 是一个条件判断命令，用于检查给定的目标（target）是否存在以及是否已经被定义
+-  PRIVATE 是链接库的可见性关键字，指定链接关系的可见性范围。
+  三种主要可见性选项：
+1. PRIVATE
+	- 链接的库只在当前目标内部可见
+	- 不会传递给依赖当前目标的其他目标
+	- 适用于实现细节，不需要暴露给外部
+```cmake
+# documentviewer内部可以使用Qt6::Core，但使用documentviewer的程序不能访问Qt6::Core
+target_link_libraries(documentviewer PRIVATE Qt6::Core)
 ```
-场景3: 静态链接
-```cpp
-// 情况: Qt_STATIC被定义 (Qt静态库)
-// 结果: ABSTRACTVIEWER_EXPORT = 空 (什么都不加)
-// 作用: 不需要导入导出标记，符号直接链接到程序中
-class AbstractViewer : public QObject { ... };
+2. PUBLIC
+	- 链接的库不仅当前目标可用，也会传递给依赖当前目标的其他目标
+	- 适用于头文件中使用的库
+```cmake
+# 使用mylib的程序也会自动链接Qt6::Core
+target_link_libraries(mylib PUBLIC Qt6::Core)
+```
+3. INTERFACE
+	- 只传递给依赖当前目标的其他目标，当前目标本身不使用
+	- 适用于提供接口但不需要直接使用的情况
+
+```cmake
+# mylib的定义
+target_link_libraries(mylib
+	PRIVATE internal_util  # mylib内部使用，myapp不需要
+	PUBLIC Qt6::Core      # mylib和myapp都需要Qt6::Core
+)
+
+# myapp自动获得Qt6::Core依赖，但不会获得internal_util依赖
+target_link_libraries(myapp PRIVATE mylib)
 ```
 由于 qt 的宏设计是跨平台的，所以**不使用 `__declspec()` 而使用 qt 专用宏**无论在什么平台上都能得到想要的效果
 #### 安装命令
@@ -1516,3 +1532,7 @@ endif()
 ```
 - 因为之前 `set(plugin_targets jsonviewer txtviewer)`，plugin_targets 变量变成了一个列表，`list(append ...)` 相当于在列表后面添加内容
 - 它用于动态管理插件列表
+
+qt 6.8.0 版本中，QtPDFWidget 库是商业版本 qt 才有的，开源版本 qt 无此功能，可以再 maintenance tools 中看到：
+![[PixPin_2025-10-28_14-04-51.png]]
+可以通过安装特定版本的 qt 来解决，有时可以用，但有时可能会要求使用对应的编译套件来使用这些库
