@@ -4,41 +4,25 @@
     "type": "split",
     "children": [
       {
-        "id": "b5d59ea184ee2531",
+        "id": "0d2027c269122c94",
         "type": "tabs",
         "children": [
           {
-            "id": "520cce1a58c50974",
+            "id": "a5a49b1bb3e3468a",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Chores/软考--高项系统架构师.md",
+                "file": "学习/Bases/设计模式/详解设计模式（视频教程）.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "软考--高项系统架构师"
-            }
-          },
-          {
-            "id": "ac4f8af020df2a9f",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Files & LongText/Long code/Python.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "Python"
+              "title": "详解设计模式（视频教程）"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -95,7 +79,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -211,8 +196,11 @@
       "quiz-generator:Open generator": false
     }
   },
-  "active": "fb472bc440e7a387",
+  "active": "a5a49b1bb3e3468a",
   "lastOpenFiles": [
+    "Files & LongText/Long code/Python.md",
+    "学习/Bases/设计模式/详解设计模式（视频教程）.md",
+    "学习/Bases/设计模式",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "Files & LongText/Attachments/PixPin_2025-10-28_14-04-51.png",
     "Chores/软考--高项系统架构师.md",
@@ -248,7 +236,6 @@
     "学习/ProjectsStudy/FromDocs/OpenCV 官方文档.md",
     "学习/其他专业书/Modern C++.md",
     "configurations.md",
-    "学习/CS self-taugh/missing semester.md",
     "学习/ToolChain",
     "Files & LongText/Attachments/download_qt_example_simple.py",
     "Files & LongText/Attachments/download_qt_example_full.py",
@@ -257,7 +244,6 @@
     "学习/Bases/开发范式",
     "学习/ProjectsStudy/FromBlogs",
     "Daily/Observations",
-    "all_objects.txt",
     "未命名.canvas",
     "未命名 1.canvas"
   ]
