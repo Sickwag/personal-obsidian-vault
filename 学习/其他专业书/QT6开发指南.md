@@ -420,6 +420,31 @@ int alignment = AlignHCenter | AlignVCenter;  // 0x4 | 0x20 = 0x24
 ```
 qt 对 flags 标志的实现代码（对 alignment ，对齐方式这一部分）可以简化为：
 ```cpp
+template<typename Enum>
+class QFlags {
+    int m_value;  // 存储组合后的整数值
+    
+public:
+    QFlags(Enum flag) : m_value(static_cast<int>(flag)) {}
+    
+    // 重载按位或运算符
+    QFlags operator|(Enum flag) const {
+        return QFlags(m_value | static_cast<int>(flag));
+    }
+    
+    QFlags operator|(QFlags other) const {
+        return QFlags(m_value | other.m_value);
+    }
+    
+    // 测试是否包含某个标志
+    bool testFlag(Enum flag) const {
+        return (m_value & static_cast<int>(flag)) == static_cast<int>(flag);
+    }
+    
+    // 转换为bool（判断是否有任何标志被设置）
+    operator bool() const { return m_value != 0; }
+};
+
 // Qt的方式
 enum AlignmentFlag {
     AlignLeft = 0x1,
@@ -434,4 +459,198 @@ Q_DECLARE_FLAGS(Alignment, AlignmentFlag)
 // typedef QFlags<AlignmentFlag> Alignment;
 // 现在可以类型安全地组合
 Alignment alignment = AlignHCenter | AlignVCenter;
+```
+注意只是**相当于**，`QFlags<Alignment>` 类型并不存在，`Qt::AlignmentFlag` 是枚举类型，其有一些枚举常量，详见 Qt 文档。`Qt::Alignment` 是一个或多个 `Qt::AlignmentFlag` 类型枚举值的组合，是一种特性标志。
+### QRandomGenerator 类
+Qt 6 中已经舍弃了 Qt 5 中产生随机数的函数 `qrand()`和 `qsrand()`，取而代之的是 QRandomGenerator类，它可以产生高质量的随机数。
+创建 QRandomGenerator 对象时可以给构造函数提供一个数作为随机数种子。
+如果两个随机数种子相同，则产生的随机数序列是完全相同的；反之不同
+
+QRandomGenerator 有一个静态函数 `securelySeeded()` 可以**创建**一个随机数发生器，**他会调用当前系统的随机数生成器(`QRandomGenerator::system()`)单独生成一个随机数**，每次调用这个静态函数使用的种子是不同的，而且无法获得，如果只是短期内使用随机数发生器，且生成的随机数的数据量比较小，就不要使用函数 ` securelySeeded() ` 单独生成随机数发生器，使用静态函数 ` QRandomGenerator::global() ` 表示的全局的随机数发生器。
+QRandomGenerator 有两个静态函数会返回随机数发生器，可以直接使用这两个函数返回的随
+机数发生器，无须给它们设置种子进行初始化。
+```cpp
+QRandomGenerator *QRandomGenerator::system()
+QRandomGenerator *QRandomGenerator::global()
+```
+- 使用 system 随机数生成是线程安全的，并且在任何线程中使用，常用语**生成密码和生成其他随机数，加密方式生成器的种子**，由于他可能调用硬件来生成随机数，***不要用它生成大量的随机数***
+- 可以使用 `quint32 rand= QRandomGenerator::global()->generate/generate64/generateDouble()` 来生成不同类型的随机数，生成 double 的范围在 `[0,1)`，不仅支持不同类型，还支持范围（使用 `bounded()` 函数），同样包括下界，**不包括上界**
+- 其对象还支持 `()` 括号运算符，每使用一次 `()` 就会再生成一次
+
+# 常用界面组件的使用
+## 界面组件概述
+### 输入类组件
+
+| 组件类名称            | 组件名称    | 功能                                                                                                                                                                                           |
+| ---------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QComboBox        | 下拉列表框   | 也称为组合框，用于从下拉列表中选择一项，也可以直接输入文字                                                                                                                                                                |
+| QFontComboBox    | 字体下拉列表框 | 自动从系统获取字体名称列表，用于选择字体                                                                                                                                                                         |
+| QLineEdit        | 编辑框     | 用于输入单行文字                                                                                                                                                                                     |
+| QTextEdit        | 文本编辑器   | 是一个“所见即所得”的文本编辑器，支持富文本格式，使用类似于 HTML 的标记，或 Markdown 格式。一般用于处理较大的富文本文档                                                                                                                         |
+| QPlainTextEdit   | 纯文本编辑器  | 是一个纯文本编辑器，支持多段落纯文本文档。一个段落就是一个带格式的字符串，每个字符都可以有自己的属性，例如字体和颜色                                                                                                                                   |
+| QSpinBox         | 整数输入框   | 用于输入整数或离散型数据的输入框                                                                                                                                                                             |
+| QDoubleSpinBox   | 浮点数输入框  | 用于输入浮点数的输入框                                                                                                                                                                                  |
+| QDateEdit        | 日期编辑框   | 用于编辑日期数据的编辑框                                                                                                                                                                                 |
+| QTimeEdit        | 时间编辑框   | 用于编辑时间数据的编辑框                                                                                                                                                                                 |
+| QDateTimeEdit    | 日期时间编辑框 | 用于编辑日期时间数据的编辑框                                                                                                                                                                               |
+| QDial            | 表盘      | 一种模仿表盘的输入组件，用于在设定的范围内输入和显示数值                                                                                                                                                                 |
+| QScrollBar       | 卷滚条     | 卷滚条通常用于实现在大的显示区域内滑动，以显示部分区域的内容。图 4-3 中的 Horizontal Scroll Bar 和 Vertical Scroll Bar 对应的类均是 QScrollBar。滚动条具有设定的数值范围，拖动滑块就可以设置输入的值。图 4-3 中的 Horizontal Slider 和 Vertical Slider 对应的类均是 QSlider |
+| QSlider          | 滑动条     | 滑动条具有设定的数值范围，拖动滑块就可以设置输入的值。图 4-3 中的 Horizontal Slider 和 Vertical Slider 对应的类均是 QSlider                                                                                                       |
+| QKeySequenceEdit | 按键序列编辑器 | 当这个编辑器获得输入焦点后，可记录用户设置的按键序列，一般用这个编辑器获取用户设置的快捷键序列                                                                                                                                              |
+
+### 显示类组件
+| 组件类名称           | 组件名称        | 功能                                                        |
+| --------------- | ----------- | --------------------------------------------------------- |
+| QLabel          | 标签          | 用于显示文字、图片等内容                                              |
+| QTextBrowser    | 文本浏览器       | 用于显示富文本格式的内容，具有只读属性，可以根据文本内的超链接进行跳转                       |
+| QGraphicsView   | 图形视图组件      | Graphics View 结构中的视图组件，10.3 节会详细介绍这个组件的用法                 |
+| QCalendarWidget | 日历组件        | 用于显示日历，并显示所设置的日期。可以在日历上选择一个日期，所以 QCalendarWidget 可以作为输入组件 |
+| QLCDNumber      | LCD 数值显示组件  | 模仿 LCD 显示效果的数值显示组件，可显示整数和浮点数                              |
+| QProgressBar    | 进度条         | 用于表示某个操作的进度，进度一般用百分数表示，有水平和垂直两种方向                         |
+| QOpenGLWidget   | OpenGL 显示组件 | 用于在 Qt 应用程序中显示 OpenGL 图形                                  |
+| QQuickWidget    | QML 显示组件    | 用于自动加载 QML 文件，并显示 QML 文件的场景                               |
+### 容器类组件
+| 组件类名称          | 组件名称         | 功能                                                                  |
+| -------------- | ------------ | ------------------------------------------------------------------- |
+| QGroupBox      | 分组框          | 具有标题和边框的容器组件                                                        |
+| QScrollArea    | 卷滚区域         | 具有水平和垂直卷滚条的容器组件，可以容纳大面积的显示内容，通过卷滚条可实现在显示范围内移动                       |
+| QToolBox       | 工具箱          | 垂直方向的多页容器组件，每个页面有标签栏，每个页面就是一个 QWidget 组件，在其上可以放置任何界面组件              |
+| QTabWidget     | 带标签栏的多页组件    | QTabWidget 有一个标签栏，每个页标签对应一个页面，每个页面就是一个 QWidget 组件，可以在页面上放置任何界面组件    |
+| QStackedWidget | 堆叠多页组件       | QStackedWidget 是类似于 QTabWidget 的多页组件，但是没有标签栏，只有两个按钮，用于在页面之间切换       |
+| QFrame         | 框架组件         | QFrame 是所有具有边框的界面组件的父类，它定义了边框形状、边框阴影、边框线宽等属性。QFrame 可以直接作为容器组件      |
+| QWidget        | 界面组件         | QWidget 可以作为容器组件，QWidget 组件没有父组件时就是独立的窗口                            |
+| QMdiArea       | MDI 工作区组件    | QMdiArea 是 MDI 显示区域，在 MDI 应用程序中，QMdiArea 用于管理多文档窗口，7.4 节会详细介绍这个类的用法 |
+| QDockWidget    | 停靠组件         | QDockWidget 是可以在 QMainWindow 窗口的上、下、左、右区域停靠的组件，也可以浮动在窗口上方           |
+| QAxWidget      | ActiveX 显示组件 | QAxWidget 用于显示 ActiveX 控件，只有 Windows 平台上才有这个组件                      |
+### 组件的同样方法接口
+| 属性名称               | 属性值类型                 | 功能                                                           |
+| ------------------ | --------------------- | ------------------------------------------------------------ |
+| enabled            | bool                  | 组件的使能状态，enabled 为 true 时才可以操作组件                              |
+| geometry           | QRect                 | 组件的几何形状，表示组件在界面上所占的矩形区域                                      |
+| sizePolicy         | QSizePolicy           | 组件默认的布局特性，这个特性与组件的水平、垂直方向尺寸变化有关系，详见后面的解释                     |
+| minimumSize        | QSize                 | 组件的最小尺寸，QSize 包含 width 和 height 两个属性                         |
+| maximumSize        | QSize                 | 组件的最大尺寸                                                      |
+| palette            | QPalette              | 组件的调色板，调色板定义了组件一些特定部分的颜色，如背景色、文字颜色等                          |
+| font               | QFont                 | 组件使用的字体。QFont 定义了字体名称、大小、粗体、斜体等特性                            |
+| cursor             | QCursor               | 鼠标光标移动到组件上时的形状                                               |
+| mouseTracking      | bool                  | 若设置为 true，只要鼠标在组件上移动，组件就接收鼠标移动事件；否则，只有在某个鼠标键被按下时，组件才接收鼠标移动事件 |
+| tabletTracking     | bool                  | 是否开启平板跟踪，默认值是 false，表示只有当触笔与平板计算机接触时，组件才接收平板事件               |
+| focusPolicy        | Qt::FocusPolicy       | 组件的焦点策略，表示组件获取焦点的方式                                          |
+| contextMenuPolicy  | Qt::ContextMenuPolicy | 组件的上下文菜单策略，上下文菜单是指在组件上点击鼠标右键时弹出的快捷菜单                         |
+| acceptDrops        | bool                  | 组件是否接收拖动来的其他对象                                               |
+| toolTip            | QString               | 鼠标移动到组件上时，在光标处显示的简短提示文字                                      |
+| statusTip          | QString               | 鼠标移动到组件上时，在主窗口状态栏上临时显示的提示文字，显示 2 秒后自动消失                      |
+| autoFillBackground | bool                  | 组件的背景是否自动填充，如果组件使用样式表设定了背景色，这个属性会被自动设置为 false                |
+| styleSheet         | QString               | 组件的样式表。样式表用于定义界面显示效果，第 18 章会详细介绍样式表的使用方法                     |
+
+sizePolicy 属性是 QSizePolicy 类型，它定义了组件在水平和垂直方向的尺寸变化策略
+
+| 策略                   | 含义                       | 适用场景     |
+| -------------------- | ------------------------ | -------- |
+| **Fixed**            | 固定大小，不拉伸不收缩              | 按钮、图标    |
+| **Minimum**          | 可以拉伸，但不能小于 `sizeHint()`  | 有最小需求的控件 |
+| **Maximum**          | 可以收缩，但不能大于 `sizeHint ()` | 不希望太大的控件 |
+| **Preferred**        | 首选 `sizeHint () `，可拉伸可收缩 | 大多数控件    |
+| **Expanding**        | 尽量占用更多空间，可收缩             | 文本框、表格   |
+| **MinimumExpanding** | 不能小于 `sizeHint() `，尽量拉伸  | 进度条      |
+| **Ignored**          | 忽略 `sizeHint() `，完全由布局决定 | 占位符      |
+而 sizePolicy 还有水平和垂直**延展性属性**，延展性决定了**在有多余空间时，widget的相对拉伸比例**
+对一个 widget 对象设置 Hstretch 或者 Vstretch 属性**只有在这些对象在一个 layout 中**才会生效。具体效果可以参考：
+```cpp
+void demonstrateStretch() {
+    QWidget window;
+    QHBoxLayout* layout = new QHBoxLayout(&window);
+    
+    QTextEdit* editor1 = new QTextEdit;
+    QTextEdit* editor2 = new QTextEdit;
+    QTextEdit* editor3 = new QTextEdit;
+    
+    // 设置不同的水平延展因子
+    editor1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    editor1->sizePolicy().setHorizontalStretch(1);  // 占1份
+    
+    editor2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    editor2->sizePolicy().setHorizontalStretch(2);  // 占2份
+    
+    editor3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    editor3->sizePolicy().setHorizontalStretch(1);  // 占1份
+    
+    // 结果：editor2的宽度是editor1和editor3的两倍
+    layout->addWidget(editor1);
+    layout->addWidget(editor2);
+    layout->addWidget(editor3);
+    
+    window.show();
+}
+// 假设有3个widget，延展因子分别为1, 2, 1
+// 可用额外空间 = 总空间 - 所有widget的最小空间需求
+// 每个widget分得的额外空间 = (延展因子 / 总延展因子) × 可用额外空间
+
+// 计算示例：
+总延展因子 = 1 + 2 + 1 = 4
+可用额外空间 = 400像素
+widget1额外空间 = (1/4) × 400 = 100像素
+widget2额外空间 = (2/4) × 400 = 200像素  
+widget3额外空间 = (1/4) × 400 = 100像素
+```
+可以对一个组件单独设置 stretch，然后加入 layout 中，也可以对一个 layout 设置 `layoutStretch(int index, int stretch)`，这个函数有点特殊，如果 Hlayout 中有三个组件在 ui 编辑界面的属性管理器中可以设置 layout 对象的 layoutStretch 属性为 `0,0,0`，而代码中只能一个个设置
+### QWidget 作为窗口时的主要属性
+
+| 属性             | 属性值类型              | 功能                                                                             |
+| -------------- | ------------------ | ------------------------------------------------------------------------------ |
+| windowTitle    | QString            | 窗口标题栏上的文字，若要利用 windowModified 属性，需要在标题文字中设置占位符 “[*]”                           |
+| windowIcon     | QIcon              | 窗口标题栏上的图标                                                                      |
+| windowOpacity  | qreal              | 窗口的不透明度，取值范围是 0.0～1.0。0.0 表示完全透明，1.0 表示完全不透明。默认值是 1.0                          |
+| windowFilePath | QString            | 窗口相关的含路径的文件名，这个属性只在 Windows 平台上有意义，如果没有设置 windowTitle 属性，程序将自动获取不含路径的文件名作为窗口标题 |
+| windowModified | bool               | 表示窗口里的文档是否被修改，若该属性值为 true，窗口标题中的占位符 “[*]” 会显示为 “*”                             |
+| windowModality | Qt::WindowModality | 窗口的模态，这个属性只在 Windows 平台上有意义，表示窗口是否处于上层窗口的标志                                    |
+| windowFlags    | Qt::WindowFlags    | 窗口的标志，是枚举类型 Qt::WindowFlag 的一些值的组合                                             |
+
+拥有一些接口和信号（只有三个）
+```cpp
+// 当 QWidget 作为独立的窗口时，有如下一些与窗口显示有关的公有槽函数。
+bool close () //关闭窗口
+void hide () //隐藏窗口
+void show () //显示窗口
+void showFullScreen () //以全屏方式显示窗口
+void showMaximized () //窗口最大化
+void showMinimized () //窗口最小化
+void showNormal () //全屏、最大化或最小化操作之后，恢复正常大小显示
+// QWidget 中定义的信号只有 3 个，定义如下：
+void customContextMenuRequested (const QPoint &pos) // 在组件上右键
+void windowIconChanged (const QIcon &icon)
+void windowTitleChanged (const QString &title)
+```
+
+## 布局管理
+QGridLayout 和 QFormLayout 较为相似，后者更适合于两列表单，主要的区别是：
+- GroupBox 1 使用了表单布局，当 GroupBox 1 的高度大于最合适的尺寸时，内部的组件的垂直间距不会再增大，下方多余的空间是空白的。
+- GroupBox 2 使用了网格布局，当 GroupBox 2 的高度增大时内部的组件在垂直方向上均匀分布的
+![[Pasted image 20251031205759.png]]
+QStackedLayout：堆叠布局，用于管理多个 QWidget 类对象，也就是多个页面，**但任何时候只有一个页面可见**。QStackedLayout 的管理效果与 QStackedWidget 的相似，只是它没有切换页面的按钮，需要另外编程处理页面切换。
+
+## QString 字符串操作
+具体内部编码参考 [[Qt Official Tutorial#字符串数据类]]
+QString 使用了隐式共享，**只有在修改操作时**才会复制其中包含的字符数据，并且由于其每一个字符都是 UTF-16 编码，所以使用 `[]` 的时候不会因为中文占用 2~4 个字节而读入半个字节的数据
+QString 中的字符都使用 QChar 存储，可以通过 `from__` 获得其 unicode 码，后面的 2/4 表示字符的字节长度，2 字节接受 `char16_t` 类型数据，反之 `char32_t`
+![[PixPin_2025-10-31_21-35-05.png]]
+
+注意这是一个静态函数，并且如果源码中有**使用中文字符修改字符串时**，需要特别注意：
+qt creator 编写的源代码文件使用 utf-8 编码，在其中使用中文（2~4 字节）中如果有 2~3 字节的文本用来赋值 QChar，不会出现编译错误，而会在运行时显示错误字符串，因为**超过 2 字节的部分会被截断**，导致显示错误的内容
+```cpp
+QString str= "Hello,北京";
+str[6]= QChar(0x9752); //'青'，使用构造函数
+str[7]= QChar::fromUcs2(0x5C9B); //'岛'，使用静态函数
+str[6]= QChar('青'); //错误的代码
+```
+section 函数用来分割字符串，比较方便：从字符串中提取以 sep 作为分隔符，从 start 段到 end 段的字符串
+```cpp
+QString QString::section(const QString &sep, qsizetype start, qsizetype end = -1,
+QString::SectionFlags flags = SectionDefault)
+
+QString str2, str1= "学生姓名,男,2003-6-15,汉族,山东";
+str2= str1.section(",",0,0); //str2 ="学生姓名"，第一段的编号为 0
+str2= str1.section(",",1,1); //str2 ="男"
+str2= str1.section(",",0,1); //str2 ="学生姓名，男"
+str2= str1.section(",",4,4); //str2 ="山东"
 ```
