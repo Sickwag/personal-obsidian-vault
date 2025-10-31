@@ -104,8 +104,56 @@ connect(sender, SIGNAL(destroyed()), this, SLOT(objectDestroyed(QObject*))); // 
 如果需要细致调节 connect 函数执行的线程，则可以通过 connect 函数的第一个和第三个参数来调整，
 因为插槽期待的是 [QObject](https://doc.qt.io/qt-6/zh/qobject.html) ，而信号不会发送。该连接将报告运行时错误。在使用 [QObject::connect](https://doc.qt.io/qt-6/zh/qobject.html#connect) () 重载时，编译器不会检查信号和槽参数（使用 lambda 或者 dynamic_static 可以避免）。
 ### 信号和槽的连接方式
+不管是哪种参数形式的 connect()函数，最后都有一个参数 type，它是枚举类型 Qt::ConnectionType，
+默认值为 `Qt::AutoConnection`。枚举类型 `Qt::ConnectionType` 表示信号与槽的关联方式，有以下几种取值。
+-  `Qt::AutoConnection`（默认值）：如果信号的接收者与发射者在同一个线程中，就使用 `Qt::DirectConnection` 方式，否则使用 `Qt::QueuedConnection` 方式，在信号发射时自动确定关联方式。
+-  `Qt::DirectConnection`：信号被发射时槽函数立即运行，槽函数与信号在同一个线程中。
+-  `Qt::QueuedConnection`：在事件循环回到接收者线程后运行槽函数，槽函数与信号在不同的线程中。
+-  `Qt::BlockingQueuedConnection`：与 `Qt::QueuedConnection` 相似，区别是信号线程会阻塞，，
+直到槽函数运行完毕。当信号与槽函数在同一个线程中时绝对不能使用这种方式，否则会造成死锁。
 
+### 解除信号和槽连接
+- 解除与一个发射者所有信号的连接，例如：
+```cpp
+disconnect(myObject, nullptr, nullptr, nullptr); //静态函数形式
+myObject->disconnect(); //成员函数形式
+```
+- 解除与一个特定信号的所有连接，例如：
+```cpp
+disconnect(myObject, SIGNAL(mySignal()), nullptr, nullptr); //静态函数形式
+myObject->disconnect(SIGNAL(mySignal())); //成员函数形式
+```
+- 解除与一个特定接收者的所有连接，例如：
+```cpp
+disconnect(myObject, nullptr, myReceiver, nullptr); //静态函数形式
+myObject->disconnect(myReceiver); //成员函数形式
+```
+- 解除特定的一个信号与槽的连接，例如：
+```cpp
+disconnect(lineEdit, &QLineEdit::textChanged, label, &QLabel::setText); //静态函数形式
+```
+#### 自定义信号实现
+- 信号就是在类定义里声明的一个函数
+- 信号函数必须是无返回值的函数，但是可以有输入参数
+- 信号函数无须实现，而只需在某些条件下被发射。
+emit 关键字可以发射信号，这个关键字可以在任何函数中使用，用来发射一个信号
+```cpp
+class TPerson : public QObject
+{
+	Q_OBJECT
+private:
+	int m_age= 10;
+public:
+	void incAge();
+signals:
+	void ageChanged( int value);
+}
 
+void do_something() {
+	int m_age = 10;
+	emit TPerson::ageChanged(m_age);
+}
+```
 ## 可绑定属性
 [Qt Bindable Properties | Qt Core | Qt 6.10.0](https://doc.qt.io/qt-6/zh/bindableproperties.html)
 ### 实现示例

@@ -244,11 +244,11 @@ endif()
 	- 程序运行时资源加载失败
 项目中选择手动指定目标的生成和结束阶段，可以保证 `qt_finalize_executable` 之间可以任意设置想要的变量，cmake 设置等内容。因为**自动结束发生在当前作用域的末尾**，这可能包括（当前 CMakeLists. txt 末尾，函数或者宏的末尾，子目录处理完成时）
 
-## Qt 框架功能概述
-### Qt 全局定义
+# Qt 框架功能概述
+## Qt 全局定义
 在 QGlobal 头文件中，包含 Qt 框架中的一些全局定义，包括基本数据类型、函数和宏。一般的**Qt 类的头文件都会包含这个头文件**
-### Qt 元对象系统
-#### QObject 元对象
+## Qt 元对象系统
+### QObject 元对象
 **元对象系统**是 Qt 的**反射机制**实现，它让 C++具备了类似 Java/C\# 的运行时类型检查和动态操作能力。`metaObject()` 函数返回的指针就是这个系统的入口点。
 元对象系统提供了一些重要的函数：
 - QObject 类提供的函数
@@ -319,7 +319,7 @@ void createPropertyEditors(QObject* obj, QWidget* parent) {
     }
 }
 ```
-#### QMetaObject 对象元对象
+### QMetaObject 对象元对象
 元对象 (metaObject) 提供的函数：
 
 | 分组      | 函数原型                                            | 功能                                                                                      |
@@ -362,7 +362,76 @@ const QMetaObject metaObj= btn->staticMetaObject; //获取元对象
 注意：
 `QObject::inherits()`。这个函数可以判断一个对象是不是继承自某个类的实例，顶层的父类是 QObject，但是如果要返回该对象**所描述的父类元对象**，需要使用 `QMetaObject::superClass()` 才可以
 
-#### 属性系统
+### 属性系统
 可以参考 [[QTExamples#元对象属性]]，分静态和动态属性
-#### 信号和槽
+### 信号和槽
 参考[[Qt Official Tutorial#信号与插槽|信号槽机制]]
+### 对象树
+- 使用 QObject 及其子类创建的对象（统称为 QObject 对象）是以对象树的形式来组织的。创建一个 QObject 对象时若设置一个父对象，它就会被添加到父对象的子对象列表里
+- 这种机制最适合于 UI 界面，上层（父对象）被关闭时，所有下层（子对象）都会被关闭。这一点可以通过在析构函数中写入**控制台调试信息**看到子对象被删除
+- 所有 QObject 对象都有 parent 和 children 两个函数，用来返回**所有**父对象或者子对象，使用 `QObjectList/QList<QObject*>` 接受返回的对象指针数组。
+- `findChild()` 函数用来在对象的子类中寻找**可以被转化为 T 类型的对象**
+```cpp
+template <typename T> T QObject::findChild(const QString &name = QString(), Qt::FindChildOptions options = Qt::FindChildrenRecursively)
+```
+最后一个参数选择寻找方法，默认**递归查找**
+## 容器类
+- Qt 的容器类比STL中的容器类更轻巧、使用更安全且更易于使用
+- 这些容器类是隐式共享和可重入的，而且它们进行了速度和存储上的优化，可以减小可执行文件大小
+- 它们是线程安全的，它们可以作为只读容器时可被多个线程访问。
+
+### 顺序容器
+Qt 6 中的 QVector 是 QList 的别名，两者完全等价
+list 重载了 `<<` 运算符，更方便传入数据
+```cpp
+QList<QString> list;
+list<<"Monday"<<"Tuesday"<<"Wednesday"<<"Thursday";
+list.append("Friday");
+QString str1= list[0]; // str1="Monday"
+QString str2= list.at(1); // str2="Tuesday"
+```
+其中以 take 开头的函数作用是从容器中移除一个元素，并**返回移除后的列表**，这可比 `vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());` 要方便
+### 关联容器
+Qt 中很多函数的返回值为 QList 或 QStringList 类型，要遍历这些返回的容器类，必须先复制（给左值），由于 Qt 使用了隐式共享，这样的复制并不会产生太大开销。
+qt 的 foreach 宏由于不是关键字，没办法做到用**引用**（C++11 中的 foreach 语法可以控制是否使用引用）返回容器中的内容，只会**创建容器副本然后操作**，所以**使用 foreach 宏修改容器中的数据不奏效**，Qt 在 5.7 后不建议使用 foreach 宏
+## 其他常用类
+### QVariant 类
+一种万能数据类型，它可以存储任何类型的数据，定义 QVariant 变量时，通过其构造函数为其赋初值。QVariant 有很多参数形式的构造函数，基本覆盖 toT 函数涉及的类型，还可以使用函数 ` setValue()`。
+QVariant 只支持一些基本的类型，没有 `toColor()`、`toFont()` 这样的函数，但是这些类型的值可以赋值给 QVariant 变量，之后通过 `QVariant::value()` 函数来得到指定类型的值
+
+### QFlags 类
+`QFlags<Enum>` 是一个模板类，其中 Enum 是枚举类型，QFlags 用于定义枚举值的或运算组合，用于解决传统 C++中的[[CodeLineCounter#位掩码设计开关|位掩码技术]]
+```cpp
+// 传统枚举 - 只能表示单一状态
+enum Alignment {
+    AlignLeft = 0x1,
+    AlignRight = 0x2,
+    AlignHCenter = 0x4,
+    AlignTop = 0x8,
+    AlignBottom = 0x10,
+    AlignVCenter = 0x20
+};
+
+// 问题：如何同时表示"水平居中 + 垂直居中"？
+// 传统方式：使用按位或
+int alignment = AlignHCenter | AlignVCenter;  // 0x4 | 0x20 = 0x24
+
+// 但这样失去了类型安全，只是普通的int
+```
+qt 对 flags 标志的实现代码（对 alignment ，对齐方式这一部分）可以简化为：
+```cpp
+// Qt的方式
+enum AlignmentFlag {
+    AlignLeft = 0x1,
+    AlignRight = 0x2,
+    AlignHCenter = 0x4,
+    AlignTop = 0x8,
+    AlignBottom = 0x10,
+    AlignVCenter = 0x20
+};
+Q_DECLARE_FLAGS(Alignment, AlignmentFlag)
+// 开启后相当于
+// typedef QFlags<AlignmentFlag> Alignment;
+// 现在可以类型安全地组合
+Alignment alignment = AlignHCenter | AlignVCenter;
+```

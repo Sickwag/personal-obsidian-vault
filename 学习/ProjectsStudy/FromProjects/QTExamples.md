@@ -42,7 +42,9 @@ timer->inherits ("QAbstractButton");//返回false. 不是QAbatractButton的子�
 - 在一个类的 **private 部分声明** `Q_OBJECT` 宏，使得类可以使用元对象的特性，如动态属性、信号与槽。
 - MOC (元对象编译器) 为每个 QObject 的子类提供必要的代码来实现元对象系统的特性。构建项目时，MOC 工具读取 C++ 源文件，当它发现类的定义里有 `Q_OBJECT` 宏时，它就会为这个类生成另外一个包含有元对象支持代码的 C++ 源文件，这个生成的源文件连同类的实现文件一起被编译和连接。
 #### qt 定义对象属性
-方便的属性设置，不管是否用READ和WRITE定义了接口函数，只要知道属性名称就可以通过`QObjct:property()`读取属性值，并通过`QObject:setProperty()`设置属性值
+方便的属性设置，不管是否用READ和WRITE定义了接口函数，只要知道属性名称就可以通过 `QObjct:property()` 读取属性值，并通过 `QObject:setProperty()` 设置属性值
+
+***使用 Q_PROPERTY 宏定义的属性是静态属性，通过 setProperty 定义的属性是动态属性***
 ##### 1. 静态属性
 ```cpp
 Q_PROPERTY(type name
@@ -93,7 +95,7 @@ class QPushButton : public QAbstractButton {
 - **生命周期绑定**：
     - 属性与类定义强绑定，修改类定义需重新编译，无法在运行时创建新的属性，但是可以修改已在编译时确定有的属性
 ##### 2. 动态属性
-运行时添加的属性，不写在 `Q_PROPERTY` 中的属性
+运行时添加的属性，不写在 `Q_PROPERTY` 中的属性，属性**键必须是 `QByteArray` 类型，值只能是 `QVariant` 类型（可以包装几乎所有Qt和标准C++类型）**
 - **元对象系统无注册**：
     - 不出现在`QMetaObject::property()`列表中
     - `Q_PROPERTY`声明的静态属性≠动态属性
@@ -109,10 +111,10 @@ class QPushButton : public QAbstractButton {
 - **优先级陷阱**：动态属性优先级高于静态属性（`property()` 返回动态值，静态属性函数仍返回成员变量）
 - 一个对象可以同时存在动静态属性，只是两者的存在方式不同而已
 
-| 属性类型       | 如何定义                    | 存储位置                     | 元对象可见性 |
-|----------------|-----------------------------|------------------------------|--------------|
-| **静态属性**   | `Q_PROPERTY(...)`           | 类成员变量（如 `bool isStatic`）| ✔️ 元对象系统可枚举           |
-| **动态属性**   | `setProperty("name", val)`  | `QObjectPrivate::dynamicProperties`（哈希表） | ❌ 元对象系统不可见        |
+| 属性类型     | 如何定义                       | 存储位置                                     | 元对象可见性      |
+| -------- | -------------------------- | ---------------------------------------- | ----------- |
+| **静态属性** | `Q_PROPERTY(...)`          | 类成员变量（如 `bool isStatic`）                 | ✔️ 元对象系统可枚举 |
+| **动态属性** | `setProperty("name", val)` | `QObjectPrivate::dynamicProperties`（哈希表） | ❌ 元对象系统不可见  |
 机制比较：
 
 | **机制**    | **静态属性**             | **动态属性**                                          |
