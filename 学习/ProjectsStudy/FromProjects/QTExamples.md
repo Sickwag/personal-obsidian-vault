@@ -41,7 +41,9 @@ timer->inherits ("QAbstractButton");//返回false. 不是QAbatractButton的子�
 - QObject 类是所有使用元对象系统的类的基类。
 - 在一个类的 **private 部分声明** `Q_OBJECT` 宏，使得类可以使用元对象的特性，如动态属性、信号与槽。
 - MOC (元对象编译器) 为每个 QObject 的子类提供必要的代码来实现元对象系统的特性。构建项目时，MOC 工具读取 C++ 源文件，当它发现类的定义里有 `Q_OBJECT` 宏时，它就会为这个类生成另外一个包含有元对象支持代码的 C++ 源文件，这个生成的源文件连同类的实现文件一起被编译和连接。
-#### qt 宏定义对象属性
+#### qt 定义对象属性
+方便的属性设置，不管是否用READ和WRITE定义了接口函数，只要知道属性名称就可以通过`QObjct:property()`读取属性值，并通过`QObject:setProperty()`设置属性值
+##### 1. 静态属性
 ```cpp
 Q_PROPERTY(type name
              (READ getFunction [WRITE setFunction] |
@@ -57,8 +59,18 @@ Q_PROPERTY(type name
              [CONSTANT]
              [FINAL])
 ```
-- 方便的属性设置，不管是否用READ和WRITE定义了接口函数，只要知道属性名称就可以通过`QObjct:property()`读取属性值，并通过`QObject:setProperty()`设置属性值
-##### 1. 静态属性
+- type：属性的数据类型，例如 int、QString 等。
+- name：属性的名称。
+- READ：指定读取属性的 getter 函数（必需）。
+- WRITE：指定写入属性的 setter 函数（可选）。
+- RESET：指定重置属性的函数（可选）。
+- NOTIFY：指定属性值变化时发出的信号（可选，用于动态属性绑定）。
+- DESIGNABLE：是否在 Qt Designer 中可设计（默认 true）。
+- SCRIPTABLE：是否可从脚本（如 QML）访问（默认 true）。
+- STORED：是否存储在对象中（默认 true）。
+- USER：是否为用户可编辑（默认 false）。
+- CONSTANT：表示属性是常量（不变化）。
+- REQUIRED (Qt 6.2+) 表示属性在 QML 中是必需的
 ```cpp
 QPushButton *button = new QPushButton;
 Q0bject *object = button;
@@ -110,7 +122,7 @@ class QPushButton : public QAbstractButton {
 | **调用示例**  | `return this->flat;` | `return d->dynamicProperties["flat"]`             |
 | **时间复杂度** | O(1)（直接内存偏移）         | O(1)（但存在哈希计算和字符串比较开销）                             |
 | **值类型**   | 固定类型（如`bool flat`）   | 通用容器`QVariant`（需类型转换）                             |
-#### qt 宏定义类属性
+#### qt 定义类属性
 属性系统还有一个宏Q CLASSINFO0.可以为类的元对象定义“名称-值” 信息
 ```cpp
 class QMyC1ass : public QObject { 

@@ -248,6 +248,7 @@ endif()
 ### Qt 全局定义
 在 QGlobal 头文件中，包含 Qt 框架中的一些全局定义，包括基本数据类型、函数和宏。一般的**Qt 类的头文件都会包含这个头文件**
 ### Qt 元对象系统
+#### QObject 元对象
 **元对象系统**是 Qt 的**反射机制**实现，它让 C++具备了类似 Java/C\# 的运行时类型检查和动态操作能力。`metaObject()` 函数返回的指针就是这个系统的入口点。
 元对象系统提供了一些重要的函数：
 - QObject 类提供的函数
@@ -318,39 +319,40 @@ void createPropertyEditors(QObject* obj, QWidget* parent) {
     }
 }
 ```
+#### QMetaObject 对象元对象
 元对象 (metaObject) 提供的函数：
 
-| 分组      | 函数原型                                            | 功能                                                                                    |
-| ------- | ----------------------------------------------- | ------------------------------------------------------------------------------------- |
-| 类的信息    | `char  *className()`                            | 返回这个类的类名称                                                                             |
-|         | `QMetaType  metaType()`                         | 返回这个元对象的类型                                                                            |
-|         | `QMetaObject  *superClass()`                    | 返回这个类的上层父类的元对象                                                                        |
-|         | `bool  inherits(QMetaObject *metaObject)`       | 返回 true 表示这个类继承自 metaObject 描述的类，否则返回 false                                           |
-|         | `QObject  *newInstance(*****)`                  | 创建这个类的一个实例，可以给构造函数传递最多 10 个参数                                                         |
-| 类信息元数据  | `QMetaClassInfo  classInfo(int index)`          | 返回序号为 index 的一条类信息的元数据，类信息是在类中用宏 Q_CLASSINFO 定义的一条信息                                  |
-|         | `int  indexOfClassInfo(char *name)`             | 返回名称为 name 的类信息的序号，序号可用于 classInfo () 函数                                               |
-|         | `int  classInfoCount()`                         | 返回这个类的类信息条数                                                                           |
-|         | `int  classInfoOffset()`                        | 返回这个类的第一条类信息的序号                                                                       |
-| 构造函数元数据 | `int  constructorCount()`                       | 返回这个类的构造函数的个数                                                                         |
-|         | `QMetaMethod  constructor(int index)`           | 返回这个类的序号为 index 的构造函数的元数据                                                             |
-|         | `int  indexOfConstructor(char *constructor)`    | 返回一个构造函数的序号，constructor 包括正则化之后的函数名和参数名                                               |
-| 方法元数据   | `QMetaMethod  method(int index)`                | 返回序号为 index 的方法的元数据                                                                   |
-|         | `int  methodCount()`                            | 返回这个类的方法的个数，包括基类中定义的方法，方法包括一般的成员函数，还包括信号和槽                                            |
-|         | `int  methodOffset()`                           | 返回这个类的第一个方法的序号                                                                        |
-|         | `int  indexOfMethod(char *method)`              | 返回名称为 method 的方法的序号                                                                   |
-| 枚举类型元数据 | `QMetaEnum  enumerator(int index)`              | 返回序号为 index 的枚举类型的元数据                                                                 |
-|         | `int  enumeratorCount()`                        | 返回这个类的枚举类型个数                                                                          |
-|         | `int  enumeratorOffset()`                       | 返回这个类的第一个枚举类型的序号                                                                      |
-|         | `int  indexOfEnumerator(char *name)`            | 返回名称为 name 的枚举类型的序号                                                                   |
-| 属性元数据   | `QMetaProperty  property(int index)`            | 返回序号为 index 的属性的元数据                                                                   |
-|         | `int  propertyCount()`                          | 返回这个类的属性的个数                                                                           |
-|         | `int  propertyOffset()`                         | 返回这个类的第一个属性的序号                                                                        |
-|         | `int  indexOfProperty(char *name)`              | 返回名称为 name 的属性的序号                                                                     |
-| 信号与槽    | `int  indexOfSignal(char *signal)`              | 返回名称为 signal 的信号的序号                                                                   |
-|         | `int  indexOfSlot(char *slot)`                  | 返回名称为 slot 的槽函数的序号                                                                    |
-| 静态函数    | `bool  checkConnectArgs(*****)`                 | 检查信号与槽函数的参数是否兼容                                                                       |
-|         | `void  connectSlotsByName(QObject *object)`     | 迭代搜索 object 的所有子对象，将匹配的信号和槽连接起来                                                       |
-|         | `bool  invokeMethod(*****)`                     | 运行 QObject 对象的某个方法，包括信号、槽或成员函数                                                        |
+| 分组      | 函数原型                                            | 功能                                                                                      |
+| ------- | ----------------------------------------------- | --------------------------------------------------------------------------------------- |
+| 类的信息    | `char  *className()`                            | 返回这个类的类名称                                                                               |
+|         | `QMetaType  metaType()`                         | 返回这个元对象的类型                                                                              |
+|         | `QMetaObject  *superClass()`                    | 返回这个类的上层父类的元对象                                                                          |
+|         | `bool  inherits(QMetaObject *metaObject)`       | 返回 true 表示这个类继承自 metaObject 描述的类，否则返回 false                                             |
+|         | `QObject  *newInstance(*****)`                  | 创建这个类的一个实例，可以给构造函数传递最多 10 个参数                                                           |
+| 类信息元数据  | `QMetaClassInfo  classInfo(int index)`          | 返回序号为 index 的一条类信息的元数据，类信息是在类中用宏 Q_CLASSINFO 定义的一条信息                                    |
+|         | `int  indexOfClassInfo(char *name)`             | 返回名称为 name 的类信息的序号，序号可用于 classInfo () 函数                                                |
+|         | `int  classInfoCount()`                         | 返回这个类的类信息条数                                                                             |
+|         | `int  classInfoOffset()`                        | 返回这个类的第一条类信息的序号                                                                         |
+| 构造函数元数据 | `int  constructorCount()`                       | 返回这个类的构造函数的个数                                                                           |
+|         | `QMetaMethod  constructor(int index)`           | 返回这个类的序号为 index 的构造函数的元数据                                                               |
+|         | `int  indexOfConstructor(char *constructor)`    | 返回一个构造函数的序号，constructor 包括正则化之后的函数名和参数名                                                 |
+| 方法元数据   | `QMetaMethod  method(int index)`                | 返回序号为 index 的方法的元数据                                                                     |
+|         | `int  methodCount()`                            | 返回这个类的方法的个数，包括基类中定义的方法，方法包括一般的成员函数，还包括信号和槽                                              |
+|         | `int  methodOffset()`                           | 返回这个类的第一个方法的序号                                                                          |
+|         | `int  indexOfMethod(char *method)`              | 返回名称为 method 的方法的序号                                                                     |
+| 枚举类型元数据 | `QMetaEnum  enumerator(int index)`              | 返回序号为 index 的枚举类型的元数据                                                                   |
+|         | `int  enumeratorCount()`                        | 返回这个类的枚举类型个数                                                                            |
+|         | `int  enumeratorOffset()`                       | 返回这个类的第一个枚举类型的序号                                                                        |
+|         | `int  indexOfEnumerator(char *name)`            | 返回名称为 name 的枚举类型的序号                                                                     |
+| 属性元数据   | `QMetaProperty  property(int index)`            | 返回序号为 index 的属性的元数据                                                                     |
+|         | `int  propertyCount()`                          | 返回这个类的属性的个数                                                                             |
+|         | `int  propertyOffset()`                         | 返回这个类的第一个属性的序号                                                                          |
+|         | `int  indexOfProperty(char *name)`              | 返回名称为 name 的属性的序号                                                                       |
+| 信号与槽    | `int  indexOfSignal(char *signal)`              | 返回名称为 signal 的信号的序号                                                                     |
+|         | `int  indexOfSlot(char *slot)`                  | 返回名称为 slot 的槽函数的序号                                                                      |
+| 静态函数    | `bool  checkConnectArgs(*****)`                 | 检查信号与槽函数的参数是否兼容                                                                         |
+|         | `void  connectSlotsByName(QObject *object)`     | 迭代搜索 object 的所有子对象，将匹配的信号和槽连接起来                                                         |
+|         | `bool  invokeMethod(*****)`                     | 运行 QObject 对象的某个方法，包括信号、槽或成员函数                                                          |
 |         | `QByteArray  normalizedSignature(char *method)` | 将方法 method 的名称和参数字符串正则化，去除多余空格。函数返回的结果可用于 checkConnectArgs ()、indexOfConstructor () 等函数 |
 获取元对象有两种方式：
 ```cpp
@@ -359,3 +361,8 @@ const QMetaObject metaObj= btn->staticMetaObject; //获取元对象
 ```
 注意：
 `QObject::inherits()`。这个函数可以判断一个对象是不是继承自某个类的实例，顶层的父类是 QObject，但是如果要返回该对象**所描述的父类元对象**，需要使用 `QMetaObject::superClass()` 才可以
+
+#### 属性系统
+可以参考 [[QTExamples#元对象属性]]，分静态和动态属性
+#### 信号和槽
+参考[[Qt Official Tutorial#信号与插槽|信号槽机制]]

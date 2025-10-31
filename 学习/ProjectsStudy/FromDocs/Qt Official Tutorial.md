@@ -2,6 +2,53 @@
 ## 信号与插槽
 ### 槽函数重载在 connect 函数中的表示方法
 [Signals & Slots | Qt Core | Qt 6.10.0](https://doc.qt.io/qt-6/zh/signalsandslots.html)
+Qt 信号槽机制是 Qt 框架的核心特性之一，它提供了一种类型安全的对象间通信方式。当某个事件发生时（如按钮被点击、文本被修改等），对象会发出信号（signal）；其他对象可以通过连接信号到槽函数（slot，注意本质是一个函数）来响应这些事件。
+信号槽机制依赖于 Qt 的元对象系统，会在编译时分析 qt 代码，然后生成额外的元信息代码插入其中
+- 信号发射和槽接收能够成功的原理是：
+- 一旦使用了 `connect(sender, signal, receiver, slot);` 编译器会在编译期：
+	1. 获取 sender 和 receiver 的元对象信息
+	2. 查找 signal 和 slot 在各自类中的索引
+	3. 在内部表中记录这个连接关系
+- 则当某个行为触发了某个信号（比如 `QToolButton` 支持一个 `clicked` 点击行为，他会触发 `QMetaObject::active()`），元对象系统就会在运行时：
+	1. 通过元对象系统查找所有连接到此信号的槽
+	2. 验证参数类型匹配
+	3. 调用所有连接的槽函数
+一个标准的 QWidget 对象结构应该符合：
+```cpp
+class MyWidget : public QWidget {
+  Q_OBJECT  // 必须包含此宏
+public:
+  explicit MyWidget(QWidget *parent = nullptr); // 做变量初始化，UI显示和信号槽链接工作，可以外包给别的函数做，比如setUI和setConnection
+
+signals:
+  // 信号声明区域，清晰表明发出了什么信号，通常大部分信号moc都会内置实现，不需要手动编写
+  void valueChanged(int newValue);
+  void buttonPressed(const QString& text);
+
+public slots:
+  // 公共槽函数区域
+  void setValue(int value);
+
+private slots:
+  // 私有槽函数区域
+  void onButtonClicked();
+  void onValueChanged(int value);
+
+private:
+  // 私有成员变量
+  QPushButton *m_button;
+  QLabel *m_label;
+  int m_value;
+
+  // 私有辅助函数
+  void setupUI();	// 处理所有布局
+  void setupConnections();	// 处理所有信号槽连接
+};
+```
+- 可以使用 `QMetaObject::Connection` 接收 connect 函数的结果，`if(!conn)` 判断链接结果成功与否
+- Qt 的信号槽连接是"一对多"的，一个信号可以连接到多个槽函数。当信号发出时，Qt 会依次调用所有连接的槽函数，但槽函数本身并不知道是通过哪个信号触发的。
+- 槽函数可以是任意一个 `doSomething` 函数，甚至可以是 lambda 表达式
+
 当信号或槽被重载时（有多个不同参数的版本），需要使用函数指针语法明确指定要连接的版本。您可以使用[qOverload](https://doc.qt.io/qt-6/zh/qoverload.html#qOverload)() 或`static_cast` 来区分：
 ```cpp
 // Connect to the int overload of QComboBox::currentIndexChanged(int)
@@ -56,6 +103,8 @@ connect(sender, SIGNAL(destroyed()), this, SLOT(objectDestroyed(QObject*))); // 
 ```
 如果需要细致调节 connect 函数执行的线程，则可以通过 connect 函数的第一个和第三个参数来调整，
 因为插槽期待的是 [QObject](https://doc.qt.io/qt-6/zh/qobject.html) ，而信号不会发送。该连接将报告运行时错误。在使用 [QObject::connect](https://doc.qt.io/qt-6/zh/qobject.html#connect) () 重载时，编译器不会检查信号和槽参数（使用 lambda 或者 dynamic_static 可以避免）。
+### 信号和槽的连接方式
+
 
 ## 可绑定属性
 [Qt Bindable Properties | Qt Core | Qt 6.10.0](https://doc.qt.io/qt-6/zh/bindableproperties.html)
@@ -528,53 +577,7 @@ dynamic_cast 是一种**运行时**类型转换：
 - 在运行时进行类型检查
 - 只能用于具有虚函数的类（多态类型）
 - 失败时返回 nullptr（指针）或抛出 std:: bad_cast 异常（引用）
-### QT 信号槽机制
-Qt 信号槽机制是 Qt 框架的核心特性之一，它提供了一种类型安全的对象间通信方式。当某个事件发生时（如按钮被点击、文本被修改等），对象会发出信号（signal）；其他对象可以通过连接信号到槽函数（slot，注意本质是一个函数）来响应这些事件。
-- 信号槽机制依赖于 Qt 的元对象系统，会在编译时分析 qt 代码，然后生成额外的元信息代码插入其中
-	- 信号发射和槽接收能够成功的原理是：
-	- 一旦使用了 `connect(sender, signal, receiver, slot);` 编译器会在编译期：
-		1. 获取 sender 和 receiver 的元对象信息
-		2. 查找 signal 和 slot 在各自类中的索引
-		3. 在内部表中记录这个连接关系
-	- 则当某个行为触发了某个信号（比如 `QToolButton` 支持一个 `clicked` 点击行为，他会触发 `QMetaObject::active()`），元对象系统就会在运行时：
-		1. 通过元对象系统查找所有连接到此信号的槽
-		2. 验证参数类型匹配
-		3. 调用所有连接的槽函数
-一个标准的 QWidget 对象结构应该符合：
-```cpp
-class MyWidget : public QWidget {
-  Q_OBJECT  // 必须包含此宏
-public:
-  explicit MyWidget(QWidget *parent = nullptr); // 做变量初始化，UI显示和信号槽链接工作，可以外包给别的函数做，比如setUI和setConnection
 
-signals:
-  // 信号声明区域，清晰表明发出了什么信号，通常大部分信号moc都会内置实现，不需要手动编写
-  void valueChanged(int newValue);
-  void buttonPressed(const QString& text);
-
-public slots:
-  // 公共槽函数区域
-  void setValue(int value);
-
-private slots:
-  // 私有槽函数区域
-  void onButtonClicked();
-  void onValueChanged(int value);
-
-private:
-  // 私有成员变量
-  QPushButton *m_button;
-  QLabel *m_label;
-  int m_value;
-
-  // 私有辅助函数
-  void setupUI();	// 处理所有布局
-  void setupConnections();	// 处理所有信号槽连接
-};
-```
-- 可以使用 `QMetaObject::Connection` 接收 connect 函数的结果，`if(!conn)` 判断链接结果成功与否
-- Qt 的信号槽连接是"一对多"的，一个信号可以连接到多个槽函数。当信号发出时，Qt 会依次调用所有连接的槽函数，但槽函数本身并不知道是通过哪个信号触发的。
-- 槽函数可以是任意一个 `doSomething` 函数，甚至可以是 lambda 表达式
 ## QCalendarWidget
 [Calendar Widget Example | Qt Widgets | Qt 6.9.1](https://doc.qt.io/qt-6/zh/qtwidgets-widgets-calendarwidget-example.html)
 主要学习嵌套布局
