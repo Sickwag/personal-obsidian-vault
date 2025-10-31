@@ -173,3 +173,75 @@ CONFIG += debug   # Debug 模式
 CONFIG += release # Release 模式
 ```
 ## 代码化 UI 设计
+编撰完成：
+[[C++ practice case#Qt 项目代码#quick_example qt 6高级开发书籍#2.3 代码化 UI 设计]]
+需要注意的有：
+- qt 的自动通过命名连接机制（即给槽函数命名为 `on_someObject_someSignalHappened()` 会将控件和的信号和对应的槽函数连接起来）**只作用于在 UI 文件中***可视化编辑控件并且在代码中编写逻辑***的情况**，如果 ui 文件（准确的说是通过 uic 生成的 cpp 文件）中没有对应的控件，没有自动连接效果。
+- 这种机制同时只对**下划线命名法有效果**
+- qt **不建议使用指针或者引用**来修改对象的属性，更建议使用 setter 和 getter，因为大部分情况下，使用 getter 函数返回的是对象属性的副本，而不是指向对象的指针。如获取 QPlainText 中的文本字体，使用 `QFont& font = plainText.font()` 获取的是副本，修改不会生效并且可能会报错：
+```bash
+error: C2440: “初始化”: 无法从“const QFont”转换为“QFont &”
+error C2440: “初始化”: 无法从“const QFont”转换为“QFont &”
+note: 转换丢失限定符
+```
+## 使用 CMake 构建系统
+### 标准 qt cmake 项目配置
+```cmake
+cmake_minimum_required(VERSION 3.5) #需要的 CMake 最低版本
+project(samp2_4 VERSION 0.1 LANGUAGES CXX) #项目版本 0.1，编程语言是 C++
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOUIC ON) #UIC 能被自动执行
+set(CMAKE_AUTOMOC ON) #MOC 能被自动执行
+set(CMAKE_AUTORCC ON) #RCC 能被自动执行
+set(CMAKE_CXX_STANDARD 11) #设置编译器需要满足的 C++语言标准，设置为 C++11
+set(CMAKE_CXX_STANDARD_REQUIRED ON) #要求编译器满足 C++标准
+
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED) #导入 Qt6::Widgets 模块
+set(PROJECT_SOURCES #设置变量 PROJECT_SOURCES 等于下面的列表
+	main.cpp #也就是项目的源文件列表
+	dialog.cpp
+	dialog.h
+	dialog.ui
+)
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6) #如果是 Qt 6 以上的版本
+	qt_add_executable(samp2_4 #创建可执行文件 samp2_4
+	MANUAL_FINALIZATION #可选参数，手动结束创建目标的过程
+	${PROJECT_SOURCES} #文件列表来源于变量 PROJECT_SOURCES
+)
+endif()
+#在连接生成目标 samp2_4 时，需要利用前面用 find_package()导入的 Qt6::Widgets 模块
+target_link_libraries(samp2_4 PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+set_target_properties(samp2_4 PROPERTIES
+	MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
+	MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+	MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+	MACOSX_BUNDLE TRUE
+	WIN32_EXECUTABLE TRUE
+)
+if(QT_VERSION_MAJOR EQUAL 6)
+	qt_finalize_executable(samp2_4) #最后生成可执行文件 samp2_4
+endif()
+```
+- **`add_executable()`** 是CMake的标准函数，只创建基本的可执行文件目标
+- **`qt_add_executable()`** 是Qt6引入的专用函数，提供了Qt特定的增强功能
+使用 qt 版本能更好的：
+- 自动处理Qt的元对象系统（MOC）
+- 更好地集成Qt的UI文件（.ui）和资源文件（.qrc）
+- 提供跨平台的目标属性设置
+如果去掉 auto uic，moc，rcc 的设置，会出现：
+- MOC（元对象编译器）失效：
+	- 包含`Q_OBJECT`宏的类不会被处理
+	- signals/slots机制无法工作
+	- 运行时类型信息（RTTI）失效
+	- **编译会失败**，因为MOC生成的代码缺失
+- UIC（UI编译器）失效：
+	- `.ui`文件不会被编译成对应的头文件
+	- 界面设计无法在代码中使用
+	- **链接会失败**，因为UI相关的类定义缺失
+- RCC（资源编译器）失效：
+	- `.qrc`资源文件不会被编译进可执行文件
+	- 图片、翻译文件等资源无法访问
+	- 程序运行时资源加载失败
+项目中选择手动指定目标的生成和结束阶段，可以保证 `qt_finalize_executable` 之间可以任意设置想要的变量，cmake 设置等内容。因为**自动结束发生在当前作用域的末尾**，这可能包括（当前 CMakeLists. txt 末尾，函数或者宏的末尾，子目录处理完成时）
+
+## Qt 框架功能概述

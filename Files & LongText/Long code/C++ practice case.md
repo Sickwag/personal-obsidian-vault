@@ -2804,3 +2804,112 @@ std::string calculateMD5_PicoSHA(const std::string& filename) {
     return picosha2::hash256_hex_string(buffer);
 }
 ```
+
+
+## Qt 项目代码
+### quick_example qt 6高级开发书籍
+#### 2.3 代码化 UI 设计
+```cpp
+#include <QColor>
+#include <QFont>
+#include <QHBoxLayout>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QPlainTextEdit>
+#include <QTextCharFormat>
+#include <QTextCursor>
+#include <QBrush>
+#include "quickwidget.h"
+#include <QGridLayout>
+#include <QRadioButton>
+#include <QCheckBox>
+#include "./ui_quickwidget.h"
+
+quickWidget::quickWidget(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::quickWidget)
+{
+    ui->setupUi(this);
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+
+    QGridLayout* optionsLayout = new QGridLayout();
+    UnderLineCheckbox = new QCheckBox("Underline", this);
+    ItalicCheckbox = new QCheckBox("Italic", this);
+    BoldCheckbox = new QCheckBox("Bold", this);
+    BlackColorButton = new QRadioButton("Black", this);
+    RedColorButton = new QRadioButton("Red", this);
+    BlueColorButton = new QRadioButton("Blue", this);
+    optionsLayout->addWidget(UnderLineCheckbox,0,0);
+    optionsLayout->addWidget(ItalicCheckbox, 0,1);
+    optionsLayout->addWidget(BoldCheckbox,0,2);
+    optionsLayout->addWidget(BlackColorButton, 1,0);
+    optionsLayout->addWidget(RedColorButton,1,1);
+    optionsLayout->addWidget(BlueColorButton,1,2);
+    mainLayout->addLayout(optionsLayout);
+
+    display_area = new QPlainTextEdit(this);
+    display_area->setPlainText("hello world\n你好世界");
+    mainLayout->addWidget(display_area);
+
+    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    QPushButton* updateButton = new QPushButton("update", this);
+    QPushButton* exitButton = new QPushButton("quit", this);
+    exitButton->setShortcut(Qt::CTRL | Qt::Key_Q);
+    buttonLayout->addWidget(updateButton);
+    buttonLayout->addWidget(exitButton);
+    mainLayout->addLayout(buttonLayout);
+    
+    connect(updateButton, &QPushButton::clicked, this, &quickWidget::onUpdateButtonClicked);
+    connect(exitButton, &QPushButton::clicked, this, &quickWidget::onExitButtonClicked);
+}
+
+quickWidget::~quickWidget()
+{
+    delete ui;
+}
+
+void quickWidget::onUpdateButtonClicked()
+{
+    QFont font = this->display_area->font();
+    
+    // 获取当前光标并选中所有文本
+    QTextCursor cursor = display_area->textCursor();
+    cursor.select(QTextCursor::Document);
+    
+    QTextCharFormat format;
+    if(this->BlackColorButton->isChecked()){
+        format.setForeground(QBrush(QColor("black")));
+    } else if(this->BlueColorButton->isChecked()){
+        format.setForeground(QBrush(QColor("blue")));
+    } else if(this->RedColorButton->isChecked()){
+        format.setForeground(QBrush(QColor("red")));
+    }
+    
+    if(this->BoldCheckbox->isChecked()){
+        font.setBold(true);
+    } else {
+        font.setBold(false);
+    }
+    if(this->ItalicCheckbox->isChecked()){
+        font.setItalic(true);
+    } else {
+        font.setItalic(false);
+    }
+    if(this->UnderLineCheckbox->isChecked()){
+        font.setUnderline(true);
+    } else {
+        font.setUnderline(false);
+    }
+    
+    display_area->setFont(font);
+    cursor.mergeCharFormat(format);  // 应用颜色格式
+    display_area->setTextCursor(cursor);
+}
+
+void quickWidget::onExitButtonClicked(){
+    QApplication::quit();
+}
+
+
+
+```
