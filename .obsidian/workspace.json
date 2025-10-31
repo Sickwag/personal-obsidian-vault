@@ -13,21 +13,6 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/Bases/设计模式/详解设计模式（视频教程）.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "详解设计模式（视频教程）"
-            }
-          },
-          {
-            "id": "3d52569c76dbf98d",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
                 "file": "学习/其他专业书/QT6开发指南.md",
                 "mode": "source",
                 "source": false,
@@ -36,24 +21,8 @@
               "icon": "lucide-file",
               "title": "QT6开发指南"
             }
-          },
-          {
-            "id": "02f784b9e36fe174",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Files & LongText/Long code/C++ practice case.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "C++ practice case"
-            }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -85,7 +54,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "属性声明",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -227,54 +196,54 @@
       "quiz-generator:Open generator": false
     }
   },
-  "active": "3d52569c76dbf98d",
+  "active": "a5a49b1bb3e3468a",
   "lastOpenFiles": [
-    "Files & LongText/Long code/C++ practice case.md",
+    "学习/ProjectsStudy/FromDocs/frmdevicebutton.md",
     "学习/其他专业书/QT6开发指南.md",
-    "学习/Bases/设计模式/详解设计模式（视频教程）.md",
-    "Files & LongText/Long code/Python.md",
-    "学习/Bases/设计模式",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
-    "Files & LongText/Attachments/PixPin_2025-10-28_14-04-51.png",
-    "Chores/软考--高项系统架构师.md",
-    "学习/ProjectsStudy/FromProjects/QTExamples.md",
-    "学习/Bases/计算机网络/OSI七层模型.md",
-    "Files & LongText/Attachments/PixPin_2025-10-26_20-08-58.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_20-08-00.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_19-47-22.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_19-44-32.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_17-45-30.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_17-42-53.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_17-41-20.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_17-39-01.png",
-    "Files & LongText/Attachments/PixPin_2025-10-26_17-38-37.png",
-    "学习/Bases/计算机组成原理/计组期末考试.md",
-    "学习/ProjectsStudy/WriteByMyself/servertech-chat.md",
-    "学习/ToolChain/Linux/Linux Basics.md",
-    "学习/Language/SQL/MySQL.md",
-    "学习/ProjectsStudy/WriteByMyself/CodeLineCounter.md",
-    "学习/Fragments/编程相关/操作经验/网络连接问题解决.md",
-    "Files & LongText/ChatLogWithAi/AiQuiz/Quiz 1.md",
-    "Files & LongText/ChatLogWithAi/AiQuiz",
-    "学习/ProjectsStudy/WriteByMyself/netease music cover downloader.md",
-    "学习/Language/C C++/Cmake.md",
-    "学习/Fragments/编程相关/操作经验/软件使用错误.md",
-    "Files & LongText/Long code/CSDN Linux.md",
-    "Files & LongText/Long code/HTML.md",
-    "学习/Fragments/编程相关/基本知识/报错日志和代码异常分析.md",
-    "学习/Fragments/编程相关/基本知识/零碎但需要知道的.md",
-    "学习/Fragments/编程相关/操作经验/使用adb禁用应用.md",
-    "学习/Fragments/编程相关/操作经验/乱码对照表及其解决方法.md",
-    "学习/ProjectsStudy/FromDocs/OpenCV 官方文档.md",
-    "学习/其他专业书/Modern C++.md",
-    "学习/ToolChain",
-    "Files & LongText/Attachments/download_qt_example_simple.py",
-    "Files & LongText/Attachments/download_qt_example_full.py",
-    "Files & LongText/Attachments/download_qt_example.py",
-    "Files & LongText/Attachments/download_qt_example.bat",
-    "学习/Bases/开发范式",
-    "学习/ProjectsStudy/FromBlogs",
-    "Daily/Observations",
+    "Files & LongText/Long code/C++ practice case.md",
+    "学习/Bases/设计模式/详解设计模式（视频教程）.md",
+    "学习/Geography Learning/From Tutorial/ArcGIS Pro 中的 Notebooks 入门.md",
+    "学习/Geography Learning/AI QA/arcpy AddXY 工具添加救护车坐标.md",
+    "学习/Geography Learning/From Tutorial",
+    "学习/Geography Learning/AI QA",
+    "学习/Geography Learning",
+    "未命名.md",
+    "日记/乐评/《历史的天空》——毛阿敏.md",
+    "日记/乐评/《有心人》——张国荣.md",
+    "日记/乐评/《Theben》——Oskar Schuster.md",
+    "日记/乐评/《Damascus》——Osckar Schuster.md",
+    "日记/还没有做完的事.md",
+    "日记/乐评",
+    "日记/2024-06-06 日记 晴.md",
+    "日记",
+    "文章/文学/2003年关于中国辩论的思考.md",
+    "学习/Scattered knowlegde/计算机二级考试/靠记的题.md",
+    "学习/Scattered knowlegde/计算机二级考试/选择题做题.md",
+    "学习/Scattered knowlegde/计算机二级考试/计算机基础知识.md",
+    "学习/Scattered knowlegde/计算机二级考试/计算机公共基础知识.md",
+    "学习/Scattered knowlegde/计算机二级考试/数据结构与算法.md",
+    "学习/Scattered knowlegde/计算机二级考试/笔记-公共基础&计算机基础.md",
+    "学习/Scattered knowlegde/计算机二级考试/押题卷.md",
+    "学习/Scattered knowlegde/计算机二级考试/数据库设计.md",
+    "学习/Scattered knowlegde/计算机二级考试/函数宝典中没有的函数.md",
+    "学习/Scattered knowlegde/计算机二级考试/Word选择题.md",
+    "学习/Scattered knowlegde/计算机二级考试/PowerPoint选择题.md",
+    "学习/Scattered knowlegde/计算机二级考试",
+    "学习/Scattered knowlegde/装机",
+    "学习/Scattered knowlegde/快捷键",
+    "学习/Scattered knowlegde/PR",
+    "学习/Scattered knowlegde",
+    "Files & LongText/Attachments/Pasted image 20250813221222.png",
+    "Files & LongText/Attachments/Pasted image 20250813183653.png",
+    "Files & LongText/Attachments/Pasted image 20250813180331.png",
+    "Files & LongText/Attachments/Pasted image 20250813180257.png",
+    "Files & LongText/Attachments/Pasted image 20250813175429.png",
+    "Files & LongText/Attachments/Pasted image 20250813163032.png",
+    "Files & LongText/Attachments/Pasted image 20250813162457.png",
+    "Files & LongText/Attachments/Pasted image 20241031211058.png",
+    "Files & LongText/Attachments/Pasted image 20241031210949.png",
+    "Files & LongText/Attachments/Pasted image 20241031210812.png",
     "未命名.canvas",
     "未命名 1.canvas"
   ]
