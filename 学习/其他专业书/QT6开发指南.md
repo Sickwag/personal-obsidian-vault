@@ -654,3 +654,51 @@ str2= str1.section(",",1,1); //str2 ="男"
 str2= str1.section(",",0,1); //str2 ="学生姓名，男"
 str2= str1.section(",",4,4); //str2 ="山东"
 ```
+函数 `simplified()` 不仅会去掉字符串首尾的空格，还会将中间连续的空格用单个空格替换
+函数 `setNum` 可以将数字类型转换为字符串类型，还可以修改进制，数字表示方法
+```cpp
+int N= 243;
+QString str;
+str.setNum(N); //十进制， str= "243"
+str.setNum(N,16); //十六进制，str= "f3"
+str.setNum(N,2); //二进制， str= "11110011"
+QString str;
+double num= 1245.2783;
+str.setNum(num,'f',5); //小数点后 5 位，str= "1245.27830"
+str.setNum(num,'E',5); //基数的小数点后 5 位，str= "1.24528E+03"
+str.setNum(num,'g',5); //整数和小数总共 5 位，str= "1245.3"
+str.setNum(num,'g',3); //整数和小数总共 3 位，str= "1.25e+03"
+```
+静态函数 asprintf 类似于标准 C 中的 prinf，可以使用 cformat 参数设置任意字符串输出，但是其中的占位符 `%s` 是一个仅仅能支持 UTF 16 的字符，如果使用中文填充占位符（utf-8）会导致乱码，qt 文档中已经说明了这点：
+
+> [!note]
+> Safely builds a formatted string from the format string cformat and an arbitrary list of arguments.
+> The format string supports the conversion specifiers, length modifiers, and flags provided by printf () in the standard C++ library. The cformat string and %s arguments must be UTF-8 encoded.
+> 
+> Note: The %lc escape sequence expects a unicode character of type char 16_t, or ushort (as returned by QChar:: unicode ()). The %ls escape sequence expects a pointer to a zero-terminated array of unicode characters of type char 16_t, or ushort (as returned by QString:: utf 16 ()). This is at odds with the printf () in the standard C++ library, which defines %lc to print a wchar_t and %ls to print a wchar_t*, and might also produce compiler warnings on platforms where the size of wchar_t is not 16 bits
+
+## QSpinBox 和 QDoubleSpinBox
+比较有用的是：`QAbstractSpinBox::AdaptiveDecimalStepType` 自适应步进，在一个范围较大并且较为精细（范围从 1-10000，但是精度为 0.001）的范围调整 spinbox 中，通过点击上下箭头来调整数字大小效率很低，自适应步长可以表示将自动连续调整步长值为 $10^n$，其中 n 为大于或等于 0 的整数。value 属性值为 10 以下时，singleStep 属性值为 1；value 属性值为 100～999 时，singleStep 属性值为 10
+## 其他常用按钮组件
+### 按钮类
+比较重要的接口是 autoExclusive 和 autoRepeat
+
+| 属性            | 属性值类型        | 功能                                                                                                                                                 |     |     |     |
+| ------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | --- | --- | --- |
+| text          | QString      | 按钮的显示文字                                                                                                                                            |     |     |     |
+| icon          | QIcon        | 按钮的图标                                                                                                                                              |     |     |     |
+| shortcut      | QKeySequence | 按钮的快捷键                                                                                                                                             |     |     |     |
+| checkable     | bool         | 按钮是否可复选                                                                                                                                            |     |     |     |
+| checked       | bool         | 按钮是否复选的状态                                                                                                                                          |     |     |     |
+| autoExclusive | bool         | 在一个布局或一个容器组件内的同类按钮是否是互斥的。如果是互斥的，当其中一个按钮的 checked 属性被设置为 true 时，其他按钮的 checked 属性被自动设置为 false                                                        |     |     |     |
+| autoRepeat    | bool         | 是否自动重复。如果值为 true，那么在按钮处于按下状态时，将自动重复发射 clicked ()、pressed ()、released () 信号。初次重复的延迟时间由属性 autoRepeatDelay 决定，重复的周期由属性 autoRepeatInterval 决定，时间单位都是毫秒 |     |     |     |
+| autoDefault   | bool         | 按钮是否为自动默认按钮                                                                                                                                        |     |     |     |
+| default       | bool         | 按钮是否为默认按钮                                                                                                                                          |     |     |     |
+| flat          | bool         | 当 flat 属性值为 true 时，按钮没有边框，只有被点击或复选时才显示按钮边框                                                                                                         |     |     |     |
+
+- 只有当按钮所在的窗口基类是 QDialog 时，autoDefault 和 default 属性才有意义。在对话框上，如果一个按钮的 default 属性为 true，按下 Enter 键就相当于点击了默认按钮。
+- 如果按钮的 autoDefault 属性为 true，它就是自动默认按钮，获得焦点时，它就会变成默认按钮。
+### 滑动条类
+参考 [[QTExamples#滑动条QSlider和QAbstractSlider的介绍和用法|slider]] 和[[QTExamples#QSlider 仪表盘 + QLCD_NUmber 数值显示的介绍及用法|仪表盘]]
+### 时间和日期类数据
+参考[[QTExamples#QTimer和QDateTime的讲解和使用|时间日期相关]]

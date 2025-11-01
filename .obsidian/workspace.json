@@ -208,8 +208,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200.5,
-    "collapsed": true
+    "width": 200.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -229,10 +228,10 @@
   },
   "active": "a5a49b1bb3e3468a",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/FromProjects/QTExamples.md",
+    "学习/其他专业书/QT6开发指南.md",
     "Files & LongText/Attachments/PixPin_2025-10-31_21-35-05.png",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
-    "学习/其他专业书/QT6开发指南.md",
-    "学习/ProjectsStudy/FromProjects/QTExamples.md",
     "学习/ProjectsStudy/WriteByMyself/CodeLineCounter 1.md",
     "Files & LongText/Attachments/Pasted image 20251031205759.png",
     "Files & LongText/Attachments/Pasted image 20251031202414.png",
@@ -274,7 +273,6 @@
     "Files & LongText/Attachments/Pasted image 20250813180257.png",
     "Files & LongText/Attachments/Pasted image 20250813175429.png",
     "Files & LongText/Attachments/Pasted image 20250813163032.png",
-    "Files & LongText/Attachments/Pasted image 20250813162457.png",
     "未命名.canvas",
     "未命名 1.canvas"
   ]

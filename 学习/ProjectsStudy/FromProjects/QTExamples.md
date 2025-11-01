@@ -295,7 +295,7 @@ void dash_board::on_dial_valueChanged(int value) {
 参考：[QTimer和QDateTime的讲解和使用_qdateediter单击弹出-CSDN博客](https://xmuli.blog.csdn.net/article/details/101040841)
 ![[2883c1621230299f4e6326632434d4e7.gif]]
 
-### 时间日期相关的类：
+### 时间日期相关的类
 
 **时间日期是经常遇到的数据类型，Qt中时间日期类型的类如下。**
 
