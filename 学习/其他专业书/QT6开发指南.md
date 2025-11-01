@@ -700,5 +700,50 @@ str.setNum(num,'g',3); //整数和小数总共 3 位，str= "1.25e+03"
 - 如果按钮的 autoDefault 属性为 true，它就是自动默认按钮，获得焦点时，它就会变成默认按钮。
 ### 滑动条类
 参考 [[QTExamples#滑动条QSlider和QAbstractSlider的介绍和用法|slider]] 和[[QTExamples#QSlider 仪表盘 + QLCD_NUmber 数值显示的介绍及用法|仪表盘]]
-### 时间和日期类数据
+### 时间和日期类
 参考[[QTExamples#QTimer和QDateTime的讲解和使用|时间日期相关]]
+## QTimer 和 QElapsedTimer
+### QTimer
+QTimer 是软件定时器，其**父类是 QObject**。QTimer 的主要功能是设置以毫秒为单位的定时周期，然后进行连续定时或单次定时。启动定时器后，定时溢出时 QTimer 会发射 timeout()信号，为 timeout()信号关联槽函数就可以进行定时处理。
+
+主要属性有：
+
+| 属性           | 属性值类型     | 功能                                                                 |
+|----------------|----------------|----------------------------------------------------------------------|
+| interval       | int            | 定时周期，单位是毫秒                                                 |
+| singleShot     | bool           | 定时器是否为单次定时，true 表示单次定时                              |
+| timerType      | Qt:: TimerType  | 定时器精度类型                                                       |
+| active         | bool           | 只读属性，返回 true 表示定时器正在运行，也就是运行 start () 函数启动了定时器 |
+| remainingTime  | int            | 只读属性，到发生定时溢出的剩余时间，单位是毫秒。若定时器未启动，属性值为 -1；若已经发生定时溢出，属性值为 0 |
+
+通过 start 函数启动定时器：
+```cpp
+void QTimer::start() //启动定时器
+void QTimer::start(int msec) //启动定时器，并设置定时周期为 msec，单位是毫秒
+void QTimer::stop() //停止定时器
+```
+设置 interval 可以设置 `timeout()` 信号发射间隔
+静态函数 `singleShot` 用于创建和启动**单次定时器**，
+### QElapsedTimer
+QElapsedTimer 用于快速计算两个事件的间隔时间，是软件计时器。**QElapsedTimer 没有父类，不支持元系统**，，其计时精度可以达到纳秒级。QElapsedTimer 的主要用途是比较精确地确定一段程序运行的时长。
+
+- 函数 elapsed()的返回值是自上次运行 start()之后计时器的运行时间，单位是毫秒。
+- 函数 nsecsElapsed()的返回值也是自上次运行 start()之后计时器的运行时间，单位是纳秒。
+- 函数 restart()返回从上次启动计时器到现在的时间，单位是毫秒，然后重启计时器。相当于先后运行了 elapsed()和 start()。
+## QComboBox 类
+QComboBox 使用模型/视图结构存储和显示下拉列表的数据，下拉列表的数据实际上存储在QStandardItemModel 模型里
+
+| 属性                | 属性值类型        | 功能                                                                                                                                                        |
+| ----------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| editable          | bool         | 是否可编辑。如果值为 false，就只能从下拉列表里选择；如果值为 true，会显示一个编辑框允许输入文字                                                                                                     |
+| currentText       | QString      | 当前显示的文字                                                                                                                                                   |
+| currentIndex      | int          | 当前选中项的序号，序号从 0 开始。-1 表示没有项被选中                                                                                                                             |
+| maxVisibleItems   | int          | 下拉列表中显示的项的最大条数，默认值为 10。如果下拉列表里项的条数超过这个值，会自动出现卷滚条                                                                                                          |
+| maxCount          | int          | 下拉列表里项的最大条数                                                                                                                                               |
+| insertPolicy      | InsertPolicy | 用户编辑的新文字插入列表的方式，是枚举类型 QComboBox::InsertPolicy，默认值是 InsertAtBottom，也就是插入列表的末尾。如果值是 NoInsert，就表示不允许插入占位文字。当 currentIndex 属性值为 -1 时下拉列表框显示的文字。这个文字不会出现在下拉列表里 |
+| placeholderText   | QString      | 当 currentIndex 属性值为 -1 时下拉列表框显示的文字（占位提示文本）                                                                                                                |
+| duplicatesEnabled | bool         | 是否允许列表中出现重复的项                                                                                                                                             |
+| modelColumn       | int          | 下拉列表中的数据在数据模型中的列编号，默认值为 0                                                                                                                                 |
+- 下拉列表是用 QListView 的子类组件显示的
+- modelColumn 属性表示下拉列表显示的数据在模型中的列编号，默认值为 0。
+- 这些属性大部分在 QComboBox 中有对应的读写接口
