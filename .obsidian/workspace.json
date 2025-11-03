@@ -23,18 +23,13 @@
             }
           },
           {
-            "id": "9bbc3cc2ab9054ed",
+            "id": "4bf12c0081f9ff2a",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/ProjectsStudy/WriteByMyself/BookManageSystem+mysql.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "BookManageSystem+mysql"
+              "title": "新标签页"
             }
           }
         ],
@@ -213,13 +208,14 @@
       "quiz-generator:Open generator": false
     }
   },
-  "active": "9bbc3cc2ab9054ed",
+  "active": "4bf12c0081f9ff2a",
   "lastOpenFiles": [
+    "学习/其他专业书/C++并发编程实战（第二版）.md",
+    "学习/ProjectsStudy/WriteByMyself/BookManageSystem+mysql.md",
     "学习/algorithm/用法导向知识.md",
     "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/其他专业书/Modern C++.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/其他专业书/C++并发编程实战（第二版）.md",
     "Files & LongText/Attachments/PixPin_2025-11-01_18-23-15.png",
     "Files & LongText/Attachments/PixPin_2025-11-01_18-20-24.png",
     "学习/ProjectsStudy/WriteByMyself/PicToAscii.md",
@@ -249,7 +245,6 @@
     "日记/乐评/《历史的天空》——毛阿敏.md",
     "日记/乐评/《有心人》——张国荣.md",
     "日记/乐评/《Theben》——Oskar Schuster.md",
-    "日记/乐评/《Damascus》——Osckar Schuster.md",
     "日记/乐评",
     "日记",
     "学习/Scattered knowlegde/计算机二级考试",
