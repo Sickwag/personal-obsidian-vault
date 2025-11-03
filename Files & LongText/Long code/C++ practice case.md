@@ -1166,7 +1166,7 @@ class InputValidator {
     InputValidator& range(U min, U max, const std::string& error_fmt = "Must be between {} and {}.");
     InputValidator& regex(const std::string& pattern, const std::string& error_msg = "Input does not match the required pattern.");
     InputValidator& length_range(size_t min, size_t max, const std::string& error_fmt = "Length must be between {} and {}.");
-    InputValidator& not_emtpy(const std::string& error_msg = "Input cannot be empty.");
+    InputValidator& not_empty(const std::string& error_msg = "Input cannot be empty.");
     InputValidator& not_contains(const std::vector<std::string>& not_allowed, const std::string& error_msg = "Input must not contain ({}).");
     InputValidator& contains(const std::vector<std::string>& must_contains, const std::string& error_msg = "Input must contain ({}).");
     InputValidator& custom(ValidatorFunc condition, const std::string& error_msg);
