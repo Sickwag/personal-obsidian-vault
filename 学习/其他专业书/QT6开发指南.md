@@ -747,3 +747,50 @@ QComboBox 使用模型/视图结构存储和显示下拉列表的数据，下拉
 - 下拉列表是用 QListView 的子类组件显示的
 - modelColumn 属性表示下拉列表显示的数据在模型中的列编号，默认值为 0。
 - 这些属性大部分在 QComboBox 中有对应的读写接口
+
+## QMainWindow 和 QAction
+QMainWindow 是主窗口类，具有菜单栏、工具栏、状态栏等主窗口常见的界面元素。要设计主窗口上的菜单栏、工具栏、按钮的下拉菜单、组件的快捷菜单等，需要用到 QAction类。QAction 对象就是实现某个功能的“动作”，我们称其为 Action。在 **UI 可视化设计时**，我们可以设计很多 Action，然后用 Action 创建菜单项和工具按钮。
+
+经常在 UI 编辑器中使用 QAction 规划动作行为逻辑，按钮逻辑，有些 QT 中不允许的操作（比如将 QComboBox 放在 QMainWindow 工具栏上，原则上工具栏上只会放一些按钮）
+
+QMainWindow 类窗口上有**菜单栏、工具栏和状态栏**，这 3 种界面组件对应的类分别是QMenuBar、QToolBar 和 QStatusBar，它们都是直接从 QWidget 继承而来的。**一个主窗口上最多有一个菜单栏和一个状态栏，可以有多个工具栏。**
+![[PixPin_2025-11-04_10-22-05.png]]
+```md
+┌─────────────────────────────────────────────────────────────┐
+│ 文件(F) 编辑(E) 视图(V) 帮助(H)                            ← 菜单栏
+├─────────────────────────────────────────────────────────────┤
+│ [新建] [保存] [打印]                                        ← 工具栏
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   这是工作区内容...                                           │
+│   用户可以在这里进行主要操作                                    │
+│                                                             │
+│                                                             │
+│                                                             │
+│                                                             │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│ 已保存成功        行: 15, 列: 8                 就绪 插入模式  ← 状态栏
+└─────────────────────────────────────────────────────────────┘
+```
+
+设计菜单的 QAction 动作：
+![[PixPin_2025-11-04_10-31-04.png]]
+- 其中 Menu role 只有 macos 上才有效
+- 可以通过拖动 Action 编辑器里的 QAction 对象放到工具栏上
+- 常用的信号和槽函数需要知道
+可以用 Action 可视化地创建工具栏上的按钮，但是**不能可视化地**在工具栏上放置其他组件。QToolBar 提供了接口函数，可以**通过代码在工具栏上添加组件**
+```cpp
+void addAction(QAction *action) //添加一个 Action，并根据 Action 的设置自动创建工具按钮
+QAction *addWidget(QWidget *widget) //添加一个界面组件
+QAction *insertWidget(QAction *before, QWidget *widget) //插入一个界面组件
+QAction *addSeparator() //添加一个分隔条
+QAction *insertSeparator(QAction *before) //插入一个分隔条
+```
+在 UI 可视化设计时，不能在状态栏上放置任何组件，而只能通过其接口函数向状态栏添加组件
+```cpp
+void addWidget(QWidget *widget, int stretch = 0) //添加正常组件
+void addPermanentWidget(QWidget *widget, int stretch = 0) //添加永久组件
+```
+这两个函数区别是：函数 `showMessage()` 用于在状态栏上左端首位置显示字符串信息，显示持续时间是 timeout，单位是毫秒。如果 timeout 设置为 0，就是一直显示，直到被 `clearMessage()` 清除，或显示下一条临时消息。使用 `showMessage()` 显示临时消息时，状态栏上用 addWidget()添加的组件会被临时隐藏，而用 `addPermanentWidget()` 函数添加的组件会保持不变。
+
