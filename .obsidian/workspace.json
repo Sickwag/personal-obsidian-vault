@@ -85,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "规范",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -106,12 +106,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -227,7 +227,7 @@
       "quiz-generator:Open generator": false
     }
   },
-  "active": "33027cd7c41d0bca",
+  "active": "d1e212fee3e1649e",
   "lastOpenFiles": [
     "Files & LongText/Attachments/PixPin_2025-11-04_10-31-04.png",
     "Files & LongText/Attachments/PixPin_2025-11-04_10-22-05.png",
