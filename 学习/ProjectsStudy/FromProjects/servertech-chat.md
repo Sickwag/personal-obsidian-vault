@@ -276,3 +276,84 @@ signals.async_wait([st, &ctx](boost::system::error_code, int) {
 }
 ```
 同理，由于协程运行过程中有可能被终止，所以使用 `signals.async_wait` 同样作为协程添加给 ctx 管理，一旦出现 signals 中有的信号，就执行其中 lambda 函数的逻辑，停止 redis 和 mysql 的服务，实现优雅退出。
+### src/server. cpp 和 src/include/server. hpp
+`log_exception` 用来重新抛出异常（因为需要将这个异常信息记录到日志中）
+`run_server` 是一个协程，用来启动所有服务
+使用 `asio::ip::tcp::acceptor` 接受所有的**入站请求**，所有由外部发送到**其监听端口**的 tcp 都由 acceptor 统一接受管理，并转交给内核。
+关于 `SO_REUSEADDR`：
+在原生 C 代码中，连接到 tcp 服务需要：
+```cpp
+#include <iostream>
+#include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+const int PORT = 8080;
+
+int main() {
+    int server_fd, new_socket;
+    struct sockaddr_in address;
+    int opt = 1; // 用于 setsockopt 的参数值
+    int addrlen = sizeof(address);
+    char buffer[1024] = { 0 };
+
+    // 1. 创建 socket 文件描述符
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // 2. 设置 SO_REUSEADDR 选项
+    // SOL_SOCKET: 表示选项级别是套接字层
+    // SO_REUSEADDR: 要设置的选项名
+    // &opt: 指向选项值的指针
+    // sizeof(opt): 选项值的长度
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+    std::cout << "SO_REUSEADDR 设置成功。" << std::endl;
+
+    // 3. 绑定 socket 到地址和端口
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY; // 监听所有可用接口
+    address.sin_port = htons(PORT); // 将端口号从主机字节序转成网络字节序
+
+    // 如果不设置 SO_REUSEADDR，这里在快速重启时可能会失败
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+    std::cout << "Socket 绑定到端口 " << PORT << " 成功。" << std::endl;
+
+    // 4. 开始监听
+    if (listen(server_fd, 3) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+    std::cout << "正在监听连接..." << std::endl;
+
+    // 5. 接受一个新连接
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+    
+    // 读取客户端数据
+    int valread = read(new_socket, buffer, 1024);
+    std::cout << "收到消息: " << buffer << std::endl;
+
+    // 发送响应
+    char* response = "Hello from server";
+    send(new_socket, response, strlen(response), 0);
+    std::cout << "响应已发送。" << std::endl;
+
+    // 关闭 socket
+    close(new_socket);
+    close(server_fd);
+
+    return 0;
+}
+```
