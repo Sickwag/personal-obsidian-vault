@@ -13,28 +13,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/ProjectsStudy/FromProjects/servertech-chat.md",
+                "file": "学习/algorithm/题型分类.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "servertech-chat"
-            }
-          },
-          {
-            "id": "8cd4b5bceb0d0cf1",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/ProjectsStudy/WriteByMyself/BookManageSystem+mysql.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "BookManageSystem+mysql"
+              "title": "题型分类"
             }
           }
         ]
@@ -90,8 +75,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -214,9 +198,17 @@
   },
   "active": "43fb53e963a1dc96",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/PixPin_2025-11-05_16-16-10.png",
+    "Files & LongText/Attachments/Pasted image 20251105161504.png",
+    "Files & LongText/Attachments/fenwick.svg",
+    "学习/algorithm/分析优化.md",
+    "学习/algorithm/题型分类.md",
+    "学习/ProjectsStudy/FromProjects/servertech-chat.md",
+    "未命名 2.base",
+    "未命名 1.base",
+    "未命名.base",
     "学习/ProjectsStudy/WriteByMyself/BookManageSystem+mysql.md",
     "学习/Language/SQL/MySQL.md",
-    "学习/ProjectsStudy/FromProjects/servertech-chat.md",
     "学习/其他专业书/Modern C++.md",
     "Files & LongText/Attachments/v2-7a2e0860eecee953296458dc06cb2b40_720w.webp",
     "学习/其他专业书/C++并发编程实战（第二版）.md",
@@ -224,7 +216,6 @@
     "学习/其他专业书/QT6开发指南.md",
     "Files & LongText/Attachments/PixPin_2025-11-04_10-31-04.png",
     "Files & LongText/Attachments/PixPin_2025-11-04_10-22-05.png",
-    "学习/algorithm/题型分类.md",
     "学习/algorithm/用法导向知识.md",
     "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
@@ -241,13 +232,11 @@
     "学习/ProjectsStudy/WriteByMyself/CodeLineCounter 1.md",
     "Files & LongText/Attachments/Pasted image 20251031205759.png",
     "Files & LongText/Attachments/Pasted image 20251031202414.png",
-    "Files & LongText/Attachments/Pasted image 20251031202354.png",
     "学习/ProjectsStudy/WriteByMyself/CodeLineCounter.md",
     "学习/ProjectsStudy/FromDocs/frmdevicebutton.md",
     "Files & LongText/Long code/C++ practice case.md",
     "学习/Bases/设计模式/详解设计模式（视频教程）.md",
     "学习/Geography Learning/From Tutorial/ArcGIS Pro 中的 Notebooks 入门.md",
-    "学习/Geography Learning/AI QA/arcpy AddXY 工具添加救护车坐标.md",
     "学习/Geography Learning/From Tutorial",
     "学习/Geography Learning/AI QA",
     "学习/Geography Learning",
@@ -255,10 +244,6 @@
     "日记",
     "学习/Scattered knowlegde/计算机二级考试",
     "学习/Scattered knowlegde/装机",
-    "学习/Scattered knowlegde/快捷键",
-    "学习/Scattered knowlegde/PR",
-    "学习/Scattered knowlegde",
-    "Files & LongText/Attachments/Pasted image 20250813221222.png",
     "未命名.canvas",
     "未命名 1.canvas"
   ]
