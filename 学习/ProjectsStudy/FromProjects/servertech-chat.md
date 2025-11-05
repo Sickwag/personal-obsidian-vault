@@ -21,15 +21,93 @@
 cmake . -DCMAKE_CXX_STANDARD=17 && make
 ```
 出现 main 文件之后继续按照指引即可
-# 代码分析（按文件）
-## server
-### src/util/cookie. cpp & include/util/cookie. hpp
-#### http 响应格式
+# 前置要求
+## 协程
+参考：[一篇文章搞懂c++ 20 协程 Coroutine - 知乎](https://zhuanlan.zhihu.com/p/615828280)
+[ c++20的协程该怎么使用? - 知乎](https://www.zhihu.com/question/405668774/answer/2438678999)
+[C++20 协程，99% 的程序员都没完全搞懂！你要做那 1% 吗？ 这可能是全网C++协程讲的最好的视频_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Cz9NYFE8E/?spm_id_from=333.337.search-card.all.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
+### 协程基本概念和原理
+协程是**可以重入的特殊函数**。就是这个函数在执行的过程，可以（通过 `co_await` ,或者 `co_yield`）挂起，然后在外部（通过 `coroutine_handle`）恢复运行。主要目的是用于**异步编程**。
+> [!应用场景] 
+> 每次一次协程的挂起都可以视为协程进入一个等待状态，比如请求一个网络，需要HTTP get一个文件，然后对文件进行分析。那么就可以用协程来包装整个处理，在发起HTTP请求后，挂起协程（处理其他事情），等待应答或者超时后，再恢复协程的运行。
+
+- 协程分为无栈协程和有栈协程两种，**无栈指可挂起/恢复的函数**，有栈协程则相当于用户态线程。有栈协程切换的成本是用户态线程切换的成本，而无栈协程切换的成本则相当于**函数调用的成本**。
+- 无栈协程只能被线程调用，**本身并不抢占内核调度**，**而线程则可抢占内核调度**。
+- 由于 C++设计哲学是***零成本抽象***，并且致力于***使用同步语法写异步代码***，所以协程采用的是无栈协程而不是有栈协程。
+
+> [!有栈协程]
+> 有栈（stackful）协程通常的实现手段是在堆上提前分配一块较大的内存空间（比如 64K），也就是协程所谓的“栈”，**参数、return address 等**都可以存放在这个“栈”空间上。如果需要协程切换，那么通过 swapcontext 一类的形式来让系统认为这个堆上空间就是普通的栈，这就实现了上下文的切换。
+> 
+> “栈”空间普遍是比较小的，在使用中有栈溢出的风险；而如果让“栈”空间变得很大，对内存空间又是很大的浪费。无栈协程则没有这些限制，既没有溢出的风险，也无需担心内存利用率的问题。
+> 
+> 有栈协程在切换时确实比系统线程要轻量，但是和无栈协程相比仍然是偏重的，无栈协程可以做到**纳秒级**切换
+
+普通的函数函数体顺序执行，无法暂停挂起，跟别说恢复，协程函数可以
+![[v2-7a2e0860eecee953296458dc06cb2b40_720w.webp]]
+C++的协程（协程函数）内部可以用**co_await** , **co_yield**. 两个关键字挂起协程，**co_return**, 关键字进行返回。**如果一个函数中存在这三个关键字之一，那么它就是一个协程**。
+### 协程函数和普通函数的区别
+普通函数是**线程相关的**，协程不依赖于特定线程
+
+
+### 协程关键字
+`co_await` 调用一个awaiter对象（可以认为是一个接口），根据其内部定义决定其操作是挂起，还是继续，以及挂起，恢复时的行为。其呈现形式为
+```cpp
+// cw_ret 记录调用的返回值，其是awaiter的await_resume 接口返回值。
+cw_ret = co_await  awaiter;
+```
+`co_yield`挂起协程。其出现形式是
+```cpp
+co_yield  cy_ret;
+```
+cy_ret会保存在promise承诺对象中（通过 `yield_value` 函数）。在协程外部可以通过promise得到。
+
+`co_return` 协程返回。其出现形式是
+```cpp
+co_return cr_ret;
+```
+cr_ret会保存在promise承诺对象中（通过`return_value`函数）。在协程外部可以通过promise得到。要注意，cr_ret并不是协程的返回值。这个是有区别的。
+
+### 协程相关对象
+#### 协程帧(coroutine frame)
+当 caller 调用一个协程的时候会先创建一个协程帧，协程帧会构建 promise 对象，再通过 promise 对象产生 return object。
+协程帧中主要有这些内容：
+- 协程参数
+- 局部变量
+- promise 对象
+
+这些内容在协程恢复运行的时候需要用到，caller 通过协程帧的句柄 std::coroutine_handle 来访问协程帧。
+#### promise_type
+promise_type 是 promise 对象的类型。promise_type 用于定义一类协程的行为，包括
+- 协程创建方式
+- 协程初始化完成和结束时的行为
+- 发生异常时的行为
+- 如何生成 awaiter 的行为
+- co_return 的行为
+promise 对象可以用于记录/存储一个协程实例的状态。每个协程帧与每个 promise 对象以及每个协程实例是一一对应的。
+#### coroutine return object
+它是`promise.get_return_object()`方法创建的，一种常见的实现手法会将 coroutine_handle 存储到 coroutine object 内，使得该 return object 获得访问协程的能力
+#### std::coroutine_handle
+协程帧的句柄，主要用于访问底层的协程帧、恢复协程和释放协程帧。
+程序员可通过调用 `std::coroutine_handle::resume()` 唤醒协程。
+#### co_await、awaiter、awaitable
+- co_await：一元操作符；
+- awaitable：支持 co_await 操作符的类型；
+- awaiter：定义了 await_ready、await_suspend 和 await_resume 方法的类型。
+
+co_await expr 通常用于表示等待一个任务(可能是 lazy 的，也可能不是)完成。co_await expr 时，expr 的类型需要是一个 awaitable，而该 co_await表达式的具体语义取决于根据该 awaitable 生成的 awaiter。
+## 设计方法
+### 低内聚，高耦合--精简头文件内容
+除非是编写纯头文件库，否则建议将一个文件中函数/变量定义和实现分开。
+但是也不是源文件中的所有函数/变量都需要在头文件中对应，如果头文件的某些函数实现需要很多工具函数辅助，但是他们只会帮助头文件中函数的实现，而对外部没有帮助，这时候就可以**不必将他们在头文件中声明，而在 cpp 文件中写入定义+声明**。
+- 减少头文件 include 的成本，代码复制也是时间
+- 他们不在其他文件使用，**如果考虑可能有命名污染还可以用匿名命名空间包裹**
+- 如果他们被频繁使用但是作用于局限于当前文件，考虑使用 `static const` 修饰
+## http 响应格式
 1. 什么是 HTTP
  HTTP (HyperText Transfer  Protocol)。它是互联网上应用最广泛的一种网络协议，用于从 Web  服务器传输超文本到本地浏览器。
 HTTP 有一个非常重要的特性：**它是无状态的 (Stateless)**
 想象一下你去银行办业务：
-* 无状态：你每次去柜台，柜员都把你当成一个全新的客户。你第一次去取钱，第二次去存钱，每次柜 员都会问你“你是谁？你要办什么业务？”。他们不记得你上次来过。
+* 无状态：你每次去柜台，柜员都把你当成一个全新的客户。你第一次去取钱，第二次去存钱，每次柜员都会问你“你是谁？你要办什么业务？”。他们不记得你上次来过。
 * HTTP 也是如此：你的浏览器（客户端）向服务器发送一个请求（比如“给我首页”），服务器返回一个响应（首页的 HTML）。然后你点击一个链接（比如“查看我的订单”），浏览器又发送一个新请求。对于服务器来说，这两个请求是完全独立的，它**不知道这两个请求来自同一个用户**，**也不知道你刚刚才访问过首页**。
 
 2. **什么是 HTTP 响应头？**
@@ -38,7 +116,7 @@ HTTP 通信由请求 (Request) 和响应 (Response) 组成。
 * HTTP 响应：服务器返回给你的浏览器信息。
 
 无论是请求还是响应，都包含两大部分：
-* 头部 (Header)：包含关于请求或响应的元数据（即“关于数据的数据”）。就像你寄信的信封上写着 寄件人、收件人、邮票、以及“请勿折叠”等说明。
+* 头部 (Header)：包含关于请求或响应的元数据（即“关于数据的数据”）。就像你寄信的信封上写着寄件人、收件人、邮票、以及“请勿折叠”等说明。
 * 主体 (Body)：包含实际的数据内容。就像信封里的信纸内容。
 
 HTTP 响应头就是服务器在返回数据给浏览器时，在实际数据（Body）之前发送的一些额外信息。这些信息告诉浏览器如何处理响应、响应的类型、服务器的信息等等。
@@ -72,9 +150,9 @@ Content-Length: 12345
 
 4. Set-Cookie 的工作原理是什么？
   Set-Cookie 是一个特殊的 HTTP 响应头。它的工作原理是：
-   - 服务器发送 `Set-Cookie`：当服务器希望浏览器保存一些信息时（例如用户登录成功后），它会在HTTP 响应中添加一个 Set-Cookie 头。
-   - 浏览器保存 Cookie：浏览器收到 Set-Cookie头后，会根据其中的指示，将这些信息（Cookie）存储在本地。
-   - 浏览器自动发送 `Cookie`：在后续的每次请求中，只要请求的 URL 符合 Cookie的域和路径等条件，浏览器都会自动将之前保存的 Cookie 信息放在 Cookie请求头中发送给服务器。
+   - 服务器发送 `Set-Cookie`：当服务器希望浏览器保存一些信息时（例如用户登录成功后），它会在 HTTP 响应中添加一个 Set-Cookie 头。
+   - 浏览器保存 Cookie：浏览器收到 Set-Cookie 头后，会根据其中的指示，将这些信息（Cookie）存储在本地。
+   - 浏览器自动发送 `Cookie`：在后续的每次请求中，只要请求的 URL 符合 Cookie 的域和路径等条件，浏览器都会自动将之前保存的 Cookie 信息放在 Cookie 请求头中发送给服务器。
    - 服务器识别用户：服务器收到 Cookie 请求头后，就能从中读取信息，从而识别出是哪个用户发来的请求，并根据这些信息来维护用户的状态。
 4. 什么是 HTTP 规范的 Set-Cookie 字符串，为什么需要它？
 
@@ -96,7 +174,11 @@ Content-Length: 12345
 * 互操作性：确保所有符合标准的浏览器和服务器都能正确地发送、接收和处理 Cookie。
 * 安全性：通过 HttpOnly、Secure、SameSite 等属性，可以大大降低 Cookie 被窃取或滥用的风险。
 6. 网络通信为什么需要它？
-     Set-Cookie 和 Cookie 机制是 Web 应用中实现用户状态管理的基石。没有它，每次用户点页面，  服务器都不知道你是谁，你就无法保持登录状态，无法使用购物车，无法享受个性化服务。它弥补了  HTTP 无状态的缺陷，使得复杂的 Web 应用成为可能。
+     Set-Cookie 和 Cookie 机制是 Web 应用中实现用户状态管理的基石。没有它，每次用户点页面，服务器都不知道你是谁，你就无法保持登录状态，无法使用购物车，无法享受个性化服务。它弥补了  HTTP 无状态的缺陷，使得复杂的 Web 应用成为可能。
+
+# 代码分析（按文件）
+## server
+### src/util/cookie. cpp & include/util/cookie. hpp
 #### 检查字符是否合法--查找表方法
 ```cpp
 // 判断字符是否为 HTTP token 的有效字符 (RFC2616/RFC7230)。Cookie 名必须是有效的 token。
@@ -130,13 +212,6 @@ tab 表是一个 256 字节的表，其中中为 1 的位置表示 ascii 表中�
 CPU 缓存友好，程序需要判断一个字符时，它只需要将字符的 ASCII值作为索引去访问 tab 数组相应位置，即可得到他是否是合法的。
 常规写法 `if(c >= 'a' && c <= 'z' || c >='A' && c <= 'Z'))` 中 if 分支会因为 CPU 分支预测，缓存未命中带来性能损失。
 查找表在**未出现溢出错误**的情况下没有分支，速度极快。
-
-#### 低内聚，高耦合--精简头文件内容
-除非是编写纯头文件库，否则建议将一个文件中函数/变量定义和实现分开。
-但是也不是源文件中的所有函数/变量都需要在头文件中对应，如果头文件的某些函数实现需要很多工具函数辅助，但是他们只会帮助头文件中函数的实现，而对外部没有帮助，这时候就可以**不必将他们在头文件中声明，而在 cpp 文件中写入定义+声明**。
-- 减少头文件 include 的成本，代码复制也是时间
-- 他们不在其他文件使用，**如果考虑可能有命名污染还可以用匿名命名空间包裹**
-- 如果他们被频繁使用但是作用于局限于当前文件，考虑使用 `static const` 修饰
 #### 零拷贝 cookie 解析器
 cookie_list 类是一个零拷贝（Zero-Copy）的解析器，用于解析客户端发送的 `Cookie`   请求头字符串。它的主要目的是高效地从一个长字符串中提取出所有的 Cookie 名称-值对，而无需进行额外的内存分配和字符串复制。
 其中的响应头解析使用的字符串是 `const char*` 类型了，所有的工具函数都是用了指针运算加快速度，可能会有点晕。本质上是：
@@ -161,7 +236,7 @@ email. cpp 及其头文件的功能是否是我理解诶的那样：
 1. is_email 函数用来判断一个电子邮件地址字符串是否符合合法的电子邮件格式，由于电子邮件地址中可能包含 Unicode 字符
 2. 而标准库中的 regex 不支持，所以这里使用了 `boost:: make_u32regex` 函数来构建一个能够匹配含有 Unicode 字符的电子邮件地址正则表达式对象
 ### src/util/scrypt. cpp & include/util/scrypt. hpp
-#### 函数工作原理
+#### 加密函数工作原理
 - `scrypt_generate_hash` 的工作原理：
   `scrypt_generate_hash` 函数接收用户输入的明文密码字符串 (passwd)、一个随机生成的盐值 (salt) 和 scrypt 算法的参数 (params)。它通过调用底层的 OpenSSL 库，执行 scrypt算法，计算出一个固定大小的哈希值。这个哈希值是一个**二进制数据块(blob)**，存储在 `std::array<unsigned char, hash_size>` 中
 -  `scrypt_phc_parse` 的作用:
@@ -281,6 +356,9 @@ signals.async_wait([st, &ctx](boost::system::error_code, int) {
 `run_server` 是一个协程，用来启动所有服务
 使用 `asio::ip::tcp::acceptor` 接受所有的**入站请求**，所有由外部发送到**其监听端口**的 tcp 都由 acceptor 统一接受管理，并转交给内核。
 关于 `SO_REUSEADDR`：
+当你关闭一个 TCP 服务器时，操作系统内核会将该端口保持在 `TIME_WAIT` 状态（通常为 2-4 分钟）。这是 **TCP协议的正常行为**，确保所有延迟的数据包能被正确处理。
+但是开发过程中需要频繁运行项目，不使用 reuseaddr 会导致下次传入同样的端口**绑定失败**，需要几分钟之后才可以（这是由系统内核管控的）
+
 在原生 C 代码中，连接到 tcp 服务需要：
 ```cpp
 #include <iostream>
@@ -304,7 +382,6 @@ int main() {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
-
     // 2. 设置 SO_REUSEADDR 选项
     // SOL_SOCKET: 表示选项级别是套接字层
     // SO_REUSEADDR: 要设置的选项名
@@ -343,17 +420,29 @@ int main() {
     
     // 读取客户端数据
     int valread = read(new_socket, buffer, 1024);
-    std::cout << "收到消息: " << buffer << std::endl;
-
+    std::cout << "收到消息: " << buffer << std::endl
     // 发送响应
     char* response = "Hello from server";
     send(new_socket, response, strlen(response), 0);
     std::cout << "响应已发送。" << std::endl;
-
     // 关闭 socket
     close(new_socket);
     close(server_fd);
 
     return 0;
 }
+```
+acceptor 封装了这些操作，简化了设置方式
+```cpp
+acceptor.open(listening_endpoint.protocol());
+acceptor.set_option(asio::socket_base::reuse_address(true));
+acceptor.bind(listening_endpoint);
+acceptor.listen();
+```
+常用的设置配置有：
+```cpp
+// 在open之后，bind之前使用， 可以多次调用设置添加配置
+acceptor.set_option(asio::socket_base::reuse_address(true));
+acceptor.set_option(asio::ip::tcp::no_delay(true)); // 禁用 Nagle's algorithm
+acceptor.set_option(asio::socket_base::keep_alive(true));
 ```
