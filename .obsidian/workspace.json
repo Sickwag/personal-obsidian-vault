@@ -75,8 +75,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -196,7 +195,7 @@
       "quiz-generator:Open generator": false
     }
   },
-  "active": "583a7a67cecc9581",
+  "active": "fb472bc440e7a387",
   "lastOpenFiles": [
     "学习/Bases/计算机网络/Linux高性能服务器编程.md",
     "学习/Bases/开发情景&面试题/面试题.md",
