@@ -67,8 +67,151 @@ C++更青睐线程间通信
 #### 并发和并行
 两个术语都是指使用可调配的硬件资源同时运行多个任务，但并行更强调性能
 ## 为什么要使用并发
-### 分离关注点
+**分离关注点**
 比如播放器应用，处理用户的操作和视频播放是两个不同的关注点，如果作为一个关注点是现在一个线程中，那么必须**定期检查用户是否执行了操作**，就会导致
 - 这个暂停检查的时间必须非常短（否则影响播放）且频繁（否则用户操作丢失）
 - 代码上两种逻辑就会混在一起，难以维护
-- 
+**性能**
+尴尬并行算法，每个线程执行同一算法的不同部分，只要硬件支持程度和并行程度成正相关
+资源并发，为不同的数据执行相同的操作，比如视频渲染场景中，不同线程处理视频不同区域
+什么时候避免并发
+**收益小于代价**
+1. 线程启动固有开销
+2. 线程资源是有限的，每个线程都在栈上占用固定大小内存
+3. 线程太多可能导致切换进程的**上下文保存+恢复时间**大于实质工作时间
+
+# 线程管控
+C++标准库还是有可能无法达到性能要求，无法提供所需的功能，但这种情况非常少，一旦出现这种情况，就似乎有必要使用平台专属的工具了。
+## 线程的基本管控
+### 发起线程
+每个线程中的任务在 return 之后被终结，每个程序只有在 main 函数运行后，C++runtime 运行之后才能**发起更多线程**
+任何可调用类型（callable type）都适用于 `std::thread`，最常使用的是重载 `()` 符的类/结构体或者使用 lambda 作为线程的启动方式
+```cpp
+class background_task {
+public:
+	void operator()() const {
+		do_something();
+		do_something_else();
+	}
+};
+background_task f;
+std::thread my_thread(f);
+```
+f 作为参数，它被**复制到属于新线程的存储空间**中，并在那里被调用，由新线程执行。故此，副本的行为必须与原本的函数对象等效
+注意发起线程过程中的“**最麻烦的解释过程**”：
+
+> [!warning]
+> 语句“`std::thread my_thread(background_task());`”的本意是发起新线程，却被解释成**函数声明**：函数名是 my_thread，只接收一个参数，返回 `std::thread` 对象，接收的参数是函数指针，所指向的函数没有参数传入，返回 background_task 对象；
+
+简而言之，这样的**既可以被解释为函数声明，又可以被解释为类调用构造函数实例化对象的语法会被编译器默认解释为前者**
+使用括号或者列表初始化语法可以避免：
+```cpp
+std::thread my_thread((background_task()));
+std::thread my_thread{background_task()};
+```
+一旦启动了线程（**使用 `std::thread` 创造了线程对象，构造函数中的任务就已经开始运行了**），我们就需明确是要等待它结束（与之汇合，见 2.1.2 节），还是任由它独自运行（与主线程分离 detach），这个决定**只需要在 thread 对象销毁前决定即可**
+如果决定现成需要分离运行，那么必须要注意生命周期问题：
+```cpp
+struct func {
+    int& i;
+    func(int& i_) : i(i_) {}
+    void operator()() {
+        for (unsigned j = 0; j < 1000000; ++j) {
+            do_something(i);
+        }
+    }
+};
+void oops() {
+    int some_local_state = 0;
+    func my_func(some_local_state);
+    std::thread my_thread(my_func);  // 非常耗时
+    my_thread.detach();// 分离运行
+}
+```
+`some_local_state` 是临时变量，my_thread 可能在 oops 函数结束之后还在运行，这时候 some_local_state 变量已经被销毁，导致 i 悬空引用
+解决方式有：
+方案1：等待线程完成（推荐）
+```cpp
+void safe_version() {
+    int some_local_state = 0;
+    func my_func(some_local_state);
+    std::thread my_thread(my_func);
+    my_thread.join();  // 等待线程完成
+}
+```
+方案2：传递值而非引用
+```cpp
+struct func_safe {
+    int i;  // 值而非引用
+    func_safe(int i_) : i(i_) {}
+    void operator()() {
+        for (unsigned j = 0; j < 1000000; ++j) {
+            do_something(i);  // 安全的副本
+        }
+    }
+};
+```
+方案3：使用智能指针
+```cpp
+void smart_pointer_version() {
+    auto state = std::make_shared<int>(0);
+    std::thread my_thread([state] {
+        for (unsigned j = 0; j < 1000000; ++j) {
+            do_something(*state);
+        }
+    });
+    my_thread.detach();
+}
+```
+### 等待线程完成
+C++20 中引入了 `std::jthread` 对象，在析构时自动调用 `join()` 函数
+调用 join 会导致**调用 join 的线程**被阻塞，然后这个调用的线程就会清空调用 join() 对象执行完毕所有内容之后清空他的资源（这保证了每个 `std::thread` 对象只能 join 一次，joinable 返回 false）
+`std::thread` 对象有三种状态：
+1. **可汇合（joinable）** - 关联着正在运行或可连接的线程
+2. **已汇合（joined）** - 线程已结束，资源已清理
+3. **已分离（detached）** - 线程在后台运行，无法再管理
+### 异常情况下的等待
+如果线程的 joinable 状态很重要，需要被别的地方用到，**线程启动以后有异常抛出，而 join () 尚未执行**，则该 join () 调用会被略过。
+解决这一问题的方法是：
+```cpp
+struct func;
+void f() {
+    int some_local_state = 0;
+    func my_func(some_local_state);
+    std::thread t(my_func);
+    try {
+        do_something_in_current_thread();
+    } catch (...) {
+        t.join();
+        throw;
+    }
+    t.join();
+}
+```
+或者使用 RAII 风格的类管理：
+```cpp
+class thread_guard {
+    std::thread& t;
+
+   public:
+    explicit thread_guard(std::thread& t_) : t(t_) {}
+    ~thread_guard() {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+    thread_guard(thread_guard const&) = delete; // 防止重复析构释放内存
+    ③ thread_guard& operator=(thread_guard const&) = delete;
+};
+struct func;
+void f() {
+    int some_local_state = 0;
+    func my_func(some_local_state);
+    std::thread t(my_func);
+    thread_guard g(t);
+    do_something_in_current_thread();
+}
+```
+
+### 后台运行线程
+调用 `std::thread` 对象的成员函数 `detach()`，会令线程在后台运行，遂无法与之直接通信。假若线程被分离，就无法等待它完结，也不可能获得与它关联的 `std::thread` 对象，因而无法汇合该线程
