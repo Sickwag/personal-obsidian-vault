@@ -461,3 +461,79 @@ acceptor.set_option(asio::socket_base::reuse_address(true));
 acceptor.set_option(asio::ip::tcp::no_delay(true)); // 禁用 Nagle's algorithm
 acceptor.set_option(asio::socket_base::keep_alive(true));
 ```
+servers 中，使用一个死循环，一直监听**已经设置好的 ip 和端口号的**acceptor，监听是否有新的 tcp 连接传入，
+```cpp
+asio::awaitable<void> chat::run_server(...) {
+    // ... 初始化 acceptor ...
+    while (true)  // 无限循环
+    {
+        // 协程在这里挂起，等待连接
+        asio::ip::tcp::socket sock = co_await acceptor.async_accept();
+        // 有连接到达后，协程恢复执行
+        // 启动新会话处理，主线程继续等待下一个连接
+        asio::co_spawn(...);
+    }
+    // 这个 while(true) 只有在 io_context 被停止时才会退出
+}
+```
+根据 [[#src/main. cpp]] 中的代码：
+```cpp
+auto st = std::make_shared<shared_state>(doc_root, ctx.get_executor());
+// ....
+signals.async_wait([st, &ctx](boost::system::error_code, int) {
+    st->redis().cancel();
+    st->mysql().cancel();
+    ctx.stop();
+});
+```
+st 使用的是当前的协程，所以一旦出现中断信号，ctx 被终止，io_context 会让协程终止，run_server 的协程也就会被关闭，监听自动关闭
+
+### src/http_serssion. cpp & include/http_session. hpp
+使用错误码，即 `boost::system::error_code` 作为错误的识别标志，比抛出异常并处理的方式开销更小，网络错误中错误很常见，如果都使用抛出错误方式解决会有性能问题。
+#### 请求发起和请求路径
+##### 请求路径
+```md
+完整 URL: https://example.com:8080/api/login?user=john#section1
+协议:     https:
+主机名:   example.com
+端口:     :8080
+路径:     /api/login
+查询参数: ?user=john
+片段:     #section1
+```
+
+`using handler_fn = asio::awaitable<http::message_generator> (*)(request_context&, shared_state&);` 定义一个函数指针，指向一个返回类型为 `asio::awaitable<http::message_generator>*;` 的指针，这个指针是一个接受 `request_context&` 和 `shared_state&` 参数的函数，它的作用是统一请求的格式
+```cpp
+// 定义路由表
+constexpr api_endpoint endpoints[] = {
+    {"/create-account", http::verb::post, handle_create_account},  //指向具体的处理函数
+    {"/login",          http::verb::post, handle_login         },  //指向具体的处理函数
+};
+
+// 端点定义
+struct api_endpoint {
+    std::string_view path;    // 路径，如 "/login"
+    http::verb method;        // HTTP 方法，如 POST
+    handler_fn handler;       // 处理函数指针
+};
+```
+```cpp
+// 匹配 URL 路径到处理函数
+auto first = std::find_if(
+    std::begin(endpoints),
+    std::end(endpoints),
+    [endpoint_path](const api_endpoint& e) { return e.path == endpoint_path; });
+
+// 找到匹配的处理函数
+handler_fn handler = nullptr;
+for (auto it = first; it != std::end(endpoints) && it->path == endpoint_path; ++it) {
+    if (it->method == ctx.request_method()) {
+        handler = it->handler;  // 找到了对应的处理函数
+        break;
+    }
+}
+
+// 调用处理函数
+std::optional<http::message_generator> gen;
+gen = co_await handler(ctx, st);
+```
