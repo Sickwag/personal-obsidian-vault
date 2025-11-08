@@ -501,6 +501,15 @@ st 使用的是当前的协程，所以一旦出现中断信号，ctx 被终止�
 查询参数: ?user=john
 片段:     #section1
 ```
+boost 中，`boost::beast::http::request<boost::beast::http::string_body>` 是一个 boost 用来标准化处理请求头中各个键值对的容器对象
+```md
+GET /api/login?user=john HTTP/1.1
+Host: example.com
+Content-Type: application/json
+```
+这样一个请求头中，除第一行外的**键值对**都可以使用**同名方法**获取其值，GET 是请求动作 `http::field::verb`， url 及其参数是 target，可以使用 `target()` 获取，http 版本可以使用 `version` 获取，这也是如果要构造这个对象需要使用初始化列表语法填入这三个内容，他们是必须的
+
+
 
 `using handler_fn = asio::awaitable<http::message_generator> (*)(request_context&, shared_state&);` 定义一个函数指针，指向一个返回类型为 `asio::awaitable<http::message_generator>*;` 的指针，这个指针是一个接受 `request_context&` 和 `shared_state&` 参数的函数，它的作用是统一请求的格式
 ```cpp
@@ -517,6 +526,8 @@ struct api_endpoint {
     handler_fn handler;       // 处理函数指针
 };
 ```
+这样规范了所有 api 分类中的请求，如果发送的 http 请求路径是 api/create-account，**并且请求类型为 POST**，那么就执行对应的 `handle_create_account` 函数，login 同理
+下面通过遍历方法来找到对应操作的执行方法
 ```cpp
 // 匹配 URL 路径到处理函数
 auto first = std::find_if(
@@ -537,3 +548,13 @@ for (auto it = first; it != std::end(endpoints) && it->path == endpoint_path; ++
 std::optional<http::message_generator> gen;
 gen = co_await handler(ctx, st);
 ```
+### src/request_context. cpp & include/request_context. hpp
+```cpp
+boost::beast::http::response<boost::beast::http::string_body>  // 构建响应头
+boost::beast::http::request<boost::beast::http::string_body>   // 构建请求头
+```
+使用这两个对象构建头之后，最好都要调用一遍 `prepare_payload` 用来
+1. 自动计算 Content-Length: 根据响应体大小设置头部
+2. 处理 Transfer-Encoding: 如需要，设置 chunked 编码
+3. 验证协议合规性: 确保响应符合 HTTP 规范
+4. 优化传输格式: 准备最有效的传输格式
