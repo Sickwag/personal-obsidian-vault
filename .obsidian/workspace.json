@@ -91,12 +91,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -212,7 +212,7 @@
       "quiz-generator:Open generator": false
     }
   },
-  "active": "a0e7013f8ff50f03",
+  "active": "d1e212fee3e1649e",
   "lastOpenFiles": [
     "学习/ProjectsStudy/FromProjects/servertech-chat.md",
     "学习/其他专业书/Modern C++.md",
