@@ -564,4 +564,144 @@ response_builder 类用来通过 api 方便地构建各式各样的 http 响应�
 
 request_context 则用来解析客户端发来的 http 请求头内容，解析出其中的 url 信息，如果请求头的 body 是 json 格式，则解析出 json 数据内容，最后通过 response_builder 生成响应头内容
 
-### include/
+### include/redis_client. hpp & src/services/redis_client. cpp
+#### `boost::system::result` 和传统错误处理方法比较
+```cpp
+// 方式1: 异常处理（性能开销大）
+try {
+    auto result = some_function();  // 可能抛异常
+} catch (const std::exception& e) {
+    // 处理异常
+}
+
+// 方式2: 错误码 + 引用参数（不直观）
+bool some_function(int& output, boost::system::error_code& ec);
+
+// 方式3: 返回 pair（不优雅）
+std::pair<value_type, boost::system::error_code> some_function();
+```
+它是一个变体类型，可以存储两种状态之一：
+- 成功状态: 包含类型 T 的值
+- 错误状态: 包含 `boost::system::error_code`
+使用 `boost::system::result` 可以简化和格式化错误处理流程：
+```cpp
+// 方式4: result 容器（清晰、类型安全）
+boost::system::result<int> result = some_function();
+if (result.has_value()) {
+    int value = result.value();  // 获取成功值
+    // 正常处理
+} else {
+    auto error = result.error(); // 获取错误码
+    // 错误处理
+}
+```
+#### 设计模式层面
+使用了 pimpl 模式，头文件中只实现接口，源文件中实现接口定义，并且实现接口的方法不是简单实现，而使继承实现。头文件中只暴露一个工厂函数接口
+
+#### 消息处理
+如果知道房间号，那么就可以调用 `get_root_history` 获取房间号中对应的所有聊天记录，使用message_batch型封装，其中的 `std::vector<message>` 中保存了所有这个房间的信息。如果一次受限于常数essage_batch_size大小，所有聊天记录条数大于这个常数，那么就会给batch标识 `has_more =true`，这样如果客户端想要加载更多消息之后再次发送的请求中只需要记录上次看到的最后一条消息的 message_id 就能够实现滚动无限加载
+```cpp
+asio::awaitable<result<std::vector<message_batch>>> get_room_history(
+    std::span<const room_history_request> input) final override {
+    assert(!input.empty());
+
+    // 说明: `XREVRANGE` 用于从 Redis Stream 中按时间倒序获取消息。
+    redis::request req;
+    for (const auto& room_req : input) {
+        // `+` 表示从最新的消息开始获取。`(` 表示从指定消息ID的前一条开始获取，用于分页。
+        std::string stream_ref = room_req.last_message_id ? "(" : "+";
+        if (room_req.last_message_id)
+            stream_ref.append(*room_req.last_message_id);
+        req.push("XREVRANGE", room_req.room_id, stream_ref, "-", "COUNT", message_batch_size);
+    }
+
+    // 2. 执行请求
+    redis::generic_response res;
+    error_code ec;
+    co_await conn_.async_exec(req, res, asio::redirect_error(ec));
+    if (ec)
+        co_return ec;
+    if (res.has_error())
+        CHAT_CO_RETURN_ERROR(errc::redis_command_failed);
+
+    // 3. 解析响应
+    // `parse_room_history_batch` (在 redis_serialization.hpp 中) 会将 Redis 的响应转换为 C++ 对象
+    auto result = parse_room_history_batch(*res);
+    if (result.has_error())
+        co_return result.error();
+
+    // 4. 设置 `has_more` 标志，用于客户端实现无限滚动加载。
+    for (chat::message_batch& batch : *result)
+        batch.has_more = batch.messages.size() >= message_batch_size;
+
+    co_return std::move(*result);
+}
+```
+注意这里将一**一个用户对于所有房间的请求**封装在一个 req 中，减少了网络 io 次数，执行 redis 请求的代码是固定的。解析响应函数（如 `parse_room_history_batch`）用于将 redis 返回内容解析为对应房间中的所有消息
+
+其中 `XREVANGE` 这个 redis 命令用法为：
+```redis
+XREVRANGE key end start [COUNT count]
+```
+其中 end 和 start 都是消息 ID **但支持特殊语法**
+
++ 最大 ID
+1 stream_ref = "+";  // 表示时间戳最大的 ID（start 位置填入+表示 id 最大的）
+```bash
+XREVRANGE "beast" "+" "-" COUNT 20
+// 获取从最新消息开始的 20 条消息
+```
+- 最小 ID
+```bash
+// 总是作为 start 参数，表示最早的那条消息
+XREVRANGE "beast" "+" "-" COUNT 20
+//                    ↑ 表示从最旧的消息结束
+```
+不使用括号（包含指定 ID）
+```
+```bash
+XREVRANGE "beast" "1698123456789-0" "-" COUNT 20
+// 获取 ID 为 "1698123456789-0" 及之前的消息
+// 包含 "1698123456789-0" 这条消息
+```
+使用括号（排除指定 ID）
+```bash
+XREVRANGE "beast" "(1698123456789-0" "-" COUNT 20
+// 获取 ID 比 "1698123456789-0" 更小的消息
+// 不包含 "1698123456789-0" 这条消息
+```
+
+
+最终返回值中由于 `*result` 是一个左值 `auto result = parse_batch_xadd_response(*res);`，并且拥有数据的同时数据产生之后就要马上使用，并不需要长生命周期保存。
+虽然 C++中的 std 容器都实现了移动语义，但是这种情况仅发生在**返回函数内部局部 std 对象**（C++17 以后还可能直接在栈上构造，不需要复制或者移动）时触发，具体可以参考 [[Modern C++#移动语义]]
+
+### include/services/redis_serialization. hpp & src/services/redis_serialization. cpp
+parse_room_history_batch 函数用来解析 redis stream XREVRANGE 命令返回非常复杂的嵌套数组结构：
+```json
+[
+  [  // 房间1的消息数组
+    ["1698123456789-0", [["payload", "{\"content\":\"hello\",\"timestamp\":12345,\"user_id\":1}"]]],
+    ["1698123456788-0", [["payload", "{\"content\":\"world\",\"timestamp\":12344,\"user_id\":2}"]]],
+    // ... 更多消息
+  ],
+  [  // 房间2的消息数组
+    ["1698123456790-0", [["payload", "{\"content\":\"redis\",\"timestamp\"  :12346,\"user_id\":3}"]]],
+    // ... 更多消息
+   ]
+ ]
+```
+- Boost.Redis 不能直接解析 Redis Stream 响应,它只提供底层的 resp3:: node 数组，需要手动解析
+- 如果尝试 json 解析会报错，因为 Redis 返回的不是标准 JSON，而是 RESP 3 协议格式
+- 反正最终结果是将 redis 的 resp 3 协议内容的消息（类 json）用 message 类封装，用 res 保存所有 message
+
+serialize_redis_message 函数用来构造 json 字符串给 redis 存储，redis 没有 json 这个数据结构，只存储 K-V 结构数据，语法：
+```md
+XADD key * field1 value1 field2 value2 ...
+
+- key: Stream 名称（如房间ID "beast"）
+- \*: 让 Redis 生成唯一消息ID
+- field value pairs: 字段-值对
+- payload 是字段名
+- JSON 字符串是值
+```
+所以 `req.push("XADD", room_id, "*", "payload", serialize_redis_message(msg));` 会将 payload 作为字段名，对应的 json 字符串作为值

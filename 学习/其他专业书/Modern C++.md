@@ -1053,7 +1053,54 @@ std::vector<int> v = heavy_computation(); // heavy_computation 返回一个局�
 | std::shared_ptr    | ✅ 可以 move，也可以 copy                                                             | 拷贝时增加引用计数                |
 | 内置类型（int，double 等） | ❌ 不用 move（无资源）                                                                 | 拷贝即可                     |
 | std::function      | ✅ 复杂封装内 std::bind std::function 是 type-erasure 模版，支持 std::move(v1) 情况转移lambda` |                          |
-
+常见注意事项是：
+- 函数中（包括参数列表）左值引用作为返回值不会自动变成右值
+```cpp
+std::string return_str(std::string& str) {
+    // str 是一个左值引用，即使在 return 语句中也是左值
+    // 所以会调用拷贝构造函数
+    return str;
+    return std::string(str);  // 编译期实际上会转化为，隐式拷贝构造
+}
+```
+原因：虽然 str 是一个左值引用，但是他在函数中已经具有名字了，不是一个临时值，所以编译器认为他是右值，不触发移动而是拷贝
+下面这种情况
+A. 使用 `std::move` 显式转换
+```cpp
+std::string return_str(std::string& str) {
+    return std::move(str);  // 显式转换为右值，触发移动
+}
+```
+  B. 返回临时对象（右值）
+```cpp
+// 这是编译期的 NRVO 优化
+std::string return_str() {
+    return "Hello";  // 返回临时对象（右值），自动移动
+}
+// C++17保证复制省略策略
+std::string return_str() {
+    std::string temp = "Hello";
+    return temp;  // 这一点在 C++17 guaranteed copy elision 中实现，可能省略移动过程直接在栈对应位置构建
+}
+```
+- 右值引用参数在函数中的身份是左值
+```cpp
+void func(std::string&& str) {  // str 是一个右值引用参数
+    std::string s1 = str;        // str 在函数内部是左值，触发拷贝
+    std::string s2 = std::move(str);  // 必须 std::move 才能移动
+}
+```
+```md
+  ┌──────────────┬────────────────────────┬────────────────┐
+  │ 情况          │ 代码                   │ 行为            │
+  ├──────────────┼────────────────────────┼────────────────┤
+  │ 左值引用参数   │ return str;            │ 拷贝            │
+  │ 右值引用参数   │ return str;            │ 拷贝（意外！）   │
+  │ 右值引用参数   │ return std:: move (str); │ 移动          │
+  │ 临时对象返回   │ return "Hello";        │ 移动（或省略）   │
+  └──────────────┴────────────────────────┴────────────────┘
+```
+#### 移动语义测试示例
 传统 C++ 通过拷贝构造函数和赋值操作符为类对象设计了拷贝/复制的概念，但为了实现对资源的移动操作，调用者必须使用先复制、再析构的方式，否则就需要自己实现移动对象的接口。
 传统的 C++ 没有区分『移动』和『拷贝』的概念，造成了大量的数据拷贝，浪费时间和空间。
 ```cpp
@@ -1137,10 +1184,6 @@ public:
 `other` 虽然是一个右值引用类型的参数，但因为它有名字，所以它在函数体内是一个**左值**。如果直接写 `data(other.data)`，调用的将是 `T` 的拷贝构造函数（前提是有，如果没有会报错），而不是预期的移动构造函数（也需要提前定义，如果没有定义则调用拷贝构造函数）。使用 `std::move(other.data)` 将 `other.data` 从左值转换为右值，从而正确地触发移动语义。
 
 > 这条规则是故意这样设计的，是为了安全。它防止你意外地“移动”一个你可能还想再次使用的具名变量。你必须显式地使用 `std::move` 来表明“我以后不再需要这个变量的当前值了”，然后编译器才允许移动它。
-=======
->>>>>>> 035b40efc510dbdf75916601d2cebe96f9b7e536
-=======
->>>>>>> 035b40efc510dbdf75916601d2cebe96f9b7e536
 
 ### Note：mutable 
 ```cpp
