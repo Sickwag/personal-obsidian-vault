@@ -700,18 +700,110 @@ PriorityCustomer& PriorityCustomer::operator=(const PriorityCustorner& rhs) {
 所谓资源就是，一旦用了它，将来必须还给系统。如果不这样，糟糕的事情就会发生。
 ## 条款 13 ：以对象管理资源
 ### auto_ptr 管理资源
-许多资源被动态分配于heap 内而后被用于单一区块或函数内。它们应该在控制流离开那个区块或函数时被释放。标准程序库提供的auto_ptr 正是针对这种形势而设计的特制产品。
+最常见的情况是：
+```cpp
+void f() {
+	Investment* pInv = createInvestment();
+	// other work
+	delete pInv;
+}
+```
+其中 otherwork 代码由于：
+- 有 return 语句，且 return 之前忘记 delete pInv
+- 创建 pInv 的语句在循环中，循环因为 continue，break 或者 goto 跳出
+- 其中有函数接受了 pInv 作为参数，在这些函数体内部提早退出，或者**delete 指针并释放内存**，这就会导致内存泄漏或者重复释放内存。
+
+
+如果有资源**动态分配于heap 内而后被用于单一区块或函数**内。它们应该在控制流**离开那个区块或函数时被释放**。标准程序库提供的`auto_ptr` 正是针对这种形势而设计的特制产品。
 1. 获得资源后立刻放进管理对象 (managing object)内，“资源取得时机便是初始化时机” (Resource Acquisition Is Initialization; RAIi) 
 2. 管理对象(managing object) 运用析构函数确保资源被释放
-3. 由于 auto_ptr 被销毁时会自动删除它所指之物，所以一定要注意别让多个auto_ptr 同时指向同一对象。如果真是那样，对象会被删除一次以上，这会导致未定义行为。
+3. 由于 auto_ptr 被销毁时会自动删除它所指之物，所以一定要注意***别让多个auto_ptr 同时指向同一对象***。如果真是那样，对象会被删除一次以上，这会导致未定义行为。
 4. auto_ptr 对 copy 和 copy assignment 函数做了特化，若通过 copy 构造函数或 copy assignment 操作符复制它们，它们会变成 null, 而复制所得的指针将取得资源的唯一拥有权！
+使用 `std::auto_ptr<Investment> pInv` 会让**指针变为一个指针对象**，这样离开作用域它的析构函数就会自动释放指针所指向的资源。
+
+> [!note]
+> ***别让多个 auto_ptr 同时指向同一对象***这一点在 C++中有预防，他的实现方式是**隐式移动语义**应用在指针对象上的一种做法，是一个特例，他的拷贝函数语义其实是所有权的转移
+> ```cpp
+> std::auto_ptr<Investment> pInv1(createInvestment());  // pInv1指向函数返回的临时右值
+> std::auto_ptr<Investment> pInv2(pInv1);       // 此时pInv2指向右值，pInv1被清空，指向nullptr
+> pInv1 = pInv2;                                // 此时pInv1指向右值，pInv2被清空，指向nullptr
+> ```
+> 这样保证了：**受 auto_ptrs 管理的资源必须绝对没有一个以上的 auto_ptr 同时指向它**，这一特性的缺点是 auto_ptr **管理的对象无法通过 auto_ptr 指针进行复制**，这一点特性导致他**严禁用于 std 容器对象上**
+> 
+> ```cpp
+> std::vector<std::auto_ptr<int>> vec;
+> vec.reserve(2); // 预留2个位置
+> vec.push_back(std::auto_ptr<int>(new int(10)));
+> vec.push_back(std::auto_ptr<int>(new int(20)));
+> // 添加第3个元素 → vector扩容到4个位置
+> vec.push_back(std::auto_ptr<int>(new int(30))); // 灾难开始！
+> // 1. 分配新内存（容量4）
+> // 2. 将旧元素拷贝到新内存
+> //   - 拷贝vec[0] → 旧vec[0]变为nullptr
+> //   - 拷贝vec[1] → 旧vec[1]变为nullptr  
+> // 3. 释放旧内存
+> // 结果：新vector中元素有效，但程序逻辑已混乱
+> ```
+
 ### 智慧指针管理资源
 智慧指针用法参考 [[Modern C++#第 5 章 智能指针与内存管理]]
 用法条款参考：[[#条款 14 ：在资源管理类中小心 copying 行为|条款 14]], [[#条款 18：让接口容易被正确使用，不易被误用|18]] 和 [[#条款 54：让自己熟悉包括 TRl 在内的标准程序库|54]] 。
+使用 RCSP 智能引用计数指针可以用一种类似垃圾回收的方法管理内存
+可以用于：
+工厂模式函数：
+```cpp
+// 传统做法 - 容易忘记delete
+Connection* createConnection() {
+    return new DatabaseConnection();
+}
+
+// auto_ptr方案 - 明确单一所有权
+std::auto_ptr<Connection> createConnection() {
+    return std::auto_ptr<Connection>(new DatabaseConnection());
+}
+
+// 调用方明确获得所有权，不会误共享
+```
+缓存系统共享资源
+```cpp
+class ImageCache {
+private:
+    std::map<std::string, std::shared_ptr<Image>> cache_;
+    
+public:
+    std::shared_ptr<Image> getImage(const std::string& filename) {
+        auto it = cache_.find(filename);
+        if (it != cache_.end()) {
+            return it->second; // 多个调用方共享同一图像
+        }
+        
+        // 加载新图像
+        auto img = std::shared_ptr<Image>(new Image(filename));
+        cache_[filename] = img;
+        return img;
+    }
+};
+
+// 使用场景：多个UI组件显示同一图片
+auto img1 = cache.getImage("background.jpg"); 
+auto img2 = cache.getImage("background.jpg"); // 共享同一内存
+```
+- `auto_ptr`在C++11中标记为**deprecated**
+- 在C++17中**完全移除**
+他与 auto_ptr 区别
+
+| 场景特征 | 适合 `auto_ptr` | 适合 `shared_ptr` | 原因 |
+|----------|----------------|------------------|------|
+| **单一所有权** | ✅ 适合 | ❌ 过度 | 资源有明确单一所有者 |
+| **共享所有权** | ❌ 不可能 | ✅ 必须 | 多个实体需要访问同一资源 |
+| **STL容器存储** | ❌ 禁止 | ✅ 完美 | `shared_ptr`有正常拷贝语义 |
+| **多线程环境** | ❌ 危险 | ✅ 安全（需注意线程安全） | 引用计数线程安全 |
+现在常用 `unique_ptr` 代替，它禁止拷贝构造（防止多个资源同时被多个指针指向），必须显式转移所有权（）
+
 ### 需要记住
-防止资源泄漏，请使用 RAIi 对象，它们在构造函数中获得资源并在析构函数
-中释放资源。
-两个常被使用的 RAIIclasses 分别是 `shared _ptr` 和 ` auto_ptr`。前者通常是较佳选择，因为其 copy 行为比较直观。若选择 auto_ptr, 复制动作会使它（被复制物）指向 null 。
+- 防止资源泄漏，每一笔资源都在获得的同时立刻被放进管理对象中，它们在构造函数中获得资源并在析构函数中释放资源。
+- 运用管理对象的构造函数**正确初始化资源**，析构函数**正确释放资源**
+- 两个常被使用的 RAIIclasses 分别是 `shared _ptr` 和 ` auto_ptr`。前者通常是较佳选择，因为其 copy 行为比较直观。若选择 auto_ptr, 复制动作会使它（被复制物）指向 null 。
 ## 条款 14 ：在资源管理类中小心 copying 行为
 
 ## 条款 15：在资源管理类中提供对原始资源的访问
