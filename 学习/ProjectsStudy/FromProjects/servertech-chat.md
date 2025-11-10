@@ -563,3 +563,5 @@ response_builder 类用来通过 api 方便地构建各式各样的 http 响应�
 其核心是使用 `boost::beast::http::message_generator` 构建返回响应头的 body 部分。其中 response_type 是完整的响应头，包含 head 和 body 部分，可以返回如 method_not_allowed，not_found_text 等错误请款发生时的响应和 json 格式内容响应
 
 request_context 则用来解析客户端发来的 http 请求头内容，解析出其中的 url 信息，如果请求头的 body 是 json 格式，则解析出 json 数据内容，最后通过 response_builder 生成响应头内容
+
+### include/
