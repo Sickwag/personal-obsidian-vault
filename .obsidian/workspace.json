@@ -70,7 +70,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "岛屿数量",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
