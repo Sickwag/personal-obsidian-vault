@@ -80,7 +80,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "自定义字面量",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
