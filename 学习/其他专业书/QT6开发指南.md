@@ -752,7 +752,7 @@ QComboBox 使用模型/视图结构存储和显示下拉列表的数据，下拉
 QMainWindow 是主窗口类，具有菜单栏、工具栏、状态栏等主窗口常见的界面元素。要设计主窗口上的菜单栏、工具栏、按钮的下拉菜单、组件的快捷菜单等，需要用到 QAction类。QAction 对象就是实现某个功能的“动作”，我们称其为 Action。在 **UI 可视化设计时**，我们可以设计很多 Action，然后用 Action 创建菜单项和工具按钮。
 
 经常在 UI 编辑器中使用 QAction 规划动作行为逻辑，按钮逻辑，有些 QT 中不允许的操作（比如将 QComboBox 放在 QMainWindow 工具栏上，原则上工具栏上只会放一些按钮）
-
+### 关于工具栏和状态栏
 QMainWindow 类窗口上有**菜单栏、工具栏和状态栏**，这 3 种界面组件对应的类分别是QMenuBar、QToolBar 和 QStatusBar，它们都是直接从 QWidget 继承而来的。**一个主窗口上最多有一个菜单栏和一个状态栏，可以有多个工具栏。**
 ![[PixPin_2025-11-04_10-22-05.png]]
 ```md
@@ -794,3 +794,5 @@ void addPermanentWidget(QWidget *widget, int stretch = 0) //添加永久组件
 ```
 这两个函数区别是：函数 `showMessage()` 用于在状态栏上左端首位置显示字符串信息，显示持续时间是 timeout，单位是毫秒。如果 timeout 设置为 0，就是一直显示，直到被 `clearMessage()` 清除，或显示下一条临时消息。使用 `showMessage()` 显示临时消息时，状态栏上用 addWidget()添加的组件会被临时隐藏，而用 `addPermanentWidget()` 函数添加的组件会保持不变。
 
+![[PixPin_2025-11-11_21-46-34.png]]
+之后开始编写代码
