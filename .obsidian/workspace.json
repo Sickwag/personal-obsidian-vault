@@ -21,8 +21,19 @@
               "icon": "lucide-file",
               "title": "Effective C++（侯捷）"
             }
+          },
+          {
+            "id": "5d2b20420e6948cb",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -196,10 +207,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "240d735a68dc6e80",
+  "active": "5d2b20420e6948cb",
   "lastOpenFiles": [
-    "学习/其他专业书/Modern C++.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
+    "学习/其他专业书/Modern C++.md",
     "学习/algorithm/分析优化.md",
     "学习/algorithm/题型分类.md",
     "学习/algorithm/用法导向知识.md",
