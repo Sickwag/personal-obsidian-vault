@@ -36,9 +36,19 @@
               "icon": "lucide-file",
               "title": "servertech-chat"
             }
+          },
+          {
+            "id": "c3c3acc6c2850f31",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -91,12 +101,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -212,15 +222,15 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "5d2b20420e6948cb",
+  "active": "d1e212fee3e1649e",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/FromProjects/servertech-chat.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
     "学习/其他专业书/Modern C++.md",
     "学习/algorithm/分析优化.md",
     "学习/algorithm/题型分类.md",
     "学习/algorithm/用法导向知识.md",
     "学习/algorithm/刷题路线.md",
-    "学习/ProjectsStudy/FromProjects/servertech-chat.md",
     "学习/ProjectsStudy/WriteByMyself/CPP爬虫实战.md",
     "Files & LongText/Attachments/PixPin_2025-11-06_14-48-13.png",
     "Files & LongText/Attachments/PixPin_2025-11-06_14-37-12.png",
