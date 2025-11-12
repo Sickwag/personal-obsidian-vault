@@ -215,6 +215,7 @@ constexpr int magic(int x) {
 }
 ```
 #### 注意事项
+##### 性能问题和编译器行为
 如果将 constexpr 应用于 if 的条件分支中，会导致**部分分支不会被检查**
 
 | 特性           | `if`          | `if constexpr`      |
@@ -231,6 +232,9 @@ constexpr int magic(int x) {
 | 一定要是固定值才能用 `constexpr`   | 错！只要能由常量参数推导出结果即可                           |
 | 只有返回值是编译期的常量             | 错！函数体中也可以有局部变量、条件分支、循环等                     |
 | `constexpr` 一定能被用作模板参数   | 错！只有在 `consteval` / `constinit` 情况下才强制编译期求值 |
+
+##### 不同标准对待态度
+C++ 11 时，每一个 constexpr 修饰返回值的函数只能有一个 return 语句，C++14 之后放宽限制
 C++20 开始，标准 string 和 vector 类具有限定的构造函数和析构函数，这是可在编译时使用的前提。所以，分配给 string 或 vector 对象的内存，也**必须在编译时释放**。
 例如，constexpr 函数返回一个 vector，编译时不会出错:
 ```cpp
