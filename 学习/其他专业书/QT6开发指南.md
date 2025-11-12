@@ -890,3 +890,5 @@ void TextEditorMainWindow::buildUI()
 - autoRaise 属性，如果设置为 true，按钮就没有边框，鼠标移动到按钮上时才显示按钮边框。
 - arrowType 属性。属性值是枚举类型 Qt:: ArrowType。默认值是 `Qt::NoArrow` 用来显示箭头图标
 ![[PixPin_2025-11-12_15-55-48.png]]
+- 在 QListWidget 中使用 `currentIndex()` 会调用底层的**数据模型**来获取当前行在数据模型中所对应的 index，没有选中行返回的 `QModelIndex` 对象的 `isValid()` 方法返回 false。而 ` currentRow() ` 只返回 int 类型，从 0 开始的行号下标，如果没有选中行返回 `-1`
+- 
