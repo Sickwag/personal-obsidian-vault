@@ -795,4 +795,82 @@ void addPermanentWidget(QWidget *widget, int stretch = 0) //添加永久组件
 这两个函数区别是：函数 `showMessage()` 用于在状态栏上左端首位置显示字符串信息，显示持续时间是 timeout，单位是毫秒。如果 timeout 设置为 0，就是一直显示，直到被 `clearMessage()` 清除，或显示下一条临时消息。使用 `showMessage()` 显示临时消息时，状态栏上用 addWidget()添加的组件会被临时隐藏，而用 `addPermanentWidget()` 函数添加的组件会保持不变。
 
 ![[PixPin_2025-11-11_21-46-34.png]]
-之后开始编写代码
+### 编写代码
+两个重要的槽函数
+```cpp
+void TextEditorMainWindow::do_fontsize_changed(int fontsize)
+{
+    QTextCursor cursor = ui->plainTextEdit->textCursor();
+    
+    QTextCharFormat format;
+    format.setFontPointSize(fontsize);
+    if (cursor.hasSelection()) {
+        cursor.mergeCharFormat(format);
+    } else {
+        ui->plainTextEdit->mergeCurrentCharFormat(format);
+        QFont currentFont = ui->plainTextEdit->font();
+        currentFont.setPointSize(fontsize);
+        ui->plainTextEdit->setFont(currentFont);
+    }
+    
+    progressbarOfFontSize->setValue(fontsize);
+}
+
+void TextEditorMainWindow::do_font_selected(const QFont &font)
+{
+    this->labelOfFontInfo->setText(QString("current font family: %1").arg(font.family()));
+    QTextCursor cursor = ui->plainTextEdit->textCursor();
+    
+    QTextCharFormat format;
+    format.setFontFamily(font.family());
+    if (cursor.hasSelection()) {
+        cursor.mergeCharFormat(format);
+    } else {
+        ui->plainTextEdit->mergeCurrentCharFormat(format);
+        QFont currentFont = ui->plainTextEdit->font();
+        currentFont.setFamily(font.family());
+        ui->plainTextEdit->setFont(currentFont);
+    }
+}
+```
+其中需要注意：
+- 对选中文本格式化：需要通过 QTextCursor 获取选中区域，然后调用**cursor 对象的 mergeCharFormat 函数**对选中文本字体应用格式
+- 对未来输入应用格式：通过 `QPlainTextEdit::mergeCurrentCharFormat()`
+- 对文本输入框中的所有问题使用效果则调用 `setFont` 函数
+对于**开关类型按钮**（即点击之后按钮保持被按下，再次点击又弹起的效果），单纯地设置槽函数是没有效果的
+```cpp
+void TextEditorMainWindow::on_actionbold_triggered(bool checked)
+{
+    QTextCharFormat fmt = ui->plainTextEdit->currentCharFormat();
+    if(checked){
+        fmt.setFontWeight(QFont::Bold);
+    }else{
+        fmt.setFontWeight(QFont::Normal);
+    }
+    ui->plainTextEdit->mergeCurrentCharFormat(fmt);
+}
+
+void TextEditorMainWindow::on_actionitalic_triggered(bool checked)
+{
+    QTextCharFormat fmt = ui->plainTextEdit->currentCharFormat();
+    fmt.setFontItalic(checked);
+    ui->plainTextEdit->mergeCurrentCharFormat(fmt);
+}
+
+void TextEditorMainWindow::on_actionunderline_triggered(bool checked)
+{
+    QTextCharFormat fmt = ui->plainTextEdit->currentCharFormat();
+    fmt.setFontUnderline(checked);
+    ui->plainTextEdit->mergeCurrentCharFormat(fmt);
+}
+```
+只有开关类按钮能够使用 `triggered(bool checked)` 这个槽，普通按钮只有 `triggered()` 表示点击一次，由于开关类按钮还要记住一个状态，所以必须区分开来，这个区分由 `QAction::setCheckable` 管理，设置 true 表示是开关按钮，否则默认 false 普通按钮，这就会导致使用 `triggered (bool check)` 的槽失效
+```cpp
+void TextEditorMainWindow::buildUI()
+{
+	ui->actionbold->setCheckable(true);
+	ui->actionitalic->setCheckable(true);
+	ui->actionunderline->setCheckable(true);
+}
+```
+完整代码参考：[[C++ practice case#Qt 项目代码#4.10 QMainWindow 和 QAction]]

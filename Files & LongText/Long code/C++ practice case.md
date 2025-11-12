@@ -2909,7 +2909,576 @@ void quickWidget::onUpdateButtonClicked()
 void quickWidget::onExitButtonClicked(){
     QApplication::quit();
 }
+```
+#### 4.10 QMainWindow 和 QAction
+ui 文件
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TextEditorMainWindow</class>
+ <widget class="QMainWindow" name="TextEditorMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>736</width>
+    <height>443</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QPlainTextEdit" name="plainTextEdit">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>10</y>
+      <width>681</width>
+      <height>341</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>736</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menufile">
+    <property name="title">
+     <string>file</string>
+    </property>
+    <addaction name="actionnew_file"/>
+    <addaction name="actionopen_file"/>
+    <addaction name="actionsave"/>
+    <addaction name="actionquit"/>
+   </widget>
+   <widget class="QMenu" name="menuedit">
+    <property name="title">
+     <string>edit</string>
+    </property>
+    <addaction name="actioncut"/>
+    <addaction name="actioncopy"/>
+    <addaction name="actionpaste"/>
+    <addaction name="actionundo"/>
+    <addaction name="actionredo"/>
+    <addaction name="actionselect_all"/>
+    <addaction name="actionclear_all"/>
+   </widget>
+   <widget class="QMenu" name="menuformat">
+    <property name="title">
+     <string>format</string>
+    </property>
+    <widget class="QMenu" name="menulanguage">
+     <property name="title">
+      <string>language</string>
+     </property>
+     <addaction name="action_chinese_lang"/>
+     <addaction name="action_english_lang"/>
+    </widget>
+    <addaction name="actionbold"/>
+    <addaction name="actionitalic"/>
+    <addaction name="actionunderline"/>
+    <addaction name="actiondisplay_button_text"/>
+    <addaction name="menulanguage"/>
+   </widget>
+   <addaction name="menufile"/>
+   <addaction name="menuedit"/>
+   <addaction name="menuformat"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionnew_file"/>
+   <addaction name="actionopen_file"/>
+   <addaction name="actionsave"/>
+   <addaction name="separator"/>
+   <addaction name="actioncut"/>
+   <addaction name="actioncopy"/>
+   <addaction name="actionpaste"/>
+   <addaction name="separator"/>
+   <addaction name="actionundo"/>
+   <addaction name="actionredo"/>
+   <addaction name="separator"/>
+   <addaction name="actionbold"/>
+   <addaction name="actionitalic"/>
+   <addaction name="actionunderline"/>
+   <addaction name="separator"/>
+   <addaction name="action_chinese_lang"/>
+   <addaction name="action_english_lang"/>
+  </widget>
+  <action name="actionnew_file">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentNew"/>
+   </property>
+   <property name="text">
+    <string>new file</string>
+   </property>
+   <property name="toolTip">
+    <string>make a new file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+N</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionopen_file">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentOpen"/>
+   </property>
+   <property name="text">
+    <string>open file</string>
+   </property>
+   <property name="toolTip">
+    <string>open a existed file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+O</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionsave">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
+   </property>
+   <property name="text">
+    <string>save</string>
+   </property>
+   <property name="toolTip">
+    <string>save current file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionquit">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::ApplicationExit"/>
+   </property>
+   <property name="text">
+    <string>quit</string>
+   </property>
+   <property name="toolTip">
+    <string>quit this program</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actioncut">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditCut"/>
+   </property>
+   <property name="text">
+    <string>cut</string>
+   </property>
+   <property name="toolTip">
+    <string>cut text</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionpaste">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditPaste"/>
+   </property>
+   <property name="text">
+    <string>paste</string>
+   </property>
+   <property name="toolTip">
+    <string>paste text</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actioncopy">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditCopy"/>
+   </property>
+   <property name="text">
+    <string>copy</string>
+   </property>
+   <property name="toolTip">
+    <string>copy text</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionundo">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditUndo"/>
+   </property>
+   <property name="text">
+    <string>undo</string>
+   </property>
+   <property name="toolTip">
+    <string>undo previous step</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionredo">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditRedo"/>
+   </property>
+   <property name="text">
+    <string>redo</string>
+   </property>
+   <property name="toolTip">
+    <string>redo previous step</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionselect_all">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditSelectAll"/>
+   </property>
+   <property name="text">
+    <string>select all</string>
+   </property>
+   <property name="toolTip">
+    <string>select all text</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionclear_all">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditClear"/>
+   </property>
+   <property name="text">
+    <string>clear all</string>
+   </property>
+   <property name="toolTip">
+    <string>cleal all text</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Alt+Backspace</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionbold">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::FormatTextBold"/>
+   </property>
+   <property name="text">
+    <string>bold</string>
+   </property>
+   <property name="toolTip">
+    <string>make font bold</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+B</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionitalic">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::FormatTextItalic"/>
+   </property>
+   <property name="text">
+    <string>italic</string>
+   </property>
+   <property name="toolTip">
+    <string>make font italic</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionunderline">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::FormatTextUnderline"/>
+   </property>
+   <property name="text">
+    <string>underline</string>
+   </property>
+   <property name="toolTip">
+    <string>make font underline</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+U</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actiondisplay_button_text">
+   <property name="text">
+    <string>display button text</string>
+   </property>
+   <property name="toolTip">
+    <string>display the text in front of button</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_chinese_lang">
+   <property name="text">
+    <string>中文</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_english_lang">
+   <property name="text">
+    <string>English</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
+```
+头文件
+```cpp
+#ifndef TEXTEDITORMAINWINDOW_H
+#define TEXTEDITORMAINWINDOW_H
+#include <qfont.h>
+#include <qspinbox.h>
+#include <QProgressBar>
+#include <QFontComboBox>
+#include <qactiongroup.h>
+#include <QMainWindow>
+#include <qlabel.h>
+#include <qgroupbox.h>
 
+QT_BEGIN_NAMESPACE
+namespace Ui { class TextEditorMainWindow; }
+QT_END_NAMESPACE
+
+class TextEditorMainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    TextEditorMainWindow(QWidget *parent = nullptr);
+    ~TextEditorMainWindow();
+
+private:
+    QLabel *labelCurrentFile;
+    QLabel *labelOfFontInfo;
+    QProgressBar *progressbarOfFontSize;
+    QSpinBox *spinForFontSize;
+    QFontComboBox *comboFontNames;
+    QActionGroup * groupLanguages;
+
+    void buildUI();
+    void buildSignalsSlots();
+
+private slots:
+    void do_fontsize_changed(int fontsize);
+    void do_font_selected(const QFont &font);
+
+    void on_actionitalic_triggered(bool checked);
+    void on_actionunderline_triggered(bool checked);
+    void on_actionbold_triggered(bool checked);
+
+    void on_actionsave_triggered();
+
+public slots:
+
+private:
+    Ui::TextEditorMainWindow *ui;
+};
+
+#endif // TEXTEDITORMAINWINDOW_H
+
+```
+源文件
+```cpp
+#include "texteditormainwindow.h"
+#include "ui_texteditormainwindow.h"
+#include <qfontcombobox.h>
+
+TextEditorMainWindow::TextEditorMainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::TextEditorMainWindow)
+{
+    ui->setupUi(this);
+    buildUI();
+    buildSignalsSlots();
+}
+
+TextEditorMainWindow::~TextEditorMainWindow()
+{
+    delete ui;
+}
+
+void TextEditorMainWindow::buildUI()
+{
+    labelCurrentFile = new QLabel("current file:", this);
+    labelCurrentFile->setMinimumWidth(150);
+    ui->statusbar->addWidget(labelCurrentFile);
+
+    ui->plainTextEdit->setPlainText("this is plain text.");
+
+    progressbarOfFontSize = new QProgressBar(this);
+    progressbarOfFontSize->setMinimum(5);
+    progressbarOfFontSize->setMaximum(50);
+    progressbarOfFontSize->setMinimumWidth(200);
+    progressbarOfFontSize->setValue(ui->plainTextEdit->font().pointSize());
+    ui->statusbar->addWidget(progressbarOfFontSize);
+
+    labelOfFontInfo = new QLabel("current font: ", this);
+    ui->statusbar->addPermanentWidget(labelOfFontInfo);
+
+    groupLanguages = new QActionGroup(this);
+    groupLanguages->addAction(ui->action_chinese_lang);
+    groupLanguages->addAction(ui->action_english_lang);
+    groupLanguages->setExclusive(true);
+    ui->action_chinese_lang->setChecked(true);
+
+    spinForFontSize = new QSpinBox(this);
+    spinForFontSize->setMinimum(5);
+    spinForFontSize->setMaximum(50);
+    spinForFontSize->setValue(ui->plainTextEdit->font().pointSize());
+    ui->toolBar->addWidget(spinForFontSize);  // 不添加这一行spinbox会默认在工具栏的0，0坐标位置添加
+
+    comboFontNames = new QFontComboBox(this);
+    comboFontNames->setMinimumWidth(150);
+    ui->toolBar->addWidget(comboFontNames);
+    ui->toolBar->addSeparator();
+
+    this->labelOfFontInfo->setText(ui->plainTextEdit->font().toString());
+    this->labelCurrentFile->setText("[tempoal file]");
+    ui->actionbold->setCheckable(true);
+    ui->actionitalic->setCheckable(true);
+    ui->actionunderline->setCheckable(true);
+}
+
+void TextEditorMainWindow::buildSignalsSlots()
+{
+    connect(this->spinForFontSize, &QSpinBox::valueChanged, this, &TextEditorMainWindow::do_fontsize_changed);
+    connect(this->comboFontNames, &QFontComboBox::currentFontChanged, this, &TextEditorMainWindow::do_font_selected);
+}
+
+void TextEditorMainWindow::do_fontsize_changed(int fontsize)
+{
+    QTextCursor cursor = ui->plainTextEdit->textCursor();
+    
+    QTextCharFormat format;
+    format.setFontPointSize(fontsize);
+    if (cursor.hasSelection()) {
+        cursor.mergeCharFormat(format);
+    } else {
+        ui->plainTextEdit->mergeCurrentCharFormat(format);
+        QFont currentFont = ui->plainTextEdit->font();
+        currentFont.setPointSize(fontsize);
+        ui->plainTextEdit->setFont(currentFont);
+    }
+    
+    progressbarOfFontSize->setValue(fontsize);
+}
+
+void TextEditorMainWindow::do_font_selected(const QFont &font)
+{
+    this->labelOfFontInfo->setText(QString("current font family: %1").arg(font.family()));
+    QTextCursor cursor = ui->plainTextEdit->textCursor();
+    
+    QTextCharFormat format;
+    format.setFontFamily(font.family());
+    if (cursor.hasSelection()) {
+        cursor.mergeCharFormat(format);  // 对光标选中的字符有效
+    } else {
+        ui->plainTextEdit->mergeCurrentCharFormat(format); // 对接下来输入的内容有效
+
+        // cursor.select(QTextCursor::Document);  // 对文档中的所有文字有效
+        // cursor.mergeCharFormat(format);
+    }
+}
+
+void TextEditorMainWindow::on_actionbold_triggered(bool checked)
+{
+    QTextCharFormat fmt = ui->plainTextEdit->currentCharFormat();
+    if(checked){
+        fmt.setFontWeight(QFont::Bold);
+    }else{
+        fmt.setFontWeight(QFont::Normal);
+    }
+    ui->plainTextEdit->mergeCurrentCharFormat(fmt);
+}
+
+void TextEditorMainWindow::on_actionitalic_triggered(bool checked)
+{
+    QTextCharFormat fmt = ui->plainTextEdit->currentCharFormat();
+    fmt.setFontItalic(checked);
+    ui->plainTextEdit->mergeCurrentCharFormat(fmt);
+}
+
+void TextEditorMainWindow::on_actionunderline_triggered(bool checked)
+{
+    QTextCharFormat fmt = ui->plainTextEdit->currentCharFormat();
+    fmt.setFontUnderline(checked);
+    ui->plainTextEdit->mergeCurrentCharFormat(fmt);
+}
+
+
+void TextEditorMainWindow::on_actionsave_triggered()
+{
+    ui->plainTextEdit->document()->setModified(false);
+    labelCurrentFile->setText("current file saved.");
+}
 
 
 ```

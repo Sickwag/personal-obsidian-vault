@@ -21,6 +21,21 @@
               "icon": "lucide-file",
               "title": "QT6开发指南"
             }
+          },
+          {
+            "id": "712c801859ac9431",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Files & LongText/Long code/C++ practice case.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "C++ practice case"
+            }
           }
         ]
       }
@@ -178,8 +193,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -199,8 +213,10 @@
   },
   "active": "240d735a68dc6e80",
   "lastOpenFiles": [
-    "学习/Language/C C++/C++ Basics.md",
+    "Files & LongText/Long code/C++ practice case.md",
     "学习/其他专业书/QT6开发指南.md",
+    "Files & LongText/Long code/MySQL Long Code Practice.md",
+    "学习/Language/C C++/C++ Basics.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
     "学习/其他专业书/Modern C++.md",
     "学习/algorithm/用法导向知识.md",
@@ -236,8 +252,6 @@
     "学习/ProjectsStudy/FromProjects/Sudoku.md",
     "学习/ProjectsStudy/FromProjects/Sudoku 1.md",
     "学习/ProjectsStudy/FromProjects/QTExamples.md",
-    "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
-    "学习/ProjectsStudy/WriteByMyself/CodeLineCounter 1.md",
     "学习/Geography Learning/From Tutorial",
     "学习/Geography Learning/AI QA",
     "学习/Geography Learning",
