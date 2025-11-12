@@ -193,7 +193,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -213,8 +214,12 @@
   },
   "active": "240d735a68dc6e80",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/PixPin_2025-11-12_15-55-48.png",
+    "Files & LongText/Attachments/PixPin_2025-11-12_15-48-11.png",
+    "学习/ProjectsStudy/FromProjects/QTExamples.md",
     "Files & LongText/Long code/C++ practice case.md",
     "学习/其他专业书/QT6开发指南.md",
+    "Files & LongText/Attachments/PixPin_2025-11-12_15-36-15.png",
     "Files & LongText/Long code/MySQL Long Code Practice.md",
     "学习/Language/C C++/C++ Basics.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
@@ -243,15 +248,11 @@
     "学习/ProjectsStudy/WriteByMyself/BookManageSystem+mysql.md",
     "学习/Language/SQL/MySQL.md",
     "Files & LongText/Attachments/v2-7a2e0860eecee953296458dc06cb2b40_720w.webp",
-    "Files & LongText/Attachments/PixPin_2025-11-04_10-31-04.png",
-    "Files & LongText/Attachments/PixPin_2025-11-04_10-22-05.png",
     "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/ProjectsStudy/WriteByMyself/PicToAscii.md",
     "学习/ProjectsStudy/FromProjects/github python learning projects.md",
     "学习/ProjectsStudy/FromProjects/CLI11.md",
     "学习/ProjectsStudy/FromProjects/Sudoku.md",
-    "学习/ProjectsStudy/FromProjects/Sudoku 1.md",
-    "学习/ProjectsStudy/FromProjects/QTExamples.md",
     "学习/Geography Learning/From Tutorial",
     "学习/Geography Learning/AI QA",
     "学习/Geography Learning",

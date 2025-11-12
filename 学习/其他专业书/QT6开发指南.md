@@ -779,6 +779,7 @@ QMainWindow 类窗口上有**菜单栏、工具栏和状态栏**，这 3 种界�
 - 其中 Menu role 只有 macos 上才有效
 - 可以通过拖动 Action 编辑器里的 QAction 对象放到工具栏上
 - 常用的信号和槽函数需要知道
+- 右键**对象查看器中的 MainWindow 类**，选择添加工具栏后就会出现工具栏，可以拖动 QAction 对象进去
 可以用 Action 可视化地创建工具栏上的按钮，但是**不能可视化地**在工具栏上放置其他组件。QToolBar 提供了接口函数，可以**通过代码在工具栏上添加组件**
 ```cpp
 void addAction(QAction *action) //添加一个 Action，并根据 Action 的设置自动创建工具按钮
@@ -874,3 +875,18 @@ void TextEditorMainWindow::buildUI()
 }
 ```
 完整代码参考：[[C++ practice case#Qt 项目代码#4.10 QMainWindow 和 QAction]]
+## 4.11 QToolButton 和 QListWidget
+![[PixPin_2025-11-12_15-36-15.png]]
+这样的内容在 [[QTExamples#列表控件QListWidget和工具按钮QToolButton的和用法]]中已经写过，这里跳过实现部分
+只讲注意事项
+- 左边的是 QToolBox，每一个QToolBox 中展开后是一个 QWidget 组件，可以填入若干个 QToolButton**或者任何元素**，每一个 QToolButton 可通过 `setDefaultAction()` 将按钮和 QAction 连接。这一个操作无法在 UI 设计中实现，只能通过代码。按钮的文字、图标、toolTip 等属性都将自动从关联的 Action复制而来
+- 在右侧添加一个 QListWidget，可以通过双击它来进行直观的调整
+![[PixPin_2025-11-12_15-48-11.png]]
+需要注意 QToolButton 的几个属性
+- popupMode 属性：
+	- `QToolButton::DelayedPopup`：按钮上没有任何附加的显示内容。如果按钮有下拉菜单，按下按钮并延时一会儿后，才显示下拉菜单。
+	- `QToolButton::MenuButtonPopup`：会在按钮右侧显示一个带箭头图标的下拉按钮。点击下拉按钮才显示下拉菜单，点击工具按钮会执行按钮关联的 Action，而不会显示下拉菜单。图 4-46 中列表组件上方的“项选择”按钮就设置为这种模式。
+	- `QToolButton::InstantPopup `：会在按钮的右下角显示一个很小的下拉箭头图标，点击按钮就会立刻显示下拉菜单，即使工具按钮关联了一个 Action，也不会执行这个 Action。图 4-46 中工具栏上的“项选择”按钮就设置为这种模式。
+- autoRaise 属性，如果设置为 true，按钮就没有边框，鼠标移动到按钮上时才显示按钮边框。
+- arrowType 属性。属性值是枚举类型 Qt:: ArrowType。默认值是 `Qt::NoArrow` 用来显示箭头图标
+![[PixPin_2025-11-12_15-55-48.png]]
