@@ -985,5 +985,51 @@ void itemDoubleClicked(QListWidgetItem *item) //双击
 - 在 QListWidget 组件上点击某个项而导致当前项发生切换时，组件会发射 4 个信号，表示当前项发生了变化，这 4 个信号是 `currentItemChanged()`、`currentRowChanged()`、`currentTextChanged()` 和 `itemSelectionChanged()`，它们传递的参数不一样
 - 击一个项时，不管是否发生了当前项的切换，都会发射 `itemPressed()` 和 `itemClicked()` 信号。1在一个项上点击鼠标右键时只会发射 `itemPressed()` 信号，而不会发射 `itemClicked()` 信号
 #### 创建右键菜单
-每个继承自 QWidget 的类都有 `customContextMenuRequested()` 信号，在一个组件上点击鼠标右键时，组件发射这个信号，用于请求创建快捷菜单。需要创建菜单只需要编
-写对饮信号的槽函数即可
+每个继承自 QWidget 的类都有 `customContextMenuRequested()` 信号，在一个组件上点击鼠标右键时，组件发射这个信号，
+首先我们如果要创建菜单，**必须**允许 QListWidget 获取上下文菜单，因为默认 `contextMenuPolicy` 属性是 `NoContextMenu` 不显示菜单
+用于**自定义请求创建**快捷菜单。需要创建菜单只需要编写对应信号的槽函数即可，也可以使用默认英文菜单。以下是文档
+
+---
+
+- `Qt::NoContextMenu`：组件没有快捷菜单，由其父容器组件处理快捷菜单。
+- `Qt::PreventContextMenu`：阻止快捷菜单，并且点击鼠标右键事件也不会交给父容器组件处理。
+- `Qt::DefaultContextMenu`：默认的快捷菜单，组件的 QWidget::contextMenuEvent()事件被自动处理。某些组件有自己的默认快捷菜单，例如 QPlainTextEdit 的 contextMenuPolicy 属性默认设置为这个值，在无须任何编程的情况下，运行时点击鼠标右键就会出现一个标准的编辑操作快捷菜单，只是菜单文字是英文的。
+- `Qt::ActionsContextMenu`：自动根据 QWidget::actions()返回的 Action 列表创建并显示快捷菜单。
+- `Qt::CustomContextMenu`：组件发射 customContextMenuRequested()信号，由用户编程实现创建并显示快捷菜单
+
+| Constant                 | Value | Description                                                                                                                                                                                                                                                                                                      |
+| ------------------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Qt::NoContextMenu`      | 0     | the widget does not feature a context menu, context menu handling is deferred to the widget's parent.                                                                                                                                                                                                            |
+| `Qt::PreventContextMenu` | 4     | the widget does not feature a context menu, and in contrast to NoContextMenu, the handling is *not* deferred to the widget's parent. This means that all right mouse button events are guaranteed to be delivered to the widget itself through `QWidget::mousePressEvent()`, and `QWidget::mouseReleaseEvent()`. |
+| `Qt::DefaultContextMenu` | 1     | the widget's `QWidget::contextMenuEvent()` handler is called.                                                                                                                                                                                                                                                    |
+| `Qt::ActionsContextMenu` | 2     | the widget displays its `QWidget::actions()` as context menu.                                                                                                                                                                                                                                                    |
+| `Qt::CustomContextMenu`  | 3     | the widget emits the `QWidget::customContextMenuRequested()` signal.                                                                                                                                                                                                                                             |
+
+---
+
+对于 `on_listWidget_customContextMenuRequested(const QPoint& point)` 中的 point 参数需要知道：
+1. pos 参数是视口（viewport）坐标系中的位置，不是全局坐标
+2. 坐标系：pos 是**鼠标点击位置**相对于 QListWidget 的视口（viewport）的相对坐标坐标，相对坐标轴的原点在部件视口的左上角
+3. 视口是什么：QListWidget 内部的可滚动区域，包含所有列表项
+4. 不是全局坐标：也不是相对于整个 QListWidget 控件（包括滚动条、边框等）的坐标
+```cpp
+void ListWidgetMainWindow::on_listWidget_customContextMenuRequested(const QPoint &pos)
+{
+    if(ui->listWidget->itemAt(pos) == nullptr){
+        QPoint global_pos = ui->listWidget->viewport()->mapToGlobal(pos);
+        QMenu* press_menu = new QMenu(this);
+        press_menu->addAction(ui->action_init_list);
+        press_menu->addAction(ui->action_insert_item);
+        press_menu->addAction(ui->action_append_item);
+        press_menu->addAction(ui->action_delete_item);
+        press_menu->addSeparator();
+        press_menu->addAction(ui->action_select_all);
+        press_menu->addAction(ui->action_select_none);
+        press_menu->addAction(ui->action_select_inves);
+
+        press_menu->exec(global_pos);
+    }
+}
+```
+### 代码实现
+仅仅是实现较为重要的部分，一些逻辑上重复的 QAction 槽函数没有实现，参考 [[C++ practice case#Qt 项目代码#4.11 QLIstWidget]]

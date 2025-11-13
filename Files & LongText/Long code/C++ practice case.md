@@ -3479,6 +3479,630 @@ void TextEditorMainWindow::on_actionsave_triggered()
     ui->plainTextEdit->document()->setModified(false);
     labelCurrentFile->setText("current file saved.");
 }
+```
+#### 4.11 QLIstWidget
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ListWidgetMainWindow</class>
+ <widget class="QMainWindow" name="ListWidgetMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>618</width>
+    <height>487</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QListWidget" name="listWidget">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>90</y>
+      <width>421</width>
+      <height>281</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QToolBox" name="toolBox">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>161</width>
+      <height>291</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
+    <widget class="QWidget" name="page_list_item_operate">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>161</width>
+       <height>189</height>
+      </rect>
+     </property>
+     <attribute name="label">
+      <string>列表项操作</string>
+     </attribute>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>111</width>
+        <height>181</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="layout_vertical_buttons">
+       <item>
+        <widget class="QToolButton" name="toolButton_init_list">
+         <property name="text">
+          <string>init list</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="toolButton_clear_list">
+         <property name="text">
+          <string>clear list</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="toolButton_delete_item">
+         <property name="text">
+          <string>delete item</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="toolButton_insert_item">
+         <property name="text">
+          <string>insert item</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="toolButton_add_item">
+         <property name="text">
+          <string>add item</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="page_list_item_sort">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>161</width>
+       <height>189</height>
+      </rect>
+     </property>
+     <attribute name="label">
+      <string>列表排序</string>
+     </attribute>
+     <widget class="QCheckBox" name="checkbox_allow_sort">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>10</y>
+        <width>100</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>allow sort</string>
+      </property>
+     </widget>
+     <widget class="QToolButton" name="toolButton_asc">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>50</y>
+        <width>71</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>asc</string>
+      </property>
+     </widget>
+     <widget class="QToolButton" name="toolButton_desc">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>100</y>
+        <width>71</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>desc</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="page_signal_shot_time">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>161</width>
+       <height>189</height>
+      </rect>
+     </property>
+     <attribute name="label">
+      <string>信号发射时机</string>
+     </attribute>
+    </widget>
+   </widget>
+   <widget class="QLabel" name="label_item_change">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>10</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>item change</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit_item_change">
+    <property name="geometry">
+     <rect>
+      <x>282</x>
+      <y>10</y>
+      <width>171</width>
+      <height>27</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_is_editable">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>10</y>
+      <width>100</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ediable</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>50</y>
+      <width>422</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QToolButton" name="toolButton_select_buttons">
+       <property name="text">
+        <string>select buttons</string>
+       </property>
+       <property name="popupMode">
+        <enum>QToolButton::ToolButtonPopupMode::InstantPopup</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="toolButton_select_all">
+       <property name="text">
+        <string>select all</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="toolButton_select_none">
+       <property name="text">
+        <string>select none</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="toolButton_select_inves">
+       <property name="text">
+        <string>select inves</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>618</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonStyle::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_init_list"/>
+   <addaction name="action_clear_list"/>
+   <addaction name="action_insert_item"/>
+   <addaction name="action_append_item"/>
+   <addaction name="action_delete_item"/>
+   <addaction name="action_exit"/>
+  </widget>
+  <action name="action_init_list">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentNew"/>
+   </property>
+   <property name="text">
+    <string>init list</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_clear_list">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::ApplicationExit"/>
+   </property>
+   <property name="text">
+    <string>clear list</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_insert_item">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditDelete"/>
+   </property>
+   <property name="text">
+    <string>insert item</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_append_item">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::MailMessageNew"/>
+   </property>
+   <property name="text">
+    <string>append item</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_delete_item">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditClear"/>
+   </property>
+   <property name="text">
+    <string>delete item</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_exit">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::MediaRecord"/>
+   </property>
+   <property name="text">
+    <string>exit</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_select_all">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditCopy"/>
+   </property>
+   <property name="text">
+    <string>select all</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_select_none">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::GoHome"/>
+   </property>
+   <property name="text">
+    <string>select none</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_select_inves">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::HelpAbout"/>
+   </property>
+   <property name="text">
+    <string>select inves</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
+```
+```cpp
+// 头文件
+#ifndef LISTWIDGETMAINWINDOW_H
+#define LISTWIDGETMAINWINDOW_H
+#include <QListWidget>
+#include <QMainWindow>
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class ListWidgetMainWindow; }
+QT_END_NAMESPACE
+
+class ListWidgetMainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    ListWidgetMainWindow(QWidget* parent = nullptr);
+    ~ListWidgetMainWindow();
+
+private slots:
+    void on_action_init_list_triggered();
+    void on_action_clear_list_triggered();
+    void on_action_insert_item_triggered();
+    void on_action_append_item_triggered();
+    void on_action_delete_item_triggered();
+    void on_action_exit_triggered();
+    void on_action_select_all_triggered();
+    void on_toolButton_asc_clicked();
+    void on_toolButton_desc_clicked();
+    void on_listWidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+    void on_listWidget_customContextMenuRequested(const QPoint &pos);
+
+private:
+    Ui::ListWidgetMainWindow *ui;
+
+    void set_actions_for_buttons();
+    void build_UI();
+    void create_selection_menu();
+};
+#endif // LISTWIDGETMAINWINDOW_H
+// 源文件
+#include <qmessagebox.h>
+#include "listwidgetmainwindow.h"
+#include "ui_listwidgetmainwindow.h"
+
+ListWidgetMainWindow::ListWidgetMainWindow(QWidget* parent)
+    : QMainWindow(parent), ui(new Ui::ListWidgetMainWindow)
+{
+    ui->setupUi(this);
+    build_UI();
+    set_actions_for_buttons();
+    create_selection_menu();
+}
+
+ListWidgetMainWindow::~ListWidgetMainWindow()
+{
+    delete ui;
+}
+
+void ListWidgetMainWindow::on_action_init_list_triggered()
+{
+    ui->listWidget->clear();
+    bool is_editable = ui->checkBox_is_editable->isChecked();
+
+    for(int i = 0;i<5;i++){
+        QListWidgetItem* item = new QListWidgetItem(QString("item%1").arg(i), this->ui->listWidget);
+        item->setCheckState(Qt::CheckState::Unchecked);
+        if(is_editable){
+            item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+        }else{
+            item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+        }
+        ui->listWidget->addItem(item);
+    }
+}
+
+void ListWidgetMainWindow::set_actions_for_buttons()
+{
+    ui->toolButton_init_list->setDefaultAction(ui->action_init_list);
+    ui->toolButton_init_list->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    ui->toolButton_add_item->setDefaultAction(ui->action_append_item);
+    ui->toolButton_add_item->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    ui->toolButton_clear_list->setDefaultAction(ui->action_clear_list);
+    ui->toolButton_clear_list->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    ui->toolButton_delete_item->setDefaultAction(ui->action_delete_item);
+    ui->toolButton_delete_item->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    ui->toolButton_insert_item->setDefaultAction(ui->action_insert_item);
+    ui->toolButton_insert_item->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    ui->toolButton_select_all->setDefaultAction(ui->action_select_all);
+    ui->toolButton_select_all->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    ui->toolButton_select_none->setDefaultAction(ui->action_select_none);
+    ui->toolButton_select_none->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    ui->toolButton_select_inves->setDefaultAction(ui->action_select_none);
+    ui->toolButton_select_inves->setToolButtonStyle(Qt::ToolButtonTextOnly);
+}
+
+void ListWidgetMainWindow::build_UI()
+{
+    ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    for(int i = 0; i< ui->layout_vertical_buttons->count(); i++){
+        QToolButton* button = qobject_cast<QToolButton*>(ui->layout_vertical_buttons->itemAt(i)->widget());
+        button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    }
+    ui->listWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    ui->toolBox->setCurrentIndex(0);
+}
+
+void ListWidgetMainWindow::create_selection_menu()
+{
+    QMenu* menu_selection = new QMenu(this);
+    menu_selection->addAction(ui->action_select_all);
+    menu_selection->addAction(ui->action_select_inves);
+    menu_selection->addAction(ui->action_select_none);
+
+    // QToolButton* button = new QToolButton(this);
+    ui->toolButton_select_buttons->setPopupMode(QToolButton::InstantPopup);
+    ui->toolButton_select_buttons->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    ui->toolButton_select_buttons->setMenu(menu_selection);
+}
+
+void ListWidgetMainWindow::on_action_clear_list_triggered()
+{
+    ui->listWidget->clear();
+}
+
+
+void ListWidgetMainWindow::on_action_insert_item_triggered()
+{
+    auto selected_items = ui->listWidget->selectedItems();
+    int order = ui->listWidget->currentRow();
+    QListWidgetItem* item = new QListWidgetItem(QString("insert item"), this->ui->listWidget);
+    if(selected_items.size() == 1){
+        if(ui->checkBox_is_editable){
+            item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+            item->setCheckState(Qt::Unchecked);
+        }else{
+            item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+        }
+        ui->listWidget->insertItem(order, item);
+    }else{
+        on_action_append_item_triggered();
+        delete item;
+    }
+}
+
+
+void ListWidgetMainWindow::on_action_append_item_triggered()
+{
+    QListWidgetItem* item = new QListWidgetItem(QString("append item"), this->ui->listWidget);
+    item->setCheckState(Qt::Unchecked);
+    if(ui->checkBox_is_editable){
+        item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+    }else{
+        item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+    }
+    ui->listWidget->addItem(item);
+}
+
+
+void ListWidgetMainWindow::on_action_delete_item_triggered()
+{
+    if(ui->listWidget->selectedItems().size() == 0){
+        QMessageBox::warning(this,"Warring","you must choose 1 item at least.");
+        return;
+    }
+    for(int i = 0;i<ui->listWidget->count();i++){
+        if(ui->listWidget->item(i)->isSelected()){
+            QListWidgetItem *taked_item = ui->listWidget->takeItem(i);
+            delete taked_item;
+        }
+    }
+}
+
+
+void ListWidgetMainWindow::on_action_exit_triggered()
+{
+    QApplication::exit();
+}
+
+
+void ListWidgetMainWindow::on_action_select_all_triggered()
+{
+    ui->listWidget->selectAll();
+}
+
+
+void ListWidgetMainWindow::on_toolButton_asc_clicked()
+{
+    if(!ui->checkbox_allow_sort->isChecked()){
+        QMessageBox::warning(this,"Warring","you have to allow sort list.");
+        return ;
+    }
+    ui->listWidget->sortItems(Qt::AscendingOrder);
+}
+
+
+void ListWidgetMainWindow::on_toolButton_desc_clicked()
+{
+    if(!ui->checkbox_allow_sort->isChecked()){
+        QMessageBox::warning(this,"Warring","you have to allow sort list.");
+        return ;
+    }
+    ui->listWidget->sortItems(Qt::DescendingOrder);
+}
+
+
+void ListWidgetMainWindow::on_listWidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
+{
+    QString display;
+    if(current != nullptr){
+        // display+="current item: " + ui->listWidget->currentItem()->text();
+        display+="current item: " + current->text();
+    }
+    if(current != nullptr && previous != nullptr) display += " | ";
+    if(previous != nullptr){
+        display += "previous item: " + previous->text();
+    }
+
+    ui->lineEdit_item_change->setText(display);
+}
+
+
+void ListWidgetMainWindow::on_listWidget_customContextMenuRequested(const QPoint &pos)
+{
+    if(ui->listWidget->itemAt(pos) == nullptr){
+        QPoint global_pos = ui->listWidget->viewport()->mapToGlobal(pos);
+        QMenu* press_menu = new QMenu(this);
+        press_menu->addAction(ui->action_init_list);
+        press_menu->addAction(ui->action_insert_item);
+        press_menu->addAction(ui->action_append_item);
+        press_menu->addAction(ui->action_delete_item);
+        press_menu->addSeparator();
+        press_menu->addAction(ui->action_select_all);
+        press_menu->addAction(ui->action_select_none);
+        press_menu->addAction(ui->action_select_inves);
+
+        press_menu->exec(global_pos);
+    }
+}
 
 
 ```
