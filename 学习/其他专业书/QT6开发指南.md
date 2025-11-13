@@ -892,7 +892,7 @@ void TextEditorMainWindow::buildUI()
 - arrowType 属性。属性值是枚举类型 Qt:: ArrowType。默认值是 `Qt::NoArrow` 用来显示箭头图标
 ![[PixPin_2025-11-12_15-55-48.png]]
 - 在 QListWidget 中使用 `currentIndex()` 会调用底层的**数据模型**来获取当前行在数据模型中所对应的 index，没有选中行返回的 `QModelIndex` 对象的 `isValid()` 方法返回 false。而 ` currentRow() ` 只返回 int 类型，从 0 开始的行号下标，如果没有选中行返回 `-1`
-### 编写代码
+### 代码逻辑
 #### 创建插入 item 逻辑
 注意创建**指针可视化对象**在设置 parent 时有些 QWidget parent 对象会将其中的子对象自动**并入其中管理**，也就是相当于调用了一次 `addWidget()` 或者 `addItem()`
 ```cpp
@@ -917,3 +917,73 @@ void ListWidgetMainWindow::on_action_insert_item_triggered()
 ```
 如果没有 mark 位置的代码，会导致 item 指针无论如何都会被创建，由于它的 parent 对象设置了 `this->ui->listWidget`，所以 QT 为了防止内存泄漏，会将其纳入 listWidget 的对象树中管理，导致 item 被添加到其中。而正常情况下 QT 只会通过 `addItem` 或者 `addWidget` 才会添加内容，这是一种**保护机制**
 解决方法是添加 `delete *item` 或者将创建 item 指针的代码移动到 `if(selected_items.size() == 1)` 语句中，这样就不用添加 delete 语句，或者使用如上方法添加 delete 删除指针
+#### 删除 item 逻辑
+```cpp
+void ListWidgetMainWindow::on_action_delete_item_triggered()
+{
+    if(ui->listWidget->selectedItems().size() == 0){
+        QMessageBox::warning(this, "Warring","you must choose 1 item at least.");
+        return;
+    }
+	// 方法1
+    for(int i = 0;i<ui->listWidget->count();i++){
+        if(ui->listWidget->item(i)->isSelected()){
+            QListWidgetItem *taked_item = ui->listWidget->takeItem(i);
+            delete taked_item;
+        }
+    }
+    
+    // 方法2
+	auto selectedItems = ui->listWidget->selectedItems();  // selectedItems类型为QListWidgetItem*
+    for(auto& item : selectedItems){
+    	int row = ui->listWidget->row(item);
+        if(row >= 0) {
+            delete ui->listWidget->takeItem(row);
+		}
+    }
+}
+```
+这样的代码看似没问题，其实在**删除时索引错乱**，每次多选 item 删除会导致删不干净，方法二甚至会导致指针悬空，因为 selectedItems 中指针指向的内容已经被 `takeitem()` 删除。
+#### 设置多选逻辑
+通过 `QListWidget::setSelectionMode` 函数解决，并且通过查看文档发现这些 Flag 是**互斥的**，功能上是递进的
+- NoSelection (0)
+- SingleSelection (1)
+- MultiSelection (2)
+- ExtendedSelection (3)
+- ContiguousSelection (4)
+这些值是互斥的，不能进行位运算组合。
+- 互斥的枚举值：使用连续整数（0, 1, 2, 3...），值代表不同的状态，每次只能处于一个状态
+- 可组合的标志：使用 2 的幂（1, 2, 4, 8...），这样可以通过位运算组合
+#### 设置排序逻辑
+`QListWidget::sortItems` 函数只能根据 item 的文本内容排序，可选排序设置**只有两个**：
+```cpp
+listWidget->sortItems(Qt::AscendingOrder);  // 升序
+listWidget->sortItems(Qt::DescendingOrder); // 降序
+```
+如果需要自定义排序逻辑，只能通过排序函数（如 `std::sort`）手动设置
+```cpp
+QList<QListWidgetItem*> items;
+for(int i = 0; i < ui->listWidet.count(); i++){
+	items.append(ui->listWidget->item(i));
+}
+std::sort(items.begin(), items.end(), [](QListWidgetItem* a, QListWidgetItem* b) -> bool { return /* custom logic */ ;});
+```
+#### QListWidget 信号
+```cpp
+void currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
+void currentRowChanged(int currentRow) //当前项发生了切换
+void currentTextChanged(const QString &currentText) //当前项发生了切换
+void itemSelectionChanged() //表示选择的项发生了变化
+void itemChanged(QListWidgetItem *item) //项的属性发生了变化，如文字、复选状态等
+void itemActivated(QListWidgetItem *item) //光标停留在某个项上，按 Enter 键时发射此信号
+void itemEntered(QListWidgetItem *item) //鼠标跟踪时
+void itemPressed(QListWidgetItem *item) //鼠标左键或右键按下
+void itemClicked(QListWidgetItem *item) //点击
+void itemDoubleClicked(QListWidgetItem *item) //双击
+```
+***值得注意的是**
+- 在 QListWidget 组件上点击某个项而导致当前项发生切换时，组件会发射 4 个信号，表示当前项发生了变化，这 4 个信号是 `currentItemChanged()`、`currentRowChanged()`、`currentTextChanged()` 和 `itemSelectionChanged()`，它们传递的参数不一样
+- 击一个项时，不管是否发生了当前项的切换，都会发射 `itemPressed()` 和 `itemClicked()` 信号。1在一个项上点击鼠标右键时只会发射 `itemPressed()` 信号，而不会发射 `itemClicked()` 信号
+#### 创建右键菜单
+每个继承自 QWidget 的类都有 `customContextMenuRequested()` 信号，在一个组件上点击鼠标右键时，组件发射这个信号，用于请求创建快捷菜单。需要创建菜单只需要编
+写对饮信号的槽函数即可
