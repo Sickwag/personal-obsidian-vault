@@ -876,6 +876,7 @@ void TextEditorMainWindow::buildUI()
 ```
 完整代码参考：[[C++ practice case#Qt 项目代码#4.10 QMainWindow 和 QAction]]
 ## 4.11 QToolButton 和 QListWidget
+### 基本使用方法
 ![[PixPin_2025-11-12_15-36-15.png]]
 这样的内容在 [[QTExamples#列表控件QListWidget和工具按钮QToolButton的和用法]]中已经写过，这里跳过实现部分
 只讲注意事项
@@ -891,4 +892,28 @@ void TextEditorMainWindow::buildUI()
 - arrowType 属性。属性值是枚举类型 Qt:: ArrowType。默认值是 `Qt::NoArrow` 用来显示箭头图标
 ![[PixPin_2025-11-12_15-55-48.png]]
 - 在 QListWidget 中使用 `currentIndex()` 会调用底层的**数据模型**来获取当前行在数据模型中所对应的 index，没有选中行返回的 `QModelIndex` 对象的 `isValid()` 方法返回 false。而 ` currentRow() ` 只返回 int 类型，从 0 开始的行号下标，如果没有选中行返回 `-1`
-- 
+### 编写代码
+#### 创建插入 item 逻辑
+注意创建**指针可视化对象**在设置 parent 时有些 QWidget parent 对象会将其中的子对象自动**并入其中管理**，也就是相当于调用了一次 `addWidget()` 或者 `addItem()`
+```cpp
+void ListWidgetMainWindow::on_action_insert_item_triggered()
+{
+    auto selected_items = ui->listWidget->selectedItems();
+    int order = ui->listWidget->currentRow();
+    QListWidgetItem* item = new QListWidgetItem(QString("insert item"), this->ui->listWidget);
+    if(selected_items.size() == 1){
+        if(ui->checkBox_is_editable){
+            item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsEditable);
+            item->setCheckState(Qt::Unchecked);
+        }else{
+            item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+        }
+        ui->listWidget->insertItem(order, item);
+    }else{
+        on_action_append_item_triggered();
+        delete item; // mark
+    }
+}
+```
+如果没有 mark 位置的代码，会导致 item 指针无论如何都会被创建，由于它的 parent 对象设置了 `this->ui->listWidget`，所以 QT 为了防止内存泄漏，会将其纳入 listWidget 的对象树中管理，导致 item 被添加到其中。而正常情况下 QT 只会通过 `addItem` 或者 `addWidget` 才会添加内容，这是一种**保护机制**
+解决方法是添加 `delete *item` 或者将创建 item 指针的代码移动到 `if(selected_items.size() == 1)` 语句中，这样就不用添加 delete 语句，或者使用如上方法添加 delete 删除指针
