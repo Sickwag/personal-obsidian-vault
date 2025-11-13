@@ -51,9 +51,21 @@
               "icon": "lucide-file",
               "title": "QT6开发指南"
             }
+          },
+          {
+            "id": "b15a27a401d75fed",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.10.3"
+              },
+              "icon": "lucide-book-up",
+              "title": "版本说明 1.10.3"
+            }
           }
         ],
-        "currentTab": 2
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -111,7 +123,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -226,8 +239,9 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "824bead2c62cadeb",
+  "active": "b15a27a401d75fed",
   "lastOpenFiles": [
+    "学习/algorithm/刷题路线.md",
     "学习/其他专业书/QT6开发指南.md",
     "Files & LongText/Long code/C++ practice case.md",
     "Files & LongText/Attachments/PixPin_2025-11-12_15-55-48.png",
@@ -244,7 +258,6 @@
     "学习/ProjectsStudy/FromProjects/servertech-chat.md",
     "学习/algorithm/分析优化.md",
     "学习/algorithm/题型分类.md",
-    "学习/algorithm/刷题路线.md",
     "学习/ProjectsStudy/WriteByMyself/CPP爬虫实战.md",
     "Files & LongText/Attachments/PixPin_2025-11-06_14-48-13.png",
     "Files & LongText/Attachments/PixPin_2025-11-06_14-37-12.png",
