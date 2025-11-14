@@ -1182,3 +1182,79 @@ int main(int argc, char** argv) {
 这段代码有一个很不容易发现的错误
 在 mark 位置 singleShot 的 lambda 函数**使用引用捕获了两个局部变量**，但是由于 `timer->start()` 不阻塞，所以开始计时之后设置好 singleShot 定时结束之后，`make_many_windows` 函数返回，其中**所有局部变量被销毁**，导致**已经完成初始化的 singleShot 后台计时对象捕获的指针所指向的内存已经被销毁**，程序读取到释放的内存块会导致程序崩溃。
 日志中会显式说明程序崩溃
+## QTreeWidge
+### 准备工作
+要在一个 container 容器中设置布局，UI 编辑器中设置 `layoutDirection`
+![[PixPin_2025-11-14_17-37-17.png]]
+![[Pasted image 20251114173750.png]]
+代码中使用 `setLayoutDirection` 即可
+设置中心组件（`setCentralWidget`）是 QMainWindow 的专属方法，一个 MainWindow 类只能有一个中心组件，后设置的会覆盖前设置的。设置一个子空间为中心组件之后：
+1. **布局管理**：该子组件会自动占据主窗口的中心区域
+2. **自动调整**：当主窗口大小改变时，中心组件会自动调整大小以适应可用空间
+3. **移除默认**：替换掉`QMainWindow`默认的空中心部件
+4. **内存管理**：设置为中心组件的子组件会被`QMainWindow`自动管理其生命周期
+![[PixPin_2025-11-14_17-44-50.png|400]]
+这里由于 scrollArea 不是中心，所以不会自动填充（当然也可以设置 `sizePolicy` 来实现）
+![[PixPin_2025-11-14_17-47-48.png|400]]
+设置之后自动填充
+### 关闭所有调试信息输出
+有些信号槽配合比较复杂的类，需要通过输出调试信息来观察信号触发情况时，就会用到很多 `qDebug` 调试信息，在 qmake 中可以通过
+```qmake
+DEFINES += QT_NO_DEBUG_OUTPUT
+```
+禁用所有调试信息输出
+cmake 中通过：
+```cmake
+target_compile_definitions(your_target_name 
+    PRIVATE 
+        QT_NO_DEBUG_OUTPUT
+        QT_NO_INFO_OUTPUT  # 如果需要也禁用qInfo()
+        QT_NO_WARNING_OUTPUT  # 如果需要也禁用qWarning()
+)
+
+# 如果需要全局配置
+add_definitions(-DQT_NO_DEBUG_OUTPUT)
+
+# 如果需要连接前设置
+target_compile_definitions(your_target_name PRIVATE QT_NO_DEBUG_OUTPUT)
+target_link_libraries(your_target_name Qt6::Core)
+```
+代码中的 `qDebug()` 语句仍然存在，只是不会在运行时输出到控制台。
+### 为控件设置用户数据
+很多Qt组件都有一个 `setData()` 函数，data 属性类型为QVariant，用来存储“用户数据”
+`QVariant` 就像一个"万能容器"，可以存储任意类型的数据（整数、字符串、对象指针等），有很多应用场景：
+```cpp
+// 在文件管理器中，列表项显示文件名，但需要知道文件路径
+QListWidgetItem *item = new QListWidgetItem("文档.txt");
+item->setData(Qt::UserRole, "/home/user/文档.txt"); // 存储完整路径
+
+// 点击时获取真实路径
+void onItemClicked(QListWidgetItem *item) {
+    QString filePath = item->data(Qt::UserRole).toString();
+    openFile(filePath); // 使用存储的路径打开文件
+}
+// 存储临时数据
+// 在进度管理器中，存储计算进度
+QProgressBar *progressBar = new QProgressBar();
+progressBar->setData(Qt::UserRole, calculateTotalSteps()); // 存储总步数
+
+void updateProgress() {
+    int totalSteps = progressBar->data(Qt::UserRole).toInt();
+    int currentStep = getCurrentStep();
+    progressBar->setValue(currentStep * 100 / totalSteps);
+}
+```
+1. **数据与显示分离**：显示文本和实际数据可以不同
+2. **避免全局变量**：数据直接关联到相关组件
+3. **简化事件处理**：在事件回调中直接获取关联数据
+通过 `setData(Qt::role, QVariant var)` 插入键值对
+查看 ` enum Qt::ItemDataRole ` 文档可以看到有很多已经内置的 role，可以看到他们是[[#QToolButton 和 QListWidget#代码逻辑#设置多选逻辑|互斥的]]，但是如果这些还是不够用，则可以插入自定义 role（QUserRole），它的值为 `0x100`，通过 `QUserRole+1` 来扩充 data 的键
+### QTreeWidget类
+对于列，可以设置 `QTreeWidgetItem` 作为表头，这样能够设置表头的各种样式，如果只是使用 QLabel 就不行，两者对应 api 为：
+```cpp
+void QTreeWidget::setHeaderLabels(const QStringList &labels)
+void QTreeWidget::setHeaderItem(QTreeWidgetItem *item) //设置表头节点
+QTreeWidgetItem *QTreeWidget::headerItem() //返回表头节点
+```
+允许存在任意个顶层节点，一个根节点，使用 `QTreeWidgetItem *QTreeWidget::invisibleRootItem()` 返回
+`QTreeWidgetItem` 在构造函数中有一个 type 变量，是一个和 [[#为控件设置用户数据|QWidget的data属性]]相似的一个特性，可以为其设置 type（**只能是一个 int 类型**）来标记这个 item 的类别。但是设置后不能更改，没有 `setType` 接口
