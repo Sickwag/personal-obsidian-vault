@@ -466,9 +466,9 @@ Qt 6 中已经舍弃了 Qt 5 中产生随机数的函数 `qrand()`和 `qsrand()`
 创建 QRandomGenerator 对象时可以给构造函数提供一个数作为随机数种子。
 如果两个随机数种子相同，则产生的随机数序列是完全相同的；反之不同
 
-QRandomGenerator 有一个静态函数 `securelySeeded()` 可以**创建**一个随机数发生器，**他会调用当前系统的随机数生成器(`QRandomGenerator::system()`)单独生成一个随机数**，每次调用这个静态函数使用的种子是不同的，而且无法获得，如果只是短期内使用随机数发生器，且生成的随机数的数据量比较小，就不要使用函数 ` securelySeeded() ` 单独生成随机数发生器，使用静态函数 ` QRandomGenerator::global() ` 表示的全局的随机数发生器。
-QRandomGenerator 有两个静态函数会返回随机数发生器，可以直接使用这两个函数返回的随
-机数发生器，无须给它们设置种子进行初始化。
+- QRandomGenerator 有一个静态函数 `securelySeeded()` 可以**创建**一个随机数发生器，**他会调用当前系统的随机数生成器(`QRandomGenerator::system()`)单独生成一个随机数**，每次调用这个静态函数使用的种子是**安全且不同**的，而且无法获得，由于**他不是静态函数**，且步骤较为复杂，每次需要随机数都创建对象会有**性能问题**
+- 如果只是短期内使用随机数发生器，且生成的随机数的数据量比较小，就不要使用函数 ` securelySeeded() ` 单独生成随机数发生器，使用静态函数 ` QRandomGenerator::global() ` 表示的全局的随机数发生器
+- QRandomGenerator 有两个静态函数会返回随机数发生器，可以直接使用这两个函数返回的随机数发生器，无须给它们设置种子进行初始化。
 ```cpp
 QRandomGenerator *QRandomGenerator::system()
 QRandomGenerator *QRandomGenerator::global()
@@ -476,7 +476,17 @@ QRandomGenerator *QRandomGenerator::global()
 - 使用 system 随机数生成是线程安全的，并且在任何线程中使用，常用语**生成密码和生成其他随机数，加密方式生成器的种子**，由于他可能调用硬件来生成随机数，***不要用它生成大量的随机数***
 - 可以使用 `quint32 rand= QRandomGenerator::global()->generate/generate64/generateDouble()` 来生成不同类型的随机数，生成 double 的范围在 `[0,1)`，不仅支持不同类型，还支持范围（使用 `bounded()` 函数），同样包括下界，**不包括上界**
 - 其对象还支持 `()` 括号运算符，每使用一次 `()` 就会再生成一次
-
+最普遍的使用方法：
+```cpp
+int x = QRandomGenerator::global()->bounded(100);
+int y = QRandomGenerator::global()->bounded(100);
+int z = QRandomGenerator::global()->bounded(100);
+// securelySeeded()同理
+qDebug()<<x ;
+qDebug()<<y ;
+qDebug()<<z ;
+```
+或者参考[[#[DIY ]自己实现网红表白程序#功能设计 ]]
 # 常用界面组件的使用
 ## 界面组件概述
 ### 输入类组件
@@ -1035,3 +1045,133 @@ void ListWidgetMainWindow::on_listWidget_customContextMenuRequested(const QPoint
 仅仅是实现较为重要的部分，一些逻辑上重复的 QAction 槽函数没有实现，参考 [[C++ practice case#Qt 项目代码#4.11 QLIstWidget]]
 
 ## \[DIY\]自己实现网红表白程序
+### 功能设计
+#### 整体接口
+```cpp
+class ManyWindows : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit ManyWindows(QString content ,QWidget *parent = nullptr);
+    ~ManyWindows();
+
+    QRandomGenerator gen;
+private:
+    Ui::ManyWindows* ui;
+    QLineEdit* lineedit_display;
+
+    void build_UI();
+    void impl_bgcolor_textcolor();
+signals:
+};
+```
+gen 是随机数生成器，如果把它初始化为 `QRandomGenerator::global()` 放在 public 可以在外部调用而不损失性能，放在 private 那么外部生成多个窗口时窗口位置随机数就需要再使用一个随机数生成器
+#### 随机生成文本和背景颜色
+```cpp
+void ManyWindows::impl_bgcolor_textcolor()
+{
+    gen = QRandomGenerator::securelySeeded();
+    QColor bg_color{
+        gen.bounded(255),
+        gen.bounded(255),
+        gen.bounded(255)
+    };
+    QColor text_color{
+        gen.bounded(255),
+        gen.bounded(255),
+        gen.bounded(255)
+    };
+    auto line_palette = this->lineedit_display->palette();
+    line_palette.setColor(QPalette::Base, bg_color);
+    line_palette.setColor(QPalette::Text, text_color);
+    this->lineedit_display->setPalette(line_palette);
+    QFont font = lineedit_display->font();
+	font.setBold(true);
+	font.setPointSize(20);
+	this->lineedit_display->setFont(font);
+}
+```
+随机数生成可以参考 [[#QRandomGenerator 类]]，自定义调整颜色和样式有几种方法：
+- 使用调色板调整每个部分颜色，设置字体等：
+```cpp
+QLineEdit* lineEdit = new QLineEdit(this);
+// 创建调色板
+QPalette palette = lineEdit->palette();
+// 设置背景色
+palette.setColor(QPalette::Base, QColor("#2C3E50"));
+// 设置字体颜色
+palette.setColor(QPalette::Text, QColor("#ECF0F1"));
+// 设置占位符文本颜色
+palette.setColor(QPalette::PlaceholderText, QColor("#95A5A6"));
+// 应用调色板
+lineEdit->setPalette(palette);
+// 可选：设置字体
+QFont font("Arial", 12, QFont::Bold);
+lineEdit->setFont(font);
+```
+- 使用 QSS：
+```cpp
+QLineEdit* lineEdit = new QLineEdit(this);
+
+// 设置背景色和字体颜色
+lineEdit->setStyleSheet("QLineEdit {"
+                       "background-color: #2C3E50;"
+                       "color: #ECF0F1;"
+                       "border: 2px solid #34495E;"
+                       "border-radius: 5px;"
+                       "padding: 5px;"
+                       "}");
+```
+#### 实现多个窗口
+这个实现放在类外部
+```cpp
+void make_many_windows(size_t interval, size_t duration, QString content)
+{
+    QTimer* global_timer = new QTimer();
+    global_timer->setInterval(interval);
+    QList<ManyWindows*>* global_windows = new QList<ManyWindows*>();
+// 
+    QScreen* screen = QApplication::primaryScreen();
+    QRect screen_rect = screen->geometry();
+// 
+    QObject::connect(global_timer, &QTimer::timeout, [screen_rect, global_windows, content]() {
+        ManyWindows* window = new ManyWindows(content);
+        window->show();
+// 
+        QRandomGenerator pos_gen = QRandomGenerator::securelySeeded();
+// 
+        const int window_width = window->width();
+        const int window_height = window->height();
+// 
+        int max_x = qMax(0, screen_rect.width() - window_width);
+        int max_y = qMax(0, screen_rect.height() - window_height);
+// 
+        int random_x = (max_x > 0) ? pos_gen.bounded(max_x + 1) : 0;
+        int random_y = (max_y > 0) ? pos_gen.bounded(max_y + 1) : 0;
+// 
+        window->move(random_x, random_y);
+        global_windows->append(window);
+        // debug
+        qDebug() << "window: (" << random_x << ", " << random_y << ") created.";
+    });
+// 
+    global_timer->start();
+// 
+    QTimer::singleShot(duration, [global_timer, global_windows]() {
+        if(global_timer && global_timer->isActive()){
+            global_timer->stop();
+            // debug
+            qDebug() << "stop create windows.";
+            for(auto& window : *global_windows){
+                if(window) {
+                    window->close();
+                    window->deleteLater();
+                }
+            }
+            global_windows->clear();
+            delete global_windows;
+        }
+        global_timer->deleteLater();
+    });
+}
+```
