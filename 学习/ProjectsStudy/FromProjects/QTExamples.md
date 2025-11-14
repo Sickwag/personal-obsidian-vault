@@ -342,9 +342,11 @@ submodules 分模块下载，single 是所有模块文件打包下载，压缩�
 ### 杂项
 如果调用一个对象函数，这个函数明明在文档里有些，但是 ide（creator）没有提示，可能是这个对象（控件）必须单独 include，而不是靠 ide 提示自动补全头文件
 ### 添加 qrc 资源管理
+#### 引入工程中
 ![[Pasted image 20251012153023.png]]
 添加完之后如果显示添加失败，需要到 cmake 中查看是否将 qrc 文件引入到项目中
 需要在 `target_link_libraries` 之前引入
+想在项目视图下看见这个文件（cmake 构建的项目中认为项目有关的文件只会在 `add_executable` 和 `add_library` 中出现），所以还要添加
 ```cmake
 qt_add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} resource.qrc) 
 ```
@@ -368,7 +370,8 @@ file 标签引入两个文件夹相对于 project_source 宏的位置，即项�
 1. 物理路径：qrc 文件中`<file>`标签指定的文件路径（相对于 qrc 文件位置）
 2. 虚拟路径：通过 prefix 定义的虚拟文件系统路径
 3. 访问路径：代码中使用:/前缀/文件路径的格式访问
-如果不使用 qrc 文件引入图片，也可以在 cmake 中使用下面方式引入
+如果不使用 qrc 文件引入图片，也可以在 cmake 中使用下面方式**单纯使用代码**引入
+使用这些方式引入的文件不会在项目视图中显示，原因参考[[#引入工程中|本节开头]]
 ```cpp
 set(books_resource_files
     "images/star.svg"
@@ -383,6 +386,33 @@ qt_add_resources(books "books"
 )
 ```
 这样就要求项目文件目录下必须要有一个真实存在的 image 文件夹，并在其中放入相应的图片
+#### 使用资源在代码中
+假设有这样一个 qrc 分布
+```xml
+<RCC>
+    <qresource prefix="/images">
+        <file>icons/app_icon.png</file>
+        <file>icons/button_hover.png</file>
+    </qresource>
+    <qresource prefix="/styles">
+        <file>themes/dark_theme.css</file>
+        <file>themes/light_theme.css</file>
+    </qresource>
+    <qresource prefix="/translations">
+        <file>lang/chinese_translation.qm</file>
+    </qresource>
+</RCC>
+```
+使用 `app_icon.png` 文件，应该使用的路径是 `":/images/app_icon.png"`
+qt 对 qrc 路径解析规则为：
+```bash
+":/images/app_icon.png"
+↑   ↑      ↑
+│   │      └── qrc文件中<file>标签内的文件名（不包括前面的路径部分）
+│   └───────── qresource的prefix值
+└───────────── 资源路径标识符
+```
+Qt会忽略 `<file>` 标签中前面的路径部分（`icons/`），只使用文件名，因为 prefix 标签已经实行过分类的作用了（prefix 标签可以不止一级），file 标签记录**文件相对当前 qrc 文件的相对位置**
 ### 添加组件和类
 qt creater 不像 vs，能够在添加继承自 widget 的类的同时选择是否添加 ui 文件，而是需要自己添加完 h\cpp 文件之后自己再添加一次 ui 文件
 ![[Pasted image 20251012120655.png]]
