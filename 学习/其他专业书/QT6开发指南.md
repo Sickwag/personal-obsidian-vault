@@ -875,7 +875,7 @@ void TextEditorMainWindow::buildUI()
 }
 ```
 完整代码参考：[[C++ practice case#Qt 项目代码#4.10 QMainWindow 和 QAction]]
-## 4.11 QToolButton 和 QListWidget
+## QToolButton 和 QListWidget
 ### 基本使用方法
 ![[PixPin_2025-11-12_15-36-15.png]]
 这样的内容在 [[QTExamples#列表控件QListWidget和工具按钮QToolButton的和用法]]中已经写过，这里跳过实现部分
@@ -1033,3 +1033,5 @@ void ListWidgetMainWindow::on_listWidget_customContextMenuRequested(const QPoint
 ```
 ### 代码实现
 仅仅是实现较为重要的部分，一些逻辑上重复的 QAction 槽函数没有实现，参考 [[C++ practice case#Qt 项目代码#4.11 QLIstWidget]]
+
+## \[DIY\]自己实现网红表白程序
