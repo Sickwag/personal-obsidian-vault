@@ -1130,34 +1130,27 @@ void make_many_windows(size_t interval, size_t duration, QString content)
     QTimer* global_timer = new QTimer();
     global_timer->setInterval(interval);
     QList<ManyWindows*>* global_windows = new QList<ManyWindows*>();
-// 
     QScreen* screen = QApplication::primaryScreen();
     QRect screen_rect = screen->geometry();
-// 
     QObject::connect(global_timer, &QTimer::timeout, [screen_rect, global_windows, content]() {
         ManyWindows* window = new ManyWindows(content);
         window->show();
-// 
         QRandomGenerator pos_gen = QRandomGenerator::securelySeeded();
-// 
         const int window_width = window->width();
         const int window_height = window->height();
-// 
         int max_x = qMax(0, screen_rect.width() - window_width);
         int max_y = qMax(0, screen_rect.height() - window_height);
-// 
         int random_x = (max_x > 0) ? pos_gen.bounded(max_x + 1) : 0;
         int random_y = (max_y > 0) ? pos_gen.bounded(max_y + 1) : 0;
-// 
         window->move(random_x, random_y);
         global_windows->append(window);
         // debug
         qDebug() << "window: (" << random_x << ", " << random_y << ") created.";
     });
-// 
     global_timer->start();
-// 
-    QTimer::singleShot(duration, [global_timer, global_windows]() {
+    QTimer::singleShot(duration, [&global_timer, &global_windows]() {
+    // mark 正确形式：
+    // QTimer::singleShot(duration, [global_timer, global_windows]() {
         if(global_timer && global_timer->isActive()){
             global_timer->stop();
             // debug
@@ -1174,4 +1167,18 @@ void make_many_windows(size_t interval, size_t duration, QString content)
         global_timer->deleteLater();
     });
 }
+
+int main(int argc, char** argv) {
+	QApplication a(argc, argv);
+	make_many_windows();
+	return a.exec();
+}
 ```
+- 一般来说，定时执行某个动作只需要设置 `QTimer` 并 `setInterval()` 即可，如果需要设置一段时间之后结束计时，则还需要使用一个辅助计时器。
+- 如果这个停止计时的操作是单次的（只停止一个/次计时器），可以使用 `QTimer::singleShot(ms, operation)`
+- 一般执行的流程是先初始化 `QTimer` 对象的设置，然后通过 connect 连接 timeout 信号执行的操作。注意 connect 可以没有 receiver，把接收信号的动作交给一个**生命周期长于 timer 对象的函数执行**
+- `QTimer` 对象在调用 `start()` 后会***立刻返回，函数不会在这条语句位置阻塞***，计时操作会转到后台**异步进行**。
+- `QTimer::singleShot` **是 static**的，初始化之后就**立刻返回**，计时操作同样后台异步运行
+这段代码有一个很不容易发现的错误
+在 mark 位置 singleShot 的 lambda 函数**使用引用捕获了两个局部变量**，但是由于 `timer->start()` 不阻塞，所以开始计时之后设置好 singleShot 定时结束之后，`make_many_windows` 函数返回，其中**所有局部变量被销毁**，导致**已经完成初始化的 singleShot 后台计时对象捕获的指针所指向的内存已经被销毁**，程序读取到释放的内存块会导致程序崩溃。
+日志中会显式说明程序崩溃
