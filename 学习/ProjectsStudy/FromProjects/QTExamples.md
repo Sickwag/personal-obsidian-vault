@@ -168,6 +168,22 @@ for (int i = meta->propertyOffset(); i < meta->propertyCount(); i++) {
 
 > ps: C++11 引入了字符串 `u8` 前缀，可以让 string 类型按照 utf-8 编码
 
+### QString 的隐式共享
+在传统C++中，如果想要为函数传入一个字符串参数，为了避免字符串复制，一般会使用 `const std::string& str` 作为传入参数，使用QString 时则不需要，因为 QString 对象之间，如果**没有对老 QString 的修改操作**，新对象从老对象中获得数据的方式是**共享同一块内存地址**，QString 内部也使用了[[Modern C++#5.1 RAII 与引用计数|引用计数]]的方法
+- `QString`：使用隐式共享，直到修改才会复制时共享数据
+- `std::string`：C++11前通常是深拷贝，C++11后可能有短字符串优化
+```cpp
+QString original = "Hello";
+
+// 情况1：只读使用 - 无复制
+processString(original);  // 隐式共享，没有数据复制
+
+// 情况2：需要修改 - 自动复制
+void modifyString(QString str) {
+    str.append(" World");  // 写时复制，此时才创建副本
+}
+```
+只有性能极其敏感的场景，才会考虑使用 const 引用传递
 ### 字符串对象转数字
 QString 对象中的各个 to 开头的函数可以实现，并且支持进制转换
 ```cpp
