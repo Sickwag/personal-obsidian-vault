@@ -1249,6 +1249,13 @@ void updateProgress() {
 3. **简化事件处理**：在事件回调中直接获取关联数据
 通过 `setData(Qt::role, QVariant var)` 插入键值对
 查看 ` enum Qt::ItemDataRole ` 文档可以看到有很多已经内置的 role，可以看到他们是[[#QToolButton 和 QListWidget#代码逻辑#设置多选逻辑|互斥的]]，但是如果这些还是不够用，则可以插入自定义 role（QUserRole），它的值为 `0x100`，通过 `QUserRole+1` 来扩充 data 的键
+### Qt 信号发射 emit 关键字
+`emit` 实际上是一个**空宏**，在预处理阶段会被替换为空：
+```cpp
+#define emit
+```
+由于各种 Qt 控件的信号函数可以直接使用函数调用来发起，**技术上不需要使用 emit**关键字，emit 关键字的存在**仅仅是为了可读性**，避免这种信号发射语法和函数调用混淆
+虽然技术上不是必须，但是**强烈建议保留**
 ### QTreeWidget类
 对于列，可以设置 `QTreeWidgetItem` 作为表头，这样能够设置表头的各种样式，如果只是使用 QLabel 就不行，两者对应 api 为：
 ```cpp
