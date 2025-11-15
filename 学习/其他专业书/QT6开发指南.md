@@ -1265,3 +1265,25 @@ QTreeWidgetItem *QTreeWidget::headerItem() //返回表头节点
 ```
 允许存在任意个顶层节点，一个根节点，使用 `QTreeWidgetItem *QTreeWidget::invisibleRootItem()` 返回
 `QTreeWidgetItem` 在构造函数中有一个 type 变量，是一个和 [[#为控件设置用户数据|QWidget的data属性]]相似的一个特性，可以为其设置 type（**只能是一个 int 类型**）来标记这个 item 的类别。但是设置后不能更改，没有 `setType` 接口
+由于这一章和 [[#QToolButton 和 QListWidget]] 非常像，很多代码较为重复，这里只实现重要部分：[[C++ practice case#Qt 项目代码#4.12 QTreeWidget]]
+## QTableWidget
+和 [[#QToolButton 和 QListWidget|QListWidget]] & [[#QTreeWidge]] 大同小异，只不过 table 中的 item 变为了单元格，最小设置单元也成为了一个单元格，对行列的修改本质上都是在**按照单元格坐标**每次修改一个单元格
+每一个 item 同样可以设置 type 和 [[#QTreeWidge#为控件设置用户数据|data]]
+### 信号处理
+同 [[#QTreeWidge]]，当前单元格发生切换时，会同时发射 `currentCellChanged()` 信号和 `currentItemChanged()` 信号。`currentCellChanged()` 信号传递 4个参数，即当前单元格的行号和列号以及之前单元格的行号和列号，`currentItemChanged()` 信号传递两个参数，即当前项和之前的项。
+自动调整行高和行宽比较方便
+```cpp
+void  resizeColumnToContents(int column)          //自动调整列号为column的列的宽度
+void  resizeColumnsToContents()                   //自动调整所有列的宽度，以适应其内容
+void  resizeRowToContents(int row)                //自动调整行号为row的行的高度
+void  resizeRowsToContents()                      //自动调整所有行的高度，以适应其内容
+```
+调整间隔行底色错开 `setAlternatingRowColors(checked)`
+# 模型/视图结构
+## 概述说明
+
+> 模型/视图（model/view）结构是进行数据存储和界面展示的一种编程结构。在这种结构里，**模型存储数据，界面上的视图组件显示模型中的数据**，在视图组件里修改的数据会被自动保存到模型里。
+
+重点在于模型**只负责存储数据**，**视图只负责展示模型中的数据**，模型的数据来源可以是**内存中**的字符串列表或二维表格型数据，也可以是**数据库中**的数据表，一种模型可以用不同的视图组件来显示数据
+![[PixPin_2025-11-15_17-07-57.png]]
+模型向视图提供数据是**单向的**，代理（delegate）在视图与模型之间交互操作时提供的临时编辑器，当需要在视图上编辑数据时，代理会为编辑数据提供一个编辑器，这个编辑器获取模型的数据、接受用户编辑的数据后又将其提交给模型。例如在QTableView组件上双击一个单元格来编辑数据时，在单元格里就会出现一个QLineEdit组件，这个编辑框就是代理提供的临时编辑器。这一点已经在[[Qt Official Tutorial#Books|官方books示例]]中使用到

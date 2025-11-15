@@ -4104,5 +4104,576 @@ void ListWidgetMainWindow::on_listWidget_customContextMenuRequested(const QPoint
     }
 }
 
+```
+#### 4.12 QTreeWidget
+```xml
+<RCC>
+    <qresource prefix="/common">
+        <file>icons/folder.svg</file>
+        <file>icons/pic.svg</file>
+    </qresource>
+</RCC>
+```
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TreeWidgetMainWindow</class>
+ <widget class="QMainWindow" name="TreeWidgetMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>804</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QScrollArea" name="scrollArea">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>511</width>
+      <height>471</height>
+     </rect>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <widget class="QWidget" name="scrollAreaWidgetContents">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>509</width>
+       <height>469</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>804</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_dir_tree">
+    <property name="title">
+     <string>目录树</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menu_view">
+    <property name="title">
+     <string>视图</string>
+    </property>
+   </widget>
+   <addaction name="menu_dir_tree"/>
+   <addaction name="menu_view"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonStyle::ToolButtonTextUnderIcon</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionadd_folder"/>
+   <addaction name="actionadd_files"/>
+   <addaction name="actiondelete_item"/>
+   <addaction name="actionscan_items"/>
+   <addaction name="actionzoom_in"/>
+   <addaction name="actionzoom_out"/>
+   <addaction name="actionzoom_real_size"/>
+   <addaction name="actionzoom_fit_width"/>
+   <addaction name="actionzoom_fit_height"/>
+   <addaction name="actiondock_float"/>
+   <addaction name="actiondock_visible"/>
+   <addaction name="actionquit"/>
+  </widget>
+  <widget class="QDockWidget" name="dock_left_side">
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QTreeWidget" name="treeWidget_files">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <action name="actionadd_folder">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::AddressBookNew"/>
+   </property>
+   <property name="text">
+    <string>add_folder</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionadd_files">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentNew"/>
+   </property>
+   <property name="text">
+    <string>add_files</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionzoom_in">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::ZoomIn"/>
+   </property>
+   <property name="text">
+    <string>zoom_in</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionzoom_out">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::ZoomOut"/>
+   </property>
+   <property name="text">
+    <string>zoom_out</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionzoom_real_size">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentPrint"/>
+   </property>
+   <property name="text">
+    <string>zoom_real_size</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actiondelete_item">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditDelete"/>
+   </property>
+   <property name="text">
+    <string>delete_item</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionquit">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::WindowClose"/>
+   </property>
+   <property name="text">
+    <string>quit</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionzoom_fit_width">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::FormatJustifyCenter"/>
+   </property>
+   <property name="text">
+    <string>zoom_fit_width</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionzoom_fit_height">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::GoUp"/>
+   </property>
+   <property name="text">
+    <string>zoom_fit_height</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionscan_items">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentOpen"/>
+   </property>
+   <property name="text">
+    <string>scan_items</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actiondock_visible">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::InsertImage"/>
+   </property>
+   <property name="text">
+    <string>dock_visible</string>
+   </property>
+   <property name="toolTip">
+    <string>dock_visible</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actiondock_float">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::EditSelectAll"/>
+   </property>
+   <property name="text">
+    <string>dock_float</string>
+   </property>
+   <property name="toolTip">
+    <string>dock_float</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
+```
+```cpp
+#ifndef TREEWIDGETMAINWINDOW_H
+#define TREEWIDGETMAINWINDOW_H
+
+#include <qspinbox.h>
+#include <QLabel>
+#include <qpixmap.h>
+#include <qmainwindow.h>
+#include <QTreeWidgetItem>
+QT_BEGIN_NAMESPACE
+namespace Ui { class TreeWidgetMainWindow; }
+QT_END_NAMESPACE
+
+
+class TreeWidgetMainWindow : public QMainWindow
+{
+    Q_OBJECT
+public:
+    explicit TreeWidgetMainWindow(QMainWindow *parent = nullptr);
+    ~TreeWidgetMainWindow();
+
+private:
+    Ui::TreeWidgetMainWindow* ui;
+    enum    Tree_Type{itTopItem=1001, itGroupItem, itImageItem};
+    enum    Tree_Col_Num{colItem=0, colItemType, colDate}; //目录树列的序号
+    QLabel* label_filename;
+    QLabel* label_node_text;
+    QSpinBox *spinBox_ratio;
+    QPixmap pixmap_;
+    float ratio_;
+
+    void build_ui();
+    void    build_tree_header();                           //构建目录树表头
+    void    init_tree();                                   //初始化目录树
+    void    add_folder_item(QTreeWidgetItem *parent_item, QString dir_name);  //添加目录节点
+    QString get_final_folder_name(const QString &full_path_name);           //提取目录名称
+    void    add_image_item(QTreeWidgetItem *partition_item,QString filename);  //添加图片节点
+    void    display_image(QTreeWidgetItem *item);           //显示一个图片节点关联的图片
+    void    change_item_caption(QTreeWidgetItem *item);      //遍历改变节点标题
+    void    delete_item(QTreeWidgetItem *partition_item, QTreeWidgetItem *item);//删除一个节点
+
+signals:
+private slots:
+    void on_actionadd_folder_triggered();
+    void on_actionadd_files_triggered();
+    void on_treeWidget_files_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
+    void on_actiondelete_item_triggered();
+    void on_actionscan_items_triggered();
+    void on_actiondock_float_triggered(bool checked);
+    void on_actiondock_visible_triggered(bool checked);
+};
+
+#endif // TREEWIDGETMAINWINDOW_H
+
+```
+
+```cpp
+#include "treewidgetmainwindow.h"
+#include "ui_treewidgetmainwindow.h"
+#include <QFileDialog>
+
+TreeWidgetMainWindow::TreeWidgetMainWindow(QMainWindow *parent)
+    : QMainWindow(parent), ui(new Ui::TreeWidgetMainWindow)
+{
+    ui->setupUi(this);
+    build_ui();
+
+    this->label_node_text = new QLabel("node title", this);
+    this->label_node_text->setMinimumWidth(200);
+    ui->statusbar->addWidget(this->label_node_text);
+
+    this->spinBox_ratio = new QSpinBox(this);
+    this->spinBox_ratio->setRange(0,2000);
+    this->spinBox_ratio->setValue(100);
+    this->spinBox_ratio->setSuffix(" %");
+    this->spinBox_ratio->setReadOnly(true);
+    this->spinBox_ratio->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    ui->statusbar->addPermanentWidget(this->spinBox_ratio);
+
+    this->label_filename = new QLabel("filename", this);
+    ui->statusbar->addPermanentWidget(this->label_filename);
+
+    build_tree_header();
+    init_tree();
+}
+
+TreeWidgetMainWindow::~TreeWidgetMainWindow()
+{
+    delete ui;
+}
+
+void TreeWidgetMainWindow::build_ui()
+{
+    this->setCentralWidget(ui->scrollArea);
+}
+
+void TreeWidgetMainWindow::build_tree_header()
+{
+    ui->treeWidget_files->clear();
+    QTreeWidgetItem* header = new QTreeWidgetItem();
+    header->setText(TreeWidgetMainWindow::colItem,      "dir and files");
+    header->setText(TreeWidgetMainWindow::colItemType,  "node type");
+    header->setText(TreeWidgetMainWindow::colDate,      "last modified");
+    header->setTextAlignment(colItem,       Qt::AlignCenter);
+    header->setTextAlignment(colItemType,   Qt::AlignCenter);
+    ui->treeWidget_files->setHeaderItem(header);
+}
+
+void TreeWidgetMainWindow::init_tree()
+{
+    QIcon icon(":/common/pic.svg");
+
+    if(icon.isNull()){
+        qDebug()<< "open file "<< icon.name() << " failed";
+    }
+    QTreeWidgetItem* item = new QTreeWidgetItem(TreeWidgetMainWindow::itTopItem);
+    item->setIcon(TreeWidgetMainWindow::colItem, icon);
+    item->setText(TreeWidgetMainWindow::colItem, "pictures");
+    item->setText(TreeWidgetMainWindow::colItemType, "Top item");
+    item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
+    item->setCheckState(TreeWidgetMainWindow::colItem, Qt::Checked);
+    ui->treeWidget_files->addTopLevelItem(item);
+}
+
+void TreeWidgetMainWindow::add_folder_item(QTreeWidgetItem *parent_item, QString dir_name)
+{
+    QIcon icon(":/common/folder.svg");
+    QString node_next = get_final_folder_name(dir_name);
+    QTreeWidgetItem* item = new QTreeWidgetItem(itGroupItem);
+    item->setIcon(colItem, icon);
+    item->setText(colItem, node_next);
+    item->setText(colItemType, "group item");
+    item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
+    item->setCheckState(colItem, Qt::Checked);
+    item->setData(colItem, Qt::UserRole, QVariant(dir_name));
+    parent_item->addChild(item);
+}
+
+QString TreeWidgetMainWindow::get_final_folder_name(const QString &full_path_name)
+{
+    return QFileInfo(full_path_name).fileName();
+}
+
+void TreeWidgetMainWindow::add_image_item(QTreeWidgetItem *parent_item, QString filename)
+{
+    QIcon icon(":/common/pic.svg");
+    QFileInfo fileinfo (filename);
+    QString node_text = fileinfo.fileName();
+    QDateTime birth_date =  fileinfo.lastModified();
+
+    QTreeWidgetItem* item = new QTreeWidgetItem(TreeWidgetMainWindow::itImageItem);
+    item->setIcon(colItem, icon);
+    item->setText(colItem, node_text);
+    item->setText(colItemType, "Image Item");//第二列文字
+    item->setText(colDate, birth_date.toString("yyyy-MM-dd")); //第三列文字
+    item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable                    | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
+    item->setCheckState(colItem,Qt::Checked);
+    item->setData(colItem, Qt::UserRole, QVariant(filename));  //设置用户数据，存储完整文件名
+    parent_item->addChild(item);   //在父节点下面添加子节点
+}
+
+void TreeWidgetMainWindow::display_image(QTreeWidgetItem *item)
+{
+    QString filepath = item->data(colItem, Qt::UserRole).toString();
+    this->label_filename->setText(filepath);
+    this->label_node_text->setText(item->text(colItem));
+
+    if (pixmap_.load(filepath)) {
+        // 将图片显示在 scrollArea 中的 label 上，调整大小以适应标签并保持宽高比
+        ui->label->setPixmap(pixmap_.scaled(ui->label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        ui->label->setAlignment(Qt::AlignCenter);
+        ui->label->setScaledContents(false); // 确保图片缩放适应显示
+    } else {
+        qDebug() << "Failed to load image:" << filepath;
+    }
+
+    ui->actionzoom_fit_height->setEnabled(true);
+    ui->actionzoom_fit_width->setEnabled(true);
+    ui->actionzoom_in->setEnabled(true);
+    ui->actionzoom_out->setEnabled(true);
+    ui->actionzoom_real_size->setEnabled(true);
+}
+
+void TreeWidgetMainWindow::change_item_caption(QTreeWidgetItem *item)
+{
+    QString str = "*" + item->text(colItem);
+    item->setText(colItem, str);
+    if(item->childCount() > 0){
+        for(int i = 0; i< item->childCount(); i++){
+            change_item_caption(item->child(i));
+        }
+    }
+}
+
+void TreeWidgetMainWindow::delete_item(QTreeWidgetItem *parent_item, QTreeWidgetItem *item)
+{
+    if(item->childCount() > 0) {
+        int count = item->childCount();
+        QTreeWidgetItem* temporal_item = item;
+        for(int i = count -1;i>=0;i--){
+            delete_item(temporal_item,temporal_item->child(i));
+        }
+    }
+    parent_item->removeChild(item);
+    delete item;
+}
+
+void TreeWidgetMainWindow::on_actionadd_folder_triggered()
+{
+    QString dir = QFileDialog::getExistingDirectory();
+    if(dir.isEmpty()) return;
+    QTreeWidgetItem* current_item = ui->treeWidget_files->currentItem();
+    if(current_item == nullptr) return;
+    if(current_item->type() != TreeWidgetMainWindow::itImageItem){
+        add_folder_item(current_item, dir);
+    }
+}
+
+
+void TreeWidgetMainWindow::on_actionadd_files_triggered()
+{
+    QStringList files = QFileDialog::getOpenFileNames(this,"choose files","","Images(*.jpg)");
+    if(files.isEmpty()) return;
+    QTreeWidgetItem *parent = nullptr;
+    QTreeWidgetItem *item = ui->treeWidget_files->currentItem();
+    if(item == nullptr){
+        item = ui->treeWidget_files->topLevelItem(0);
+    }
+    if(item->type() == TreeWidgetMainWindow::itImageItem){
+        parent = item->parent();
+    }else{
+        parent = item;
+    }
+    for(int i = 0; i < files.size(); i++){
+        QString file = files.at(i);
+        add_image_item(parent, file);
+    }
+    parent->setExpanded(true);
+}
+
+
+void TreeWidgetMainWindow::on_treeWidget_files_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
+{
+    qDebug("currentItemChanged() is emitted");
+    if (current == nullptr)                 //当前节点为空
+        return;
+    if (current == previous)                //没有切换节点，只是列变化
+        return;
+    int var= current->type();               //节点的类型
+    switch(var)     {
+    case itTopItem:                        //顶层节点
+        ui->actionadd_folder->setEnabled(true);
+        ui->actionadd_files->setEnabled(true);
+        ui->actiondelete_item->setEnabled(false);//不允许删除顶层节点
+        break;
+    case itGroupItem:      //分组节点
+        ui->actionadd_folder->setEnabled(true);
+        ui->actionadd_files->setEnabled(true);
+        ui->actiondelete_item->setEnabled(true);
+        break;
+    case  itImageItem:      //图片节点
+        ui->actionadd_folder->setEnabled(false);//图片节点下不能添加目录节点
+        ui->actionadd_files->setEnabled(true);
+        ui->actiondelete_item->setEnabled(true);
+        display_image(current);
+    }
+
+}
+
+
+void TreeWidgetMainWindow::on_actiondelete_item_triggered()
+{
+    QTreeWidgetItem *item= ui->treeWidget_files->currentItem();    //当前节点
+    if(item == nullptr) return;
+    QTreeWidgetItem *parent_item= item->parent();               //当前节点的父节点
+    delete_item(parent_item, item);
+}
+
+
+
+void TreeWidgetMainWindow::on_actionscan_items_triggered()
+{
+    for(int i = 0;i<ui->treeWidget_files->topLevelItemCount(); i++){
+        QTreeWidgetItem* item = ui->treeWidget_files->topLevelItem(i);
+        change_item_caption(item);
+    }
+}
+
+
+void TreeWidgetMainWindow::on_actiondock_float_triggered(bool checked)
+{
+    ui->dock_left_side->setFloating(checked);
+}
+
+
+
+void TreeWidgetMainWindow::on_actiondock_visible_triggered(bool checked)
+{
+    ui->dock_left_side->setVisible(checked);
+}
+
 
 ```
