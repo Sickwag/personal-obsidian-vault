@@ -1465,4 +1465,8 @@ editor->setGeometry(option.rect);
 实现这三个函数，并在想要使用代理模型的 View 上使用 `setItemDelegate` 函数设置即可。可以参考官方实现 [[Qt Official Tutorial#Books#设置委托机制（booksdelegate. cpp）]]
 ## QFileSystemModel和QTreeView
 ### QFileSystemModel类
-QFileSystemModel为本机的文件系统提供一个模型，可用于访问本机的文件系统，函数`setRootPath()`用于设置一个根目录，QFileSystemModel模型就只显示这个根目录下的文件系统。
+QFileSystemModel为本机的文件系统提供一个模型，可用于访问本机的文件系统，函数 `setRootPath()` 用于设置一个根目录，QFileSystemModel模型就只显示这个根目录下的文件系统。
+```cpp
+QDir  rootDirectory()          //以QDir类型返回当前根目录
+QString  rootPath()            //以QString类型返回当前根目录
+```
