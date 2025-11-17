@@ -1338,3 +1338,4 @@ editTriggers属性。表示视图组件是否可以编辑数据，以及进入�
 - selectionMode属性。这个属性表示在视图组件上选择项的操作模式，对于QTableView比较有意义。设置单选多选拓展选项
 ### QStringListModel和QListView
 QStringListModel是处理字符串列表的模型类，其实例可以作为QListView组件的数据模型。结合使用这两个类，就可以在界面上显示和编辑字符串列表。
+对 view 使用 `setModel` 会自动连接对应信号和槽，这才会使对模型的修改会被实时更新到视图，对模型修改则使用 `setData()` 设置 `Qt::DisplayRole` 或者使用 `setItemData`。
