@@ -1339,3 +1339,64 @@ editTriggers属性。表示视图组件是否可以编辑数据，以及进入�
 ### QStringListModel和QListView
 QStringListModel是处理字符串列表的模型类，其实例可以作为QListView组件的数据模型。结合使用这两个类，就可以在界面上显示和编辑字符串列表。
 对 view 使用 `setModel` 会自动连接对应信号和槽，这才会使对模型的修改会被实时更新到视图，对模型修改则使用 `setData()` 设置 `Qt::DisplayRole` 或者使用 `setItemData`。
+比较简单
+### QStandardItemModel和QTableView
+`QStandardItemModel`：基于项的模型类。它维护一个二维的项数组，每个项是一个 QStandardItem 对象，用于存储文字、字体、对齐方式等各种角色的数据。
+`QTableView`：二维表格视图组件类，基本显示单元是单元格。通过函数 `setModel ()` 设置一个 QStandardItemModel 类的数据模型之后，一个单元格显示数据模型中的一个项。
+`QItemSelectionModel`：项选择模型类。它是用于跟踪视图组件的单元格选择状态的类，需要指定一个 QStandardItemModel 类的数据模型。当在 QTableView 组件上选择一个或多个单元格时，通过项选择模型可以获得选中单元格的模型索引。
+#### 选择模型
+一个视图组件需要设置一个数据模型，还可以设置一个选择模型，使用 `setSelectionModel`，QItemSelectionModel是选择模型类，它的功能是跟踪视图组件上的选择操作，给出选择范围。
+
+#### 从文件中读取文本内容
+```cpp
+void MainWindow::on_actOpen_triggered() {
+    QString curPath = QCoreApplication::applicationDirPath();
+    QString aFileName = QFileDialog::getOpenFileName(this, "打开一个文件", curPath, "数据文件(*.txt);;所有文件(*.*)");
+    if (aFileName.isEmpty())
+        return;
+    QStringList aFileContent;
+    QFile aFile(aFileName);
+    if (aFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream aStream(&aFile);
+        ui->plainTextEdit->clear();
+        while (!aStream.atEnd()) {
+            QString str = aStream.readLine();          
+            ui->plainTextEdit->appendPlainText(str);
+            aFileContent.append(str);
+        }
+        aFile.close();
+		// ....
+    }
+}
+```
+打开文件操作应该配一个 if 语句验证是否打开，并在 if 中将文件关闭
+```cpp
+void MainWindow::iniModelData(QStringList& aFileContent) {
+    int rowCnt = aFileContent.size(); // 文本行数，第一行是标题
+    m_model->setRowCount(rowCnt - 1); // 实际数据行数
+    QString header = aFileContent.at(0);
+
+    QStringList headerList = header.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
+    m_model->setHorizontalHeaderLabels(headerList);
+
+    int j;
+    QStandardItem* aItem;
+    for (int i = 1; i < rowCnt; i++) {
+        QString aLineText = aFileContent.at(i);
+        QStringList tmpList = aLineText.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
+        for (j = 0; j < FixedColumnCount - 1; j++) {
+            aItem = new QStandardItem(tmpList.at(j));
+            m_model->setItem(i - 1, j, aItem);
+        }
+        aItem = new QStandardItem(headerList.at(j));
+        aItem->setCheckable(true);
+
+        aItem->setBackground(QBrush(Qt::yellow));
+        if (tmpList.at(j) == "0")
+            aItem->setCheckState(Qt::Unchecked);
+        else
+            aItem->setCheckState(Qt::Checked);
+        m_model->setItem(i - 1, j, aItem);
+    }
+}
+```
