@@ -1400,3 +1400,69 @@ void MainWindow::iniModelData(QStringList& aFileContent) {
     }
 }
 ```
+比较简单，查阅文档即可
+## 自定义代理
+在模型/视图结构中，代理的作用就是在视图组件进入编辑状态编辑某个项时，提供一个临时的编辑器用于数据编辑，编辑完成后再把数据提交给数据模型。
+### 自定义代理的功能
+若要替换QTableView组件提供的默认代理组件，就需要为QTableView组件的某列或某个单元格设置自定义代理。自定义代理类需要从QStyledItemDelegate类继承。
+也可以**单单为某一行或者某一列使用代理**
+如果需要设置自定义代理类，需要实现这几个函数：
+- createEditor
+	- parent是要创建的组件的父组件，一般就是窗口对象；option是项的一些显示选项，是QStyleOptionViewItem类型的，包含字体、对齐方式、背景色等属性；
+	- index是项在数据模型中的模型索引，
+	- `index->model()` 可以获取项所属数据模型的对象指针。
+	- 设置了代理类的组件**被编辑时**就是调用这个函数
+```cpp
+QWidget  *QStyledItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) 
+```
+- setEditorData
+	- 定义如何将数据模型中对应 index 位置的数据加载到 `createEditor` 函数创建出的**临时编辑器**中**用来显示**，不至于用户点击编辑之后看到的编辑框中的内容不是空白。
+	- 这个函数的默认实现（或者说一般实现）是通过 data 函数 `Qt::UserRole` 用户角色对应的数据
+```cpp
+// 自定义委托类
+class MyDelegate : public QStyledItemDelegate {
+public:
+    // 1. 创建编辑器
+    QWidget* createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override {
+        return new QLineEdit(parent);  // 返回文本编辑器
+    }
+    // 2. 设置编辑器数据 - 重点函数！
+    void setEditorData(QWidget *editor, const QModelIndex &index) const override {
+        QLineEdit *lineEdit = static_cast<QLineEdit*>(editor);
+        QString currentText = index.data(Qt::EditRole).toString();
+        // 设置到编辑器中
+        lineEdit->setText(currentText);
+    }
+};
+```
+- setModelData
+	- 是 setEditorData 的反面，用于设置填入代理编辑器中的数据用什么方法填入数据模型
+```cpp
+void  QStyledItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index)
+```
+- updateEditorGeometry
+	- 用于设置 createEditor 设置的编辑器的大小
+```cpp
+// 根据内容调整大小
+void updateEditorGeometry(QWidget *editor, 
+                         const QStyleOptionViewItem &option,
+                         const QModelIndex &index) const {
+    QLineEdit *lineEdit = qobject_cast<QLineEdit*>(editor);
+    if (lineEdit) {
+        // 根据文本长度调整编辑器宽度
+        QString text = index.data(Qt::DisplayRole).toString();
+        int textWidth = lineEdit->fontMetrics().horizontalAdvance(text) + 10;
+        QRect rect = option.rect;
+        rect.setWidth(qMin(textWidth, 200));  // 最大200像素
+        editor->setGeometry(rect);
+    }
+}
+
+// 这样可以设置建议大小
+editor->setGeometry(option.rect);
+```
+### 设计自定义代理类
+实现这三个函数，并在想要使用代理模型的 View 上使用 `setItemDelegate` 函数设置即可。可以参考官方实现 [[Qt Official Tutorial#Books#设置委托机制（booksdelegate. cpp）]]
+## QFileSystemModel和QTreeView
+### QFileSystemModel类
+QFileSystemModel为本机的文件系统提供一个模型，可用于访问本机的文件系统，函数`setRootPath()`用于设置一个根目录，QFileSystemModel模型就只显示这个根目录下的文件系统。
