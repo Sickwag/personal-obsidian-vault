@@ -1696,3 +1696,6 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 | **用途**   | 控制窗口行为/外观        | 存储任意自定义数据       |
 | **性能**   | 直接影响窗口系统         | 轻量级数据存储         |
 在一些对象中，设置了窗口属性之后才会有对应的事件发生，比如 `this->setAttribute(Qt::WA_Hover,true)` 设置之后，鼠标移入一个控件之后会触发 `QEvent::HoverEnter` 的事件
+
+## 事件过滤器
+### 事件过滤器工作原理
