@@ -1628,6 +1628,71 @@ void QCoreApplication::sendPostedEvents(QObject *receiver = nullptr, int event_t
 一个类接收到应用程序派发来的事件后，首先会由函数 `event()` 处理
 
 > [!note]
-> 任何从QObject派生的类都可以重新实现函数 `event()`。如果一个类重新实现了函数 `event()`，需要在函数 `event()` 的实现代码里设置是否接受事件。`accept()` 或者 `ignore()`，被接受的事件由事件接收者处理，被忽略的事件则传播到事件接收者的父容器组件的event()函数去处理，这称为事件的传播（propagation），事件最后可能会传播给 QWidget。
+> 任何从QObject派生的类都可以重新实现函数 `event()`。如果一个类重新实现了函数 `event()`，需要在函数 `event()` 的实现代码里设置是否接受事件。`accept()` 或者 `ignore()`，被接受的事件由事件接收者处理，被忽略的事件则传播到事件接收者的父容器组件的event()函数去处理，这称为事件的传播（propagation），事件最后可能会传播给 QWidget。accept 和 ignore 除了传播方面，就只有一个**标记作用**，用来鉴别(`isAccept()`)一个事件是否已经被处理，避免重复
 
-所有继承自 `QWidget` 的类
+所有继承自 `QWidget` 的类都实现了 event 函数，并对一些类别的事件定义了专门的处理函数（绘制函数 `paintEvent`，鼠标移动函数 `mouseEvent` ），并且这些函数都是 protect 的
+
+### 典型事件处理
+qt为不同的事件设置了不同的处理函数，在对象接收到事件时，先调用 `event` 函数，然后根据事件的类别（`event.type()`）将这个信号对象转发到不同的处理函数处理，而不同的信号对象的accept函数的实现逻辑是不一样的，默认实现都是通过 `accept` 封装起来，方便调用
+绘制窗口函数
+```cpp
+void Widget::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    painter.drawPixmap(0,0,this->width(),this->height(), QPixmap(":/pics/images/background.jpg"));
+    // QWidget::paintEvent(event);
+}
+```
+由于绘制窗口的**逻辑定义**是在**显示 UI 之后**，事件循环之前，事件循环开始之后就是开始处理事件了，根据**单一职责和资源最小化原则**，只在需要用到资源的位置加载和使用资源。由于 painEvent 比构造函数更加具体（更小），初始化资源应该在这个函数中完成
+注释部分会运行父类的 `paintEvent()` 函数，以便父类执行其内建标准信号处理（比如 paintEvent 事件，如果不需要父类渲染成**[[QT样式表合集#基本语法特性|尽量原生]]** 的样子，就不需要调用）的一些操作。
+```cpp
+void Widget::closeEvent(QCloseEvent *event)
+{
+    QString dlgTitle = "message";
+    QString content = "surt to exit?";
+    QMessageBox::StandardButton result = QMessageBox::question(this,dlgTitle,content,QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
+    if(result == QMessageBox::Yes){
+        event->accept();
+    }else{
+        event->ignore();
+    }
+}
+```
+代码中没有 `QApplication::quit()` 或者 `QApplication::closeAllWindows()` 的逻辑，这些都封装在**QCloseEvent 对象的 accept 函数中**。
+```cpp
+void Widget::mousePressEvent(QMouseEvent *event)
+{
+    if(event == Qt::LeftButton){
+        QPoint pos = event->pos();
+        QPointF relaPt = event->position();
+        QPointF winPt = event->scenePosition();
+        QPointF globPt = event->globalPosition();
+        QString str= QString::asprintf("pos()=(%d,%d)", pt.x(),pt.y());
+        str= str + QString::asprintf("\nposition()=(%.0f,%.0f)", relaPt.x(),relaPt.y());
+        str= str + QString::asprintf("\nscenePosition()=(%.0f,%.0f)", winPt.x(),winPt.y());
+        str= str + QString::asprintf("\nglobalPosition()=(%.0f,%.0f)", globPt.x(),globPt.y());
+        ui->labMove->setText(str);
+        ui->labMove->adjustSize();
+        ui->labMove->move(pos);
+    }
+    QWidget::mousePressEvent(event);
+}
+```
+如果要判断同时按下多个键，可以写成：
+```cpp
+if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton))
+```
+## 事件与信号
+事件通常是由窗口系统或应用程序产生的，信号则是 Qt 定义或用户自定义的。Qt 为界面组件定义的信号通常是对事件的封装
+### 窗口属性
+和[[#属性系统]]中的属性不一样，窗口属性使用 `setAttribute()` 设置，作为一种配置属性，用来调整窗口/控件的显示效果，运行逻辑。而 `setProperty()` 用来存储程序运行的用户自定义数据，方便需要用时查询。
+- ✅ **`setAttribute()`** = 告诉 Qt **如何对待**这个控件
+- ✅ **`setProperty()`** = 告诉程序 **这个控件有什么**数据
+
+| 特性       | `setAttribute()` | `setProperty()` |
+| -------- | ---------------- | --------------- |
+| **作用对象** | QWidget 及其子类     | QObject 及其所有子类  |
+| **属性类型** | 预定义的窗口属性         | 自定义的动态属性        |
+| **用途**   | 控制窗口行为/外观        | 存储任意自定义数据       |
+| **性能**   | 直接影响窗口系统         | 轻量级数据存储         |
+在一些对象中，设置了窗口属性之后才会有对应的事件发生，比如 `this->setAttribute(Qt::WA_Hover,true)` 设置之后，鼠标移入一个控件之后会触发 `QEvent::HoverEnter` 的事件
