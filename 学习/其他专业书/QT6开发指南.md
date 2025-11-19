@@ -1472,10 +1472,11 @@ QDir  rootDirectory()          //以QDir类型返回当前根目录
 QString  rootPath()            //以QString类型返回当前根目录
 ```
 `setFilter()` 用来设置文件管理器的设置：
-- `QDir::AllDirs`：列出所有目录。函数setFilter()设置的过滤器必须包含这个选项。
+- `QDir::AllDirs`：列出所有目录。**函数setFilter()设置的过滤器必须包含这个选项**。
 - `QDir::Files`：列出文件。
 - `QDir::Drives`：列出驱动器。
-- `QDir::NoDotAndDotDot`：不列出目录下的“.”和“..”特殊项。•    QDir::Hidden：列出隐藏的文件。
+- `QDir::NoDotAndDotDot`：不列出目录下的“.”和“..”特殊项，这两项会在 linux 下显示
+- `QDir::Hidden`：列出隐藏的文件。
 - `QDir::System`：列出系统文件。
 文件名和文件类型过滤器：`setNameFilters` 一般接受 QStringList，过滤器会用通配符表示，`setNameFilterDisables(bool enable)` 设置为true，未通过文件名过滤器过滤的项只是被设置为禁用；如果参数enable设置为false，未通过文件名过滤器过滤的项就被隐藏
 `setOption` 可以用来设置枚举值，对文件管理器进行不同的设置：
@@ -1486,7 +1487,90 @@ QString  rootPath()            //以QString类型返回当前根目录
 文件系统最好是树形模型，如果要对文件系统进行操作或者获取信息大部分 api 需要传入一个 QModelIndex index ，这个可以通过 `item->index()` 或者 `QTreeWidgetItem` 组件的 `clicked` 信号触发
 
 ### 代码编写
-treeview 的 clicked 信号会发送当前被点击的对象的 index
+treeview 的 clicked 信号会发送当前被点击的对象的 index，这个 index 可以给文件模型来获取这个项的各种信息，参考[[#QFileSystemModel类#基本知识|基本api]]
+其他部分比较简单，使用到上述 api 的代码：
+```cpp
+#include "mainwindow.h"
+#include <qfiledialog.h>
+#include "ui_mainwindow.h"
+
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    ui->splitterMain->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    model_ = new QFileSystemModel(this);
+    model_->setRootPath(QDir::currentPath());
+    ui->treeView->setModel(model_);
+    ui->tableView->setModel(model_);
+    ui->listView->setModel(model_);
+
+    connect(ui->treeView, &QTreeView::clicked, ui->listView, &QListView::setRootIndex);
+    connect(ui->treeView, &QTreeView::clicked, ui->tableView, &QTableView::setRootIndex);
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+
+void MainWindow::on_treeView_clicked(const QModelIndex &index)
+{
+    ui->chkIsDir->setChecked(model_->isDir(index));
+    ui->labPath->setText(model_->filePath(index));
+    ui->labType->setText(model_->type(index));
+    ui->labFileName->setText(model_->fileName(index));
+    unsigned int size = model_->size(index);
+    if(size < 1024){
+        ui->labFileSize->setText(QString("%1 KB").arg(size / 1024));
+    }else{
+        ui->labFileSize->setText(QString::asprintf("%.1f MB").arg(size / 1024 / 1024));
+    }
+}
+
+
+void MainWindow::on_actSetRoot_triggered()
+{
+    QString dir = QFileDialog::getExistingDirectory(this, "选择目录", QDir::currentPath());
+    if (!dir.isEmpty()) {
+        model_->setRootPath(dir);
+        ui->treeView->setRootIndex(model_->index(dir));
+    }
+}
+
+
+void MainWindow::on_radioShowAll_clicked()
+{
+    ui->groupBoxFilter->setEnabled(true);
+    model_->setFilter(QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot);
+}
+
+
+void MainWindow::on_radioShowOnlyDir_clicked()
+{
+    ui->groupBoxFilter->setEnabled(false);
+    model_->setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
+}
+
+
+void MainWindow::on_chkBoxEnableFilter_clicked(bool checked)
+{
+    model_->setNameFilterDisables(!checked);
+    ui->comboFilters->setEnabled(checked);
+    ui->btnApplyFilters->setEnabled(checked);
+}
+
+
+void MainWindow::on_btnApplyFilters_clicked()
+{
+    QString fliters = ui->comboFilters->currentText().trimmed();
+    QStringList filter_list = fliters.split(";",Qt::SkipEmptyParts);
+    model_->setNameFilters(filter_list);
+}
+```
+
 ### UI 设计
 ![[PixPin_2025-11-19_16-47-34.png]]
 - 留空的地方最好放一个 spacer
@@ -1498,3 +1582,52 @@ treeview 的 clicked 信号会发送当前被点击的对象的 index
 ![[Pasted image 20251119172713.png]]
 ![[PixPin_2025-11-19_17-27-50.png]]
 这样控件就会随着画布大小而调整
+
+# 事件处理
+GUI 应用程序是由事件（event）驱动的，点击鼠标、按下某个按键、改变窗口大小、最小化窗口等都会产生相应的事件，应用程序对这些事件进行相应的处理以实现程序的功能
+## Qt 的事件系统
+### 事件的产生和派发
+在 Qt 中，**事件是对象，是 QEvent 类或其派生类的实例**
+- QKeyEvent 是按键事件类，
+- QMouseEvent 是鼠标事件类，
+- QPaintEvent 是绘制事件类，
+- QTimerEvent 是定时器事件类
+事件来源分类：
+1. 自生事件（spontaneous event）：是由窗口系统产生的事件。QKeyEvent 事件、QMouseEvent 事件。自生**事件会进入系统队列，然后被应用程序的事件循环逐个处理。**
+2. 发布事件（posted event）：是由Qt或应用程序产生的事件。例如，**QTimer定时器发生定时溢出**时Qt会自动发布QTimerEvent事件。应用程序使用静态函数 `QCoreApplication::postEvent()` 产生发布事件。**发布事件会进入Qt事件队列，然后由应用程序的事件循环进行处理。**
+3. 发送事件（sent  event）：是由Qt或应用程序定向发送给某个对象的事件。应用程序使用***静态函数*** `QCoreApplication::sendEvent()` 产生发送事件，由对象的 `event()` 函数直接处理。
+```cpp
+bool  QCoreApplication::sendEvent(QObject *receiver, QEvent *event)
+```
+
+> [!note]
+> 窗口系统产生的自生事件**自动进入系统队列**
+> 应用程序发布的事件**进入 Qt 事件队列**
+> 自生事件和发布事件的处理是**异步**的，也就是事件进入队列后由系统去处理，程序不会在产生事件的地方停止进行等待。
+
+main 函数中的 `return a.exec()` 函数用来**调起时事件循环**，之前做的只是 UI 显示工作，`QApplication::exec()` 的主要功能就是不断地检查系统队列和Qt事件队列里是否有未处理的**自生事件和发布事件（只处理这两种事件）**，应用程序的事件循环还可以对队列中的**相同事件进行合并处理**，例如如果队列中有一个界面组件的多个 QPaintEvent 事件，就只派发一次 QPaintEvent 事件，**因为界面只需要绘制一次**。
+发送事件由应用程序**直接派发**给某个对象，是以**同步模式**运行的
+如果循环事件比较复杂，导致的程序卡顿（CPU 长时间占用）可以使用下面方法解决：
+- 不同线程处理不同逻辑（界面渲染和数据处理）
+- 长时间占用 CPU 的过程中调用 `QCoreApplication::processEvents()` 将事件队列里未处理的事件派发出去
+```cpp
+void  QCoreApplication::processEvents(QEventLoop::ProcessEventsFlags flags = QEventLoop::AllEvents)
+```
+`QEventLoop::AllEvents`：处理所有事件。
+`QEventLoop::ExcludeUserInputEvents`：排除用户输入事件，如键盘和鼠标的事件。
+`QEventLoop::ExcludeSocketNotifiers`：排除网络 socket 的通知事件。
+`QEventLoop::WaitForMoreEvents`：如果没有未处理的事件，等待更多事件。
+还有一个派发函数
+```cpp
+void QCoreApplication::sendPostedEvents(QObject *receiver = nullptr, int event_type = 0)
+```
+- 把前面用静态函数`QCoreApplication::postEvent()`发送到Qt事件队列里的事件立刻派发出去。
+- 如果不指定event_ type，只指定receiver，就派发所有给这个接收者的事件；
+- 如果event_type和receiver都不指定，就派发所有用 `QCoreApplication::postEvent()` 发布的事件。
+### 事件的处理
+一个类接收到应用程序派发来的事件后，首先会由函数 `event()` 处理
+
+> [!note]
+> 任何从QObject派生的类都可以重新实现函数 `event()`。如果一个类重新实现了函数 `event()`，需要在函数 `event()` 的实现代码里设置是否接受事件。`accept()` 或者 `ignore()`，被接受的事件由事件接收者处理，被忽略的事件则传播到事件接收者的父容器组件的event()函数去处理，这称为事件的传播（propagation），事件最后可能会传播给 QWidget。
+
+所有继承自 `QWidget` 的类
