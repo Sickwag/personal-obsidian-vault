@@ -1465,8 +1465,36 @@ editor->setGeometry(option.rect);
 实现这三个函数，并在想要使用代理模型的 View 上使用 `setItemDelegate` 函数设置即可。可以参考官方实现 [[Qt Official Tutorial#Books#设置委托机制（booksdelegate. cpp）]]
 ## QFileSystemModel和QTreeView
 ### QFileSystemModel类
+#### 基本知识
 QFileSystemModel为本机的文件系统提供一个模型，可用于访问本机的文件系统，函数 `setRootPath()` 用于设置一个根目录，QFileSystemModel模型就只显示这个根目录下的文件系统。
 ```cpp
 QDir  rootDirectory()          //以QDir类型返回当前根目录
 QString  rootPath()            //以QString类型返回当前根目录
 ```
+`setFilter()` 用来设置文件管理器的设置：
+- `QDir::AllDirs`：列出所有目录。函数setFilter()设置的过滤器必须包含这个选项。
+- `QDir::Files`：列出文件。
+- `QDir::Drives`：列出驱动器。
+- `QDir::NoDotAndDotDot`：不列出目录下的“.”和“..”特殊项。•    QDir::Hidden：列出隐藏的文件。
+- `QDir::System`：列出系统文件。
+文件名和文件类型过滤器：`setNameFilters` 一般接受 QStringList，过滤器会用通配符表示，`setNameFilterDisables(bool enable)` 设置为true，未通过文件名过滤器过滤的项只是被设置为禁用；如果参数enable设置为false，未通过文件名过滤器过滤的项就被隐藏
+`setOption` 可以用来设置枚举值，对文件管理器进行不同的设置：
+`QFileSystemModel::DontWatchForChanges`：不监视文件系统的变化，默认是监视。
+`QFileSystemModel::DontResolveSymlinks`：不解析文件系统的符号连接项，默认是解析。
+`QFileSystemModel::DontUseCustomDirectoryIcons`：不使用自定义的目录图标，默认是使用系统的图标。
+
+文件系统最好是树形模型，如果要对文件系统进行操作或者获取信息大部分 api 需要传入一个 QModelIndex index ，这个可以通过 `item->index()` 或者 `QTreeWidgetItem` 组件的 `clicked` 信号触发
+
+### 代码编写
+treeview 的 clicked 信号会发送当前被点击的对象的 index
+### UI 设计
+![[PixPin_2025-11-19_16-47-34.png]]
+- 留空的地方最好放一个 spacer
+- 选中多个控件，然后右键->布局->使用拆分器水平（垂直）布局，这样这几个控件之间就会出现一个**分隔条**，用户可以通过拖动分隔条来调整不同部分控件的所占用的空间大小。
+- 如果有多个不同的 splitter 组合成不同方向的布局，比如图中的 TreeView 和右边的两个 View 是 splitter 水平布局，而右边两个 ListView 和 TableView 是上下结构体的 Splitter，这就需要给 splitter 设置 sizePolicy 为 expanding，否则调整 splitter_main 也就是 1，右边的 splitter 水平拓展
+![[PixPin_2025-11-19_17-17-44.png]]
+![[PixPin_2025-11-19_17-21-59.png]]
+- 如果想要 ui 编辑器中拖动画布，所有画布中的控件都随着画布大小变化，那么需要调整**根布局（mainwindow 类中名为 centeralWidget），也就是根对象下的第一个布局**的 layout 属性
+![[Pasted image 20251119172713.png]]
+![[PixPin_2025-11-19_17-27-50.png]]
+这样控件就会随着画布大小而调整
