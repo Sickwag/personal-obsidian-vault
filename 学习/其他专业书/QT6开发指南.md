@@ -1788,5 +1788,212 @@ bool Widget::eventFilter(QObject *watched, QEvent *event)
 - 一个 QMimeData 类的对象
 - QWidget 类属性 acceptDrops如果设置为 true，这个属性**不是窗口属性而是控件属性**，所以使用 `setAcceptDrop(true)` 即可设置， 对应的这个组件就可以作为一个放置点。默认为 false。
 - QWidget 类中没有定义拖动操作相关的函数，所以一般的界面组件是不能作为拖动点的，而 `QAbstractItem` 可以
+### MIME 文件信息
+一张图片 MIME 信息
+```md
+dragEnterEvent事件 mimeData()->formats()
+application/x-qt-windows-mime;value="Shell IDList Array"
+application/x-qt-windows-mime;value="UsingDefaultDragImage"
+application/x-qt-windows-mime;value="DragImageBits"
+application/x-qt-windows-mime;value="DragContext"
+application/x-qt-windows-mime;value="DragSourceHelperFlags"
+application/x-qt-windows-mime;value="InShellDragLoop"
+text/uri-list
+application/x-qt-windows-mime;value="FileName"
+application/x-qt-windows-mime;value="FileContents"
+application/x-qt-windows-mime;value="FileNameW"
+application/x-qt-windows-mime;value="FileGroupDescriptorW"
+application/x-qt-windows-mime;value="IsShowingLayered"
+application/x-qt-windows-mime;value="DragWindow"
+application/x-qt-windows-mime;value="IsComputingImage"
+application/x-qt-windows-mime;value="IsShowingText"
+application/x-qt-windows-mime;value="ComputedDragImage"
+application/x-qt-windows-mime;value="DropDescription"
+application/x-qt-windows-mime;value="DisableDragText"
+application/x-qt-windows-mime;value="Preferred DropEffect"
 
+ dragEnterEvent事件 mimeData()->urls()
+/E:/file_storage/Files/Pictures/Arts/under pressure--jazznuf.jpg
+```
+> [!note]
+> - application/x-qt-windows-mime; value="Shell IDList Array"
+> 用途：用于 Windows Shell 的拖放操作，表示拖放的数据是一个文件或文件夹的标识列表。
+> 常见于：Windows 操作系统中的拖放操作，特别是在资源管理器中拖放文件或文件夹。
+> - application/x-qt-windows-mime; value="UsingDefaultDragImage"
+> 用途：指示是否使用默认的拖放图像。
+> 常见于：Windows 的拖放操作中，用于确定拖动时显示的图像。
+> - application/x-qt-windows-mime; value="DragImageBits"
+> 用途：包含拖动图像的位图数据。
+> 常见于：Windows 的拖放操作中，用于显示拖动时的图像。
+> - application/x-qt-windows-mime; value="DragContext"
+> 用途：包含拖动上下文的信息。
+> 常见于：Windows 的拖放操作中，用于管理拖动过程中的上下文数据。
+> - application/x-qt-windows-mime; value="DragSourceHelperFlags"
+> 用途：包含拖动源的帮助标志。
+> 常见于：Windows 的拖放操作中，用于指示拖动源的行为特性。
+> - application/x-qt-windows-mime; value="InShellDragLoop"
+> 用途：指示当前是否在 Shell 的拖动循环中。
+> 常见于：Windows 的拖放操作中，用于管理拖动状态。
+> - application/x-qt-windows-mime; value="DragWindow"
+> 用途：包含拖动操作的窗口句柄。
+> 常见于：Windows 的拖放操作中，用于关联拖动操作与特定窗口。
+> - application/x-qt-windows-mime; value="IsComputingImage"
+> 用途：指示是否正在计算拖动图像。
+> 常见于：Windows 的拖放操作中，用于管理拖动图像的生成过程。
+> - application/x-qt-windows-mime; value="IsShowingText"
+> 用途：指示拖动图像是否显示文本。
+> 常见于：Windows 的拖放操作中，用于控制拖动图像的显示内容。
+> - application/x-qt-windows-mime; value="ComputedDragImage"
+> 用途：包含已计算的拖动图像数据。
+> 常见于：Windows 的拖放操作中，用于优化拖动图像的显示。
+> - application/x-qt-windows-mime; value="DropDescription"
+> 用途：包含拖放操作的描述信息。
+> 常见于：Windows 的拖放操作中，用于提供拖放操作的详细信息。
+> - application/x-qt-windows-mime; value="DisableDragText"
+> 用途：指示是否禁用拖动文本。
+> 常见于：Windows 的拖放操作中，用于控制拖动文本的显示。
+> - application/x-qt-windows-mime; value="Preferred DropEffect"
+> 用途：指示首选的拖放效果（如复制、移动等）。
+> 常见于：Windows 的拖放操作中，用于确定拖放操作的具体行为。
+> text/uri-list
+> 用途：包含拖放的文件或 URL 列表，每行一个 URI。
+> 常见于：跨平台拖放操作中，用于表示拖放的文件路径。
+> - application/x-qt-windows-mime; value="FileName"
+> 用途：包含拖放文件的短文件名（ANSI 编码）。
+> 常见于：Windows 的拖放操作中，用于提供文件名信息。
+> - application/x-qt-windows-mime; value="FileContents"
+> 用途：包含拖放文件的实际内容。
+> 常见于：Windows 的拖放操作中，用于传输文件数据。
+> - application/x-qt-windows-mime; value="FileNameW"
+> 用途：包含拖放文件的宽字符文件名（Unicode 编码）。
+> 常见于：Windows 的拖放操作中，用于提供文件名信息。
+> - application/x-qt-windows-mime; value="FileGroupDescriptorW"
+> 用途：包含拖放文件的描述信息（宽字符编码）。
+> 常见于：Windows 的拖放操作中，用于提供文件的详细描述信息。
+> - application/x-qt-windows-mime; value="IsShowingLayered"
+> 用途：指示拖动图像是否为层叠图像。
+> 常见于：Windows 的拖放操作中，用于控制拖动图像的显示方式。
+
+`mimeData()->formats()` 返回的是所有可用的 MIME 类型格式的列表，而不是具体的文件内容信息（如文件位置、像素大小、文件格式等）。这些格式描述了数据的类型和结构，而不是实际的数据内容。
+`format()` 返回的行都是对象名，而不是真实的 MIME 数据，只有使用对应的解包之后才能获取文件的信息
 ### 外部文件拖放操作示例
+```cpp
+// widget.h
+class Widget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    Widget(QWidget *parent = nullptr);
+    ~Widget();
+
+protected:
+    void dragEnterEvent(QDragEnterEvent* event);
+    void resizeEvent(QResizeEvent* event);
+    void dropEvent(QDropEvent* event);
+
+private:
+    Ui::Widget *ui;
+};
+// widget.cpp
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::Widget)
+{
+    ui->setupUi(this);
+    ui->labPic->setScaledContents(true);
+    this->setAcceptDrops(true);
+    ui->plainTextEdit->setAcceptDrops(true);
+    ui->labPic->setAcceptDrops(false);
+}
+
+Widget::~Widget()
+{
+    delete ui;
+}
+
+void Widget::dragEnterEvent(QDragEnterEvent *event)
+{
+    ui->plainTextEdit->clear();
+    ui->plainTextEdit->appendPlainText("dragEnterEvent事件 mimeData()->formats()");
+    for(int i = 0; i< event->mimeData()->formats().size(); i++){
+        ui->plainTextEdit->appendPlainText(event->mimeData()->formats().at(i));
+    }
+    ui->plainTextEdit->appendPlainText("\n dragEnterEvent事件 mimeData()->urls()");
+    for(int i = 0;i<event->mimeData()->urls().size(); i++){
+        QUrl url = event->mimeData()->urls().at(i);
+        ui->plainTextEdit->appendPlainText(url.path());
+    }
+    if (event->mimeData()->hasUrls()) {
+        QString filename = event->mimeData()->urls().at(0).fileName();
+        QFileInfo fileInfo(filename);
+        QString ext = fileInfo.suffix().toUpper();
+        if (ext == "JPG")
+            event->acceptProposedAction();
+        else
+            event->ignore();
+    } else
+        event->ignore();
+}
+
+void Widget::resizeEvent(QResizeEvent *event)
+{
+    QSize size = ui->plainTextEdit->size();
+    ui->plainTextEdit->resize(this->width() - 10, size.height());
+    ui->labPic->resize(this->width() - 10, this->height() - size.height() - 20);
+    event->accept();
+}
+
+void Widget::dropEvent(QDropEvent *event)
+{
+    QString filename = event->mimeData()->urls().at(0).path();
+    filename = filename.right(filename.length() - 1); // Windows平台上，返回的字符串filename的开头有一个额外的“/”
+    QPixmap pixmap(filename);
+    ui->labPic->setPixmap(pixmap);
+    event->accept();
+}
+```
+## 具有拖放操作功能的组件
+
+### 示例窗口类定义和初始化
+QLineEdit、QAbstractItemView、QStandardItem 等类都有一个函数 setDragEnabled (bool)，当设置参数为 true 时，组件就可以作为一个拖动点。QAbstractItemView 类定义了拖放操作相关的各种函数
+```cpp
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::Widget)
+{
+    ui->setupUi(this);
+    // 安装事件过滤器，由窗口处理4个项数据组件的事件
+    ui->listSource->installEventFilter(this);
+	// ...
+    //设置4个项数据组件的拖放操作相关属性
+    ui->listSource->setAcceptDrops(true);
+    ui->listSource->setDragDropMode(QAbstractItemView::DragDrop);
+    ui->listSource->setDragEnabled(true);
+    ui->listSource->setDefaultDropAction(Qt::CopyAction);
+	// ...
+}
+```
+1. **接受拖放操作 (`setAcceptDrops(true)`)**:
+    - **效果**: 控件可以接受外部或内部的拖放操作。
+    - **用途**: 允许用户将数据（如文件、文本等）拖放到该控件中。
+2. **设置拖放模式 (`setDragDropMode(QAbstractItemView::DragDrop)`)**:
+    - **效果**: 控件支持拖放操作，并且可以在内部重新排列项目。
+    - **用途**: 用户可以从外部拖放数据到控件中，并且可以在控件内部重新排列项目。
+    - **模式**:
+        - `QAbstractItemView::DragOnly`: 仅支持拖动操作。
+        - `QAbstractItemView::DropOnly`: 仅支持接收拖放操作。
+        - `QAbstractItemView::DragDrop`: 同时支持拖动和接收拖放操作。
+        - `QAbstractItemView::InternalMove`: 仅支持在控件内部重新排列项目。
+3. **启用拖动操作 (`setDragEnabled(true)`)**:
+    - **效果**: 控件中的项目可以被拖动到其他位置或控件。
+    - **用途**: 允许用户拖动控件中的项目到同一控件或其他控件中。
+4. **设置默认的放置动作 (`setDefaultDropAction(Qt::CopyAction)`)**:
+    - **效果**: 当用户执行拖放操作时，默认使用复制操作。
+    - **用途**: 确保拖放操作默认行为是复制数据，而不是移动数据。
+    - **可选值**:
+        - `Qt::CopyAction`: 复制数据。
+        - `Qt::MoveAction`: 移动数据。
+        - `Qt::LinkAction`: 创建链接。
+        - `Qt::TargetMoveAction`: 目标控件负责移动数据。
+        - `Qt::IgnoreAction`: 忽略操作。
