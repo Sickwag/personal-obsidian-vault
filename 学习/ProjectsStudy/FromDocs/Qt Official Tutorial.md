@@ -112,6 +112,45 @@ connect(sender, SIGNAL(destroyed()), this, SLOT(objectDestroyed(QObject*))); // 
 -  `Qt::BlockingQueuedConnection`：与 `Qt::QueuedConnection` 相似，区别是信号线程会阻塞，，
 直到槽函数运行完毕。当信号与槽函数在同一个线程中时绝对不能使用这种方式，否则会造成死锁。
 
+在类定义中定义信号函数，标明参数类型和参数的意义在参数名称中，然后在需要触发信号的位置使用 `emit sigal_name(arg1, arg2....)` 这样就能保证对应类型的槽函数能够读取到发送的信号和信号函数中的参数，槽函数可以接受信号函数中的参数并处理
+比如下面这个自定义槽函数和信号的例子：
+```cpp
+// 在类定义中
+class FileProcessor : public QObject {
+    Q_OBJECT
+    
+signals:
+    // 参数类型 + 有意义的参数名
+    void fileProcessed(const QString &fileName, int fileSize, bool success);
+    void progressUpdated(int currentFile, int totalFiles, double percentage);
+};
+
+void FileProcessor::processFile(const QString &filePath) {
+    QFileInfo info(filePath);
+    
+    // 触发信号，传递具体参数值
+    emit fileProcessed(info.fileName(), info.size(), true);
+    emit progressUpdated(5, 10, 50.0);  // 处理到第5个，总共10个
+}
+
+class MainWindow : public QMainWindow {
+public slots:
+    // 槽函数参数与信号参数完全匹配
+    void onFileProcessed(const QString &fileName, int fileSize, bool success) {
+        qDebug() << "文件:" << fileName 
+                 << "大小:" << fileSize 
+                 << "处理结果:" << (success ? "成功" : "失败");
+    }
+    
+    void onProgressUpdated(int current, int total, double percent) {
+        progressBar->setValue(percent);
+        statusLabel->setText(QString("处理中: %1/%2").arg(current).arg(total));
+    }
+};
+
+
+```
+
 ### 解除信号和槽连接
 - 解除与一个发射者所有信号的连接，例如：
 ```cpp

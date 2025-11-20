@@ -1682,6 +1682,7 @@ void Widget::mousePressEvent(QMouseEvent *event)
 ```cpp
 if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton))
 ```
+
 ## 事件与信号
 事件通常是由窗口系统或应用程序产生的，信号则是 Qt 定义或用户自定义的。Qt 为界面组件定义的信号通常是对事件的封装
 ### 窗口属性
@@ -1699,3 +1700,7 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 
 ## 事件过滤器
 ### 事件过滤器工作原理
+可以将一个对象的事件委托给另一个对象来监视并处理，方法为：
+1. 被监视对象使用函数 `installEventFilter()` 将自己注册给监视对象，监视对象就是事件过滤器。
+2. 监视对象重新实现函数 `eventFilter()`（一般在 protect 中），对监视到的事件进行处理
+[[#典型事件处理|上一个例子中]]，如果要管理一个控件中的类事件，就需要**创建一个新类并且继承与这个控件的父类**，然后在这个类中定义各种 event 处理函数。
