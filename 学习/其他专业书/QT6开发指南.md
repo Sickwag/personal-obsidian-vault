@@ -1703,4 +1703,90 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 可以将一个对象的事件委托给另一个对象来监视并处理，方法为：
 1. 被监视对象使用函数 `installEventFilter()` 将自己注册给监视对象，监视对象就是事件过滤器。
 2. 监视对象重新实现函数 `eventFilter()`（一般在 protect 中），对监视到的事件进行处理
-[[#典型事件处理|上一个例子中]]，如果要管理一个控件中的类事件，就需要**创建一个新类并且继承与这个控件的父类**，然后在这个类中定义各种 event 处理函数。
+[[#典型事件处理|上一个例子中]]，如果要管理一个控件中的类事件，就需要**创建一个新类并且继承与这个控件的父类**，然后在这个类中定义各种 event 处理函数（都应该放在 protect 中，因为他们是 qt 回调，不需要被手动调用）。
+
+`eventFilter` 是 Qt 框架**回调**你的代码，而不是你**主动调用**的代码。因此它应该被保护（protect 修饰）起来，只对框架和子类可见，子类可以通过通过最后的 return 语句委托父类处理**不是子类特化处理的事件**
+事件过滤器的调用链（**是一条可以拦截的链，不是后者覆盖前者的链**）：
+```md
+事件发生
+    ↓
+目标对象的 event() 方法
+    ↓
+遍历所有安装的过滤器 → 调用 filter1->eventFilter()
+    ↓                      调用 filter2->eventFilter()  
+    ↓                      ...
+目标对象的事件处理方法（如 mousePressEvent）
+```
+
+### 事件过滤器编程实例
+```cpp
+// widget.h
+class Widget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    Widget(QWidget *parent = nullptr);
+    ~Widget();
+
+private:
+    Ui::Widget *ui;
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event);
+};
+// widget.cpp
+Widget::Widget(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::Widget)
+{
+    ui->setupUi(this);
+    ui->labHover->installEventFilter(this);
+    ui->labDBClick->installEventFilter(this);
+}
+
+Widget::~Widget()
+{
+    delete ui;
+}
+
+bool Widget::eventFilter(QObject *watched, QEvent *event)
+{
+    if(watched == ui->labHover){
+        if(event->type() == QEvent::Enter){
+            ui->labHover->setStyleSheet("background-color:rgb(170,255,255);");
+        }else if(event->type() == QEvent::Leave){
+            ui->labHover->setStyleSheet("");
+            ui->labHover->setText("close and click");
+        }else if (event->type()== QEvent::MouseButtonPress){
+            ui->labHover->setText("button pressed");
+        }else if (event->type()== QEvent::MouseButtonRelease){
+            ui->labHover->setText("button released");
+        }
+    }
+    if (watched == ui->labDBClick) {
+        if (event->type() == QEvent::Enter)  // 鼠标光标移入
+            ui->labDBClick->setStyleSheet("background-color: rgb(85, 255, 127);");
+        else if (event->type() == QEvent::Leave) {
+            ui->labDBClick->setStyleSheet("");
+            ui->labDBClick->setText("可双击的标签");
+
+        } else if (event->type() == QEvent::MouseButtonDblClick)  // 鼠标双击
+            ui->labDBClick->setText("double clicked");
+    }
+    return QWidget::eventFilter(watched, event);  // 运行父类的eventFilter()函数
+    // return true;     // 如果直接返回true会导致除了上面的事件都传播不到父类，连文字渲染不处理，
+}
+```
+- 一个监视类对象filter（**任何 QObject 子类**都可以作为事件过滤器），专门用来处理其他对象发出的的事件，处理逻辑写在这个类的eventFilter函数中，当被监视对象发生事件时，这个函数就会被qt自动调用，并将被监视对象（watched参数）和被监视对象发生的事件（event参数）传入这个函数中，函数根据这两个参数来执行对应的事件处理逻辑。
+- 不在监视类对象处理逻辑范围内的事件通常会被 `return 父类::eventFilter(watched, event)` 这样代码交给父类来处理，这个监视器只会过滤他职责范围内的事件。
+- 监视类对象如果 `return true` 表示事件拦截，不会继续传递，如果 false 表示不处理，会传递给其他过滤器（包括父类过滤器）处理。**一旦某个过滤器返回 true，事件传递就终止了**，**父类过滤器只有在子类过滤器返回 false 时才会被调用**
+- 需要被监视的控件通过`installEventFilter()`安装某个监视类对象实例指针，这个类发生的事件就会交给这个对象接管。
+## 拖放事件与拖放操作
+### 拖放操作相关事件
+- 启动拖动操作需要一个 QDrag 对象描述拖动操作
+- 一个 QMimeData 类的对象
+- QWidget 类属性 acceptDrops如果设置为 true，这个属性**不是窗口属性而是控件属性**，所以使用 `setAcceptDrop(true)` 即可设置， 对应的这个组件就可以作为一个放置点。默认为 false。
+- QWidget 类中没有定义拖动操作相关的函数，所以一般的界面组件是不能作为拖动点的，而 `QAbstractItem` 可以
+
+### 外部文件拖放操作示例
