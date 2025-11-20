@@ -1997,3 +1997,173 @@ Widget::Widget(QWidget *parent)
         - `Qt::LinkAction`: 创建链接。
         - `Qt::TargetMoveAction`: 目标控件负责移动数据。
         - `Qt::IgnoreAction`: 忽略操作。
+代码设计比较简单，主要是初始化这几项设置和 eventFilter 过滤器
+```cpp
+bool Widget::eventFilter(QObject *watched, QEvent *event)
+{
+    if (event->type() != QEvent::KeyPress)  // 不是KeyPress事件，退出
+        return QWidget::eventFilter(watched, event);
+    QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+    if (keyEvent->key() != Qt::Key_Delete) // 按下的不是Delete键，退出
+        return QWidget::eventFilter(watched, event);
+    if (watched == ui->listSource) {
+        QListWidgetItem* item = ui->listSource->takeItem(ui->listSource->currentRow());
+        delete item;
+    } else if (watched == ui->listWidget) {
+        QListWidgetItem* item = ui->listWidget->takeItem(ui->listWidget->currentRow());
+        delete item;
+    } else if (watched == ui->treeWidget) {
+        QTreeWidgetItem* curItem = ui->treeWidget->currentItem();
+        if (curItem->parent() != nullptr){
+            QTreeWidgetItem* parItem = curItem->parent();
+            parItem->removeChild(curItem);
+        }
+        else{
+            int index = ui->treeWidget->indexOfTopLevelItem(curItem);
+            ui->treeWidget->takeTopLevelItem(index);
+        }
+        delete curItem;
+    } else if (watched == ui->tableWidget) {
+        QTableWidgetItem* item = ui->tableWidget->takeItem(
+            ui->tableWidget->currentRow(),
+            ui->tableWidget->currentColumn());
+        delete item;
+    }
+    return true;
+    // 表示事件已经被处理
+}
+```
+# 对话框和多窗口程序设计
+## 标准对话框
+内置对话框
+
+| 对话框类                    | 主要静态函数                           | 函数功能                             |
+| ----------------------- | -------------------------------- | -------------------------------- |
+| **QFileDialog**         | `QString getOpenFileName()`      | 选择打开一个文件，返回选择文件的文件名              |
+|                         | `QStringList getOpenFileNames()` | 选择打开多个文件，返回选择的所有文件的文件名列表         |
+|                         | `QString getSaveFileName()`      | 选择保存一个文件，返回保存文件的文件名              |
+|                         | `QString getExistingDirectory()` | 选择一个已有的目录，返回所选目录的完整路径            |
+|                         | `QUrl getOpenFileUrl()`          | 选择打开一个文件，可选择打开远程网络文件             |
+|                         | `void saveFileContent()`         | 将一个 QByteArray 类型的字节数据数组的内容保存为文件 |
+| **QColorDialog**        | `QColor getColor()`              | 显示选择颜色对话框用于选择颜色，返回值是选择的颜色        |
+| **QFontDialog**         | `QFont getFont()`                | 显示选择字体对话框，返回值是选择的字体              |
+| **QProgressDialog**     | —                                | 显示进度变化的对话框，没有静态函数                |
+| **QInputDialog**        | `QString getText()`              | 显示标准输入对话框，输入单行文字                 |
+|                         | `int getInt()`                   | 显示标准输入对话框，输入整数                   |
+|                         | `double getDouble()`             | 显示标准输入对话框，输入浮点数                  |
+|                         | `QString getItem()`              | 显示标准输入对话框，从一个下拉列表框中选择输入          |
+|                         | `QString getMultiLineText()`     | 显示标准输入对话框，输入多行字符串                |
+| **QMessageBox**         | `StandardButton information()`   | 显示信息提示对话框                        |
+|                         | `StandardButton question()`      | 显示询问并获取是否确认的对话框                  |
+|                         | `StandardButton warning()`       | 显示警告信息提示对话框                      |
+|                         | `StandardButton critical()`      | 显示错误信息提示对话框                      |
+|                         | `void about()`                   | 显示设置自定义信息的关于对话框                  |
+|                         | `void aboutQt()`                 | 显示关于 Qt 的对话框                     |
+| **QPrintDialog**        | —                                | 打印机设置对话框，没有静态函数                  |
+| **QPrintPreviewDialog** | —                                | 打印预览对话框，没有静态函数                   |
+### 标准对话框预览
+选择颜色窗口
+![[PixPin_2025-11-20_20-53-58.png]]
+字体选择窗口
+![[PixPin_2025-11-20_20-54-22.png]]
+输入窗口
+![[PixPin_2025-11-20_21-38-57.png]]
+### Qt 内置对话框翻译
+qt 内置的标准对话框**是可翻译的**，如果需要设置其中的语言，需要加载对应的语言包文件
+```cpp
+#include <QApplication>
+#include <QTranslator>
+#include <QFontDialog>
+#include <QMessageBox>
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+
+    // 创建一个 QTranslator 对象
+    QTranslator customTranslator;
+
+    // 加载自定义的翻译文件
+    if (customTranslator.load("custom_dialogs_zh_CN", ":/translations")) {
+        app.installTranslator(&customTranslator);
+    } else {
+        QMessageBox::warning(nullptr, "警告", "无法加载自定义翻译文件");
+    }
+
+    // 创建另一个 QTranslator 对象
+    QTranslator qtTranslator;
+
+    // 加载 Qt 内置的翻译文件
+    if (qtTranslator.load("qtw_zh_CN", ":/qtbase_translations")) {
+        app.installTranslator(&qtTranslator);
+    } else {
+        QMessageBox::warning(nullptr, "警告", "无法加载 Qt 内置翻译文件");
+    }
+
+    // 显示 QFontDialog
+    bool ok;
+    QFont font = QFontDialog::getFont(&ok);
+    if (ok) {
+        // 用户选择了字体
+        QMessageBox::information(nullptr, "选择的字体", font.toString());
+    } else {
+        // 用户取消了选择
+        QMessageBox::information(nullptr, "取消", "未选择字体");
+    }
+
+    return app.exec();
+}
+```
+### Qt 自定义翻译
+1. 在源代码中使用 `tr()` 或者 `QObject::tr()` 标记一个字符串是**可翻译的**
+2. 调用 `lupdate myapp.pro` 让 lupdate 提取源码中的所有可翻译字符串，生成一个 `.ts` 文件
+3. 用 Qt Linguist 打开 ts 文件，手动调整翻译内容
+4. 使用 lrelease 工具将 ts 编译为**二进制**`.qm` 文件，`lrelease myapp_en.ts -qm myapp_en.qm`
+5. 在程序启动时加载翻译
+```cpp
+if (translator.load("myapp_zh_CN", ":/translations")) {
+    app.installTranslator(&translator);
+} else {
+    QMessageBox::warning(nullptr, "警告", "无法加载翻译文件");
+}
+```
+翻译文件在 `C:\Qt\<version>\<compiler>\translations`，可以在官网下载
+如果想要让一个应用中不同的Widget控件显示不同的语言，一般的做法是：
+- 为每个部分创建不同的翻译文件（例如 `qtw_en_US.qm` 和 `qtw_zh_CN.qm`）。
+- 加载这些翻译文件到不同的 `QTranslator` 实例中。
+- 在需要显示不同语言时，先 `installTranslator`，然后对不同的控件选择性调用 `update` 函数即可实现选择性翻译，一般不会使用多个 `QApplication` 实例在一个应用里。
+```cpp
+class LanguageManager : public QObject
+{
+    Q_OBJECT
+public:
+    static void setLanguage(const QString& languageCode) {
+        QApplication::removeTranslator(&translator);
+        
+        if (languageCode == "zh_CN") {
+            translator.load(":/translations/zh_CN.qm");
+        } else if (languageCode == "en_US") {
+            translator.load(":/translations/en_US.qm");
+        }
+        // 可以加载多个翻译文件
+        QApplication::installTranslator(&translator);
+        
+        // 通知所有窗口更新
+        for (QWidget* widget : QApplication::allWidgets()) {
+            widget->update();
+        }
+    }
+    
+private:
+    static QTranslator translator;
+};
+```
+## 设计和使用自定义对话框
+### 什么是模态对话框
+模态对话框是一种用户界面元素，当它出现时，它会阻止用户与父窗口或其他窗口进行交互，直到该对话框被关闭。换句话说，用户必须首先处理模态对话框中的任务
+
+- **`Qt::WindowModal`**：表示对话框是相对于其父窗口模态的。当这个对话框打开时，用户不能与父窗口进行交互，但可以与应用程序中的其他顶级窗口进行交互。
+- **`Qt::ApplicationModal`**：表示对话框是相对于整个应用程序模态的。当这个对话框打开时，用户不能与应用程序中的任何其他窗口进行交互，直到这个对话框被关闭。
+- **`Qt::NonModal`**（默认值）：表示对话框是非模态的。用户可以与父窗口和其他窗口进行交互，即使对话框是打开的。
+使用函 `QWidget::show()` 数显示一个对话框时，根据modal属性的值，对话框会以模态或非模态方式显示。函数show()没有返回值，但是一些询问对话框，调用其 `exec()` 是**模态形式的**，并且有返回值表示询问/操作结果
+如果子窗口需要读取父窗口的大量数据时，一般会使用 `exec()` 来创建子对话框，这种形式**只会创建一次以模形式行时显示的对话框**，子对话框关闭之后并没有被删除，只是被隐藏了（**会一直占用内存**）
