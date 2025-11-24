@@ -69,7 +69,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "原生",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -90,8 +90,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -221,7 +220,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "3bd80c560decbdf0",
+  "active": "fb472bc440e7a387",
   "lastOpenFiles": [
     "Files & LongText/Attachments/PixPin_2025-11-20_21-38-57.png",
     "Files & LongText/Attachments/PixPin_2025-11-20_20-54-22.png",
