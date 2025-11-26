@@ -2161,9 +2161,52 @@ private:
 ## 设计和使用自定义对话框
 ### 什么是模态对话框
 模态对话框是一种用户界面元素，当它出现时，它会阻止用户与父窗口或其他窗口进行交互，直到该对话框被关闭。换句话说，用户必须首先处理模态对话框中的任务
-
+一个对话框的模态属性可以通过下面方式访问或者设置
+```cpp
+Qt::WindowModality windowModality() const;
+void setWindowModality(Qt::WindowModality windowModality)
+```
 - **`Qt::WindowModal`**：表示对话框是相对于其父窗口模态的。当这个对话框打开时，用户不能与父窗口进行交互，但可以与应用程序中的其他顶级窗口进行交互。
 - **`Qt::ApplicationModal`**：表示对话框是相对于整个应用程序模态的。当这个对话框打开时，用户不能与应用程序中的任何其他窗口进行交互，直到这个对话框被关闭。
 - **`Qt::NonModal`**（默认值）：表示对话框是非模态的。用户可以与父窗口和其他窗口进行交互，即使对话框是打开的。
 使用函 `QWidget::show()` 数显示一个对话框时，根据modal属性的值，对话框会以模态或非模态方式显示。函数show()没有返回值，但是一些询问对话框，调用其 `exec()` 是**模态形式的**，并且有返回值表示询问/操作结果
 如果子窗口需要读取父窗口的大量数据时，一般会使用 `exec()` 来创建子对话框，这种形式**只会创建一次以模形式行时显示的对话框**，子对话框关闭之后并没有被删除，只是被隐藏了（**会一直占用内存**）
+### QDialog 类
+一般有**接受，取消**两个按键，分别对应 `accept`，`reject`。对话框询问完毕之后会发送 `QDialog::Accepted` 或者 `QDialog::Rejected` 信号，被 done 槽函数接受
+
+> [!note]
+>  `void QDialog::done(int r)`
+>  Closes the dialog and sets its result code to r. The finished() signal will emit r; if r is QDialog:: Accepted or QDialog:: Rejected, the accepted() or the rejected() signals will also be emitted, respectively
+
+#### 对话框窗口属性
+如果不需要获取对话框的返回值（accept，reject 或者其他用户选择结果），那么可以使用
+```cpp
+setAttribute(Qt::WA_DeleteOnClose);
+```
+设置一旦对话框关闭，对话框对象立即被删除，否则窗口会**一直占用内存**，解决方法是将这个窗口的 `close` 信号关联到 `deleteLater` 槽，或者手动删除对应窗口对象的指针。
+如果是频繁需要打开关闭同一个对话框的情景下可以不设置自动关闭，让其一直占用内存，调用时用一个 if 防止重复创建
+```cpp
+void do_something(){
+	if(this->dialog == nullptr) {this->dialog = new QDialog(this);}
+	else{ /* ... */}
+}
+```
+#### 对话框窗口标志
+`QDialog`（以及 `QWidget` 及其子类）中的 `setWindowFlag` 方法用于设置窗口标志（window flags），这些标志定义了窗口的各种属性和行为。窗口标志是 `Qt::WindowType` 枚举类型的一部分，可通过[[CodeLineCounter#位掩码设计开关|位掩码]]组合
+窗口标志一般使用场景在：[[#什么是模态对话框||模态对话框]]，无边框窗口，窗口置顶行为等场景中
+
+| 常量                  | 值          | 描述                                                                                                                                                                                                                                                                       |
+| ------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Qt::Widget`        | 0x00000000 | 这是 `QWidget` 的默认类型。如果 `QWidget` 有父窗口，则它是子窗口；如果没有父窗口，则它是独立窗口。请参见 `Qt::Window` 和 `Qt::SubWindow`。                                                                                                                                                                          |
+| `Qt::Window`        | 0x00000001 | 表示该部件是一个窗口，通常带有窗口系统框架和标题栏，无论该部件是否有父窗口。请注意，如果部件没有父窗口，则无法清除此标志。                                                                                                                                                                                                            |
+| `Qt::Dialog`        | 0x00000002 | 表示该部件是一个应该作为对话框装饰的窗口（即标题栏中通常没有最大化或最小化按钮）。这是 `QDialog` 的默认类型。如果希望将其用作模态对话框，则应从另一个窗口启动，或具有父窗口并使用 `QWidget::windowModality` 属性。如果设置为模态，对话框将阻止应用程序中的其他顶级窗口获取输入。在 Qt 中，具有父窗口的顶级窗口称为次级窗口。                                                                                      |
+| `Qt::Sheet`         | 0x00000004 | 表示该窗口是 macOS 上的 sheet。由于使用 sheet 意味着窗口模态，推荐使用 `QWidget::setWindowModality()` 或 `QDialog::open()` 代替。                                                                                                                                                                     |
+| `Qt::DrawerSheet`   | Dialog     | 表示该部件是 macOS 上的 drawer。此功能已弃用。设置此标志无效。                                                                                                                                                                                                                                   |
+| `Qt::Popup`         | 0x00000008 | 表示该部件是一个弹出式顶级窗口，即它是模态的，但具有适合弹出菜单的窗口系统框架。                                                                                                                                                                                                                                 |
+| `Qt::Tool`          | Dialog     | 表示该部件是一个工具窗口。工具窗口通常是一个带有较小标题栏和装饰的小窗口，通常用于工具按钮集合。如果有父窗口，工具窗口将始终保持在其上方。如果没有父窗口，可以考虑使用 `Qt::WindowStaysOnTopHint`。如果窗口系统支持，工具窗口可以用更轻的框架装饰。在 macOS 上，工具窗口对应于 `NSPanel` 类的窗口，这意味着该窗口位于正常窗口之上，无法将正常窗口置于其之上。默认情况下，工具窗口在应用程序不活动时会消失，这可以通过 `Qt::WA_MacAlwaysShowToolWindow` 属性控制。 |
+| `Qt::ToolTip`       | Sheet      | 表示该部件是一个工具提示。此标志用于内部实现工具提示。                                                                                                                                                                                                                                              |
+| `Qt::SplashScreen`  | Dialog     | 表示该窗口是一个启动画面。这是 `QSplashScreen` 的默认类型。                                                                                                                                                                                                                                   |
+| `Qt::SubWindow`     | 0x00000012 | 表示该部件是一个子窗口，例如 `QMdiSubWindow`。                                                                                                                                                                                                                                          |
+| `Qt::ForeignWindow` | 0x00000020 | 表示该窗口对象是一个句柄，表示由其他进程或手动使用本地代码创建的本地平台窗口。                                                                                                                                                                                                                                  |
+| `Qt::CoverWindow`   | 0x00000040 | 表示该窗口表示一个覆盖窗口，在某些平台上显示应用程序最小化时。                                                                                                                                                                                                                                          |
+
