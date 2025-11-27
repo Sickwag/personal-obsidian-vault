@@ -65,7 +65,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "位掩码",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -86,13 +86,11 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "8bf7189d29dd45a6",
@@ -185,7 +183,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "d7bcf4e39e7982fc",
+  "active": "fb472bc440e7a387",
   "lastOpenFiles": [
     "学习/其他专业书/QT6开发指南.md",
     "学习/ProjectsStudy/FromDocs/args库（3000行）.md",
