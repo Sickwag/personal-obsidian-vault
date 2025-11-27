@@ -26,10 +26,15 @@
             "id": "d7bcf4e39e7982fc",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "学习/algorithm/刷题路线.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
               "icon": "lucide-file",
-              "title": "新标签页"
+              "title": "刷题路线"
             }
           }
         ],
@@ -106,6 +111,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "学习/algorithm/刷题路线.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -115,7 +121,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "反向链接"
+              "title": "刷题路线 的反向链接列表"
             }
           },
           {
@@ -124,11 +130,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "学习/algorithm/刷题路线.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "出链"
+              "title": "刷题路线 的出链列表"
             }
           },
           {
@@ -152,20 +159,31 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "学习/algorithm/刷题路线.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "大纲"
+              "title": "刷题路线 的大纲"
+            }
+          },
+          {
+            "id": "4c2d9e4fa23aee3a",
+            "type": "leaf",
+            "state": {
+              "type": "quiet-outline",
+              "state": {},
+              "icon": "lines-of-text",
+              "title": "Quiet Outline"
             }
           }
-        ]
+        ],
+        "currentTab": 4
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -183,9 +201,14 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "fb472bc440e7a387",
+  "active": "d7bcf4e39e7982fc",
   "lastOpenFiles": [
     "学习/其他专业书/QT6开发指南.md",
+    "学习/其他专业书/Google C++ Style Guide.md",
+    "学习/AI/Pytorch basic.md",
+    "学习/其他专业书/算法竞赛入门经典.md",
+    "学习/其他专业书/现代C++语言核心特性解析.md",
+    "学习/其他专业书/软件工程.md",
     "学习/ProjectsStudy/FromDocs/args库（3000行）.md",
     "学习/ProjectsStudy/WriteByMyself/CodeLineCounter.md",
     "学习/ProjectsStudy/FromProjects/QTExamples.md",
@@ -204,7 +227,6 @@
     "Files & LongText/Attachments/PixPin_2025-11-19_17-21-59.png",
     "Files & LongText/Attachments/PixPin_2025-11-19_17-17-44.png",
     "Files & LongText/Attachments/PixPin_2025-11-19_16-47-34.png",
-    "学习/其他专业书/Google C++ Style Guide.md",
     "Files & LongText/Attachments/PixPin_2025-11-18_10-28-52.png",
     "Files & LongText/Attachments/PixPin_2025-11-18_09-48-04.png",
     "Files & LongText/Long code/C++ practice case.md",
@@ -218,13 +240,9 @@
     "学习/algorithm/题型分类.md",
     "学习/ProjectsStudy/WriteByMyself/CPP爬虫实战.md",
     "学习/其他专业书/C++并发编程实战（第二版）.md",
-    "学习/Bases/计算机网络/Linux高性能服务器编程.md",
-    "学习/Bases/开发情景&面试题/面试题.md",
-    "学习/Bases/开发情景&面试题/开发情景题.md",
     "未命名 2.base",
     "未命名 1.base",
     "未命名.base",
-    "学习/ProjectsStudy/WriteByMyself/BookManageSystem+mysql.md",
     "学习/Geography Learning/From Tutorial",
     "学习/Geography Learning/AI QA",
     "学习/Geography Learning",
