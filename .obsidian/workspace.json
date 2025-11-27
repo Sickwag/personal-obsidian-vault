@@ -21,8 +21,19 @@
               "icon": "lucide-file",
               "title": "QT6开发指南"
             }
+          },
+          {
+            "id": "d7bcf4e39e7982fc",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -86,7 +97,74 @@
   "right": {
     "id": "8bf7189d29dd45a6",
     "type": "split",
-    "children": [],
+    "children": [
+      {
+        "id": "37604ac5dcc0dc73",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "33720a871b60a235",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "反向链接"
+            }
+          },
+          {
+            "id": "715b593b2cc7a1ae",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "出链"
+            }
+          },
+          {
+            "id": "17dee0ebe788aa1f",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "ff82c7801168f952",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "大纲"
+            }
+          }
+        ]
+      }
+    ],
     "direction": "horizontal",
     "width": 200,
     "collapsed": true
@@ -107,11 +185,11 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "fc6e45368d1399f5",
+  "active": "d7bcf4e39e7982fc",
   "lastOpenFiles": [
+    "学习/其他专业书/QT6开发指南.md",
     "学习/ProjectsStudy/FromDocs/args库（3000行）.md",
     "学习/ProjectsStudy/WriteByMyself/CodeLineCounter.md",
-    "学习/其他专业书/QT6开发指南.md",
     "学习/ProjectsStudy/FromProjects/QTExamples.md",
     "学习/其他专业书/Modern C++.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
