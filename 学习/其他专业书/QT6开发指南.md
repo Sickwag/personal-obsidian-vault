@@ -1686,17 +1686,95 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 ## 事件与信号
 事件通常是由窗口系统或应用程序产生的，信号则是 Qt 定义或用户自定义的。Qt 为界面组件定义的信号通常是对事件的封装
 ### 窗口属性
-和[[#属性系统]]中的属性不一样，窗口属性使用 `setAttribute()` 设置，作为一种配置属性，用来调整窗口/控件的显示效果，运行逻辑。而 `setProperty()` 用来存储程序运行的用户自定义数据，方便需要用时查询。
-- ✅ **`setAttribute()`** = 告诉 Qt **如何对待**这个控件
-- ✅ **`setProperty()`** = 告诉程序 **这个控件有什么**数据
+和[[#属性系统]]中的属性不一样:
+窗口属性使用 `setAttribute()` 设置，作为一种配置属性，用来调整窗口/控件的显示效果，运行逻辑
+控件自定义数据 `setProperty()` 用来存储程序运行的用户自定义数据，方便需要用时查询
+窗口状态 `setWindowFlag`，窗口状态决定了窗口在屏幕上的显示方式，例如最大化、最小化、全屏等
+- `setWindowFlag` 设置窗口标志，**用来定义这个窗口的行为，是否为模态，是否无边框等**
 
-| 特性       | `setAttribute()` | `setProperty()` |
-| -------- | ---------------- | --------------- |
-| **作用对象** | QWidget 及其子类     | QObject 及其所有子类  |
-| **属性类型** | 预定义的窗口属性         | 自定义的动态属性        |
-| **用途**   | 控制窗口行为/外观        | 存储任意自定义数据       |
-| **性能**   | 直接影响窗口系统         | 轻量级数据存储         |
+| 枚举值                         | 描述                                                                                                   |
+| --------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Qt::Widget                  | 这是 `QWidget` 的默认类型。如果 `QWidget` 有父窗口，则它是子窗口；如果没有父窗口，则它是独立窗口。请参见 `Qt::Window` 和 `Qt::SubWindow`。      |
+| Qt::Window                  | 表示该部件是一个窗口，通常带有窗口系统框架和标题栏，无论该部件是否有父窗口。                                                               |
+| Qt::Dialog                  | 表示该部件是一个应该作为对话框装饰的窗口（即标题栏中通常没有最大化或最小化按钮）。这是 `QDialog` 的默认类型。                                         |
+| Qt::Sheet                   | 表示该窗口是 macOS 上的 sheet。由于使用 sheet 意味着窗口模态，推荐使用 `QWidget::setWindowModality()` 或 `QDialog::open()` 代替。 |
+| Qt::DrawerSheet             | 表示该部件是 macOS 上的 drawer。此功能已弃用。设置此标志无效。                                                               |
+| Qt::Popup                   | 表示该部件是一个弹出式顶级窗口，即它是模态的，但具有适合弹出菜单的窗口系统框架。                                                             |
+| Qt::Tool                    | 表示该部件是一个工具窗口。工具窗口通常是一个带有较小标题栏和装饰的小窗口，通常用于工具按钮集合。                                                     |
+| Qt::ToolTip                 | 表示该部件是一个工具提示。此标志用于内部实现工具提示。                                                                          |
+| Qt::SplashScreen            | 表示该窗口是一个启动画面。这是 `QSplashScreen` 的默认类型。                                                               |
+| Qt::SubWindow               | 表示该部件是一个子窗口，例如 `QMdiSubWindow`。                                                                      |
+| Qt::ForeignWindow           | 表示该窗口对象是一个句柄，表示由其他进程或手动使用本地代码创建的本地平台窗口。                                                              |
+| Qt::CoverWindow             | 表示该窗口表示一个覆盖窗口，在某些平台上显示应用程序最小化时。                                                                      |
+| Qt::WindowModal             | 表示该窗口是模态的，相对于其父窗口模态。用户必须关闭此窗口才能与父窗口交互。                                                               |
+| Qt::ApplicationModal        | 表示该窗口是模态的，相对于整个应用程序模态。用户必须关闭此窗口才能与应用程序中的任何窗口交互。                                                      |
+| Qt::WindowStaysOnTopHint    | 表示该窗口始终位于其他窗口之上。                                                                                     |
+| Qt::FramelessWindowHint     | 表示该窗口没有边框。                                                                                           |
+| Qt::CustomizeWindowHint     | 允许自定义窗口的标题栏和边框。通常与 `Qt::FramelessWindowHint` 结合使用。                                                   |
+| Qt::BypassWindowManagerHint | 绕过窗口管理器，通常用于特殊用途窗口。                                                                                  |
+- `setWindowState` 设置窗口状态，**定义窗口在屏幕上的显示方式，例如最大化、最小化、全屏等**
+
+| 枚举值                  | 描述                     |
+| -------------------- | ---------------------- |
+| Qt::WindowNoState    | 表示窗口没有处于任何特殊状态（即正常状态）。 |
+| Qt::WindowMinimized  | 表示窗口最小化。               |
+| Qt::WindowMaximized  | 表示窗口最大化。               |
+| Qt::WindowFullScreen | 表示窗口全屏显示。              |
+| Qt::WindowActive     | 表示窗口是活动窗口。             |
+-  **`setAttribute()`** = 告诉 Qt **如何对待**这个控件，**主要影响窗口的外观和关闭/打开窗口时是否删除对象**，***不可组合***
+
+| 枚举值                              | 设置为 true 时的含义描述              |
+| -------------------------------- | ---------------------------- |
+| Qt::WA_DeleteOnClose             | 表示当窗口关闭时，自动删除该窗口对象。          |
+| Qt::WA_TranslucentBackground     | 表示窗口具有半透明背景。                 |
+| Qt::WA_OpaquePaintEvent          | 表示窗口在绘制时不透明。                 |
+| Qt::WA_NoSystemBackground        | 表示窗口不使用系统背景。                 |
+| Qt::WA_AlwaysStackUnder          | 表示窗口总是位于其他窗口之下。              |
+| Qt::WA_AlwaysShowToolTips        | 表示窗口总是显示工具提示。                |
+| Qt::WA_SetPalette                | 表示窗口使用自定义调色板。                |
+| Qt::WA_SetCursor                 | 表示窗口使用自定义光标。                 |
+| Qt::WA_CustomWhatsThis           | 表示窗口具有自定义的“关于此”帮助文本。         |
+| Qt::WA_DontShowOnScreen          | 表示窗口不显示在屏幕上。                 |
+| Qt::WA_Mapped                    | 表示窗口已经被映射到屏幕上。               |
+| Qt::WA_Modal                     | 表示窗口是模态的。                    |
+| Qt::WA_KeyboardFocusChange       | 表示窗口在获得或失去键盘焦点时发出信号。         |
+| Qt::WA_InputMethodEnabled        | 表示窗口启用输入法。                   |
+| Qt::WA_KeyCompression            | 表示窗口压缩按键事件。                  |
+| Qt::WA_Hover                     | 表示窗口接收悬停事件。                  |
+| Qt::WA_NoMouseReplay             | 表示窗口不重放鼠标事件。                 |
+| Qt::WA_TransparentForInput       | 表示窗口对输入事件透明。                 |
+| Qt::WA_SetWindowIcon             | 表示窗口使用自定义窗口图标。               |
+| Qt::WA_SetStyle                  | 表示窗口使用自定义样式。                 |
+| Qt::WA_SetFont                   | 表示窗口使用自定义字体。                 |
+| Qt::WA_UnderMouse                | 表示窗口当前位于鼠标下方。                |
+| Qt::WA_MouseTracking             | 表示窗口启用鼠标跟踪事件。                |
+| Qt::WA_QuitOnClose               | 表示当窗口关闭时，退出应用程序。             |
+| Qt::WA_PaintOnScreen             | 表示窗口在屏幕上直接绘制。                |
+| Qt::WA_RightToLeft               | 表示窗口从右到左排列。                  |
+| Qt::WA_SetLayoutDirection        | 表示窗口设置布局方向。                  |
+| Qt::WA_NoBackground              | 表示窗口没有背景。                    |
+| Qt::WA_NoMousePropagation        | 表示窗口不传播鼠标事件。                 |
+| Qt::WA_HideOnHideParent          | 表示当父窗口隐藏时，窗口也隐藏。             |
+| Qt::WA_NoChildEventsForParent    | 表示窗口不为父窗口发送事件。               |
+| Qt::WA_LockLandscapeOrientation  | 表示窗口锁定横向方向。                  |
+| Qt::WA_LockPortraitOrientation   | 表示窗口锁定纵向方向。                  |
+| Qt::WA_MacOpaqueSizeGrip         | 表示窗口使用不透明的大小调整手柄。            |
+| Qt::WA_MacAlwaysShowScrollBars   | 表示窗口始终显示滚动条。                 |
+| Qt::WA_QuitOnClose               | 表示当窗口关闭时，退出应用程序。             |
+| Qt::WA_StyledBackground          | 表示窗口使用样式化的背景。                |
+| Qt::WA_AttributeCount            | 表示属性的数量。                     |
+
+-  **`setProperty()`** = 告诉程序 **这个控件有什么**数据，用于提高维护，可读性
+- `setWindowOpacity()` 窗口透明度
+
 在一些对象中，设置了窗口属性之后才会有对应的事件发生，比如 `this->setAttribute(Qt::WA_Hover,true)` 设置之后，鼠标移入一个控件之后会触发 `QEvent::HoverEnter` 的事件
+
+| 函数名              | 作用                                      | 特性                          | 是否可以组合 |
+| ---------------- | --------------------------------------- | --------------------------- | ------ |
+| `setWindowFlag`  | 设置或清除窗口标志（window flags），定义窗口的行为和外观。     | 影响窗口的显示方式、模态性、边框等。          | 是      |
+| `setAttribute`   | 设置或清除窗口属性（window attributes），控制窗口的各种特性。 | 影响窗口的行为、事件处理等。              | 否      |
+| `setWindowState` | 设置窗口的状态（window states），控制窗口在屏幕上的显示方式。   | 影响窗口的显示方式（如最大化、最小化、全屏等）。    | 是      |
+| `setProperty`    | 设置窗口的自定义属性，可以存储任意类型的值。                  | 用于存储和检索自定义数据，不直接影响窗口的行为或外观。 | 否      |
 
 ## 事件过滤器
 ### 事件过滤器工作原理
@@ -2210,3 +2288,18 @@ void do_something(){
 | `Qt::ForeignWindow` | 0x00000020 | 表示该窗口对象是一个句柄，表示由其他进程或手动使用本地代码创建的本地平台窗口。                                                                                                                                                                                                                                  |
 | `Qt::CoverWindow`   | 0x00000040 | 表示该窗口表示一个覆盖窗口，在某些平台上显示应用程序最小化时。                                                                                                                                                                                                                                          |
 
+## 多窗口应用程序设计
+### 窗口类重要特性的设置
+QSplashScreen 和 QMdiSubWindow。QSplashScreen 同样继承自 QWidget 并作为窗口类，可以通过[[#窗口属性|一系列设置函数]] 调整窗口的属性，行为。
+### 多窗口设计代码
+### Qt 多窗口事件循环机制
+- **`setWindowFlag(Qt::Window, true)`**：
+- 设置窗口标志 `Qt::Window` 为 `true`，表示该部件是一个独立的窗口。
+- 这意味着无论该部件是否有父窗口，它都会作为一个顶级窗口显示，具有窗口系统框架和标题栏，会在任务栏显示独立的图标。
+- 如果希望一个部件成为一个子窗口（例如，`QMdiSubWindow` 中的一个子窗口），**应该指定父窗口**
+- 但是，如果你使用 `setWindowFlag(Qt::Window, true)`，即使指定了父窗口，该部件仍然会作为一个独立的顶级窗口显示。
+
+
+`QApplication` 的事件循环依赖于顶级窗口的存在，没有父窗口的窗口被称为顶级窗口。只要有至少一个顶级窗口存在，事件循环就会继续运行。
+- 如果窗口设置了 `Qt::WA_DeleteOnClose` 属性，窗口对象会在关闭后被自动删除。没有设置那么他还会存在在内存中，**如果再次调用 `show` 还是会出现**，删除了那么对象都不存在，更没有 `show` 函数
+- 
