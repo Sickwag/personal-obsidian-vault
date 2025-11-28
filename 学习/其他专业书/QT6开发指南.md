@@ -2339,4 +2339,97 @@ void MainWindow::on_actWidget_triggered()
 ## MDI 应用程序设计
 MDI 应用程序有一个主窗口和任意多个子窗口，当在 MDI 应用程序里打开了多个子窗口时，获得输入焦点的子窗口是活动的（active）子窗口。子窗口一般共享（**但也可以独立设置**）主窗口上的工具栏和菜单，主窗口上的操作一般是针对当前的活动子窗口
 ![[PixPin_2025-11-28_18-06-47.png]]
-子窗口就像 vc++6.0 的交互逻辑，但现代软件一般采用多页模式
+子窗口就像 vc++6.0 的交互逻辑，但现代软件一般采用多页模式，MDI 应用程序的设计主要是对 QMdiArea 和 QMdiSubWindow 类的使用
+### QMdiArea 类
+QMdiArea 显示子窗口有两种模式：子窗口模式和多页模式。通过下面函数设置
+```cpp
+void  QMdiArea::setViewMode(QMdiArea::ViewMode mode)
+```
+这个类用来存储子窗口，操作类下的子窗口可以通过
+```cpp
+QMdiSubWindow  *QMdiArea::activeSubWindow(); // 当前活动窗口
+void  QMdiArea::removeSubWindow(QWidget *widget); // 删除窗口
+QList<QMdiSubWindow *> QMdiArea::subWindowList(QMdiArea::WindowOrder order= CreationOrder); // 所有子窗口列表
+```
+每一个 QMdiArea 对象需要通过 `widget()` 成员函数才能转化为 QWidget 对象进行操作
+QMdiArea 管理的子窗口实际上是 QMdiSubWindow 窗口，QMdiSubWindow 的内部组件才是用户窗口
+
+保存 QPlainText 的文本到文件
+```cpp
+void MainWindow::on_actSave_triggered()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Text Files (*.txt);;All Files (*)"));
+    if (fileName.isEmpty())
+        return;
+    QString textContent = plainTextEdit->toPlainText();
+    // 打开文件进行写入
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, tr("Save File"),
+                             tr("Cannot write file %1:\n%2.")
+                             .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+        return;
+    }
+    QTextStream out(&file);
+    out << textContent;
+    file.close();
+    QMessageBox::information(this, tr("File Saved"), tr("The file has been saved successfully."));
+}
+```
+### 代码编写
+打开新的 MDI 窗口
+```cpp
+void MainWindow::on_actDoc_Open_triggered()
+{
+    bool needNew = false;
+    TFormDoc* formDoc;
+    if(ui->mdiArea->subWindowList().size() > 0){
+        formDoc = (TFormDoc*)ui->mdiArea->activeSubWindow()->widget();
+        needNew = formDoc->isFileOpened();
+    }else{
+        needNew = true;
+    }
+    QString curPath=QDir::currentPath();
+    QString aFileName=QFileDialog::getOpenFileName(this,tr("打开一个文件"),curPath, "C程序文件(*.h *cpp);;文本文件(*.txt);;所有文件(*.*)");
+    if (aFileName.isEmpty())
+        return;     //如果未选择文件，退出
+    
+    if (needNew) {
+        formDoc = new TFormDoc(this);
+        ui->mdiArea->addSubWindow(formDoc);
+    }
+    
+    formDoc->loadFromFile(aFileName);
+    formDoc->show();
+    
+    ui->actCut->setEnabled(true);
+    ui->actCopy->setEnabled(true);
+    ui->actPaste->setEnabled(true);
+    ui->actFont->setEnabled(true);
+}
+```
+- 如果已经有窗口，并且活跃窗口已经打开了文件，那么 needNew 需要一个新的子窗口，如果活跃窗口没有打开文件，那么就将活跃窗口作为新打开的子窗口（这是 needNew 为 false）
+- 如果没有窗口，则无脑创建即可
+- 一定要先获取MDI子窗口，再使用QFileDialog对话框打开文件。如果**先显示 QFileDialog，会导致焦点集中到其他应用中，MDI 应用主窗口就没有当期激活窗口这一说法**。
+层叠展开：
+![[PixPin_2025-11-28_20-53-05.png]]
+平铺展开
+![[PixPin_2025-11-28_20-53-25.png]]
+都是内置 api，不用自己手动布局，平铺 api 会自动处理窗口大小
+**从多窗口模式切换到多页模式需要重新设置窗口属性和设置**
+```cpp
+void MainWindow::on_actViewMode_triggered(bool checked)
+{//MDI 显示模式
+    if (checked) //Tab多页显示模式
+        ui->mdiArea->setViewMode(QMdiArea::TabbedView); //Tab多页显示模式
+    else //子窗口模式
+        ui->mdiArea->setViewMode(QMdiArea::SubWindowView); //子窗口模式
+    ui->mdiArea->setTabsClosable(checked);  //切换到多页模式下需重新设置
+    ui->actCascade->setEnabled(!checked);   //子窗口模式下才有用
+    ui->actTile->setEnabled(!checked);
+}
+```
+## Splash 与登录窗口
+splash 窗口简单来说就是启动界面，显示启动界面表示程序已经启动，但是在加载中，可以在这个时候进行一些耗时的操作和用户交互，比如登录，使用 QSplashScreen 实现
+![[PixPin_2025-11-28_20-56-53.png]]
+Splash 窗口没有标题栏，只能采用在图片上拖动的方式移动窗口，需要**使用鼠标事件实现窗口拖动**，
