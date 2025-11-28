@@ -2292,14 +2292,51 @@ void do_something(){
 ### 窗口类重要特性的设置
 QSplashScreen 和 QMdiSubWindow。QSplashScreen 同样继承自 QWidget 并作为窗口类，可以通过[[#窗口属性|一系列设置函数]] 调整窗口的属性，行为。
 ### 多窗口设计代码
+设置独立的窗口
+```cpp
+void MainWindow::on_actWidget_triggered()
+{
+    TFormDoc* formDoc = new TFormDoc(this);
+    formDoc->setAttribute(Qt::WA_DeleteOnClose);
+    formDoc->setWindowTitle("based on QWidget window no parent, delete on close");
+    formDoc->setWindowFlag(Qt::Window, true);
+
+    formDoc->setWindowFlag(Qt::CustomizeWindowHint,true);
+    formDoc->setWindowFlag(Qt::WindowMinMaxButtonsHint,true);
+    formDoc->setWindowFlag(Qt::WindowCloseButtonHint,true);
+    formDoc->setWindowFlag(Qt::WindowStaysOnTopHint,true);
+
+    formDoc->setWindowOpacity(0.9);
+    formDoc->show();
+}
+```
+- **`Qt::CustomizeWindowHint`**：移除窗口管理系统提供的默认装饰（如标题栏、边框等），允许你自定义窗口的外观。
+	- 窗口将没有默认的标题栏和边框。
+	- 你需要自己实现标题栏、最小化、最大化和关闭按钮等控件。
+- **`Qt::WindowMinMaxButtonsHint`**：在自定义窗口中添加最小化和最大化按钮。
+	- 如果 `Qt::CustomizeWindowHint` 被设置，这个标志会确保窗口具有最小化和最大化按钮。
+	- 注意：如果 `Qt::CustomizeWindowHint` 没有被设置，这个标志不会生效。
+- **`Qt::WindowCloseButtonHint`**：在自定义窗口中添加关闭按钮。
+	- 如果 `Qt::CustomizeWindowHint` 被设置，这个标志会确保窗口具有关闭按钮。
+	- 注意：如果 `Qt::CustomizeWindowHint` 没有被设置，这个标志不会生效。
+- **`Qt::WindowStaysOnTopHint`**：使窗口始终保持在其他窗口之上。
+	- 窗口将始终位于其他窗口的最前面，不会被其他窗口遮挡。
+	- 这通常用于工具窗口或需要始终可见的窗口。
 ### Qt 多窗口事件循环机制
+设置独立窗口
 - **`setWindowFlag(Qt::Window, true)`**：
 - 设置窗口标志 `Qt::Window` 为 `true`，表示该部件是一个独立的窗口。
 - 这意味着无论该部件是否有父窗口，它都会作为一个顶级窗口显示，具有窗口系统框架和标题栏，会在任务栏显示独立的图标。
-- 如果希望一个部件成为一个子窗口（例如，`QMdiSubWindow` 中的一个子窗口），**应该指定父窗口**
-- 但是，如果你使用 `setWindowFlag(Qt::Window, true)`，即使指定了父窗口，该部件仍然会作为一个独立的顶级窗口显示。
-
-
-`QApplication` 的事件循环依赖于顶级窗口的存在，没有父窗口的窗口被称为顶级窗口。只要有至少一个顶级窗口存在，事件循环就会继续运行。
+- 如果希望一个部件成为一个子窗口（例如，`QMdiSubWindow` 中的一个子窗口），**应该指定父窗口**，如果设置了父窗口，就不会作为一个顶层窗口出现，任务栏中不出现
+![[Pasted image 20251128170759.png]]
+![[Pasted image 20251128170805.png]]
+顶层窗口事件循环
+- `QApplication` 的事件循环依赖于顶级窗口的存在，没有父窗口的窗口被称为顶级窗口。只要有至少一个顶级窗口存在，事件循环就会继续运行。
 - 如果窗口设置了 `Qt::WA_DeleteOnClose` 属性，窗口对象会在关闭后被自动删除。没有设置那么他还会存在在内存中，**如果再次调用 `show` 还是会出现**，删除了那么对象都不存在，更没有 `show` 函数
-- 
+- 没有顶层窗口（删除，不是隐藏）后事件循环结束后会调用 `QApplication::quit` 槽函数关闭。
+其他比较简单
+
+## MDI 应用程序设计
+MDI 应用程序有一个主窗口和任意多个子窗口，当在 MDI 应用程序里打开了多个子窗口时，获得输入焦点的子窗口是活动的（active）子窗口。子窗口一般共享（**但也可以独立设置**）主窗口上的工具栏和菜单，主窗口上的操作一般是针对当前的活动子窗口
+![[PixPin_2025-11-28_18-06-47.png]]
+子窗口就像 vc++6.0 的交互逻辑，但现代软件一般采用多页模式
