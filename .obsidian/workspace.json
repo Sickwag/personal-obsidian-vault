@@ -162,14 +162,23 @@
               "icon": "lines-of-text",
               "title": "Quiet Outline"
             }
+          },
+          {
+            "id": "c538e4710d9b017f",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
+            }
           }
         ],
-        "currentTab": 4
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 307.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -189,6 +198,7 @@
   },
   "active": "fc6e45368d1399f5",
   "lastOpenFiles": [
+    "学习/其他专业书/QT6开发指南.md",
     "Files & LongText/Attachments/PixPin_2025-11-28_20-56-53.png",
     "Files & LongText/Attachments/PixPin_2025-11-28_20-53-25.png",
     "Files & LongText/Attachments/PixPin_2025-11-28_20-53-05.png",
@@ -196,7 +206,6 @@
     "Files & LongText/Attachments/Pasted image 20251128170805.png",
     "Files & LongText/Attachments/Pasted image 20251128170759.png",
     "学习/algorithm/刷题路线.md",
-    "学习/其他专业书/QT6开发指南.md",
     "学习/其他专业书/Google C++ Style Guide.md",
     "学习/AI/Pytorch basic.md",
     "学习/其他专业书/算法竞赛入门经典.md",
@@ -216,7 +225,6 @@
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "学习/其他专业书/QT样式表合集.md",
     "Files & LongText/Attachments/PixPin_2025-11-19_17-27-50.png",
-    "Files & LongText/Attachments/Pasted image 20251119172713.png",
     "Files & LongText/Long code/C++ practice case.md",
     "Files & LongText/Long code/MySQL Long Code Practice.md",
     "学习/Language/C C++/C++ Basics.md",
