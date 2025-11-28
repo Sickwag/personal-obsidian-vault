@@ -20,9 +20,28 @@
               },
               "icon": "lucide-file",
               "title": "QT6开发指南"
+<<<<<<< HEAD
+=======
+            }
+          },
+          {
+            "id": "d7bcf4e39e7982fc",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/algorithm/刷题路线.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "刷题路线"
+>>>>>>> 0f7419ed42165a0c46b1051661bb44053840a02a
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -161,6 +180,7 @@
               "state": {},
               "icon": "lines-of-text",
               "title": "Quiet Outline"
+<<<<<<< HEAD
             }
           },
           {
@@ -180,6 +200,16 @@
     "direction": "horizontal",
     "width": 307.5,
     "collapsed": true
+=======
+            }
+          }
+        ],
+        "currentTab": 4
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200
+>>>>>>> 0f7419ed42165a0c46b1051661bb44053840a02a
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -197,6 +227,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
+<<<<<<< HEAD
   "active": "fc6e45368d1399f5",
   "lastOpenFiles": [
     "学习/其他专业书/QT6开发指南.md",
@@ -207,6 +238,11 @@
     "Files & LongText/Attachments/Pasted image 20251128170805.png",
     "Files & LongText/Attachments/Pasted image 20251128170759.png",
     "学习/algorithm/刷题路线.md",
+=======
+  "active": "d7bcf4e39e7982fc",
+  "lastOpenFiles": [
+    "学习/其他专业书/QT6开发指南.md",
+>>>>>>> 0f7419ed42165a0c46b1051661bb44053840a02a
     "学习/其他专业书/Google C++ Style Guide.md",
     "学习/AI/Pytorch basic.md",
     "学习/其他专业书/算法竞赛入门经典.md",
@@ -226,7 +262,18 @@
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "学习/其他专业书/QT样式表合集.md",
     "Files & LongText/Attachments/PixPin_2025-11-19_17-27-50.png",
+<<<<<<< HEAD
     "Files & LongText/Long code/C++ practice case.md",
+=======
+    "Files & LongText/Attachments/Pasted image 20251119172713.png",
+    "Files & LongText/Attachments/PixPin_2025-11-19_17-21-59.png",
+    "Files & LongText/Attachments/PixPin_2025-11-19_17-17-44.png",
+    "Files & LongText/Attachments/PixPin_2025-11-19_16-47-34.png",
+    "Files & LongText/Attachments/PixPin_2025-11-18_10-28-52.png",
+    "Files & LongText/Attachments/PixPin_2025-11-18_09-48-04.png",
+    "Files & LongText/Long code/C++ practice case.md",
+    "学习/algorithm/刷题路线.md",
+>>>>>>> 0f7419ed42165a0c46b1051661bb44053840a02a
     "Files & LongText/Long code/MySQL Long Code Practice.md",
     "学习/Language/C C++/C++ Basics.md",
     "学习/algorithm/用法导向知识.md",
@@ -235,6 +282,10 @@
     "学习/algorithm/分析优化.md",
     "学习/algorithm/题型分类.md",
     "学习/ProjectsStudy/WriteByMyself/CPP爬虫实战.md",
+<<<<<<< HEAD
+=======
+    "学习/其他专业书/C++并发编程实战（第二版）.md",
+>>>>>>> 0f7419ed42165a0c46b1051661bb44053840a02a
     "未命名 2.base",
     "未命名 1.base",
     "未命名.base",
