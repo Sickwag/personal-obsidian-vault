@@ -1686,7 +1686,6 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 ## 事件与信号
 事件通常是由窗口系统或应用程序产生的，信号则是 Qt 定义或用户自定义的。Qt 为界面组件定义的信号通常是对事件的封装
 ### 窗口属性
-<<<<<<< HEAD
 和[[#属性系统]]中的属性不一样:
 窗口属性使用 `setAttribute()` 设置，作为一种配置属性，用来调整窗口/控件的显示效果，运行逻辑
 控件自定义数据 `setProperty()` 用来存储程序运行的用户自定义数据，方便需要用时查询
@@ -2448,4 +2447,102 @@ void MainWindow::on_actViewMode_triggered(bool checked)
 ## Splash 与登录窗口
 splash 窗口简单来说就是启动界面，显示启动界面表示程序已经启动，但是在加载中，可以在这个时候进行一些耗时的操作和用户交互，比如登录，使用 QSplashScreen 实现
 ![[PixPin_2025-11-28_20-56-53.png]]
-Splash 窗口没有标题栏，只能采用在图片上拖动的方式移动窗口，需要**使用鼠标事件实现窗口拖动**，
+
+Splash 窗口通常是无边框的，所以拖动事件发生在窗口中显示的组件上，需要自行设置事件代理，`setWindowFlags(Qt::FramelessWindowHint);` 可以设置无边框，但是在任务显示对话框标题
+![[PixPin_2025-12-10_22-16-48.png]]
+### 代码编写
+#### 窗口拖动事件
+Splash 窗口没有标题栏，只能采用在图片上拖动的方式移动窗口，需要**使用鼠标事件实现窗口拖动**，程序在运行时，图片是显示在 QLabel 组件上的，鼠标拖动的实际上是 QLabel 组件，**QLabel 组件没有对事件进行处理，事件传播给其父容器组件** TDialogLogin处理。
+```cpp
+void TDialogLogin::mousePressEvent(QMouseEvent *event)
+{ //鼠标按键被按下
+    if (event->button() == Qt::LeftButton)
+    {
+        m_moving = true;
+        m_lastPos = event->globalPosition().toPoint() - this->pos();
+    }
+    return QDialog::mousePressEvent(event);
+}
+
+void TDialogLogin::mouseMoveEvent(QMouseEvent *event)
+{ //鼠标按下左键移动
+    QPoint eventPos=event->globalPosition().toPoint();
+
+    if (m_moving && (event->buttons() & Qt::LeftButton)
+        && (eventPos-m_lastPos).manhattanLength() > QApplication::startDragDistance())
+    {
+        move(eventPos-m_lastPos);
+        m_lastPos = eventPos - this->pos();
+    }
+    return QDialog::mouseMoveEvent(event);
+}
+
+void TDialogLogin::mouseReleaseEvent(QMouseEvent *event)
+{ //鼠标按键被释放
+    m_moving=false;     //停止移动
+    event->accept();
+}
+```
+
+对一个继承自 QWidget 的窗口设置 `setWindowFlags(Qt::SplashScreen)`，窗口就会自动设置为无边框，无任务栏，不在任务栏显示。
+- `m_lastPos` 存储了鼠标按下时相对于窗口左上角的偏移量，用于后续计算窗口的新位置。
+- **`this->m_lastPos = event->globalPos() - this->pos();`**计算鼠标按下位置相对于窗口左上角的位置。
+- `QApplication::startDragDistance()` 返回系统定义的开始拖拽的最小距离，避免误操作
+
+#### 设置保存方面
+QSettings 有多种形式的构造函数，使用 Windows 注册表保存设置时，构造函数定义如下：
+```cpp
+QSettings(const QString &organization, const QString &application = QString(), QObject *parent = nullptr) 
+```
+它需要参数 organization 和 application，这两个参数确定了注册表中的一个目录。如果定义 QSettings 变量时没有传递任何参数，它默认使用静态函数 `QApplication::organizationName()` 的值作为 organization，在构造函数中我们已经设置了：
+```cpp
+QApplication::setOrganizationName("WWB-Qt"); //设置组织名
+QApplication::setApplicationName("samp7_5"); //设置应用程序名
+// 也可以在创建settings对象时设置
+QSettings settings("MySoft", "Star Runner");
+```
+- 那么会将设置保存在**注册表目录**是 HKEY_CURRENT_USER/Software/WWB-Qt/samp 7_5。注册表里的参数是以“键-键值”的形式来保存的，键就是参数的名称，键值就是参数的值。
+- QSettings 是一个基于键值对存储的数据结构，但是因为 QVariant 是 Qt 核心模块的一部分，所以它不能提供对数据类型的转换功能，在 [QVariant](https://doc.qt.io/qt-6/zh/qvariant.html) 中没有 `toColor()`, `toImage()`, 或 `toPixmap()` 函数，但是可以使用模板函数转换读取配置，将 QVariant 类型存储到设置中无限制
+```cpp
+// 读取不支持类型的设置
+QSettings settings("MySoft", "Star Runner");
+QColor color = settings.value("DataPump/bgcolor").value<QColor>();
+
+// 设置QVariant到设置中
+QSettings settings("MySoft", "Star Runner");
+QColor color = palette().background().color();
+settings.setValue("DataPump/bgcolor", color);
+```
+- 使用 QSettings 存储 QByteArray 类型的数据（如 QImage 和 QPixmap 转换后的数据）时，这些数据会被以二进制格式存储在配置文件中。具体来说，这些**二进制数据通常会被编码为 Base 64 字符串**，以便在文本文件（如 INI 文件）中存储。***使用 UTF-8 编码格式保存配置文件***可以保持文本格式，同时能够存储二进制数据。
+- QSettings 对象可以在堆栈或堆上创建（即使用 `new` ）。构建和销毁 QSettings 对象的速度非常快。
+- 已经存在具有相同键值的设置，则现有值将被新值覆盖。为提高效率，更改可能不会立即保存到永久存储区。(您可以随时调用 `sync()` 来提交更改）。
+- 不要在**部分键名称**中使用斜线（`/ ` 和 ` \`）；反斜线字符用于分隔子键。在窗口中，`\` 会被 QSettings 转换为 `/`，这使得它们完全相同。
+```cpp
+settings.setValue("mainwindow/size", win->size());
+settings.setValue("mainwindow/fullScreen", win->isFullScreen());
+settings.setValue("outputpanel/visible", panel->isVisible());
+```
+- 如果设置中没有对的键，会返回一个值为 null 的 QVariant（可以被 ` toInt() ` 转换为 0）
+- 设置键可以包含任何 Unicode 字符。Windows 注册表和 INI 文件使用不区分大小写的键，而 macOS 和 iOS 上的 CFPreferences API 使用区分大小写键。***需要避免出大小写以外完全一样的键名***
+#### 设置管理分类
+如果要保存或恢复多个具有相同前缀的设置，可以使用 [beginGroup](https://doc.qt.io/qt-6/zh/qsettings.html#beginGroup) () 指定前缀，并在最后调用 [endGroup](https://doc.qt.io/qt-6/zh/qsettings.html#endGroup) () 。下面是同一个例子，但这次使用的是组机制：
+```cpp
+settings.beginGroup("mainwindow");
+settings.setValue("size", win->size());
+settings.setValue("fullScreen", win->isFullScreen());
+settings.endGroup();
+
+settings.beginGroup("outputpanel");
+settings.setValue("visible", panel->isVisible());
+settings.endGroup();
+```
+有时，你确实希望访问存储在特定文件或注册表路径中的设置。在所有平台上，如果要直接读取 INI 文件，可以使用 QSettings 构造函数，该函数将文件名作为第一个参数，并将 [QSettings::IniFormat](https://doc.qt.io/qt-6/zh/qsettings.html#Format-enum) 作为第二个参数。
+```cpp
+QSettings settings("/home/petra/misc/myapp.ini", QSettings::IniFormat);
+```
+在 macOS 和 iOS 上，通过传递 [QSettings::NativeFormat](https://doc.qt.io/qt-6/zh/qsettings.html#Format-enum) 作为第二个参数，可以访问属性列表 `.plist` 文件。如果在 windows 上，第一个参数应该填入注册表路径，这样设置保存在注册表中
+```cpp
+QSettings settings("/Users/petra/misc/myapp.plist", QSettings::NativeFormat);
+QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Office", QSettings::NativeFormat);
+```
+平台之间的限制和注意事项：[参考](https://doc.qt.io/qt-6/zh/qsettings.html#platform-limitations)

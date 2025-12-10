@@ -1,14 +1,14 @@
 {
   "main": {
-    "id": "febd151eaede0d64",
+    "id": "9fb8fd7f9d39dbbb",
     "type": "split",
     "children": [
       {
-        "id": "2e98c39c8ffebcc4",
+        "id": "e3215f2c86ef524b",
         "type": "tabs",
         "children": [
           {
-            "id": "fc6e45368d1399f5",
+            "id": "dd8a4de916da9ff2",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -20,47 +20,28 @@
               },
               "icon": "lucide-file",
               "title": "QT6开发指南"
-<<<<<<< HEAD
-=======
-            }
-          },
-          {
-            "id": "d7bcf4e39e7982fc",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/algorithm/刷题路线.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "刷题路线"
->>>>>>> 0f7419ed42165a0c46b1051661bb44053840a02a
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
   },
   "left": {
-    "id": "22acc8c252aa3615",
+    "id": "127ff923cbf6c590",
     "type": "split",
     "children": [
       {
-        "id": "f7af89d61672c9a0",
+        "id": "ffca496a6fffbbae",
         "type": "tabs",
         "children": [
           {
-            "id": "fb472bc440e7a387",
+            "id": "982f21257484af50",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
               "state": {
-                "sortOrder": "custom",
+                "sortOrder": "alphabetical",
                 "autoReveal": false
               },
               "icon": "lucide-folder-closed",
@@ -68,24 +49,24 @@
             }
           },
           {
-            "id": "d1e212fee3e1649e",
+            "id": "129968db299d0d8b",
             "type": "leaf",
             "state": {
               "type": "search",
               "state": {
                 "query": "",
                 "matchingCase": false,
-                "explainSearch": true,
+                "explainSearch": false,
                 "collapseAll": false,
                 "extraContext": false,
-                "sortOrder": "byModifiedTime"
+                "sortOrder": "alphabetical"
               },
               "icon": "lucide-search",
               "title": "搜索"
             }
           },
           {
-            "id": "da5aeddede390dfb",
+            "id": "a694d82fb6f2e47b",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -98,24 +79,24 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
+    "width": 243.5124969482422,
     "collapsed": true
   },
   "right": {
-    "id": "8bf7189d29dd45a6",
+    "id": "71aa3531bb8d70f2",
     "type": "split",
     "children": [
       {
-        "id": "37604ac5dcc0dc73",
+        "id": "af2ce8255f897a4e",
         "type": "tabs",
         "children": [
           {
-            "id": "33720a871b60a235",
+            "id": "06e6c408d5d3a0d2",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "学习/algorithm/刷题路线.md",
+                "file": "学习/其他专业书/QT6开发指南.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -125,25 +106,25 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "刷题路线 的反向链接列表"
+              "title": "QT6开发指南 的反向链接列表"
             }
           },
           {
-            "id": "715b593b2cc7a1ae",
+            "id": "171773bd90079c3c",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "学习/algorithm/刷题路线.md",
+                "file": "学习/其他专业书/QT6开发指南.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "刷题路线 的出链列表"
+              "title": "QT6开发指南 的出链列表"
             }
           },
           {
-            "id": "17dee0ebe788aa1f",
+            "id": "3784e110efbac80c",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -158,49 +139,28 @@
             }
           },
           {
-            "id": "ff82c7801168f952",
+            "id": "51a8ff317e2ffe25",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "学习/algorithm/刷题路线.md",
+                "file": "学习/其他专业书/QT6开发指南.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "刷题路线 的大纲"
+              "title": "QT6开发指南 的大纲"
             }
           },
           {
-            "id": "4c2d9e4fa23aee3a",
+            "id": "48964ee9d3832ce1",
             "type": "leaf",
             "state": {
               "type": "quiet-outline",
               "state": {},
               "icon": "lines-of-text",
               "title": "Quiet Outline"
-<<<<<<< HEAD
-            }
-          },
-          {
-            "id": "c538e4710d9b017f",
-            "type": "leaf",
-            "state": {
-              "type": "git-view",
-              "state": {},
-              "icon": "git-pull-request",
-              "title": "Source Control"
-            }
-          }
-        ],
-        "currentTab": 5
-      }
-    ],
-    "direction": "horizontal",
-    "width": 307.5,
-    "collapsed": true
-=======
             }
           }
         ],
@@ -208,94 +168,27 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
->>>>>>> 0f7419ed42165a0c46b1051661bb44053840a02a
+    "width": 300,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
-      "command-palette:打开命令面板": false,
-      "workspaces:管理工作区布局": false,
-      "bases:创建新数据库": false,
-      "copilot:Open Copilot Chat": false,
-      "quiz-generator:Open generator": false,
       "switcher:打开快速切换": false,
       "graph:查看关系图谱": false,
       "daily-notes:打开/创建今天的日记": false,
       "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
       "markdown-importer:打开 Markdown 格式转换器": false,
+      "workspaces:管理工作区布局": false,
+      "bases:创建新数据库": false,
       "table-editor-obsidian:Advanced Tables Toolbar": false,
       "obsidian-git:Open Git source control": false
     }
   },
-<<<<<<< HEAD
-  "active": "fc6e45368d1399f5",
+  "active": "dd8a4de916da9ff2",
   "lastOpenFiles": [
-    "学习/其他专业书/QT6开发指南.md",
-    "Files & LongText/Attachments/PixPin_2025-11-28_20-56-53.png",
-    "Files & LongText/Attachments/PixPin_2025-11-28_20-53-25.png",
-    "Files & LongText/Attachments/PixPin_2025-11-28_20-53-05.png",
-    "Files & LongText/Attachments/PixPin_2025-11-28_18-06-47.png",
-    "Files & LongText/Attachments/Pasted image 20251128170805.png",
-    "Files & LongText/Attachments/Pasted image 20251128170759.png",
-    "学习/algorithm/刷题路线.md",
-=======
-  "active": "d7bcf4e39e7982fc",
-  "lastOpenFiles": [
-    "学习/其他专业书/QT6开发指南.md",
->>>>>>> 0f7419ed42165a0c46b1051661bb44053840a02a
-    "学习/其他专业书/Google C++ Style Guide.md",
-    "学习/AI/Pytorch basic.md",
-    "学习/其他专业书/算法竞赛入门经典.md",
-    "学习/其他专业书/现代C++语言核心特性解析.md",
-    "学习/其他专业书/软件工程.md",
-    "学习/ProjectsStudy/FromDocs/args库（3000行）.md",
-    "学习/ProjectsStudy/WriteByMyself/CodeLineCounter.md",
-    "学习/ProjectsStudy/FromProjects/QTExamples.md",
-    "学习/其他专业书/Modern C++.md",
-    "学习/其他专业书/Effective C++（侯捷）.md",
-    "Daily/Miscellaneous/网络工程题目.md",
-    "Daily/Miscellaneous/0每周要做的事.md",
-    "Daily/Miscellaneous",
-    "Files & LongText/Attachments/PixPin_2025-11-20_21-38-57.png",
-    "Files & LongText/Attachments/PixPin_2025-11-20_20-54-22.png",
-    "Files & LongText/Attachments/PixPin_2025-11-20_20-53-58.png",
-    "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
-    "学习/其他专业书/QT样式表合集.md",
-    "Files & LongText/Attachments/PixPin_2025-11-19_17-27-50.png",
-<<<<<<< HEAD
-    "Files & LongText/Long code/C++ practice case.md",
-=======
-    "Files & LongText/Attachments/Pasted image 20251119172713.png",
-    "Files & LongText/Attachments/PixPin_2025-11-19_17-21-59.png",
-    "Files & LongText/Attachments/PixPin_2025-11-19_17-17-44.png",
-    "Files & LongText/Attachments/PixPin_2025-11-19_16-47-34.png",
-    "Files & LongText/Attachments/PixPin_2025-11-18_10-28-52.png",
-    "Files & LongText/Attachments/PixPin_2025-11-18_09-48-04.png",
-    "Files & LongText/Long code/C++ practice case.md",
-    "学习/algorithm/刷题路线.md",
->>>>>>> 0f7419ed42165a0c46b1051661bb44053840a02a
-    "Files & LongText/Long code/MySQL Long Code Practice.md",
-    "学习/Language/C C++/C++ Basics.md",
-    "学习/algorithm/用法导向知识.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/ProjectsStudy/FromProjects/servertech-chat.md",
-    "学习/algorithm/分析优化.md",
-    "学习/algorithm/题型分类.md",
-    "学习/ProjectsStudy/WriteByMyself/CPP爬虫实战.md",
-<<<<<<< HEAD
-=======
-    "学习/其他专业书/C++并发编程实战（第二版）.md",
->>>>>>> 0f7419ed42165a0c46b1051661bb44053840a02a
-    "未命名 2.base",
-    "未命名 1.base",
-    "未命名.base",
-    "学习/Geography Learning/From Tutorial",
-    "学习/Geography Learning/AI QA",
-    "学习/Geography Learning",
-    "日记/乐评",
-    "日记",
-    "学习/Scattered knowlegde/计算机二级考试",
-    "未命名.canvas",
-    "未命名 1.canvas"
+    "Files & LongText/Attachments/PixPin_2025-12-10_22-16-48.png",
+    "conflict-files-obsidian-git.md",
+    "学习/其他专业书/QT6开发指南.md"
   ]
 }
