@@ -2951,5 +2951,49 @@ QDataStream  &readBytes(char *&s, uint &len)
 > 
 > ***这两种方式读写不能混用***
 
+#### 基本类型读取方法
+方法和[[#使用预定义方式]]不差太多，仅仅是将 `fileStream << value` 方式改为对应 api 调用，不过需要将 value 通过 `writeRawData((char*)&value, sizeof(type))` 将不同类型统一转化为 `char*` 类型充当第一个参数，`iniRead()` 和 `iniWrite()` 将创建 QDataStream 和 QFile 的操作封装起来
+```cpp
+void MainWindow::on_btnDouble_Read_clicked()
+{
+    if(iniRead()){
+        float value = ui->spin_Float->value();
+        fileStream->writeRawData((char*)&value, sizeof(float));
+        ui->edit_Float->setText(QString::asprintf("%.4f", value));
+        delFileStream();        
+    }
+}
 
 
+void MainWindow::on_btnDouble_Write_clicked()
+{
+    if(iniWrite()){
+        float value = ui->spin_Float->value();
+        fileStream->writeRawData((char*)&value, sizeof(float));
+        delFileStream();
+    }
+}
+```
+#### 字符串读取方法
+```cpp
+void MainWindow::on_btnStr_Write_clicked() {
+    if (iniWrite()) {
+        QString str = ui->editStr_In->text();
+        QByteArray btArray = str.toUtf8(); // 如果是Latin1编码则 QByteArray btArray = str.toLatin1();
+        fileStream->writeBytes(btArray, btArray.length());
+        delFileStream();
+    }
+}
+void MainWindow::on_btnStr_Read_clicked() {  // 读取字符串，UTF-8编码
+    if (iniRead()) {
+        char* buf;
+        uint strLen;
+        fileStream->readBytes(buf, strLen);                 // 同时读取字符串长度和字符串内容
+        QString str = QString::fromUtf8(buf, strLen);       // 用UTF-8编码解码数据, latin1同理
+        ui->editStr_Out->setText(str);
+        delFileStream();
+        delete buf;                                         // 需要手动删除缓存区
+    }
+}
+```
+对于预定义方法中使用流操作符方法这种方法稍微麻烦一点，**因为原生字符数组需要记录长度**，需要通过 `QFileStream::readBytes(char* s, uint len)` 读取文件流中所有的文本字符和
