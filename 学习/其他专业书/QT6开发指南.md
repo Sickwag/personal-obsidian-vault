@@ -1788,8 +1788,6 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 | **用途**   | 控制窗口行为/外观        | 存储任意自定义数据       |
 | **性能**   | 直接影响窗口系统         | 轻量级数据存储         |
 在一些对象中，设置了窗口属性之后才会有对应的事件发生，比如 `this->setAttribute(Qt::WA_Hover,true)` 设置之后，鼠标移入一个控件之后会触发 `QEvent::HoverEnter` 的事件
-
->>>>>>> 0f7419ed42165a0c46b1051661bb44053840a02a
 ## 事件过滤器
 ### 事件过滤器工作原理
 可以将一个对象的事件委托给另一个对象来监视并处理，方法为：
@@ -2591,7 +2589,16 @@ QTemporaryDir dir(specDir + "/TempDir_XXXXXX");     // 文件夹名称模板，�
 // 最终文件名 类似 TempDir_cjkxHgb
 ```
 - 如果在创建QTemporaryFile对象时不设置文件名模板，就会在静态函数 `QDir::tempPath()` 表示的系统临时目录下创建一个临时文件，文件名自动以“applicationName.××××××”的形式命名。其中的applicationName是静态函数 `QCoreApplication::applicationName()` 返回的应用程序名称，“××××××”表示6个随机字母（大小写敏感）
-
+### 文件过滤器
+本质上是一个 QString 对象，在使用 `QFileDialog` 时，过滤器字符串（filter string）用于指定用户可以选择的文件类型。
+基本语法为：
+```cpp
+描述字符串(文件模式);;描述字符串 (文件模式);;...
+QString filter = "Images (*.png *.xpm *.jpg);;Text Files (*.txt);;All Files (*)";
+```
+- 文件拓展名**大小写不敏感**，但建议统一格式
+- 如果应用程序支持多语言，建议对描述部分进行本地化，使用 `tr("Images (*.png *.xpm *.jpg)")` 来支持翻译。
+- 过滤器的顺序会影响用户在下拉菜单中看到的顺序
 ### 文件监控
 监控文件（夹）改变每次监控对象发生改变时会触发对应的 changed 信号，一般需要自己设置槽函数：
 ```cpp
@@ -2617,3 +2624,96 @@ void Dialog::on_pushButton_47_clicked()
 ```
 ## 读写文本文件
 Qt 有两种读写文本文件的方法，一种是用 QFile 类直接读写文本文件，另一种是将 QFile 和 QTextStream 结合起来，用流（stream）方法进行文本文件读写
+如果在创建QFile对象时没有指定文件名，可以用函数 `setFileName()` 设置文件名。注意，在调用函数 `open()` 打开文件后，就不能再调用 `setFileName()` 设置文件名。
+open 函数中的参数时枚举值，可以组合传递
+### 用 QFile 读写文本文件
+#### 读取文本文件
+```cpp
+bool MainWindow::openByIO_Whole(const QString& aFileName) {  // 整体读取
+    QFile aFile(aFileName);
+    if (!aFile.exists())  // 文件不存在
+        return false;
+    if (!aFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+    QByteArray all_Lines = aFile.readAll();
+    QString text(all_Lines);
+    ui->textEditDevice->setPlainText(text);
+    aFile.close();
+    ui->tabWidget->setCurrentIndex(0);
+    return true;
+}
+bool MainWindow::openByIO_Lines(const QString& aFileName) {  // 逐行读取
+    QFile aFile;
+    aFile.setFileName(aFileName);
+    if (!aFile.exists())  // 文件不存在
+        return false;
+    if (!aFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+    ui->textEditDevice->clear();
+    
+    while (!aFile.atEnd()) {
+        QByteArray line = aFile.readLine();    // 读取一行文字，自动添加“\0”
+        QString str = QString::fromUtf8(line); // 从字节数组转换为字符串，文件必须采用UTF-8编码
+        str.truncate(str.length() - 1);        // 去除增加的空行
+        ui->textEditDevice->appendPlainText(str);
+    }
+    aFile.close();
+    ui->tabWidget->setCurrentIndex(0);
+    return true;
+}
+```
+分为一次性读取和按行读取，`QFile::readLine()` 读入的每一行文本在末尾的 `\n` **之后** 都会自动添加一个空终止符（` \0 `），因为 QByteArray 需要以空终止符结尾来表示字符串的结束，每一行字符的结尾为
+每一行的内容包括换行符 \n，`line.size()` 返回的是实际字节数，不包括 ` \0`，`\0` 是为了确保 QByteArray 可以被视为一个 C 风格的字符串，但在实际数据中并不包含在返回的字节数组中。
+如果将读取到的字符串显示到文本框中，需要通过以下方法去除最后一个换行符，否则会打印出多余空行：
+```cpp
+QByteArray line = file.readLine();
+line = line.trimmed(); // 去掉前后空白字符，包括换行符
+line = line.chop(1);   // 去除最后一个\n，\0只是QByteArray用来管理字符串的，并不是实际读取内容
+line = line.simplified(); // 去掉前后空白字符，并将中间的多个空白字符替换为单个空格
+textEdit->appendPlainText(QString(line));
+```
+#### 写入文本文件
+使用 QFile 直接写入：
+- **安全性**：如果写入过程中发生错误，可能会导致目标文件损坏或不一致。
+- **使用场景**：适用于不需要保证文件一致性的简单写入操作。
+```cpp
+bool MainWindow::saveByIO_Whole(const QString& aFileName) {
+    QFile aFile(aFileName);
+    if (!aFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+    QString str = ui->textEditDevice->toPlainText();	// 整个内容作为字符串
+    QByteArray strBytes = str.toUtf8();					// 转换为字节数组，UTF-8编码
+    aFile.write(strBytes, strBytes.length());			// 写入文件
+    aFile.close();
+    ui->tabWidget->setCurrentIndex(0);
+    return true;
+}
+```
+可以看到核心就是 QFile 的 open 函数参数设置和 `write()` 函数，还可以使用 QSaveFile 对象：
+使用 QSaveFile 先将数据写入一个临时文件，只有在调用 `commit() `成功后才会将临时文件重命名为目标文件。
+- **原子性**：确保文件写入过程的安全性和原子性，避免文件损坏。
+- **回滚机制**：如果写入过程发生错误，可以调用 `cancelWriting()` 取消写入，不影响原始文件。
+- **使用场景**：适用于需要保证文件一致性和安全性的写入操作。
+```cpp
+bool MainWindow::saveByIO_Safe(const QString &aFileName) {
+    QSaveFile aFile(aFileName);
+    if (!aFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+    aFile.setDirectWriteFallback(false);					// 使用临时文件
+    try {
+        QString str = ui->textEditDevice->toPlainText();	// 整个内容作为字符串
+        QByteArray strBytes = str.toUtf8();					// 转换为字节数组，UTF-8编码
+        aFile.write(strBytes, strBytes.length());			// 写入文件
+        aFile.commit();										// 提交对文件的修改
+        ui->tabWidget->setCurrentIndex(0);
+        return true;
+    } catch (QException& e) {
+        qDebug("保存文件的过程发生了错误");
+        aFile.cancelWriting();						        // 出现异常时取消写入
+        return false;
+    }
+}
+```
+`aFile.setDirectWriteFallback(false);` 禁止直接写入回退：QSaveFile 在写入过程中始终使用临时文件，而不是直接写入目标文件。这种方式，即使在写入过程中发生错误，也不会影响原始文件，**是一种原子操作**
+### 结合使用 QFile 和 QTextStream 读写文本文件
+QTextStream 是能与 I/O 设备类结合来为读写文本数据提供一些简便接口函数的类。QTextStream 可以和 QIODevice 的各种子类结合使用，如 QFile、QSaveFile、QTcpSocket、QUdpSocket 等 I/O 设备类。最方便的一点是可以使用 `<<` 和 `>>` 操作符
