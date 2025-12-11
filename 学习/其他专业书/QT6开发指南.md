@@ -2814,7 +2814,6 @@ Intel x86、AMD 64、ARM 处理器全采用小端字节序，MIPS 采用大端�
 ### 二进制读写类
 - QFile 也可以读写二进制文件，但是 `read()` 和 `write()` 函数处理二进制数据不是很方便，一般可将 QFile 和 QDataStream 类结合使用
 - QDataStream 是对 I/O 设备进行二进制流数据读写操作的类，其**流数据格式与 CPU 类型、操作系统无关，是完全独立的**。QDataStream 不仅可以用于二进制文件的读写操作，还可以用于网络通信、串口通信等 I/O 设备的数据读写操作。
-#### QDataStream 流化数据的方式
 在构造函数中传入一个 QIODevice（可以是 QFile 文件）对象与文件实现关联，以数据流的方式读写文件，数据流编码有两种方式：**使用 Qt 的预定义编码方式，使用原始二进制数据方式**。
 - 预定义序列化
 	- qt 中所有基本类型（int，qint，qfloat）和一些简单的对象（QString，QColor）都可以通过流操作符**自动序列化为二进制数据**传入 QDataStream 中。
@@ -2825,8 +2824,132 @@ Intel x86、AMD 64、ARM 处理器全采用小端字节序，MIPS 采用大端�
 - 原始二进制数据
 	- 使用 `readRawData()` 和 `writeRawData()`
 	- 文需要用户自定义数据转化为二进制的写入方式和将二进制解释为数据的转化方式
-写入数据时，规范化的流程是：
+### 使用预定义方式
+读写数据时，规范化的流程是：
 1. 文件打开（是否可以打开检查，不存在时创建）
 2. 流绑定物理文件
 3. 设置流解析规则版本和字节序
 4. 流读入/写入数据，关闭文件
+如果是**连续读取写入**的情景，可以使用 QDataStream 的 `startTransaction()` 设置事务，然后统一通过 `commitTransaction()` 提交更改（成功返回 true）
+#### 特殊类型流式化读写
+通用读写接口
+```cpp
+template<class T>
+void MainWindow::writeByStream(T value)
+{
+    QFile fileDevice(this->m_filename);
+    if(!fileDevice.open(QIODevice::WriteOnly)) return;
+
+    QDataStream fileStream(&fileDevice);
+    fileStream.setVersion(QDataStream::qt_6_2);
+    if(ui->radio_BigEndian->isChecked()){
+        fileStream.setByteOrder(QDataStream::BigEndian);
+    }else{
+        fileStream.setByteOrder(QDataStream::LittleEndian);
+    }
+    
+    fileStream << value;
+    fileDevice.close();
+}
+
+template<class T>
+void MainWindow::readByStream(T& value)
+{
+    if(!QFile::exists(this->m_filename)){
+        QMessageBox::critical(this, "Error", "file not exist, filename: "+ this->m_filename);
+        return;
+    }
+    QFile fileDevice(this->m_filename);
+    if(!fileDevice.open(QIODevice::ReadOnly)) return;
+    QDataStream fileStream(&fileDevice);
+    fileStream.setVersion(QDataStream::Qt_6_2);
+    if(ui->radio_BigEndian->isChecked()){
+        fileStream.setByteOrder(QDataStream::BigEndian);
+    }else{
+        fileStream.setByteOrder(QDataStream::LittleEndian);
+    }
+    
+    if(ui->radio_Single->isChecked()){
+        fileStream.setFloatingPointPrecision(QDataStream::SinglePrecision);
+    }else{
+        fileStream.setFloatingPointPrecision(QDataStream::DoublePrecision);
+    }
+    fileStream >> value;
+    fileDevice.close();
+}
+```
+这种方式可以避免显示类型转化，都由模板自动推导类型
+```cpp
+void MainWindow::on_btnFont_Read_clicked() {  // QFont类型数据，读出
+    QFont font;
+    readByStream(font);
+    ui->editFont_Out->setFont(font);
+}
+void MainWindow::on_btnColor_Read_clicked() {  // QColor类型数据，读出
+    QColor color = Qt::black;
+    readByStream(color);
+    QPalette plet = ui->editColor_Out->palette();
+    plet.setColor(QPalette::Text, color);
+    ui->editColor_Out->setPalette(plet);
+}
+```
+读写字符串数据时，`char*` 类型和 `QString` 类型有不同的方法：
+- **`char*`**:
+    - **类型**：指针类型，指向一个字符数组。
+    - **内存表示**：通常是一个以空字符 `\0` 结尾的字符数组（C 风格字符串）。
+    - **长度**：需要手动管理长度，因为没有内置的长度信息。
+    - **用途**：适用于 C 风格的字符串操作，或者需要精确控制内存布局的情况。
+- **`QString`**:
+    - **类型**：Qt 提供的字符串类，用于处理 Unicode 字符串。
+    - **内存表示**：内部使用 UTF-16 或 UTF-8 编码（取决于 Qt 版本和配置）。
+    - **长度**：内置长度信息，方便操作。
+    - **用途**：适用于需要处理多语言文本和复杂字符串操作的情况。
+
+为什么需要不同的读写方式？
+1. `char*`
+- **固定格式**：`QDataStream` 需要知道字符串的长度才能正确写入和读取。
+- **手动管理**：必须手动提供字符串的长度，否则 `QDataStream` 无法确定何时停止读取。
+2. **`QString`**:
+- **内置长度**：`QString` 内部存储了字符串的长度，`QDataStream` 可以直接使用这个长度信息。
+- **自动处理**：`QDataStream` 可以自动处理 `QString` 的读写，而不需要额外的信息。
+```cpp
+void MainWindow::on_btnStr_Write_clicked() {  // char*字符串，写入
+    QString str = ui->editStr_In->text();
+    char* Value = str.toLocal8Bit().data();
+    writeByStream(Value);
+}
+void MainWindow::on_btnQStr_Write_clicked() {  // QString字符串，写入
+    QString Value = ui->editQStr_In->text();
+    writeByStream(Value);
+}
+```
+QDataStream 的流写入操作符支持 `char*` 字符串，它会根据结束符“`\0`”判断一个字符串的末尾。`char*` 字符串采用 Latin 1 编码，一个字符占用 1 字节，**不支持汉字**
+将 Hello 以 `char*` 写入文件后，前 4 字节是一个 32 位整数记录字符串长度，最后一个字节十六进制为 `\0`，而如果使用 QString 存入 QDataStream 中，前 4 字节数值为 10，Hello 占用 10 字节长度（每个字符采用 UTF-16 编码导致）
+#### 预定义方式注意事项
+对于二进制数据的写入
+- 写入与读取的顺序和数据格式需要一致
+- 写入与读取所使用的字节序和浮点数精度也要一致
+- 确保序列化格式版本兼容。
+如果是简单的基本类型数据，做到上述几点已经可以了，但是如果是 Qt 的内置类型，如 QFont、QColor 等数据。其他用户要编写一个程序按照此文件格式读取文件内容，就只能用 Qt 编写，用其他语言编程（不按照 qt 的方式解码二进制数据）很难解析这些复杂类型数据。
+### 使用原始二进制方式
+使用纯二进制编码，只需要公开二进制文件格式定义，那么任何语言都可以解析这种格式
+```cpp
+int  writeRawData(const char *s, int len)
+int  readRawData(char *s, int len)
+```
+- s是char类型的缓冲区指针，表示待写入流的原始数据；len需要小于或等于s的长度值。函数的返回值是实际写入的字节数，如果返回值为-1表示写入过程出现错误。
+- 写和读数据时，不会将数据中的“\0”作为结束符，数据的存储顺序也不受函数 `QDataStream::setByteOrder()` 字节序的影响，只是连续写入或读取相应字节数的数据。在将一些基本类型的数据转换为字节数据数组时，其存储顺序自动由操作系统的字节序决定
+- `writeRawData` 只会将数据写入，不做任何额外工作
+```cpp
+QDataStream  &writeBytes(const char *s, uint len)
+QDataStream  &readBytes(char *&s, uint &len)
+```
+- `writeBytes()` 函数则会将 len **序列化为 4 字节数据**写在前面，然后再写入 s 的数据，`QDataStream::setByteOrder()` 设置的字节序会影响 `writeBytes()` 写入的4字节整数的存储方式，即这个整数会根据字节序的设置相应按大端字节序或小端字节序存储。
+
+> [!note]
+> `writeRawData()` 适合写入各种整数、浮点数等基本类型数据，因为这些类型数据的字节数是固定的，而 `函数writeBytes()` 适合写入字符串数据，因为字符串数据的长度是不固定的，前面存储的uint类型整数正好表示字符串数据的字节数，便于用函数 `readBytes()` 读出。
+> 
+> ***这两种方式读写不能混用***
+
+
+

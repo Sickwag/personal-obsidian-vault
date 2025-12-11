@@ -139,7 +139,17 @@
             }
           },
           {
-            "id": "51a8ff317e2ffe25",
+            "id": "6db1a78e1a403bdd",
+            "type": "leaf",
+            "state": {
+              "type": "quiet-outline",
+              "state": {},
+              "icon": "lines-of-text",
+              "title": "Quiet Outline"
+            }
+          },
+          {
+            "id": "df742da5a5281168",
             "type": "leaf",
             "state": {
               "type": "outline",
@@ -152,19 +162,9 @@
               "icon": "lucide-list",
               "title": "QT6开发指南 的大纲"
             }
-          },
-          {
-            "id": "48964ee9d3832ce1",
-            "type": "leaf",
-            "state": {
-              "type": "quiet-outline",
-              "state": {},
-              "icon": "lines-of-text",
-              "title": "Quiet Outline"
-            }
           }
         ],
-        "currentTab": 4
+        "currentTab": 3
       }
     ],
     "direction": "horizontal",
