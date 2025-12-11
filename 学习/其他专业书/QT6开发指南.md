@@ -2281,9 +2281,10 @@ setAttribute(Qt::WA_DeleteOnClose);
 void do_something(){
 	if(this->dialog == nullptr) {this->dialog = new QDialog(this);}
 	else{ /* ... */}
-}
+}`
 ```
 #### 对话框窗口标志
+**默认继承自 QDialog 的窗口右上角只会有关闭按钮，如果想要最小化合最大化窗口，需要 `setWindoeFlags(Qt::Window)`**`
 `QDialog`（以及 `QWidget` 及其子类）中的 `setWindowFlag` 方法用于设置窗口标志（window flags），这些标志定义了窗口的各种属性和行为。窗口标志是 `Qt::WindowType` 枚举类型的一部分，可通过[[CodeLineCounter#位掩码设计开关|位掩码]]组合
 窗口标志一般使用场景在：[[#什么是模态对话框||模态对话框]]，无边框窗口，窗口置顶行为等场景中
 
@@ -2302,7 +2303,6 @@ void do_something(){
 | `Qt::ForeignWindow` | 0x00000020 | 表示该窗口对象是一个句柄，表示由其他进程或手动使用本地代码创建的本地平台窗口。                                                                                                                                                                                                                                  |
 | `Qt::CoverWindow`   | 0x00000040 | 表示该窗口表示一个覆盖窗口，在某些平台上显示应用程序最小化时。                                                                                                                                                                                                                                          |
 
-<<<<<<< HEAD
 ## 多窗口应用程序设计
 ### 窗口类重要特性的设置
 QSplashScreen 和 QMdiSubWindow。QSplashScreen 同样继承自 QWidget 并作为窗口类，可以通过[[#窗口属性|一系列设置函数]] 调整窗口的属性，行为。
@@ -2546,3 +2546,74 @@ QSettings settings("/Users/petra/misc/myapp.plist", QSettings::NativeFormat);
 QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Office", QSettings::NativeFormat);
 ```
 平台之间的限制和注意事项：[参考](https://doc.qt.io/qt-6/zh/qsettings.html#platform-limitations)
+
+# 文件系统操作和文件读写
+## 文件操作相关类概述
+### 基本文件读写
+Qt 中进行文件读写的基本的类是 QFile，QFile 的父类是 QFileDevice，QFileDevice 提供了文件交互操作的底层功能。QFileDevice 的父类是 QIODevice，它有两个父类：QObject 和 QIODeviceBase
+QFile 只有一些基本的文件数据读写函数，使用起来不够方便。QTextStream 能以流方式读写文本文件，QDataStream 能以流方式读写二进制文件，这两个类需要与 QFile 搭配使用。它们的父类是 QIODevice，**QIODevice 还有一个子类 QDebug**，使用函数 qDebug () 输出调试信息时，实际上是创建了一个默认的 QDebug 对象，通过该对象将调试信息输出到 Qt Creator 的 Application Output 窗口
+### 特定格式文件读写
+- xml 文件用 QDomDocument 对象表示，文档树状结构中的节点用 QDomNode 及其子类表示，qt 读取 xml 文件原理是将文件根据 DOM 格式**解析成树状结构**，这和 pugi 库类似。
+- json 文件使用 QJsonDocument 读写 JSON 文件的类，
+	- QJsonArray 是封装了 JSON 数组的类，
+	- QJsonObject 是封装了 JSON 对象的类，
+	- QJsonValue 是封装了 JSON 值的类
+- 图片文件使用来从 QPaintDevice 继承的 QImage 和 QPixmap ，**它们在读取图片文件时总是按图片原始大小读取整张图片**。
+	- 类 QImageReader 用于在读取图片文件时进行更多的控制，例如通过函数 `setScaledSize ()` 以指定大小读取图片，可以实现缩略图显示。
+	- QImage 和 QPixmap 的函数 `save()` 可以直接将图片保存为文件。QImageWriter 类可实现在保存图片时提供更多的选项，例如设置压缩级别和图片品质。
+	- QImageReader 和 QImageWriter 主要用于读取和保存图片时需要进行特殊处理的场合。
+	- 如果不需要进行特殊处理，使用 QImage 和 QPixmap 类自带的读取和保存图片文件的函数即可。
+
+## 目录和文件操作
+### 文件基本信息获取
+- QCoreApplication：可以提取应用程序路径、程序名等信息
+- QFileInfo：用于获取文件的信息，如文件的路径、基本文件名、文件名后缀、文件大小，修改时间，创建时间。
+- QTemporaryDir：用于创建临时目录，临时目录可以在使用后自动删除。
+- QTemporaryFile：用于创建临时文件，临时文件可以在使用后自动删除。
+- QFileSystemWatcher：用于监视设定的目录和文件，当所监视的目录或文件出现复制、重命名、删除等操作时会发射相应的信号。
+- QFileInfo 的 `fileTime()` 函数，可以返回文件的多种时间，参数是枚举类型 `QFile::FileTime`：
+	- `QFileDevice::FileAccessTime`：最后一次读或写文件的时间。
+	- `QFileDevice::FileBirthTime`：文件创建的时间。
+	- `QFileDevice::FileMetadataChangeTime`：文件的元数据被修改的时间，**文件的权限被修改也会被记录**
+	- `QFileDevice::FileModificationTime`：文件最后被修改的时间
+- QFile 中文件路径 `path()` 没有重载 `/` 操作符，**需要使用创痛方法拼接字符串**
+```cpp
+QString sous = ui->editFile->text();
+QFileInfo fileInfo(sous);
+QString newFile = fileInfo.path() + "/" + fileInfo.baseName() + ".xyz";
+QFile::rename(sous,newFile);
+```
+- QTemporalDir 创建临时文件位置（windows）：C:/Users/Sickwag/AppData/Local/Temp 中，可以通过构造函数设置临时文件（夹）名称模板：
+```cpp
+QString specDir = ui->editDir->text();  // 界面上设置的目录
+ui->plainTextEdit->appendPlainText("指定目录= " + specDir);
+QTemporaryDir dir(specDir + "/TempDir_XXXXXX");     // 文件夹名称模板，绝对路径
+// 最终文件名 类似 TempDir_cjkxHgb
+```
+- 如果在创建QTemporaryFile对象时不设置文件名模板，就会在静态函数 `QDir::tempPath()` 表示的系统临时目录下创建一个临时文件，文件名自动以“applicationName.××××××”的形式命名。其中的applicationName是静态函数 `QCoreApplication::applicationName()` 返回的应用程序名称，“××××××”表示6个随机字母（大小写敏感）
+
+### 文件监控
+监控文件（夹）改变每次监控对象发生改变时会触发对应的 changed 信号，一般需要自己设置槽函数：
+```cpp
+void Dialog::on_pushButton_46_clicked()
+{
+    showBtnInfo(sender());
+    ui->plainTextEdit->appendPlainText("watch dir: " + ui->editDir->text() + "\n");
+    fileWatcher.addPath(ui->editDir->text());
+    fileWatcher.addPath(ui->editFile->text());
+    connect(&fileWatcher, &QFileSystemWatcher::directoryChanged, this, &Dialog::do_directoryChanged);
+    connect(&fileWatcher, &QFileSystemWatcher::fileChanged, this, &Dialog::do_fileChanged);
+}
+
+
+void Dialog::on_pushButton_47_clicked()
+{
+    showBtnInfo(sender());
+    ui->plainTextEdit->appendPlainText("停止监视目录：" + ui->editDir->text()+"\n");
+    fileWatcher.removePath(ui->editDir->text());
+    fileWatcher.removePath(ui->editFile->text());
+    disconnect(&fileWatcher);
+}
+```
+## 读写文本文件
+Qt 有两种读写文本文件的方法，一种是用 QFile 类直接读写文本文件，另一种是将 QFile 和 QTextStream 结合起来，用流（stream）方法进行文本文件读写
