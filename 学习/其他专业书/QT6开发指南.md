@@ -2716,4 +2716,117 @@ bool MainWindow::saveByIO_Safe(const QString &aFileName) {
 ```
 `aFile.setDirectWriteFallback(false);` 禁止直接写入回退：QSaveFile 在写入过程中始终使用临时文件，而不是直接写入目标文件。这种方式，即使在写入过程中发生错误，也不会影响原始文件，**是一种原子操作**
 ### 结合使用 QFile 和 QTextStream 读写文本文件
+#### 读取文件
 QTextStream 是能与 I/O 设备类结合来为读写文本数据提供一些简便接口函数的类。QTextStream 可以和 QIODevice 的各种子类结合使用，如 QFile、QSaveFile、QTcpSocket、QUdpSocket 等 I/O 设备类。最方便的一点是可以使用 `<<` 和 `>>` 操作符
+其他方面和 QFile 没什么区别，QTextStream 可以更精细地读取文本，自动检测文件编码格式
+```cpp
+bool MainWindow::openByStream_Whole(const QString& aFileName) {
+    QFile aFile(aFileName);
+    if (!aFile.exists())
+        return false;
+    if (!aFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+    QTextStream aStream(&aFile);
+    aStream.setAutoDetectUnicode(true);
+    QString str = aStream.readAll();
+    ui->textEditStream->setPlainText(str);
+    aFile.close();
+    ui->tabWidget->setCurrentIndex(1);
+    return true;
+}
+
+bool MainWindow::openByStream_Lines(const QString& aFileName) {
+    QFile aFile(aFileName);
+    if (!aFile.exists())
+        return false;
+    if (!aFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+    QTextStream aStream(&aFile);
+    aStream.setAutoDetectUnicode(true);
+    ui->textEditStream->clear();
+    while (!aStream.atEnd()) {
+        QString str = aStream.readLine();
+        ui->textEditStream->appendPlainText(str);
+    }
+    aFile.close();
+    ui->tabWidget->setCurrentIndex(1);
+    return true;
+}
+```
+`QTextStream` 的 `setAutoDetectUnicode(true)` 通过检查文件的前几个字节（通常是前 4 到 8 字节）来检测文件的编码格式。具体来说：
+1. **BOM（Byte Order Mark）**：
+    - **UTF-8 BOM**：通常不存在 BOM，因为 UTF-8 不需要字节序标记。
+    - **UTF-16 BOM**：前两个字节可能是 `FF FE` 或 `FE FF`。
+    - **UTF-32 BOM**：前四个字节可能是 `FF FE 00 00` 或 `00 00 FE FF`。
+2. **其他检测**：
+    - 如果文件没有 BOM，`QTextStream` 会尝试根据文件内容和其他线索推断编码格式。
+
+#### 写入文件
+没什么特别，主要通过 `<<` 操作符
+```cpp
+bool MainWindow::saveByStream_Whole(const QString& aFileName) {
+    QFile aFile(aFileName);
+    if (!aFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+    QTextStream aStream(&aFile);
+    aStream.setAutoDetectUnicode(true);
+    QString str = ui->textEditStream->toPlainText();
+    
+    aStream << str;
+    aFile.close();
+    return true;
+}
+
+
+bool MainWindow::saveByStream_Safe(const QString& aFileName) {
+    QSaveFile aFile(aFileName);
+    if (!aFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+    try {
+        QTextStream aStream(&aFile);
+        aStream.setAutoDetectUnicode(true);
+        QTextDocument* doc = ui->textEditStream->document();
+        int cnt = doc->blockCount();
+        for (int i = 0; i < cnt; i++) {
+            QTextBlock textLine = doc->findBlockByNumber(i);
+            QString str = textLine.text();
+            aStream << str << "\n";
+        }
+        aFile.commit();
+        return true;
+    } catch (QException& e) {
+        qDebug("保存文件的过程发生了错误");
+        aFile.cancelWriting();
+        return false;
+    }
+}
+```
+### 区别和共同点
+如果要读写安全，则
+- Stream 流读写需要注意 `setAutoDetectUnicode(true)`，文本分块读取而不是一次性读入。
+- `readLine()` 函数会在每行后添加 `\0`，需要注意去除最后一个 `\n`
+- 使用 QSaveFile 类保存文件，将读写操作放在 try-catch 中，并在错误处理中使用 `cancelWriting()`
+## 读写二进制文件
+### 基础知识
+以二进制形式保存同样的数据会比其他形式保存节省大量空间
+**字节序**：字节序是指一个多字节数据的各个字节码在内存或文件中的存储顺序，分为大端（big-endian）字节序和小端（little-endian）字节序。大端字节序是高位字节在前（低地址），低位字节在后（高地址）；小端字节序是低位字节在前（低地址），高位字节在后（高地址）。
+Intel x86、AMD 64、ARM 处理器全采用小端字节序，MIPS 采用大端字节序。在将数据写入文件时可以根据需要设定字节序，一般使用与操作系统一致的字节序，但也可以不一致。例如 Windows 系统采用的是小端字节序，而保存数据到文件时也可以保存为大端字节序形式
+### 二进制读写类
+- QFile 也可以读写二进制文件，但是 `read()` 和 `write()` 函数处理二进制数据不是很方便，一般可将 QFile 和 QDataStream 类结合使用
+- QDataStream 是对 I/O 设备进行二进制流数据读写操作的类，其**流数据格式与 CPU 类型、操作系统无关，是完全独立的**。QDataStream 不仅可以用于二进制文件的读写操作，还可以用于网络通信、串口通信等 I/O 设备的数据读写操作。
+#### QDataStream 流化数据的方式
+在构造函数中传入一个 QIODevice（可以是 QFile 文件）对象与文件实现关联，以数据流的方式读写文件，数据流编码有两种方式：**使用 Qt 的预定义编码方式，使用原始二进制数据方式**。
+- 预定义序列化
+	- qt 中所有基本类型（int，qint，qfloat）和一些简单的对象（QString，QColor）都可以通过流操作符**自动序列化为二进制数据**传入 QDataStream 中。
+	- 序列化读写之前，需要使用 `setVersion()` 设置 qt 序列化版本，***低版本读取高版本 qt 序列化数据可能会出现问题***
+	- 设置字节序，`setByteOrder(QDataStream::ByteOrder bo)`，在读取时设置即可，并不强制
+	- 设置浮点数精度，`setFloatingPointPrecision(QDataStream::FloatingPointPrecision precision)`
+	- 设置事务处理，可以调用对应 api 实现
+- 原始二进制数据
+	- 使用 `readRawData()` 和 `writeRawData()`
+	- 文需要用户自定义数据转化为二进制的写入方式和将二进制解释为数据的转化方式
+写入数据时，规范化的流程是：
+1. 文件打开（是否可以打开检查，不存在时创建）
+2. 流绑定物理文件
+3. 设置流解析规则版本和字节序
+4. 流读入/写入数据，关闭文件
