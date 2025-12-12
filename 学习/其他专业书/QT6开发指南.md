@@ -3198,3 +3198,85 @@ void MainWindow::on_actPhoto_triggered()
 - 本质就是通过构建一条数据（QSqlRecord 对象），然后添加到模型中，由模型管理数据提交
 - 更新照片由两个部分组成：更新数据模型中的照片和更新显示在屏幕上的照片，数据库中的 BLOB 类型只能转化为 QByteArray 存储，这里使用 QFile 直接读取方式将图片数据转为字节数组，然后将字节数组构建为 QSqlRecord 存储。GUI QLabel 直接使用 load 和 `setPixmap()` 即可实现更新
 ## QSqlQueryModel 的使用
+### 实现数据查询
+#### 获取数据并记录
+```cpp
+void MainWindow::selectData()
+{
+    this->qryModel = new QSqlQueryModel(this);
+    qryModel->setQuery("SELECT empNo, Name, Gender, Birthday, Province, Department, Salary FROM employee ORDER BY empNo");
+    if(this->qryModel->lastError().isValid()){
+        QMessageBox::critical(this, "错误", "数据表查询错误,错误信息\n" +qryModel->lastError().text());
+        return;
+    }
+    ui->statusBar->showMessage(QString("记录条数：%1").arg(qryModel->rowCount()));
+    
+    QSqlRecord rec = qryModel->record();
+    qryModel->setHeaderData(rec.indexOf("empNo"), Qt::Horizontal, "工号");
+    qryModel->setHeaderData(rec.indexOf("Name"), Qt::Horizontal, "姓名");
+	// ...
+
+    selModel = new QItemSelectionModel(qryModel, this);
+    connect(selModel, &QItemSelectionModel::currentRowChanged, this, &MainWindow::do_currentRowChanged);
+    ui->tableView->setModel(qryModel);
+    ui->tableView->setSelectionModel(selModel);
+
+    dataMapper = new QDataWidgetMapper(this);
+    dataMapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
+    dataMapper->setModel(qryModel);
+    dataMapper->addMapping(ui->dbSpinEmpNo, rec.indexOf("empNo"));
+    dataMapper->addMapping(ui->dbEditName, rec.indexOf("Name"));
+	// ...
+    dataMapper->toFirst();
+    ui->actOpenDB->setEnabled(false);
+}
+```
+- qt 中，如果在没有绑定数据库的情况下直接执行 sql 语句，会调用 ` QSqlDatabase::database()` 获取到的第一个默认数据库作为执行对象
+- QSqlQueryModel 可以使用默认的列名作为表头数据，设置表头**只是为了提高可读性，支持多语言和数据导出中有作用**，并不会直接影响默认的表头显示
+- QSqlQueryModel没有类似于 `QSqlTableModel::fieldIndex()` 的函数，为了便于根据字段名获取字段序号，如果需要知道某一个字段的 index，需要先调用 `record()` 获取空记录（其中包含了字段名信息），然后调用 `indexOf()` 获取
+- 同理，无论是 `QSqlQueryModel` 还是 `QStandardItemModel`（或其他 `QAbstractTableModel` 的子类），设置表头的主要目的是为了让最终显示在 `QTableView` 中的表格具有更具可读性和描述性的列标题
+#### 通过数据库查询数据并更新
+```cpp
+void MainWindow::do_currentRowChanged(const QModelIndex &current, const QModelIndex &previous)
+{// 功能仍然是根据行变化之后的行得到对应人记录，更新身份信息和照片
+    Q_UNUSED(previous);
+    if(!current.isValid()){
+        ui->dbLabPhoto->clear();
+        ui->dbEditMemo->clear();
+        return;
+    }
+    this->dataWapper->setCurrentModelIndex(current); // 根据current更新基本文本信息
+    bool first= (current.row() == 0);                        //是否为首记录
+    bool last= (current.row() == qryModel->rowCount()-1);    //是否为尾记录
+    
+    // 更新UI控件状态
+    ui->actRecFirst->setEnabled(!first);
+    ui->actRecPrevious->setEnabled(!first);
+    ui->actRecNext->setEnabled(!last);
+    ui->actRecLast->setEnabled(!last);
+    
+    // 更新照片信息
+    int curRecNo = selModel->currentIndex();
+    QSqlRecord curRec = this->qryModel->record(curRecNo);
+    int empNo = curRec.value("EmpNo").toInt();
+    QSqlQuery query;
+    query.prepare("SELECT EmpNo, Memo, Photo FROM employee WHERE EmpNo = :ID");
+    query.bindValue(":ID", empNo);
+    query.exec();
+    query.first();
+    QVariant va = query.value("Photo");
+    if(va.isValid()){
+        QByteArray data = va.toBitArray();
+        QPixmap pic;
+        pic.loadFromData(data);
+        ui->dbLabPhoto->setPixmap(pic.scaledToWidth(ui->dbLabPhoto->size().width()));
+    }else{
+        ui->dbLabPhoto->clear();
+    }
+    QVariant va2 = query.value("Memo");
+    ui->dbEditMemo->setPlainText(va2.toString());
+}
+```
+-  `QSqlQuery` 对象使用 `exec()` 方法执行 SQL 语句后，只支持单个结果集返回。每次 `exec()` 只能执行一条 SQL 语句并返回一个结果集。`previous()`, `next()`, `first()`, `last()`, `seek(index)`, `at()`, 和 `isActive()` 这些函数用于在结果集中定位某一行 `QSqlRecord` 数据。
+- QSqlQuery 采用**游标机制**管理行间数据，这些定位函数的时间复杂度是 `O(1)`
+- 在 sql 语句编写时，需要注意**按需存取**，只操作必要的数据，过多的 BLOB 数据被查询会消耗大量内存
