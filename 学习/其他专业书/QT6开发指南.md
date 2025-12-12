@@ -2996,4 +2996,52 @@ void MainWindow::on_btnStr_Read_clicked() {  // 读取字符串，UTF-8编码
     }
 }
 ```
-对于预定义方法中使用流操作符方法这种方法稍微麻烦一点，**因为原生字符数组需要记录长度**，需要通过 `QFileStream::readBytes(char* s, uint len)` 读取文件流中所有的文本字符和
+对于预定义方法中使用流操作符方法这种方法稍微麻烦一点，**因为原生字符数组需要记录长度**，需要通过 `QFileStream::readBytes(char* s, uint len)` 分配文件流中所有的文本字符串长度大小的空间
+实际执行步骤为：
+```cpp
+// 步骤1：从流中读取4字节 → 转换为uint → len = 4
+// 步骤2：分配 len+1 字节内存 → buf = new char[5]
+// 步骤3：从流中读取len字节内容 → buf = "Test"
+// 步骤4：在末尾添加'\0' → buf[4] = '\0'
+```
+这种方法能够高度自定义数据的二进制存储/读取方式，但是不能读写较为复杂的类型（QColor，QFont 等）
+
+# 数据库
+## Qt 数据库编程概述
+### 基本内容
+Qt 6 只支持 SQLite 3，不支持 SQLite 2。QSqlDatabase 类用于建立与数据库的连接，在创建 QSqlTableModel 和 QSqlQuery 类对象时，都需要设置所属的数据库连接。
+```cpp
+QSqlDatabase  DB= QSqlDatabase::addDatabase("QSQLITE");
+```
+这段代码只会添加数据库驱动，而只有调用 `open()` 函数才会进行数据库连接
+`QSqlDatabase::tables()` 用于返回数据库对象的表，填入不同的枚举值参数会返回不同的表或者视图，数据集
+- QSqlTableModel是一个模型类，它与数据库中的一个数据表关联后就作为该数据表的模型，**需要在构造函数中绑定数据库并 `setTable()` 设置表**
+- 形成数据模型之后，就可以用对应的[[#视图]]来实现数据的显示和操作
+- **QDataWidgetMapper** 用于在图形用户界面（GUI）中的小部件（widgets）和数据模型（models）之间建立映射关系。主要目的是简化数据绑定和同步的过程，使得数据可以从模型自动加载到小部件中，反之亦然。显著减少代码量。***当模型中的数据发生变化时，关联的小部件会自动更新；反之亦然***
+### 代码编写
+基本表格属性设置
+```cpp
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    this->setCentralWidget(ui->splitter);
+    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectItems);
+    ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tableView->setAlternatingRowColors(true);
+}
+```
+`ui->tableView->setSelectionBehavior(QAbstractItemView::SelectItems);`
+- **作用**：设置 `QTableView` 的选择行为为选择单个单元格。
+- **参数**：`QAbstractItemView::SelectItems`
+    - **`QAbstractItemView::SelectItems`**: 用户可以选择单个单元格（默认行为）。
+    - **`QAbstractItemView::SelectRows`**: 用户可以选择整行。
+    - **`QAbstractItemView::SelectColumns`**: 用户可以选择整列。
+`ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);`
+- **作用**：设置 `QTableView` 的选择模式为单选，即每次只能选择一个单元格、一行或一列。
+- **参数**：`QAbstractItemView::SingleSelection`
+    - **`QAbstractItemView::SingleSelection`**: 每次只能选择一个单元格、一行或一列（根据 `setSelectionBehavior` 设置）。
+    - **`QAbstractItemView::ExtendedSelection`**: 用户可以通过拖动鼠标或使用 Shift 键和 Ctrl 键进行扩展选择。
+    - **`QAbstractItemView::ContiguousSelection`**: 用户可以选择连续的行或列。
+    - **`QAbstractItemView::MultiSelection`**: 用户可以选择多个不连续的行或列
