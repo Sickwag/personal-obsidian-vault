@@ -3280,3 +3280,14 @@ void MainWindow::do_currentRowChanged(const QModelIndex &current, const QModelIn
 -  `QSqlQuery` 对象使用 `exec()` 方法执行 SQL 语句后，只支持单个结果集返回。每次 `exec()` 只能执行一条 SQL 语句并返回一个结果集。`previous()`, `next()`, `first()`, `last()`, `seek(index)`, `at()`, 和 `isActive()` 这些函数用于在结果集中定位某一行 `QSqlRecord` 数据。
 - QSqlQuery 采用**游标机制**管理行间数据，这些定位函数的时间复杂度是 `O(1)`
 - 在 sql 语句编写时，需要注意**按需存取**，只操作必要的数据，过多的 BLOB 数据被查询会消耗大量内存
+## QSqlQuery 的使用
+### 基本知识
+QSqlQuery 用来运行 sql 语句，实现增删改查。
+常用的 api
+```cpp
+QString    executedQuery()  // 返回上一次成功运行过的SQL语句
+QString    lastQuery()  // 返回当前使用的SQL语句
+int    numRowsAffected()  // 返回SQL语句影响的记录条数，如果返回值为-1，表示无法确定影响的记录条数。如果运行的是SELECT语句，该函数的返回值无意义，应该用函数size()确定查询结果的记录条数
+```
+有一个特殊的函数 `bool isForwardOnly()`，返回数据集是否仅能前向移动，若此返回true，则只能用 `next()` 函数或参数值为正数的 `seek()` 函数移动当前记录。默认为false。 `setForwardOnly()` 设置数据集是否仅能前向移动，**必须在运行函数 `prepare()` 或 `exec()` 之前运行这个函数。若设置为仅能前向移动，可提高内存使用效率和记录移动速度**
+最好在初始化 `QSqlQuery` 对象时**指定数据库对象**，用 `exec(QString)` 执行字面量 sql 语句时**语句中不能有参数**
