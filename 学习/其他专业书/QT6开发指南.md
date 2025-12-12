@@ -3117,4 +3117,24 @@ void MainWindow::do_currentRowChanged(const QModelIndex &current, const QModelIn
 }
 ```
 - `isDirty()` 表示数据是否是脏数据（未同步仅数据模型中）
-- 每一行是一个人的各项数据，所以行切换的时候需要更新
+- 每一行是一个人的各项数据，所以行切换的时候需要更新，基本信息中的所有 combox 和 Lineedit 都已经通过 dataMapper 映射，所以徐亚更新信息时只需要 `this->dataMapper->setCurrentIndex(curent.row());` 就能够让所有组件映射 `current.row()` 的内容，初始状态被设置为 `toFirst()` 显示 dataModel 中的第一条记录，等价于 `setCurrentIndex(0)`
+- 由于图片信息是二进制信息，QDataWidgetMapper 用于在简单数据类型（如字符串、整数、浮点数、布尔值等）和 UI控件之间进行映射，对于 BLOB 类型不可以被映射
+- QSqlRecord 是一个用来存储**一条 sql 记录的类**，封装了各个字段的内容和字段的属性信息
+```cpp
+QSqlRecord  QSqlTableModel::record()           //没指定获取哪行的记录所以只返回字段定义
+QSqlRecord  QSqlTableModel::record(int row)    //返回字段定义和数据
+bool    contains(QString  &name)  // 判断记录是否含有名称为name的字段
+QVariant  QSqlRecord::value(int index)              //返回序号为index的字段的值
+QVariant  QSqlRecord::value(const QString &name)    //返回字段名称为name的字段的值
+```
+- QDataWidgetMapper 只有一个信号 currentIndexChanged ()，在当前行变化时会发射此信号
+- QSqlField 封装了一条记录中某个字段的数据，封装了字段值和字段信息，所以获取表格字段信息除了获取 metaData 外还有一种方法：
+```cpp
+void MainWindow::getFieldNames()
+{
+    QSqlRecord emptyRec = this->tableModel->record();
+    for(int i = 0; i < emptyRec.count(); i++){
+        ui->comboFields->addItem(emptyRec.fieldName(i));
+    }
+}
+```
