@@ -2260,7 +2260,7 @@ void setWindowModality(Qt::WindowModality windowModality)
 - **`Qt::WindowModal`**：表示对话框是相对于其父窗口模态的。当这个对话框打开时，用户不能与父窗口进行交互，但可以与应用程序中的其他顶级窗口进行交互。
 - **`Qt::ApplicationModal`**：表示对话框是相对于整个应用程序模态的。当这个对话框打开时，用户不能与应用程序中的任何其他窗口进行交互，直到这个对话框被关闭。
 - **`Qt::NonModal`**（默认值）：表示对话框是非模态的。用户可以与父窗口和其他窗口进行交互，即使对话框是打开的。
-使用函 `QWidget::show()` 数显示一个对话框时，根据modal属性的值，对话框会以模态或非模态方式显示。函数show()没有返回值，但是一些询问对话框，调用其 `exec()` 是**模态形式的**，并且有返回值表示询问/操作结果
+使用函 `QWidget::show()` 数显示一个对话框时，根据modal属性的值，对话框会以模态或非模态方式显示。***函数`show()`没有返回值，但是一些询问对话框，调用其 `exec()` 是模态形式的，并且有返回值表示询问/操作结果***
 如果子窗口需要读取父窗口的大量数据时，一般会使用 `exec()` 来创建子对话框，这种形式**只会创建一次以模形式行时显示的对话框**，子对话框关闭之后并没有被删除，只是被隐藏了（**会一直占用内存**）
 ### QDialog 类
 一般有**接受，取消**两个按键，分别对应 `accept`，`reject`。对话框询问完毕之后会发送 `QDialog::Accepted` 或者 `QDialog::Rejected` 信号，被 done 槽函数接受
@@ -3291,3 +3291,135 @@ int    numRowsAffected()  // 返回SQL语句影响的记录条数，如果返回
 ```
 有一个特殊的函数 `bool isForwardOnly()`，返回数据集是否仅能前向移动，若此返回true，则只能用 `next()` 函数或参数值为正数的 `seek()` 函数移动当前记录。默认为false。 `setForwardOnly()` 设置数据集是否仅能前向移动，**必须在运行函数 `prepare()` 或 `exec()` 之前运行这个函数。若设置为仅能前向移动，可提高内存使用效率和记录移动速度**
 最好在初始化 `QSqlQuery` 对象时**指定数据库对象**，用 `exec(QString)` 执行字面量 sql 语句时**语句中不能有参数**
+
+### 占位符处理两种方式
+```cpp
+void QSqlQuery::bindValue(const QString &placeholder, const QVariant &val, QSql::ParamType paramType = QSql::In);
+
+QSqlQuery query;
+query.prepare("{CALL get_user_id(:name, :userId)}");
+query.bindValue(":name", "Alice");
+query.bindValue(":userId", QVariant(QVariant::Int), QSql::Out); // 绑定输出参数
+query.exec();
+
+// 获取返回的值
+int userId = query.boundValue(":userId").toInt();
+```
+- paramType是参数类型，默认值为 `QSql::In`，表示传递给数据库的值。`QSql::Out` 表示参数是一个返回值，运行 `exec()` 后，这个参数会被数据库返回的值覆盖。
+- `QVariant(QVariant::Int)` 是一个空的 `QVariant`，类型为 `int`，`QSql::Out` 表示 `:userId` 是一个输出参数，`exec()` 执行后，`:userId` 会被存储过程返回的值覆盖。使用 `boundValue()` 获取，只能在 `exec()` 执行后调用。
+
+第二种方法**不需要给出占位符标记或者序号**，统一使用 `?` 占位，按顺序绑定。
+
+```cpp
+void QSqlQuery::bindValue(int pos, const QVariant &val, QSql::ParamType paramType = QSql::In)
+
+query.prepare("UPDATE employee SET Department=?, Salary=? WHERE EmpNo =?");
+query.addBindValue("技术部");
+query.addBindValue(6000);
+query.addBindValue(1007);
+
+void  QSqlQuery::addBindValue(const QVariant &val, QSql::ParamType paramType = QSql::In);
+```
+### 代码编写
+#### 修改数据
+```cpp
+void MainWindow::updateRecord(int recNo)
+{// 主窗口点击更新记录按钮时，跳出编辑框
+    
+    // 跳出编辑框之前，需要记下我应该修改谁的信息，先记录下当前选中的是谁
+    QSqlRecord curRec = this->qryModel->record(recNo);
+    int empNo = curRec.value("EmpNo").toInt();
+    // 查找需要修改的人的empNo，用于在数据库中依据empNo找到对应记录
+    QSqlQuery query;
+    query.prepare("select * from employee where EmpNo = :ID");
+    query.bindValue(":ID", empNo);
+    query.exec();
+    query.first();
+    if(!query.isValid()) return;
+    
+    // 跳出编辑框
+    TDialogData *dataDialog = new TDialogData(this);
+    dataDialog->setWindowFlags(dataDialog->windowFlags() | Qt::MSWindowsFixedSizeDialogHint);
+    dataDialog->setUpdateRecord(curRec); // 将当前行记录的信息填入对话框中
+    int ret = dataDialog->exec();
+    if(ret == QDialog::Accepted){
+        // 将tabView中当前行已经修改过的QSqlRecord数据填入数据库中
+        QSqlRecord  recData = dataDialog->getRecordData();
+        
+        query.prepare("update employee set Name=:Name, Gender=:Gender,"
+                      " Birthday=:Birthday,  Province=:Province,"
+                      " Department=:Department, Salary=:Salary,"
+                      " Memo=:Memo, Photo=:Photo "
+                      " where EmpNo = :ID");
+        
+        query.bindValue(":Name",    recData.value("Name"));
+        query.bindValue(":Gender",  recData.value("Gender"));
+        query.bindValue(":Birthday",recData.value("Birthday"));
+        query.bindValue(":Province",recData.value("Province"));
+        query.bindValue(":Department",  recData.value("Department"));
+        query.bindValue(":Salary",  recData.value("Salary"));
+        query.bindValue(":Memo",    recData.value("Memo"));
+        query.bindValue(":Photo",   recData.value("Photo"));
+        
+        query.bindValue(":ID",      empNo);
+        
+        if (!query.exec())
+            QMessageBox::critical(this, "错误", "记录更新错误\n"+query.lastError().text());
+        else
+            qryModel->query().exec();   //数据模型重新查询数据，更新tableView显示
+    }
+    delete dataDialog;      //删除对话框
+}
+
+// 更新函数
+void MainWindow::on_actRecEdit_triggered()
+{
+    int curRecNo = this->selModel->currentIndex().row();
+    updateRecord(curRecNo);
+}
+
+
+void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
+{
+    int curRecNo = index.row();
+    updateRecord(curRecNo);
+}
+```
+这个函数用于所有对 tabView 中的行记录的修改操作，流程为：
+1. 记录现在哪一行需要修改，保存这行的数据并通过 `setUpdataRecord()` 填入 TDialogData 对话框中。
+2. 根据将这一行对应的人的 empNo 记下来
+3. 对话框修改数据之后将修改的数据**在数据库中查找 empNo 值**写回数据库（updata 语句）
+
+#### 插入数据
+```cpp
+void MainWindow::on_actRecInsert_triggered()
+{
+	// QSqlQuery query;
+    // query.exec("select * from employee where EmpNo =-1"); //实际查不出，只查询字段信息
+    // QSqlRecord curRec=query.record();   //获取当前记录,实际为空记录
+    QSqlRecord curRec = this->DB.record("employee");
+    // curRec.clear();
+    curRec.setValue("EmpNo", this->qryModel->rowCount() + 3000);
+    
+    TDialogData* dataDialog = new TDialogData(this);
+    Qt::WindowFlags    flags=dataDialog->windowFlags();
+    dataDialog->setWindowFlags(flags | Qt::MSWindowsFixedSizeDialogHint); //对话框固定大小
+    dataDialog->setInsertRecord(curRec); //插入记录
+    
+    int ret=dataDialog->exec();
+    if (ret==QDialog::Accepted) {
+        QSqlRecord  recData=dataDialog->getRecordData();
+        query.prepare("INSERT INTO employee (EmpNo,Name,Gender,Birthday,Province,"
+                      " Department,Salary,Memo,Photo) "
+                      " VALUES(:EmpNo,:Name, :Gender,:Birthday,:Province,"
+                      " :Department,:Salary,:Memo,:Photo)");
+        
+        query.bindValue(":EmpNo",recData.value("EmpNo"));
+		// ...
+    }
+    delete dataDialog;
+}
+```
+- 由于插入数据需要一个 QSqlRecord 对象，并且**对象必须拥有表格的字段信息**，不然 `setInsertRecord()` 函数无法插入数据，获取包含字段的 record 对象书中使用**一段一定没有结果的 sql 语句获得**，这样并不可取
+- 使用 `QSqlRecord curRec = this->DB.record("employee");` 方法**将表中的字段信息记录到 curRec 中**，并不会记录字段值，也不需要调用 `clear()` 否则会**清空字段信息**
+- 省略部分和[[#QSqlQuery 的使用#修改数据|修改数据]]一致
