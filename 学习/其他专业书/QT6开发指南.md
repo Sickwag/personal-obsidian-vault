@@ -3046,6 +3046,7 @@ MainWindow::MainWindow(QWidget *parent)
     - **`QAbstractItemView::ExtendedSelection`**: 用户可以通过拖动鼠标或使用 Shift 键和 Ctrl 键进行扩展选择。
     - **`QAbstractItemView::ContiguousSelection`**: 用户可以选择连续的行或列。
     - **`QAbstractItemView::MultiSelection`**: 用户可以选择多个不连续的行或列
+可以通过 `setSort()` 设置数据模型中的数据排序方法，`sort()` 立刻执行排序，`setFilter()` 函数**在数据模型中执行过滤**。以上操作都**不会影响数据库和数据模型中的元数据**，只是进行调整。
 #### 设置 GUI 控件和数据模型数据映射
 ```cpp
 void MainWindow::openTable()
@@ -3127,7 +3128,7 @@ bool    contains(QString  &name)  // 判断记录是否含有名称为name的字
 QVariant  QSqlRecord::value(int index)              //返回序号为index的字段的值
 QVariant  QSqlRecord::value(const QString &name)    //返回字段名称为name的字段的值
 ```
-- QDataWidgetMapper 只有一个信号 currentIndexChanged ()，在当前行变化时会发射此信号
+- QDataWidgetMapper 只有一个信号 `currentIndexChanged()`，在当前行变化时会发射此信号
 - QSqlField 封装了一条记录中某个字段的数据，封装了字段值和字段信息，所以获取表格字段信息除了获取 metaData 外还有一种方法：
 ```cpp
 void MainWindow::getFieldNames()
@@ -3138,3 +3139,62 @@ void MainWindow::getFieldNames()
     }
 }
 ```
+#### 数据模型增删改查
+```cpp
+void MainWindow::on_actRecAppend_triggered()
+{
+    QSqlRecord rec = tableModel->record();
+    rec.setValue(this->tableModel->fieldIndex("empNo"), 2000 + this->tableModel->rowCount());
+    rec.setValue(this->tableModel->fieldIndex("Gender"), "male");
+    tableModel->insertRecord(tableModel->rowCount(), rec);
+    selModel->clearSelection();
+    QModelIndex curIndex = tableModel->index(tableModel->rowCount()-1, 1);
+    selModel->setCurrentIndex(curIndex, QItemSelectionModel::Select);
+    showRecordCount();
+}
+
+
+void MainWindow::on_actRecInsert_triggered()
+{
+    QModelIndex curIndex = this->selModel->currentIndex();
+    QSqlRecord rec = this->tableModel->record();
+    this->tableModel->insertRecord(curIndex.row(), rec);
+    this->selModel->clearSelection();
+    this->selModel->setCurrentIndex(curIndex, QItemSelectionModel::Select);
+    showRecordCount();
+}
+
+
+void MainWindow::on_actRecDelete_triggered()
+{
+    QModelIndex curIndex = this->selModel->currentIndex();
+    this->tableModel->removeRow(curIndex.row());
+    this->selModel->clearSelection();
+    showRecordCount();
+}
+
+void MainWindow::on_actPhoto_triggered()
+{
+    QString aFile = QFileDialog::getOpenFileName(this, "choose a pic file", "", "jpg pic(*.jpg);;png pic(*.png)");
+
+    if(aFile.isEmpty()) return;
+    QByteArray data;
+    QFile* file = new QFile(aFile);
+    file->open(QIODevice::ReadOnly);
+    data = file->readAll();
+    file->close();
+
+    QSqlRecord curRec = this->tableModel->record();
+    int curRecNo = this->selModel->currentIndex().row();
+    curRec.setValue(this->tableModel->fieldIndex("Photo"), data);
+    this->tableModel->setRecord(curRecNo, curRec);
+
+    QPixmap* pic = new QPixmap;
+    pic->load(aFile);
+    ui->dbLabPhoto->setPixmap(pic->scaledToWidth(ui->dbLabPhoto->size().width()));
+}
+```
+- 更改 model 的结构（增删行列记录时）最好对选择模型使用 `clearSelect()` 一下刷新选择。
+- 本质就是通过构建一条数据（QSqlRecord 对象），然后添加到模型中，由模型管理数据提交
+- 更新照片由两个部分组成：更新数据模型中的照片和更新显示在屏幕上的照片，数据库中的 BLOB 类型只能转化为 QByteArray 存储，这里使用 QFile 直接读取方式将图片数据转为字节数组，然后将字节数组构建为 QSqlRecord 存储。GUI QLabel 直接使用 load 和 `setPixmap()` 即可实现更新
+## QSqlQueryModel 的使用
