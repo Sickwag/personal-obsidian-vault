@@ -1411,13 +1411,14 @@ void MainWindow::iniModelData(QStringList& aFileContent) {
 	- parent是要创建的组件的父组件，一般就是窗口对象；option是项的一些显示选项，是QStyleOptionViewItem类型的，包含字体、对齐方式、背景色等属性；
 	- index是项在数据模型中的模型索引，
 	- `index->model()` 可以获取项所属数据模型的对象指针。
-	- 设置了代理类的组件**被编辑时**就是调用这个函数
+	- 设置了代理类的组件**被编辑时**就是调用这个函数来创建被编辑时显示的状态
 ```cpp
 QWidget  *QStyledItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) 
 ```
 - setEditorData
 	- 定义如何将数据模型中对应 index 位置的数据加载到 `createEditor` 函数创建出的**临时编辑器**中**用来显示**，不至于用户点击编辑之后看到的编辑框中的内容不是空白。
 	- 这个函数的默认实现（或者说一般实现）是通过 data 函数 `Qt::UserRole` 用户角色对应的数据
+	- 代理组件在被编辑时**代理组件中显示的内容/状态**通过这个函数实现
 ```cpp
 // 自定义委托类
 class MyDelegate : public QStyledItemDelegate {
@@ -3019,7 +3020,7 @@ QSqlDatabase  DB= QSqlDatabase::addDatabase("QSQLITE");
 - 形成数据模型之后，就可以用对应的[[#视图]]来实现数据的显示和操作
 - **QDataWidgetMapper** 用于在图形用户界面（GUI）中的小部件（widgets）和数据模型（models）之间建立映射关系。主要目的是简化数据绑定和同步的过程，使得数据可以从模型自动加载到小部件中，反之亦然。显著减少代码量。***当模型中的数据发生变化时，关联的小部件会自动更新；反之亦然***
 ### 代码编写
-基本表格属性设置
+#### 基本表格属性设置
 ```cpp
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -3045,3 +3046,75 @@ MainWindow::MainWindow(QWidget *parent)
     - **`QAbstractItemView::ExtendedSelection`**: 用户可以通过拖动鼠标或使用 Shift 键和 Ctrl 键进行扩展选择。
     - **`QAbstractItemView::ContiguousSelection`**: 用户可以选择连续的行或列。
     - **`QAbstractItemView::MultiSelection`**: 用户可以选择多个不连续的行或列
+#### 设置 GUI 控件和数据模型数据映射
+```cpp
+void MainWindow::openTable()
+{
+    tableModel = new QSqlTableModel(this, this->DB);
+    tableModel->setTable("employee");
+    tableModel->setEditStrategy(QSqlTableModel::OnManualSubmit);
+    tableModel->setSort(tableModel->fieldIndex("empNo"), Qt::AscendingOrder);
+    if(!tableModel->select()){
+        QMessageBox::critical(this, "Error", "error message: " + tableModel->lastError().text());
+        return;
+    }
+    showRecordCount();
+    
+    tabModel->setHeaderData(tabModel->fieldIndex("empNo"),  Qt::Horizontal, "工号");
+    tabModel->setHeaderData(tabModel->fieldIndex("Name"),   Qt::Horizontal, "姓名");
+    // ...
+}
+```
+- 函数 `select()`根据当前设置的排序和过滤规则从数据表查询数据并将其刷新到数据模型。
+- 由于设置了 `setEditStrategy(QSqlTableModel::OnManualSubmit);`，所以通过对模型的更改（通过 GUI 控件更改）不会立刻同步到数据库中，**需要手动调用 `submitAll()` 方法**
+- tableModel 本质上是一个**数据模型**，模型中的数据是从 DB 中的 employee（`setTable()` 函数）表中**选择性地提取一些数据组成的**
+- `tableModel->setHeaderData(tableModel->fieldIndex("empNo"), Qt::Horizontal, "工号");` 设置数据模型的水平表头，虽然 model-view 架构中，model 不管新数据如何展示，设置表头的工作本应该由 view 控件实现，但是设置表头也可以理解为是一种模型的数据属性而不是显示效果。实际业务中一份数据通常会在多个控件中用到，如果在 view 中设置表头这种属性信息会导致代码冗余。
+- 如果不进行表头设置，在 QTableView 组件里显示表格数据时，会将字段名作为表头。
+```cpp
+this->dataMapper = new QDataWidgetMapper(this);
+this->dataMapper->setModel(this->tableModel);
+this->dataMapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
+this->dataMapper->addMapping(ui->dbSpinEmpNo,tabModel->fieldIndex("empNo"));
+this->dataMapper->addMapping(ui->dbEditName,tabModel->fieldIndex("Name"));
+// ...
+this->dataMapper->toFirst();
+```
+- 为**映射包装器**设置模型，就相当于设置了数据源，然后设置每一段数据分别要映射到哪个控件中
+- 设置 `AutoSubmit` 会让**编辑控件**中的内容自动同步导**数据模型**中（注意不是数据库），同理也可以设置 `ManualSubmit`
+- 设置 `toFirst()` 表示让控件默认显示映射器所映射的**数据模型**第一条记录，等价于 `setCurrentIndex(0)`
+#### 行切换引起控件更新
+```cpp
+void MainWindow::do_currentChanged(const QModelIndex &current, const QModelIndex &previous)
+{
+    Q_UNUSED(current);
+    Q_UNUSED(previous);
+    ui->actSubmit->setEnabled(tableModel->isDirty());
+    ui->actRevert->setEnabled(tableModel->isDirty());
+}
+
+void MainWindow::do_currentRowChanged(const QModelIndex &current, const QModelIndex &previous)
+{
+    Q_UNUSED(previous);
+    ui->actRecDelete->setEnabled(current.isValid());
+    ui->actPhoto->setEnabled(current.isValid());
+    ui->actPhotoClear->setEnabled(current.isValid());
+    
+    if(!current.isValid()){
+        ui->dbLabPhoto->clear();
+        return;
+    }
+    int curRecNo = current.row();
+    this->dataMapper->setCurrentIndex(curRecNo);
+    QSqlRecord curRec = this->tableModel->record(curRecNo);
+    if(curRec.isNull("Photo")){
+        ui->dbLabPhoto->clear();
+    }else{
+        QByteArray data = curRec.value("Photo").toByteArray();
+        QPixmap pic;
+        pic.loadFromData(data);
+        ui->dbLabPhoto->setPixmap(pic.scaledToWidth(ui->dbLabPhoto->size().width()));
+    }
+}
+```
+- `isDirty()` 表示数据是否是脏数据（未同步仅数据模型中）
+- 每一行是一个人的各项数据，所以行切换的时候需要更新
