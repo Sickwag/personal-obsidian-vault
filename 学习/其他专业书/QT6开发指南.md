@@ -3423,3 +3423,9 @@ void MainWindow::on_actRecInsert_triggered()
 - 由于插入数据需要一个 QSqlRecord 对象，并且**对象必须拥有表格的字段信息**，不然 `setInsertRecord()` 函数无法插入数据，获取包含字段的 record 对象书中使用**一段一定没有结果的 sql 语句获得**，这样并不可取
 - 使用 `QSqlRecord curRec = this->DB.record("employee");` 方法**将表中的字段信息记录到 curRec 中**，并不会记录字段值，也不需要调用 `clear()` 否则会**清空字段信息**
 - 省略部分和[[#QSqlQuery 的使用#修改数据|修改数据]]一致
+#### 删除数据
+删除和[[#QSqlQuery 的使用#插入数据|插入]]数据执行完毕之后，为什么需要调用？
+```cpp
+QString sqlStr=qryModel->query().executedQuery();   //执行过的SELECT语句
+            qryModel->setQuery(sqlStr);         //重新查询数据
+```
