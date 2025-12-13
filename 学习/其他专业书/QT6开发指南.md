@@ -3424,8 +3424,106 @@ void MainWindow::on_actRecInsert_triggered()
 - 使用 `QSqlRecord curRec = this->DB.record("employee");` 方法**将表中的字段信息记录到 curRec 中**，并不会记录字段值，也不需要调用 `clear()` 否则会**清空字段信息**
 - 省略部分和[[#QSqlQuery 的使用#修改数据|修改数据]]一致
 #### 删除数据
-删除和[[#QSqlQuery 的使用#插入数据|插入]]数据执行完毕之后，为什么需要调用？
+```cpp
+void MainWindow::on_actRecDelete_triggered()
+{
+    int curRecNo= selModel->currentIndex().row();
+    QSqlRecord  curRec= qryModel->record(curRecNo);
+    if(curRec.isEmpty()) return;
+    
+    int empNo = curRec.value("EmpNo").toInt();
+    QSqlQuery query;
+    query.prepare("delete  from employee where EmpNo = :ID");
+    query.bindValue(":ID",empNo);
+    
+    if (!query.exec())
+        QMessageBox::critical(this, "错误", "删除记录出现错误\n"+query.lastError().text());
+    else {
+        QString sqlStr=qryModel->query().executedQuery();//  执行过的SELECT语句
+        qryModel->setQuery(sqlStr);         //重新查询数据
+    }
+}
+```
+- [[#QSqlQuery 的使用#删除数据|删除]] 和[[#QSqlQuery 的使用#插入数据|插入]]数据执行完毕之后，调用已经执行过的查询语句并不可靠，应为如果上一次执行的查询不是 `select * from employee` 会导致 qryModel 得到不完整的数据
 ```cpp
 QString sqlStr=qryModel->query().executedQuery();   //执行过的SELECT语句
-            qryModel->setQuery(sqlStr);         //重新查询数据
+qryModel->setQuery(sqlStr);         //重新查询数据
 ```
+- qryModel 内部会维护一个 QSqlQuery 对象，如果通过 `setQuery()` 设置了 sql 语句，那么模型会**立刻执行这条语句**并将返回结果作为 qryModel 的内部数据，内部的 QSqlQuery 对象会记录下这条 sql，**每次调用 `query()` 会调用最后一次 `setQuery()` 设置的 sql 语句**
+## QSqlRelationalTableModel 的使用
+QSqlRelationalTableModel是QSqlTableModel的子类，专门设计用来处理数据库表之间的关联关系（特别是外键关联）
+## 三种数据模型操纵数据库区别
+### 基本特性
+| 特性        | QSqlTableModel      | QSqlQueryModel      | QSqlRelationalTableModel |
+| --------- | ------------------- | ------------------- | ------------------------ |
+| **继承关系**  | QAbstractTableModel | QAbstractTableModel | **QSqlTableModel 的子类**   |
+| **数据源**   | 单表                  | 任意SQL查询             | 单表 + 关联表                 |
+| **可读写**   | 读写                  | 只读                  | 读写（继承自TableModel）        |
+| **关联处理**  | 不支持                 | 不支持                 | **内置支持外键关联**             |
+| **使用复杂度** | 简单                  | 中等                  | 中等（关联配置）                 |
+### 示例理解
+对于这样两个表的结构：
+```sql
+-- 员工表（外键指向部门）
+CREATE TABLE employee (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    department_id INTEGER,  -- 外键
+    salary REAL
+);
+
+-- 部门表
+CREATE TABLE department (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    location TEXT
+);
+```
+三种方式操作结果对比：
+```cpp
+QSqlTableModel *model = new QSqlTableModel(this);
+model->setTable("employee");
+model->select();
+
+// 显示结果：department_id 显示为数字ID
+// id | name | department_id | salary
+// 1  | Alice| 101          | 5000
+// 2  | Bob  | 102          | 6000
+```
+QSqlTableModel，用户看到的是部门 ID，而不是部门名称。
+```cpp
+QSqlQueryModel *model = new QSqlQueryModel(this);
+model->setQuery("SELECT e.id, e.name, d.name as department, e.salary "
+                "FROM employee e "
+                "LEFT JOIN department d ON e.department_id = d.id");
+
+// 显示结果：通过JOIN获取部门名称
+// id | name | department | salary
+// 1  | Alice| HR         | 5000
+// 2  | Bob  | IT         | 6000
+```
+QSqlQueryModel显示了部门名称。但需要手动编写复杂 SQL，修改数据时需要处理多个表。
+```cpp
+QSqlRelationalTableModel *model = new QSqlRelationalTableModel(this);
+model->setTable("employee");
+
+// 关键：设置关系映射
+model->setRelation(
+    2,  // department_id字段在employee表中的索引（第3列）
+    QSqlRelation("department", "id", "name")  // 关联表、关联键、显示字段
+);
+
+model->select();
+
+// 显示结果：自动将department_id转换为部门名称
+// id | name | department | salary
+// 1  | Alice| HR         | 5000
+// 2  | Bob  | IT         | 6000
+```
+QSqlRelationalTableModel 设置映射规则，将 employee 表中的第二列（department_id 列）与 department 表的 name 列，根据两者共有的 id 列设置映射规则，
+
+### 操作数据库逻辑
+QSqlTableModel 是通过模型 `setData(index, value)` 直接修改值，然后模型自动将修改的值同步到数据库中，需要手动/自动调用 `submitAll()`
+[[#QSqlQueryModel 的使用|QSqlQueryModel]] 的增删改查的方法有两种：
+- 通过构造 QSqlRecord 对象，将数据写入其中然后将其通过 api 加入到数据模型中，然后数据模型和数据包装器分别将更改同步到数据库和对应组件中。
+- 通过 [[#QSqlQuery 的使用|QSqlQuery]] 是通过直接执行 sql 语句，获取执行结果后通过 `qryModel->query()` 重新查询 `setQuery()` 预设的 sql ，最终重新显示到组件中，也可以使用包装器关联控件
