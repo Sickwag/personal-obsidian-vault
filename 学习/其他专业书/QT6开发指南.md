@@ -3694,8 +3694,134 @@ event.accept();
 ![[PixPin_2025-12-13_17-10-27.png]]
 
 ### 绘制基本图形
+| 函数名                   | 功能和示例代码                                                                                                                                                                                                                       | 示例图形                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| `drawPoint()`         | 绘制一个点<br><br>painter.drawPoint(QPoint(W/2, H/2));<br>                                                                                                                                                                         | `•` （中心点）            |
+| `drawPoints()`        | 绘制一批点<br><br>QPoint points[] = {<br>    QPoint(5*W/12, H/4),<br>    QPoint(3*W/4, 5*H/12),<br>    QPoint(2*W/4, 5*H/12)<br>};<br>painter.drawPoints(points, 3);<br>                                                           | `• • •` （三个散点）       |
+| `drawLine()`          | 绘制直线<br><br>QLine Line(W/4, H/4, W/2, H/2);<br>painter.drawLine(Line);<br>                                                                                                                                                    | `/` （斜线）             |
+| `drawLines()`         | 绘制一批直线<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>QList<QLine> Lines;<br>Lines.append(QLine(rect.topLeft(), rect.bottomRight()));<br>Lines.append(QLine(rect.topRight(), rect.bottomLeft()));<br>painter.drawLines(Lines);<br> | `╳` （交叉线）            |
+| `drawArc()`           | 绘制弧线<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>int startAngle = 90 * 16; // 起始 90°<br>int spanAngle = 90 * 16; // 旋转 90°<br>painter.drawArc(rect, startAngle, spanAngle);<br>                                                 | `⌒` （四分之一圆弧）         |
+| `drawChord()`         | 绘制一段弦<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>int startAngle = 90 * 16; // 起始 90°<br>int spanAngle = 90 * 16; // 旋转 90°<br>painter.drawChord(rect, startAngle, spanAngle);<br>                                              | `△` （弦与弧围成的扇形区域）     |
+| `drawPie()`           | 绘制扇形<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>int startAngle = 40 * 16; // 起始 40°<br>int spanAngle = 120 * 16; // 旋转 120°<br>painter.drawPie(rect, startAngle, spanAngle);<br>                                               | `扇` （扇形）             |
+| `drawConvexPolygon()` | 根据给定的点绘制凸多边形<br><br>QPoint points[4] = {<br>    QPoint(5*W/12, H/4),<br>    QPoint(3*W/4, 5*H/12),<br>    QPoint(5*W/12, 3*H/4),<br>    QPoint(W/4, 5*H/12)<br>};<br>painter.drawConvexPolygon(points, 4);<br>                | `◇` （菱形）             |
+| `drawPolygon()`       | 绘制多边形，最后一个点会和第一个点重合<br><br>QPoint points[] = {<br>    QPoint(5*W/12, H/4),<br>    QPoint(3*W/4, 5*H/12),<br>    QPoint(5*W/12, 3*H/4),<br>    QPoint(2*W/4, 5*H/12)<br>};<br>painter.drawPolygon(points, 4);<br>              | `▶` （箭头形多边形）         |
+| `drawPolyline()`      | 绘制多点连接的线，最后一个点不会和第一个点连接<br><br>QPoint points[] = {<br>    QPoint(5*W/12, H/4),<br>    QPoint(3*W/4, 5*H/12),<br>    QPoint(5*W/12, 3*H/4),<br>    QPoint(2*W/4, 5*H/12)<br>};<br>painter.drawPolyline(points, 4);<br>         | `→→→` （折线）           |
+| `drawImage()`         | 将 QImage 对象存储的图片绘制在指定的矩形区域内<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>QImage image(":/images/images/qt.jpg");<br>painter.drawImage(rect, image);<br>                                                                          | `[Qt]` （文字占位）        |
+| `drawPixmap()`        | 将 QPixmap 对象存储的图片绘制在指定的矩形区域内<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>QPixmap image(":/images/images/qt.jpg");<br>painter.drawPixmap(rect, image);<br>                                                                       | `[Qt]` （文字占位）        |
+| `drawText()`          | 绘制文本，只能绘制单行文字，字体属性由 QPainter::font() 决定<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>QFont font;<br>font.setPointSize(30);<br>font.setBold(true);<br>painter.setFont(font);<br>painter.drawText(rect, "Hello, Qt");<br>          | `Hello, Qt` （文本）     |
+| `drawEllipse()`       | 绘制椭圆<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>painter.drawEllipse(rect);<br>                                                                                                                                                 | `○` （椭圆）             |
+| `drawRect()`          | 绘制矩形<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>painter.drawRect(rect);<br>                                                                                                                                                    | `□` （矩形）             |
+| `drawRoundedRect()`   | 绘制圆角矩形<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>painter.drawRoundedRect(rect, 20, 20);<br>                                                                                                                                   | ` rounded □ ` （圆角矩形） |
+| `fillRect()`          | 填充矩形，无边框线<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>painter.fillRect(rect, Qt::green);<br>                                                                                                                                    | `■` （绿色填充矩形）         |
+| `eraseRect()`         | 擦除某个矩形区域，等效于用背景色填充该区域<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>painter.eraseRect(rect);<br>                                                                                                                                  | `⬜` （擦除/透明矩形）        |
+| `drawPath()`          | 绘制由 QPainterPath 对象定义的路径<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>QPainterPath path;<br>path.addEllipse(rect);<br>path.addRect(rect);<br>painter.drawPath(path);<br>                                                         | `○+□` （路径叠加）         |
+| `fillPath()`          | 填充某个 QPainterPath 对象定义的绘图路径，但是不显示轮廓线<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>QPainterPath path;<br>path.addEllipse(rect);<br>path.addRect(rect);<br>painter.fillPath(path, Qt::red);<br>                                    | `🔴` （红色填充路径）        |
+
 QPainterPath 类用于记录绘图操作序列。一个 PainterPath 由许多基本的绘图操作组成，一个闭合的 PainterPath 是起点和终点连接起来的绘图路径。这类出现是为了解决**复杂图形多次绘制问题**，将复杂图形绘制方法记录其中即可复用 `drawPath()`
 
 ## 坐标系统和坐标变换
 ### 坐标变换
+![[PixPin_2025-12-13_17-45-10.png]]
+```cpp
+void drawClock(QPainter &painter) {
+    // 1. 平移原点到时钟中心
+    painter.translate(200, 200);
+    
+    // 2. 画时钟刻度
+    for (int i = 0; i < 12; ++i) {
+        // 3. 每次旋转30度（360/12 = 30）
+        painter.rotate(30);
+        painter.drawLine(0, -90, 0, -100);  // 画刻度线
+    }
+    
+    // 4. 画时针（当前时间3:30）
+    painter.save();  // 保存当前坐标系状态
+    painter.rotate(90);  // 3点 = 90度
+    painter.drawLine(0, 0, 0, -40);
+    painter.restore();  // 恢复坐标系
+    
+    // 5. 画分针
+    painter.save();
+    painter.rotate(180);  // 6点方向 = 180度
+    painter.drawLine(0, 0, 0, -60);
+    painter.restore();
+}
+```
 本质上就是改变**绘图参考坐标系的基准线指向**。在[[Qt Official Tutorial#AnalogClock|官方时钟案例]]中可以看到
+绘制五角星代码：
+```cpp
+void Widget::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::TextAntialiasing);
+
+    qreal R = 100;
+    const qreal Pi = 3.1415926;
+    qreal deg = Pi * 72 / 180;
+    // 绘制五角星五个顶点
+    QPoint points[5]={   QPoint(R,0),
+        QPoint(R*qCos(deg),     -R*qSin(deg)),
+        QPoint(R*qCos(2*deg),   -R*qSin(2*deg)),
+        QPoint(R*qCos(3*deg),   -R*qSin(3*deg)),
+        QPoint(R*qCos(4*deg),   -R*qSin(4*deg))
+    };
+
+    QFont font;
+    font.setPointSize(14);
+    painter.setFont(font);
+    QPen    penLine;
+    penLine.setWidth(2);
+    penLine.setColor(Qt::blue);
+    penLine.setStyle(Qt::SolidLine);
+    penLine.setCapStyle(Qt::FlatCap);
+    penLine.setJoinStyle(Qt::BevelJoin);
+    painter.setPen(penLine);
+
+    QBrush  brush;
+    brush.setColor(Qt::yellow);         //画刷颜色
+    brush.setStyle(Qt::SolidPattern);   //画刷填充样式
+    painter.setBrush(brush);
+
+    // 五角星路径绘制，顺序不能打乱
+    QPainterPath starPath;
+    starPath.moveTo(points[0]);
+    starPath.lineTo(points[2]);
+    starPath.lineTo(points[4]);
+    starPath.lineTo(points[1]);
+    starPath.lineTo(points[3]);
+    starPath.closeSubpath();    //闭合路径，最后一个点与第一个点相连，虽然两点是重叠的，但要手动闭合
+
+    starPath.addText(points[0],font,"1"); //显示端点编号
+    starPath.addText(points[1],font,"2");
+    starPath.addText(points[2],font,"3");
+    starPath.addText(points[3],font,"4");
+    starPath.addText(points[4],font,"5");
+
+    // 三个位置绘制不同的三个五角星
+    painter.save();             //保存坐标状态，左上角状态
+    painter.translate(100,120);
+    painter.drawPath(starPath); //画星星
+    painter.drawText(0,0,"S1");
+    painter.restore();          //恢复坐标状态
+
+    painter.translate(300,120); //平移
+    painter.scale(0.8,0.8);     //缩放
+    painter.rotate(90);         //顺时针旋转
+    painter.drawPath(starPath); //画星星
+    painter.drawText(0,0,"S2");
+
+    painter.resetTransform();   //复位所有坐标变换
+    painter.translate(500,120); //平移
+    painter.rotate(-145);       //逆时针旋转
+    painter.drawPath(starPath); //画星星
+    painter.drawText(0,0,"S3");
+
+    event->accept();
+}
+```
+- QPainterPath 记录图形之后，**不需要保证路径闭合**
+- `closeSubPath()` **总是**会连接当前位置到当前子路径的起点，无论当前位置在哪里。
+- 直接在 path 上使用 `addText()` 添加文字会使用这些点的局部坐标系如果父路径有旋转或倾斜变换，文字会继承这些变换。使用 `addText()` 实际上做了两件事
+	1. 将字体轮廓转换为路径
+	2. 将这个路径添加到 starPath 中，应用当前的变换矩阵
