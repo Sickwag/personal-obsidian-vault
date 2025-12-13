@@ -3632,3 +3632,70 @@ QWidget类有一个事件处理函数 `paintEvent()`，在组件界面需要重�
 - QPen 类：用于控制线条的颜色、宽度、线型等。
 - QBrush 类：用于设置一个区域的填充特性，包括填充颜色、填充样式、渐变特性等，还可以采用图片进行材质填充。
 - QFont 类：用于设置文字的字体、样式、大小等属性。
+### 代码编写
+#### 基本绘图
+```cpp
+void Widget::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::TextAntialiasing);
+    int w = this->width();
+    int h = this->height();
+    QRect rec(w/4, h/4, w/2, h/2);
+
+    QPen pen;
+    pen.setWidth(3);
+    pen.setColor(Qt::red);
+    pen.setStyle(Qt::SolidLine);
+    pen.setCapStyle(Qt::FlatCap);
+    pen.setJoinStyle(Qt::BevelJoin);
+
+    QBrush brush;
+    brush.setColor(Qt::yellow);
+    brush.setStyle(Qt::SolidPattern);
+
+    painter.setBrush(brush);
+    painter.setPen(pen);
+    painter.drawRect(rec);
+    event->accept();
+}
+```
+这个函数作用仅仅是显示一个红边框，黄填充，长宽为 1/2 窗口大小的居中矩形
+![[PixPin_2025-12-13_16-41-35.png]] 对于 QPen 对象来说，下面的所有调整都是**针对线条的绘制**
+```cpp
+void    setColor(QColor  &color)  	// 设置画笔颜色，即线条颜色
+void    setWidth(int  width)  		// 设置线条宽度，单位是像素
+void    setStyle(Qt::PenStyle  style)  // 设置线条样式，参数为枚举类型Qt::PenStyle    
+void    setCapStyle(Qt::PenCapStyle  style)  // 设置线条端点样式，参数为枚举类型Qt::PenCapStyle    
+void    setJoinStyle(Qt::PenJoinStyle  style)  // 设置线条连接样式，参数为枚举类型Qt::PenJoinStyle
+```
+对于 QBrush 对象同理，只针对填充样式的控制
+```cpp
+void    setColor(QColor  &color)  设置画刷颜色，实体填充时即填充颜色
+void    setStyle(Qt:: BrushStyle  style)  设置画刷填充样式，参数为枚举类型Qt::BrushStyle
+void    setTexture(QPixmap  &pixmap)  设置一个QPixmap类型的图片作为画刷的图片，画刷样式自动设置为Qt:: TexturePattern  
+void    setTextureImage(QImage &image) 设置一个QImage类型的图片作为画刷的图片，画刷样式自动设置为
+```
+#### 渐变绘图
+三种渐变类型可以参考[[QT样式表合集#Brush 模型介绍|样式表]]中的 QSS 实现渐变
+```cpp
+painter.setPen(Qt::NoPen);
+QLinearGradient linearGrad(rec.left(), rec.top(), rec.right(), rec.bottom());
+// QLinearGradient linearGrad(rec.left(), rec.top(), rec.right(), rec.top());
+linearGrad.setColorAt(0, Qt::blue);
+linearGrad.setColorAt(0.5, Qt::white);
+linearGrad.setColorAt(1, Qt::blue);
+painter.setBrush(linearGrad);
+painter.drawRect(rec);
+event.accept();
+```
+其中两种渐变形式会出现不同的图案
+![[PixPin_2025-12-13_17-10-27.png]]
+
+### 绘制基本图形
+QPainterPath 类用于记录绘图操作序列。一个 PainterPath 由许多基本的绘图操作组成，一个闭合的 PainterPath 是起点和终点连接起来的绘图路径。这类出现是为了解决**复杂图形多次绘制问题**，将复杂图形绘制方法记录其中即可复用 `drawPath()`
+
+## 坐标系统和坐标变换
+### 坐标变换
+本质上就是改变**绘图参考坐标系的基准线指向**。在[[Qt Official Tutorial#AnalogClock|官方时钟案例]]中可以看到
