@@ -3452,15 +3452,82 @@ qryModel->setQuery(sqlStr);         //重新查询数据
 - qryModel 内部会维护一个 QSqlQuery 对象，如果通过 `setQuery()` 设置了 sql 语句，那么模型会**立刻执行这条语句**并将返回结果作为 qryModel 的内部数据，内部的 QSqlQuery 对象会记录下这条 sql，**每次调用 `query()` 会调用最后一次 `setQuery()` 设置的 sql 语句**
 ## QSqlRelationalTableModel 的使用
 QSqlRelationalTableModel是QSqlTableModel的子类，专门设计用来处理数据库表之间的关联关系（特别是外键关联）
+QSqlRelation 构造函数中第二个参数是**数据库表中的实际字段名，而不是 `setHeadData()` 的 表头名称！**
+```cpp
+QSqlRelation (const QString &tableName, const QString &indexColumn, const QString &displayColumn)
+// QSqlRelation对象可以调用参数同名函数返回对应值
+// setJoinMode()用于设置SQL语句中的连接模式，也就是设置是否显示外键字段值在编码表中不存在的记录
+```
+### 下拉框生成
+对于一个已经设置外键关系的 QSqlRelationTableMode，将数据显示到 tabView 组件时，如果支持编辑单元格的值（通过设置代理实现，默认的 QSqlRelationDelegate 默认使用下拉选框模式），弹出的下拉选框会显示对应列在数据表中的所有允许值
+```sql
+-- 创建示例数据库表
+-- 学生表（主表）
+CREATE TABLE students (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    major_id INTEGER,      -- 外键，指向专业表
+    class_id INTEGER,      -- 外键，指向班级表
+    grade INTEGER
+);
+-- 专业表（关联表1）
+CREATE TABLE majors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    major_name TEXT NOT NULL,
+    faculty TEXT
+);
+-- 班级表（关联表2）
+CREATE TABLE classes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    class_name TEXT NOT NULL,
+    teacher TEXT
+);
+```
+```cpp
+model = new QSqlRelationalTableModel(this);
+model->setTable("students");
+
+// 关键步骤1：设置关联关系
+// 将major_id列关联到majors表，显示major_name字段
+model->setRelation(
+    model->fieldIndex("major_id"),  // 学生表中的外键列
+    QSqlRelation("majors", "id", "major_name")  // 关联表、关联键、显示字段
+);
+
+// 将class_id列关联到classes表，显示class_name字段
+model->setRelation(
+    model->fieldIndex("class_id"),
+    QSqlRelation("classes", "id", "class_name")
+);
+
+// 设置编辑策略
+model->setEditStrategy(QSqlTableModel::OnFieldChange);
+
+// 注意要设置代理
+QSqlRelationalDelegate *delegate = new QSqlRelationalDelegate(tableView);
+tableView->setItemDelegate(delegate);
+```
+设置好关系模式后，当用户点击"专业"进行编辑时：
+1. 自动弹出下拉选择框
+2. 显示所有可选的专业名称（计算机科学、软件工程...）
+3. 显示时：major_id=1 → 查询 majors 表找到 id=1 的记录 → 显示 "计算机科学"
+4. **编辑时：自动获取 majors 表的所有 major_name 生成下拉框**
+5. **保存时：用户选择"软件工程" → 查询 majors 表找到 major_name="软件工程"的id → 存储 id=2**
 ## 三种数据模型操纵数据库区别
 ### 基本特性
-| 特性        | QSqlTableModel      | QSqlQueryModel      | QSqlRelationalTableModel |
-| --------- | ------------------- | ------------------- | ------------------------ |
-| **继承关系**  | QAbstractTableModel | QAbstractTableModel | **QSqlTableModel 的子类**   |
-| **数据源**   | 单表                  | 任意SQL查询             | 单表 + 关联表                 |
-| **可读写**   | 读写                  | 只读                  | 读写（继承自TableModel）        |
-| **关联处理**  | 不支持                 | 不支持                 | **内置支持外键关联**             |
-| **使用复杂度** | 简单                  | 中等                  | 中等（关联配置）                 |
+| 特性        | QSqlTableModel | QSqlQueryModel  | QSqlRelationalTableModel |
+| --------- | -------------- | --------------- | ------------------------ |
+| **易用性**   | 高，自动处理数据同步     | 中，需要手动处理数据同步    | 中，需要配置关联关系               |
+| **灵活性**   | 低，只能操作单表       | 高，支持任意复杂查询      | 中，支持外键关联但限于主表结构          |
+| **性能**    | 中等，自动缓存和更新     | 取决于查询复杂度        | 中等，自动JOIN可能影响性能          |
+| **可读写**   | 支持读写           | 默认只读（需子类化实现写操作） | 支持读写（继承自TableModel）      |
+| **自动更新**  | 支持             | 不支持，需要手动刷新      | 支持                       |
+| **多表操作**  | 不支持            | 支持              | **支持外键关联映射**             |
+| **聚合查询**  | 不支持            | 支持              | 不支持                      |
+| **关联处理**  | 不支持            | 需要手动JOIN        | **内置外键关联解析**             |
+| **编辑界面**  | 普通编辑控件         | 只读或自定义          | **自动生成关联下拉框**            |
+| **数据一致性** | 自动维护           | 需要手动维护          | 自动维护外键约束                 |
+| **适用场景**  | 简单单表CRUD       | 复杂查询/报表         | 有关联的表单应用                 |
 ### 示例理解
 对于这样两个表的结构：
 ```sql
@@ -3520,10 +3587,35 @@ model->select();
 // 1  | Alice| HR         | 5000
 // 2  | Bob  | IT         | 6000
 ```
-QSqlRelationalTableModel 设置映射规则，将 employee 表中的第二列（department_id 列）与 department 表的 name 列，根据两者共有的 id 列设置映射规则，
+- 将 `employee` 表中的第2列（`department_id` 字段）设置为外键
+- 这个外键指向 `department` 表的 `id` 字段
+- 在界面上显示时，用 `department` 表的 `name` 字段值替代原始的 `id` 值
+- 数据存储时，仍然存储 `department_id`（外键值）
+实现原理是根据两者共有的 id 列设置映射规则，**并不需要两表拥有同一个名为 id 的字段**，对于不同的字段名称还可以通过这种方式提高可读性
+```cpp
+-- 员工表
+CREATE TABLE employee (
+    emp_id INTEGER PRIMARY KEY,      -- 不叫id，叫emp_id
+    emp_name TEXT,
+    dept_code INTEGER                -- 外键，不叫department_id
+);
+
+-- 部门表  
+CREATE TABLE department (
+    dept_id INTEGER PRIMARY KEY,     -- 不叫id，叫dept_id
+    dept_name TEXT,
+    location TEXT
+);
+
+model->setRelation(
+    model->fieldIndex("dept_code"),  // employee表中的外键字段
+    QSqlRelation("department", "dept_id", "dept_name")  // 关联表、关联键、显示字段
+);
+```
 
 ### 操作数据库逻辑
 QSqlTableModel 是通过模型 `setData(index, value)` 直接修改值，然后模型自动将修改的值同步到数据库中，需要手动/自动调用 `submitAll()`
 [[#QSqlQueryModel 的使用|QSqlQueryModel]] 的增删改查的方法有两种：
 - 通过构造 QSqlRecord 对象，将数据写入其中然后将其通过 api 加入到数据模型中，然后数据模型和数据包装器分别将更改同步到数据库和对应组件中。
 - 通过 [[#QSqlQuery 的使用|QSqlQuery]] 是通过直接执行 sql 语句，获取执行结果后通过 `qryModel->query()` 重新查询 `setQuery()` 预设的 sql ，最终重新显示到组件中，也可以使用包装器关联控件
+`QSqlRelationalTableModel` 的出现，是为了让 Qt 的 GUI 控件能够**感知和理解数据库中的表间关联关系**，从而在显示和操作关联数据时，**避免编写复杂的 JOIN 查询和手动处理外键转换**，如果没有这个类，那么在GUI 控件中需要展示/操作多个表中的数据时，只能通过sql语句来实现将多个表中的内容显示在一个表格控件中。有了这个类，就能够在qt中**复现不同表之间的关系，让qt控件了解数据库基本结构关联**，从而减少代码量，让数据通过GUI控件修改更方便
