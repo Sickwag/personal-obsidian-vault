@@ -3748,6 +3748,7 @@ void drawClock(QPainter &painter) {
 }
 ```
 本质上就是改变**绘图参考坐标系的基准线指向**。在[[Qt Official Tutorial#AnalogClock|官方时钟案例]]中可以看到
+### QPainterPath 绘制复杂图形
 绘制五角星代码：
 ```cpp
 void Widget::paintEvent(QPaintEvent *event)
@@ -3825,3 +3826,72 @@ void Widget::paintEvent(QPaintEvent *event)
 - 直接在 path 上使用 `addText()` 添加文字会使用这些点的局部坐标系如果父路径有旋转或倾斜变换，文字会继承这些变换。使用 `addText()` 实际上做了两件事
 	1. 将字体轮廓转换为路径
 	2. 将这个路径添加到 starPath 中，应用当前的变换矩阵
+- 解决方法是对文字内容重新使用一个 `QPainterPath` 对象初始化并通过 `addPath()` 添加到 starPath 中，直接将 a `ddText()` 用于已经包含几何图形的路径**文字会继承父路径的变换状态，导致倾斜/旋转**
+- `setBrush` 之后给复杂图形填充颜色的规则是**奇偶规则**：从图形内任意一点向外画一条射线，计算射线与路径相交的次数：如果相交次数为**奇数**，点在内部（填充），为**偶数**，点在外部（不填充），所以五角星中心五边形**不会填充**
+### 视口和窗口
+绘图设备的物理坐标系是基本的坐标系，通过 QPainter 的平移、旋转等坐标变换可以得到更容易操作的逻辑坐标系。物理坐标系也称为视口（viewport）坐标系，逻辑坐标系也称为窗口（window）坐标系
+- 视口是指绘图设备的任意一个矩形区域，它使用物理坐标系。可以只选取物理坐标系中的一个矩形区域来绘图，默认情况下，视口等于绘图设备的整个矩形区域。
+- 窗口是用逻辑坐标系定义的，窗口可以直接定义矩形区域的逻辑坐标范围。
+![[PixPin_2025-12-13_19-58-31.png|800]]
+```cpp
+painter.setViewport(50,0,200,200);
+painter.setWindow(-50,-50,100,100);
+```
+使用窗口坐标系的优点是：在绘图时只需按照窗口坐标系定义来绘图，而不用关注实际的物理坐标范围。例如在一个固定边长为 100 像素的正方形窗口内绘图，当实际绘图设备大小变化时，**绘制的图形会自动相应改变大小**。
+```cpp
+void Widget::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    int w = this->width();
+    int h = this->height();
+    int side = qMin(w, h);
+    QRect rec((w-side)/2, (h-side)/2, side, side);
+    painter.drawRect(rec);
+    // painter.setViewport(rec);
+    painter.setWindow(-100, -100, 200, 200);
+    QPen    pen;
+    pen.setWidth(1);        //线宽
+    pen.setColor(Qt::red);  //划线颜色
+    pen.setStyle(Qt::SolidLine);    //线的类型
+    pen.setCapStyle(Qt::FlatCap);   //线端点样式
+    pen.setJoinStyle(Qt::BevelJoin);//线的连接点样式
+    painter.setPen(pen);
+
+    for(int i=0; i<36; i++){
+        painter.drawEllipse(QPoint(50,0),50,50);
+        painter.rotate(10);
+    }
+}
+```
+- 默认情况下，`QPainter` 的**逻辑坐标系**与**设备坐标系**重合。画 `(0,0)` 就是左上角，`(width, height)` 是右下角。`drawEllipse(QPoint(50,0), 50, 50)` 中的 `(50,0)` 是**设备像素坐标**。
+- `setviewport()` 会导致所有后续绘图操作将被限制在这个矩形内（超出部分会被裁剪），不改变逻辑坐标，只是“框定”了绘图范围
+- `setWindow()` 它会建立一个**从逻辑坐标到设备坐标的映射关系**，逻辑坐标 `(-100, -100)` 映射到设备坐标 `(0,0)`，逻辑坐标 `(100, 100)` 映射到设备坐标 `(side, side)`（因为 window 宽高是 200x200）
+![[PixPin_2025-12-13_20-38-56.png]]
+- 方框是由于 rec 对象设置了大小，所以绘制出矩形，构造函数中 `setAutoFillBackground(true)` 自动填充白色
+- 1 图不设置窗口和视口导致绘图坐标原点在左上角，并且**可绘制图形的区域**在是整个 Widget 对象，绘制圆形 `painter.drawEllipse(QPoint(50,0),50,50);` 半径 50 像素，所以组合图形圆心在左上角，并且较小**不会随窗口缩放**
+- 2 图设置视口，设置了可绘制区域限定在 rec 矩形中，**逻辑坐标仍是设备坐标**，同样半径 50 像素较小，**不会随窗口缩放**
+- 3 图设置窗口，映射 `(-100,-100)` 替换 GUi 窗口的左上角坐标，逻辑坐标圆心在 GUi 程序中心位置，`painter.drawEllipse(QPoint(50,0),50,50);` 设置的是逻辑坐标，所以一个圆半径是 1/4 个可绘制区域长度，**是 50 逻辑坐标刻度单位而不是 50 像素**，**可以随窗口缩放**，此时可绘制范围仍然是整个 Widge，所以是椭圆不是正圆
+- 4 图绘图原点设置在视口中央，区域限定在视口中，并且半径为 50 逻辑坐标刻度单位，所以是正圆
+- `QPainter` 中，**所有的绘图函数（如 `drawLine`、`drawRect`、`drawEllipse`、`drawText` 等）使用的都是 _逻辑坐标_（logical coordinates）**，而不是物理设备坐标（像素），**默认情况下逻辑坐标等于物理坐标**
+- 绘制的图形是否根据根据窗口大小变化**一般需要通过视口实现**，因为视口大小根据 rect 参数调整，而 rect 在每次 paintEvent 重绘时都会调整大小
+
+> [!note]
+> 所以，viewport 限制绘制的位置，window 设置绘图比例尺大小
+
+## 图形/视图架构
+Qt为绘制复杂的可交互的图形提供了图形/视图（graphics/view）架构，这是一种基于图形项的模型/视图结构。使用图形/视图架构可以绘制复杂的由成千上万个基本图形组件组成的图形，并且每个图形组件是可选择、可拖放和可修改的，类似于矢量绘图软件的绘图功能
+图形/视图架构主要由**场景、视图和图形项**组成
+![[PixPin_2025-12-13_21-22-59.png|800]]
+场景是一个抽象的管理图形项的容器，可以向场景添加图形项，获取场景中的某个图形项。主要具有如功能:
+- 提供管理大量图形项的快速接口。
+- 将事件传播给每个图形项。
+- 管理每个图形项的状态，例如选择状态、焦点状态等。
+- 管理未经变换的渲染功能，主要用于打印。
+场景拥有**前景和后景**，可以设置画刷填充或者自定义绘制
+```cpp
+etBackgroundBrush()
+setForegroundBrush()
+drawBackground()
+drawForeground()
+```
