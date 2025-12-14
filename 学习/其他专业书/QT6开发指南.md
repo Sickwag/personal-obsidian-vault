@@ -4152,6 +4152,7 @@ D:\Qt\6.2.3\msvc2019_64\plugins\designer
 简单粗暴，直接将源代码添加到项目中，然后再 UI 编辑器中对对应的控件右键 prompt to 提升控件即可，这样做自定义组件类中**新增的属性不会出现在属性编辑器里**，新增的信号也不会出现在 Go to slot 对话框里
 #### 通过外部库引入自定义控件
 参考：[Qt项目中添加外部库的详细配置教程,-CSDN博客](https://blog.csdn.net/jason_thinking/article/details/137654933)
+[Qt之实现自定义控件的两种方式——插件法_qt自定义控件-CSDN博客](https://blog.csdn.net/u011832219/article/details/128531359?ops_request_misc=%7B%22request%5Fid%22%3A%22170964553816800184155013%22%2C%22scm%22%3A%2220140713.130102334..%22%7D&request_id=170964553816800184155013&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_click~default-2-128531359-null-null.142)
 qmake 项目右键项目->添加库->外部库
 ![[PixPin_2025-12-14_17-45-04.png]]
 在项目目录中添加一个 include（或者其他名称都行）文件夹，并将 dll 文件和 lib 文件（取决于动静态引入方式）和头文件添加进去即可
@@ -4159,3 +4160,36 @@ qmake 项目右键项目->添加库->外部库
 效果和[[#prompt to 引入自定义控件|提升法]]一致，但是由于只通过 `.h` 文件暴露了接口，无法新增属性和新的信号
 
 ## 创建和使用静态库
+创建项目的时候选择 C++ Library，type 选择 static library
+qmake 中设置 `TEMPLATE = lib` 即可，cmake 设置
+```cmake
+#add_library用于生成静态库或动态库，STATIC表示静态库
+add_library(MyStaticLib STATIC
+  tpendialog.cpp
+  tpendialog.h
+  tpendialog.ui
+)
+```
+**静态库不需要设置导入导出宏**
+生成的库文件与使用的编译器有关，**只会生成一个 lib文件和 `.h` 文件**，MSVC生成的库文件是 ` MyStaticLib.lib `；MinGW生成的库文件是 ` libMyStaticLib.a `。**同编译器在 Release 和 Debug 模式下编译生成的静态库文件名称是相同的，并不会为 Debug 版本库文件名自动添加一个字母“d”**，如需区分则手动更名，然后通过[[#通过外部库引入自定义控件|添加外部库]]实现引入
+
+## 创建和使用共享库
+创建项目的时候选择 C++ Library，type 选择 shared library，向导结束后**会生成 4 个文件**，`MySharedLib.pro`、`MySharedLib_global.h`、`tpendialog.h`和`tpendialog.cpp`
+编译共享库会比静态库多出一个文件
+```cpp
+// MySharedLib_global.h
+#include <QtCore/qglobal.h> 
+#if defined(MYSHAREDLIB_LIBRARY) 
+#  define MYSHAREDLIB_EXPORT Q_DECL_EXPORT      //声明为导出，共享库中有效#else 
+#  define MYSHAREDLIB_EXPORT Q_DECL_IMPORT      //声明为导入，使用库的项目中有效
+#endif
+```
+在需要导出的符号前面添加 `MYSHAREDLIB_EXPORT`，这样可以在导出符号的同时，标明这个导出符号来自哪个静态库
+共享库里的符号，包括变量、类和函数等，需要声明为**导出的公共符号**才可以被应用程序使用。共享库要导出的符号前面需要加 `Q_DECL_EXPORT` 宏。而在使用共享库的应用程序中，需要在共享库的头文件里将需要用到的符号声明为导入的，也就是在符号前加 `Q_DECL_IMPORT` 宏。
+```cpp
+#include "MySharedLib_global.h" 
+class MYSHAREDLIB_EXPORT TPenDialog {
+public:
+     TPenDialog(); 
+};
+```
