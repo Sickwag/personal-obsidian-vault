@@ -3937,3 +3937,63 @@ ARGB 32：在 RGB 32 的基础上高位 ff 表示 Alpha 值，但一般只有 0~
 int DPI= 200; 
 image.setDotsPerMeterX(DPI/0.0254);    //image是一个QImage类型的变量
 ```
+### 代码编写
+```cpp
+void MainWindow::printImage(QPainter *painter, QPrinter *printer)
+{
+    QMargins margin(20,40,20,40);
+    QRectF pageRect = printer->pageRect(QPrinter::DevicePixel);
+    int pageW = pageRect.width();
+    int pageH = pageRect.height();
+    const int lineInc = 20;
+    int curX = margin.left();
+    int curY = margin.top();
+    painter->drawText(curX, curY, this->m_filename);
+    curY += lineInc;
+    
+    painter->drawText(curX,curY,QString("Page width =%1 像素").arg(pageW));
+    painter->drawText(200,curY,QString("Image width =%1 像素").arg(m_image.width()));
+    curY += lineInc;
+    
+    painter->drawText(curX,curY,QString("Page height=%1 像素").arg(pageH));
+    painter->drawText(200,curY,QString("Image height=%1 像素").arg(m_image.height()));
+    curY += lineInc;
+    
+    int spaceH= pageH-curY;  //页面剩余的高度
+    
+    //图像未超过页面范围，居中显示实际大小的图片
+    if ((pageW > m_image.width()) && (spaceH > m_image.height())) {
+        curX =(pageW - m_image.width())/2;          //使水平居中
+        painter->drawImage(curX, curY, m_image);    //打印图像
+        return;
+    }
+    
+    //否则图像高度或宽度超过了页面剩余空间，缩放后打印
+    QImage newImg;
+    if (m_image.height() > m_image.width())
+        newImg =m_image.scaledToHeight(spaceH);   //按高度缩放
+    else
+        newImg =m_image.scaledToWidth(pageW);     //按宽度缩放
+    curX =(pageW-newImg.width())/2;             //使水平居中
+    painter->drawImage(curX,curY,newImg);
+}
+```
+打印图像，首先划定好范围，图片上方空间用来显示信息**使用 QPainter 画笔绘制文字**，lineInc 是每一行的宽度，并根据剩余空间设置图像缩放
+```cpp
+void MainWindow::on_actImg_RotateRight_triggered()
+{
+    QTransform matrix;
+    matrix.reset();
+    matrix.rotate(-90);
+    m_image.transformed(matrix);
+    QPixmap pixmap = QPixmap::fromImage(m_image);
+    ui->labPic->setPixmap(pixmap);
+    ui->tabWidget->setCurrentIndex(0);
+    showImageFeatures(false);
+    imageModified(true);
+}
+```
+图像旋转需要用到 QTransform 进行**矩阵转换**
+
+# 自定义插件和库
+## 设计和使用自定义界面组件
