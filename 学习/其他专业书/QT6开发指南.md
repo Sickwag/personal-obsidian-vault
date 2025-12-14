@@ -4066,8 +4066,6 @@ void Widget::on_horizontalSlider_valueChanged(int value)
 }
 ```
 ## 设计和使用Qt Designer Widget插件
-通过提升法使用自定义组件类。但是在 Qt Designer 中，自定义组件类中**新增的属性不会出现在属性编辑器里**，新增的信号也不会出现在 Go to slot 对话框里，使用起来不够直观和方便，解决方法是：将自定义界面组件设计为 Qt  Designer 的 Widget 插件，**将自定义组件安装到 Qt Designer 的组件面板里**，这样就可以像使用 Qt 自带的界面组件一样使用
-
 qt 安装目录下的 `\Qt\Tools\QtCreator\bin\plugins` 用 dll（linux 是 so）文件存储插件，其中包含了**高级 API**用以拓展 Qt 功能，**低级 API 用于自行编写拓展应用程序功能**，其中包含了自定义 Qt Designer Widget 插件
 ### 创建自定义 QWidget 控件
 NewProject 中的 Qt 4 设计师控件项目
@@ -4131,7 +4129,33 @@ INSTALLS    += target
 
 include(tpbattery.pri)
 ```
-### 组件类定义
+### 组件类编写和引入
+#### 编写
 大体上和[[#自定义插件和库#设计和使用自定义界面组件|电池组件]]代码一致，但需要添加 `#include <QtUiPlugin/QDesignerExportWidget>` 头文件和 `class QDESIGNER_WIDGET_EXPORT TPBattery : public QWidget {}` 宏，用于将自定义组件类从插件导出给 Qt Designer 使用，必须在类名称前使用此宏。
 在Release模式下编译，编译后会生成 `tpbatteryplugin.dll` 和 `tpbatteryplugin.lib` 两个文件。若在Debug模式下编译，会生成文件 `tpbatteryplugind.dll` 和 `tpbatteryplugind.lib`，**注意文件名后面多了一个字母“d”**
-编译后，将构建目录下的 Debug 和
+#### 引入到 Qt Designer 控件盒子
+编译后，将构建目录下的 Debug 和 Release 编译的 dll 文件复制到
+![[PixPin_2025-12-14_16-13-23.png]]
+```md
+D:\Qt\Tools\QtCreator\bin\plugins\designer
+D:\Qt\6.2.3\msvc2019_64\plugins\designer
+```
+控件盒子中**出现对应的控件**需要满足下面几个条件
+- Qt creator 的 Base qt 版本需要和编译控件 dll 的编译器**完全一样**，包括次版本号，Qt 6.7.3 和 Qt 6.8.0 虽然都是 6. x 系列，**但在 ABI 级别上不兼容**
+![[Pasted image 20251214173138.png]]
+![[PixPin_2025-12-14_17-33-30.png]]
+如果控件盒子中没有空间，可以**在 UI 编辑器界面查看 Design Widgeter** 插件安装情况
+![[Pasted image 20251214172709.png]]
+![[PixPin_2025-12-14_17-34-47.png]]
+其中显示版本不兼容，则无法直接引入到 qt creator 中，则需要通过[[#prompt to 引入自定义控件|提升法]]或[[#通过外部库引入自定义控件|外部库引入]]方法，或者**将 qt creator 版本**切换到对应编译器版本
+#### prompt to 引入自定义控件
+简单粗暴，直接将源代码添加到项目中，然后再 UI 编辑器中对对应的控件右键 prompt to 提升控件即可，这样做自定义组件类中**新增的属性不会出现在属性编辑器里**，新增的信号也不会出现在 Go to slot 对话框里
+#### 通过外部库引入自定义控件
+参考：[Qt项目中添加外部库的详细配置教程,-CSDN博客](https://blog.csdn.net/jason_thinking/article/details/137654933)
+qmake 项目右键项目->添加库->外部库
+![[PixPin_2025-12-14_17-45-04.png]]
+在项目目录中添加一个 include（或者其他名称都行）文件夹，并将 dll 文件和 lib 文件（取决于动静态引入方式）和头文件添加进去即可
+![[Pasted image 20251214174148.png]]
+效果和[[#prompt to 引入自定义控件|提升法]]一致，但是由于只通过 `.h` 文件暴露了接口，无法新增属性和新的信号
+
+## 创建和使用静态库
