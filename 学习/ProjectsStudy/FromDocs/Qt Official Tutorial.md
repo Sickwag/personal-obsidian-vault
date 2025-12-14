@@ -464,13 +464,64 @@ model->setTable("employee");
 model->setRelation(2, QSqlRelation("city", "id", "name"));
 model->setRelation(3, QSqlRelation("country", "id", "name"));
 ```
+
+> [!note]
 > The setRelation () function calls establish a relationship between two tables. The first call specifies that column 2 in table employee is a foreign key that maps with field id of table city, and that the view should present the city's name field to the user. The second call does something similar with column 3.
 > The setRelation () call specifies that column 2 in table employee is a foreign key that maps with field id of table city, and that the view should present the city's name field to the user.
 > 
 > 第一个 setRelation 表示将 employee 表的第 2 列设置一个外键，链接到 city 表中的 id 列，最终将 city 表中 id 列与 employee 表中的第 2 列相等的记录的 city 表中的 name 属性显示在 id 表中的 city 列
 
-
-
+# Qt 杂项
+## 编码规范
+参考：[Qt Coding Style/zh - Qt Wiki](https://wiki.qt.io/Qt_Coding_Style/zh#%E5%8F%98%E9%87%8F%E5%A3%B0%E6%98%8E)
+[Qt编程规范 - 知乎](https://zhuanlan.zhihu.com/p/598034134)
+https://gitcode.com/Open-source-documentation-tutorial/97151
+[C++代码规范中文版(QT) | Worklt](https://worklt.tech/posts/QT-Google-cpp-style-guide-CN/)
+[Qt开发代码编码规范 - 知乎](https://zhuanlan.zhihu.com/p/597825467)
+### 文件
+ - 头文件依赖：使用前置声明（forward declarations）尽量减少`.h` 中 `#include` 的数量.
+- 文件名全部小写，可以包含下划线，VS 工程中可能使用大驼峰
+### 函数
+- 槽函数命名格式为 `slot_<object_name>_<signalName>`，其中 `object_name` 为控件对象名（**采用变量名的命名规则**），`signalName` 为信号名（**采用普通函数的命名规则**）
+- 信号函数命名格式为 `signal_<signalName>`，其中 `signalName` 为信号名（**采用普通函数的命名规则**）
+- 内联函数: 只有当函数只有**10行**甚至更少时才会将其定义为内联函数（inline function）。
+- 函数参数顺序（Function Parameter Ordering）: 定义函数时，参数顺序为：**输入参数在前，输出参数在后**
+- 槽函数和信号函数使用 `slot_` 和 `signal_` 前缀
+- 重写虚函数时加virtual关键字：重写一个虚函数时，在衍生类中把它明确地声明为virtual。
+### 变量
+- 变量和函数命名使用**小驼峰**命名法，全局变量使用 `g_` 前缀，成员变量使用 `_` 后缀，结构体成员必须要 `_` 后缀
+- 常量命名**不含前缀且全大写**，允许下划线，包括 const 全局常量和宏定义
+- 枚举值使用**大驼峰**命名，结构体名称大写，成员**小驼峰**
+- **不应该让变量类型成为其名字的一部分**，比如 int 类型变量命名为 `i_value`，因为类型转换时，变量的名字不会随之转换。  
+- ui 控件尽可能用缩写，QPushButton 缩写为 `btn_标记名称`
+### 类和结构体
+- 类名是名词，每个单词以大写字母开头，不包含下划线
+- 类成员声明注意**先声明函数，信号函数，槽函数，然后是变量**，顺序按照 public，protect，private
+- 仅在代码中需要拷贝一个类对象的时候使用拷贝构造函数；不需要拷贝时应使用 `Q_DISABLE_COPY(MyClass)` (QT 自带的不可复制宏)。
+- 仅当只有数据时使用struct，其它一概使用class
+- 使用组合（composition）通常比使用继承更适宜，如果使用继承的话，只使用公共继承
+### 语句
+- new申请内存之后。使用try catch捕获申请内存是否成功。原因：new申请内存可能失败
+- 条件和循环语句第一个大括号不换行
+- 使用指针前必须检查指针是否为空
+- 空循环体应使用{}或continue，而不是一个简单的分号
+### 注释
+- 每个类数据成员（也叫实例变量或成员变量）应注释说明用途，如果变量可以接受NULL或-1等警戒值（sentinel values），须说明之，如：
+```cpp
+private:
+  //Keeps track of the total number of entries in the table.
+  //Used to ensure we do not goover the limit. -1 means
+  //that we don't yet know how many entries the table has.
+  int num_total_entries_;
+```
+- todo 注释写法：
+```cpp
+//TODO(kl@gmail.com):Use a"*"here for concatenation operator.
+//TODO(Zeke): change this to use relations.
+```
+### 风格之外
+- 数据库命名：采用全小写字母，单词中间加下划线的方式； 表，字段命名：采用全小写字母，单词中间加下划线的方式； C++代码中的sql：全小写字母。
+ - VS 使用Visual Assist X（VAX）插件提供快速的代码补全以及格式化的代码注释
 # 项目实例
 ## AnalogClock
 ### QPainter 设置绘制原点和缩放
