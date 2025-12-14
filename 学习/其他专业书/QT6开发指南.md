@@ -3997,3 +3997,141 @@ void MainWindow::on_actImg_RotateRight_triggered()
 
 # 自定义插件和库
 ## 设计和使用自定义界面组件
+```cpp
+void TBattery::paintEvent(QPaintEvent *event)
+{
+    QPainter painter;
+    
+    // 设置可绘制区域大小和位置，比例尺
+    QRect rect(0,0,this->width(), this->height());
+    painter.setViewport(rect);
+    painter.setWindow(0,0,120,50); // 设置视口左上角坐标为0,0，视口右下角坐标为120,50，单位是逻辑坐标轴刻度单位，不是像素
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::TextAntialiasing);
+    
+    // 绘制边框
+    QPen pen(colorBorder);
+    pen.setWidth(2);
+    pen.setStyle(Qt::SolidLine);
+    pen.setCapStyle(Qt::FlatCap);
+    pen.setJoinStyle(Qt::BevelJoin);
+    
+    QBrush brush(colorBack);
+    brush.setStyle(Qt::SolidPattern);
+    
+    painter.setPen(pen);
+    painter.setBrush(brush);
+    rect.setRect(1,1,109,48);
+    painter.drawRect(rect);
+    
+    // 绘制电极头
+    brush.setColor(colorBorder);
+    painter.setBrush(brush);
+    rect.setRect(110,15,10,20);
+    painter.drawRect(rect);
+    
+    if(m_powerLevel > m_warnLevel){
+        brush.setColor(colorPower);
+        // pen.setColor(colorPower);
+    }else{
+        brush.setColor(colorPower);
+        // pen.setColor(colorPower);        
+    }
+    painter.setBrush(brush);
+    painter.setPen(Qt::NoPen);
+    // painter.setPen(pen);
+    
+    // 显示电量文字
+    QFontMetrics textSize(this->font());
+    QString powStr = QString::asprintf("%d%%", this->m_powerLevel);
+    QRect textRect = textSize.boundingRect(powStr);
+    painter.setFont(this->font());
+    pen.setColor(colorBorder);
+    painter.setPen(pen);
+    painter.drawText(55 - textRect.width()/2, 23 + textRect.height()/2, powStr);
+    event->accept();
+}
+```
+字体渲染类 QFontMetrics，**QFont** 回答："用什么字体？"，**QFontMetrics** 回答："这个字体渲染出来多大？"，用于下面的场景
+1. **精确布局**：文本对齐、居中、换行需要知道文本的实际尺寸
+2. **设备适配**：不同设备（屏幕、打印机）上同一字体的实际尺寸不同
+3. **国际化**：不同语言字符宽度不同，需要动态计算
+注意，要想滑动条滑动时改变电池样式，则需要将滑动条 valueChange 的时候调用对应的 set 函数，set 函数中使用 `repaint()`，则会重新调用 `paintEvent()` 重绘图形
+```cpp
+void Widget::on_horizontalSlider_valueChanged(int value)
+{
+    ui->battery->setPowerLevel(value);
+    QString str = QString::asprintf("current power: %d %%", value);
+    ui->labInfo->setText(str);
+}
+```
+## 设计和使用Qt Designer Widget插件
+通过提升法使用自定义组件类。但是在 Qt Designer 中，自定义组件类中**新增的属性不会出现在属性编辑器里**，新增的信号也不会出现在 Go to slot 对话框里，使用起来不够直观和方便，解决方法是：将自定义界面组件设计为 Qt  Designer 的 Widget 插件，**将自定义组件安装到 Qt Designer 的组件面板里**，这样就可以像使用 Qt 自带的界面组件一样使用
+
+qt 安装目录下的 `\Qt\Tools\QtCreator\bin\plugins` 用 dll（linux 是 so）文件存储插件，其中包含了**高级 API**用以拓展 Qt 功能，**低级 API 用于自行编写拓展应用程序功能**，其中包含了自定义 Qt Designer Widget 插件
+### 创建自定义 QWidget 控件
+NewProject 中的 Qt 4 设计师控件项目
+![[PixPin_2025-12-14_15-27-39.png]]
+插件若要安装到 Qt Designer 的组件面板里，并且要在设计时**正常显示**（否则会显示空白），**编译插件的编译器必须和编译 Qt Creator 的编译器相同**
+![[PixPin_2025-12-14_15-21-34.png]]
+![[PixPin_2025-12-14_15-31-12.png]]
+`tpbatteryplugin.h` 和 `tpbatteryplugin.cpp`**用于实现插件有关逻辑**，决定了这个自定义 QWidget 在 UI 编辑器中图标显示，是否是容器，名称，toolTip，拖拽到画布中初始化行为
+```cpp
+#include <QDesignerCustomWidgetInterface>
+
+class TPBatteryPlugin : public QObject, public QDesignerCustomWidgetInterface
+{
+    Q_OBJECT
+    Q_INTERFACES(QDesignerCustomWidgetInterface)
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QDesignerCustomWidgetInterface")
+
+public:
+    explicit TPBatteryPlugin(QObject *parent = nullptr);
+
+    bool isContainer() const override;
+    bool isInitialized() const override;
+    QIcon icon() const override;
+    QString domXml() const override;
+    QString group() const override;
+    QString includeFile() const override;
+    QString name() const override;
+    QString toolTip() const override;
+    QString whatsThis() const override;
+    QWidget *createWidget(QWidget *parent) override;
+    void initialize(QDesignerFormEditorInterface *core) override;
+
+private:
+    bool m_initialized = false;
+};
+
+// cpp文件
+QWidget *TPBatteryPlugin::createWidget(QWidget *parent)
+{
+    return new TPBattery(parent);
+}
+// 可知这个控件从UI编辑器控件盒子中拿到画布中会调用这个函数
+```
+`tpbattery.h` 和 `tpbattery.cpp` 用于实现 TPBattery 类，即描述这个控件在 UI 编辑器是什么样的
+
+### 自定义控件 qmake 编写
+```qmake
+CONFIG      += plugin debug_and_release # 表示这个项目既可以被编译为插件（dll或者so文件），也可以是debug/release编译
+TARGET      = $$qtLibraryTarget(tpbatteryplugin)
+TEMPLATE    = lib		# 表示项目是一个库，而一般的应用程序模板类型是app。
+
+HEADERS     = tpbatteryplugin.h
+SOURCES     = tpbatteryplugin.cpp
+RESOURCES   = icons.qrc
+LIBS        += -L. 
+
+QT += designer
+
+target.path = $$[QT_INSTALL_PLUGINS]/designer
+INSTALLS    += target
+
+include(tpbattery.pri)
+```
+### 组件类定义
+大体上和[[#自定义插件和库#设计和使用自定义界面组件|电池组件]]代码一致，但需要添加 `#include <QtUiPlugin/QDesignerExportWidget>` 头文件和 `class QDESIGNER_WIDGET_EXPORT TPBattery : public QWidget {}` 宏，用于将自定义组件类从插件导出给 Qt Designer 使用，必须在类名称前使用此宏。
+在Release模式下编译，编译后会生成 `tpbatteryplugin.dll` 和 `tpbatteryplugin.lib` 两个文件。若在Debug模式下编译，会生成文件 `tpbatteryplugind.dll` 和 `tpbatteryplugind.lib`，**注意文件名后面多了一个字母“d”**
+编译后，将构建目录下的 Debug 和
