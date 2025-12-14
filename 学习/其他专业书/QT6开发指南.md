@@ -4170,22 +4170,27 @@ add_library(MyStaticLib STATIC
   tpendialog.ui
 )
 ```
-**静态库不需要设置导入导出宏**
-生成的库文件与使用的编译器有关，**只会生成一个 lib文件和 `.h` 文件**，MSVC生成的库文件是 ` MyStaticLib.lib `；MinGW生成的库文件是 ` libMyStaticLib.a `。**同编译器在 Release 和 Debug 模式下编译生成的静态库文件名称是相同的，并不会为 Debug 版本库文件名自动添加一个字母“d”**，如需区分则手动更名，然后通过[[#通过外部库引入自定义控件|添加外部库]]实现引入
+**静态库不需要设置导入导出宏**，静态库中的所有符号（如果未使用 `static` 或匿名命名空间隐藏）会被直接打包到目标文件中，导入导出是[[#动态库（共享库）]]的概念
+生成的库文件与使用的编译器有关，**只会生成一个 lib 或者 a 文件**，MSVC生成的库文件是 ` MyStaticLib.lib `；MinGW生成的库文件是 ` libMyStaticLib.a `。**同编译器在 Release 和 Debug 模式下编译生成的静态库文件名称是相同的，并不会为 Debug 版本库文件名自动添加一个字母“d”**，如需区分则手动更名，然后通过[[#通过外部库引入自定义控件|添加外部库]]实现引入
 
 ## 创建和使用共享库
+### 创建共享库
 创建项目的时候选择 C++ Library，type 选择 shared library，向导结束后**会生成 4 个文件**，`MySharedLib.pro`、`MySharedLib_global.h`、`tpendialog.h`和`tpendialog.cpp`
-编译共享库会比静态库多出一个文件
+编译共享库会比静态库多出一个 dll/so 文件
 ```cpp
 // MySharedLib_global.h
 #include <QtCore/qglobal.h> 
 #if defined(MYSHAREDLIB_LIBRARY) 
-#  define MYSHAREDLIB_EXPORT Q_DECL_EXPORT      //声明为导出，共享库中有效#else 
+#  define MYSHAREDLIB_EXPORT Q_DECL_EXPORT      //声明为导出，共享库中有效
+#else 
 #  define MYSHAREDLIB_EXPORT Q_DECL_IMPORT      //声明为导入，使用库的项目中有效
 #endif
+// 这样动态库项目可以使用这个头文件作为源代码，编译选项中添加预定义宏MYSHAREDLIB_LIBRARY自动设置，这样就会导出动态项目中的符号
+// 编译完成后给别的项目使用MYSHAREDLIB动态库，可以将同一个头文件和dll放入项目中即可
+// 使用这个动态库的项目没有定义，宏MYSHAREDLIB_LIBRARY所以会导入动态库中的符号
 ```
-在需要导出的符号前面添加 `MYSHAREDLIB_EXPORT`，这样可以在导出符号的同时，标明这个导出符号来自哪个静态库
-共享库里的符号，包括变量、类和函数等，需要声明为**导出的公共符号**才可以被应用程序使用。共享库要导出的符号前面需要加 `Q_DECL_EXPORT` 宏。而在使用共享库的应用程序中，需要在共享库的头文件里将需要用到的符号声明为导入的，也就是在符号前加 `Q_DECL_IMPORT` 宏。
+共享库里的符号，包括变量、类和函数等，需要声明为**导出的公共符号**才可以被应用程序使用。共享库要导出的符号前面需要加 `Q_DECL_EXPORT` 宏。而在使用共享库的应用程序中，需要在头文件里将需要用到的符号声明为导入的，也就是在符号前加 `Q_DECL_IMPORT` 宏。
+在需要导出的符号前面添加 `MYSHAREDLIB_EXPORT`，这样可以在导出符号的同时，标明这个导出符号来自哪个动态库
 ```cpp
 #include "MySharedLib_global.h" 
 class MYSHAREDLIB_EXPORT TPenDialog {
@@ -4193,3 +4198,176 @@ public:
      TPenDialog(); 
 };
 ```
+在 qmake 中设置预定义宏
+```qmake
+DEFINES += MYSHAREDLIB_LIBRARY
+```
+cmake 设置
+```cmake
+target_compile_definitions(MySharedLib PRIVATE MYSHAREDLIB_LIBRARY)
+```
+- MSVC 编译，编译后会生成文件 `MySharedLib.dll` 和 `MySharedLib.lib`。
+- MinGW 编译，编译后会生成文件 `MySharedLib.dll` 和 `libMySharedLib.a`。
+### 使用共享库
+**只有使用共享库（动态库）的时候才有两种方式**：隐式链接（implicit linking）调用和显式链接（explicit linking）调用
+使用静态库只有一种[[#动静态概念#静态库|静态链接]] 的方法
+#### 显式链接
+显式链接调用时只有 `.dll` 文件，没有 `.h` 文件和 `.lib` 文件，这个 `.dll` 文件可能是用其他编程语言生成的。虽然没有 `.h` 文件，但可以使用QLibrary类在应用程序里动态加载 `.dll` 文件，**在提前知道 dll 文件中已经定义好的函数原型情况下**手动在代码中说明 dll 中函数的签名
+显示链接一般只用于调用非 C/C++ 语言的，或者较为简单的 dll 文件
+
+显式链接的特点：
+- 程序员负责所有步骤
+- 不需要编译器/链接器的帮助
+- 直接使用 Windows API（LoadLibrary/GetProcAddress/QLibrary）
+```cpp
+// windows API示例
+#include <windows.h>
+#include <iostream>
+
+int main() {
+    // 1. 手动加载DLL
+    HMODULE hDll = LoadLibraryA("MyLibrary.dll");
+    if (!hDll) {
+        std::cerr << "无法加载DLL" << std::endl;
+        return 1;
+    }
+    
+    // 2. 手动获取函数地址
+    // C++函数有名称修饰（name mangling）,"add"在C++中可能被修饰为"?add@@YAHHH@Z"
+	// 需要在动态库项目中对对应的使用extern "C"防止函数名修饰
+    typedef int (*AddFunc)(int, int);
+    AddFunc add = (AddFunc)GetProcAddress(hDll, "add");
+    
+    if (!add) {
+        std::cerr << "找不到函数" << std::endl;
+        FreeLibrary(hDll);
+        return 1;
+    }
+    
+    // 3. 使用函数
+    int result = add(5, 3);
+    std::cout << "结果: " << result << std::endl;
+    
+    // 4. 手动卸载
+    FreeLibrary(hDll);
+    return 0;
+}
+
+// Qt示例代码
+QLibrary lib("MySharedLib.dll");
+if (lib.load()) {
+    typedef void (*FuncType)();
+    FuncType func = (FuncType)lib.resolve("exportedFunction");
+    if (func) {
+        func();
+    }
+    lib.unload();
+}
+```
+#### 隐式链接
+隐式链接特点：需要 `.h` ，`.lib`（所有定义和定义实现在 dll 中的地址） 和 `dll`（具体实现）
+编译器/链接器的工作：
+1. 编译时：从 `.h` 文件中看到add函数声明，但不知道实现
+2. 链接时：查看`MyLibrary.lib`，发现add函数在`MyLibrary.dll`中
+3. 生成可执行文件时：
+   • 不包含add函数的代码
+   • 包含一个"导入地址表"（IAT）
+   • IAT中包含："调用add时，跳转到 `MyLibrary.dll` 中的地址"
+4. 需要 dll 文件和 h 文件，程序在启动时自动加载 dll 文件
+```cpp
+// 隐式链接示例代码
+// MyLibrary.h
+#ifdef MYLIB_EXPORTS
+    #define MYLIB_API __declspec(dllexport)
+#else
+    #define MYLIB_API __declspec(dllimport)
+#endif
+
+MYLIB_API int add(int a, int b);
+
+// MainApp.cpp
+#include "MyLibrary.h"
+#include <iostream>
+
+int main() {
+    // 直接调用，像使用普通函数一样
+    int result = add(5, 3);
+    std::cout << "结果: " << result << std::endl;
+    return 0;
+}
+```
+### 链接方式区分总结
+| 特性       | 隐式链接             | 显式链接                     |
+| -------- | ---------------- | ------------------------ |
+| **所需文件** | .h + .lib + .dll | 只有.dll                   |
+| **加载时机** | 程序启动时自动加载        | 运行时手动加载                  |
+| **使用方式** | 直接调用函数/类         | 通过函数指针调用                 |
+| **类型检查** | 编译时检查            | 通过程序员仔细检查编码，否则在运行时才能发现错误 |
+| **代码提示** | 有（因为有头文件）        | 无                        |
+| **适用场景** | 常规C++库           | 插件、跨语言调用                 |
+## 动静态库区分
+### 动静态概念
+#### 静态库
+静态库就像买书：
+- 你去书店买一本《C++编程指南》
+- 把书带回家，放在书架上
+- 任何时候想看就直接从书架上拿
+- 这本书永远属于你
+代码层面：
+编译时：把**库的代码（二进制形式）复制到**程序(exe)中
+你的程序变大了，但运行时不需要额外的文件，想看书的时候书就在家里（已经在 exe 文件内部），不需要到图书馆（加载 dll 文件）
+将项目编译为**静态库时，只会产生 lib 文件**，扩展名：.lib (Windows), .a (Linux/Mac)，需要使用这个库时，只需要 lib 文件和 `.h` 文件（提供接口），没有 `.h` 文件也可以自己通过 dumpin 等工具查看 lib 文件中的符号表然后实现接口，**但这一方法比较困难，通常使用静态库必须使用配套的 `.h` 文件**
+只使用静态库的项目最终会被编译为一个 exe 文件，不需要打包 dll 或 lib 文件就能发行
+#### 动态库（共享库）
+动态库就像借书：
+- 你去图书馆借《C++编程指南》
+- 把书带回家看
+- 看完后还回图书馆
+- 其他人也可以借同一本书
+代码层面：
+编译时：只**在 lib 中记录**"书在图书馆的哪个书架"
+运行时：**运行时**去"图书馆"（DLL文件）里找代码执行
+动态库编译会产生 lib （导入库，提供定义）和 dll（提供实现） 文件，扩展名：.dll (Windows), .so (Linux), .dylib (Mac)
+编译过程：
+1. 编译 main. cpp → main. obj
+2. 链接 MathLib. lib（注意：这是导入库，不是静态库！）
+3. 结果：exe 文件中只记录"add 函数在 MathLib. dll 中"
+4. 最终生成：program. exe（很小，不包含 add 函数的代码），需要 MathLib. dll 一起发布
+编译为动态库的项目会被编译为多个 lib 和 dll 文件，他们需要一起打包发行，使用动态库的项目，可以只使用 dll 文件（[[#显式链接]]），也可以 `.h` + `.lib` + `.dll` （[[#隐式链接]]）
+#### 两种库区分总结
+| 特性        | 静态库                    | 动态库/共享库                               |
+| --------- | ---------------------- | ------------------------------------- |
+| **文件扩展名** | .lib (Win), .a (Linux) | .dll (Win), .so (Linux), .dylib (Mac) |
+| **编译时**   | 代码被复制到程序中              | 只记录函数位置信息                             |
+| **运行时**   | 不需要额外文件                | 需要DLL/SO文件存在                          |
+| **内存使用**  | 每个程序都有自己的副本            | 多个程序共享同一份                             |
+| **程序大小**  | 较大（包含库代码）              | 较小（不包含库代码）                            |
+| **更新维护**  | 更新需要重新编译程序             | 更新只需替换DLL文件                           |
+| **启动速度**  | 快（无需加载DLL）             | 稍慢（需要加载DLL）                           |
+| **运行速度**  | 快（代码在本地）               | 稍慢（需要跳转）                              |
+| **部署难度**  | 简单（单文件）                | 复杂（需要附带DLL）                           |
+| **共享能力**  | 不能共享                   | 可以共享                                  |
+| **适用场景**  | 小型工具、嵌入式               | 大型系统、插件架构                             |
+使用库时需要**提前知道库的动静态**并使用匹配的连接方式，否则可能会引起**编译器未定义行为，或者能通过编译但是运行时崩溃**
+### 各种文件记录的内容
+DLL 是共享库的运行时文件，包含：
+- 编译后的机器代码（函数、类的实现）
+- 导出符号表（导出的函数/类名称和虚拟内存地址）
+- 重定位信息（地址重定位表）
+- 资源数据（图标、字符串等）
+可以通过 dumpin（windows）等工具解析 dll，查看其中的函数/变量/类名称和地址位置
+
+LIB 是导入库（动态），包含：
+- 符号名称和序号（函数/类名称）
+- DLL 文件名信息
+- 桩代码（stub code）或跳转指令
+- 重定位信息
+LIB （静态）文件完全不同，包含：
+- 完整的机器代码（所有函数/类的实现）
+- 符号表（所有函数/类名称和地址）
+- 重定位信息
+静态 LIB 实际上是多个 `.obj/.o` 文件的打包
+链接时，所需代码被复制到最终的可执行文件中
+
+动静态库编译的库文件可能都是 lib 文件，但是大小差异很大
+
