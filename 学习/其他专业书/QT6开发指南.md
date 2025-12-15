@@ -4371,3 +4371,9 @@ LIB （静态）文件完全不同，包含：
 
 动静态库编译的库文件可能都是 lib 文件，但是大小差异很大
 
+# Qt Charts
+QtCharts 模块已在 Qt 6.8.0 中弃用（官方文档中说是 6.10 开始的？）用 QGraphs 类替代，并且这一章没什么意义，可以用更方便的 html 实现表格，看看即可
+# Qt Data Visuallization
+同理
+# 多线程
+## 使用 QThread 创建多线程程序
