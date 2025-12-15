@@ -120,3 +120,298 @@ if (ec != CURLE_OK) {
 ### html 源码解析
 需要用到另一个库 pugixml，这个库**只能解析 xml，如果手动将 html 中的单标签，特殊语法使其成为一个符合 xml 格式的文档并在 pugi 解析选项中使用宽松解析**，也可以用来解析 xml
 具体代码参考：[[C++ practice case#html/xml 解析#pugixml 解析]]
+
+## Qt 实现版本
+### 代码实现
+具有完成错误处理和异步调用网络请求功能，还能获取资源下载进度
+```cpp
+// .h
+#ifndef WEBPAGEFETCH_H
+#define WEBPAGEFETCH_H
+
+#include <QObject>
+#include <qnetworkaccessmanager.h>
+#include <qnetworkreply.h>
+#include <QScopedPointer>
+
+class WebPageFetch : public QObject
+{
+    Q_OBJECT
+public:
+    explicit WebPageFetch(QObject *parent = nullptr);
+    ~WebPageFetch();
+
+    void fetch(const QUrl &url, int timeout = 10000);
+    QString fetchSync(const QUrl &url, int timeout = 100000);
+
+private:
+    void setProxy(const QString& host, quint16 port, const QString& username = QString(), const QString& password = QString());
+    
+    QScopedPointer<QNetworkAccessManager> manager;
+    QNetworkReply *currentReply;
+    int m_timeout;
+
+signals:
+    void finished(const QString &html);
+    void error(const QString &errorMessage);
+    void progress(qint64 byteReceived, qint64 byteTotal);
+
+private slots:
+    void onReplyFinished();
+    void onError(QNetworkReply::NetworkError code);
+    void onDownloadProgress(qint64 bytesRecord, qint64 byteTotal);
+};
+
+#endif // WEBPAGEFETCH_H
+
+// .cpp
+#include "webpagefetch.h"
+
+#include <QEventLoop>
+#include <QNetworkProxy>
+#include <QTimer>
+#include <QSslSocket>
+
+WebPageFetch::WebPageFetch(QObject *parent)
+    : QObject{parent}, manager(new QNetworkAccessManager(this)), currentReply(nullptr), m_timeout(10000)
+{
+    // 设置支持SSL
+    if (!QSslSocket::supportsSsl()) {
+        qWarning() << "SSL is not supported on this platform.";
+    }
+}
+
+WebPageFetch::~WebPageFetch()
+{
+    if(currentReply){
+        currentReply->abort();
+        currentReply->deleteLater();
+    }
+}
+
+void WebPageFetch::fetch(const QUrl &url, int timeout)
+{
+    this->m_timeout = timeout;
+    if(currentReply){
+        currentReply->abort();
+        currentReply->deleteLater();
+    }
+    QNetworkRequest request(url);
+    request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                                       "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                       "Chrome/91.0.4472.124 Safari/537.36");
+    request.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;"
+                                   "q=0.9,image/webp,*/*;q=0.8");
+    request.setRawHeader("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8");
+
+    if(url.toString().startsWith("https")){
+        QSslConfiguration sslConfig = request.sslConfiguration();
+        sslConfig.setProtocol(QSsl::TlsV1_2);
+        request.setSslConfiguration(sslConfig);
+    }
+    currentReply = manager->get(request);
+
+    connect(currentReply, &QNetworkReply::finished, this, &WebPageFetch::onReplyFinished);
+    connect(currentReply, &QNetworkReply::errorOccurred, this, &WebPageFetch::onError);
+    connect(currentReply, &QNetworkReply::downloadProgress, this,  &WebPageFetch::onDownloadProgress);
+
+    QTimer::singleShot(timeout, [this](){
+        if(currentReply && currentReply->isRunning()){
+            currentReply->abort();
+            emit error("request timout");
+        }
+    });
+}
+
+QString WebPageFetch::fetchSync(const QUrl &url, int timeout)
+{
+    QEventLoop loop;
+    QString result;
+
+    QTimer timer;
+    timer.setSingleShot(true);
+    this->fetch(url, timeout);
+    connect(this, &WebPageFetch::finished, [&loop, &result](const QString &html){
+        result = html;
+        loop.quit();
+    });
+    connect(this, &WebPageFetch::error, [&loop](const QString &error){
+        qDebug() << "fetch error: " << error;
+        loop.quit();
+    });
+    timer.start(timeout + 1000);
+    loop.exec();
+    return result;
+}
+
+QString WebPageFetch::getHtml()
+{
+    return m_html;
+}
+
+void WebPageFetch::setProxy(const QString &host, quint16 port, const QString &username, const QString &password)
+{
+    QNetworkProxy proxy;
+    proxy.setType(QNetworkProxy::HttpProxy);
+    proxy.setHostName(host);
+    proxy.setPort(port);
+    if(!username.isEmpty() && !password.isEmpty()){
+        proxy.setUser(username);
+        proxy.setPassword(password);
+    }
+    QNetworkProxy::setApplicationProxy(proxy);
+}
+
+void WebPageFetch::onReplyFinished()
+{
+    if(!currentReply) return;
+
+    if(currentReply->error() == QNetworkReply::NoError){
+        QByteArray data = currentReply->readAll();
+        QString html = QString::fromUtf8(data);
+        m_html = html;
+        currentReply->deleteLater();
+        currentReply = nullptr;
+        emit finished(html); // 发出完成信号
+    } else {
+        currentReply->deleteLater();
+        currentReply = nullptr;
+        emit error("Network error occurred"); // 发出错误信号
+    }
+}
+
+void WebPageFetch::onError(QNetworkReply::NetworkError code)
+{
+    Q_UNUSED(code);
+    if(currentReply){
+        emit error(currentReply->errorString());
+        currentReply->deleteLater();
+        currentReply = nullptr;
+    }
+}
+
+void WebPageFetch::onDownloadProgress(qint64 bytesRecord, qint64 byteTotal)
+{
+    emit progress(bytesRecord, byteTotal);
+}
+
+
+
+```
+这一版本实现较为简单，qt 框架比较成熟
+### 代码实现中使用到的类
+QNetworkRequest - 网络请求容器，专门用来处理网络请求的类，可以用来设置网页链接网址，设置html请求头，设置必要的网络连接目标信息，常用功能：
+```cpp
+QNetworkRequest request(QUrl("https://www.example.com"));
+
+// 主要功能：
+// 1. 设置URL
+request.setUrl(QUrl("https://api.example.com/data"));
+
+// 2. 设置请求头（HTTP headers）
+request.setHeader(QNetworkRequest::UserAgentHeader, "MyApp/1.0");
+request.setRawHeader("Authorization", "Bearer token123");
+request.setRawHeader("Content-Type", "application/json");
+
+// 3. 设置属性（attributes）
+request.setAttribute(QNetworkRequest::FollowRedirectsAttribute, true);  // 跟随重定向
+request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);     // 允许HTTP/2
+
+// 4. 优先级设置
+request.setPriority(QNetworkRequest::HighPriority);
+
+// 5. SSL配置（用于HTTPS）
+QSslConfiguration sslConfig = request.sslConfiguration();
+sslConfig.setProtocol(QSsl::TlsV1_2);
+request.setSslConfiguration(sslConfig);
+```
+QNetworkAccessManager - 网络访问管理器
+用于执行网络请求，执行各种动作（比如发送已经设置好的请求头）的类，用于中央调度，设置代理，调整连接参数，错误处理
+```cpp
+QNetworkAccessManager manager;
+
+// 它负责：
+// 1. 发送各种类型的请求
+QNetworkReply* getReply = manager.get(request);      // GET请求
+QNetworkReply* postReply = manager.post(request, data);  // POST请求
+QNetworkReply* putReply = manager.put(request, data);    // PUT请求
+QNetworkReply* deleteReply = manager.deleteResource(request); // DELETE请求
+
+// 2. 管理网络配置
+manager.setProxy(proxy);      // 设置代理
+manager.setCookieJar(cookieJar);  // 设置Cookie管理
+
+// 3. 提供身份验证支持
+connect(&manager, &QNetworkAccessManager::authenticationRequired,
+        [](QNetworkReply *reply, QAuthenticator *authenticator) {
+            authenticator->setUser("username");
+            authenticator->setPassword("password");
+        });
+
+// 4. SSL错误处理
+connect(&manager, &QNetworkAccessManager::sslErrors,
+        [](QNetworkReply *reply, const QList<QSslError> &errors) {
+            // 处理SSL错误
+        });
+```
+QNetworkReply - 网络响应处理器
+用于读取从网络中获得的回复，解析信息，QNetworkAccessManager 调度器发出获取资源请求之后，资源管理由 QNetworkReply 接管
+```cpp
+QNetworkReply *reply = manager.get(request);
+
+// QNetworkReply的重要特性：
+// 1. 异步操作 - 通过信号通知状态
+connect(reply, &QNetworkReply::readyRead, []() {
+    // 有数据可读
+});
+
+connect(reply, &QNetworkReply::downloadProgress, 
+        [](qint64 bytesReceived, qint64 bytesTotal) {
+    // 下载进度更新
+});
+
+connect(reply, &QNetworkReply::finished, []() {
+    // 请求完成（无论成功失败）
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray data = reply->readAll();  // 读取所有数据
+        qDebug() << "响应状态码:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        qDebug() << "响应头:" << reply->rawHeaderList();
+    }
+});
+
+// 2. 流式读取数据（适合大文件）
+while (!reply->atEnd()) {
+    QByteArray chunk = reply->read(4096);  // 每次读取4KB
+    // 处理数据块
+}
+
+// 3. 错误处理
+if (reply->error() != QNetworkReply::NoError) {
+    qDebug() << "错误代码:" << reply->error();
+    qDebug() << "错误描述:" << reply->errorString();
+}
+
+// 4. 重要：必须手动删除（推荐使用deleteLater）
+reply->deleteLater();
+```
+```md
+开始网络请求
+    ↓
+创建 QNetworkRequest
+    ↓ 设置URL、请求头等
+    ↓
+QNetworkAccessManager.get(request)
+    ↓ 发送请求到网络
+    ↓
+返回 QNetworkReply 对象
+    ↓
+    ├── readyRead()信号 → 读取部分数据
+    ├── downloadProgress()信号 → 更新进度
+    └── finished()信号 → 请求完成
+    ↓
+在finished()槽函数中：
+    - 检查error()判断是否成功
+    - 调用readAll()或read()获取数据
+    - 调用deleteLater()清理
+```
+- `manager->get()` 函数是一个异步调用函数，刚调用 get 时**会立刻返回**，curentReply 中还没有数据，需要时间获取

@@ -44,9 +44,56 @@ cout << typeInfo.name() ;//调用类的方法得到函数返回值类型
 #### 固定次数的 while 循环
 [dsacpp 3rd \> 复杂度分类](dsacpp%203rd.md#复杂度分类) 书 Page 14
 `while( 0< n --)` 表示 `0<n` 是循环条件，每循环一次 `n--`，只能将 n 这个控制因子放中间
+### 第一个 C++程序
+```cpp
+# include "iostream"
+using namespace std;
+int main()
+{
+    cout <<"hello world"<< endl; // endl可以使用\n代替
+    return  0;
+}
+```
+### C++代码基础结构
+```cpp
+# include "iostream"
+using namespace std;
+```
+表示调用与处理文件和使用 std 命名空间
+```cpp
+int main()
+{
+    cout <<"hello world"<< endl;
+    return  0;
+}
+```
+![Untitled 230.png](../../../Files%20&%20LongText/Attachments/Untitled%20230.png)
+主函数表示程序的入口, 从 main 函数开始运行
+cout 函数表示向外输出
+endl 表示输出一个换行符
+return 表示函数返回值
+### 单工程多 main 函数
+Clion 使用工程管理代码, 每个程序使用一个工程 ,每个工程仅有一个 main 函数表示程序的入口
+这样的管理规则不便于学习, 所以关闭将源代码添加到新目标的选项, 每学习一个知识点使用一个 C 文件. 这样表示新创建的文件不属于下面 learning 工程
+![Untitled 1 42.png](../../../Files%20&%20LongText/Attachments/Untitled%201%2042.png)
 
+### 函数功能
+#### memset
+`memset` 是 C 语言标准库中的一个函数，用于将一块内存区域中的每个字节设置为特定的值。它通常用于初始化内存区域，比如将结构体或数组的所有字节设置为 0（即清零）。
+- 原型
+`memset` 的原型定义在 `<string.h>` 头文件中，如下所示：
 
-## C++环境设置
+```c
+void *memset(void *s, int c, size_t n);
+```
+- 参数
+- `s`：指向要填充的内存区域的指针。
+- `c`：要设置的值，它会被转换为 `unsigned char` 类型。
+- `n`：要填充的字节数。
+
+`memset` 函数返回一个指向 `void` 类型的指针，指向填充后的内存区域的起始地址。
+
+### C++环境设置
 程序 g++ 是将 gcc 默认语言设为 C++ 的一个特殊的版本，链接时它自动使用 C++ 标准库而不用 C 标准库。通过遵循源码的命名规范并指定对应库的名字，用 gcc 来编译链接 C++ 程序是可行的
 在命令行中编译源代码方式是先创建好 cpp 文件
 在命令行中执行
@@ -616,7 +663,7 @@ else(boolean_expression2){  //else可选
 代码块层级不明显时可以如 python 一般使用缩进而不用 `{}` 括起
 #### switch case
 switch 语句用于基于不同的条件执行不同的代码块，它通常用来**替代一系列的 if-else** 语句
-![202](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240805092821.jpg)
+![202](Pasted%20image%2020240805092821.jpg)
 - 即使 `default` 分支位于 `switch` 语句的中间位置，它仍然只会在没有其他 `case` 匹配时执行。 ^e 1 df 0 e
 - 通常建议在每个 `case` 分支的末尾使用 `break` 语句，以防止代码执行“穿透”到下一个 `case` 分支。如果缺少 `break`，程序将继续执行下一个 `case`，这叫做"贯穿"。但 `default` 分支不需要 `break`，因为它是 `switch` 语句的最后一个部分。
 - **执行时机**: 只有当没有任何 `case` 标签匹配时，`default` 分支才会执行。如果有一个 `case` 标签匹配，即使没有 `break` 语句，`default` 分支也不会执行。
@@ -646,7 +693,7 @@ int main() {
 定义同 main 函数, 函数声明方法如 [C++ prime plus \> 函数原型](C++%20prime%20plus.md#函数原型)
 **函数声明补充**
 在函数外部定义函数时一定要注意函数头要和声明完全一样，即便声明中写了，定义中不能不写函数返回类型，不然会报错
-![375](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240811001027.png)
+![375](Pasted%20image%2020240811001027.png)
 ```cpp
 // 函数声明
 int max(int num1, int num2);
@@ -697,7 +744,7 @@ bool compare(const Type& a, const Type& b);
 ```
 如果未显式指定参数类型，编译器会根据传入的参数自动推断类型。如果不符合对应元素的迭代器，则会报错
 #### lambda 实质
-- 每个 lambda 表达式会生成**唯一匿名类型**（参考[[C++ Runoob Tutoral#仿函数|仿函数]]），其 `operator()` 是 const 成员函数。
+- 每个 lambda 表达式会生成**唯一匿名类型**（参考[[#仿函数|仿函数]]），其 `operator()` 是 const 成员函数。
 - 无捕获的 lambda 可隐式转换为函数指针，但有捕获的 lambda 无法转换。（硬性要求）
 - 容器中使用 lambda 定义比较器和函数（方法）中定义二元操作函数区别
 - `lambda` 表达式本质上是一个匿名的函数对象，它会自动生成一个重载了 `()` 运算符的类。因此，`lambda` 表达式可以像普通的函数对象一样传递给需要比较器的函数或容器。
@@ -858,7 +905,7 @@ Point points[2] = {{1, 2}, {3, 4}};
 赋值 : `double balance[5] = {1000.0, 2.0, 3.4, 7.0, 50.0};` 赋值使用大括号
 拓展: 通过 `setw`,  `setfill` 格式化输出
 `setw(n)` 函数只对**紧接着的** , 后面的输出产生作用。
-![350](../../../Files%20&%20LongText/Attachments/cpp-setw-20200922-RUNOOB.svg)
+![350](cpp-setw-20200922-RUNOOB.svg)
 通过 `setfill(string)` 将 `setw` 的空位补齐, 两者都是流控制符 [C++ prime plus \> 对于流的新理解](C++%20prime%20plus.md#对于流的新理解)
 ### 多维数组
 定义 : `type name[size1][size2]...[sizeN];`
@@ -905,7 +952,69 @@ int main()
 | [指向数组的指针](https://www.runoob.com/cplusplus/cpp-pointer-to-an-array.html "C++ 中指向数组的指针")                 | 您可以通过指定不带索引的数组名称来生成一个指向数组中第一个元素的指针。 |
 | [传递数组给函数](https://www.runoob.com/cplusplus/cpp-passing-arrays-to-functions.html "C++ 中传递数组给函数作为参数") | 您可以通过指定不带索引的数组名称来给函数传递一个指向数组的指针。       |
 | [从函数返回数组](https://www.runoob.com/cplusplus/cpp-return-arrays-from-function.html "C++ 中从函数返回数组")         | C++ 允许从函数返回数组。                                               |
+## 函数
+### 函数默认参数
+类似于 [Python Basics \> 函数的传参使用方式](Python%20Basics.md#函数的传参使用方式)，关键字传参，位置传参两种方式，位置必须放关键字前面
+- C++中定义函数时有默认值的参数需要放在没有的前面
+- 如果函数声明有默认值，函数实现的时候就不能有默认参数（两者其一有）
+```cpp
+int func2(int a , int b = 10);
+int func2(int a, int b) {
+	return a + b;
+}
+//wrong syntax follow
+int func2(int a , int b = 10);
+int func2(int a = 10, int b = 10) {//即使相同也不行，是一种重定义的错误写法
+	return a + b;
+}
+```
+### 函数占位参数
 
+```cpp
+void func(int a, int = 10) ;
+void exampleFunction(int required, int placeholder1 = 0, int placeholder2 = 0) ;//z只用到了require，后面参数虽然正常定义但只是占位作用
+func(10);//调用时可以不用给有默认值的参数传入
+```
+占位参数可以没有名称，这种情况无法在函数中使用这个参数，但可以在下面的情况中使用
+1. **函数签名一致性**：在某些情况下，函数可能需要保持一致的接口，即使某些参数在当前版本的实现中并不需要。占位参数可以用来保持函数签名的一致性，确保调用者传递相同数量的参数。
+2. **未来扩展**：占位参数可以为未来可能的功能扩展提供便利。开发者可能预见到将来某个功能需要额外的参数，因此在当前版本中预留这些参数，即使它们目前不执行任何操作。
+3. **模板和泛型编程**：在模板编程或泛型编程中，占位参数可以用来表示类型或值的占位符，直到具体实例化或使用时才确定其具体值。
+4. **函数重载**：占位参数可以用于区分同名函数的不同版本，即函数重载。通过给函数提供不同数量或类型的占位参数，编译器可以根据调用时提供的实参来选择合适的函数版本。 
+
+### 函数重载
+#### 函数重载满足条件：
+* 同一个作用域下（定义在 main 外部的函数同 main 放全局作用域）
+* 函数名称相同
+* 函数参数**类型不同**（参数之前的修饰符不同）  或者 **个数不同** 或者 **顺序不同**（尤其注意顺序不同）
+[C++ Runoob Tutoral \> 重载运算符和重载函数](C++%20Runoob%20Tutoral.md#重载运算符和重载函数)
+#### 函数重载注意事项
+```cpp
+//1、引用作为重载条件
+void func(int &a){
+	cout << "func (int &a) 调用 " << endl;
+}
+void func(const int &a){
+	cout << "func (const int &a) 调用 " << endl;
+}
+//两者本质上是一个接受变量，一个接受常量变量，是类型不同的重载
+
+//2、函数重载碰到函数默认参数
+void func2(int a, int b = 10){//不输入b不报错，产生歧义
+	cout << "func2(int a, int b = 10) 调用" << endl;
+}
+void func2(int a){
+	cout << "func2(int a) 调用" << endl;
+}
+int main() {
+	int a = 10;
+	func(a); //调用无const
+	func(10);//调用有const
+	//func2(10); //碰到默认参数产生歧义，需要避免
+	func2(10,10);//这是可运行的
+	return 0;
+}
+```
+最好的解决办法是：**在写重载函数时不定义默认参数**
 ## 指针
 可以理解为：
 - 地址是储物柜编号
@@ -1671,7 +1780,7 @@ int x = myVector[0]; // 看做序列获取元素
 也可以在定义结构时定义别名，
 ## 类和对象
 - **结构：**
-![375](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240809124518.png)
+![375](Pasted%20image%2020240809124518.png)
 **类成员**
 指那些把定义和原型写在类定义内部的函数，就像类定义中的其他变量一样。
 未说明变量作用域默认为 private
@@ -1706,7 +1815,7 @@ p.print();
 // 等价于
 Person::print(&p);
 ```
-也就是说：**所有非静态成员函数的第一个参数，都必须是 `this` 指针**，也就是“当前对象的指针”。（在 python 中，这一特性通过 [[Python Basics#self 参数| self 参数]] 体现）
+也就是说：**所有非静态成员函数的第一个参数，都必须是 `this` 指针**，也就是“当前对象的指针”。（在 python 中，这一特性通过 [[Python Basics#self 参数|self 参数]] 体现）
 #### 调用运算符重载函数原理
 ```cpp
 class Vec3 {
@@ -1719,7 +1828,7 @@ public:
 Vec3 a, b;
 Vec3 c = a + b;
 ```
-由于 `+` 是双元操作符，接受两个参数，第一个参数**在没有显式指定的情况下是对象本身的引用**， `Vec3 operator+(const Vec3& other) ` 在底层会被解析为 ` Vec3 operator+(Vec3& a, const Vec3& other)`，所以结果是 a 的 operator+被调用。运算符重载函数参数设置可以参考 [[C++ Runoob Tutoral#运算符重载]]
+由于 `+` 是双元操作符，接受两个参数，第一个参数**在没有显式指定的情况下是对象本身的引用**， `Vec3 operator+(const Vec3& other) ` 在底层会被解析为 ` Vec3 operator+(Vec3& a, const Vec3& other)`，所以结果是 a 的 operator+被调用。运算符重载函数参数设置可以参考 [[#运算符重载|运算符重载]]
 ```cpp
 // 底层相当于
 Vec3 c = a.operator+(b);
@@ -1825,7 +1934,7 @@ using 是 C++11 引入的关键字，用于定义类型别名。其语法为：
 
 - `typedef` 不支持直接定义模板别名，是 C++ 和 C 语言都支持的关键字，因此在需要兼容 C 代码时，`typedef` 是更好的选择。
 - `using` 支持定义模板别名，`typedef` 无法实现，是 C++11 引入的特性，不支持 C 语言
-- 两者都有作用域，需要注意的是，再类中使用类型定义作用于**只在对应的[[#访问修饰符]]中生效**
+- 两者都有作用域，需要注意的是，再类中使用类型定义作用于**只在对应的[[#访问修饰符|访问修饰符]]中生效**
 ### 访问修饰符
 #### 修饰符类型
 1. **public（公有）**:- 成员可以被任何代码访问。
@@ -1877,7 +1986,7 @@ void externalFunction() {
 }
 
 ```
-![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240908230304.png)
+![400](Pasted%20image%2020240908230304.png)
 
 ##### 友元类
 ```cpp
@@ -2031,6 +2140,33 @@ constexpr int compile_time_add(int a, int b) {
 2. 编译时间：需要分析和展开更多代码
 3. 缓存效率：过度内联可能导致指令缓存未命中
 ### 类构造函数
+#### 基本知识
+**构造函数语法：**`类名(){}`
+
+1. 构造函数，没有返回值也不写 void
+2. 函数名称与类名相同
+3. 构造函数可以有参数，因此可以发生重载
+4. 程序在调用对象时候会自动调用构造，无须手动调用, 而且只会调用一次
+**析构函数语法：** `~类名(){}`
+
+5. 析构函数，没有返回值也不写 void
+6. 函数名称与类名相同, 在名称前加上符号  ~
+7. 析构函数不可以有参数，因此不可以发生重载
+8. 程序在对象销毁前会自动调用析构，无须手动调用, 而且只会调用一次
+
+对象的**初始化和清理**也是两个非常重要的安全问题
+- 一个对象或者变量没有初始状态，对其使用后果是未知
+- 同样的使用完一个对象或变量，没有及时清理，也会造成一定的安全问题
+c++利用了**构造函数**和**析构函数**解决上述问题，这两个函数将会被编译器自动调用，对象的初始化和清理是编译器强制，不提供构造和析构，编译器会提供**空实现。**
+
+默认情况下，c++编译器至少给一个类添加 3 个函数
+1．默认构造函数 (无参，函数体为空)
+2．默认析构函数 (无参，函数体为空)
+3．默认拷贝构造函数，对属性进行值拷贝
+构造函数调用规则如下：
+- 如果用户定义有参构造函数，1. 不再提供，但是会提供默认拷贝构造
+- 如果用户定义拷贝构造函数，1.2. 都不会提供默认函数
+
 将函数中的变量字段定义更简洁地不写在函数体中，函数中的 const 变量中必须在列表中初始化，不能被赋值
 ```cpp
 Line:: Line ( double len): length (len){
@@ -2185,7 +2321,7 @@ void show_attribute 34 (Myclass& object_name)
 定义和生命都需要修改
 ```
 #### 委托函数
-
+##### 委托函数定义
 > **委托构造函数（Delegating Constructor）** 是指一个构造函数调用另一个构造函数来完成部分或全部初始化工作的机制。使得多个构造函数之间可以共享初始化代码，避免重复代码。
 
 假设你要做一顿饭，有三种情况：
@@ -2224,6 +2360,94 @@ public:
 | 被委托构造函数执行完后再执行当前构造函数体 | 初始化顺序要清楚         |
 | 不能委托给构造函数模板           | 编译器无法推导类型        |
 | 不能同时使用成员初始化器和委托构造函数   | 初始化列表要么全委托，要么自己写 |
+### 对象的深浅拷贝
+##### 深浅拷贝注意事项
+浅拷贝：简单的赋值拷贝操作, 只将内存地址中存储的数据逐字复制到目标对象中
+![Pasted image 20240905114412.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240905114412.png)
+深拷贝：在堆区重新申请空间，进行拷贝操作
+![Pasted image 20240905113832.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240905113832.png)
+```cpp
+    // 如果不自定义析构函数，编译器自动添加空析构函数，自动添加的析构函数只能完成浅拷贝
+    //---- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+    Person(const Person &p)    {
+        cout << "拷贝构造函数!" << endl;
+        // 如果不利用深拷贝在堆区创建新内存，会导致浅拷贝带来的重复释放堆区问题
+        m_age = p.m_age;
+        m_height = p.m_height;//会导致析构函数清空内存操作报错
+    //---- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
+        // 虚线内是编译器自动添加的析构函数中的内容
+        m_height = new int(*p.m_height); // 自定义析构函数，在堆区创建新的对象，申请新的内存，防止浅拷贝
+    }
+
+    // 析构函数
+    ~Person()    {
+        cout << "析构函数!" << endl;
+        if (m_height != NULL)        {
+            delete m_height;
+            m_height = NULL; // 防止野指针出现
+        }
+    }
+public:
+    int m_age;
+    int *m_height;
+};
+void test01(){
+    Person p1(18, 180);
+    Person p2(p1);
+    cout << "p1的年龄： " << p1.m_age << " 身高： " << *p1.m_height << endl;
+    cout << "p2的年龄： " << p2.m_age << " 身高： " << *p2.m_height << endl;
+}
+int main(){
+    test01();
+    system("pause");
+    return 0;
+}
+```
+如果属性有在堆区开辟（代码中的 m_height 定义指针放在堆区）的，一定要自己提供拷贝构造函数，防止浅拷贝带来的问题
+##### 析构函数的作用
+在类的实例销毁时调用析构函数清空堆区数据（需要手动释放），并防止指针悬空
+```cpp
+~Person()    {
+    cout << "析构函数!" << endl;
+    if (m_height != NULL)        {
+        delete m_height;
+        m_height = NULL; // 防止野指针出现
+    }
+}
+```
+#### 类对象作为成员
+其他类的对象属性或函数可以作为本类的参数、成员属性。当类中成员是其他类对象时，我们称该成员为对象成员。
+```cpp
+class Phone{
+public:
+	Phone(string name)	{
+		m_PhoneName = name;
+		cout << "Phone构造" << endl;
+	}
+	~Phone()	{
+		cout << "Phone析构" << endl;
+	}
+	string m_PhoneName;
+};
+class Person{
+public:
+    string m_Name;
+    Phone m_Phone;
+    // 初始化列表可以告诉编译器调用哪一个构造函数
+    Person(string name, string pName) : m_Name(name), m_Phone(pName){
+    //第二个参数赋值等价为 m_Phone = name，是字符串类型，Phone类有字符串类重载，这是一个隐式赋值
+        cout << "Person构造" << endl;
+    }
+    ~Person(){
+        cout << "Person析构" << endl;
+    }
+    void playGame(){
+        cout << m_Name << " 使用" << m_Phone.m_PhoneName << " 牌手机! " << endl;
+    }
+};
+```
+- 创建对象时，构造的顺序是：先调用对象成员的构造函数，再调用本类构造函数
+- 销毁对象时，析构的顺序是：先调用本类析构函数，在调用对象成员的析构函数
 ### this 指针
 每一个非静态成员函数只会诞生一份函数实例，也就是说多个同类的对象会共用一块代码
 那么问题是：这一块代码是如何区分那个对象调用自己的呢？
@@ -2344,22 +2568,95 @@ int main (){
     return 0;
 }
 ```
+#### 对象内存空间占用
+每个空对象有一个独一无二的内存地址，编译器会给每个空对象分配 1 字节空间区分空对象的内存位置
+只有非静态成员变量**才属于类的对象**上，成员函数和成员变量**分开存储**
+```cpp
+class Person{
+    // 非静态成员变量占对象空间,属于类的对象上，所有的综合起来和类分配同一块空间
+    int a = 0;
+    int b = 1;
+    // 静态成员变量不占对象空间
+    static int mB;
+    // 函数也不占对象空间，所有函数共享一个函数实例
+    void func(){
+        cout << "a:" << this->a<< endl;
+    }
+    // 静态成员函数也不占对象空间
+    static void sfunc(){
+    }
+};
+int main(){
+    Person p;
+    cout << "the size = " << sizeof(p) << endl;
+    //两个非静态成员变量占用4*2 = 8字节
+    return 0;
+}
+```
+#### 指向自身指针
+当函数中有 this 指针指向本身，就不能创建空指针循环调用或访问元素
+```cpp
+class Person {
+public:
+	void ShowClassName() {
+		cout << "我是Person类!" << endl;
+	}
+
+	void ShowPerson() {
+		if (this == NULL) {//防止指针为空的跳出条件
+			return;
+		}
+		cout << mAge << endl;//使用到了类的对象，本需指向类的指针->属性，这针为空会报错
+	}
+public://不写默认private，外部访问不到
+	int mAge;
+};
+
+void test01()
+{
+	Person * p = NULL;
+	p->ShowClassName(); //空指针，可以调用成员函数
+	p->ShowPerson();  //但是如果成员函数中用到了this指针，就不可以了
+}
+```
 ### 类的静态成员
-[C++ Basics \> 静态成员](C++%20Basics.md#静态成员)
+#### “静态”一词理解
 - 静态成员是类本身的成员，不为任何类的对象所特有，在内存中只有一份 copy ，所有对象共享（对任何一个静态变量的修改会反映在所有实例上），没有创建对象时仍可以通过 `::` 域解析运算符为**定义，调用**他们。有对象之后用 `.` 访问，定义，调用
 - 其他类型的变量在创建对象时对象的属性都通过值传递传递副本给对应变量值[需要注意深浅拷贝问题带来的值传递非法访问错误](C++%20Basics.md#深浅拷贝注意事项)
 - 静态成员在类中仅仅是声明，要在类的外面定义，（**静态整型变量允许在类中定义，其他在类外**）如果不是整型变量想要静态只能在**类外**（不直接作为类的成员变量即可，比如定义在类的成员函数中作为局部变量）
 - 定义给静态成员分配内存-- [在编译之前为放在全局区的静态成员分配全局区内存](C++%20Basics.md#内存分区模型)。如果不加定义就会报错，初始化是生命存在，而定义是分配内存。[C++ Runoob Tutoral \> 变量声明](#变量声明)
 - `Static` 是一个声明修饰符，**不是数据类型修饰符**，也就是说在传参时，不能将一个参数类型标记为 `static`。用 static 声明的变量只会初始化一次，初始化后的变量只接受改变（如果没用 `const` 修饰的话），不支持重新声明，并且重新生命**不报错** ^irv 5 hd
 #### 静态变量
+   *  所有对象共享同一份数据
+   *  在编译阶段（程序启动前）分配内存
+   *  类内声明，类外初始化
+	   * 静态成员变量可以在类内声明，但通常**不建议在类内直接初始化**。从 C++17 开始，允许在类内直接初始化静态成员变量，但仅限于整型和枚举类型的静态成员变量（包括 `bool`、`char`、`int`、`long` 等基本类型及其 `const` 修饰的版本，以及枚举类型）。
+	   * 在类外初始化变量需要
+	   1.  `class_name::type varname = value` 前加 class 名指明从属关系，不然只是全局变量定义
+	   2. 在 public 中定义声明变量，否则外部无法访问，也就无法初始化和调用
 可以参考 [java编程的逻辑 \> 类的加载过程](java编程的逻辑.md#类的加载过程)中有完整解释，非静态修饰符的作用和其在类中的作用
-![350](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240811131402.png)
+![350](Pasted%20image%2020240811131402.png)
 - 用 **static** 关键字来把类成员定义为静态，这意味着无论创建多少个类的对象，静态成员都只有一个副本。可以节省内存
 - 静态成员在类的所有对象中是共享的。如果不存在其他的初始化语句，编译无法通过
 - 通过 `int Box:: objectCount = 0;` 在外部初始化变量
 #### 静态函数
 - 静态成员函数没有 this 指针，只能访问静态成员（包括静态成员变量和静态成员函数）。
 - 不像不同成员函数可以使用 this 访问类中的所有成员
+   *  所有对象共享同一个函数
+   *  静态成员函数**只能**访问静态成员变量
+	   假设静态函数中对**类的普通变量**赋值，静态变量在内存中只有一份 copy 而普通成员变量在所有类的实例中都有副本，多个类的对象同时调用静态函数，重定义冲突报错
+	   ![Pasted image 20240905203056.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240905203056.png)
+"静态"这个词在这里表示"与类或函数相关，但不随对象或函数调用的生命周期而改变"。静态成员和静态变量都具有以下共同特性：
+- **持久性**：它们在程序的整个生命周期内存在，不会因为对象的创建和销毁或函数的调用而消失。
+- **共享性**：静态成员变量可以在类的所有实例之间共享，而函数内的静态变量可以在多次函数调用之间共享。
+```cpp
+//1、通过对象
+Person p1;
+p1.func();
+
+//2、通过类名
+Person::func();//不创建对象情况下访问
+```
 ## 继承
 ### 继承方式
 三种继承方法，使用 `class 子类名: 继承方式继承父类名{类体}`
@@ -2721,7 +3018,220 @@ int main () {
 	return 0;
 }
 ```
-### 多态
+### 继承中的细节
+- 问题：从父类继承过来的成员，哪些属于子类对象中？
+父类中私有成员也是被子类继承下去了，只是由编译器给隐藏后访问不到
+- 问题：子类继承父类后，当创建子类对象，也会调用父类的构造函数，父类和子类的构造和析构顺序是谁先谁后？
+```cpp
+----------伪代码------------
+class Base 
+	cout << "Base构造函数!" << endl;{
+	cout << "Base析构函数!" << endl;
+class Son : public Base
+	cout << "Son构造函数!" << endl;
+	cout << "Son析构函数!" << endl;
+-----------结果--------------
+Base构造函数!
+Son构造函数!
+Son析构函数!
+Base析构函数!
+```
+所以是包含关系
+- 问题：当子类与父类出现同名的**成员变量、函数**，如何通过子类对象，访问到子类或父类中同名的数据呢？
+访问子类同名成员直接访问即可
+访问父类同名成员需要加作用域
+```cpp
+-------------通过类名访问---------------------
+cout << "Son  下 m_A = " << s.m_A << endl;
+cout << "Base 下 m_A = " << s.Base::m_A << endl;
+-------------通过对象访问-----------------------
+cout << "Son  下 m_A = " << Son::m_A << endl;
+cout << "Base 下 m_A = " << Son::Base::m_A << endl;
+```
+- 多继承一般不会轻易使用，多继承中如果父类中出现了同名情况，子类使用时候要加作用域
+### 不同访问修饰符继承
+```cpp
+class Base {
+protected:
+    int protectedVar;
+private:
+    int privateVar;
+public:
+    int publicVar;
+    
+    void publicMethod() { cout << "Base public method" << endl; }
+protected:
+    void protectedMethod() { cout << "Base protected method" << endl; }
+private:
+    void privateMethod() { cout << "Base private method" << endl; }
+};
+```
+
+| 基类成员        | 公有继承      | 保护继承      | 私有继承    |
+| ----------- | --------- | --------- | ------- |
+| public 成员    | public    | protected | private |
+| protected 成员 | protected | protected | private |
+| private 成员   | 不可访问      | 不可访问      | 不可访问    |
+|             |           |           |         |
+1. **private 成员永远不可访问**：无论哪种继承方式，基类的 private 成员都不能被派生类直接访问
+2. **访问权限逐级降低**：
+    - 公有继承：保持原有访问级别
+    - 保护继承：public 成员变为 protected
+    - 私有继承：所有可访问成员都变为 private
+```cpp
+// 公有继承
+class PublicDerived : public Base {
+public:
+    void test() {
+        publicVar = 10;        // ✓ 可访问
+        protectedVar = 20;     // ✓ 可访问
+        // privateVar = 30;    // ✗ 不可访问
+        
+        publicMethod();        // ✓ 可调用
+        protectedMethod();     // ✓ 可调用
+        // privateMethod();    // ✗ 不可调用
+    }
+};
+
+// 外部访问
+int main() {
+    PublicDerived obj;
+    obj.publicVar = 100;       // ✓ 可访问
+    // obj.protectedVar = 200; // ✗ 不可访问
+    // obj.privateVar = 300;   // ✗ 不可访问
+    
+    obj.publicMethod();        // ✓ 可调用
+    // obj.protectedMethod();  // ✗ 不可调用
+}
+// 保护继承
+class ProtectedDerived : protected Base {
+public:
+    void test() {
+        publicVar = 10;        // ✓ 可访问（变为protected）
+        protectedVar = 20;     // ✓ 可访问
+        // privateVar = 30;    // ✗ 不可访问
+        
+        publicMethod();        // ✓ 可调用（变为protected）
+        protectedMethod();     // ✓ 可调用
+    }
+};
+
+// 外部访问
+int main() {
+    ProtectedDerived obj;
+    // obj.publicVar = 100;    // ✗ 不可访问（已变为protected）
+    // obj.publicMethod();     // ✗ 不可访问（已变为protected）
+}
+// 私有继承
+class PrivateDerived : private Base {
+public:
+    void test() {
+        publicVar = 10;        // ✓ 可访问（变为private）
+        protectedVar = 20;     // ✓ 可访问（变为private）
+        // privateVar = 30;    // ✗ 不可访问
+        
+        publicMethod();        // ✓ 可调用（变为private）
+        protectedMethod();     // ✓ 可调用（变为private）
+    }
+};
+
+// 外部访问
+int main() {
+    PrivateDerived obj;
+    // obj.publicVar = 100;    // ✗ 不可访问（已变为private）
+    // obj.publicMethod();     // ✗ 不可访问（已变为private）
+}
+```
+
+### 菱形继承
+![clip\_image002.jpg](../../../Files%20&%20LongText/Attachments/clip_image002.jpg)
+1. 羊继承了动物的数据，驼同样继承了动物的数据，当草泥马使用数据时，就会产生二义性。
+2. 草泥马继承自动物的数据继承了两份，其实我们应该清楚，这份数据我需要一份就可以。
+```cpp
+class Animal{
+public:
+	int m_Age;
+};
+
+//继承前加virtual关键字后，变为虚继承
+//此时公共的父类Animal称为虚基类
+class Sheep : virtual public Animal {};
+class Tuo   : virtual public Animal {};
+class SheepTuo : public Sheep, public Tuo {};
+
+void test01(){
+	SheepTuo st;
+	st.Sheep::m_Age = 100;
+	st.Tuo::m_Age = 200;
+	
+	cout << "st.Sheep::m_Age = " << st.Sheep::m_Age << endl;
+	cout << "st.Tuo::m_Age = " <<  st.Tuo::m_Age << endl;
+	cout << "st.m_Age = " << st.m_Age << endl;
+}
+int main() {
+	test01();
+	system("pause");
+	return 0;
+}
+```
+### 虚继承
+虚继承出现是为了解决[菱形继承](#菱形继承)问题，
+```cpp
+class Base { /* ... */ };
+class Left : public Base { /* ... */ };
+class Right : public Base { /* ... */ };
+class Derived : public Left, public Right { /* ... */ };
+```
+`Left` 和 `Right` 都以虚继承的方式继承 `Base`。这意味着 `Derived` 类只会继承一份 `Base` 的成员，无论它通过 `Left` 还是 `Right` 继承。
+**工作原理**
+虚继承通过创建一个共享的基类子对象来工作。这个共享的子对象被称为虚基类表（vtable），它包含了指向虚基类的指针。当派生类需要访问虚继承的基类成员时，它通过这个表来访问。
+
+虚继承确保了即使在复杂的继承体系中，基类也只有一份实例。这使得虚继承特别适用于设计需要多重继承但又想避免菱形继承问题的类层次结构。
+
+## 多态
+多态分为两类
+- 静态多态: 函数重载和运算符重载属于静态多态，复用函数名
+- 动态多态: 派生类和虚函数实现运行时多态
+静态多态和动态多态区别：
+- 静态多态的函数地址早绑定 - 编译阶段确定函数地址
+- 动态多态的函数地址晚绑定 - 运行阶段确定函数地址
+和 [Python Basics \> 多态](Python%20Basics.md#多态)一样，不过需要在父类中的公共成员前加上 `vitural`
+```cpp
+#include <iostream>
+using namespace std;
+class animal{
+	public:
+	void virtual speak(){
+		cout << "there is an animal is speaking " << endl;
+	}
+};
+
+class dog:public animal{
+	public:
+	void speak(){
+		cout << "dog barking" << endl;
+	}
+};
+class cat:public animal{
+	public:
+	void speak(){
+		cout << "cat barking" << endl;
+	}
+};
+
+void animal_speak(animal & ani){
+	ani.speak();
+}
+
+int main(){
+	dog d;
+	cat c;
+	animal_speak(d);
+	animal_speak(c);
+}
+```
+- 多态父类只起到模板作用，作为子类模板的一种继承。用来实现一套模板创建多个不同对象
+### 多态的意义
 当类之间存在层次结构，并且类之间是通过继承关联时，就会用到多态。调用成员函数时，会根据调用函数的对象的类型来执行不同的函数。**给程序提供拓展性**
 形成多态需要的条件：
 1、必须存在继承关系；(原因是本质上多态是一个大类中不同的小类，小类分别实现不同的功能)
@@ -2731,7 +3241,7 @@ int main () {
 	任何一个品牌的空调（大类）都可以制冷（小类功能），但是制冷技术不一样 (多态定义)
 3、存在基类类型的指针或者引用，通过该指针或引用调用虚函数；
 4、小类中共同的特点放在大类中，这样创建类的对象时既有共通的特点，又有小类的属性
-#### 类型适应
+### 类型适应
 子类对象和父类对象可以合法赋值，虽然他们是不同类，但是有继承关系
 ```cpp
 class class_name 1;
@@ -2775,6 +3285,11 @@ virtual void disp (基类名称基类对象){//函数原型, 不加 virtual 如�
 - 只有成员函数才可以是虚拟的，因此友元不能是虚拟函数。但可以通过让友元函数调用虚拟成员函数来解决友元的虚拟问题。
 - 类中每个成员都是一个接口，在 OOP 中继承的定义是父类定义“蓝图”，子类负责实现，纯虚函数定义函数体为 0，则父类因无法实现而接口不完整，不能创建**父类**对象。
 - 虚函数定义一个接口，供**继承的子类**实现，通过[基类指针指向子类](#类型适应)的方式用派生类中定义的实现方式**覆盖虚函数**
+- 在多态中，通常父类中虚函数的实现是毫无意义的，主要都是调用子类重写的内容
+- 类中只要有一个纯虚函数就称为抽象类
+- 抽象类无法实例化对象
+- 子类必须重写父类中的纯虚函数，否则也属于抽象类
+关于使用 new [创建指针](#^b5440b)类
 ### 数据抽象
 只向外界提供关键信息，并隐藏实现细节，即只表现必要的信息而不呈现细节。
 通过不同的访问修饰符将数据放入 private 或 protect 保护不被外部访问
@@ -2813,7 +3328,7 @@ int main ( )
    return 0;
 }
 ```
-![total是内部细节](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240814123236.png)
+![total是内部细节](Pasted%20image%2020240814123236.png)
 ### 数据封装
 - 把数据和操作数据的函数绑定，方便管理
 - 常见的数据封装方式是类的 public 中定义函数原型，private 中定义变量，这样变量只能被类中其他成员访问，而不被外部调用。
@@ -3119,9 +3634,9 @@ ret-type func-name(parameter list)
 ```
 type 是函数所使用的数据类型的占位符名称。这个名称可以在函数定义中使用。
 模板是一种用抽象化的定义生成函数、类的方法，是一种生成函数的**函数**
-![Pasted image 20240928154335.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240928154335.png)
+![Pasted image 20240928154335.png](Pasted%20image%2020240928154335.png)
 将其简化为
-![Pasted image 20240928154435.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240928154435.png)
+![Pasted image 20240928154435.png](Pasted%20image%2020240928154435.png)
 #### 函数模板实例
 用 template 作为关键字表示下面的是模板
 ```cpp
@@ -3144,7 +3659,7 @@ int main(){
 - 这样一来，无论函数中输入的参数需要重载为什么类型，都可以直接调用函数模板**实例化一个函数**匹配对应的数据类型
 - 代码中的 T 表示一种需要编译器自动推断的数据类型，并不规定为 T，代码中用 T 表示 a，b，tmp 三个变量都同一类型，推断出一个类型是什么直接套用在另外两个上，不用推三个
 - 在实际编译过程中，编译器会对函数名进行修饰保证重载为针对某种数据类型的函数名是唯一的，不会被混乱地调用，每次重载时也能快速的找到对应的重载函数。最后在使用函数模板实例化的位置粘贴上经过名称修饰的函数名即可
-![Pasted image 20240928155601.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240928155601.png)
+![Pasted image 20240928155601.png](Pasted%20image%2020240928155601.png)
 编译器自动推导为 int 类型，手动在 Swap 后添加 `<数据类型>` 可以将 T 手动识别为对应类型。
 整个 `template <typename list>` 可视为函数的前缀，<>中可以填入不同的类型标签，是**生成函数的函数的参数列表**
 ```cpp
@@ -3169,7 +3684,7 @@ void Swap<int>(int &a, int &b) {
 - 函数名 Swap 后的 `<int>` 目的是告诉开发者，这个具体化模板是针对 int 类型的，也可以省略，编译器根据 template 后面<>（模板类型参数）是空的推断出这是具体化函数模板
 
 #### 编译器使用函数规则
-![Pasted image 20240928163003.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240928163003.png)
+![Pasted image 20240928163003.png](Pasted%20image%2020240928163003.png)
 1）同等匹配条件下，具体化优先于常规模板，普通函数优先于具体化和常规模板。
 2）如果希望使用函数模板，可以用空模板参数强制使用函数模板。（即 main 函数中这样调用 Swap 函数 `Swap<>(1,2)`）
 3）如果函数模板能产生更好的匹配，将优先于非模板函数。
@@ -3179,7 +3694,7 @@ void Swap<int>(int &a, int &b) {
 - 函数模板能够适应（推断）任何数据类型，但函数中的代码不能（即不能凭空推断出两个 [box类型相加](#运算符重载)得到什么结果）
 - 自动类型推到不会发生隐式转换，显示指定函数数据类型，可以发生隐式转换
 - 模板必须要能够推断出数据类型，如果函数模板中没有 T 也就是没东西可推，会报错
-![无类型可推报错](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240928160731.png)
+![无类型可推报错](Pasted%20image%2020240928160731.png)
 
 - 如果要将函数具体化模板和普通函数定义和声明分开放在文件中，那么一般**在头文件 (. h) 中声明，源文件 (. cpp) 中定义**
 - 创建函数模板的声明和定义都在头文件中，一般将模板声明和定义分开放，没有意义
@@ -3188,10 +3703,10 @@ void Swap<int>(int &a, int &b) {
 #### 定义
 仿函数（Functor）是一个类或结构体，它重载了函数调用运算符 `operator()`（必须重载，否则不能当做函数调用），使得该**类的对象可以像函数一样被调用**。
 仿函数本质上是一个“*函数对象*”，因为它既具有函数的调用行为，又可以像对象一样存储状态。
-[[C++ Runoob Tutoral#lambda 实质|lambda 和仿函数关系]]
+[[#lambda 实质|lambda 和仿函数关系]]
 
 #### 基本语法
-只需要在类或结构体中重载 `operator()` 即可（并不需要导入 [[C++ Runoob Tutoral#functional|`functional` 库]]）
+只需要在类或结构体中重载 `operator()` 即可（并不需要导入 [[#functional|`functional` 库]]）
 ```cpp
 #include <iostream>
 struct MyFunctor {
@@ -3399,7 +3914,7 @@ struct A {
 4) 如果 value 是一个带有括号的内容，那么会被当成一个表达式处理，先计算表达式的值，然后计算他**去除引用后的基本类型**
 5) 如果 value 是函数调用，则 res 的类型与函数的返回值类型相同（**函数不能返回 void**，但可以返回 void*）
 6) decltype 中是函数调用，则返回函数的返回值类型，decltype 中只填函数名称不调用，则是返回函数的类型，在 res 前加 `*` 则返回函数指针
-![[../../../Files & LongText/Attachments/Pasted image 20250917092227.png]]
+![[Pasted image 20250917092227.png]]
 ```cpp
 int func(){
 	cout<<“调用了funcO函数。\n"；
@@ -3446,7 +3961,7 @@ int main(){
 `decltype` 的本质：：
 - `decltype(cmp)` 返回的是变量 `cmp` 的**确切类型**（包括是否引用、const 等修饰符），而非无脑返回引用类型。`decltype` 是一个类型推导工具，它返回表达式的类型。`decltype` 不会返回引用，除非表达式本身是一个引用。
 - 若 `cmp` 是 `auto&&` 或函数引用，`decltype` 会保留引用属性；对于普通变量，返回其实际类型。
-在需要传入比较器类型的容器中（如：[[C++ Runoob Tutoral#priority_queue|priority_queue]]），模板参数中 compare 需要传入**自定义比较器类型**，但是比较器通过 [[#lambda 函数]]定义无法实例化，不能用一个只有类型没有实现逻辑的参数作为比较器（没有实现无法比较），这时候就需要借助 decltype 和容器的构造函数将示例传入，而 decltype 传入类型—— [[刷题路线#3170. 删除星号以后字典序最小的字符串]]
+在需要传入比较器类型的容器中（如：[[#priority_queue|priority_queue]]），模板参数中 compare 需要传入**自定义比较器类型**，但是比较器通过 [[#lambda 函数|lambda 函数]]定义无法实例化，不能用一个只有类型没有实现逻辑的参数作为比较器（没有实现无法比较），这时候就需要借助 decltype 和容器的构造函数将示例传入，而 decltype 传入类型—— [[刷题路线#3170. 删除星号以后字典序最小的字符串]]
 `decltype(auto)`：
 -  `decltype(auto) var = 初始表达式` 会自动计算表达式的类型（C++11 以后），等价于 `decltype(初始表达式) var = 初始表达式` 如果使用这个特性，则表达式会被切实执行（decltype 计算 auto，auto 计算括号外部表达式，运行时）
 ```cpp
@@ -3511,7 +4026,7 @@ string add<string&,string&>(string& t,string& u);
 ```
 配合完美转发自动推导模板返回值类型
 易错理解：
-![[../../../Files & LongText/Attachments/Pasted image 20250917093842.png]]
+![[Pasted image 20250917093842.png]]
 #### 类模板
 类模板，模板类同函数模板，模板函数同理，一个意思
 - 类模板的通用类型（T）可以放置于成员变量前，成员函数的参数位置，成员函数的代码中，成员函数的返回值位置，总之，**哪里需要通用类型，哪里就能放**
@@ -3925,7 +4440,7 @@ int main() {
 ### 互斥量，互斥锁和包装器
 互斥量是一种同步原语，用于控制对共享资源的互斥访问。互斥量**功能**被创建的主要目的是防止多个线程同时访问同一资源，从而避免数据竞争和其他并发问题。实现互斥量功能需要依赖**互斥锁（锁）**。互斥锁是互斥量的一种使用方式。
 
-- [[C++ Runoob Tutoral#^2i4zfm|关于两者关系的形象理解]]
+- [[#^2i4zfm|关于两者关系的形象理解]]
 - mutex 实例化的对象是互斥锁
 - 通过 lock_guard 或 unique_lock 等**互斥锁包装器**创建的对象是互斥量
 - 其他实现各种细节的锁类型：[C++ 标准库 mutex | 菜鸟教程 (runoob.com)](https://www.runoob.com/cplusplus/cpp-libs-mutex.html)
@@ -4034,7 +4549,7 @@ int main () {
    cout <<"count: "<< count <<  endl; // 可能打印非 0 值
 }
 ```
-![Pasted image 20240930205503.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240930205503.png)
+![Pasted image 20240930205503.png](Pasted%20image%2020240930205503.png)
 ###### 不一致
 多线程对共享数据进行操作, 由于缓存一致性问题, 可能导致其中一个线程看到的数据不是最新值。
 比如在这个程序里面，有时候判断` x==1` 是 true，有时候判断` x==1` 是 false
@@ -4059,7 +4574,7 @@ int main () {
   t 2.join ();
 }
 ```
-![Pasted image 20240930205621.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240930205621.png)
+![Pasted image 20240930205621.png](Pasted%20image%2020240930205621.png)
 ###### 死锁
 死锁（Deadlock）是多线程或多进程编程中的一个严重问题，它会导致程序无法继续执行下去，因为一组线程或进程相互等待对方释放资源，但永远无法满足条件，从而陷入僵局。
 死锁的定义是：多个线程因为抢占和持有资源而造成的一种互相等待的僵局状态。
@@ -4097,7 +4612,7 @@ int main () {
     return 0;
 }
 ```
-![Pasted image 20240930211247.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240930211247.png)
+![Pasted image 20240930211247.png](Pasted%20image%2020240930211247.png)
 - 线程 A 首先尝试锁定 mutex_1，并成功获得锁。
 - 线程 B 首先尝试锁定 mutex_2，并成功获得锁。
 - 接下来，线程 A 想要锁定 mutex_2，但它被线程 B 持有，因此线程 A 被阻塞，无法继续执行，等待 mutex_2 被释放。
@@ -4145,7 +4660,7 @@ int main () {
 }
 ```
 可以看到数据竞争的问题得到了解决
-![Pasted image 20240930211233.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240930211233.png)
+![Pasted image 20240930211233.png](Pasted%20image%2020240930211233.png)
 #### 互斥锁包装器
 ##### 包装器的核心作用
 1. **自动资源管理**：  
@@ -4441,7 +4956,485 @@ int main() {
 	cout << "main thread is executed ." << endl;
 }
 ```
+## 内存分区
+### 技术层次
+![Pasted image 20241019114301.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241019114301.png)
+### 数据类型
+#### 数据类型是什么
+数据类型是有由编译器创建的，为了更好管理内存空间的一种变量标识符。
+- 类型是对数据的一种抽象
+- 类型相同的数据具有相同的表示形式，存储格式和支持的操作
+- 程序中的所有数据**必定属于某种基本数据类型**
+- 数据类型可以理解为创建变量的模具，作用是
+	- ==分配存储该变量的相应内存大小的同时创建该内存单元的别名==
+	- 别名包含这块内存的地址信息
+![Pasted image 20241019115122.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241019115122.png)
 
+#### typedef 关键字使用
+typedef 的出现目的是 
+1. 简化 struct 关键字
+```cpp
+// 传统写法 定义一个Person类型的Person_object对象变量
+struct Person{
+    char name[64];
+    int age;
+};
+typedef struct Person person_object;
+
+// typedef写法
+typedef struct Person{
+    char name[64];
+    int age;
+} person_object;
+```
+2. 区分数据类型
+```cpp
+// typedef写法
+typedef struct Person{
+    char name[64];
+    int age;
+} person_object;
+
+// typedef区分数据类型
+void test(){
+    char *p1, p2;
+    cout << "the type of p1 :" << typeid(p1).name() << "\nthe type of p2 : " << typeid(p2).name() << endl;
+    
+    typedef char *pchar;
+    pchar p3, p4;
+    cout << "the type of p3 :" << typeid(p3).name() << "\nthe type of p4 : " << typeid(p4).name() << endl;
+}
+int main(){
+    test();
+}
+-------------------------------
+the type of p1 :Pc
+the type of p2 :c
+the type of p3 :Pc
+the type of p4 :Pc
+```
+创建指针时 `*` 只对最近的变量有作用，`char *p1 ,*p2` 是正确的写法，typedef 创建数据类型
+
+3. 提高代码可移植性
+当需要修改很多变量的类型，可以将 typedef 这个类型，未来只需要改这个 typedef 语句即可修改所有用这个自定义数据变量类型
+```cpp
+typedef long long My_data_struct;
+
+My_data_struct var1;
+My_data_struct var2;
+My_data_struct var3;
+My_data_struct var4;
+My_data_struct var5;
+```
+- 某天需要将所有 `long long` 类型改为 int ，只需要修改 1 行代码即可
+#### void 数据类型
+- `void` 没有类型，`void*` 无类型指针，可以**指向任何类型的数据**（注意不是空指针，空指针用 NULL 表示）
+- void 定义变量没有意义，因为没有类型，编译器无法决定分配多少内存
+- 在 vscode 中如果没定义函数返回值，直接 `return` 也是可以的，但是不推荐，如果显式声明函数返回值为 `void` ， `return` 后加任何内容都是不合法的
+- `void` 还能实现**万能指针**作用，
+	无论多少级、指向什么数据类型的指针占用空间都是 4 / 8 字节（32 / 64 位系统），占用空间取决于系统架构而不是编程语言。
+	不同类型指针需要赋值时要使用类型强转方法， void 指针不用强转转化为任意类型指针，反过来不行
+	```cpp
+	void test(){
+     void *p = NULL;
+     int *intp = NULL;
+     double *doublep = NULL;
+     cout << " the size of p pointer is : " << sizeof(p) << endl;
+     cout << " the size of intp pointer is : " << sizeof(intp) << endl;
+     cout << " the size of doublep pointer is : " << sizeof(doublep) << endl;
+     intp = (int *)doublep;
+     p = intp;
+     // intp = p; // 这一行会报错
+ }
+	```
+
+> - `sizeof` 是一个运算符而不是关键字、函数，作用是计算一个变量、指针所占用空间的大小
+> - 无符号数据类型和有符号类型进行运算结果会被转为无符号数据类型
+> - `sizeof` 的返回值是一个 `unsigned` 类型数据
+> - 对于自定义数据类型，指针允许使用运算符，如 `p+1` 表示跳转到下一个指针所知的位置
+
+```cpp
+struct my_struct {
+    int a;      // 0~3
+    char b;     // 4~7(内存对齐)
+    int c;      // 8~11
+    char d;     // 12~15(内存对齐)
+};// 整个结构体占用内存大小为 16
+
+int main(){
+    struct my_struct asset = {1, 'a', 2, 'b'};// 创建asset结构体
+    struct my_struct *p = &asset;       // 创建指向my_struct数据类型的指针p
+
+    // 十进制重载
+    printf("p : %d", p);
+    printf("\np+1 : %d", p+1);
+
+    // 十六进制重载
+    cout << "\np : " << p << endl;
+    cout << "p+1 : " << p+1 << endl;
+}
+```
+- 问题是如何通过地址访问 my_struct 中某一个元素（如第四个 int 类型元素）的位置？
+```cpp
+char *p2 = &asset;       // 创建指向char类型的指针
+printf("p2 : %d", p2);						        // 1
+printf("\np2+1 : %d", *(p2+12));			        // 2
+printf("\np2+1 : %d", *(int *)(p2+12));		        // 3
+printf("\np2+1 : %d", *(int *)((int *)p2+3));		// 4
+```
+- 创建一个指针变量 `p2`，它指向 `asset` 结构体的开头位置内存地址 ------- 1
+- `p2` 类型为 `char`，`char` 只能解引用 `char` 1 字节大小的内存地址位置中存储的内容，也就是说这个指针解引用得到的是一个字节大小的内存位置----------------------2
+- 而 12 位置是一个占用 4 字节的 int 类型元素，需要 4 字节空间才能解引用出正确的内容，先将 `char` 指针强转为 `int`（符合 12 地址数据的类型）然后解引用----------3
+- 也可以先将 `p2` 指向的位置强转为 `int` 类型指针（注意先计算 `(int *)p2`），`int` 类型指针 `+3` 会跳转 12 格，然后将指向跳转 12 格之后的指针转换为 `int` 类型的 4 个指针，最后解引用 4 格内容，得到最后的 `int d` 数据------------------------------------4
+### 运行过程详解
+[C++ Basics \> 内存分区模型](#内存分区模型)
+#### 运行之前
+1）预处理：宏定义展开、头文件展开、**条件编译这里并不会检查语法**
+2）编译：检查语法，将预处理后文件编译生成汇编文件
+3）汇编：将汇编文件生成目标文件（二进制文件）
+4）链接：将目标文件链接为可执行程序
+当我们编译完成生成可执行文件之后，我们通过在 linux 下 size 命令可以查看一个可执行二进制文件基本情况：（也就是下面的内容是编译过程中做的事）
+![Pasted image 20241019164847.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241019164847.png)
+1. text 代码区表示写的代码文件占用字节大小，这段通常是**只读的**、共享的，所有程序都可以调用它以节省内存大小
+2. 数据区包括 data 和 bss
+3. date 区存放所有**初始化的**变量和值（普通赋值，static，const， \ #define ）
+4. bss 存放所有**定义但未初始化的**变量和值（编译器自动初始化为 0 或 NULL）
+5. hex 是十六进制表示的总大小
+---
+#### 运行之后
+##### 栈区特性
+栈是一种先进后出的内存结构，由编译器自动分配释放，存放函数的参数值、返回值、局部变量等。在程序运行过程中实时加载和释放，因此，局部变量的生存周期为申请到释放该段栈空间。
+- 堆区（heap）
+1. 堆是一个大容器，**它的容量要远远大于栈**，但没有栈那样先进后出的顺序。用于动态内存分配。堆在内存中位于 BSS 区和栈区之间。一般由程序员分配和释放，若程序员不释放，程序结束时由操作系统回收（C 语言中使用 `malloc` 和 `free`，C++ 中使用 `new` 和 `delete`）。
+2. 堆区的内容一定要手动释放才会释放，直到程序结束
+3. 如果将指针放在堆中，在**释放指针所占用的内存**之后为了防止指针悬空，需要将指针置空
+```cpp
+void getspace(){
+	int * p = malloc(sizeof(int)* 5) // 在堆区开辟内存，超出getspace函数也不会销毁
+	for(int i = 0; i < 5 ; i++){
+		p[i] = 100 +1;
+	}
+	return p;
+}
+void test(){
+	int *p  = getspace()
+	for(int i; i < 5; i++){
+		printf("%d \n",p[i]);
+	}
+	free(p); // 对应malloc
+	p = NULL;// 防止指针空指针再被使用
+}
+```
+
+
+##### 堆区使用注意事项
+1. 同级别指针之间不用引用传递参数**会使用值传递**导致无法实质性改变指针指向内存中的内容
+```cpp
+void allocateSpace(char * pp){
+    size_t contend = 100;
+    char *temp = (char * )malloc(contend);
+    memset(temp, 0, 100);
+    strcpy(temp, "hello world");
+    pp = temp;
+}
+
+void test03(){
+    char * p = NULL;
+    allocateSpace(p);
+    printf("p : %d", p);
+}
+
+int main(){
+    test03();
+}
+```
+- 以 `void test(int a,int b){}` 为例，函数参数列表中的每个参数（实际上是对函数调用时传递的**值的引用**。这些参数在函数被**调用时被创建**，并且在函数调用期间它们的值会被初始化为传递给函数的实际参数值。
+- `char *p = NULL;` 在 `test03` 函数中被初始化。当您调用 `allocateSpace(p);` 时，`p` 的值（即指针的地址）被复制到 `allocateSpace` 函数的参数 `pp` 中。`pp` 是 `p` 的一个副本，**指向相同的内存地址**，但存储两个指针的内存地址是不同的，由于 `p` 被定义为 `NULL`，所以内存地址是空的
+- `malloc` 的返回值为 `void`，需要转换成相应类型才能初始化变量 `char *temp = (char * )malloc(contend);`
+![Pasted image 20241020133619.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241020133619.png)
+![Pasted image 20241020133918.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241020133918.png)
+2. 问题的关键在于 p 是一个空指针，如果 p 初始化不为 `NULL`，那么 pp 会指向 p 一样的内存地址，对 pp 的操作也做用于 p，因为是同一块内存
+```cpp
+void allocateSpace(char ** pp){
+    size_t contend = 100;
+    char *temp = (char * )malloc(contend);
+    memset(temp, 0, 100);
+    strcpy(temp, "hello world");
+    *pp = temp;
+}
+
+void test03(){
+    char * p = NULL;
+    allocateSpace(&p);
+    printf("p : %s", p);
+}
+
+int main(){
+    test03();
+}
+```
+- 使用二级指针 `** pp` 存储一级指针的地址（一级指针地址是栈中 `p` 的地址）
+![Pasted image 20241020140359.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241020140359.png)
+![Pasted image 20241020185931.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241020185931.png)
+
+3. 所以可以总结出，当主调用函数给一个空指针分配内存（栈区）时，利用同级指针**值传递内容**，无法造成实质性的修改（这种情况下可以看做一种值传递），需要使用更高级的指针。
+### 动静态变量
+可以参考 [java编程的逻辑 \> 类的加载过程](java编程的逻辑.md#类的加载过程)中有完整的静，非静态修饰符的作用和其在类中的作用
+static 修饰的变量如果在函数之外定义：
+- 作用范围只在当前文件中有效。
+- 程序运行前分配内存
+- 生命周期在程序运行结束后结束
+extern 修改时的是**全局变量**
+- 属于外部连接属性
+- 在函数外不使用 static 修饰的普通变量定义默认在开头加上 `extern`
+- 在 A 文件中想要使用 B 文件中定义的的 extern 变量，需要在 A 文件中声明 `extern var ;` 告诉编译器有这么一个 `extern` 变量在其他的文件中，链接时自己找
+### 常量
+#### const 常量
+##### const 全局/局部常量
+使用 `const` 修饰的**全局变量**数据是放在常量区的，[C++ Basics \> 内存分区模型](#内存分区模型)
+无法直接修改（重定义），和间接修改（使用指针修改常量内存地址）
+```cpp
+const int a = 10;
+int a = 20; // 直接修改更没有
+void test(){
+    int *p = &a; // C++会在编译之前报错，C编译不报错，但是运行时报错
+    *p = 30;
+}
+
+int main(){
+    test();
+}
+```
+常量区数据不支持修改
+
+局部变量，如放在函数内部声明的变量就是，C 语言中用 `const` 修饰的局部变量不能被直接修改，但可以间接，**因为局部变量存放在栈区**，是一种伪常量，**不能用来初始化数组**，而在 C++ 中直接间接都不允许
+```cpp
+void test(){
+    const int a = 10;
+    a = 20; // 直接修改报错
+    int *p = &a; // 间接同理
+    *p = 30;
+    char[10] name;
+    char[a] name;// 报错，因为a不是常量
+} 
+```
+在变量/对象声明语句前加 const 表示这个变量不可被修改，**且必须在声明时初始化**
+如果是指针变量则有些特殊含义：
+```cpp
+const char* str1 = "hello"; // 指向const char的指针
+char* const str2 = buffer;  // const指针，指向char
+const char* const str3 = "hello"; // const指针，指向const char
+```
+##### const 修饰成员函数
+![C++ Runoob Tutoral \> ^0ca58b](C++%20Runoob%20Tutoral.md#^0ca58b)
+**常函数：**
+* 成员函数后，函数体前加 const 后我们称为这个函数为**常函数**
+* 常函数内不可以修改成员属性，
+* 成员属性声明时加关键字 mutable 后，在常函数中依然可以修改
+* 声明对象前加 const 称该对象为常对象
+* **常对象只能调用常函数**
+* 只能在类的成员函数中使用
+
+如果在函数返回类型前加 const 则基本没有意义，因为函数返回值是右值（临时值），被变量/对象接受前都是临时副本
+如果函数返回的是**引用或者指针**，加 const 则表示基调用着不得修改返回后对象
+
+```cpp
+// 基本没有意义
+const std::string& getName() { return name; }
+const int* getData() { return &data; }
+
+std::string& ref = obj.getName(); // 错误：不能丢弃const限定
+const std::string& ref = obj.getName(); // 正确
+obj.getName() = "new name"; // 错误：不能修改const引用
+```
+##### const 修饰函数参数
+表示函数内部不能修改这个参数，但是外部调用者可以。只需要让这个函数外部的其它代码修改这个传入的参数即可
+#### 字符串常量
+- 在常量区创建多个指针初始化指向相同的常量时，**有的编译器**会为了节省内存只保留一个
+- 因为字符串常量是可以共享的，所以所有指针都指向同一个地址
+- 字符串既然是常量，放在常量区中，但 ANSI 协会定义：**修改字符串常量是未定义的**，结果由编译器决定
+```cpp
+void test(){
+    char *p1 = "hello";
+    char *p2 = "hello";
+    char *p3 = "hello";
+
+    printf("%d \n", p1);
+    printf("%d \n", p2);
+    printf("%d \n", p3);
+
+    p1[0] = 'w';
+    printf("%d \n", p1); // could be compile but cannot run in C
+}
+int main(){
+    test();
+}
+```
+
+### 函数调用模型
+#### 宏函数
+- 宏函数既不定义在栈中也不在堆中，在编译时自动替换，编译完成代码中没有宏函数
+- 替换过程在编译阶段，不占用程序运行时的内存
+- 一般用于简短并且频繁使用或者可能要修改的情况，这样可以以代码区的空间增长为代价减少了用普通函数时需要的入栈出栈时间
+#### 函数调用流程
+![图中的ret是result](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241021111844.png)
+-  普通函数调用流程
+	- `func(1,2)` 的 return 值 3 由临时变量存储，return 后 `func (1,2)` 生命周期结束：
+	- 临时变量被销毁，栈底临时变量出栈销毁
+	- func 函数中局部变量，实参出栈销毁
+	- 栈中指针指向返回地址，main 函数中跳转到第 9 行，留下 `result = 3`
+	- 函数返回地址被销毁
+	- main 函数 return
+- 宏函数调用流程
+	- main 函数中 `add(1,2)` 直接被替换为 `1+2` 三个临时变量分别存储 1,2 和 3
+	- 直接返回结果
+- 调用惯例
+	- 函数的调用方和被调用方对于函数是如何调用的必须有一个明确的约定，只有双方都遵循同样的约定，函数才能够被正确的调用，这样的约定被称为”调用惯例（Calling Convention)”. 
+	- C/C++中默认使会用 `cdecl`
+		- 出栈方（也就是销毁操作是由谁执行）：主调函数（代码中调用 `func` 函数的函数：`main`）
+		- 参数传递顺序：从右往左（先传入 `b`，`t_b` 再传入 `a`，`t_a`）
+		- 名称修饰：`_函数名`
+#### 栈的生长方式和内存存放方向
+##### 调用实例
+先有一个情景，main 调用 func 1，func 1 调用 func 2
+![Pasted image 20241021121614.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241021121614.png)
+- main ，func 1 和 func 2 中有数据定义在堆区和常量区时，三个函数都能访问
+- mian 函数定义常量在栈区，func 1 和 func 2 都可以调用
+- **func 1 定义数据在栈区时，main 函数不可以访问，func 2 可以**
+
+##### 栈的结构
+![375](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241021122129.png)
+```cpp
+void test(){
+    int a = 0;
+    int b = 0;
+    int c = 0;
+    int hex = 0x11223344;// 16进制，每个数字16位，两个数字一个字节
+
+    printf("a : %d\n", &a);
+    printf("b : %d\n", &b);
+    printf("c : %d\n", &c);
+    
+    char *p = (char *)&hex;
+    printf("hex : %x\n", &hex);// hex变量所占用空间的的第一个内存地址
+    printf("hex : %x\n", *p);
+    printf("hex : %x\n", *(p + 1));// 跳转下一个字节
+    printf("hex : %x\n", *(p + 2));// 跳转下一个字节
+    printf("hex : %x\n", *(p - 1));// 跳转上一个字节，hex右边没定义，报错
+}
+int main(){
+    test();
+}
+----------------------
+a : 6421988
+b : 6421984
+c : 6421980
+hex : 61fdd8
+hex : 44
+hex : 33
+hex : 22
+hex : 0
+```
+
+使用十六进制只是为了演示方便（2 数字一个字节），对任意数据，低位字节放在高地址中（11223344 的个位十位放在内存地址大的地方）
+
+## 指针加强
+
+### 空指针和野指针
+空指针：指向 `NULL` 指针
+野指针：有三种情况
+- 没有开辟内存，当做变量使用的指针
+```cpp
+void void_pointer(){
+    char *p = NULL;
+    char *q = (char *)0x12345;
+    // strcpy(q, "1234");
+    // strcpy(p, "1234");
+}
+```
+- malloc 后 free 导致的指针悬空情况
+没明确指向某一块内存地址，所以无法对数据进行操作
+```cpp
+void wild_pointer(){
+    // situation 1 : uninitialized pointer
+    char *p1;
+    printf("%d\n", *p1);// cant find ident
+
+    // situation 2 : malloc then free pointer
+    int *p2 = (int *)(malloc(sizeof(int)));
+    *p2 = 100;
+    printf("%d\n", *p2); // available to be see 100 
+    free(p2);
+    printf("%d\n", *p2);// available to be see ramdon numbers
+    *p2 = 1000;			// cannot be redact with not applied for
+    // p = NULL;
+    // *p2 = 1000;
+}
+int main(){
+    wild_pointer();
+}
+```
+对于野指针，`free` 之后指针指向的位置内容被清空指针没有置空，只能访问到这块内存的*随机指向*，因为程序没有申请这块内存，所以无法修改
+- 超出作用域的指针
+```cpp
+// situation 3 : exceed the scope
+int * exceed(){
+    int a = 10;
+    int *p = &a;
+    return p;
+}
+
+int main(){
+    int *pointer = exceed();
+    printf("pointer : %d \n", *pointer); // display 10 normally
+    printf("pointer : %d \n", *pointer); // pointer was destroied
+}
+```
+- 空指针可以被重复释放，野指针不能
+![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241021203159.png)
+`free` 只能释放 NULL 和有内容的内存回归初始化*随机数值*的状态
+### 指针的各种操作
+#### 指针的步长
+1) 指针的步长可以理解为[栈的结构](#栈的结构)中不同类型的指针 `+1` 之后跳转的字节长度不同
+2) 在解引用的时候使用不同类型的指针控制解引用的内存大小
+
+#### 指针的间接赋值
+指针间接赋值需要下面三步
+1）2 个变量（一个普通变量一个指针变量、或者一个实参于个形参）
+2）建立关系
+3）通过 `*` 操作指针指向的内存
+```cpp
+void indirect_pointer(int * p){
+    *p = 100;
+}
+int main(){
+    int a = 10;
+    indirect_pointer(&a);
+    printf("a : %d\n", a);
+    printf("a : %d\n", &a);
+}
+```
+#### 输入输出特性
+```cpp
+// 输入输出特新
+void stack_memo(char * string_pointer){
+    strcpy(string_pointer, "hello world");
+    printf("content in buffer : %s", string_pointer);
+}
+
+void heap_memo(){
+    char *string_pointer = (char * )malloc(sizeof(char) * 64);
+    memset(string_pointer, 0, 64);
+    strcpy(string_pointer, "hello world");
+    printf("contend in string pointer : %s\n", string_pointer);
+    
+}
+int main(){
+    char buffer[1024] = {0};
+    // in_and_out(&buffer[1024]);
+    heap_memo();
+}
+```
 # STL 资源库
 standard template library
 - C++ 标准模板库（Standard Template Library，STL）是一套功能强大的 C++ 模板类和函数的集合，它提供了一系列通用的、可复用的算法和数据结构。
@@ -5012,7 +6005,7 @@ template<
 4. `priority_queue` 的  *构造函数需要一个比较器实例*  ，而不是将参数传递给比较器的构造函数。比较器实例是通过构造函数的参数直接传递的，而不是通过某种隐式的逻辑传递给比较器的构造函数。所以升序排序传入 `greater<int>()` 是一个临时对象（实例），而 `greater<int>` 是一个类型。构造函数需要的是**一个实例**，而不是类型
 5. `priority_queue` 需要将比较器作为成员存储，因此必须知道其**完整类型**（通过模板参数），并要求实例在构造时传入。
 6. `priority_queue` 的构造函数**必须接受比较器实例**，因为其内部需要存储该实例。如果比较器实例是内置（一般通过仿函数用 `operator ()` 重载，所以有默认构造函数可获得它的实例）的（如：`greater<type>`）会**自动实例化这个类型成为它的实例**，既获得了类型有得到了实例所以不用再在 `priority_queue ` 对象的构造函数中传入实例。
-7. 当类型没有默认构造函数无法实例化，时，就需要通过 pq 构造函数接受实例化后的类型（lambda 用 auto 变量接受后就是 lambda 类型的实例化，lambda 是重载 `()` 的对象，参考 [[#lambda 实质]]）作为参数，传递给 pq 作为 compare 类型实例（实例中包含了实现）存储
+7. 当类型没有默认构造函数无法实例化，时，就需要通过 pq 构造函数接受实例化后的类型（lambda 用 auto 变量接受后就是 lambda 类型的实例化，lambda 是重载 `()` 的对象，参考 [[#lambda 实质|lambda 实质]]）作为参数，传递给 pq 作为 compare 类型实例（实例中包含了实现）存储
 ##### 成员方法和复杂度
 - `empty ()`: 检查队列是否为空。
 - `size ()`: 返回队列中的元素数量。
@@ -5343,7 +6336,7 @@ for (ContainerType::iterator it = container.begin(); it != container.end(); ++it
 
 #### functional
 ##### 定义
-`<functional>` 头文件提供了一组函数模板，允许使用函数对象作为参数传递给算法，或者作为算法的返回值。函数对象是那些重载了 `operator ()` 的对象 (是可调用的)，具有函数的使用方法，同时具有对象的性质（是人为定义[[#仿函数]] ）
+`<functional>` 头文件提供了一组函数模板，允许使用函数对象作为参数传递给算法，或者作为算法的返回值。函数对象是那些重载了 `operator ()` 的对象 (是可调用的)，具有函数的使用方法，同时具有对象的性质（是人为定义[[#仿函数|仿函数]] ）
 **函数对象是一种特殊的类**，它重载了 `operator ()` 来允许对象像函数一样被调用（工作原理）
 
 ##### 成员函数
@@ -5370,7 +6363,7 @@ for (ContainerType::iterator it = container.begin(); it != container.end(); ++it
 ##### 绑定函数
 `std::function<bool(const FileInfo&, const FileInfo&)> myFunc;` 定一个包装函数，返回值为 bool，接受两个类型为 `FileInfo`
 这是 C++标准中对 `std::function` 的模板参数**特殊处理**，允许直接书写函数签名。这种设计让代码更接近自然语法，特别是在处理回调时更为直观。
-可以声明一个这样的对象，然后用 [[#lambda 函数]]封装函数结构定义这个对象
+可以声明一个这样的对象，然后用 [[#lambda 函数|lambda 函数]]封装函数结构定义这个对象
 ```cpp
 auto lambdaWithCapture = [threshold](const FileInfo& a) -> bool {
     return a.size > threshold;
@@ -6005,3 +6998,160 @@ std::function<void()> func = [] { std::cout << "Hello\n"; };
 | 回调函数 / 钩子传参  | 函数指针           | 简洁直观       |
 | 状态携带、灵活封装    | lambda / 仿函数   | 可维护性强      |
 | 多态可调用对象封装    | std:: function | 提高通用性，牺牲性能 |
+
+# 常见问题及其技术细节
+##  `vector<bool>` 的特殊性
+他不是普通的容器。它被设计为**压缩存储**，每个bool值只用1位（bit）而不是1个字节（byte）来存储。
+### 非标准容器
+标准容器再使用 `at()` 或者 `[]` 时，会返回对应的元素引用，而 `vector<bool>` 不会
+```cpp
+std::vector<bool>::reference  // 返回代理对象，不是bool&
+std::vector<bool>::const_reference  // 返回代理对象，不是const bool&
+
+// 这会导致一些问题：
+std::vector<bool> vb(10);
+bool& ref = vb[0];  // 错误！不能将代理对象绑定到bool&
+auto& ref = vb[0];  // 可以，但ref是代理类型
+```
+对于标准容器：
+```cpp
+template<typename T>
+struct vector {
+    using value_type = T;
+    using reference = value_type&;           // 关键：返回真实引用
+    using const_reference = const value_type&;
+};
+```
+对于 `vector<bool>` 特化：
+```cpp
+template<>
+struct vector<bool> {
+    using value_type = bool;
+    // 注意这里！！！
+    using reference = _Bit_reference;        // 代理类，不是bool&
+    using const_reference = bool;            // 甚至不是const bool&
+    
+    class _Bit_reference {  // 简化的代理类
+    public:
+        operator bool() const;              // 转换到bool
+        _Bit_reference& operator=(bool);    // 从bool赋值
+        // ... 但没有返回bool&的方法！
+    };
+};
+```
+
+**这意味着 `vector<bool>::reference` 根本无法传递给期望 `bool&` 的模板代码。** 
+### 位压缩导致无法引用
+普通 `vector<T>` 的内存模型是线性的、连续的：
+```
+[byte0][byte1][byte2]...  // 每个元素占用sizeof(T)字节
+```
+`vector<bool>`的内存模型是位压缩的：
+```
+[byte0: b7 b6 b5 b4 b3 b2 b1 b0][byte1: b15 b14 ... b8]...
+```
+**这导致了致命问题：C++没有"位引用"的概念。**
+```cpp
+template<typename Container>
+void foo(Container& c) {
+    typename Container::reference ref = c[0];
+    // 对于vector<int>: ref是int&，绑定到具体内存位置
+    // 对于vector<bool>: ref是代理对象，但代理对象本身存在哪？
+    //                  它可能在栈上临时创建，然后持有一个"指针+位偏移"
+    // 这就产生了生命周期问题！
+}
+
+// 考虑这个经典陷阱
+std::vector<bool> get_flags() {
+    std::vector<bool> flags{true, false, true};
+    return flags;
+}
+
+// get_flags()[0] 展开为：
+_Bit_reference temp = vb[0];  // 临时代理对象！在栈上创建
+// temp内部包含：(byte_ptr = &vb.data[0], bit_offset = 0)
+auto&& ref = temp;  // ref绑定到这个临时代理对象
+// 1. 调用get_flags()，返回临时vector<bool>对象（假设RVO优化）
+// 2. 在这个临时对象上调用operator[]
+// 3. operator[]返回一个临时_Bit_reference代理对象
+// 4. 这个代理对象持有指向临时vector内部数据的指针
+// 5. 整个表达式结束后，临时vector被销毁
+// 6. 但ref仍然绑定着那个已被销毁的临时代理对象
+// 7. 代理对象内部持有的指针现在指向已释放的内存
+auto&& ref = get_flags()[0];  // 灾难！代理对象引用已销毁容器的内部状态
+// ref现在持有一个指向已销毁内存的指针+位偏移
+```
+
+### 线程安全
+```cpp
+// 线程不安全的典型例子
+// 线程A
+void thread_a() {
+    for (size_t i = 0; i < 50; ++i) {
+        shared[i] = true;  // 修改第0-49位
+    }
+}
+
+// 线程B  
+void thread_b() {
+    for (size_t i = 50; i < 100; ++i) {
+        shared[i] = false;  // 修改第50-99位
+    }
+}
+```
+两个线程同时修改不同元素，但可能操作到同一个字节！操作同一个字节在C++编译器中是未定义行为
+### 与算法库不兼容
+```cpp
+std::vector<bool> vb = {true, false, true};
+auto it = std::find(vb.begin(), vb.end(), false);  // 可能工作，但有问题
+
+// 以下可能编译失败或有奇怪行为
+auto ptr = &vb[0];  // 错误！不能取地址
+std::sort(vb.begin(), vb.end());  // 可能失败
+```
+因为 `vb[0]` 返回的是代理对象，**不是左值 bool**，调用&操作符，它也是在**代理对象上调用**，返回代理对象的地址
+底层原因：bool 占用 1 位，无法有独立的地址，**同一个字节内的不同位共享相同地址**（只是位偏移不同）
+考虑 `std::sort` 的实现：
+```cpp
+// sort通常需要交换元素
+template<typename RandomIt>
+void sort(RandomIt first, RandomIt last) {
+    // 内部会做类似的事情：
+    using value_type = typename iterator_traits<RandomIt>::value_type;
+    value_type temp = std::move(*first);  // 对于vector<bool>::iterator，这是代理对象！
+    *first = std::move(*last);            // 移动语义在位级别毫无意义
+}
+```
+更糟糕的是，有些算法依赖`value_type`可移动构造/赋值，但代理对象可能没有这些操作。
+### 迭代器失效情景
+```cpp
+std::vector<bool> vb{true, false};
+auto it = vb.begin();
+// it的类型是vector<bool>::iterator
+// 但*it返回的是reference，即_Bit_reference
+vb.push_back(true);  // 所有迭代器可能失效，但行为未定义
+*it = false;  // 为一个位代理对象（数据存储在1bit里）赋值false是未定义行为！
+```
+这就导致了如果需要为容器设置模板时，需要单独处理 `vector<bool>` 的特殊逻辑，否则导致未定义行为会让程序崩溃
+```cpp
+template<typename Container>
+void process(Container& c) {
+    auto it = c.begin();
+    using RefType = decltype(*it);  // 对于vector<bool>，这不是bool&
+    // 你的模板可能假设这是value_type&
+}
+
+// 例如，标准库的某些概念检查：
+static_assert(std::is_same_v<
+    decltype(*std::declval<std::vector<bool>>().begin()), 
+    bool&
+>);  // 失败！
+```
+### 难以发现的 auto 陷阱
+```cpp
+std::vector<bool> vb{true, false, true};
+auto b = vb[0];  // b是std::vector<bool>::reference，不是bool
+// b可能意外失效，例如：
+vb.push_back(true);  // 可能导致b变成悬空引用
+if (b) { /* 未定义行为 */ }  // b可能已经无效
+```

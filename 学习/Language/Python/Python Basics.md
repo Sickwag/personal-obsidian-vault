@@ -151,7 +151,7 @@ name_2 = "Troye"
 print("the result is %s" %(name_1==name_2))
 ```
 **条件语句并列**
-python 中直接使用关键字链接 bool 判断式：逻辑与（AND）、逻辑或（OR）和逻辑非（NOT）分别使用 `and`、`or` 和 `not` 关键字。这与 [C++ Runoob Tutoral \> 条件并列](../C%20C++/C++%20Runoob%20Tutoral.md#条件并列)使用逻辑符号不同 ^80d212
+python 中直接使用关键字链接 bool 判断式：逻辑与（AND）、逻辑或（OR）和逻辑非（NOT）分别使用 `and`、`or` 和 `not` 关键字。这与 [C++ Runoob Tutoral \> 条件并列](C++%20Runoob%20Tutoral.md#条件并列)使用逻辑符号不同 ^80d212
 #### IF判断语句
 ```Python
 if 要判断的条件:    #冒号不要忘记
@@ -1756,7 +1756,7 @@ Python 使用模块的全路径来解析导入的模块。这意味着，如果�
 	- 类定义
 	- 导入语句
 	- 执行语句（如打印输出）
-- 导入模块时，模块文件中的顶层代码会被执行，但**函数或类内部的代码（体）** 只有在它们被调用时才会执行。这与[C++ prime plus \> 2. 编译器预处理](../C%20C++/C++%20prime%20plus.md#2.%20编译器预处理)一致![Untitled 79 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2079%209.png)![Untitled 80 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2080%209.png)
+- 导入模块时，模块文件中的顶层代码会被执行，但**函数或类内部的代码（体）** 只有在它们被调用时才会执行。这与[C++ prime plus \> 2. 编译器预处理](C++%20prime%20plus.md#2.%20编译器预处理)一致![Untitled 79 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2079%209.png)![Untitled 80 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2080%209.png)
 其中sleep功能(不是函数)在文件中被定义好了是什么作用
 sleep功能有一个浮点类型参数,有些编译器中会显示功能的说明,vscode暂时不会![Untitled 81 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2081%209.png)
 
@@ -2605,7 +2605,7 @@ for index, student in enumerate(students):
 ![Untitled 120 8.png](../../../Files%20&%20LongText/Attachments/Untitled%20120%208.png)
 ![Untitled 121 8.png](../../../Files%20&%20LongText/Attachments/Untitled%20121%208.png)
 #### 构造、析构方法 
-- 来自 [C++ Runoob Tutoral \> 构造函数](../C%20C++/C++%20Runoob%20Tutoral.md#构造函数)，同样是自动调用 `__init__` 的返回值是 none，不是第一个被调用的
+- 来自 [C++ Runoob Tutoral \> 构造函数](C++%20Runoob%20Tutoral.md#构造函数)，同样是自动调用 `__init__` 的返回值是 none，不是第一个被调用的
 - __new__ 才是，new 方法的作用是规定创建（实例化）对象时实例化的方法。new 规定了应该如何实例化一个对象，__init__ 函数规定了实例化的对象的初始属性是什么 ^f7b234
 - new 方法必须返回一个**新创建的实例**，将创建的实例作为返回值**传递给 init**方法
 ```python
@@ -2636,7 +2636,7 @@ a = capstr("romantic")
 print(a)
 ```
 ----------------------------------------------------------
-同样的，python 提供了析构方法，在创建的实例被销毁时调用 [C++ Runoob Tutoral \> 析构函数](../C%20C++/C++%20Runoob%20Tutoral.md#析构函数) __del__ 魔术方法  
+同样的，python 提供了析构方法，在创建的实例被销毁时调用 [C++ Runoob Tutoral \> 析构函数](C++%20Runoob%20Tutoral.md#析构函数) __del__ 魔术方法  
 #### 字符串方法
 在对实例使用print是会得到实力所在模块和内存地址
 ```Python
@@ -2811,7 +2811,7 @@ phone.call_by_5g()  # 只有类的对象能够调用方法,不要写成phone=Pho
 对旧类修改得到新类但继承旧类的对象的各种属性\参数\功能,从而得到新的对象
 **对上一代手机( 旧类的对象 )的属性修改( 修改旧类的成员 ), 得到新的新类( 成员发生变化 ),得到新一代手机( 新类的对象 )**
 **函数覆盖**
-如果子类中定义了和父类中相同（C++中需要类型、参数列表、名称全部相同，python 中只需要函数、方法名称）的函数、方法。会发生函数覆盖（override）而不是重载（overloading），在类外调用该方法、参数时，会调用子类方法而不是父类。这点和 [C++](../C%20C++/C++%20Runoob%20Tutoral.md#函数覆盖) 不同 ^ffc9cf
+如果子类中定义了和父类中相同（C++中需要类型、参数列表、名称全部相同，python 中只需要函数、方法名称）的函数、方法。会发生函数覆盖（override）而不是重载（overloading），在类外调用该方法、参数时，会调用子类方法而不是父类。这点和 [C++](C++%20Runoob%20Tutoral.md#函数覆盖) 不同 ^ffc9cf
 ![Untitled 126 8.png](../../../Files%20&%20LongText/Attachments/Untitled%20126%208.png)
 ![Untitled 127 8.png](../../../Files%20&%20LongText/Attachments/Untitled%20127%208.png)
 通过继承的语法, 只需要关心新的类, 并且通过继承,旧类并不会改变, 只是创建了一个包含旧类的新类

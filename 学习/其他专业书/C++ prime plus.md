@@ -13,7 +13,7 @@ C语言是过程性编程, 是问题转化为用语言描述的过程性方法
 
 ### main 函数
 #### 使用 main 函数注意事项
-![425](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240802150130.png)
+![425](Pasted%20image%2020240802150130.png)
 - 空括号表示mian再被其他函数调用时不做出参数回答**沉默**(不接受任何参数的隐式声明)，而不是不接受调用函数的任何内容，括号中填写 `void` 表示明确不接受任何参数
 - 通常 main 函数被程序的**启动代码**调用
 - 省略函数返回类型默认为`int`, 在C语言中一定要写`return`,在C++中可以不写,默认`return 0`
@@ -50,7 +50,7 @@ Python 和 ruby 等语言支持自动以入口函数名
 #### 头文件
 头文件一般被包含在其他文件中，对于旧 C 语言的头文件，一部分在C++重写了其中内容使其适用于 C++并保留原有名称，一部分去掉 `.h` 后缀并在前面加上 `c` 表示其来自于 C 语言（如 C 语言的 `math.h` 变为 `cmath`，但 `math.h` 仍能使用）。编译器中新旧文件都支持使用
 
-![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241023210440.png)
+![400](Pasted%20image%2020241023210440.png)
 
 #### 标记和空白
 一行代码中不可分割的元素叫做标记
@@ -129,7 +129,7 @@ int main() {
 > C++程序是一组组函数,函数中是一组语句,语句需要操作对象,对象就是数据, 数据用变量存储
 
 每个变量再使用前都需要被声明数据类型，[C++ Basics \> 数据类型是什么](C++%20Basics.md#数据类型是什么)，目的是防止在不知情的情况下**因为拼写错误创建新的变量**
-![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241023215717.png)
+![400](Pasted%20image%2020241023215717.png)
 C 98 推荐将所有需要使用的变量声明在程序开头，C++的做法是尽可能在首次使用变量前声明它。提高了自由度，也使 C++代码无法对所有变量一目了然
 
 #### cout/cin 新花样
@@ -213,7 +213,7 @@ return os;
 }
 ```
 - 对于输入输出, 流还可以这样使用: (`cin`同理)
-	![pdbrec\_02914.jpg](../../../Files%20&%20LongText/Attachments/pdbrec_02914.jpg)
+	![pdbrec\_02914.jpg](pdbrec_02914.jpg)
 
 ***注意**: `cout`和`cin`都是是`istream`和`ostream`**类的实例**，这两个类是在iostream**文件**中的**预定义对象***
 
@@ -235,7 +235,7 @@ C++提供了两种发送消息的方式：一种方式是使用类方法；另�
 ## 函数
 ### 函数使用
 简洁定义: 函数执行完毕后，语句中的函数调用部分将被替换为返回的值。因此，这个例子将返回值赋给变量x。简而言之，参数是发送给函数的信息，返回值是从函数中发送回去的值。
-![475](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240803181252.png)'
+![475](Pasted%20image%2020240803181252.png)'
 
 对于main函数返回值: 源代码没有调用main函数的函数, 因为main是计算机系统启动代码的入口，由[启动代码](#启动代码)调用，入口程序返回值代表整个程序运行情况. 一般约定返回值为0表示代码正常运行 ,非零则反之
 
@@ -365,7 +365,7 @@ int main(){
 C++11将使用大括号的初始化称为列表初始化（list-initialization），因为这种初始化常用于给复杂的数据类型提供值列表。
 **列表初始化不允许缩窄（narrowing）**，
 不允许将浮点型转换为整型。在不同的整型之间转换或将整型转换为浮点型可能被允许，条件是编译器知道目标变量**能够正确地存储**赋给它的值。例如，可将long变量初始化为int值，因为long总是至少与int一样长；相反方向的转换也可能被允许，只要int变量能够存储赋给它的long常量
-![Pasted image 20241024121821.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241024121821.jpg)
+![Pasted image 20241024121821.jpg](Pasted%20image%2020241024121821.jpg)
 初始化 c 4 时，您知道 x 的值为 66，但在编译器看来，x 是一个变量，其值可能很大。编译器不确定这个数能否正确初始化 char，而使用 `=` 允许*窄缩*，初始化 `c5` 正常
 #### 表达式中的转换
 C++将bool、char、unsigned char、signed char和short值转换为int。具这些转换被称为整型提升（integral promotion）
@@ -384,11 +384,11 @@ C++将bool、char、unsigned char、signed char和short值转换为int。具这�
 为保持与传统C语言中大量代码的兼容性，在将参数传递给取消原型对参数传递控制的函数时，C++将float参数提升为double。
 #### 强制类型转换
 强制转换格式如下
-![Pasted image 20241024123201.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241024123201.jpg)
+![Pasted image 20241024123201.jpg](Pasted%20image%2020241024123201.jpg)
 可以参考 [C++ Basics \> 指针加强](C++%20Basics.md#指针加强)中对指针变量的转换
 第一种格式来自 C 语言，第二种格式是纯粹的 C++。新格式的想法是，要让强制类型转换就像是函数调用。
 C++还引入了4个强制类型转换运算符，其中 `static_cast<>` 可用于将值从一种数值类型转换为另一种数值类型，这一部分将在[第15章  友元、异常和其他](#第15章%20%20友元、异常和其他)介绍
-![Pasted image 20241024123347.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241024123347.jpg)
+![Pasted image 20241024123347.jpg](Pasted%20image%2020241024123347.jpg)
 ## 字面量
 **字面量**（Literal）是指直接在代码中表示的固定值。字面量是数据的直接表示，不需要变量或常量来存储它们。它们是硬编码在程序中的值，**可以被当做表达式**
 
@@ -400,7 +400,7 @@ C++还引入了4个强制类型转换运算符，其中 `static_cast<>` 可用�
 - `INT_MAX` 类型名+MAX 或 MIN 是系统常量, 表示类型最大数值, char 的最大位数使用 `CHAR_BIT`, 在 `climits` 头文件中通过 `#define INT_MAX` 定义的符号常量, `ZERO` 表示0
 - C++引入新的声明变量方式: `int vari_name(value)` / `int vari_name{}` / `int vari_name={}`
 - 整型变量做超出范围的运算 ( 上溢和下溢 ) 会回到取值范围的另一端 , 导致出错 
-![整形溢出|337](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240804085714.png)
+![整形溢出|337](Pasted%20image%2020240804085714.png)
 如果确定变量的值不可能为负，那么一般将其设置为 `undesigned` 以获得更大的空间
 - int 被设置为对目标计算机而言最为“自然”的长度。自然长度（natural size）指的是计算机处理起来效率最高的长度。**如果没有非常有说服力的理由来选择其他类型，则应使用 int**。整数值大于 16 位使用 `long`. 超过 20 亿使用 `long long`
 - `climits` 文件中设置额各种符号常量最大最小值，对于 `char` 类型还设置了使用 `CHAR_BIT` 查看 `char` 的位数
@@ -457,9 +457,9 @@ int asciiValue = static_cast<int>(character); // 获取 'A' 的ASCII编码
 ```
 
 特别地,使用\b退格转义可以实现文本输入效果( 输入数字时去掉下划线 )
-![recording 3.gif](../../../Files%20&%20LongText/Attachments/recording%203.gif)
-同样的, C++允许输入变量时混合输入键盘上可以输入的字符和不能啊输入的符号的编码, 同python [Files & LongText/Long code/Python \> 使用非ascii字符](../../../Files%20&%20LongText/Long%20code/Python.md#使用非ascii字符)
-![\\u00E2是西里尔字母中a的编码|400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240804103644.png)
+![recording 3.gif](recording%203.gif)
+同样的, C++允许输入变量时混合输入键盘上可以输入的字符和不能啊输入的符号的编码, 同python [Files & LongText/Long code/Python \> 使用非ascii字符](Python.md#使用非ascii字符)
+![\\u00E2是西里尔字母中a的编码|400](Pasted%20image%2020240804103644.png)
 将 `\u00E2` 解释为“Unicode码点为 `U-00E2` 的字符”。支持Unicode的编译器知道，这表示字符ö，但无需使用内部编码00E2。
 
 char 字符类型在默认情况下，既不是没有符号，也不是有符号。是否有符号由 C++实现决定，这样编译器开发人员可以最大限度地将这种类型与硬件属性匹配起来。对 `char` 的容量很敏感时，最好显示指定 `char` 的类型为 `unsigned` 或 `signed`
@@ -532,9 +532,9 @@ char16_t和char32_t，两者都是无符号的，长16、32位。C++11使用**�
 因为这种用2做幂的特性, 二进制不能很精确地表示十进制数.进而出现这种结果
 
 > 11.17加上50.25应等于61.42，但是输出中却是61.419998的原因
-![425](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240804135852.png)
+![425](Pasted%20image%2020240804135852.png)
 `float` 比 `double` 精度低只有6~7位有效数字 ,运算速度也较慢, 程序中出现小数时,默认定义 `double`, float类型计算只会计算数字的前6~7位数字,后面的数字都会在计算中忽略
-![其中b\=a+1.0f](../../../Files%20&%20LongText/Attachments/pdbrec_00571.jpg)
+![其中b\=a+1.0f](pdbrec_00571.jpg)
 对于 cout 流控制对象，流中的数字常量后的 0 会自动省略，`cout.setf()` 可以覆盖这种行为
 ```cpp
 #include <iostream>
@@ -615,7 +615,7 @@ const比define好, 首先，它能明确指定类型。其次，可以使用C++�
 - 除法运算符（/）的行为取决于操作数的类型。如果两个操作数都是整数，则C++将执行整数除法。这意味着结果的小数部分将被丢弃，使得最后的结果是一个整数。如果其中有一个（或两个）操作数是浮点值，则小数部分将保留，结果为浮点数。
 - 如果两个操作数都是double类型，则结果为double类型；如果两个操作数都是float类型，则结果为float类型。浮点常量在默认情况下为double类型。两操作数不同时[[]] ^2d6181
 - int除法、float除法和double除法。C++根据上下文（这里是操作数的类型）来确定运算符的含义。这也是一种运算符的重载
-	![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240804143120.png)
+	![400](Pasted%20image%2020240804143120.png)
 
 **类型转化** : 将大( 存储空间 )变量赋值给小变量会导致精度丢失, 如果改变的类型容量不够大,如`float`转`int`可能会导致溢出, 结果不确定. 反之只会增加存储空间,其他不变
 
@@ -736,14 +736,14 @@ int main()
 - 如果只对数组的一部分进行初始化，则编译器将把其他元素设置为 0。因此，将数组中所有的元素都初始化为 0 非常简单—只要显式地将第一个元素初始化为 0
 - 最好不要让编译器自行决定数组大小，如下图第一行代码
 - 
-![425](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240808233203.png)
+![425](Pasted%20image%2020240808233203.png)
 
 ### 数组初始化方法
 - 将所有元素或部分元素初始化为 0
-![Pasted image 20241025143335.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025143335.jpg)
-![Pasted image 20241025143532.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025143532.jpg)
+![Pasted image 20241025143335.jpg](Pasted%20image%2020241025143335.jpg)
+![Pasted image 20241025143532.jpg](Pasted%20image%2020241025143532.jpg)
 - 省略等号
-![Pasted image 20241025143444.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025143444.jpg)
+![Pasted image 20241025143444.jpg](Pasted%20image%2020241025143444.jpg)
 
 ## 字符串
 ### C 风格字符串
@@ -752,11 +752,11 @@ int main()
 - dog 并不是一个合法的字符串，有错误但是程序能够运行
 - 如果使用 `printf` ，printf 无法读取到 `\0` 就会在内存中一直向下读取知到得到一个终止符，并将 d 之后，终止符之前的所有内容解析成一个字符
 - 终止符不会被 strlen 函数计算在字符串长度中
-![pdbrec\_00238.jpg](../../../Files%20&%20LongText/Attachments/pdbrec_00238.jpg)
+![pdbrec\_00238.jpg](pdbrec_00238.jpg)
 - 两者都是字符数组，但只有第二个是字符串，第一个只是简单的字符数组，因为他没有 `\0`
 - 用引号括起的字符串隐式地包括结尾的空字符，因此不用显式地包括它，用 `“”` 包括的字符数组会自动在后面填充 `\0` 直到容器末尾
 - 所以，字符串常量（使用双引号）不能与字符常量（使用单引号）互换。**'S'只是83的另一种写法**，**"S"不是字符常量**，它表示的是两个字符（字符S和\0）组成的字符串。"S"实际上表示的是字符串所在的内存地址。因此下面的语句试图将一个内存地址赋给 shirt_size：
-![Pasted image 20241025144318.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025144318.jpg)
+![Pasted image 20241025144318.jpg](Pasted%20image%2020241025144318.jpg)
 - `strlen()` 只计算可见的字符，不将 `\0` 计算在内，要存储字符串，数组的长度不能短于 `strlen(string)+1。`
 
 
@@ -768,7 +768,7 @@ int main()
 #### 字符串工具
 ##### getline
 - **`cin >> line`**- 无法读取键盘输入空白字符（如空格、制表符或换行符）之后的任何内容，cin 获取内容也会丢弃换行符在**输入队列**中，再次使用会重新读取消息队列中的内容
-![375](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240809105936.png)
+![375](Pasted%20image%2020240809105936.png)
 - get ,getline 返回值为 iostream 类型的**流对象**，都获取一行输入直到达到**换行符**，终止符不使其停止读取。但 getline 在最终得到的输入序列将换行转换为终止符 `\0`，get **保留**换行符
 - `cin.getline(name,20)` 表示将一行内容读取到 name 中，字符长度不**超过 19**
 - cin 的第一个参数是一个指针，指向 name 数组中的第一个元素，getline 方法表示从指针位置向下读取到换行为止，第二参数表示最大读取位数，所以可以使用
@@ -781,9 +781,9 @@ int main()
 
 ##### get
 - 连续两次调用. get 因为没有丢弃换行符 get 会认为已到达行尾
-![350](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240809103944.png)
+![350](Pasted%20image%2020240809103944.png)
 - 空参数表示只读一个字符，所以可以用它再不换行情况下处理换行符继续使用 get 输入
-![375](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240809104409.png)
+![375](Pasted%20image%2020240809104409.png)
 实现 getline 的效果
 
 ##### `cin` 的不足
@@ -792,7 +792,7 @@ int main()
 - istream中的类（如cin）提供了一些面向行的类成员函数：getline( )和get( )。这两个函数都读取一行输入，直到到达换行符。然而，随后getline( )将丢弃换行符，而get( )将换行符保留在输入序列中。
 - istream 类有另一个名为`get()`的成员函数，该函数有几种变体。
 - 在需要跳过空行的位置在使用一次 `get()` 可以忽略空行
-![Pasted image 20241025151919.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025151919.jpg)
+![Pasted image 20241025151919.jpg](Pasted%20image%2020241025151919.jpg)
 这段代码中在 `cin` 输入年份之后按 enter 结束输入换行符会留在输入队列中，导致 getline 无法得到地址信息
 ##### 空行和其他问题
 - 字符串比分配的空间长设置失效位，get 接收到空行设置失效位，恢复阻断方法 ^a1a64c
@@ -801,10 +801,10 @@ int main()
 #### C++风格字符串初始化
 使用 string 头文件中的 string 更方便的定义字符串
 C++同样支持 C 风格字符串对象和 string 对象
-![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240809110438.png)
-![Pasted image 20241025152949.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025152949.jpg)
+![400](Pasted%20image%2020240809110438.png)
+![Pasted image 20241025152949.jpg](Pasted%20image%2020241025152949.jpg)
 - 第一个参数是目标数组；第二个参数数组长度
-![Pasted image 20241025153012.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025153012.jpg)
+![Pasted image 20241025153012.jpg](Pasted%20image%2020241025153012.jpg)
 - 第一个参数指向何处获取输入，第二个参数表示将输入放入*string*类型对象中
 `isstream` 中没有处理 `string` 类型的功能，但在 C++标准中将处理*string*对象的函数作为 istream 中的友元函数，所以可以处理
 **string**和**char**异同
@@ -812,10 +812,10 @@ C++同样支持 C 风格字符串对象和 string 对象
 - 可以使用运算符`+`将两个 string 对象合并起来，还可以使用`+=`附加到 string 对象的末尾。
 - char 只能使用 strcat 外部辅助函数
 - string 自带 .size 方法计算长度，C 风格字符串需要 strlen 函数辅助
-	![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240809111107.png)
+	![400](Pasted%20image%2020240809111107.png)
 #### 原始（raw）字符串
 原始字符串将" (和)"用作定界符，并使用前缀 R 来标识原始字符串：
-![Pasted image 20241025154245.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025154245.png)
+![Pasted image 20241025154245.png](Pasted%20image%2020241025154245.png)
 `“()”` 之间的是需要显示的原始字符
 **wchar 字符串初始化和 Raw 格式字符**
 16 位 wchar 前缀为 L 或 u
@@ -916,9 +916,9 @@ int main(){
 
 - 对不适宜的类型强制转换的结果是未定义的
 - 可以通过枚举类型初始化时显式设置枚举值
-![Pasted image 20241025195850.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025195850.jpg)
+![Pasted image 20241025195850.jpg](Pasted%20image%2020241025195850.jpg)
 - 指定的值必须是整数。也可以只显式地定义其中一些枚举量的值
-![Pasted image 20241025195926.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025195926.jpg)
+![Pasted image 20241025195926.jpg](Pasted%20image%2020241025195926.jpg)
 - 枚举类型没有定义算术运算符，虽然枚举类型有对应的枚举值，在算术运算中枚举类型被转换为整数但为 `int`，不能将他赋值为 `enum` 类型数据。但可以通过强制类型转换使其可行
 ```cpp
 int a = 5;
@@ -945,31 +945,31 @@ temporal = State(3);
 
 运行阶段决策就好比度假时，选择参观哪些景点取决于天气和当时的心情；
 编译阶段决策更像不管在什么条件下，都坚持**预先设定的日程安排**。
-![Pasted image 20241025201037.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025201037.png)
-![Pasted image 20241025201118.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025201118.png)
+![Pasted image 20241025201037.png](Pasted%20image%2020241025201037.png)
+![Pasted image 20241025201118.png](Pasted%20image%2020241025201118.png)
 - 指向不同长度数据类型的指针，指针本身的长度是一样的，因为都内存存储地址（固定长度）
 #### 指针的危险性
 - 在 C++中创建指针时，计算机将分配用来存储地址的内存，但不会分配用来存储指针所指向的数据的内存。
-![Pasted image 20241025203415.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025203415.jpg)
+![Pasted image 20241025203415.jpg](Pasted%20image%2020241025203415.jpg)
 fellow 指向位置不明，223323 只是一个整数值，但编译器会将他认为是地址值，现在默认用十六进制表示地址就是为了避免这一情况，所以，**在创建指针变量时正确初始化他的地址**
 - 指针不是整型，虽然计算机通常把地址当作整数来处理。
-![Pasted image 20241025203652.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025203652.jpg)
+![Pasted image 20241025203652.jpg](Pasted%20image%2020241025203652.jpg)
 这样看似正确，但只是将一个十六进制整数传递给指针变量，编译器报错类型不匹配
-![Pasted image 20241025203805.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025203805.png)
+![Pasted image 20241025203805.png](Pasted%20image%2020241025203805.png)
 需要强转，注意，pt 的值是 int 类型的地址并不表示 pt 是    类型的指针
-![Pasted image 20241025203834.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025203834.png)
+![Pasted image 20241025203834.png](Pasted%20image%2020241025203834.png)
 
 #### 使用 new 来分配内存
 - 变量是在编译时分配的有名称的内存
 - 指针只是为可以通过名称直接访问的内存提供了一个别名
 - 指针真正的用武之地在于，在运行阶段分配未命名的内存以存储值。
-![Pasted image 20241025205501.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025205501.jpg)
+![Pasted image 20241025205501.jpg](Pasted%20image%2020241025205501.jpg)
 这段代码的真正含义是定义一个指向 typename 类型的 pointer_name ，存放这个指针变量的地址由 new 向操作系统申请，申请的内存大小由 typename 决定
 - 计算机可能由于没有足够的内存无法满足 new 的请求。在这种情况下，new 通常会引发异常
 - 在 C++中，值为 0 的指针被称为空指针（null pointer）。C++确保空指针不会指向有效的数据，因此它常被用来表示运算符或函数失败（如果成功，它们将返回一个有用的指针）
 - 内存泄漏指：**分配的内存==再也==无法使用了**，分配的内存没有回收 new 一直请求没有回应
 对于需要在程序运行时确定存储空间大小的情景，如果使用声明定义数组，则定义大了浪费空间，小了空间溢出，盛情动态数组可以避免这一点
-![为数组分配内存通用格式](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025211827.jpg)
+![为数组分配内存通用格式](Pasted%20image%2020241025211827.jpg)
 #### 使用 delete 删除内存
 - 不能使用 delete 释放正常声明变量获得的内存
 - 对空指针使用 delete 是安全的
@@ -993,7 +993,7 @@ for (int i = 0; i < 4; i++ ){
 #### 指针，数组和指针算术
 [C++ Basics \> 指针的步长](C++%20Basics.md#指针的步长)
 使用数组指针访问数组中某个元素时，编译器进行如下计算
-![先计算数组第2个元素的地址，然后找到存储在那里的值。](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241025212923.jpg)
+![先计算数组第2个元素的地址，然后找到存储在那里的值。](Pasted%20image%2020241025212923.jpg)
 
 对数组名称获取其地址时，数组名不会解释为地址，而是第一个元素的地址
 对数组名使用取地址运算符时，得到的是**整个数组的地址**
@@ -1023,7 +1023,7 @@ cout 中的 flower 传递字符数组中的第一个元素地址，由于元素�
 - 经常需要将字符串放到数组中。初始化数组时，请使用=运算符；否则应使用 `strcpy()` 或 `strncpy()`
 	- 使用 `strcpy()` 时需要注意，超过数组固定长度的字符，函数将字符串中剩余的部分复制到数组后面的内存字节中，这可能会覆盖程序正在使用的其他内存。要避免这种问题，请使用 `strncpy()`。该函数还接受第3个参数—要复制的最大字符数。
 	- 如果 `strncpy()` 在到达字符串结尾之前，目标内存已经用完，则它将不会添加空字符。所以应该这样使用该函数
-	![Pasted image 20241026091533.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026091533.jpg)
+	![Pasted image 20241026091533.jpg](Pasted%20image%2020241026091533.jpg)
 ```cpp
 char short_sentence[5];
 // strcpy(short_sentence, "hello world");      // 数组溢出，报错
@@ -1051,7 +1051,7 @@ char * getname(void){
 
 #### 指针和结构体
 创建结构时，指针只知道结构的地址，不能将成员运算符句点用于结构名，因为这种结构没有名称，C++专门为这种情况提供了一个运算符：箭头成员运算符（−>）
-![Pasted image 20241026093657.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026093657.jpg)
+![Pasted image 20241026093657.jpg](Pasted%20image%2020241026093657.jpg)
 因为 pt 只存储地址并知到地址需要解析 things 大小的内存地址，他并不知道这个内存地址叫什么名字，所以只能使用 `->`
 
 #### 三种管理内存方式
@@ -1081,11 +1081,11 @@ vector类的功能比数组强大，但付出的代价是效率稍低
 - array 对象和数组存储在相同的内存区域（即栈）中，而 vector 对象存储在另一个区域（自由存储区或堆）中
 - 可以将 `array`, `vector` 对象赋给另一个 `array`, `vector` 对象；对于数组必须逐元素复制数据。
 - 同样的，C++不检查超界错误。
-![Pasted image 20241026111511.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026111511.jpg) 在任何容器中等价于![Pasted image 20241026111718.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026111718.jpg)
+![Pasted image 20241026111511.jpg](Pasted%20image%2020241026111511.jpg) 在任何容器中等价于![Pasted image 20241026111718.jpg](Pasted%20image%2020241026111718.jpg)
 找到a1的指向，向前移两个double元素，并将20.2存储到目的地。将信息存储到数组的外面。
-![Pasted image 20241026111920.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026111920.jpg)
+![Pasted image 20241026111920.jpg](Pasted%20image%2020241026111920.jpg)
 `vector` 和 `array` 对象**默许这种行为**，但也可以通过手动检查避免这种错误，
-![Pasted image 20241026111930.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026111930.jpg)
+![Pasted image 20241026111930.jpg](Pasted%20image%2020241026111930.jpg)
 中括号表示法和成员函数 `at()` 的差别在于，使用 `at()` 时，将在运行期间捕获非法索引，而程序默认将中断。
 这种额外检查的代价是运行时间更长，这就是C++让允许您使用任何一种表示法的原因所在。另外，这些类还让您能够降低意外超界错误的概率。例如，它们包含成员函数 `begin()` 和 `end()`，让您能够确定边界，以免无意间超界，这将在第16章讨论。
 
@@ -1110,7 +1110,7 @@ void int_array(void){
 ## 循环
 ### for 循环的组成部分
 #### for 的结构
-![Pasted image 20241026151208.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026151208.jpg)
+![Pasted image 20241026151208.jpg](Pasted%20image%2020241026151208.jpg)
 C++并没有将 ` test-expression ` 的值限制为只能为真或假。可以使用任意表达式，C++将把结果强制转换为 `bool` 类型。因此，值为 0 的表达式将被转换为 `bool` 值 `false`，如果表达式的值为非零，则被强制转换为 `bool` 值 ` true`。
 cout 默认将 `bool` 值先转换为 `int` 再显示，可以使用 `ios::boolapha` 或者 `ios_base::boolalpha` 强制显示 `bool` 值
 
@@ -1118,8 +1118,8 @@ cout 默认将 `bool` 值先转换为 `int` 再显示，可以使用 `ios::boola
 C++表达式是值或值与运算符的组合，**每个 C++表达式都有值**。
 当判定表达式的值这种操作改变了内存中数据的值时，我们说表达式有副作用（side effect）
 从表达式到语句的转变很容易，只要加分号即可。
-![表达式](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026153756.jpg)
-![语句](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026153809.jpg)
+![表达式](Pasted%20image%2020241026153756.jpg)
+![语句](Pasted%20image%2020241026153809.jpg)
 只要加上分号，所有的表达式都可以成为语句，但不一定有编程意义。
 ```cpp
 int temp = variable + 1; // programmingful
@@ -1132,11 +1132,11 @@ variable +1 ;// nosense
 #### 逗号运算符
 - 它确保先计算第一个**表达式（注意不是语句，逗号连接两个语句可能会报错）**，然后计算第二个表达式（换句话说，逗号运算符是**一个顺序点**）
 - 先计算左边的表达式，再计算右边的表达式，整个表达式的结果是“右边表达式的值
-![Pasted image 20241026192819.jpg](Files%20&%20LongText/Attachments/Pasted%20image%2020241026192819.jpg)
-![Pasted image 20241026192943.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026192943.png)
+![Pasted image 20241026192819.jpg](Pasted%20image%2020241026192819.jpg)
+![Pasted image 20241026192943.png](Pasted%20image%2020241026192943.png)
 使用逗号注意事项：
 - 在所有运算符中，逗号运算符的优先级是最低的。
-![Pasted image 20241026193037.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026193037.jpg) 被解释为 ![Pasted image 20241026193042.jpg](Files%20&%20LongText/Attachments/Pasted%20image%2020241026193042.jpg)
+![Pasted image 20241026193037.jpg](Pasted%20image%2020241026193037.jpg) 被解释为 ![Pasted image 20241026193042.jpg](Pasted%20image%2020241026193042.jpg)
 - 在 for 循环中如果使用赋值运算符在第二个参数位置，可能会出现难以察觉的错误
 ```cpp
 int main (){
@@ -1155,16 +1155,16 @@ int main (){
 - 拼接两个字符串需要使用 `strcmp()` 函数来比较。该函数接受两个字符串地址作为参数。这意味着参数可以是指针、字符串常量或字符数组名。`strcmp()` 的返回值是由两个地址指向的要拼接的字符串在 *ascii/或系统编码*中的顺序决定的
 - 大写字母将位于小写字母之前。因此，字符串“Zoo”在字符串“aviary”之前。
 - 在有些语言（如BASIC和标准Pascal）中，存储在不同长度的数组中的字符串**彼此不相等**。但是C-风格字符串是通过**结尾的空值字符**定义的，而不是由其所在数组的长度定义的。这意味着==两个字符串即使被存储在长度不同的数组中，也可能是相同的==：
-![Pasted image 20241026195134.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241026195134.jpg)
+![Pasted image 20241026195134.jpg](Pasted%20image%2020241026195134.jpg)
 
 
 ### 基于范围的 for 循环
-![Pasted image 20241027110744.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027110744.jpg)
+![Pasted image 20241027110744.jpg](Pasted%20image%2020241027110744.jpg)
 这种形式的`for`循环表示方法意思是将`price`容器中的每一个元素赋值给`x`，直到`prices`结束
 ### while / do while 循环
 在 while 循环后没有函数体情况下使用 `;` 表示创建一个死循环，因为语句块由 `{}` 而不是缩进创建。
 可以通过 `#define` 或 `typedef`定义别名
-![Pasted image 20241027105856.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027105856.jpg)
+![Pasted image 20241027105856.jpg](Pasted%20image%2020241027105856.jpg)
 
 ### 循环和文本输入
 #### 使用原始 cin 输入
@@ -1192,35 +1192,35 @@ int main(){
 `>` 表示覆盖输出
 `>>` 表示追加输出
 在 Unix 系统中，可以使用 `CTRL+D` 结束输入，也可以在命令行中使用 `<` 表示从文件输入
-![Pasted image 20241027113041.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027113041.jpg) 将 fishtale 中的文本作为 gofish 程序的输入
+![Pasted image 20241027113041.jpg](Pasted%20image%2020241027113041.jpg) 将 fishtale 中的文本作为 gofish 程序的输入
 
 ##### 模拟EOF(end of file)条件\环境
 - 在Unix中，可以在行首按下Ctrl+D来实现；在Windows命令提示符模式下，可以在任意位置按Ctrl+Z和Enter，用于PC的Microsoft Visual C++、Borland C++ 5.5和GNU C++ 都能够识别行首的Ctrl + Z，但用户必须随后按下回车键。总之，很多PC编程环境都将Ctrl+Z视为模拟的EOF，但具体细节（必须在行首还是可以在任何位置，是否必须按下回车键等）各不相同。
 - 检测到EOF后，cin将两位（eofbit和failbit）都设置为1。可以通过成员函数eof( )来查看eofbit是否被设置；如果检测到EOF，则cin.eof( )将返回bool值true，否则返回false。同样，如果eofbit或failbit被设置为1，则fail( )成员函数返回true，否则返回false。注意，eof( )和fail( )方法报告最近读取的结果；也就是说，它们在事后报告，而不是预先报告。
 - cin 方法检测到 EOF 时，将设置 cin 对象中一个指示 EOF 条件的标记。设置这个标记后，cin 将不读取输入，再次调用 cin 也不管用。对于文件输入，这是有道理的，因为程序不应读取超出文件尾的内容。然而，对于键盘输入，有可能使用模拟 EOF 来结束循环，但稍后要读取其他输入。cin.clear ( ) 方法可能清除 EOF 标记，使输入继续进行。
-![cin.fail()可以检测输入文件结束情况](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027114159.jpg)
+![cin.fail()可以检测输入文件结束情况](Pasted%20image%2020241027114159.jpg)
 
 #### 旧版本的输入输出
 - `getchar()` 和 `putchar()`，它们仍然适用，但是他的工作方式是将字符编码作为 int 值返回；而 cin.get (ch) 返回一个对象，而不是读取的字符。**所以无法显示中文**
 - put ( ) 成员只有一个原型—put (char)。可以传递一个 int 参数给它，该参数将被强制转换为 char。C++标准还要求只有一个原型。然而，有些 C++实现都提供了 3 个原型：put (char)、put (signed char) 和 put (unsigned char)。
-![Pasted image 20241027121247.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027121247.png)
+![Pasted image 20241027121247.png](Pasted%20image%2020241027121247.png)
 
 get ( ) 的主要用途是能够将 stdio. h 的 getchar ( ) 和 putchar ( ) 函数转换为 iostream 的 cin.get ( ) 和 cout.put ( ) 方法。只要用头文件 iostream 替换 stdio. h，并用作用相似的方法替换所有的 getchar ( ) 和 putchar ( ) 即可。
 ## 第五章复习题
 ### 练习题
 1. 输入条件循环在进入输入循环体之前将评估测试表达式。如果条件最初为 false，则循环**不会执行其循环==体==**。退出条件循环在处理循环体之后评估测试表达式。因此，即使测试表达式最初为 false，**循环也将执行一次**。（循环执行，并不包括循环体）
 2. 循环输入条件和结束条件如果是有副作用的表达式可能会引起难以察觉的错误
-![Pasted image 20241027131808.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027131808.jpg)
+![Pasted image 20241027131808.jpg](Pasted%20image%2020241027131808.jpg)
 它将打印：
-![Pasted image 20241027131916.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027131916.jpg)
+![Pasted image 20241027131916.jpg](Pasted%20image%2020241027131916.jpg)
 原因是循环体最后一次执行之后*再执行一次*`j+=3`
 
 ---
 下面例子中同理，判断条件和*输出条件*都是有副作用的表达式，会改变结果
-![Pasted image 20241027132036.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027132036.jpg)
+![Pasted image 20241027132036.jpg](Pasted%20image%2020241027132036.jpg)
 它将输出 `6\n8`
 
-8. 在C++中，逗号 `,` 是一个运算符，它会先计算左边的表达式，然后计算右边的表达式，并且整个表达式的值是右边表达式的值。![Pasted image 20241027132746.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027132746.jpg) 会先计算 1，这个表达式的值，返回 1 结果，然后计算后面表达式结果，0 开头的数字默认为 8 进制，所以 `024 = 20`，所以这个表达式表示将 20 赋值给 `x`
+8. 在C++中，逗号 `,` 是一个运算符，它会先计算左边的表达式，然后计算右边的表达式，并且整个表达式的值是右边表达式的值。![Pasted image 20241027132746.jpg](Pasted%20image%2020241027132746.jpg) 会先计算 1，这个表达式的值，返回 1 结果，然后计算后面表达式结果，0 开头的数字默认为 8 进制，所以 `024 = 20`，所以这个表达式表示将 20 赋值给 `x`
 ### 编程练习
 3. 编写一个要求用户输入数字的程序。每次输入后，程序都将报告到目前为止，所有输入的累计和。当用户输入 0 时，程序结束。
 使用下面这段代码看似没错
@@ -1252,7 +1252,7 @@ if (cin.fail()){
 - `cin.ignore(numeric_limits<streamsize>::max(), '\n');` 中，`cin. igore` 是[忽略输入输出流中直到遇到特定字符的函数](C++%20Runoob%20Tutoral.md#cin.%20ignore%20()%20函数)，接受两个参数。
 - 当用户输入的数据类型与程序期望的类型不匹配时，`std::cin` 会进入一个错误状态。`std::cin` 会设置一个错误标志，表示这段流有问题，中断传输。`clear` 解除这个标志，流可以被继续接受或修改
 - `cin.clear()` 一般后面跟 `cin.ignore()` 用来清除输入队列中从错误字符后的内容，保证继续输入
-完整代码：[C++ practice case \> 第五章编程练习题](../../../Files%20&%20LongText/Long%20code/C++%20practice%20case.md#第五章编程练习题)
+完整代码：[C++ practice case \> 第五章编程练习题](C++%20practice%20case.md#第五章编程练习题)
 
 # 第六章分支语句和逻辑运算符
 ## if 语句
@@ -1283,8 +1283,8 @@ int main(){
 ---
 `||` 和 `&&` 的优先级比关系运算符低，`||` 和 `&&` 运算符是个顺序点（sequence point）。也是说，先修改左侧的值，再对右侧的值进行判定
 !运算符的优先级高于所有的关系运算符和算术运算符。因此，要对表达式求反，必须用括号将其括起
-![Pasted image 20241027175049.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027175049.jpg)
-C++确保程序从左向右进行计算逻辑表达式，并在**知道答案后立刻停止**。例如，假设有下面的条件：![Pasted image 20241027175259.jpg](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027175259.jpg)
+![Pasted image 20241027175049.jpg](Pasted%20image%2020241027175049.jpg)
+C++确保程序从左向右进行计算逻辑表达式，并在**知道答案后立刻停止**。例如，假设有下面的条件：![Pasted image 20241027175259.jpg](Pasted%20image%2020241027175259.jpg)
 
 - 标识符and、or和not都是C++保留字，可以将他们用于逻辑运算符位置，在 C 中需要使用头文件iso646.h
 ## 字符函数库 cctype
@@ -1309,7 +1309,7 @@ C++从C语言继承了一个与字符相关的、非常方便的函数软件包
 - switch 并不是为处理取值范围而设计的。switch 语句中的每一个 case 标签都必须是一个单独的值。另外，这个值必须是整数（包括 char），因此 switch 无法处理浮点测试。另外 case 标签值还必须是常量。如果选项涉及取值范围、浮点测试或两个变量的比较，则应使用 if else 语句。
 - Switch 在跳转到相应 case 位置执行相应代码之后并不会停止，**想要跳出只能使用 break**
 - 通常，cin 无法识别枚举类型（它不知道程序员是如何定义它们的），但使用枚举类型作为 *Switch 标签和需要运算*时，枚举类型会自动**提升为**整形，
-![Pasted image 20241027191724.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241027191724.png)
+![Pasted image 20241027191724.png](Pasted%20image%2020241027191724.png)
 - 如果既可以使用 if else if 语句，也可以使用 switch 语句，则当选项不少于 3 个时，应使用 switch 语句。
 ## break 和 continue
 continue 语句导致该程序跳过循环体的剩余部分，但**不会跳过循环的更新表达式**。
@@ -1342,7 +1342,7 @@ void get_data(){
 ```
 ## 简单文件输入输出
 ### 将结构体内容以二进制形式存储在文件中
-源代码： [C++ practice case \> 读写二进制文件](../../../Files%20&%20LongText/Long%20code/C++%20practice%20case.md#读写二进制文件)
+源代码： [C++ practice case \> 读写二进制文件](C++%20practice%20case.md#读写二进制文件)
 函数部分详解：
 #### 写入部分
 ```cpp
@@ -1413,7 +1413,7 @@ if (readRecordsFromFile("records.dat", loadedRecords)) {
 ## 第六章复习题
 ### 练习题
 - 在两个条件分支的涉及范围有重叠的情况下 `if-else` 效率比多 `if` 更高
-![325](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241028205720.png)
+![325](Pasted%20image%2020241028205720.png)
 ch 为 `char` 类型， ++ch 和 ch + 1 得到的数值相同。但++ch 的类型为 char，将作为字符打印，而 ch + 1 是 int 类型（因为将 char 和 int 相加），将作为数字打印。
 - !! x 是否与 x 相同取决于 `x` 的类型，如果 `int x = 10`， `!x = 0`， `!!x = 1`，如果 `x` 为 `bool` 类型，则 `x` 与 `!!x` 相同
 ### 编程练习
