@@ -4374,7 +4374,8 @@ mysql::pooled_connection conn = co_await pool.async_get_connection(
     asio::cancel_after(std::chrono::seconds(1))
 );
 ```
-
+### 异步连接数据库
+代码实现参考 [[C++ practice case#MySQL 数据库程序#boost.mysql 异步连接版本]]
 # MySQL 情景设计题
 ### 185. 部门工资前三高的所有员工
 (https://leetcode.cn/problems/department-top-three-salaries/)

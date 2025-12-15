@@ -3,6 +3,8 @@ source: https://www.bilibili.com/video/BV11HsqzFEUN/?spm_id_from=333.1387.favlis
 crea: 2025年11月6日14:30:28
 ---
 # 简单 html 源代码获取脚本
+## curl 实现版本
+### 获取 html 源码
 ```cpp
 #include <fstream>
 #include <curl/curl.h>
@@ -115,3 +117,6 @@ if (ec != CURLE_OK) {
     }
 }
 ```
+### html 源码解析
+需要用到另一个库 pugixml，这个库**只能解析 xml，如果手动将 html 中的单标签，特殊语法使其成为一个符合 xml 格式的文档并在 pugi 解析选项中使用宽松解析**，也可以用来解析 xml
+具体代码参考：[[C++ practice case#html/xml 解析#pugixml 解析]]

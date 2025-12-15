@@ -4674,6 +4674,323 @@ void TreeWidgetMainWindow::on_actiondock_visible_triggered(bool checked)
 {
     ui->dock_left_side->setVisible(checked);
 }
+```
+## html/xml 解析
+### pugixml 解析
+配合 curl 库获取 html 源码实现解析豆瓣书单中的所有书籍信息
+```cpp
+#include <curl/curl.h>
+#include <fstream>
+#include <iostream>
+#include <pugixml.hpp>
+#include <regex>
+#include <string>
+#include <vector>
 
+namespace {
+static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp) {
+    size_t total_size = size * nmemb;
+    userp->append((char*)contents, total_size);
+    return total_size;
+}
 
+std::string ltrim(const std::string& s) {
+    size_t start = s.find_first_not_of(" \t\n\r\f\v");
+    return (start == std::string::npos) ? "" : s.substr(start);
+}
+std::string rtrim(const std::string& s) {
+    size_t end = s.find_last_not_of(" \t\n\r\f\v");
+    return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+}
+
+std::string trim(const std::string& s) {
+    return rtrim(ltrim(s));
+}
+
+std::vector<std::string> separate_str(const std::string& input, const std::string& separator) {
+    std::vector<std::string> result;
+    if (separator.empty()) {
+        result.push_back(input);
+        return result;
+    }
+    std::string::size_type start = 0;
+    std::string::size_type end = input.find(separator);
+    while (end != std::string::npos) {
+        std::string token = input.substr(start, end - start);
+        result.push_back(trim(token));
+        start = end + separator.length();
+        end = input.find(separator, start);
+    }
+    std::string token = input.substr(start);
+    result.push_back(trim(token));
+    return result;
+}
+}  // namespace
+
+static void init_curl() {
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+}
+
+static void cleanup_curl() {
+    curl_global_cleanup();
+}
+
+std::string get_html_content(const std::string& web_site_url) {
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        std::cout << "curl init failed.\n";
+        return "";
+    }
+
+    struct curl_slist* headers = NULL;
+    headers = curl_slist_append(headers, "Referer:https://www.douban.com");
+    headers = curl_slist_append(headers, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0");
+
+    std::string html_content;
+
+    curl_easy_setopt(curl, CURLOPT_URL, web_site_url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &html_content);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
+
+    if (web_site_url.substr(0, 5) == "https") {
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
+    }
+
+    CURLcode ec = curl_easy_perform(curl);
+    if (ec != CURLE_OK) {
+        std::cout << "curl easy perform failed: " << curl_easy_strerror(ec) << '\n';
+    } else {
+        std::cout << "curl perform done\n";
+        std::cout << "HTML content length: " << html_content.length() << " characters\n";
+    }
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+
+    return html_content;
+}
+
+struct BookInfo {
+    std::string book_title_, author_, description_, publisher_, published_time_;
+    float rating;
+    unsigned int rated_nums;
+    void print() {
+        std::cout << "================\n";
+        std::cout << "title:" << book_title_ << "\n";
+        std::cout << "author:" << author_ << "\n";
+        std::cout << "description:" << description_ << "\n";
+        std::cout << "publish:" << publisher_ << "\n";
+        std::cout << "published time:" << published_time_ << "\n";
+        std::cout << "rating:" << rating << "\n";
+        std::cout << "candidate:" << rated_nums << "\n";
+    }
+};
+
+class GetDoubanBookSetInfo {
+   public:
+    GetDoubanBookSetInfo(const std::string& url) : url_(url), page_sum_(0) {
+        std::string html_content = get_html_content(url);
+
+        this->page_sum_ = get_page_sum_from_content(html_content);
+        if (this->page_sum_ == 0) {
+            this->page_sum_ = 1;
+        }
+
+        pugi::xml_parse_result result = doc_.load_string(html_content.c_str(),
+                                                         pugi::parse_default | pugi::parse_comments | pugi::parse_escapes | pugi::parse_wconv_attribute |
+                                                             pugi::parse_eol | pugi::parse_trim_pcdata | pugi::parse_declaration | pugi::parse_doctype |
+                                                             pugi::parse_pi | pugi::parse_cdata);
+        if (!result) {
+            std::cout << "HTML parsing failed: " << result.description() << std::endl;
+        }
+    }
+
+    std::vector<BookInfo> get_serialized_data() {
+        std::vector<BookInfo> books;
+
+        for (int i = 1; i <= this->page_sum_; i++) {
+            std::string current_url = this->url_;
+            if (i > 1) {
+                if (!current_url.ends_with("/"))
+                    current_url.append(1, '/');
+                current_url += "?page=" + std::to_string(i);
+
+                std::string page_content = get_html_content(current_url);
+                pugi::xml_document page_doc;
+                pugi::xml_parse_result result = page_doc.load_string(page_content.c_str(),
+                                                                     pugi::parse_default | pugi::parse_comments | pugi::parse_escapes | pugi::parse_wconv_attribute |
+                                                                         pugi::parse_eol | pugi::parse_trim_pcdata | pugi::parse_declaration | pugi::parse_doctype |
+                                                                         pugi::parse_pi | pugi::parse_cdata);
+                if (!result) {
+                    std::cout << "Failed to parse page " << i << std::endl;
+                    continue;
+                }
+
+                extract_books_from_doc(page_doc, books);
+            } else {
+                extract_books_from_doc(doc_, books);
+            }
+        }
+        return books;
+    }
+
+   private:
+    void extract_books_from_doc(pugi::xml_document& doc, std::vector<BookInfo>& books) {
+        std::string info_xpath = "//ul[@class='subject-list']/li/div[@class='info']";
+        pugi::xpath_node_set node_set = doc.select_nodes(info_xpath.c_str());
+
+        for (const auto& node : node_set) {
+            BookInfo info;
+            auto title_node = node.node().child("h2").child("a");
+            auto author_pub_node = node.node().find_child([](pugi::xml_node& n) {
+                return std::string(n.name()) == "div" &&
+                       std::string(n.attribute("class").value()) == "pub";
+            });
+
+            auto rating_nums_node = node.node().select_node("./div[@class='star clearfix']/span[@class='rating_nums']").node();
+            auto pl_node = node.node().select_node("./div[@class='star clearfix']/span[@class='pl']").node();
+            auto desc_node = node.node().child("p");
+
+            info.book_title_ = trim(title_node.text().as_string());
+            const auto strs = separate_str(author_pub_node.text().as_string(), "/");
+            size_t size = strs.size();
+            if (size == 5) {
+                info.author_ = strs[0] + "/" + strs[1];
+                info.publisher_ = strs[2];
+                info.published_time_ = strs[3];
+            } else if (size == 4) {
+                info.author_ = strs[0];
+                info.publisher_ = strs[1];
+                info.published_time_ = strs[2];
+            } else {
+                std::cerr << "Warning: invalid book info in book: " << info.book_title_ << std::endl;
+                continue;
+            }
+            info.description_ = trim(desc_node.text().as_string());
+            info.rating = rating_nums_node.text().as_float();
+            std::string pl_str = trim(pl_node.text().as_string());
+            size_t start = pl_str.find('(');
+            size_t end = pl_str.find("人评价");
+            if (start != std::string::npos && end != std::string::npos && end > start) {
+                std::string num_str = pl_str.substr(start + 1, end - start - 1);
+                try {
+                    info.rated_nums = std::stoi(num_str);
+                } catch (...) {
+                    info.rated_nums = 0;
+                }
+            } else {
+                info.rated_nums = 0;
+            }
+            books.emplace_back(std::move(info));
+        }
+    }
+
+    size_t get_page_sum_from_content(const std::string& html_content) {
+        std::regex page_pattern1(R"(/series/\d+\?page=(\d+)" > (\d +) < / a >) ");
+            std::regex page_pattern2(R"(href="[^"]*page=(\d+)[^"]*">(\d+)</a>)");
+        std::regex page_pattern3(R"(>(\d+)</a>\s*<span class=\"next\">)");
+
+        std::sregex_iterator iter(html_content.begin(), html_content.end(), page_pattern2);
+        std::sregex_iterator end;
+
+        int max_page = 0;
+        for (; iter != end; ++iter) {
+            std::smatch match = *iter;
+            if (match.size() >= 3) {
+                try {
+                    int page_num = std::stoi(match[2].str());
+                    if (page_num > max_page)
+                        max_page = page_num;
+                } catch (...) {
+                }
+            }
+        }
+
+        if (max_page == 0) {
+            size_t pos = 0;
+            while ((pos = html_content.find("page=", pos)) != std::string::npos) {
+                pos += 5;
+                size_t start_num = pos;
+                while (start_num < html_content.length() && !isdigit(html_content[start_num])) {
+                    start_num++;
+                }
+
+                if (start_num < html_content.length()) {
+                    size_t end_num = start_num;
+                    while (end_num < html_content.length() && isdigit(html_content[end_num])) {
+                        end_num++;
+                    }
+
+                    std::string num_str = html_content.substr(start_num, end_num - start_num);
+                    try {
+                        int page_num = std::stoi(num_str);
+                        if (page_num > max_page)
+                            max_page = page_num;
+                    } catch (...) {
+                    }
+                }
+            }
+        }
+
+        size_t next_pos = html_content.find("后页&gt;");
+        if (next_pos != std::string::npos) {
+            size_t search_start = std::max(0, (int)next_pos - 100);
+
+            for (int i = next_pos; i > search_start && i >= 0; i--) {
+                if (isdigit(html_content[i])) {
+                    size_t num_start = i;
+                    while (num_start > search_start && isdigit(html_content[num_start - 1])) {
+                        num_start--;
+                    }
+
+                    if (num_start == 0 || !isdigit(html_content[num_start - 1])) {
+                        size_t num_end = i + 1;
+                        while (num_end < html_content.length() && isdigit(html_content[num_end])) {
+                            num_end++;
+                        }
+
+                        std::string num_str = html_content.substr(num_start, num_end - num_start);
+                        try {
+                            int page_num = std::stoi(num_str);
+                            if (page_num + 1 > max_page)
+                                max_page = page_num + 1;
+                            break;
+                        } catch (...) {
+                        }
+                    }
+                }
+            }
+        }
+
+        return max_page > 0 ? max_page : 1;
+    }
+
+   private:
+    std::string url_;
+    size_t page_sum_;
+    pugi::xml_document doc_;
+};
+
+int main() {
+    init_curl();
+
+    try {
+        const std::string url = "https://book.douban.com/series/697";
+        GetDoubanBookSetInfo gd(url);
+        auto data = gd.get_serialized_data();
+        std::cout << "Found " << data.size() << " books" << std::endl;
+        for (auto& x : data) {
+            x.print();
+        }
+    } catch (const std::exception& e) {
+        std::cout << "Exception occurred: " << e.what() << std::endl;
+    }
+
+    cleanup_curl();
+    return 0;
+}
 ```
