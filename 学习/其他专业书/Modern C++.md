@@ -2984,9 +2984,10 @@ m.insert(std::move(nh)); // 插入修改后的键值对
 - 一旦 `extract()` 出某个节点：
     - 该元素不会在 map 中了
     - map 的 `size()` 会减一
-    - 桶的结构也不会重新调整（unordered_map 也是稳定的）
+    - 桶的结构**不会重新调整**（unordered_map 也是稳定的）
     - 得到了一个 node handle，包含完整的 `<key, value>` 对，这块内存地址不变，value 还在等待操作
 - 通过 `.key() = xxx` 和 `.mapped() = xxx` 返回键和值的引用
+- 任何对 node 的操作**都需要在检查 `node.empty() == false` 之后操作，否则会导致未定义行为，程序能够通过编译且不抛出异常，但是运行时崩溃**。
 
 # 第 4 章兼容迭代器
 ## 迭代器

@@ -7180,3 +7180,171 @@ auto b = vb[0];  // b是std::vector<bool>::reference，不是bool
 vb.push_back(true);  // 可能导致b变成悬空引用
 if (b) { /* 未定义行为 */ }  // b可能已经无效
 ```
+
+## `std::unorderedmap` 哈希实现
+### 查找和插入复杂度
+平均情况下插入和查找的时间复杂度为 O(1)，但最坏情况下可能达到 O(n)。
+
+|场景|描述|对 `std::unordered_map` 的影响|
+|---|---|---|
+|**1. 所有键哈希到同一桶**|哈希函数设计极差，或输入数据被精心构造（哈希碰撞攻击）|所有元素都存储在同一个桶的链表中，哈希表退化为一个链表|
+|**2. 动态扩容期间**|插入元素触发 rehash，需要重新计算所有键的哈希值并迁移|单次插入操作可能触发 O(n) 的 rehash，但均摊后仍为 O(1)|
+|**3. 桶内链表过长**|即使哈希函数正常，元素过多且桶数量不足，导致多个键映射到同一桶|在特定桶内查找需要遍历链表，最坏需遍历所有 n 个元素|
+关键在于哈希函数的设置，`std::unordered_map` 通常采用**开链法**解决冲突，如果多个元素索引到一个同一个索引，会在对应位置创建**单向链表**来存储所有元素
+```cpp
+struct TerribleHash {
+    size_t operator()(const std::string&) const {
+        return 0; // 所有键哈希值相同
+    }
+};
+std::unordered_map<std::string, int, TerribleHash> map;
+
+// 简化版开链法结构示意
+template<typename Key, typename Value>
+class Bucket {
+    std::list<std::pair<Key, Value>> chain; // 链表存储冲突元素
+};
+
+template<typename Key, typename Value>
+class UnorderedMap {
+    std::vector<Bucket<Key, Value>> buckets; // 桶数组
+    // ...
+}
+ ```
+### 负载因子触发 rehash
+负载因子（Load Factor）是哈希表性能调优的核心参数。它衡量哈希表的“拥挤程度”，直接影响查找效率和内存使用的平衡，`负载因子 = 哈希表中元素数量 / 桶的数量`。
+
+| 作用          | 原理                                       | 影响          |
+| ----------- | ---------------------------------------- | ----------- |
+| **触发自动扩容**  | 当负载因子 > `max_load_factor` 时，自动增加桶数量      | 避免哈希碰撞过度恶化  |
+| **平衡性能与内存** | 低负载因子：桶多冲突少，但内存占用大  <br>高负载因子：内存节省，但冲突增加 | 决定时间与空间的权衡  |
+| **预测哈希碰撞**  | 负载因子越高，平均每个桶的元素越多                        | 直接影响查找/插入性能 |
+所有主流实现（GCC、Clang、MSVC）默认 `max_load_factor = 1.0` 
+
+| 负载因子范围         | 含义    | 性能特征            | 适用场景               |
+| -------------- | ----- | --------------- | ------------------ |
+| **< 0.5**      | 桶非常充裕 | 查找接近O(1)，插入极少冲突 | 对查找性能极端敏感，内存充足     |
+| **0.5 - 0.75** | 桶比较充足 | 查找性能优秀，内存使用合理   | **通用推荐范围**，平衡性能与内存 |
+| **0.75 - 1.0** | 桶适度紧张 | 查找略有下降，内存较节省    | 内存受限，可接受轻微性能下降     |
+| **> 1.0**      | 桶过载   | 链表变长，性能显著下降     | 应避免（除非使用开放寻址哈希）    |
+| **> 5.0**      | 严重过载  | 退化为链表查找，O(n)性能  | 哈希函数可能有问题          |
+当负载因子超过阈值（`max_load_factor`）触发rehash时，需要O(n)时间重新分配和重哈希所有元素，重新分配的底层实现是对**先分配捅数量大小的内存，然后所有元素根据 ` rehash() ` 函数重新计算哈希值**
+rehash 的**核心是“桶数组扩容”**，而不是“更换哈希函数”
+```cpp
+// 简化版rehash逻辑
+void rehash(size_t new_bucket_count) {
+    // 1. 分配新的、更大的桶数组（通常是原大小的2倍左右的质数）
+    vector<Bucket> new_buckets(new_bucket_count);
+    
+    // 2. 遍历所有元素，重新计算每个键在新数组中的位置
+    for (auto& node : all_nodes) {
+        // 哈希函数不变！还是用原来的 hash(key)
+        size_t new_index = hash(node.key) % new_bucket_count; // 捅数量改变，index值也会改变
+        // 3. 将节点插入到新桶数组的对应位置
+        new_buckets[new_index].insert(node);
+    }
+    // 4. 交换新旧桶数组，释放旧数组
+    swap(buckets, new_buckets);
+}
+```
+### 使用注意事项
+触发/调用 `rehash()` 和 `reserve` 会使所有迭代器失效，包括end迭代器。这一错误经常会发生在**大量插入元素**之前记录下迭代器，并在插入后使用迭代器
+```cpp
+std::unordered_map<int, int> map = {{1, 10}, {2, 20}, {3, 30}};
+auto it = map.find(2);  // 获取迭代器
+
+// 插入大量元素触发自动rehash
+for (int i = 100; i < 10000; ++i) {
+    map[i] = i;  // 可能触发rehash
+}
+
+// 危险！it 可能已经失效
+// std::cout << it->second << std::endl;  // 未定义行为！
+
+// 正确做法：重新查找
+it = map.find(2);  // 重新获取有效迭代器
+if (it != map.end()) {
+    std::cout << it->second << std::endl;  // 安全
+}
+```
+使用哈希表时，***最好先对其中的桶数量和负载因子进行估计***，调用 `reserve()` 预留足够空间
+通过在插入前计算负载因子和桶数量，然后和大量插入之后的两者对比来判断是否触发了 `rehash()` 这一方法并不可靠，因为：
+1. **条件竞争**：即使桶数没变，内部可能已经重新分配了内存
+2. **精度问题**：浮点数比较不可靠（`load_factor()`返回`float`）
+3. **标准不保证**：即使桶数不变，迭代器也可能失效（实现特定）
+4. **遗漏场景**：`max_load_factor()` 改变负载因子阈值可能会让 `load_factor()` 的现有负载因子超过阈值，但是**直到下一次插入操作前桶数是不变**的，`rehash()` 的检测发生在插入操作之前
+通过 `if(it != map.end())` 检测迭代器是否已经失效的方法也不可靠，因为 `rehash()` 同样会让 `end()` 迭代器失效
+```cpp
+void safe_iterator_check() {
+    std::unordered_map<int, std::string> map{{1, "a"}, {2, "b"}};
+    auto it = map.find(1);
+    // 大量插入（可能触发rehash）
+    for (int i = 100; i < 10000; ++i) {
+        map.insert({i, "value"});
+    }
+    
+    // C++17起：直接检查迭代器是否仍然指向有效元素
+    if (it != map.end()) {
+        // 首先可能find没有查找到元素，本来就是map.end()
+        // 即使 it != end()，它也可能已经失效
+    }
+}
+```
+
+最好的解决方法是**利用 C++17 [[Modern C++#高效地修改 map 项的键值|句柄]] 这一特性**，通过 `extract()` 将键值对提取出来，这样节点操作还是能用的
+### 实现良好的哈希函数
+- **均匀性**：不同输入应均匀分布到哈希值空间
+- **确定性**：相同输入必须产生相同哈希值
+- **高效性**：计算速度快
+- **抗碰撞**：减少不同输入产生相同哈希值的概率
+```cpp
+struct Person {
+    std::string name;
+    int age;
+    double salary;
+};
+
+struct PersonHash {
+    size_t operator()(const Person& p) const {
+        // 方法1：使用std::hash组合（推荐）
+        size_t h1 = std::hash<std::string>{}(p.name);
+        size_t h2 = std::hash<int>{}(p.age);
+        size_t h3 = std::hash<double>{}(p.salary);
+        
+        // 使用位混合技术（参考boost::hash_combine）
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+};
+
+// 示例2：更健壮的组合方式（减少碰撞）
+struct RobustPersonHash {
+    size_t operator()(const Person& p) const {
+        size_t seed = 0;
+        hash_combine(seed, p.name);
+        hash_combine(seed, p.age);
+        hash_combine(seed, p.salary);
+        return seed;
+    }
+  private:
+    // 类似boost::hash_combine的实现
+    template <typename T>
+    void hash_combine(size_t& seed, const T& val) const {
+        std::hash<T> hasher;
+        seed ^= hasher(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+};
+
+// 示例3：简单但有效的字符串哈希（FNV-1a算法）
+struct FNVHash {
+    size_t operator()(const std::string& str) const {
+        const size_t prime = 0x100000001b3;  // FNV质数
+        size_t hash = 0xcbf29ce484222325;    // FNV偏移基准
+        
+        for (char c : str) {
+            hash ^= static_cast<unsigned char>(c);
+            hash *= prime;
+        }
+        return hash;
+    }
+};
+```
