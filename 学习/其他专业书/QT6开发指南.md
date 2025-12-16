@@ -4463,6 +4463,72 @@ void MyThread::run() {
 }
 ```
 计时器只能管控当前线程的任务，所以必须在**对应线程中**创建对应的 QTimer 对象，或者通过 `obj.moveToThread(threadObj)` 移动对象到对应线程中
+```cpp
+// 工作对象
+class Worker : public QObject {
+    Q_OBJECT
+public:
+    explicit Worker(QObject *parent = nullptr) : QObject(parent) {
+        qDebug() << "Worker created in thread:" << QThread::currentThread();
+    }
+    
+    ~Worker() {
+        qDebug() << "Worker destroyed";
+    }
+    
+public slots:
+    void doWork() {
+        qDebug() << "Worker::doWork() in thread:" << QThread::currentThread();
+        // 模拟工作
+        for (int i = 0; i < 5; ++i) {
+            qDebug() << "Working..." << i;
+            QThread::sleep(1);
+        }
+        
+        emit workFinished();
+    }
+    
+    void stopWork() {
+        qDebug() << "Stop work requested";
+        // 这里可以设置标志位停止工作
+    }
+    
+signals:
+    void workFinished();
+};
+
+int main(int argc, char *argv[]) {
+    QCoreApplication app(argc, argv);
+    qDebug() << "Main thread:" << QThread::currentThread();
+    // 1. 创建工作对象（在主线程创建）
+    Worker *worker = new Worker();
+    // 2. 创建工作线程
+    QThread *workerThread = new QThread();
+    // 3. 将worker移动到工作线程
+    worker->moveToThread(workerThread);
+    // 4. 连接信号槽
+    // 线程启动时开始工作
+    QObject::connect(workerThread, &QThread::started, worker, &Worker::doWork);
+    
+    // 工作完成时退出线程
+    QObject::connect(worker, &Worker::workFinished, workerThread, &QThread::quit);
+    
+    // 工作完成时删除worker
+    QObject::connect(worker, &Worker::workFinished, worker, &Worker::deleteLater);
+    
+    // 线程退出时删除线程对象
+    QObject::connect(workerThread, &QThread::finished, workerThread, &QThread::deleteLater);
+    
+    // 5. 启动线程
+    workerThread->start();
+    
+    // 6. 程序运行10秒后退出
+    QTimer::singleShot(10000, &app, &QCoreApplication::quit);
+    
+    return app.exec();
+}
+```
+现代 qt 推荐将需要在线程中区分的工作通过一个**继承自 QObject**的类管控，然后 `obj.moveToThread(threadObj)` 的方式在线程中创建对象
 - 线程中需要使用**信号槽**进行通信
 ```cpp
 MainWindow::MainWindow(QWidget *parent)
@@ -4709,7 +4775,7 @@ void TValueThread::run() {
     while (1) {
         rwLocker.lockForRead();  // 以只读方式锁定
         waiter.wait(&rwLocker);  // 等待被唤醒
-        emit new Value(seq, dice Value);
+        emit new Value(seq, diceValue);
         rwLocker.unlock();  // 解锁
     }
 }
@@ -4786,7 +4852,7 @@ public:
 ```
 信号量通常用来保护一定数量的相同资源，如数据采集时的双缓冲区
 创建一个QSemaphore对象时可以设置初始值表示可用资源的个数。`acquire()` 以阻塞等待方式获取一个资源，信号量资源数减 1；函数 `release()` 释放一个资源，信号量的资源数加 1
-`tryAccquir(int n, QDeadlineTimer timer)` 会以**阻塞方式**尝试获取，如果超过 timer，则不再尝试获取，返回 false，如果没有设置 timer，则会一直等待，**必须获取到**
+`tryAccquire(int n, QDeadlineTimer timer)` 会以**阻塞方式**尝试获取，如果超过 timer，则不再尝试获取，返回 false，如果没有设置 timer，则会一直等待，**必须获取到**
 QSemaphore **本质上是一个资源记录器**，他不拥有任何资源，只是起到一个现在还有多少资源空闲，多少资源正在被占用的**记录作用**，并且可以在多个线程中被访问到，同时他提供一些成员方法 `accquire(int n, QDeadlineTimer)`，`available()` 等**原子操作**来帮助程序员记录。
 
 | 维度       | QMutex（互斥锁）              | QSemaphore（信号量）            |
@@ -4812,3 +4878,48 @@ void threadFunction() {
 资源池，限制并发等场景
 # 网络
 Qt Network 模块提供了用于编写 TCP/IP 网络应用程序的各种类，如用于 TCP 通信的 QTcpSocket 和 QTcpServer，用于 UDP 通信的 QUdpSocket。
+## 主机信息查询
+QHostInfo 类可以根据主机名获取主机的 IP 地址，或者通过 IP 地址获取主机名，常用来根据主机名查找 ip 地址的静态函数
+```cpp
+int QHostInfo::lookupHost(const QString &name, const QObject *receiver, const char *member)
+
+QHostInfo::lookupHost("www.kde.org", this, &MyWidget::lookedUp);
+
+// 获取ip地址
+void MyWidget::lookedUp(const QHostInfo &host)
+{
+    if (host.error() != QHostInfo::NoError) {
+        qDebug() << "Lookup failed:" << host.errorString();
+        return;
+    }
+
+    const auto addresses = host.addresses();
+    for (const QHostAddress &address : addresses)
+        qDebug() << "Found address:" << address.toString();
+}
+```
+主机 ip 地址协议放在 `QHostInfo::addresses()` 返回的 `QHostAddress::protocol()` 中
+本机 ip 地址和列表
+```cpp
+QString hostName=QHostInfo::localHostName();    //本地主机名
+QHostInfo   hostInfo=QHostInfo::fromName(hostName);  //本机IP地址
+QList<QHostAddress> addrList=hostInfo.addresses();    //IP地址列表
+```
+QNetworkInterface 类可以获得应用程序所在主机的所有网络接口的信息，包括子网掩码和广播地址。
+```cpp
+QList<QNetworkInterface> list = QNetworkInterface::allInterfaces();
+for(const auto& interface : list){
+    ui->textEdit->appendPlainText("设备名称："+interface.humanReadableName());
+    ui->textEdit->appendPlainText("硬件地址："+interface.hardwareAddress());
+    ui->textEdit->appendPlainText("接口类型："+interfaceType(interface.type()));
+    QList<QNetworkAddressEntry> entryList=interface;
+    for(const auto& entry : entryList){
+        ui->textEdit->appendPlainText("   IP 地址："+entry.ip().toString());
+        ui->textEdit->appendPlainText("   子网掩码："+entry.netmask().toString());
+        ui->textEdit->appendPlainText("   广播地址："+entry.broadcast().toString()+"\n");
+    }
+}
+```
+## TCP 通信
+TCP通信必须先建立TCP连接，通信端分为客户端和服务器端。Qt提供QTcpSocket类和QTcpServer类，用于设计TCP通信应用程序。服务器端程序必须使用QTcpServer进行端口监听，建立服务器；使用QTcpSocket建立连接，然后使用套接字（socket）进行通信。
+![[PixPin_2025-12-16_19-57-01.png]]
