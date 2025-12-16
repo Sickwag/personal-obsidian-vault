@@ -4520,4 +4520,13 @@ void TDiceThread::run()
 // 设置m_diceValue getter
 int TDiceThread::diceValue() { return = m_diceValue;}
 ```
-但是如果**在主线程中调用 `diceValue` 时，有可能工作线程在 for 循环中**，所以可能会得到脏数据，解决方法是将 for 循环和求平均数的操作设置为一个原子操作，**不可被中断**
+但是如果**在主线程中调用 `diceValue` 时，有可能工作线程在 for 循环中**，所以可能会得到脏数据，解决方法是将 for 循环和求平均数的操作设置为一个原子操作，**不可被中断**，线程TDiceThread的计算点数是在函数 `run()` 里执行的，获取点数 `diceValue()` 实际上是在主线程里运行的。
+### 线程同步 api
+QMutex主要有以下几个函数：
+```cpp
+void  QMutex::lock()                    //锁定互斥量，一直等待
+void  QMutex::unlock()                  //解锁互斥量
+bool  QMutex::tryLock()                 //尝试锁定互斥量，不等待
+bool  QMutex::tryLock(int timeout)      //尝试锁定互斥量，最多等待timeout毫秒
+```
+互斥量（QMutex 对象）相当于一把钥匙，如果两个线程要访问同一个共享资源，例如本示例中的变量m_diceValue，就需要通过 `lock()` 或 `tryLock()` 拿到这把钥匙，然后才可以访问该共享资源，访问完之后还要通过 `unlock()` 还回钥匙，这样别的线程才有机会拿到钥匙。
