@@ -4530,3 +4530,175 @@ bool  QMutex::tryLock()                 //尝试锁定互斥量，不等待
 bool  QMutex::tryLock(int timeout)      //尝试锁定互斥量，最多等待timeout毫秒
 ```
 互斥量（QMutex 对象）相当于一把钥匙，如果两个线程要访问同一个共享资源，例如本示例中的变量m_diceValue，就需要通过 `lock()` 或 `tryLock()` 拿到这把钥匙，然后才可以访问该共享资源，访问完之后还要通过 `unlock()` 还回钥匙，这样别的线程才有机会拿到钥匙。
+```cpp
+class TDiceThread : public QThread
+{
+    Q_OBJECT
+public:
+    TDiceThread(QObject *parent = nullptr);
+
+    void diceBegin();
+    void dicePause();
+    void stopThead();
+    bool readValue(int *seq, int *diceValue);
+
+private:
+    QMutex mutex;
+    int m_seq = 0;
+    int m_diceValue = 0;
+    bool m_paused = true;
+    bool m_stop = false;
+
+protected:
+    void run();
+
+signals:
+    void newValue(int seq, int diceValue);
+};
+```
+使用到互斥锁的部分代码
+```cpp
+bool TDiceThread::readValue(int *seq, int *diceValue)
+{
+    if(mutex.tryLock(100)){
+        *seq = m_seq;
+        *diceValue = m_diceValue;
+        mutex.unlock();
+        return true;
+    }else{
+        return false;
+    }
+}
+
+void TDiceThread::run()
+{
+    m_stop = false;
+    m_paused = false;
+    m_seq = 0;
+
+    while(!m_stop){
+        if(!m_paused){
+            mutex.lock();		// mark1
+            m_diceValue = 0;
+            for(int i = 0; i < 5; i++){
+                m_diceValue += QRandomGenerator::global()->bounded(1,7);
+            }
+            m_diceValue /= 5;
+            m_seq++;
+            mutex.unlock();		// mark2
+        }
+        this->msleep(500);
+    }
+    this->quit();
+}
+```
+- Mutex保护在 `lock()` 和 `unlock()` 之间**所有的共享（可以被多个线程/对象读取的）变量读写访问**，所以 mark 1 到 mark 2 为止中使用到的 `m_diceValue`，`m_seq` 会被锁住，但是 i 是 for 循环中的临时变量，语法上**不在 lock 和 unlock 中的作用于**，线程上他也只是一个临时的，单线程变量。对于其中的临时对象 `QRandomGenerator::global()` 则由其自身管理
+- 信号发射代码**最好不要在锁中执行**，因为如果将发射信号占用了资源，槽函数执行的某些操作也需要这些资源，会导致死锁
+```cpp
+// 线程A执行：
+void ThreadA::process() {
+    mutex.lock();          // A获得锁
+    int result = calculate();
+    emit dataReady(result);
+    // ... 耗时的数据操作 ... 但A还持有锁！
+    mutex.unlock();        // A释放锁（但可能已经太晚）
+}
+
+// 主线程的槽函数：
+void MainWindow::onDataReady(int value) {
+    mutex.lock();
+    ui->display(value);
+    mutex.unlock();
+}
+```
+会有两种情况，取决于**信号槽连接类型和线程关系**
+```cpp
+// 直接连接
+connect(threadA, &ThreadA::dataReady,
+        mainWindow, &MainWindow::onDataReady,
+        Qt::DirectConnection);
+// 队列连接
+connect(threadA, &ThreadA::dataReady,
+        mainWindow, &MainWindow::onDataReady,
+        Qt::QueuedConnection);
+```
+直接连接会导致死锁：
+发射槽函数之后资源没有解锁，槽函数在等待释放锁。
+- 槽函数在**发射信号的线程中立即执行**，`onDataReady()` 会在ThreadA线程中**立刻执行**，调用槽函数的行为会在 `dataReady()` 函数中的 `mutex.unlock()` 代码之前，但是线程 A 执行 ` onDataReady() ` 的同时线程 A 持有锁
+- 在 ThreadA 执行耗时操作时，主线程永远得不到互斥锁（解锁资源的钥匙）使用，卡在 `mutex.lock()` 位置
+队列连接不会导致死锁，但不可靠，还是需要等待线程 A 中耗时操作执行完毕后主线程才能够使用锁
+- 信号被放入**主线程的事件队列**，主线程在自己的事件循环中处理信号
+- ThreadA继续执行不受影响
+根据**最小锁持有时间**原则，可以改写代码为：
+```cpp
+while(!m_stop){
+    if(!m_paused){
+        QMutexLocker locker(&mutex);
+        m_diceValue = 0;
+        for(int i = 0; i < 5; i++){
+            m_diceValue += QRandomGenerator::global()->bounded(1,7);
+        }
+        m_diceValue /= 5;
+        m_seq++;
+    }
+    this->msleep(500);
+}
+this->quit();
+```
+创建 `QMutexLocker` 对象会自动调用 `mutex.lock()` 并且在出作用域，对象被销毁时自动解锁
+### 基于读写锁的线程同步
+如果对所有读写操作都使用互斥锁保护，会因为所有操作都必须排队而降低性能，实际上可以对访问操作中**不太重要的读操作**不使用互斥锁，而对写入操作使用。
+读写锁类 QReadWriteLock，它是基于读或写的方式进行代码片段锁定的，允许多个线程以只读方式同步访问资源，但是只要有一个线程在以写入方式访问资源，其他线程就必须等待，直到写操作结束。
+```cpp
+void lockForRead()  // 以只读方式锁定资源，如果有其他线程以写入方式锁定资源，这个函数会被阻塞
+void  lockForWrite()   //以写入方式锁定资源，如果其他线程以读或写方式锁定资源，这个函数会被阻塞
+void  unlock()                      //解锁
+bool  tryLockForRead()              //尝试以只读方式锁定资源，不等待
+bool  tryLockForRead(int timeout)   //尝试以只读方式锁定资源，最多等待timeout毫秒
+bool  tryLockForWrite()             //尝试以写入方式锁定资源，不等待
+bool  tryLockForWrite(int timeout)  //尝试以写入方式锁定资源，最多等待timeout毫秒
+```
+使用它可以提高性能并保护数据
+```cpp
+int buffer[100];
+QMutex mutex;
+
+void ThreadDAQ::run()  // 负责采集数据的线程
+{
+    ...
+    mutex.lock();
+    // Lock.lockForWrite();
+    // QWriteLocker(&Lock);
+    get_data_and_write_in_buffer();  // 数据写入
+    buffer mutex.unlock();
+    // Lock.unlock();
+    // 同理出作用域自动解锁
+    ...
+}
+void ThreadShow::run()  // 负责显示数据的线程
+{
+    ...
+    mutex.lock();
+    // Lock.lockForRead();
+    // QReadLocker(&Lock);
+    show_buffer();  // 读取buffer里的数据并显示
+    mutex.unlock();
+    // Lock.unlock();
+    // 同理出作用域自动解锁
+    ...
+}
+void ThreadSaveFile::run()  // 负责保存数据的线程
+{
+    ...
+    // Lock.lockForRead();
+    // QReadLocker(&Lock);
+    mutex.lock();
+    save_buffer_toFile();  // 读取buffer里的数据并保存到文件
+    mutex.unlock();
+    // Lock.unlock();
+    // 同理出作用域自动解锁
+    ...
+}
+```
+### 基于条件等待的线程同步
+QWaitCondition 类，可以使一个线程在满足一定条件时通知其他多个线程，使其他多个线程及时进行响应，这样比手写 lock，unlock 效率更高
