@@ -4942,6 +4942,8 @@ MainWindow::~MainWindow()
     delete ui;
 }
 ```
+如果不设置，在**没有点击断开连接的情况下**关闭应用会因为 tcp 连接没有关闭导致内存泄漏
+![[PixPin_2025-12-16_22-08-58.png]]
 获取基本信息
 ```cpp
 void MainWindow::on_actHostInfo_triggered()
@@ -4960,6 +4962,45 @@ void MainWindow::on_actHostInfo_triggered()
     }
 }
 ```
+#### 客户端
+```cpp
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+
+    tcpClient = new QTcpSocket(this);
+    labSocketState = new QLabel("Socket状态:");
+    labSocketState->setMinimumWidth(250);
+    ui->statusBar->addWidget(labSocketState);
+
+    QString localIP=getLocalIP();      //获取本机IP
+    this->setWindowTitle(this->windowTitle()+"----本机IP地址："+localIP);
+    ui->comboServer->addItem(localIP);
+
+    connect(tcpClient, &QTcpSocket::connected, this, &MainWindow::do_connected);
+    connect(tcpClient, &QTcpSocket::disconnected, this, &MainWindow::do_disconnected);
+    connect(tcpClient, &QTcpSocket::stateChanged, this, &MainWindow::do_socketStateChange);
+    connect(tcpClient, &QTcpSocket::readyRead, this, &MainWindow::do_socketReadyRead);
+}
+```
+一个客户端只有一个 socket，所以可以放在构造函数中
+```cpp
+MainWindow::~MainWindow()
+{
+    // 先断开所有信号槽连接，防止在析构过程中访问已销毁的对象
+    disconnect(tcpClient);
+
+    // 如果socket还连接着，则断开连接
+    if (tcpClient->state() == QAbstractSocket::ConnectedState) {
+        tcpClient->disconnectFromHost();
+    }
+
+    delete ui;
+}
+```
+同理，需要保证在销毁前关闭连接，否则可能会导致报错
 #### 客户端通信总体流程
 步骤1：创建服务器对象
 ```cpp
@@ -5016,4 +5057,87 @@ tcpClient->connectToHost(addr, port);  // 连接到指定IP和端口的服务器
 - 设置接收数据的信号处理：readyRead()信号
 步骤4：发送和接收数据
 - 发送：`tcpClient->write(data)`
-- 接收：在`readyRead()`信号的槽函数中读取数据
+- 接收：在 `readyRead()` 信号的槽函数中读取数据
+## UDP 通信
+用户数据报协议（User Datagram Protocol，UDP）是轻量的、不可靠的、面向数据报（datagram）的、无连接的协议，它可以用于对可靠性要求不高的场合。
+***UDP通信不区分客户端和服务器端，UDP程序都是客户端程序***
+![[PixPin_2025-12-16_22-13-24.png]]
+
+QUdpSocket 类用于实现 UDP 通信，它与 QTcpSocket 具有相同的父类 QAbstractSocket，**共享大部分的接口函数**，QUdpSocket以数据报传输数据，而不是以连续的数据流传输数据。`QUdpSocket::writeDatagram()`函数用于发送数据报，**数据报一般少于512字节每个数据报包含发送者和接收者的IP地址和端口等信息。**，
+**UDP 消息传送有单播、广播、组播 3 种模式**
+![[PixPin_2025-12-16_22-15-44.png|800]]
+TCP 通信只有单播模式，没有广播和组播模式。UDP 通信虽然不能保证数据传输的准确性，但是它具有灵活性，一般的即时通信软件都是基于 UDP 通信的。
+`QUdpSocket::joinMulticastGroup()` 函数可实现加入多播组的功能，加入多播组后，UDP数据的收发与正常的UDP数据的收发方法一样
+在单播、广播和组播模式下，UDP 程序都是对等的。组播和广播的实现方式基本相同，只是数据报的目标 IP 地址设置不同。组播模式需要加入多播组，实现方式有较大差异。
+### UDP 单播和广播
+#### 单播代码
+在同一台计算机上运行时，两个运行实例需要绑定不同的端口，例如实例A绑定端口1200，实例B绑定端口3600。实例A向实例B发送数据报时，需要指定实例B所在主机的IP地址和绑定端口作为目标地址和目标端口
+单播，和 tcp 链接不同的是 udp **是无协议链接**，，不像 TCP 那样建立持续连接。因此**只会在需要发送数据包的时候发送或接受，没有真正的"UDP 连接"状态**
+```cpp
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+
+    this->labSocketState = new QLabel("socket state: ", this);
+    this->labSocketState->setMinimumWidth(200);
+    ui->statusBar->addWidget(this->labSocketState);
+
+    QString localIP = getLocalIP();
+    this->setWindowTitle(this->windowTitle()+"----本机IP地址："+localIP);
+    ui->comboTargetIP->addItem(localIP);
+
+    this->udpSocket = new QUdpSocket(this);
+
+    connect(this->udpSocket, &QUdpSocket::readyRead, this, &MainWindow::do_socketReadyRead);
+    connect(this->udpSocket, &QUdpSocket::stateChanged, this, &MainWindow::do_socketStateChange);
+
+    do_socketStateChange(this->udpSocket->state());  // 需要在状态栏中显示状态
+}
+```
+所有 udp 客户端都是等价的，所以初始化和信号槽连接在构造函数中进行
+```cpp
+MainWindow::~MainWindow()
+{
+    if(udpSocket->state() == QUdpSocket::BoundState){
+    // if(udpSocket)
+    // if(udpSocket->localPort() > 0)
+        this->udpSocket->abort();
+        this->udpSocket->close();
+    }
+    delete ui;
+}
+```
+释放连接时由于**无法检测连接**，只能直接**放弃绑定端口并关闭 udp 套接字**，任选一种判断方法
+```cpp
+void MainWindow::do_socketReadyRead()
+{
+    while(this->udpSocket->hasPendingDatagrams()){
+        QByteArray datagram;
+        datagram.resize(udpSocket->pendingDatagramSize());
+        QHostAddress peerHost;
+        quint16 peerPort;
+        udpSocket->readDatagram(datagram.data(), datagram.size(), &peerHost, &peerPort);
+        QString str = datagram.data();
+        QString peer="[From "+peerHost.toString()+":"+QString::number(peerPort)+"] ";
+        ui->textEdit->appendPlainText(peer+str);
+    }
+}
+```
+读取数据时，没有指定从哪一个主机和端口读取信息，但还是能够读取，原因是 **UDP 数据包自身携带发送方信息：每个 UDP 数据报都包含源 IP 地址和源端口**，操作系统传递原始信息：底层网络栈会将完整的数据包信息传递给应用程序，**引用到对应变量**
+```cpp
+void MainWindow::on_btnBroadcast_clicked()
+{
+    quint16 targetPort = ui->spinTargetPort->value();
+    QString msg = ui->editMsg->text();
+    QByteArray data = msg.toUtf8();
+    this->udpSocket->writeDatagram(data, QHostAddress::Broadcast, targetPort);
+    ui->textEdit->appendPlainText("[broadcast] "+msg);
+    ui->editMsg->clear();
+    ui->editMsg->setFocus();
+}
+```
+使用广播时，更不需要指定 targetHost ，但是需要指定 targetPort
+ - 如果你的IP是192.168.1.x，广播地址就是192.168.1.255
+   - 如果你的IP是10.0.0.x，广播地址就是10.0.0.255
