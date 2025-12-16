@@ -4923,3 +4923,97 @@ for(const auto& interface : list){
 ## TCP 通信
 TCP通信必须先建立TCP连接，通信端分为客户端和服务器端。Qt提供QTcpSocket类和QTcpServer类，用于设计TCP通信应用程序。服务器端程序必须使用QTcpServer进行端口监听，建立服务器；使用QTcpSocket建立连接，然后使用套接字（socket）进行通信。
 ![[PixPin_2025-12-16_19-57-01.png]]
+### 基本知识
+在客户端与服务器端建立 TCP 连接后，具体的数据通信是通过 QTcpSocket 对象完成的。QTcpSocket 类提供了 TCP 的接口，可以用 QTcpSocket 类实现标准的网络通信协议，如 POP 3、SMTP 和 NNTP 等，也可以设计自定义协议。
+TCP客户端使用QTcpSocket对象与TCP服务器端建立连接并通信。客户端的QTcpSocket对象首先通过 `connectToHost()` 尝试连接到服务器，该函数需要指定服务器的IP地址和端口。函数 `connectToHost()` 以异步方式连接到服务器，不会阻塞程序运行，成功连接后QTcpSocket对象会发射 `connected()` 信号。
+QTcpSocket 是从 QIODevice 间接继承的，所以可以使用流数据读写功能。一个 QTcpSocket 实例既可以接收数据也可以发送数据，且接收与发送是异步工作的，有各自的缓冲区。
+- QTcpServer：服务器端类，负责监听和接受客户端连接
+- QTcpSocket：套接字类，用于实际的数据传输，服务器和客户端都使用
+### 代码编写
+#### 服务器端
+使用 QTcpServer 和 QTcpSocket 对象在需要断开连接时要做的操作
+```cpp
+MainWindow::~MainWindow()
+{
+    if(tcpSocket != nullptr && tcpSocket->state() == QAbstractSocket::ConnectedState){
+        tcpSocket->disconnectFromHost();
+    }
+    if(tcpServer->isListening()) tcpServer->close();
+    delete ui;
+}
+```
+获取基本信息
+```cpp
+void MainWindow::on_actHostInfo_triggered()
+{
+    QString hostName = QHostInfo::localHostName();
+    ui->textEdit->appendPlainText("local name: " + hostName + "\n");
+    QHostInfo hostInfo = QHostInfo::fromName(hostName);
+    QList<QHostAddress> addrList = hostInfo.addresses();
+    if(addrList.isEmpty()) return;
+    for(const auto& addr : addrList){
+        if(QAbstractSocket::IPv4Protocol == addr.protocol()){
+            QString ip = addr.toString();
+            ui->textEdit->appendPlainText("local host ip: " + ip + "\n");
+            if(ui->comboIP->findText(ip) < 0) ui->comboIP->addItem(ip);
+        }
+    }
+}
+```
+#### 客户端通信总体流程
+步骤1：创建服务器对象
+```cpp
+QTcpServer *tcpServer = new QTcpServer(this);
+```
+步骤2：开始监听
+```cpp
+void MainWindow::on_actStart_triggered(){
+	tcpServer->listen(address, port);    // 在指定IP和端口上监听
+}
+```
+步骤3：等待客户端连接
+```cpp
+connect(tcpServer, SIGNAL(newConnection()), this, SLOT(
+ do_newConnection()));
+```
+步骤4：接收连接
+```cpp
+void MainWindow::do_newConnection()
+{
+	// 由于不同的客户端和服务器通信会使用**不同的socket**，所以信号槽连接不能在构造函数中进行
+    tcpSocket = tcpServer->nextPendingConnection(); // 新的连接
+    // 设置连接的各种信号和槽
+    tcpSocket = tcpServer->nextPendingConnection();
+	connect(tcpSocket, &QTcpSocket::connected, this, &MainWindow::do_clientConnected);
+	do_clientConnected();
+	connect(tcpSocket, &QTcpSocket::disconnected, this, &MainWindow::do_clientDisconnected);
+	connect(tcpSocket, &QTcpSocket::stateChanged, this, &MainWindow::do_socketStateChange);
+	do_socketStateChange(tcpSocket->state());
+}
+```
+步骤5：发送和接收数据
+- 发送：`tcpSocket->write(data)`
+- 接收：不能一直 `canReadLine()` 检测，而一旦 tcp 传输完毕，需要传输的数据准备好了之后才能使用 `while(tcpSocket->canReadLine())` 读取数据
+断开连接时需要将 tcpSocket 置空，少一个链接，就少一个 socket，没必要再存在了
+```cpp
+void MainWindow::do_clientDisconnected()
+{
+    ui->textEdit->appendPlainText("**Client socket disconnected");
+    tcpSocket->deleteLater();
+}
+```
+#### 客户端通信总体流程
+步骤1：创建客户端socket
+```cpp
+QTcpSocket *tcpClient = new QTcpSocket(this);
+```
+步骤2：连接到服务器
+```cpp
+tcpClient->connectToHost(addr, port);  // 连接到指定IP和端口的服务器
+```
+步骤3：建立连接后处理
+- 在`connected()`信号的槽函数中处理连接成功逻辑
+- 设置接收数据的信号处理：readyRead()信号
+步骤4：发送和接收数据
+- 发送：`tcpClient->write(data)`
+- 接收：在`readyRead()`信号的槽函数中读取数据
