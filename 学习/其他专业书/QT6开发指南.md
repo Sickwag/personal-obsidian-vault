@@ -4377,3 +4377,147 @@ QtCharts 模块已在 Qt 6.8.0 中弃用（官方文档中说是 6.10 开始的�
 同理
 # 多线程
 ## 使用 QThread 创建多线程程序
+### 代码编写
+#### 线程执行原理
+qt 中的 QThread 线程可以被继承，更方便地处理工作
+```cpp
+class TDiceThread : public QThread
+{
+    Q_OBJECT
+private:
+    int     m_seq=0;        //掷骰子次数序号
+    int     m_diceValue;    //骰子点数
+    bool    m_paused=true;  //暂停次骰子
+    bool    m_stop=false;   //停止线程run()
+protected:
+    void    run();      //线程的事件循环
+public:
+    explicit TDiceThread(QObject *parent = nullptr);
+
+    void    diceBegin();    //开始掷骰子
+    void    dicePause();    //暂停
+    void    stopThread();   //结束线程run()
+signals:
+    void    newValue(int seq,int diceValue);    //产生新点数的信号
+};
+```
+这个线程接管随机数**在线程中的产生**，继承的作用就是限制和细化这个线程能做的事，封装在类中，使用 `Q_OBJECT` 启用信号槽更方便，run 函数用来控制县程序要做的事（也可以是别的名称），但是类的线程执行状态由**内部管控**，QThread 能用的他也能用
+```cpp
+void TDiceThread::run()
+{//线程的事件循环
+    m_stop=false;       //启动线程时令m_stop=false
+    m_paused=true;      //启动运行后暂时不掷骰子
+    m_seq=0;            //掷骰子次数
+    while(!m_stop) {
+        if (!m_paused) {
+            m_diceValue= QRandomGenerator::global()->bounded(1,7);  //产生随机数[1,6]
+            m_seq++;
+            emit newValue(m_seq, m_diceValue);  //发射信号
+        }
+        this->msleep(500);    //线程休眠500ms
+    }
+
+    quit();     //相当于exit(0), 退出线程的事件循环
+}
+```
+#### 线程终止方法
+在Qt线程编程中，有两种停止线程的方式：
+1. **优雅停止**：使用线程类自己的停止方法（如 `stopThread()`），**使用 `stopThread()` 是安全的**，因为：
+	- 这是一个**用`户主动操作**，应用程序处于正常运行状态
+	- 线程需要时间执行清理操作，`stopThread()`只是设置一个标志，线程需要在`run()`函数中**主动检查**这个标志并退出。这需要时间
+	- 主线程可以等待线程完成清理
+2. **强制停止**：使用 `terminate()` 强制终止线程，然后执行 `wait()`
+	- 立即向操作系统发送"终止线程"的请求，线程会被强制结束（但需要时间），不会执行后续代码
+	- **危险**：可能跳过资源释放、文件关闭等，所以需要使用 `wait()` 等待线程完全被关闭（操作系统执行的动作）后**线程资源被回收之前**操作系统执行其它代码可能因为线程仍在占用资源，或者资源被删除，但是线程对象还占用这部分内存，导致内存泄漏
+	- 这种方法在关闭窗口时是可以接受的，但是程序运行期间最好使用 `stopThread()`
+### 线程的事件循环
+**如果线程中的对象需要与Qt的事件系统交互，就必须启动事件循环 （`exec()` 启动）。否则，可以不启动**，线程只是简单的循环和sleep，没有使用信号槽、定时器等Qt异步机制
+线程是线程，线程类是线程类，**线程类只是一个方便定义和调整线程工作的一种抽象**，本质上是操作系统资源调度的一个单位，把他封装乘类只是为了**利用 qt 框架的功能更好地设置线程工作而已**
+
+需要启用线程类事件循环的场景
+- 线程中需要使用**QTimer**定时器
+```cpp
+// 示例：线程中的定时任务
+class TimerWorker : public QObject {
+    Q_OBJECT
+public:
+    TimerWorker() {
+        m_timer = new QTimer(this);
+        connect(m_timer, &QTimer::timeout, this, &TimerWorker::onTimeout);
+        m_timer->start(1000);  // 每秒触发一次
+    }
+    
+private slots:
+    void onTimeout() {
+        qDebug() << "定时任务执行中，线程ID:" << QThread::currentThreadId();
+    }
+    
+private:
+    QTimer* m_timer;
+};
+
+void MyThread::run() {
+    TimerWorker worker;
+    exec();  // ✅ 必须有事件循环，定时器才能工作
+}
+```
+计时器只能管控当前线程的任务，所以必须在**对应线程中**创建对应的 QTimer 对象，或者通过 `obj.moveToThread(threadObj)` 移动对象到对应线程中
+- 线程中需要使用**信号槽**进行通信
+```cpp
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+
+    threadA= new TDiceThread(this);
+    connect(threadA,&TDiceThread::started, this, &MainWindow::do_threadA_started);
+    connect(threadA,&TDiceThread::finished,this, &MainWindow::do_threadA_finished);
+}
+```
+mainwindow 是主线程，TDiceThread 是工作线程，
+- 线程中需要使用**QNetworkAccessManager**等异步网络模块
+- 线程中需要使用**数据库**操作（通常是异步的）
+- 线程需要**持续运行**并响应各种事件
+- 实现**工作者对象**（Worker Object）模式
+如果要在线程的工作函数中使用 `connect()` 函数，那么需要最后启用 `exec()`，否则 run 执行完后立刻返回，线程对象被销毁，没有启动事件循环，这个线程对象都被销毁了也就没有信号槽这个东西了。其他对象发送到该线程类的信号也就无法受到
+```cpp
+void MyThread::run() {
+    Worker worker;  // worker在这个线程中创建
+    
+    connect(this, &MyThread::startWork, &worker, &Worker::doWork);
+    exec();
+}
+```
+执行事件循环，会被阻塞，直到调用 `quit()` **退出事件循环**线程类才会被销毁, connect 本身没有问题，问题在于线程的生命周期，`emit` 发送信号时，会发生：
+1. Qt生成一个"调用请求"（QMetaCallEvent）
+2. 将这个事件放入**目标对象所在线程的事件队列**
+3. 目标线程的事件循环从队列中取出事件
+4. 执行实际的函数调用
+
+## 线程同步
+### 线程同步的概念
+如果不使用信号槽机制来让主线程读取工作线程的骰子值，就需要这样的代码
+```cpp
+void TDiceThread::run()
+{//线程的事件循环，不断更新m_diceValue
+    m_stop=false;
+    m_paused=true;
+    m_seq=0;
+    while(!m_stop) {
+        if (!m_paused) {
+            m_diceValue=0;
+            for(int i=0; i<5; i++)
+                m_diceValue += QRandomGenerator::global()->bounded(1,7);
+            m_diceValue =m_diceValue/5;
+            m_seq++;
+        }
+        msleep(500);
+    }
+    quit();     //在  m_stop==true时结束线程任务
+}
+
+// 设置m_diceValue getter
+int TDiceThread::diceValue() { return = m_diceValue;}
+```
+但是如果**在主线程中调用 `diceValue` 时，有可能工作线程在 for 循环中**，所以可能会得到脏数据，解决方法是将 for 循环和求平均数的操作设置为一个原子操作，**不可被中断**
