@@ -4423,13 +4423,14 @@ void TDiceThread::run()
 #### 线程终止方法
 在Qt线程编程中，有两种停止线程的方式：
 1. **优雅停止**：使用线程类自己的停止方法（如 `stopThread()`），**使用 `stopThread()` 是安全的**，因为：
-	- 这是一个**用`户主动操作**，应用程序处于正常运行状态
+	- 这是一个**用户主动操作**，应用程序处于正常运行状态
 	- 线程需要时间执行清理操作，`stopThread()`只是设置一个标志，线程需要在`run()`函数中**主动检查**这个标志并退出。这需要时间
 	- 主线程可以等待线程完成清理
 2. **强制停止**：使用 `terminate()` 强制终止线程，然后执行 `wait()`
 	- 立即向操作系统发送"终止线程"的请求，线程会被强制结束（但需要时间），不会执行后续代码
 	- **危险**：可能跳过资源释放、文件关闭等，所以需要使用 `wait()` 等待线程完全被关闭（操作系统执行的动作）后**线程资源被回收之前**操作系统执行其它代码可能因为线程仍在占用资源，或者资源被删除，但是线程对象还占用这部分内存，导致内存泄漏
 	- 这种方法在关闭窗口时是可以接受的，但是程序运行期间最好使用 `stopThread()`
+	- - **Qt官方文档明确警告：此函数很危险，只在绝对必要时使用**
 ### 线程的事件循环
 **如果线程中的对象需要与Qt的事件系统交互，就必须启动事件循环 （`exec()` 启动）。否则，可以不启动**，线程只是简单的循环和sleep，没有使用信号槽、定时器等Qt异步机制
 线程是线程，线程类是线程类，**线程类只是一个方便定义和调整线程工作的一种抽象**，本质上是操作系统资源调度的一个单位，把他封装乘类只是为了**利用 qt 框架的功能更好地设置线程工作而已**
@@ -4629,6 +4630,7 @@ connect(threadA, &ThreadA::dataReady,
 队列连接不会导致死锁，但不可靠，还是需要等待线程 A 中耗时操作执行完毕后主线程才能够使用锁
 - 信号被放入**主线程的事件队列**，主线程在自己的事件循环中处理信号
 - ThreadA继续执行不受影响
+默认情况下是自动连接 **AutoConnection**：默认方式，跨线程时为QueuedConnection，同线程时为DirectConnection
 根据**最小锁持有时间**原则，可以改写代码为：
 ```cpp
 while(!m_stop){
@@ -4658,7 +4660,7 @@ bool  tryLockForRead(int timeout)   //尝试以只读方式锁定资源，最多
 bool  tryLockForWrite()             //尝试以写入方式锁定资源，不等待
 bool  tryLockForWrite(int timeout)  //尝试以写入方式锁定资源，最多等待timeout毫秒
 ```
-使用它可以提高性能并保护数据
+使用它可以提高性能并保护数据，读操作可以并行，写操作独占
 ```cpp
 int buffer[100];
 QMutex mutex;
@@ -4702,3 +4704,111 @@ void ThreadSaveFile::run()  // 负责保存数据的线程
 ```
 ### 基于条件等待的线程同步
 QWaitCondition 类，可以使一个线程在满足一定条件时通知其他多个线程，使其他多个线程及时进行响应，这样比手写 lock，unlock 效率更高
+```cpp
+void TValueThread::run() {
+    while (1) {
+        rwLocker.lockForRead();  // 以只读方式锁定
+        waiter.wait(&rwLocker);  // 等待被唤醒
+        emit new Value(seq, dice Value);
+        rwLocker.unlock();  // 解锁
+    }
+}
+void TPictureThread::run() {
+    while (1) {
+        rwLocker.lockForRead();  // 以只读方式锁定
+        waiter.wait(&rwLocker);  // 等待被唤醒
+        QString filename = QString::asprintf(":/dice/images/d%d.jpg", dice Value);
+        emit newPicture(filename);
+        rwLocker.unlock();  // 解锁
+    }
+}
+```
+示例代码中使用了生产者-消费者模式，TDiceThread 是生产者，每隔 500 ms 生产一个随机数，TValueThred 和 TPicturelThread 线程根据这个数字发送 `newValue` 信号和显示图片
+`waiter.wait()`的具体作用
+1. 同步功能：消费线程会**解锁 mutex**，然后在此处阻塞等待，直到生产者调用 `waiter.wakeAll()`
+2. 避免忙等待：如果没有这种等待机制，消费线程会不断循环检查数据是否可用（CPU占用高）这种方式将线程状态设置为等待（挂起）不消耗CPU
+3. 数据一致性：通过读写锁确保安全访问共享变量diceValue和seq
+```cpp
+void MainWindow::on_actThread_Run_triggered()
+{//"启动线程"按钮
+    threadValue->start();
+    if (!threadPic->isRunning())
+        threadPic->start();
+    if(!threadA->isRunning())
+        threadA->start();
+}
+```
+这种方式需要**注意线程启动 `run()` 顺序，初始化顺序无所谓**，先启动随机数生成和图片这种**消费者线程**，后启动主线程（发送信号的线程）
+![[PixPin_2025-12-16_16-56-58.png]]
+
+### 基于信号量的线程同步
+信号量（semaphore）是另一种限制对**同一组共享**资源进行访问的 ITC 技术，它与互斥量相似，但二者有区别。一个互斥量只能被锁定一次，而信号量可以被多次使用。互斥锁主要用于**防止资源访问冲突**和限制所有权，信号量用于限制某些资源的**并发访问数量**，用于生产者消费者模型，线程池模型等，**用于多个线程需要同时访问资源的场景**
+```cpp
+const int DataSize = 100; // 100次访问任务，需要生产和消费各100次
+const int BufferSize = 10; // 同一时间内只允许10个线程访问同一块数据
+
+char buffer[BufferSize];
+QSemaphore freeSpace(BufferSize);   // 初始：BufferSize个空闲空间
+QSemaphore usedSpace(0);            // 初始：0个已使用空间
+
+// 生产者线程
+class Producer : public QThread {
+public:
+    void run() override {
+        for (int i = 0; i < DataSize; ++i) {
+            // 等待空闲空间
+            freeSpace.acquire();
+            buffer[i % BufferSize] = 'A' + (i % 26);
+            qDebug() << "Producer: produced" << buffer[i % BufferSize];
+            // 释放已使用空间
+            usedSpace.release();
+            msleep(50);
+        }
+    }
+};
+
+// 消费者线程
+class Consumer : public QThread {
+public:
+    void run() override {
+        for (int i = 0; i < DataSize; ++i) {
+            // 等待有数据可用
+            usedSpace.acquire();
+            // 消费数据
+            char data = buffer[i % BufferSize];
+            qDebug() << "Consumer: consumed" << data;
+            // 释放空闲空间
+            freeSpace.release();
+            msleep(100);
+        }
+    }
+};
+```
+信号量通常用来保护一定数量的相同资源，如数据采集时的双缓冲区
+创建一个QSemaphore对象时可以设置初始值表示可用资源的个数。`acquire()` 以阻塞等待方式获取一个资源，信号量资源数减 1；函数 `release()` 释放一个资源，信号量的资源数加 1
+`tryAccquir(int n, QDeadlineTimer timer)` 会以**阻塞方式**尝试获取，如果超过 timer，则不再尝试获取，返回 false，如果没有设置 timer，则会一直等待，**必须获取到**
+QSemaphore **本质上是一个资源记录器**，他不拥有任何资源，只是起到一个现在还有多少资源空闲，多少资源正在被占用的**记录作用**，并且可以在多个线程中被访问到，同时他提供一些成员方法 `accquire(int n, QDeadlineTimer)`，`available()` 等**原子操作**来帮助程序员记录。
+
+| 维度       | QMutex（互斥锁）              | QSemaphore（信号量）            |
+| -------- | ------------------------ | -------------------------- |
+| **哲学本质** | **所有权**哲学<br>强调"谁拥有，谁释放" | **许可证**哲学<br>强调"有证通行，无证等待" |
+| **数学模型** | 布尔变量（0或1）<br>二元状态        | 整数计数器<br>多元状态              |
+| **设计目的** | 保护**完整性**<br>确保数据不被破坏    | 管理**并发度**<br>控制同时访问的数量     |
+| **线程关系** | 竞争关系<br>"你死我活"的独占        | 协作关系<br>"有序共享"的合作          |
+| **典型隐喻** | 厕所钥匙<br>一次只能一个人用         | 停车场空位<br>多个位置可同时使用         |
+### 互斥量和信号量的应用
+多线程连接数据库是典型的信号量使用场景，我们需要控制同时连接上数据库的对象（线程）是有限的，就需要 `dbConnections` 来帮助记录现在有多少个已经连接上的对象，需要时 `accquire()`，如果已满会自动阻塞代码，否则正常使用
+```cpp
+// 假设我们只有3个数据库连接
+QSemaphore dbConnections(3);  // 开始时，3把钥匙都在桶里
+void threadFunction() {
+    dbConnections.acquire();  // 拿走一把钥匙（如果没有钥匙，就等着）
+    // 这里使用数据库连接...
+    doDatabaseWork();
+    dbConnections.release();  // 还回钥匙
+}
+```
+消费者生产者模式，在[[#多线程#基于信号量的线程同步]]中已经有示例代码，主要目的是避免**生产和消费速度不匹配**导致某一方不断生产或者不断消耗（实际上没有产品给他消耗），导致 CPU 空转
+资源池，限制并发等场景
+# 网络
+Qt Network 模块提供了用于编写 TCP/IP 网络应用程序的各种类，如用于 TCP 通信的 QTcpSocket 和 QTcpServer，用于 UDP 通信的 QUdpSocket。
