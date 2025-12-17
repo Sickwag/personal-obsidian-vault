@@ -5252,34 +5252,15 @@ UDP 协议本身有标准的头部格式（8 字节）：
 |                                   |
 +---------------- ... --------------+
 ```
-UDP 协议本身有标准协议头，但这是由操作系统网络栈自动添加的，应用层无需关心。但作为应用开发者构建的是**应用层数据格式**，不是 UDP 包头
-## UDP 标准协议头（由系统自动处理）
+UDP 协议本身有标准协议头，但这是由操作系统网络栈自动添加的，应用层无需关心。作为应用开发者构建的是**应用层数据格式**，不是 UDP 包头
 
-UDP 协议本身的标准头部（8 字节）：
-
-```
- 0      7 8     15 16    23 24    31  
-+--------+--------+--------+--------+
-|     源端口        |      目标端口      |  ← 4字节
-+--------+--------+--------+--------+
-|    长度         |     校验和        |  ← 4字节  
-+--------+--------+--------+--------+
-```
-
-
-
-## 应用层数据格式（开发者定义）
-
-我们之前构建的是应用层数据格式，格式如下：
-
+代码中构建的是应用层数据格式，格式如下：
 ```
 [协议标识符][参数1][参数2][实际数据]
 例如： "CHUNK;0;9;[图片数据]"
 ```
-
-## 常见的应用层 UDP 协议格式设计
-
-### 1. **头部 + 数据格式**
+常见的应用层 UDP 协议格式设计
+1. **头部 + 数据格式**
 ```cpp
 struct PacketHeader {
     quint32 magic;      // 魔数，用于识别包类型
@@ -5289,97 +5270,252 @@ struct PacketHeader {
     quint32 totalSize;  // 总大小（仅START包）
 };
 ```
-
-### 2. **字符串标记格式（我们用的）**
+2. **字符串标记格式（代码中使用）**
 ```cpp
 // START包: "START;文件大小;"
 // CHUNK包: "CHUNK;分块索引;总块数;[实际数据]"
 // END包:   "END;"
 ```
-
-### 3. **二进制格式**
+这种方式只是在修改**应用层的 UDP 数据格式**，真正发送的 UDP 数据包头是由操作系统添加的
+3. **二进制格式**
 ```cpp
-// 方式1：固定头部 + 可变数据
+// 方式1：固定头部 + 可变数据，需要自定义精标准UDP协议中的字段转化为方便处理的格式
 [4字节长度][1字节类型][4字节序列号][实际数据]
 
 // 方式2：类型化数据包
 if (type == 1) {  // START包
     // [4字节总大小]
 } else if (type == 2) {  // CHUNK包  
-    // [4字节块索引][4字节总块数][实际数据]
+    // [4字节块索引][4字节总块数][chunk包中的实际数据]
+} else if (type == 3){   // END包
+	// [4字节长度][1字节类型(3)][4字节序列号][可选：结束状态码(4字节)]
 }
 ```
-
-## 如何构建应用层协议
-
-### 1. **定义协议标识**
+改进后的基于 UDP 协议的图片传输代码，只需要修改发送图片函数和接收数据函数
 ```cpp
-const quint32 PROTOCOL_MAGIC = 0x12345678;  // 识别包的魔数
-enum PacketType {
-    START = 1,
-    CHUNK = 2, 
-    END = 3
-};
-```
+void MainWindow::on_btnChoosePic_clicked()
+{
+    QString picPath = QFileDialog::getOpenFileName(this, "choose pic file", "", QString("png file(*.png);;jpg file(*.jpg)"));
+    if(picPath.isEmpty()) return;
 
-### 2. **构建发送数据**
-```cpp
-QByteArray buildStartPacket(qint64 totalSize) {
-    QByteArray packet;
-    QDataStream stream(&packet, QIODevice::WriteOnly);
-    stream << PROTOCOL_MAGIC;
-    stream << (quint8)START;
-    stream << totalSize;
-    return packet;
+    // 明确标识这是发送操作
+    ui->textEdit->appendPlainText("[SEND] 准备发送图片: " + QFileInfo(picPath).fileName());
+
+    QFile file(picPath);
+    if(file.open(QIODevice::ReadOnly)){
+        QByteArray picData = file.readAll();
+        QPixmap pic;
+        pic.loadFromData(picData);
+        ui->labPic->setPixmap(pic.scaledToHeight(ui->labPic->height()));
+
+        // 检查图片大小，如果太大则分块发送
+        if (picData.size() > 58000) {  // 留出安全边界
+            sendImageInChunks(picData);
+        } else {
+            // 直接发送小图片
+            QString targetIP = ui->comboTargetIP->currentText();
+            QHostAddress targetHost(targetIP);
+            quint16 targetPort = ui->spinTargetPort->value();
+
+            qint64 sent = this->udpSocket->writeDatagram(picData, targetHost, targetPort);
+            if (sent == -1) {
+                ui->textEdit->appendPlainText("[SEND ERROR] 发送失败: " + udpSocket->errorString());
+            }
+        }
+    }
 }
 
-QByteArray buildChunkPacket(int index, int total, const QByteArray& data) {
-    QByteArray packet;
-    QDataStream stream(&packet, QIODevice::WriteOnly);
-    stream << PROTOCOL_MAGIC;
-    stream << (quint8)CHUNK;
-    stream << index;
-    stream << total;
-    stream << data;
-    return packet;
+void MainWindow::sendImageInChunks(const QByteArray &imageData)
+{ // 用于分块发送大文件图片，调用这个函数时就说明已经需要分块了
+    QString targetIP = ui->comboTargetIP->currentText();
+    QHostAddress targetHost(targetIP);
+    quint16 targetPort = ui->spinTargetPort->value();
+
+    // 包头类型为START包，格式为"START;total_size;"
+    QByteArray startPacket = "START;" + QString::number(imageData.size()).toUtf8() + ";";
+    this->udpSocket->writeDatagram(startPacket, targetHost, targetPort);
+
+    // 分块发送图片数据 - 使用一致的块大小
+    const int chunkSize = 58000;  // 每个数据块大小，留出空间给包头
+    int totalChunks = (imageData.size() + chunkSize - 1) / chunkSize;  // 上取整
+
+    for (int i = 0; i < totalChunks; ++i) {
+        int offset = i * chunkSize;
+        int currentChunkSize = qMin(chunkSize, imageData.size() - offset);
+        QByteArray chunk = imageData.mid(offset, currentChunkSize);
+
+        // 构造包头：标识符+包序号+总包数+实际数据
+        QByteArray packetHeader = QString("CHUNK;%1;%2;").arg(i).arg(totalChunks).toUtf8(); // 注意编码格式
+        QByteArray packet = packetHeader + chunk;
+
+        qint64 sent = this->udpSocket->writeDatagram(packet, targetHost, targetPort);
+        if (sent == -1) {
+            ui->textEdit->appendPlainText("[error] 发送分块失败: " + udpSocket->errorString());
+            return;
+        }
+        QCoreApplication::processEvents(); // 处理事件循环
+        QThread::msleep(5); // 添加短暂延迟，防止发送太快
+    }
+
+    // 发送结束信号
+    QByteArray endPacket = "END;";
+    this->udpSocket->writeDatagram(endPacket, targetHost, targetPort);
+
+    ui->textEdit->appendPlainText(QString("[out] 已发送图片分块: %1 bytes, %2 chunks").arg(imageData.size()).arg(totalChunks));
 }
 ```
-
-### 3. **解析接收数据**
+接收数据函数较为复杂，因为需要 UDP 可能是乱序的，需要手动构建 chunk 包的顺序编号和手动排序
+首先需要构建记录器，记录传输过程中的基本信息
 ```cpp
-void parsePacket(const QByteArray& data) {
-    QDataStream stream(data);
-    quint32 magic;
-    quint8 type;
-    stream >> magic;
-    
-    if (magic != PROTOCOL_MAGIC) return;  // 不是我们的包
-    
-    stream >> type;
-    if (type == START) {
-        qint64 totalSize;
-        stream >> totalSize;
-        // 处理开始包...
-    } else if (type == CHUNK) {
-        int index, total;
-        stream >> index >> total;
-        QByteArray chunkData;
-        stream >> chunkData;
-        // 处理分块...
+// 用于接收分块图片的变量
+QMap<QString, QByteArray> pendingImages;  // 存储正在接收的完整图片数据
+QMap<QString, int> expectedChunks;        // 每个会话期望的分块总数
+QMap<QString, int> receivedChunks;        // 每个会话已接收的分块数
+QMap<QString, QMap<int, QByteArray>> pendingChunks; // 存储乱序到达的分块数据
+```
+每个 udp 程序对等，所以区别不同的程序方法是记录每一个程序的 host 和 port 信息 `QString sessionKey = peerHost.toString() + ":" + QString::number(peerPort);`，然后存储到这些数据中作为键值，每一个键值对代表一个会话
+```cpp
+void MainWindow::do_socketReadyRead()
+{
+    ui->textEdit->appendPlainText("[RECV] 接收到UDP数据包，开始处理...");
+
+    while(this->udpSocket->hasPendingDatagrams()){
+        QByteArray datagram;
+        datagram.resize(udpSocket->pendingDatagramSize());
+        QHostAddress peerHost;
+        quint16 peerPort;
+        udpSocket->readDatagram(datagram.data(), datagram.size(), &peerHost, &peerPort);
+
+        QString peer = "[From "+peerHost.toString()+":"+QString::number(peerPort)+"] ";
+        ui->textEdit->appendPlainText("[RECV] 收到来自 " + peerHost.toString() + " 端口 " + QString::number(peerPort) + " 的数据，大小: " + QString::number(datagram.size()) + " bytes");
+
+        // 检查是否是控制包或分块数据
+        QString dataStr = QString::fromUtf8(datagram);
+        if (dataStr.startsWith("START;")) {
+            ui->textEdit->appendPlainText("[RECV] 识别为START包");
+            // 解析开始包：START;<size>;
+            QStringList parts = dataStr.split(';');
+            if (parts.size() >= 2) {
+                int imageSize = parts[1].toInt();
+                QString sessionKey = peerHost.toString() + ":" + QString::number(peerPort);
+
+                // 初始化接收状态
+                pendingImages[sessionKey].clear();
+                expectedChunks[sessionKey] = (imageSize + 58000 - 1) / 58000; // 计算所需分块数, 使用略小的块大小
+                receivedChunks[sessionKey] = 0;
+                pendingChunks[sessionKey].clear(); // 清空之前的分块缓存
+
+                ui->textEdit->appendPlainText(peer + QString("开始接收图片，大小: %1 bytes, 总计: %2 分块").arg(imageSize).arg(expectedChunks[sessionKey]));
+            }
+        }
+        else if (dataStr.startsWith("CHUNK;")) {
+            ui->textEdit->appendPlainText("[RECV] 识别为CHUNK包");
+            // 解析分块包：CHUNK;<chunk_index>;<total_chunks>;<data>
+            QStringList parts = dataStr.split(';', Qt::SkipEmptyParts);
+
+            if (parts.size() >= 3) {
+                bool ok1, ok2;
+                int chunkIndex = parts[1].toInt(&ok1);
+                int totalChunks = parts[2].toInt(&ok2);
+
+                if (ok1 && ok2) {
+                    ui->textEdit->appendPlainText("[RECV] 解析到分块索引: " + QString::number(chunkIndex) + ", 总数: " + QString::number(totalChunks));
+
+                    // 查找第三个分号的位置来提取数据部分
+                    int firstSemicolon = dataStr.indexOf(';');
+                    int secondSemicolon = dataStr.indexOf(';', firstSemicolon + 1);
+                    int thirdSemicolon = dataStr.indexOf(';', secondSemicolon + 1);
+
+                    if (thirdSemicolon != -1) {
+                        QByteArray imageData = datagram.mid(thirdSemicolon + 1); // 数据部分
+                        ui->textEdit->appendPlainText("[RECV] 分块数据大小: " + QString::number(imageData.size()) + " bytes");
+
+                        QString sessionKey = peerHost.toString() + ":" + QString::number(peerPort);
+
+                        // 存储分块到pendingChunks map中，允许乱序到达
+                        if (expectedChunks.contains(sessionKey)) {
+                            pendingChunks[sessionKey][chunkIndex] = imageData;
+                            receivedChunks[sessionKey] = pendingChunks[sessionKey].size();
+
+                            ui->textEdit->appendPlainText(peer + QString("已接收分块: %1/%2").arg(receivedChunks[sessionKey]).arg(expectedChunks[sessionKey]));
+
+                            // 检查是否收到所有分块
+                            if (receivedChunks[sessionKey] >= expectedChunks[sessionKey]) {
+                                ui->textEdit->appendPlainText("[RECV] 所有分块已接收，开始重组图片");
+
+                                // 按序组合所有分块
+                                QByteArray completeImageData;
+                                bool complete = true;
+                                for (int i = 0; i < expectedChunks[sessionKey]; ++i) {
+                                    if (pendingChunks[sessionKey].contains(i)) {
+                                        completeImageData += pendingChunks[sessionKey][i];
+                                        ui->textEdit->appendPlainText("[RECV] 组装分块 " + QString::number(i));
+                                    } else {
+                                        ui->textEdit->appendPlainText(peer + "错误：缺少分块 " + QString::number(i));
+                                        complete = false;
+                                        break; // 退出循环，数据不完整
+                                    }
+                                }
+
+                                if (complete) {
+                                    ui->textEdit->appendPlainText("[RECV] 图片重组完成，总大小: " + QString::number(completeImageData.size()) + " bytes");
+
+                                    // 显示完整的图片
+                                    QPixmap pic;
+                                    if (pic.loadFromData(completeImageData)) {
+                                        ui->labPic->setPixmap(pic.scaledToHeight(ui->labPic->height()));
+                                        ui->textEdit->appendPlainText(peer + "图片接收完成！");
+                                    } else {
+                                        ui->textEdit->appendPlainText(peer + "图片数据损坏！");
+                                    }
+                                } else {
+                                    ui->textEdit->appendPlainText(peer + "图片重组失败，数据不完整");
+                                }
+
+                                // 清理临时数据
+                                pendingImages.remove(sessionKey);
+                                expectedChunks.remove(sessionKey);
+                                receivedChunks.remove(sessionKey);
+                                pendingChunks.remove(sessionKey);
+                            } else {
+                                ui->textEdit->appendPlainText("[RECV] 等待更多分块，当前: " + QString::number(receivedChunks[sessionKey]) + "/" + QString::number(expectedChunks[sessionKey]));
+                            }
+                        } else {
+                            // 如果sessionKey不存在，可能是因为START包丢失或顺序异常
+                            ui->textEdit->appendPlainText(peer + "接收到分块但没有初始化会话信息，可能START包丢失");
+                        }
+                    } else {
+                        ui->textEdit->appendPlainText("[RECV] 错误：无法找到数据部分分隔符");
+                    }
+                } else {
+                    ui->textEdit->appendPlainText("[RECV] 错误：无法解析分块索引或总数");
+                }
+            } else {
+                ui->textEdit->appendPlainText("[RECV] 错误：CHUNK数据格式不正确，分隔符数量: " + QString::number(parts.size()));
+            }
+        }
+        else if (dataStr.startsWith("END;")) {
+            ui->textEdit->appendPlainText("[RECV] 识别为END包");
+            QString sessionKey = peerHost.toString() + ":" + QString::number(peerPort);
+            ui->textEdit->appendPlainText(peer + sessionKey + " 图片传输结束");
+        }
+        else {
+            // 传统模式：直接接收完整图片数据或文本消息
+            ui->textEdit->appendPlainText("[RECV] 识别为常规数据包");
+            QPixmap pic;
+            if (pic.loadFromData(datagram)) {
+                ui->labPic->setPixmap(pic.scaledToHeight(ui->labPic->height()));
+                ui->textEdit->appendPlainText(peer + "接收到完整图片");
+            } else {
+                // 如果不是有效图片数据，可能是普通文本消息
+                QString msg = QString::fromUtf8(datagram);
+                ui->textEdit->appendPlainText(peer + msg);
+            }
+        }
     }
 }
 ```
 
-## 常见应用层协议头部字段
-
-| 字段 | 作用 | 说明 |
-|------|------|------|
-| Magic Number | 识别包类型 | 防止处理错误类型的数据 |
-| Packet Type | 包类型 | 区分 START/CHUNK/END 等 |
-| Sequence | 序列号 | 用于按序处理（如果需要） |
-| Size | 数据大小 | 告知接收方数据长度 |
-| Checksum | 校验和 | 检测数据是否损坏 |
-| Session ID | 会话标识 | 处理多文件同时传输 |
-| Timestamp | 时间戳 | 检测数据包延迟 |
-
-这就是 UDP 应用层协议的设计思路。我们之前用的字符串格式是最简单的形式，二进制格式更高效但更复杂。
+## 基于 HTTP 的网络应用程序
+简单的 html 爬取参考 [[CPP爬虫实战#Qt 实现版本]]
+Qt 网络模块提供一些类来实现 OSI 七层网络模型中高层的网络协议，如 HTTP、FTP、SNMP 等，这些类主要是 QNetworkRequest、QNetworkAccessManager 和 QNetworkReply
