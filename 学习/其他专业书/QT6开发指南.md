@@ -5518,4 +5518,40 @@ void MainWindow::do_socketReadyRead()
 
 ## 基于 HTTP 的网络应用程序
 简单的 html 爬取参考 [[CPP爬虫实战#Qt 实现版本]]
-Qt 网络模块提供一些类来实现 OSI 七层网络模型中高层的网络协议，如 HTTP、FTP、SNMP 等，这些类主要是 QNetworkRequest、QNetworkAccessManager 和 QNetworkReply
+Qt 网络模块提供一些类来实现 OSI 七层网络模型中高层的网络协议，如 HTTP、FTP、SNMP 等，这些类主要是 QNetworkRequest、QNetworkAccessManager 和 QNetworkReply，这里用来下载文件
+### 代码编写
+```cpp
+void MainWindow::on_btnDownload_clicked()
+{
+    QString urlSpec = ui->editURL->text().trimmed();
+    QUrl newUrl = QUrl::fromUserInput(urlSpec);
+    QString tempDir = ui->editPath->text().trimmed();
+    QString fullFilename = tempDir + newUrl.fileName();
+    if(!QFile::exists(fullFilename)) QFile::remove(fullFilename);
+    downloadedFile = new QFile(fullFilename);
+    ui->btnDownload->setEnabled(false);
+    reply = networkManager.get(QNetworkRequest(newUrl));
+    connect(reply, &QNetworkReply::readyRead, this, &MainWindow::do_readyRead);
+    connect(reply, &QNetworkReply::downloadProgress, this, &MainWindow::do_downloadProgress);
+    connect(reply, &QNetworkReply::finished, this, &MainWindow::do_finished);
+}
+```
+这里删除了错误处理代码，因为不重要
+`QUrl` 对象的 `filename()` 方法用于**从连接中获取文件名**，如果链接中没有文件名则返回空字符串，如果在程序中下载 `www.bing.com` 就会导致无法获取文件名
+非必要情况，请求头中的 User-Agent 的通用字符串可以直接用 `QNetworkRequest(newUrl)` 自动生成
+`QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));` 调用系统默认应用打开 Url 链接，Url 文件有各种类别
+
+| 方法                      | 签名                                                                                                                                                        | 用途                         | 使用场景                          | 示例                                                                                         | 注意事项                                                                            |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| **fromAce**             | `QString fromAce(const QByteArray &domain, QUrl::AceProcessingOptions options = {})`                                                                      | 将ACE编码的域名转换为Unicode字符串     | 国际化域名处理，将Punycode编码转换为可读域名    | `QString domain = QUrl::fromAce("xn--mnchen-3ya.example.com");` // 返回"münchen.example.com" | 1. Qt 6.3新增<br>2. 主要用于国际化域名<br>3. 反向操作使用toAce()                                 |
+| **fromCFURL**           | `QUrl fromCFURL(CFURLRef url)`                                                                                                                            | 从Core Foundation URL创建QUrl | **macOS/iOS平台专用**，与Apple框架互操作 | `CFURLRef cfUrl = ...; QUrl qtUrl = QUrl::fromCFURL(cfUrl);`                               | 1. 仅macOS/iOS可用<br>2. 需要包含CoreFoundation框架<br>3. 用于与Apple API集成                 |
+| **fromEncoded**         | `QUrl fromEncoded(QByteArrayView input, QUrl::ParsingMode mode = TolerantMode)`                                                                           | 从已编码的字节数据创建QUrl            | 处理已URL编码的原始数据，避免双重编码          | `QUrl url = QUrl::fromEncoded("http://example.com/path%20name");`                          | 1. 输入必须是已编码的<br>2. 与fromPercentEncoding()区别：返回QUrl对象而非字符串<br>3. 常用于网络协议处理       |
+| **fromLocalFile**       | `QUrl fromLocalFile(const QString &localFile)`                                                                                                            | 从本地文件路径创建file:// URL       | 将本地文件路径转换为URL格式用于跨平台文件访问      | `QUrl url = QUrl::fromLocalFile("/home/user/file.txt");` // 返回"file:///home/user/file.txt" | 1. 自动处理平台差异<br>2. Windows上会转换为"file:///C:/path"<br>3. 反向操作使用toLocalFile()       |
+| **fromNSURL**           | `QUrl fromNSURL(const NSURL *url)`                                                                                                                        | 从NSURL对象创建QUrl             | **macOS/iOS平台专用**，与Cocoa框架互操作 | `NSURL *nsUrl = ...; QUrl qtUrl = QUrl::fromNSURL(nsUrl);`                                 | 1. 仅Apple平台可用<br>2. 需要Foundation框架<br>3. 用于与Cocoa API集成                         |
+| **fromPercentEncoding** | `QString fromPercentEncoding(const QByteArray &input)`                                                                                                    | 将百分号编码字符串解码为普通字符串          | 解码URL编码的字符串，如将"%20"解码为空格      | `QString str = QUrl::fromPercentEncoding("Hello%20World%21");` // 返回"Hello World!"         | 1. 只解码不解析URL<br>2. 与fromEncoded()区别：返回字符串而非QUrl<br>3. 反向操作使用toPercentEncoding() |
+| **fromStringList**      | `QList<QUrl> fromStringList(const QStringList &urls, QUrl::ParsingMode mode = TolerantMode)`                                                              | 批量将字符串列表转换为QUrl列表          | 批量处理多个URL字符串，如从配置文件读取URL列表    | `QList<QUrl> urls = QUrl::fromStringList({"http://a.com", "https://b.com"});`              | 1. 便于批量处理<br>2. 可指定解析模式<br>3. 无效URL会被创建为空QUrl                                   |
+| **fromUserInput**       | `QUrl fromUserInput(const QString &userInput, const QString &workingDirectory = QString(), QUrl::UserInputResolutionOptions options = DefaultResolution)` | 从用户输入的字符串智能创建QUrl          | 浏览器地址栏、文件对话框等用户输入场景           | `QUrl url = QUrl::fromUserInput("google.com");` // 可能返回"http://google.com"                 | 1. 智能解析：自动添加scheme<br>2. 支持相对路径解析<br>3. 可指定工作目录<br>4. 提供多种解析选项                  |
+# 多媒体
+Qt Multimedia 模块为多媒体编程提供支持。多媒体编程实现的功能主要包括播放音频和视频文件，通过麦克风录制音频，通过摄像头拍照和录像等
+Qt 5 多媒体模块使用的是基于插件的结构，不同的前端使用不同的插件，要实现一个完整的多媒体后端需要至少 4 个插件，而且后端的 API 对用户开放。这种基础结构导致很难维护和升级功能且难以做到完全跨平台。Qt6放弃了基于插件的基础结构，它只有一个后端，**后端只与操作系统有关且后端对用户是隐藏的，用户通过统一的前端 API 编程，在编译时就确定使用的后端，实现了真正的跨平台**。
+Qt 6 多媒体模块在不同的平台上使用不同的后端，Linux 上是 GStreamer，Windows 上是 WMF，macOS 和 iOS 上是 AVFoundation，Android 上是 Android 多媒体 API。
