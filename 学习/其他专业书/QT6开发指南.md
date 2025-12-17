@@ -5168,3 +5168,218 @@ B 程序端显示
 ```
 单播会使用 `127.0.0.1`，而广播会使用 `172.26.192.1`，原因是**单播且目标地址为 localhost 时不会通过网络适配器发送，而只会通过操作系统内核**，所以使用本地回环地址。如果 targetHost 设置为其他 ip 地址，也会通过网络适配器发送
 广播会通过，**由操作系统选择一个合适的网络适配器发送**，所以使用某个网络接口发送，这个地址可以通过 `ipconfig` 查询到具体是哪一个设备发送
+### UDP 组播
+组播报文的目标地址使用 D 类 IP 地址，D 类地址不能出现在 IP 报文的源 IP 地址字段中。所有的信息接收者都加入一个组，并且加入之后，流向组播地址的数据报立即开始向接收者传输，组内的所有成员都能接收到数据报。组内的成员是动态变化的，主机可以在任何时刻加入和离开组。
+#### 组播地址
+使用 UDP 组播必须使用一个组播地址，有特定的地址段。多播组可以是永久的也可以是临时的。`joinMulticastGroup()`函数使主机加入多播组，`leaveMulticastGroup()`函数使主机离开多播组
+关于组播IP地址，有如下一些约定。
+- `224.0.0.0～224.0.0.255`为预留的组播地址（永久组地址），地址224.0.0.0保留不分配，其他地址供路由协议使用。
+- `224.0.1.0～224.0.1.255`是公用组播地址，可以用于Internet。
+- `224.0.2.0～238.255.255.255`为用户可用的组播地址（临时组地址），全网范围内有效。
+- `239.0.0.0～239.255.255.255`为本地管理组播地址，仅在特定的本地范围内有效。
+因此，若是在家庭或办公室局域网内测试UDP组播功能，可以使用的组播地址范围是 `239.0.0.0～239.255.255.255`。
+#### 代码编写
+除去加入，离开组播和一些配置内容，代码编写逻辑和单播无异
+构造函数中使用：
+```cpp
+udpSocket = new QUdpSocket(this);
+udpSocket->setSocketOption(QAbstractSocket::MulticastTtlOption,1);
+```
+MulticastTtlOption 是UDP组播的数据报的生存期，数据报每跨一个路由该值会减1。MulticastTtlOption 的默认值为1，表示组播数据报只能在同一路由下的局域网内传播。
+```cpp
+void MainWindow::on_actStart_triggered()
+{//"加入组播"按钮
+    QString   IP =			ui->comboIP->currentText();
+    quint16   groupPort =	ui->spinPort->value();    //端口
+    groupAddress=QHostAddress(IP);      //多播组地址
+    if (udpSocket->bind(QHostAddress::AnyIPv4, groupPort, QUdpSocket::ShareAddress) {
+        udpSocket->joinMulticastGroup(groupAddress); //加入多播组
+		// ...
+    }
+    else
+        ui->textEdit->appendPlainText("**绑定端口失败");
+}
+
+void MainWindow::on_actStop_triggered()
+{//"退出组播"按钮
+    udpSocket->leaveMulticastGroup(groupAddress);   //退出组播
+    udpSocket->abort();     //解除绑定
+    // ...
+}
+
+void MainWindow::on_btnMulticast_clicked()
+{//"组播消息"按钮, 发送组播消息
+    quint16  groupPort=ui->spinPort->value();  //组播端口
+    QString  msg=ui->editMsg->text();
+    QByteArray  datagram=msg.toUtf8();
+
+    udpSocket->writeDatagram(datagram, groupAddress, groupPort);
+	// ...
+}
+```
+### 使用 udp 通信注意事项
+#### 和 tcp 通信区别
+udp 通信内容大小一般小于 512 bytes，最大不能超过 65 kb，并且**可能会乱序达到**，这使得在大文件传送过程中需要分块和调整顺序，需要搭配线程和一定算法来实现，较为复杂。
+TCP 协议：
+- 流式传输：TCP 是面向连接的流协议，不需要手动分块
+- 自动分段：TCP 协议栈自动处理数据分段和重组
+- 可靠传输：自动确认、重传、按序交付
+- 无需包头：不需要手动构建数据包包头，TCP 本身有头信息
+使用 tcp 协议时，只需要简单操作即可
+```cpp
+// TCP方式发送大文件
+QTcpSocket socket;
+socket.connectToHost("targetIP", port);
+socket.write(imageData);  // 直接发送，不需要分块
+socket.flush();           // 确保数据发送完成
+```
+UDP 协议：
+- 数据报传输：每个数据包独立，有大小限制（通常 65507 字节）
+- 不保证可靠：需要手动处理可靠性
+- 需要协议设计：需要手动分块和构建协议头
+
+#### UDP 协议包头格式
+UDP 协议本身有标准的头部格式（8 字节）：
+```md
+0      7 8     15 16    23 24    31
++--------+--------+--------+--------+
+|   Source Port   |    Dest Port    |
++--------+--------+--------+--------+
+|      Length     |    Checksum     |
++--------+--------+--------+--------+
+|                                   |
+|            data bytes             |
+|                                   |
++---------------- ... --------------+
+```
+UDP 协议本身有标准协议头，但这是由操作系统网络栈自动添加的，应用层无需关心。但作为应用开发者构建的是**应用层数据格式**，不是 UDP 包头
+## UDP 标准协议头（由系统自动处理）
+
+UDP 协议本身的标准头部（8 字节）：
+
+```
+ 0      7 8     15 16    23 24    31  
++--------+--------+--------+--------+
+|     源端口        |      目标端口      |  ← 4字节
++--------+--------+--------+--------+
+|    长度         |     校验和        |  ← 4字节  
++--------+--------+--------+--------+
+```
+
+
+
+## 应用层数据格式（开发者定义）
+
+我们之前构建的是应用层数据格式，格式如下：
+
+```
+[协议标识符][参数1][参数2][实际数据]
+例如： "CHUNK;0;9;[图片数据]"
+```
+
+## 常见的应用层 UDP 协议格式设计
+
+### 1. **头部 + 数据格式**
+```cpp
+struct PacketHeader {
+    quint32 magic;      // 魔数，用于识别包类型
+    quint8 type;        // 包类型 (START=1, CHUNK=2, END=3)
+    quint32 seq;        // 序列号
+    quint32 size;       // 数据大小
+    quint32 totalSize;  // 总大小（仅START包）
+};
+```
+
+### 2. **字符串标记格式（我们用的）**
+```cpp
+// START包: "START;文件大小;"
+// CHUNK包: "CHUNK;分块索引;总块数;[实际数据]"
+// END包:   "END;"
+```
+
+### 3. **二进制格式**
+```cpp
+// 方式1：固定头部 + 可变数据
+[4字节长度][1字节类型][4字节序列号][实际数据]
+
+// 方式2：类型化数据包
+if (type == 1) {  // START包
+    // [4字节总大小]
+} else if (type == 2) {  // CHUNK包  
+    // [4字节块索引][4字节总块数][实际数据]
+}
+```
+
+## 如何构建应用层协议
+
+### 1. **定义协议标识**
+```cpp
+const quint32 PROTOCOL_MAGIC = 0x12345678;  // 识别包的魔数
+enum PacketType {
+    START = 1,
+    CHUNK = 2, 
+    END = 3
+};
+```
+
+### 2. **构建发送数据**
+```cpp
+QByteArray buildStartPacket(qint64 totalSize) {
+    QByteArray packet;
+    QDataStream stream(&packet, QIODevice::WriteOnly);
+    stream << PROTOCOL_MAGIC;
+    stream << (quint8)START;
+    stream << totalSize;
+    return packet;
+}
+
+QByteArray buildChunkPacket(int index, int total, const QByteArray& data) {
+    QByteArray packet;
+    QDataStream stream(&packet, QIODevice::WriteOnly);
+    stream << PROTOCOL_MAGIC;
+    stream << (quint8)CHUNK;
+    stream << index;
+    stream << total;
+    stream << data;
+    return packet;
+}
+```
+
+### 3. **解析接收数据**
+```cpp
+void parsePacket(const QByteArray& data) {
+    QDataStream stream(data);
+    quint32 magic;
+    quint8 type;
+    stream >> magic;
+    
+    if (magic != PROTOCOL_MAGIC) return;  // 不是我们的包
+    
+    stream >> type;
+    if (type == START) {
+        qint64 totalSize;
+        stream >> totalSize;
+        // 处理开始包...
+    } else if (type == CHUNK) {
+        int index, total;
+        stream >> index >> total;
+        QByteArray chunkData;
+        stream >> chunkData;
+        // 处理分块...
+    }
+}
+```
+
+## 常见应用层协议头部字段
+
+| 字段 | 作用 | 说明 |
+|------|------|------|
+| Magic Number | 识别包类型 | 防止处理错误类型的数据 |
+| Packet Type | 包类型 | 区分 START/CHUNK/END 等 |
+| Sequence | 序列号 | 用于按序处理（如果需要） |
+| Size | 数据大小 | 告知接收方数据长度 |
+| Checksum | 校验和 | 检测数据是否损坏 |
+| Session ID | 会话标识 | 处理多文件同时传输 |
+| Timestamp | 时间戳 | 检测数据包延迟 |
+
+这就是 UDP 应用层协议的设计思路。我们之前用的字符串格式是最简单的形式，二进制格式更高效但更复杂。
