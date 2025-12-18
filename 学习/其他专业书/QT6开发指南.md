@@ -5570,13 +5570,14 @@ Qt 6 多媒体模块在不同的平台上使用不同的后端，Linux 上是 GS
 | 摄像头录像                  | `QMediaCaptureSession`、`QCamera`、`QMediaRecorder`                    |
 
 ## 播放音频
-在创建一个QMediaPlayer对象后，必须先用函数 `setAudioOutput()` 设置一个音频输出设备（QAudioOutput 构造函数中指定，不指定使用默认播放设备），再用函数 `setSource()` 设置播放媒介来源（可以是本地文件或网络文件）然后才能调用 `play()` 函数播放。
 媒介有元数据，函 `metaData()` 可以返回当前媒介的元数据，重新设置媒介时会发射 `metaDataChanged()` 信号。媒介的元数据是QMediaMetaData类型数据，元数据用“key-value”形式的键值对表示
 在Qt Multimedia中，"媒介"通常指的是**音频或视频输入输出设备**，官方术语为`QMediaDevice`
 1. **QMediaDevice** 是所有媒体设备的基类
 2. **QAudioDevice** 表示音频设备
 3. **QVideoDevice** 表示视频设备
 可以使用 api 获取设备列表
+### 输出设备
+在创建一个QMediaPlayer对象后，必须先用函数 `setAudioOutput()` 设置一个音频输出设备（QAudioOutput 构造函数中指定，不指定使用默认播放设备），再用函数 `setSource()` 设置播放媒介来源（可以是本地文件或网络文件）然后才能调用 `play()` 函数播放。
 ```cpp
 // 获取所有可用音频输出设备
 QList<QAudioDevice> devices = QMediaDevices::availableAudioOutputs();
@@ -5605,3 +5606,87 @@ QCameraDevice QMediaDevices::defaultVideoInput()  //返回默认的视频输入�
 | `void sourceChanged(const QUrl &media)`                        | 媒体源变化时，重新设置媒体源或者 QUrl 时                  | 跟踪当前播放的媒体      |
 ### 代码编写
 播放列表中**的项**如果要设置拖动模式，需要对整个 `listWidget` 设置 `setDragDropMode(QAbstractItemView::InternalMove)`，所有歌曲 item 只能在 listWidget 空间中拖动放下
+示例代码中每次点击 play 按钮都会重新设置源，导致暂停之后播放会从头开始
+```cpp
+void MainWindow::on_btnPlay_clicked()
+{//开始播放
+    if (ui->listWidget->currentRow()<0)   //没有选择文件，就播放第1个
+        ui->listWidget->setCurrentRow(0);
+    player->setSource(getUrlFromItem(ui->listWidget->currentItem()));
+    player->play();
+    loopPlay=ui->btnLoop->isChecked();  //是否循环播放
+}
+
+// 修改代码，添加一个qint64斌阿玲
+void MainWindow::on_btnPlay_clicked()
+{//开始播放
+    if (ui->listWidget->currentRow()<0)   //没有选择文件，就播放第1个
+        ui->listWidget->setCurrentRow(0);
+
+    QUrl currentSource = player->source();
+    QUrl newSource = getUrlFromItem(ui->listWidget->currentItem());
+
+    if (!currentSource.isValid() || currentSource != newSource) {
+        player->setSource(newSource);
+        if(alreadyPlayed != 0) {
+            alreadyPlayed = 0;
+        }
+    }
+    if(alreadyPlayed != 0 && player->position() != alreadyPlayed) {
+        player->setPosition(alreadyPlayed);
+    }
+
+    player->play();
+    loopPlay=ui->btnLoop->isChecked();  //是否循环播放
+}
+
+void MainWindow::on_btnPause_clicked()
+{//暂停播放
+    player->pause();
+    this->alreadyPlayed = player->position();
+}
+
+void MainWindow::on_btnNext_clicked()
+{
+    this->alreadyPlayed = 0;
+}
+
+void MainWindow::on_btnPrevious_clicked()
+{
+    this->alreadyPlayed = 0;
+}
+```
+QSoundEffect 用于播放低延迟音效文件，例如无压缩的 WAV 文件，从而实现一些音效，用法很简单，基本 api 接口和 QMediaPlayer 一样，这里略过
+## 录制音频
+### 代码编写
+同[[#播放音频]]中 QMediaPlayer 对象需要设置 QAudioOutput 设置播放设备和 `setSource()` 设置播放源，录制音频中需要对 QMediaCaptureSession 设置一个 QAudioInput 录制设备和 QMediaRecorder 录制对象
+```cpp
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    this->session =             new QMediaCaptureSession(this);
+    this->recorder =            new QMediaRecorder(this);
+    QAudioInput *audioInput =   new QAudioInput(this);
+    session->setAudioInput(audioInput);
+    session->setRecorder(recorder);
+    connect(recorder, &QMediaRecorder::recorderStateChanged, this, &MainWindow::do_stateChanged);
+    connect(recorder, &QMediaRecorder::durationChanged, this, 
+    &MainWindow::do_durationChanged);
+}
+```
+使用 `QMediaRecorder`，比特率，通道，采样频率等设置可以通过**对应名称的 setter 设置**
+获取基本输入设备信息
+```cpp
+QMediaFormat format;
+for(const auto& device : QMediaDevices::audioInputs()){
+    ui->comboDevices->addItem(device.description(), QVariant::fromValue(device));
+}
+for(const auto& encoder : format.supportedAudioCodecs(QMediaFormat::Encode)){
+    ui->comboCodec->addItem(QMediaFormat::audioCodecDescription(encoder), QVariant::fromValue(encoder));
+}
+for(const auto& fileFormat : format.supportedFileFormats(QMediaFormat::Encode)){
+    ui->comboFileFormat->addItem(QMediaFormat::fileFormatDescription(fileFormat));
+}
+```
