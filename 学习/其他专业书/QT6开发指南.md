@@ -5568,3 +5568,40 @@ Qt 6 多媒体模块在不同的平台上使用不同的后端，Linux 上是 GS
 | 抓取音频和视频                | `QMediaCaptureSession`、`QCamera`、`QVideoWidget`                      |
 | 摄像头拍照                  | `QMediaCaptureSession`、`QCamera`、`QImageCapture`                     |
 | 摄像头录像                  | `QMediaCaptureSession`、`QCamera`、`QMediaRecorder`                    |
+
+## 播放音频
+在创建一个QMediaPlayer对象后，必须先用函数 `setAudioOutput()` 设置一个音频输出设备（QAudioOutput 构造函数中指定，不指定使用默认播放设备），再用函数 `setSource()` 设置播放媒介来源（可以是本地文件或网络文件）然后才能调用 `play()` 函数播放。
+媒介有元数据，函 `metaData()` 可以返回当前媒介的元数据，重新设置媒介时会发射 `metaDataChanged()` 信号。媒介的元数据是QMediaMetaData类型数据，元数据用“key-value”形式的键值对表示
+在Qt Multimedia中，"媒介"通常指的是**音频或视频输入输出设备**，官方术语为`QMediaDevice`
+1. **QMediaDevice** 是所有媒体设备的基类
+2. **QAudioDevice** 表示音频设备
+3. **QVideoDevice** 表示视频设备
+可以使用 api 获取设备列表
+```cpp
+// 获取所有可用音频输出设备
+QList<QAudioDevice> devices = QMediaDevices::availableAudioOutputs();
+// 打印设备信息
+for (const QAudioDevice &device : devices) {
+    qDebug() << "设备名称：" << device.description();
+    qDebug() << "设备类型：" << (device.type() == QAudioDevice::Output ? "输出" : "输入");
+    qDebug() << "设备ID：" << device.id();
+    qDebug() << "-------------------------";
+}
+
+// 默认设备列表
+QAudioDevice  QMediaDevices::defaultAudioInput()  //返回默认的音频输入设备信息
+QAudioDevice  QMediaDevices::defaultAudioOutput() //返回默认的音频输出设备信息
+QCameraDevice QMediaDevices::defaultVideoInput()  //返回默认的视频输入设备信息
+```
+
+### 常用信号
+| 签名                                                             | 触发时机                                     | 用途             |
+| -------------------------------------------------------------- | ---------------------------------------- | -------------- |
+| `void durationChanged(qint64 duration)`                        | 媒体时长变化时，切换媒体源，某些流媒体（如直播流）没有固定时长，不会触发此信号。 | 获取/更新媒体总时长     |
+| `void mediaStatusChanged(QMediaPlayer::MediaStatus status)`    | 媒体状态变化时，媒体状态分为正在加载，已加载，缓冲中，缓冲不足暂停，缓冲完成等  | 监控加载、缓冲、播放状态   |
+| `void metaDataChanged()`                                       | 元数据可用/变化时                                | 获取媒体信息（作者、标题等） |
+| `void playbackStateChanged(QMediaPlayer::PlaybackState state)` | 播放状态变化时                                  | 监控播放/暂停/停止状态   |
+| `void positionChanged(qint64 position)`                        | 播放位置变化时                                  | 更新播放进度         |
+| `void sourceChanged(const QUrl &media)`                        | 媒体源变化时，重新设置媒体源或者 QUrl 时                  | 跟踪当前播放的媒体      |
+### 代码编写
+播放列表中**的项**如果要设置拖动模式，需要对整个 `listWidget` 设置 `setDragDropMode(QAbstractItemView::InternalMove)`，所有歌曲 item 只能在 listWidget 空间中拖动放下
