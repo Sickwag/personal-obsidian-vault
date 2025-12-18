@@ -5555,3 +5555,16 @@ void MainWindow::on_btnDownload_clicked()
 Qt Multimedia 模块为多媒体编程提供支持。多媒体编程实现的功能主要包括播放音频和视频文件，通过麦克风录制音频，通过摄像头拍照和录像等
 Qt 5 多媒体模块使用的是基于插件的结构，不同的前端使用不同的插件，要实现一个完整的多媒体后端需要至少 4 个插件，而且后端的 API 对用户开放。这种基础结构导致很难维护和升级功能且难以做到完全跨平台。Qt6放弃了基于插件的基础结构，它只有一个后端，**后端只与操作系统有关且后端对用户是隐藏的，用户通过统一的前端 API 编程，在编译时就确定使用的后端，实现了真正的跨平台**。
 Qt 6 多媒体模块在不同的平台上使用不同的后端，Linux 上是 GStreamer，Windows 上是 WMF，macOS 和 iOS 上是 AVFoundation，Android 上是 Android 多媒体 API。
+## 多媒体模块类
+| 应用功能                   | 用到的类                                                                 |
+| ---------------------- | -------------------------------------------------------------------- |
+| 播放音效文件（WAV 文件）         | `QSoundEffect`                                                       |
+| 播放编码的 MP3、WMA 等格式音频文件  | `QMediaPlayer`                                                       |
+| 录制音频并保存为 MP3、WMA 等格式文件 | `QMediaCaptureSession`、`QAudioInput`、`QMediaRecorder`、`QMediaFormat` |
+| 采集原始音频输入数据             | `QAudioSource`、`QAudioFormat`                                        |
+| 播放原始音频                 | `QAudioSink`、`QAudioFormat`                                          |
+| 播放视频                   | `QMediaPlayer`、`QVideoWidget`、`QGraphicsVideoItem`                   |
+| 发现音频和视频设备              | `QMediaDevices`、`QAudioDevice`、`QCameraDevice`                       |
+| 抓取音频和视频                | `QMediaCaptureSession`、`QCamera`、`QVideoWidget`                      |
+| 摄像头拍照                  | `QMediaCaptureSession`、`QCamera`、`QImageCapture`                     |
+| 摄像头录像                  | `QMediaCaptureSession`、`QCamera`、`QMediaRecorder`                    |
