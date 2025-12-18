@@ -5690,3 +5690,215 @@ for(const auto& fileFormat : format.supportedFileFormats(QMediaFormat::Encode)){
     ui->comboFileFormat->addItem(QMediaFormat::fileFormatDescription(fileFormat));
 }
 ```
+录入音频，需要设置几个**必要属性：采样率，比特率，通道数，采样质量，媒体文件格式（包括文件格式和编码格式）**
+```cpp
+void MainWindow::on_actRecord_triggered()
+{
+    if(recorder->recorderState() == QMediaRecorder::PausedState){
+        recorder->record();
+        return;
+    }
+    QString selectedFile = ui->editOutputFile->text().trimmed();
+    if (selectedFile.isEmpty()){
+        QMessageBox::critical(this,"错误","请先设置录音输出文件");
+        return;
+    }
+    if (QFile::exists(selectedFile))
+        QFile::remove(selectedFile);
+    recorder->setOutputLocation(QUrl::fromLocalFile(selectedFile)); //设置输出文件
+
+    //设置session的输入设备
+    //    QVariant var =ui->comboDevices->itemData(ui->comboDevices->currentIndex());
+    //    QAudioDevice audioDevice= var.value<QAudioDevice>();
+    //    session->audioInput()->setDevice(audioDevice);
+    session->audioInput()->setDevice(QMediaDevices::defaultAudioInput());
+
+    QVariant codeVar=ui->comboCodec->itemData(ui->comboCodec->currentIndex());
+    Qvariant formatVar=ui->comboFileFormat->itemData(ui->comboFileFormat->currentIndex());
+    QMediaFormat::AudioCodec audioCodec = codeVar.value<QMediaFormat::AudioCodec>();
+    QMediaFormat::FileFormat fileFormat = fileVar.value<QMediaFormat::FileFormat>();
+    Qvariant sampVar=ui->comboSampleRate->itemData(ui->comboSampleRate->currentIndex());
+    Qvaraint channelVar=ui->comboChannels->itemData(ui->comboChannels->currentIndex());
+    
+    QMediaFormat mediaFormat;
+    mediaFormat.setAudioCodec(audioCodec);  //设置编码格式
+    mediaFormat.setFileFormat(fileFormat);  //设置文件格式
+
+    recorder->setMediaFormat(mediaFormat);  //设置mediaFormat
+    recorder->setAudioSampleRate(sampVar.toInt());      //设置采样率
+    recorder->setAudioChannelCount(channelVar.toInt());    //设置通道数
+    recorder->setAudioBitRate(ui->comboBitrate->currentText().toInt());         //设置比特率
+    recorder->setQuality(QMediaRecorder::Quality(ui->sliderQuality->value()));  //设置品质
+    if (ui->radioQuality->isChecked())              //设置编码模式
+        recorder->setEncodingMode(QMediaRecorder::ConstantQualityEncoding);     //固定品质
+    else
+        recorder->setEncodingMode(QMediaRecorder::ConstantBitRateEncoding);     //固定比特率
+
+    recorder->record();
+}
+```
+## 采集和播放原始音频数据
+Qt 多媒体模块提供了两种方法来实现音频录制：高层次方法和低层次方法。使用 QMediaCaptureSession 类和 QMediaRecorder 类录制音频的方法是高层次方法，这种方法能将录制的音频编码压缩后保存为常见的音乐格式文件，但是**无法探测音频采集过程中的原始数据**。使用 QAudioSource 类录制音频是低层次方法。
+### 使用的类和接口
+#### 音频录入 QAudioSource
+```cpp
+QAudioSource(const QAudioDevice &audioDevice, const QAudioFormat &format = QAudioFormat(),QObject *parent = nullptr)
+QAudioSource(const QAudioFormat &format = QAudioFormat(), QObject *parent = nullptr)
+```
+其中 format 参数表示采样音频的格式，包含[[#录制音频]]中提到的几个必要属性，采样率，通道数，采样格式，都被封装到一个 QAudioFormat 类对象中，其中需要注意：
+```cpp
+void  QAudioFormat::setSampleFormat(QAudioFormat::SampleFormat format)//设置采样格式
+```
+采样格式 `QAudioFormat::UInt8` 表示一个采样点用一个 `quint8` 存储，其他枚举类型同理
+录音时调用 `QAudioSource::start(QIODevice* device)`，需要传入一个类似 QFile 类型的 io 设备，将数据存储进去。播放前需要 `setVolume(0~1)` 设置声音，**停止采集后，需要调用 io 设备的 ` close() ` 停止**。
+#### 音频输出 QAudioSink
+```cpp
+QAudioSink(const QAudioDevice &audioDevice, const QAudioFormat &format = QAudioFormat(), QObject *parent = nullptr) 
+QAudioSink(const QAudioFormat &format = QAudioFormat(), QObject *parent = nullptr)
+
+QFile sourceFile("testfile.raw");               //创建文件I/O设备
+sourceFile.open(QIODevice::ReadOnly);           //以只读方式打开文件
+QAudioFormat format;                            //音频格式
+format.setSampleRate(16000);                    //设置采样频率
+format.setChannelCount(1);                      //设置通道数
+format.setSampleFormat(QAudioFormat::UInt8);    //设置采样点格式
+audio= new QAudioSink(format, this);            //使用默认的音频输出设备
+audio->start(&sourceFile);                      //开始播放音频
+```
+同理[[#使用的类和接口#音频录入 QAudioSource|音频录入]]一致，一个 QAudioSink 对象设置了 format 之后**不可修改**，并且 `QAudioSink` 的设计原则是直接将原始音频数据推送到硬件设备，**不进行格式转换**。它要求开发者必须提供与音频文件完全匹配的格式参数。如果设置的 `QAudioFormat` 与文件实际不符，会**导致音频解析失败或者声音失真**
+解决方式是使用 QAudioSink 之前对文件进行**参数解析或格式转换**
+```cpp
+#include <QFile>
+#include <QDebug>
+#include <QByteArray>
+
+struct WavHeader {
+    char chunkID[4]; // "RIFF"
+    quint32 chunkSize; // 文件总大小减8
+    char format[4]; // "WAVE"
+    char subchunk1ID[4]; // "fmt "
+    quint32 subchunk1Size; // fmt 块大小（16~24）
+    quint16 audioFormat; // 1=PCM
+    quint16 numChannels; // 声道数
+    quint32 sampleRate; // 采样率
+    quint32 byteRate; // 字节率
+    quint16 blockAlign; // 块对齐
+    quint16 bitsPerSample; // 位深度
+    char subchunk2ID[4]; // "data"
+    quint32 subchunk2Size; // 数据块大小
+};
+
+QAudioFormat parseWavHeader(const QString &filePath) {
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qWarning() << "无法打开文件";
+        return QAudioFormat();
+    }
+
+    WavHeader header;
+    if (file.read((char*)&header, sizeof(header)) != sizeof(header)) {
+        qWarning() << "读取文件头失败";
+        return QAudioFormat();
+    }
+
+    QAudioFormat format;
+    format.setSampleRate(header.sampleRate);
+    format.setChannelCount(header.numChannels);
+    format.setSampleFormat(QAudioFormat::Int16); // 根据 bitsPerSample 设置
+    return format;
+}
+```
+wav 文件参数解析，wav 文件的文件头中包含这些信息
+```cpp
+#include <QAudioDecoder>
+#include <QAudioFormat>
+#include <QUrl>
+#include <QDebug>
+
+void decodeAudio(const QString &filePath) {
+    QAudioDecoder decoder;
+    decoder.setSource(QUrl::fromLocalFile(filePath));
+
+    QAudioFormat format;
+    connect(&decoder, &QAudioDecoder::audioFormatChanged, [&format](const QAudioFormat &fmt) {
+        format = fmt;
+        qDebug() << "采样率：" << fmt.sampleRate();
+        qDebug() << "声道数：" << fmt.channelCount();
+        qDebug() << "采样格式：" << fmt.sampleFormat();
+    });
+
+    decoder.start();
+}
+```
+引入 QAudioDecoder，自动解析各种文件的属性信息
+如果要格式转换方式转换音频文件，则可以使用 ffmpeg 等库实现，**如果是 RAW 文件，则必须手动设置，无法通过文件解析获得这些信息**，在使用对应设备播放之前，也应该检查一下设备是否支持：
+```cpp
+QAudioDevice defaultDevice = QMediaDevices::defaultAudioOutput();
+if (defaultDevice.isFormatSupported(format)) {
+    // 格式支持，可以创建 QAudioSink
+} else {
+    qWarning() << "格式不被支持！";
+}
+```
+示例代码 samp 16_4 需要将音频输出到图表中，所以**使用 TMyDevice**继承 QIODevice 自定义音频输出到图表上的行为，继承 QIODevice **必须实现虚函数**：
+```cpp
+virtual qint64 readData(char *data, qint64 maxSize) = 0
+virtual qint64 writeData(const char *data, qint64 maxSize) = 0
+```
+## 播放视频文件
+同样使用 QMediaPlayer 类，音频视频都使用 `setSource()` 设置
+```cpp
+void  setVideoOutput(QObject *)               //设置用于显示视频的界面组件
+QObject  *videoOutput()                       //返回显示视频的界面组件
+void  setActiveSubtitleTrack(int index)       //设置当前的字幕轨道
+int  activeSubtitleTrack()                    //当前的字幕轨道
+```
+### 代码编写
+注意设置完视频播放后，还要 `setAudioOutput()` 不然视频没有声音
+```cpp
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    this->player = new QMediaPlayer(this);
+    QAudioOutput *audioOutput = new QAudioOutput(this);
+    player->setAudioOutput(audioOutput);
+    player->setVideoOutput(ui->videoWidget);
+	// 各种connect
+}
+
+void MainWindow::on_btnAdd_clicked()
+{//打开文件
+	// 省略获取文件过程
+    QString aFile=QFileDialog::getOpenFileName(this,dlgTitle,curPath,filter);
+    QFileInfo   fileInfo(aFile);    
+    player->setSource(QUrl::fromLocalFile(aFile));  //设置播放文件
+    player->play();
+}
+```
+使用 qt 自带的 `QVideoWidget` 设置文件播放时全屏 `setFullScreen(true)`，会导致程序**无法退出全屏，esc 也不行**，只能关闭程序，所以设置 TMyVideoWidget 接管
+```cpp
+void TMyVideoWidget::keyPressEvent(QKeyEvent *event)
+{
+    if((event->key() == Qt::Key_Escape) && this->isFullScreen()){
+        setFullScreen(false);
+        event->accept();
+        QVideoWidget::keyPressEvent(event);
+    }
+}
+
+void TMyVideoWidget::mousePressEvent(QMouseEvent *event)
+{
+    if(event->button() == Qt::LeftButton){
+        if(m_player->playbackState() == QMediaPlayer::PlayingState){
+            m_player->pause();
+        }else{
+            m_player->play();
+        }
+    }
+    QVideoWidget::mousePressEvent(event);
+}
+```
+### 在 QGraphicsVideoItem 上播放视频文件
+使用 QGraphicsVideoItem 组件显示视频时，可以在显示场景中将其和其他图形项组合显示，放大、缩小、拖动、旋转等功能
