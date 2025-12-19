@@ -5970,3 +5970,155 @@ void  setImageCapture(QImageCapture *imageCapture) //设置一个QImageCapture�
 void  setRecorder(QMediaRecorder *recorder)       //设置一个recorder，用于录音或录像
 void  setVideoOutput(QObject *output)      //设置一个视频输出组件，用于接收摄像头预览视频
 ```
+### 代码编写
+QMediaCaptureSession 用于管理所有的音视频录制，需要设置音频录入时，设置一个 QAudioInput 对象，设置好录入格式和参数，最后添加 `session->setAudioInput()`，需要设置摄像头拍照则 `setCamera()`，录制视频则 `setRecorder()`
+```cpp
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    // initiualize ui
+    // 创建抓取管理器
+    session = new QMediaCaptureSession(this);
+    session->setVideoOutput(ui->videoPreview);
+    // 音频输入
+    QAudioInput *audioInput = new QAudioInput(this);
+    audioInput->setDevice(QMediaDevices::defaultAudioInput());
+    session->setAudioInput(audioInput);
+    
+    // 图像输入（控制摄像头）
+    this->camera = new QCamera(this);
+    camera->setCameraDevice(QMediaDevices::defaultVideoInput());
+    session->setCamera(camera);
+    
+    connect(camera, &QCamera::activeChanged, this, &MainWindow::do_camera_activeChanged);
+    connect(ui->comboCam_List, &QComboBox::currentIndexChanged, this, &MainWindow::do_camera_changed);
+    do_camera_changed(ui->comboCam_List->currentIndex());
+    
+    // 图像输入（拍摄照片）
+    imageCapture = new QImageCapture(this);
+    imageCapture->setQuality(QImageCapture::VeryHighQuality);
+    session->setImageCapture(imageCapture);
+	// 各种connect
+    
+    // 图像输入（录制视频）
+    recorder = new QMediaRecorder(this);
+    session->setRecorder(recorder);
+    // 各种conncet
+    
+    // 播放音效
+    soundEffect = new QSoundEffect(this);
+    QString filename = ":/sound/images/shutter.wav";
+    soundEffect->setSource(QUrl::fromLocalFile(filename));
+}
+```
+建议使用设备 IO 类对象之前使用类似 `QMediaDevices::defaultVideoInput()` 检测是否有返回的系统默认摄像头是无效的，说明系统没有摄像头，无法进行后续操作。这时就就应该在 if 语句中 return，设备 IO 类对象构造函数中会**隐式调用获取默认设备的操作**，没有会导致异常
+```cpp
+session->setVideoOutput(ui->videoPreview); //设置视频输出组件，用于视频预览
+session->setAudioInput(audioInput);        //设置音频输入设备，用于录音
+session->setCamera(camera);                //为session设置摄像头
+session->setImageCapture(imageCapture);    //为session设置抓图器，只用于照片拍摄，需要提前设置摄像头
+session->setRecorder(recorder);            //为session设置recorder，可以录制音频和视频，需要提前设置摄像头
+```
+总之就是这么几个 api
+```cpp
+QList<QMediaFormat::AudioCodec>  supportedAudioCodecs(QMediaFormat::ConversionMode m) 
+QList<QMediaFormat::VideoCodec>  supportedVideoCodecs(QMediaFormat::ConversionMode m) 
+QList<QMediaFormat::FileFormat>  supportedFileFormats(QMediaFormat::ConversionMode m) 
+```
+获取系统支持的视频编码和文件格式列表。QMediaFormat类有3个函数可以获取系统支持的音频编码、视频编码和文件格式列表：
+其中，参数m表示转换方向，取值 `QMediaFormat::Encode` 表示编码，用于录制音频或视频；取值 `QMediaFormat::Decode` 表示解码，用于播放音频或视频。
+- **QCamera**是摄像头的核心控制器，负责连接物理设备、管理视频流。
+- **QMediaRecorder**、**QImageCapture**、**QVideoOutput**等组件依赖于`QCamera`提供的视频流。
+- **QAudioInput**通过`QCamera`的音频输入功能与摄像头绑定。
+```cpp
+void MainWindow::closeEvent(QCloseEvent *event) {
+    if (m_isWorking) {
+        if(recorder->recorderState() == QMediaRecorder::RecordingState) //正在录制视频
+            recorder->stop();   //停止录制视频
+        camera->stop();         //关闭摄像头
+    }
+    event->accept();
+}
+```
+断开录制时：
+- `QCamera::stop()`的行为： 
+	- 关闭摄像头硬件
+    - 停止所有已连接的`QMediaRecorder`（录制状态）。
+    - 断开`QVideoOutput`的视频流（预览停止）。
+    - 清除`QImageCapture`的抓图功能（无法再拍照）。
+- `QMediaRecorder::stop()`的行为：  
+    - 结束当前的录制过程（生成最终的视频文件）。
+	- 断开与 `QCamera` 的录制流绑定，但 `QCamera` 本身仍可能处于运行状态（例如预览还在继续）。
+- 设计逻辑是：
+	- 如果窗口关闭时仍在录制（`recorder->recorderState() == QMediaRecorder::RecordingState`），必须显式调用 `recorder->stop()` 以生成完整的视频文件。
+	- 然后调用 `camera->stop()` 关闭摄像头，其所有依赖资源（如录制、预览、抓图）会自动释放。
+# 串口编程
+工控行业的开发者在编写上位机程序时经常要用到串口来与下位机通信。Qt  Serial  Port 模块提供了访问串口的基本功能，并不重要，遂跳过
+# 其他工具软件和技术
+## 多语言界面
+### 基本步骤
+1. 在设计程序时，代码中用户可见的字符串都用函数 `tr()` 封装，以便Qt提取界面字符串用于生成翻译资源文件。在插入了 `Q_OBJECT` 宏的类或 QObject 的子类中，可以直接使用 `tr() ` 函数，自定义类中可以在**类定义最上方插入 `Q_DECLARE_TR_FUNCTIONS`**，否则需要使用静态函数 ` QObject::tr() ` 进行调用。
+2. 在项目配置文件（`.pro`文件）中设置需要导出的翻译文件（`.ts`文件）名称，使用工具软件lupdate扫描项目所有文件中需要翻译的字符串，生成翻译文件
+3. 使用Qt的工具软件Linguist打开生成的翻译文件，将程序中的字符串翻译为需要的语言版本，例如将所有中文字符串翻译为英文字符串
+4. 使用工具软件lrelease编译翻译好的翻译文件，生成更为紧凑的`.qm`文件
+5. 在应用程序中用QTranslator加载不同的 `.qm` 文件，实现不同的语言界面。
+```cpp
+QString QObject::tr(const char *sourceText, const char *disambiguation = nullptr, int n = -1)
+
+// disambinguation参数用于给**翻译者提供描述信息**
+QString str1 = tr("DA", "District Attorney");
+```
+使用 `tr()` 时，需要注意：
+- 尽量使用字符串常量，不要使用字符串变量。代码使用了字符串变量在工具软件lupdate将不能提取“不能删除记录”这个字符串。
+```cpp
+char *errorStr= “不能删除记录”;
+QString str2= tr(errorStr);
+```
+- 如果需要使用字符串变量，则需要添加 `QT_TR_NOOP` 宏
+```cpp
+const char *cities[4]={QT_TR_NOOP(“北京”),
+              QT_TR_NOOP(“上海”),
+              QT_TR_NOOP(“青岛”),
+              QT_TR_NOOP(“武汉”)}; 
+for (int i=0; i<4; i++)  comboBox->addItem(tr(cities[i]));
+```
+- `tr()` 中不能使用拼接的动态字符串（使用+拼接），但可以对整个 `tr()` 返回的 QString 对象使用占位符填充/拼接字符串
+```cpp
+labCellPos->setText(tr("第 %1 行").arg(current.row()));
+```
+### 使用方法
+在对代码（**包含 ui 文件**）中所有字符串使用 `tr()` 标记之后，先在 pro 中配置
+```qmake
+TRANSLATIONS = samp18_1_cn.ts \
+                samp18_1_en.ts
+```
+第一个翻译文件会使用代码中的字符串语言，时默认语言，其他文件是**需要从**源代码中字符串翻译过来的语言文件
+然后使用语言家
+![[Pasted image 20251219111414.png]]
+创建/更新对应的 ts 文件
+在 qt linguist 中打开对应 en_ts 文件，源语言（源代码中的语言）用的是中文，会显示在**字符串窗口中**
+![[Pasted image 20251219113023.png]]
+
+深绿色问号图标表示还没有翻译过的源文，黄色问号图标表示已经有译文的源文，亮绿色钩形图标表示已完成翻译的源文，灰色图标表示**无效原文**，无效原文是由于**翻译文件未重新同步，但是源代码/ui 文件发生改变**导致的，不影响程序运行，会自动忽略
+![[PixPin_2025-12-19_11-31-52.png]]
+程序中的**可输入组件**（如 QPlainText）在源代码/ui 文件中应该被清空，否则也会被提取，填入翻译字符串后工具栏更新字符串状态，保存文件后，使用 lrelease 工具生成**紧凑 qm 文件**，在 `main.cpp` 中加载 qm 文件
+```cpp
+int main(int argc, char *argv[])
+{
+	QSettings  settings;
+QString  curLang=settings.value("Language","CN").toString();    //读取注册表，EN或CN
+bool suss=false;
+if (curLang=="EN")
+    suss =trans.load("samp18_1_en.qm");
+else
+    suss =trans.load("samp18_1_cn.qm");
+
+if (suss)
+    app.installTranslator(&trans);   //应用程序加载翻译器
+}
+```
+每隔 QApplication 对象都有一个内置的成员 trans，可以调用 `installTranslator()` 安装翻译器，**只有最后一个安装的翻译器会起作用**，翻译器负责管理翻译文件 `.qm`
+QTranslator的 ` load() ` 函数在加载qm文件时会抛弃原有的内容，所以一个QTranslator对象**任何时刻都只能使用一个qm文件**
+`setUpUi()` 函数中会调用一个 `retranslateUi()`，显示翻译后的字符
