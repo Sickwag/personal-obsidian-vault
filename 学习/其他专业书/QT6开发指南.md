@@ -6121,4 +6121,40 @@ if (suss)
 ```
 每隔 QApplication 对象都有一个内置的成员 trans，可以调用 `installTranslator()` 安装翻译器，**只有最后一个安装的翻译器会起作用**，翻译器负责管理翻译文件 `.qm`
 QTranslator的 ` load() ` 函数在加载qm文件时会抛弃原有的内容，所以一个QTranslator对象**任何时刻都只能使用一个qm文件**
-`setUpUi()` 函数中会调用一个 `retranslateUi()`，显示翻译后的字符
+`setUpUi()` 函数中会调用一个 `retranslateUi()`，显示翻译后的字符，所以点击切换语言按钮后，在对应槽函数中使用 `ui->retranslateUi()` 即可重新渲染
+```cpp
+void MainWindow::on_actLang_CN_triggered()
+{//切换到中文界面
+    if(trans.load("samp18_1_cn.qm")){
+        ui->retranslateUi(this);
+        labInfo->setText("字体名称");
+    }
+}
+```
+## Qt 样式表
+qt designer 中内嵌了 qss 设置
+qss 语法可以参考 [[QT样式表合集]]
+
+## Qt 应用程序的发布和安装
+一个Qt项目被以Release模式构建后运行可能会提示找不到 dll 文件，解决方式之一是将 Qt 运行库的路径添加到系统的 PATH，例如 Qt 6.2.3 MinGW 64-bit 的运行库的路径是：`D:\Qt\6.2.3\mingw_64\bin`，如果系统有多个 qt 开发组件，**这样可能会导致 dll 版本问题**
+如果要将使用 Qt 开发的应用程序发布其他计算机上，就需要将 Qt 的运行库随应用程序一起发布给，用户不一定安装了 Qt 且版本和开发用的套件一样，Qt 提供了工具来提取对应的 dll
+### Windows 平台上的 Qt 应用程序发布
+`windeployqt.exe` 是Qt自带的Windows平台发布工具，它可以为Qt应用程序复制其运行所需要的各种库文件、插件和翻译文件，生成可发布的文件和目录。
+在对应编译器的 bin 文件夹中: `D:\Qt\5.15.2\mingw81_64\bin`，应用程序由哪个开发套件构建、生成的，就应该用哪个版本的 windeployqt.exe 生成发布文件，程序编译目录中的 exe 文件直接运行一般不会成功（缺少 qt dll 文件）
+```powershell
+D:\OtherProgram\QT\6.8.0\msvc2022_64\bin\windeployqt.exe --release --no-quick-import --no-translations --no-compiler-runtime .\musicPlayer.exe
+```
+- 书中提到的 `--no-virtualkeyboard` 现已弃用
+- 运行之后会自动在当前目录生成 qt 运行库文件，exe 文件即可运行
+- 如果还是缺少，根据对应 dll 文件名在 qt 目录中查找复制即可，如果是 mingw 编译会缺少 `libgcc_s_seh-1.dll`、`libstdc++-6.dll` 和 `libwinpthread-1.dll`，这些功能用于 c++标准库和线程功能，会被 `--no-compiler-runtime` 跳过，还可以在 qmake 中静态链接这些组件
+```qmake
+QMAKE_CXXFLAGS += -static-libgcc -static-libstdc++
+```
+- 删除 `D3Dcompiler_47.dll` 和 `opengl32sw.dll` 这两个文件，MusicPlayer.exe仍然可以运行，他们分别负责 `Direct3D` 和 OpenGL 渲染，可使用对应的 `--no` 选项过滤
+### 制作安装文件
+Qt Installer Framework是 Qt 提供的一个制作安装文件的工具，在安装 Qt 时可以选择，这些工具软件与 Qt 开发套件版本无关，可以添加到系统的 PATH 环境变量里（`QT/Tools/QtInstallFramwork/<version_number>/bin`），制作的安装项目可以**跨平台上生成安装文件**
+- 使用 QIF 可以制作离线安装，在线安装文件。
+- 安装的内容可以划分为多个模块和层级，并且可以设置依赖性，安装过程中可选择安装模块
+- 安装向导的定制性很强，可以使用自定义 UI 文件，可以通过脚本程序添加交互操作功能
+- 可以用多语言开发使安装向导具有本地化语言
+- 用 QIF 生成的安装文件在安装时，会自动安装一个工具软件 maintenancetool. exe，运行它可以添加、移除、更新或完全卸载软件。
