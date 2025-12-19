@@ -6265,4 +6265,23 @@ MusicPlayer组件。所有**程序运行的必要文件和文件夹**压缩为�
 	<Script>installscript.qs</Script>
 	<SortingPriority>100</SortingPriority>
 </Package>
+<!--/package/示例音乐/meta/package.xml -->
+<Package>
+	<DisplayName>示例音乐</DisplayName>
+	<Description>几个MP3文件用于测试</Description>
+	<Version>1.0.0</Version>
+	<ReleaseDate>2022-02-16</ReleaseDate>
+	<!-- 表示这个组件必须安装 -->
+	<Default>true</Default>
+	<SortingPriority>90</SortingPriority>
+</Package>
+<!--/package/源代码/meta/package.xml -->
+<Package>
+	<DisplayName>源代码</DisplayName>
+	<Description>Music Player的Qt项目源代码</Description>
+	<Version>1.0.0</Version>
+	<ReleaseDate>2022-02-16</ReleaseDate>
+	<Default>true</Default>
+	<SortingPriority>80</SortingPriority>
+</Package>
 ```
