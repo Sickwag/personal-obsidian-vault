@@ -5900,5 +5900,73 @@ void TMyVideoWidget::mousePressEvent(QMouseEvent *event)
     QVideoWidget::mousePressEvent(event);
 }
 ```
+`player->setVideoOutput(ui->videoWidget)` 
+- 将 `QMediaPlayer` 的视频输出定向到指定的 `QVideoWidget`。
+- 这是**必须调用**的操作。如果不调用此方法，视频帧不会发送到 `QVideoWidget`，即视频无法显示
+`ui->videoWidget->setMediaPlayer(player)`
+- 将 `QVideoWidget` 与 `QMediaPlayer` 建立反向关联，主要用于实现一些 UI 交互逻辑。
+- 通常**不需要显式调用**，除非你需要特定功能（如双击全屏、右键菜单等）。
+- `QVideoWidget` 内部通过 `setMediaPlayer` 记录播放器实例，用于实现某些快捷操作
+	- **双击全屏**：需要知道播放器状态（播放/暂停）。
+	- **右键菜单**：提供播放控制选项（如暂停、停止）。
+- **典型场景**：如果希望 `QVideoWidget` 支持双击全屏或右键菜单，那么就需要设置
+- **这段代码会隐式调用 `setVideoOutput()`**
 ### 在 QGraphicsVideoItem 上播放视频文件
 使用 QGraphicsVideoItem 组件显示视频时，可以在显示场景中将其和其他图形项组合显示，放大、缩小、拖动、旋转等功能
+简单来说就是将视频控件和其他的 GUi 控件放在一个**画布**中，这个画布允许其中的所有组件拖放，移动，放大缩小
+```cpp
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    // 初始化播放器设置
+    player = new QMediaPlayer(this);
+    QAudioOutput *audioOutput = new QAudioOutput(this);
+    QGraphicsScene *scene = new QGraphicsScene(this);
+    player->setAudioOutput(audioOutput);
+
+    ui->graphicsView->setScene(scene);
+    videoItem = new QGraphicsVideoItem;
+    videoItem->setSize(QSizeF(360, 240));
+    videoItem->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+    scene->addItem(videoItem);
+
+    player->setVideoOutput(videoItem);
+
+	// 省略connect
+	// 设置文字组件
+    QGraphicsSimpleTextItem   *item2=new QGraphicsSimpleTextItem("海风吹，海浪涌");
+    QFont font=item2->font();
+    font.setPointSize(20);
+    item2->setFont(font);
+    item2->setPos(0,0);
+    item2->setBrush(QBrush(Qt::blue));
+    item2->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+    //                    | QGraphicsItem::ItemIsFocusable);
+    scene->addItem(item2);
+}
+```
+所有放在容器中的控件都可以被设置位置，放大缩小，本质上都是等价的。这里由于项目演示是文字和视频同框渲染，所以在构造函数中提前放置了一个**文本 graphicItem 对象和视频 graphicItem 对象**，实际环境中应该会在需要时在 scene 中创建对应对象并添加进去。
+## 摄像头的使用
+### 拍摄照片
+QCamera 是摄像头控制接口类，，需要为 QCamera 对象设置一个 QCameraDevice 对象作为具体的摄像头设备，QCameraDevice 和上面提到的 device 类相似，有相似的 api
+```cpp
+QCamera(const QCameraDevice &cameraDevice, QObject *parent = nullptr)    //构造函数
+void  QCamera::setCameraDevice(const QCameraDevice &cameraDevice)
+```
+可控制摄像头的调焦、曝光补偿、色温调节等功能，这些特性全部封装在 QCamera 中作为一个属性，前提是摄像头支持这些特性，通过下面函数返回
+```cpp
+QCamera::Features  QCamera::supportedFeatures()
+```
+使用对应 setter 设置文件格式，编码质量，分辨率等属性，使用 `capture()` 拍摄
+### 录制视频
+同理，[[#录制音频]]中使用到的 QMediaRecorder 也能录制视频，同理各种 setter 设置属性，**QMediaCaptureSession 是用于控制音频和视频抓取的类**，它的一些接口函数用于设置音频输入设备和视频输入设备，还可以将摄像头预览视频输出到一个视频输出组件上。
+```cpp
+void  setAudioInput(QAudioInput *input)           //设置一个音频输入设备，用于录音
+void  setAudioOutput(QAudioOutput *output)        //设置一个音频输出设备，用于回放音频
+void  setCamera(QCamera *camera)                  //设置一个QCamera对象作为视频输入设备
+void  setImageCapture(QImageCapture *imageCapture) //设置一个QImageCapture对象，用于拍照
+void  setRecorder(QMediaRecorder *recorder)       //设置一个recorder，用于录音或录像
+void  setVideoOutput(QObject *output)      //设置一个视频输出组件，用于接收摄像头预览视频
+```
