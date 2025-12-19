@@ -6089,10 +6089,27 @@ for (int i=0; i<4; i++)  comboBox->addItem(tr(cities[i]));
 labCellPos->setText(tr("第 %1 行").arg(current.row()));
 ```
 ### 使用方法
-在对代码（**包含 ui 文件**）中所有字符串使用 `tr()` 标记之后，先在 pro 中配置
+在对代码（**包含 ui 文件**）中所有字符串使用 `tr()` 标记之后
 ```qmake
 TRANSLATIONS = samp18_1_cn.ts \
                 samp18_1_en.ts
+```
+或者 cmake
+```cmake
+# 1. 添加翻译支持
+set(TRANSLATIONS
+    ${CMAKE_CURRENT_SOURCE_DIR}/samp18_1_cn.ts
+    ${CMAKE_CURRENT_SOURCE_DIR}/samp18_1_en.ts
+)
+
+# 2. 调用 lupdate 提取翻译字符串
+qt_add_translation(QM_FILES ${TRANSLATIONS} SOURCES main.cpp mainwindow.cpp)
+
+# 3. 添加生成翻译文件的依赖
+add_custom_target(update_translations
+    COMMAND lupdate ${CMAKE_CURRENT_SOURCE_DIR} -ts ${TRANSLATIONS}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
 ```
 第一个翻译文件会使用代码中的字符串语言，时默认语言，其他文件是**需要从**源代码中字符串翻译过来的语言文件
 然后使用语言家
@@ -6144,6 +6161,13 @@ qss 语法可以参考 [[QT样式表合集]]
 ```powershell
 D:\OtherProgram\QT\6.8.0\msvc2022_64\bin\windeployqt.exe --release --no-quick-import --no-translations --no-compiler-runtime .\musicPlayer.exe
 ```
+或者 cmake
+```cmake
+# 仅针对 MinGW 编译器添加静态链接标志
+if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
+endif()
+```
 - 书中提到的 `--no-virtualkeyboard` 现已弃用
 - 运行之后会自动在当前目录生成 qt 运行库文件，exe 文件即可运行
 - 如果还是缺少，根据对应 dll 文件名在 qt 目录中查找复制即可，如果是 mingw 编译会缺少 `libgcc_s_seh-1.dll`、`libstdc++-6.dll` 和 `libwinpthread-1.dll`，这些功能用于 c++标准库和线程功能，会被 `--no-compiler-runtime` 跳过，还可以在 qmake 中静态链接这些组件
@@ -6158,3 +6182,87 @@ Qt Installer Framework是 Qt 提供的一个制作安装文件的工具，在安
 - 安装向导的定制性很强，可以使用自定义 UI 文件，可以通过脚本程序添加交互操作功能
 - 可以用多语言开发使安装向导具有本地化语言
 - 用 QIF 生成的安装文件在安装时，会自动安装一个工具软件 maintenancetool. exe，运行它可以添加、移除、更新或完全卸载软件。
+### 编写构建文件
+#### 设置主构建文件
+qmake 配置：
+```qmake
+TEMPLATE = aux    #声明项目模板类型是aux，而不是一般的应用程序（app）或库（lib）
+
+INSTALLER = MusicPlayer_installer    #生成的安装文件名，MusicPlayer_installer.exe
+
+INPUT = $$PWD/config/config.xml $$PWD/packages # 定义输入文件，构建安装包需要输入的文件，config.xml用于记录构建信息，packages用于放入源代码和支持文件
+demo.input = INPUT
+demo.output = $$INSTALLER
+demo.commands = binarycreator -c $$PWD/config/config.xml -p $$PWD/packages ${QMAKE_FILE_OUT}
+demo.CONFIG += target_predeps no_link combine
+
+QMAKE_EXTRA_COMPILERS += demo
+```
+- `TEMPLATE = aux` 表示这是一个 **非标准项目模板**，不涉及代码编译或库生成，而是用于 **定义自定义构建流程**（例如生成安装包）[2](http://file/6e2819cf-2405-45fe-982e-6c90b54ec4a0.pdf)[4](http://file/6e2819cf-2405-45fe-982e-6c90b54ec4a0.pdf)。
+- `qmake` 默认支持的模板类型：
+    - `app`：编译应用程序（生成可执行文件）。
+    - `lib`：编译库（生成动态或静态库）。
+    - `aux`：不编译代码，仅执行自定义命令（如调用 `binarycreator` 生成安装包
+- `demo.commands = binarycreator -c $$PWD/config/config.xml -p $$PWD/packages ${QMAKE_FILE_OUT}`：  
+    指定生成安装包的具体命令，调用 `Qt Installer Framework` 的 `binarycreator` 工具，参数：
+    - `-c`：使用指定的 `config.xml` 配置文件。
+    - `-p`：指定安装包的组件目录（`packages`）[2](http://file/6e2819cf-2405-45fe-982e-6c90b54ec4a0.pdf)[6](http://file/6e2819cf-2405-45fe-982e-6c90b54ec4a0.pdf)。
+- `demo.CONFIG += target_predeps no_link combine`：
+    - `target_predeps`：确保依赖项先于目标构建。
+    - `no_link`：禁用链接阶段（因为不编译代码）。
+    - `combine`：合并多个构建步骤为单个命令[2](http://file/6e2819cf-2405-45fe-982e-6c90b54ec4a0.pdf)。
+
+cmake 配置
+```cmake
+# 设置安装包名称
+set(INSTALLER_NAME MusicPlayer_installer)
+add_custom_target(build_installer
+	# 调用binarycreator生成
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/binarycreator -c ${CMAKE_CURRENT_SOURCE_DIR}/config/config.xml -p ${CMAKE_CURRENT_SOURCE_DIR}/packages ${CMAKE_CURRENT_BINARY_DIR}/${INSTALLER_NAME}.exe
+    DEPENDS ${PROJECT_NAME}  # 确保主程序先构建
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+```
+安装程序的基本信息通过 `config.xml` 生成
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>Music Player</Name>
+    <Version>1.0.0</Version>
+    <Title>Music Player Created by Qt 6</Title>
+    <Publisher>WWB</Publisher>
+    <StartMenuDir>Qt6 Samples</StartMenuDir>
+    <TargetDir>@HomeDir@/Qt6Samples</TargetDir>
+    <CreateLocalRepository>true</CreateLocalRepository>
+    <WizardStyle>Aero</WizardStyle>
+    <WizardShowPageList>true</WizardShowPageList>
+	<WizardDefaultWidth> 650   </WizardDefaultWidth>
+	<WizardDefaultHeight> 430  </WizardDefaultHeight>
+</Installer>
+```
+`<Name>` 定义了应用程序的名称
+`<Title>` 定义了安装向导的标题 
+`<StartMenuDir>` 定义了在开始菜单中创建的文件夹名称 
+`<TargetDir>` 定义了初始的安装文件夹，其中 `@HomeDir@` 表示使用QIF中的预定义变量HomeDir，也就是用户主目录。
+\packages下是需要安装的组件，每个组件是一个文件夹，有data和meta两个**固定名称的文件夹**，data文件夹里是需要安装到用户计算机上的文件，meta文件夹里是对组件进行配置的文件。
+MusicPlayer组件。所有**程序运行的必要文件和文件夹**压缩为一个文件***7z 格式（必须是）将其复制到\packages\MusicPlayer\data目录下***
+#### 设置组件构建文件
+可运行程序放在 `/package/data` 文件夹下，`/package/meta` 文件夹中防止组件配置文件，其中
+- **必须要一个 `package.xml` 文件配置组件的构建方式**，
+- `license.txt` 存放的是安装过程的许可协议内容，
+- `installscript.qs` 是 qt 脚本文件，这里只用于为安装后的文件 MusicPlayer.exe 创建开始菜单快捷方式和桌面快捷方式。
+```xml
+<!--/package/MusicPlayer/meta/package.xml -->
+<Package>
+	<DisplayName>Music Player</DisplayName>
+	<Description>Music Player应用程序</Description>
+	<Version>1.0.0</Version>
+	<ReleaseDate>2022-02-16</ReleaseDate>
+	<Licenses>
+		<License name="GNU Public License Agreement" file="license.txt"/>
+	</Licenses>
+	<ForcedInstallation>true</ForcedInstallation>
+	<Script>installscript.qs</Script>
+	<SortingPriority>100</SortingPriority>
+</Package>
+```
