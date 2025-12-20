@@ -66,3 +66,50 @@ QImage（图像）
 - 适用场景：图像处理、像素操作、图像算法等
 ## bubble 对话框模块
 包含 `bubble.h` 和 `bubble.cpp`
+### 根据文本内容设置气泡组件尺寸
+```cpp
+void Bubble::setContent(const QString &text, int parent_width)
+{
+    ui->content_label->setText(text);
+
+    int max_textwidth = parent_width - 300;
+    ui->content_label->setMaximumWidth(max_textwidth);
+    ui->content_label->setFont(QFont("Microsoft YaHei", 10));
+    
+    // 计算整个字符串的长度占用
+    QFontMetrics fm(ui->content_label->font());
+    int textWidth = fm.horizontalAdvance(text);
+    int optimalWidth = qMin(textWidth + 20, max_textwidth);
+
+    // 重要：先重置尺寸限制，让标签自由计算
+    ui->content_label->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+    ui->content_label->setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+
+    ui->content_label->setFixedWidth(optimalWidth);
+    ui->content_label->setWordWrap(textWidth + 20 > max_textwidth);
+
+    // 强制更新布局
+    ui->content_label->adjustSize();
+
+    // 获取QLabel自己计算的大小（最准确）
+    QSize labelSize = ui->content_label->sizeHint();
+//    qDebug() << "最终气泡尺寸:" << labelSize;
+
+    // 根据整个气泡组件的大小，调整组件画布大小
+    QSize newBubbleSize = calculateBubbleSize(labelSize, parent_width);
+    this->setFixedSize(newBubbleSize);
+    ui->content_label->setFixedSize(labelSize); // 根据布局调整
+    ui->label->setFixedHeight(labelSize.height());
+}
+```
+设置 setMaximumSize 后，如果文本内容长度超过最大宽度，QLabel
+不会自动换行。默认情况下，QLabel 会：
+1. 截断文本：超出部分会被截断显示
+2. 不自动换行：除非显式设置 `setWordWrap(true)`
+  `adjustSize()` 会根据以下因素重新计算并设置控件尺寸：
+- 当前设置的固定宽度 (setFixedWidth)
+- 是否启用换行 (setWordWrap)
+- 文本内容和字体
+- 样式表中的内边距（padding）
+所以先重置尺寸，设置好计算的宽度后，调用 `adjustSize()` 函数刷新
+计算完气泡组件大小后，计算画布大小，调用 `this->setFixedSize()`，`ui->label->setFixedHeight(labelSize.height());`让label字体垂直居中
