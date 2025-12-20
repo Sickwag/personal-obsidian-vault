@@ -3,6 +3,7 @@ created: 2025年12月19日21:45:45
 repo: https://github.com/windy66666/m_project/tree/main
 ---
 # 杂项知识
+# 具体文件
 ## addfriend 模块
 包含 `addfriend.h` 和 `addfriend.cpp`
 ### `time_t` 类型使用
@@ -41,3 +42,27 @@ QPixmap Business::getRoundedPixmap(const QPixmap& src, int radius)
     return result;
 }
 ```
+`Qt::SmoothTransformation` 是一个优化标志，它启用**高质量的图像缩放算法**：
+- **双线性插值**：在缩放时使用周围像素的加权平均值，使缩放后的图像更加平滑
+- **抗锯齿效果**：减少缩放后图像的锯齿状边缘
+- **更好的视觉效果**：特别是当图像缩放比例较大时，能保持较好的清晰度
+设置圆角图片的步骤：
+- 绘制符合头像 UI 控件大小的矩形 `QRect rect(0, 0, src.width(), src.height())`
+- 对 pixmap 设置透明背景
+- 在这个矩形上绘制圆角路径 `path.addRoundRect(rect, radius, radius)`
+- 设置剪裁区域和**使用画笔**在剪裁区域绘制 pixmap
+### 访问图像方式
+qt 中有两种方式 QImage 和 QPixmap，
+QPixmap（像素图）
+- 用途：主要用于显示和绘制，返回一些基本图片信息
+- 存储格式：内部使用优化的显示格式（通常是硬件加速格式）
+- 性能：需要**频繁在屏幕上显示**时性能更好
+- 适用场景：GUI 显示、用作图标和作为控件背景图等
+
+QImage（图像）
+- 用途：主要用于像素级操作和图像处理，各种 convertTo ，pixel，set 函数，用于精细操作数据，更改数据存储格式，保存数据
+- 存储格式：以原始像素数据格式存储（RGB、ARGB 等）
+- 性能：**像素级访问和修改更高效**
+- 适用场景：图像处理、像素操作、图像算法等
+## bubble 对话框模块
+包含 `bubble.h` 和 `bubble.cpp`
