@@ -112,4 +112,67 @@ void Bubble::setContent(const QString &text, int parent_width)
 - 文本内容和字体
 - 样式表中的内边距（padding）
 所以先重置尺寸，设置好计算的宽度后，调用 `adjustSize()` 函数刷新
-计算完气泡组件大小后，计算画布大小，调用 `this->setFixedSize()`，`ui->label->setFixedHeight(labelSize.height());`让label字体垂直居中
+计算完气泡组件大小后，计算画布大小，调用 `this->setFixedSize()`，`ui->label->setFixedHeight(labelSize.height());` 让label字体垂直居中
+
+## 数据管理和请求构建模块
+### 数据请求流程
+包含 `datamanager.h` ， `datamanager.cpp`，`business.h` 和 `business.cpp`
+UI 需要跟用户交互，用户的交互产生数据更新的需要，需要从 server 端拉取最新的数据。
+程序中的datamanager 类用来专门管理**当前用户**的：信息，好友列表，群组列表，消息缓存和有添加好友和添加群组的请求列表，并且为这些属性添加了一系列 setter 和 getter 接口，这些数据保存在本地 client 端中。
+
+business 类则用来构建出各种请求头，用于 networkmanager 对象的 `send_message()` 函数来发送网络数据请求，请求的结果被 datamanager 调用保存到 client 程序的内存中，这些数据最终会被用来更新 ui
+构建流程
+```md
+用户操作
+    ↓
+UI组件（如点击发送按钮）
+    ↓
+Business::construct_chat_message() (构建协议)
+    ↓
+NetworkManager::send_message() (发送到服务器)
+    ↓
+服务器响应
+    ↓
+NetworkManager接收数据
+    ↓
+MainWindow::onDataReach() (分发处理)
+    ↓
+DataManager更新数据
+    ↓
+UI更新显示
+```
+### 请求头使用基本数据类型原因
+很多需要网络请求的 C++项目中，网络请求的各项信息都被封装在 struct 中，成员使用基本数据类型 int，char，char\[\]等，原因有：
+- 网络协议本质上是二进制协议，数据在网络中传输的是字节流不是高级语言对象
+- 对于字符串，一般使用字符数组或者字符串指针，C 字符串内存布局完全确定，每个字段的位置和大小都固定，而 `QString` / `std::string`：内部结构复杂，包含额外的元数据（长度、容量、引用计数等），一般在无关网络请求的部分使用**减少代码编写工作量**
+- 网络前后端，或者网络协议需要被不同语言实现，使用基本类型能够保证被正确读取，**序列化和反序列化**
+- 性能考虑，零拷贝：可以直接发送内存中的数据，内存效率：没有额外的对象开销，并且只包含**实现功能所需的最小的数据**，节省流量
+## 自定义消息框
+包含 `custommessagebox.h` 和 `custommessagebox.cpp`
+继承 QDialog 是因为 QMessageBox 的外观受系统主题影响，并且只能使用**固定的布局（窗口标题，图标，正文内容，确定，否定，取消按钮**），QDialog 则可以完全自定义外观和布局
+自定义窗口大小布局：
+```cpp
+void CustomMessageBox::adjustSizeToContent()
+{
+    // 步骤1: 计算文本所需高度
+    m_textEdit->document()->setTextWidth(m_textEdit->width());
+    int textHeight = m_textEdit->document()->size().height();
+
+    // 步骤2: 限制最大高度
+    QScreen *screen = QApplication::primaryScreen();
+    int maxHeight = screen->availableGeometry().height() * 0.6;
+
+    // 步骤3: 设置文本编辑框高度
+    int textEditHeight = qMin(textHeight + 10, 200); // 最大200像素
+    m_textEdit->setFixedHeight(textEditHeight);
+
+    // 步骤4: 计算总高度
+    int totalHeight = 180 + (textEditHeight - 60); // 基础高度 + 额外高度
+
+    // 步骤5: 设置对话框大小
+    setFixedSize(350, qMin(totalHeight, maxHeight));
+    findChild<QWidget*>("bgWidget")->setFixedSize(350, qMin(totalHeight, maxHeight));
+}
+```
+- 注意对 `m_textEdit->document(m_textEdit->width())` 设置宽度就是设置文本框的宽度为文本控件的宽度，这就相当于让文本在长度超过文本控件（m_textEdit）宽度时，在视觉上自动换行
+- 
