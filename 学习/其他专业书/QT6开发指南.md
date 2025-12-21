@@ -172,6 +172,8 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 CONFIG += debug   # Debug 模式
 CONFIG += release # Release 模式
 ```
+如果使用 msvc 编译器，通过生成->配置管理器调整编译行为
+![[PixPin_2025-12-21_19-28-51.png]]
 ## 代码化 UI 设计
 编撰完成：
 [[C++ practice case#Qt 项目代码#quick_example qt 6高级开发书籍#2.3 代码化 UI 设计]]
@@ -4160,6 +4162,7 @@ qmake 项目右键项目->添加库->外部库
 效果和[[#prompt to 引入自定义控件|提升法]]一致，但是由于只通过 `.h` 文件暴露了接口，无法新增属性和新的信号
 
 ## 创建和使用静态库
+### 创建静态库
 创建项目的时候选择 C++ Library，type 选择 static library
 qmake 中设置 `TEMPLATE = lib` 即可，cmake 设置
 ```cmake
@@ -4172,7 +4175,69 @@ add_library(MyStaticLib STATIC
 ```
 **静态库不需要设置导入导出宏**，静态库中的所有符号（如果未使用 `static` 或匿名命名空间隐藏）会被直接打包到目标文件中，导入导出是[[#动态库（共享库）]]的概念
 生成的库文件与使用的编译器有关，**只会生成一个 lib 或者 a 文件**，MSVC生成的库文件是 ` MyStaticLib.lib `；MinGW生成的库文件是 ` libMyStaticLib.a `。**同编译器在 Release 和 Debug 模式下编译生成的静态库文件名称是相同的，并不会为 Debug 版本库文件名自动添加一个字母“d”**，如需区分则手动更名，然后通过[[#通过外部库引入自定义控件|添加外部库]]实现引入
+如果使用 msbuild 作为构建工具：
+![[PixPin_2025-12-21_19-24-40.png]]
+链接器只会将程序实际调用的函数和类从静态库中链接到最终的可执行文件中，而不是整个静态库
+- 如果你只使用了库中的 AntButton，只有 AntButton 相关的代码会被链接
+- 其他未使用的组件（如 AntInput、CarouselWidget 等）不会被包含
+### 使用静态库
+将 lib 和项目中所有头文件放到项目目录中（也可以是其他地方）并配置好 includepath，如果这个库**也是用了第三方库，需要将第三方库的头文件也放到需要用的项目中**。比如 [byralpha/AntDesign](https://github.com/byralpha/AntDesign) 库，其中用到第三方库有两个：qrcodegen 和 FastGuassianBlur
+qmake 配置
+```qmake
+LIBS += -L$$PWD/path/to/your/static/library/ -lQtAntDesign
 
+INCLUDEPATH += \
+	# 添加本项目includepath
+    $$PWD/../QtAntDesignLib/include \
+    
+    # 添加第三方库includepath
+    $$PWD/../QtAntDesignLib/ThirdParty/QR-Code-generator-master
+    $$PWD/../QtAntDesignLib/ThirdParty/FastGaussianBlur-main
+
+DEPENDPATH += $$INCLUDEPATH
+
+SOURCES += \
+    main.cpp \
+    mainwindow.cpp
+
+HEADERS += \
+    mainwindow.h
+```
+cmake配置
+```cmake
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui)
+
+# 添加 QtAntDesign 静态库
+set(QtAntDesign_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../QtAntDesignLib")
+set(QtAntDesign_INCLUDE_DIRS 
+    "${CMAKE_CURRENT_SOURCE_DIR}/../QtAntDesignLib/include"
+    # 添加第三方库头文件
+    "${CMAKE_CURRENT_SOURCE_DIR}/../QtAntDesignLib/ThirdParty/QR-Code-generator-master"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../QtAntDesignLib/ThirdParty/FastGaussianBlur-main"
+)
+
+# 添加包含目录
+target_include_directories(${PROJECT_NAME} PRIVATE ${QtAntDesign_INCLUDE_DIRS})
+
+# 链接静态库
+target_link_libraries(${PROJECT_NAME} 
+    Qt6::Core 
+    Qt6::Widgets 
+    Qt6::Gui
+    "${QtAntDesign_LIB_DIR}/libQtAntDesign.a"  # Linux/macOS
+    # "${QtAntDesign_LIB_DIR}/QtAntDesign.lib" # Windows
+)
+
+# 如果是 Windows 并且使用 MSVC
+if(WIN32 AND MSVC)
+    target_link_libraries(${PROJECT_NAME} 
+        Qt6::Core 
+        Qt6::Widgets 
+        Qt6::Gui
+        "${QtAntDesign_LIB_DIR}/QtAntDesign.lib"
+    )
+endif()
+```
 ## 创建和使用共享库
 ### 创建共享库
 创建项目的时候选择 C++ Library，type 选择 shared library，向导结束后**会生成 4 个文件**，`MySharedLib.pro`、`MySharedLib_global.h`、`tpendialog.h`和`tpendialog.cpp`
@@ -4296,6 +4361,19 @@ int main() {
     return 0;
 }
 ```
+如果使用 msbuild 则需要修改项目属性中**包含目录+库目录+附加依赖项**
+![[PixPin_2025-12-21_20-27-33.png]]
+库目录（Library Directories），只是**文件夹**路径字符串，**不能用来指向文件**
+- 作用：告诉链接器在哪里搜索库文件
+- 内容：路径列表（例如：D:\MyLibs\Debug）
+- 功能：提供搜索路径，就像告诉链接器"去这些地方找库文件"
+![[PixPin_2025-12-21_20-40-09.png]]
+附加依赖项（Additional Dependencies）
+- 作用：告诉链接器具体要使用哪个库文件
+- 内容：具体的库文件名（例如：QtAntDesign. lib）
+- 功能：指定需要链接的具体库文件名
+需要注意，**使用动/静态库只有项目被配置为动态库或者应用程序时**，项目属性中才会有链接器这个选项，否则不会出现，只有最终编译为动态/应用程序时，才会需要链接
+![[PixPin_2025-12-21_20-40-48.png]]
 ### 链接方式区分总结
 | 特性       | 隐式链接             | 显式链接                     |
 | -------- | ---------------- | ------------------------ |
@@ -4370,7 +4448,53 @@ LIB （静态）文件完全不同，包含：
 链接时，所需代码被复制到最终的可执行文件中
 
 动静态库编译的库文件可能都是 lib 文件，但是大小差异很大
+### 区分可执行文件类型
+区分可执行文件是**依赖动态链接库**还是通过静态链接将依赖打包进入文件的方法，Visual studio 自带一个 dumpbin 工具，执行：
+```powershell
+dumpbin /dependents <可执行文件路径>
 
+# 返回结果大概为：
+Dump of file .\x64\Debug\QtAntDesign.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Image has the following dependencies:
+
+    USER32.dll
+    Qt6OpenGLWidgetsd.dll
+    Qt6MultimediaWidgetsd.dll
+    Qt6Widgetsd.dll
+    Qt6Multimediad.dll
+    Qt6Svgd.dll
+    Qt6Guid.dll
+    Qt6Cored.dll
+    MSVCP140D.dll
+    dwmapi.dll
+    VCRUNTIME140_1D.dll
+    VCRUNTIME140D.dll
+    ucrtbased.dll
+    KERNEL32.dll
+    SHELL32.dll
+
+  Summary
+
+Summary
+
+    1000 .00cfg    # 控制流防护数据（安全特性）
+    7000 .data     # 已初始化的全局/静态变量
+   1F000 .idata    # 导入表（Import Table），记录依赖的DLL函数
+   10000 .msvcjmc  # Visual Studio Just My Code 调试信息
+   25000 .pdata    # 异常处理数据（x64平台）
+    1000 .qtversi  # Qt版本信息
+ 2898000 .rdata    # 只读数据（常量、字符串、虚函数表等）
+   1D000 .reloc    # 重定位表（ASLR地址空间布局随机化）
+    1000 .rsrc     # 资源（图标、版本信息、对话框等）
+  23E000 .text     # 代码段（实际执行的机器码）
+  10E000 .textbss  # 未初始化的代码相关数据
+    1000 .tls      # 线程局部存储数据
+```
+- dependencies 中说明了程序运行期间需要的所有动态链接库，静态链接形式的话不会出现在 dependencies 中
+- Summary 中是一些应用程序编译成可执行文件内部的一些信息的大小（单位 byte）
 # Qt Charts
 QtCharts 模块已在 Qt 6.8.0 中弃用（官方文档中说是 6.10 开始的？）用 QGraphs 类替代，并且这一章没什么意义，可以用更方便的 html 实现表格，看看即可
 # Qt Data Visuallization
@@ -6175,6 +6299,7 @@ endif()
 QMAKE_CXXFLAGS += -static-libgcc -static-libstdc++
 ```
 - 删除 `D3Dcompiler_47.dll` 和 `opengl32sw.dll` 这两个文件，MusicPlayer.exe仍然可以运行，他们分别负责 `Direct3D` 和 OpenGL 渲染，可使用对应的 `--no` 选项过滤
+对于 debug 编译得到的 exe 文件，再使用 windeploy 时必须加 `--debug` 参数，不能和 release 混用。两种方式打包进来的 dll 文件是不同的（debug 版本文件名末尾会添加一个 `“d”`），并且 release 版本一般比较小
 ### 制作安装文件
 Qt Installer Framework是 Qt 提供的一个制作安装文件的工具，在安装 Qt 时可以选择，这些工具软件与 Qt 开发套件版本无关，可以添加到系统的 PATH 环境变量里（`QT/Tools/QtInstallFramwork/<version_number>/bin`），制作的安装项目可以**跨平台上生成安装文件**
 - 使用 QIF 可以制作离线安装，在线安装文件。
