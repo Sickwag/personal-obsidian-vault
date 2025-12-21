@@ -4177,7 +4177,7 @@ add_library(MyStaticLib STATIC
 生成的库文件与使用的编译器有关，**只会生成一个 lib 或者 a 文件**，MSVC生成的库文件是 ` MyStaticLib.lib `；MinGW生成的库文件是 ` libMyStaticLib.a `。**同编译器在 Release 和 Debug 模式下编译生成的静态库文件名称是相同的，并不会为 Debug 版本库文件名自动添加一个字母“d”**，如需区分则手动更名，然后通过[[#通过外部库引入自定义控件|添加外部库]]实现引入
 如果使用 msbuild 作为构建工具：
 ![[PixPin_2025-12-21_19-24-40.png]]
-链接器只会将程序实际调用的函数和类从静态库中链接到最终的可执行文件中，而不是整个静态库
+链接器只会将程序实际调用的函数和类从静态库中链接到最终的可执行文件中，而不是整个静态库 ^prqdmq
 - 如果你只使用了库中的 AntButton，只有 AntButton 相关的代码会被链接
 - 其他未使用的组件（如 AntInput、CarouselWidget 等）不会被包含
 ### 使用静态库
@@ -4363,7 +4363,7 @@ int main() {
 ```
 如果使用 msbuild 则需要修改项目属性中**包含目录+库目录+附加依赖项**
 ![[PixPin_2025-12-21_20-27-33.png]]
-库目录（Library Directories），只是**文件夹**路径字符串，**不能用来指向文件**
+库目录（Library Directories），只是**文件夹**路径字符串，**不能用来指向文件** ^vjmdhz
 - 作用：告诉链接器在哪里搜索库文件
 - 内容：路径列表（例如：D:\MyLibs\Debug）
 - 功能：提供搜索路径，就像告诉链接器"去这些地方找库文件"
@@ -4373,7 +4373,7 @@ int main() {
 - 内容：具体的库文件名（例如：QtAntDesign. lib）
 - 功能：指定需要链接的具体库文件名
 需要注意，**使用动/静态库只有项目被配置为动态库或者应用程序时**，项目属性中才会有链接器这个选项，否则不会出现，只有最终编译为动态/应用程序时，才会需要链接
-![[PixPin_2025-12-21_20-40-48.png]]
+![[PixPin_2025-12-21_20-40-48.png]] ^igwo85
 ### 链接方式区分总结
 | 特性       | 隐式链接             | 显式链接                     |
 | -------- | ---------------- | ------------------------ |
@@ -4448,6 +4448,126 @@ LIB （静态）文件完全不同，包含：
 链接时，所需代码被复制到最终的可执行文件中
 
 动静态库编译的库文件可能都是 lib 文件，但是大小差异很大
+### 使用 qt 链接第三方库实战
+#### cmake 链接
+使用的第三方库为 [QtAntDesign](https://github.com/byralpha/AntDesign)，这个第三方库本身编译成库文件时就需要两个第三方库，qrcodegen 和 fastGuassianBlur，库的源码文件结构为：
+```bash
+├───fonts
+├───Imgs
+├───ThirdParty
+│   ├───FastGaussianBlur-main
+│   └───QR-Code-generator-master
+├───Video
+└───x64
+```
+首先将库的第三方库头文件包含到 includepath 中（这两个库是 head-only ）
+![[PixPin_2025-12-21_21-43-01.png]]
+然后将库编译为静态库
+![[PixPin_2025-12-21_21-44-32.png]]
+debug 模式和 release 模式全部编译一遍，注意根据[[QT6开发指南#^prqdmq|之前知识]]可知需要自己给 debug 编译得到的库文件添加 d 后缀
+![[PixPin_2025-12-21_22-14-25.png]]
+使用静态库的项目结构
+```bash
+├───images
+├───lib
+│   └───QtAntDesign
+└───ThirdParty
+    ├───fastGaussianBlur
+    │   └───include
+    ├───qrcode
+    │   └───include
+    └───QtAntDesign
+        └───include
+```
+`lib/QtAntDesign` 中放入两个 lib 文件，不同库的头文件放在 `ThirdParty` 对应的 include 文件夹中
+使用静态库项目的 cmake 配置
+```cmake
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Svg)
+
+set(PROJECT_SOURCES
+        main.cpp
+        mainwindow.cpp
+        mainwindow.h
+        mainwindow.ui
+)
+
+set(QtAntDesign_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/QtAntDesign")
+set(QtAntDesign_INCLUDE_DIRS
+    "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/QtAntDesign/include/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/qrcode/include/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/fastGaussianBlur/include/"
+)
+
+target_link_libraries(TimesRest PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Svg
+    $<$<CONFIG:Debug>:${QtAntDesign_LIB_DIR}/QtAntDesignd.lib>
+    $<$<CONFIG:Release>:${QtAntDesign_LIB_DIR}/QtAntDesign.lib>
+)
+
+target_include_directories(TimesRest PRIVATE ${QtAntDesign_INCLUDE_DIRS})
+```
+- 第一个 find_package **用来寻找名为 Qt 5 或者 Qt 6 并且包含 Widgets 模块的库**，然后找到后自然就会定义 `QT_VERSION_MAJOR` 变量为主版本号。第二个 find_package 自然就使用这个信息，防止不同版本 qt 编译直接报错
+- 然后设置 lib 库文件目录和 includepath 目录，分别通过 `target_link_directories` 和 `target_include_directories` 添加即可
+在 cmake 中指定构建类型链接指定库，有很多方法：
+1. 命令行方法 `cmake -DCMAKE_BUILD_TYPE=Debug/Release /path/to/source`
+2. cmakelist 中设置
+```cmake
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+```
+3. 使用**生成器表达式**
+```cmake
+target_link_libraries(MyApp
+    Qt6::Core 
+    Qt6::Widgets 
+    Qt6::Gui
+    $<$<CONFIG:Debug>:${CMAKE_SOURCE_DIR}/lib/QtAntDesignd.lib>
+    $<$<CONFIG:Release>:${CMAKE_SOURCE_DIR}/lib/QtAntDesign.lib>
+)
+```
+4. 使用条件语句
+```cpp
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_link_libraries(MyApp 
+        ${CMAKE_SOURCE_DIR}/lib/QtAntDesignd.lib
+        Qt6::Core 
+        Qt6::Widgets 
+        Qt6::Gui
+    )
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_link_libraries(MyApp 
+        ${CMAKE_SOURCE_DIR}/lib/QtAntDesign.lib
+        Qt6::Core 
+        Qt6::Widgets 
+        Qt6::Gui
+    )
+endif()
+```
+5. 使用 `find_package` 指定不同库文件路径
+```cmake
+find_library(QtAntDesign_LIBRARY_DEBUG
+    NAMES QtAntDesignd QtAntDesign_d
+    PATHS ${CMAKE_SOURCE_DIR}/lib/debug
+)
+
+find_library(QtAntDesign_LIBRARY_RELEASE
+    NAMES QtAntDesign
+    PATHS ${CMAKE_SOURCE_DIR}/lib/release
+)
+
+target_link_libraries(MyApp
+    Qt6::Core 
+    Qt6::Widgets 
+    Qt6::Gui
+    optimized ${QtAntDesign_LIBRARY_RELEASE}
+    debug ${QtAntDesign_LIBRARY_DEBUG}
+)
+```
+#### 使用 msBuild 构建
+在 [[QT6开发指南#^igwo85]] 和 [[QT6开发指南#^vjmdhz]] 中已经有提及
 ### 区分可执行文件类型
 区分可执行文件是**依赖动态链接库**还是通过静态链接将依赖打包进入文件的方法，Visual studio 自带一个 dumpbin 工具，执行：
 ```powershell
