@@ -177,7 +177,7 @@ void CustomMessageBox::adjustSizeToContent()
 - 注意对 `m_textEdit->document(m_textEdit->width())` 设置宽度就是设置文本框的宽度为文本控件的宽度，告诉文档系统在进行文本布局和换行计算时，按照这个宽度来换行，文本在长度超过m_textEdit宽度时，在**视觉上自动换行**
 - findChild 中提到的名为 `bgWidget` 的 GUI 控件其实是 custommessagebox 类中所有组件（按钮，标题和 message 正文）的画布，将画布的大小设置为其中所有组件的大小让其显示正常
 ## 聊天列表模块
-包含 `frienditem.h` 和 `frienditem.cpp`
+包含 `frienditem.h` 和 `frienditem.cpp`，`groupmember.cpp` 和 `groupmember.h`
 `friendItem::set_users_in_group_list_item` 用于在群成员列表中显示用户信息，*可能是历史原因*在 GroupMember 中也有同名函数用来处理群成员显示，在群成员列表显示控件中显示每一个成员的头像，名称等信息
 
 `setSession()` 函数本质是根据 ` m_session ` 中解析出来的信息来更新 ui 控件
@@ -229,3 +229,60 @@ for(int i = 0; i < users.size(); i++) {
 }
 ```
 遍历所有已经管理的数据，检查最后一条消息发送者是否存在于 datamanager 中
+## 登录模块
+重点是 onDataReach 函数，当有消息发送到客户端时，`while(true)` 不断使用 `read_message()` 从 socket 中读取消息，如果读取到的请求头非空，则说明接收到了数据，根据 `msg_header.msg_type` 再通过 `m_NetworkManger` 发送对应的请求，将请求结果通过 `m_dataManager` 记录到本地客户端中
+登录回应和注册回应比较复杂
+```cpp
+case LOGIN_RESPONSE:
+	 m_NetworkManager->read_login_message(msg_header, user_query_response_msg);
+	 qDebug() << "接收到登陆回应";
+	 if (user_query_response_msg.success_flag == 0) {
+		 qDebug() <<  user_query_response_msg.response;
+		 // 使用自定义消息框
+		 CustomMessageBox::showWarning(this, "登陆失败", user_query_response_msg.response);
+		 // 登录失败，保持连接但重置认证状态
+		 resetUIState();
+		 m_connectionState = Connected;
+	 }else{
+		 qDebug() << user_query_response_msg.response;
+		 m_connectionState = Authenticated;
+
+		// 构建m_currentUser，省略
+		 // 将头像数据转换为QPixmap用于显示， 省略
+		 m_dataManager.setCurrentUser(m_currentUser);
+		 // 发出登录成功信号，开始创建主窗口
+		 emit loginSuccess();
+		 return;
+	 }
+	break;
+case REGISTER_RESPONSE:
+	m_NetworkManager->read_remain_message(msg_header, response_msg);
+	qDebug() << "接收到注册回应";
+
+	resetUIState();
+	// 注册完成后重置连接状态
+	m_connectionState = Connected;
+
+	if (response_msg.success_flag == 0) {
+		qDebug() <<  response_msg.response;
+		// 使用自定义消息框
+		CustomMessageBox::showWarning(
+			this,  // 父窗口
+			"注册失败",
+			response_msg.response
+		);
+	}else{
+		qDebug() <<  response_msg.response;
+		// 注册成功后自动填充账号
+		ui->accountEdit->setText(m_pendingRegisterAccount);
+		ui->passwordEdit->setFocus();
+		ui->passwordEdit->clear();
+		CustomMessageBox::showInformation(this, "注册成功", "账号注册成功，请登录");
+	}
+	break;
+```
+## 用户信息模块
+简单显示用户信息窗口
+![[PixPin_2025-12-21_12-52-50.png]]
+
+## 主界面模块
