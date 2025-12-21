@@ -282,7 +282,123 @@ case REGISTER_RESPONSE:
 	break;
 ```
 ## 用户信息模块
-简单显示用户信息窗口
+简单显示用户信息窗口，在用户点击头像位置 show，widget 会被在 mainwindow 中传入用户头像控件
 ![[PixPin_2025-12-21_12-52-50.png]]
+```cpp
+void UserInfoPopup::showAtWidgetSide(QWidget *widget)
+{
+    if (!widget) return;
 
+    // 获取按钮的全局位置和大小
+    QRect widgetRect = widget->rect();
+    QPoint widgetTopLeft = widget->mapToGlobal(widgetRect.topLeft());
+    QPoint widgetBottomRight = widget->mapToGlobal(widgetRect.bottomRight());
+
+    // 获取屏幕信息
+    QScreen *screen = QApplication::screenAt(widgetTopLeft);
+    if (!screen) {
+        screen = QApplication::primaryScreen();
+    }
+
+    int x = widgetBottomRight.x() + 5;
+    int y = widgetTopLeft.y();
+
+    this->move(x, y);
+    this->show();
+    this->raise();
+}
+```
+在 mainwindow 中的头像位置偏右**显示并将本窗口置顶**，如果显示窗口后再次点击头像，为避免关闭，使用了 eventFilter
+```cpp
+bool UserInfoPopup::eventFilter(QObject *watched, QEvent *event)
+{
+    if (event->type() == QEvent::MouseButtonPress) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+
+        // 检查点击位置是否在弹窗外
+        if (!geometry().contains(mouseEvent->globalPos())) {
+            // 获取点击的控件
+            QWidget *clickedWidget = QApplication::widgetAt(mouseEvent->globalPos());
+
+            // 如果点击的是触发按钮，不关闭（避免立即关闭）
+            if (clickedWidget && clickedWidget->objectName() != "headimgBtn") {
+                hide();
+                return true;
+            }
+        }
+    }
+
+    return QWidget::eventFilter(watched, event);
+}
+```
 ## 主界面模块
+### 实现细腻滚动
+每次滚动的单位是 1 像素，同理类似 temux 终端界面效果只需要将每次滚动的单位长度设置为单行文字高度即可
+```cpp
+bool mainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::Wheel) {
+        QWheelEvent *wheelEvent = static_cast<QWheelEvent*>(event);
+
+        if (obj == ui->listWidget->viewport() || obj == ui->chatWidget->viewport()) {
+            QAbstractScrollArea *scrollArea = (obj == ui->listWidget->viewport()) ? ui->listWidget : ui->chatWidget;
+
+            if (scrollArea) {
+                QScrollBar *vScrollBar = scrollArea->verticalScrollBar();
+                int delta = wheelEvent->angleDelta().y();
+
+                // 超细腻滚动：每次只滚动1像素
+                int step = (delta > 0) ? -1 : 1;
+                vScrollBar->setValue(vScrollBar->value() + step);
+
+                return true;
+            }
+        }
+    }
+    return QWidget::eventFilter(obj, event);
+}
+```
+- `angleDelta()` 返回一个 QPoint 对象，表示滚轮的滚动量，传统滚轮：每次滚动通常为 120 或 -120，触摸板/高精度滚轮：可以是更小的值（如 15, 30, 60 等）
+```cpp
+// 传统做法
+vScrollBar->setValue(vScrollBar->value() + delta);
+
+// 细腻滚动
+delta = delta > 0 ? -1 : 1;
+vScrollBar->setValue(vScrollBar->value() + delta);
+```
+传统做法这样会根据用户的设备有不同的滚动精度，而细腻滚动在任何设备上滚动效果都是一致的
+### QListWidget 自定义项控件
+在 update 消息列表和群消息列表时，使用了这样代码：
+```cpp
+void mainWindow::update_friendlist(USER_INFO &user_info)
+{
+    bool flag = false;
+    for (int i = 0; i < ui->friend_list->count(); i++) {
+        QListWidgetItem* item = ui->friend_list->item(i);
+        if (!item) continue;
+        friendItem *friItem = qobject_cast<friendItem*>(ui->friend_list->itemWidget(item));
+        if(strcmp(friItem->m_friend_info.user_account, user_info.user_account) == 0) {
+            friItem->setfriendlist_item(user_info);
+
+            QString notice = "您的好友："+ QString(user_info.user_name) + "   已上线";
+            if(user_info.status == 1){
+                CustomMessageBox::showInformation(this, "好友上线提醒", notice);
+            }
+            flag = true;
+            break;
+        }
+    }
+
+    if(!flag){
+        add_friendlist(user_info);
+    }
+}
+```
+friendItem 构造函数中并没有对 QListWidgetItem 的转换，但是 `friendItem *friItem = qobject_cast<friendItem*>(ui->friend_list->itemWidget(item));` 能够被 `qobject_cast` 转换的原因是在对应的 add 函数中使用了
+```cpp
+QListWidgetItem * m_Item = new QListWidgetItem();
+ui->friend_list->insertItem(0, m_Item);
+ui->friend_list->setItemWidget(m_Item, friItem);
+```
+通过 `setItemWidget()` 将 friendItem 与 QListWidgetItem 关联起来， QListWidget 内部管理的仍然是 QListWidgetItem 对象，如果需要获取其中的单个项，返回结果（如 `itemWidget()`）还是 `QWidget*` 需要手动转换
