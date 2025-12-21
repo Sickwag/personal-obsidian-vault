@@ -174,5 +174,58 @@ void CustomMessageBox::adjustSizeToContent()
     findChild<QWidget*>("bgWidget")->setFixedSize(350, qMin(totalHeight, maxHeight));
 }
 ```
-- 注意对 `m_textEdit->document(m_textEdit->width())` 设置宽度就是设置文本框的宽度为文本控件的宽度，这就相当于让文本在长度超过文本控件（m_textEdit）宽度时，在视觉上自动换行
-- 
+- 注意对 `m_textEdit->document(m_textEdit->width())` 设置宽度就是设置文本框的宽度为文本控件的宽度，告诉文档系统在进行文本布局和换行计算时，按照这个宽度来换行，文本在长度超过m_textEdit宽度时，在**视觉上自动换行**
+- findChild 中提到的名为 `bgWidget` 的 GUI 控件其实是 custommessagebox 类中所有组件（按钮，标题和 message 正文）的画布，将画布的大小设置为其中所有组件的大小让其显示正常
+## 聊天列表模块
+包含 `frienditem.h` 和 `frienditem.cpp`
+`friendItem::set_users_in_group_list_item` 用于在群成员列表中显示用户信息，*可能是历史原因*在 GroupMember 中也有同名函数用来处理群成员显示，在群成员列表显示控件中显示每一个成员的头像，名称等信息
+
+`setSession()` 函数本质是根据 ` m_session ` 中解析出来的信息来更新 ui 控件
+```cpp
+void friendItem::setSession_item()
+{
+    ui->friend_name->setText(m_session_info.name);
+    if(m_session_info.sessionType == 1){ // 私聊
+         ui->msg_label->setText(m_session_info.lastMessage);
+    }else{ // 群聊
+        QString displayText = m_session_info.lastMessage;
+        // 检查群成员数据是否可用
+        if (m_dataManager.m_groupMembers.contains(m_group_info.group_account)) {
+            QVector<USER_INFO> users = m_dataManager.m_groupMembers[m_group_info.group_account];
+
+            QString senderName = "";
+            // 查找发送者名称是否是在datamanager中被管理起来
+            for(int i = 0; i < users.size(); i++) {
+                if(QString::fromUtf8(users[i].user_account) == m_session_info.sender) {
+                    senderName = QString::fromUtf8(users[i].user_name);
+                    break;
+                }
+            }
+
+            // 如果找到发送者，添加前缀
+            if(!senderName.isEmpty()) {
+                displayText = senderName + ": " + m_session_info.lastMessage;
+            } else if (!m_session_info.sender.isEmpty()) {
+                // 如果没找到发送者名称，但sender不为空，显示账号
+                displayText = m_session_info.sender + ": " + m_session_info.lastMessage;
+            }
+        } else {
+            qDebug() << "群成员数据未就绪，群账号:" << m_group_info.group_account;
+            // 群成员数据未就绪，只显示消息内容
+        }
+
+        ui->msg_label->setText(displayText);
+    }
+    // 更新UI上组件的显示代码...
+}
+```
+由于**当前[[#数据管理和请求构建模块|用户的所有信息]]** 都被 datamanager 存储起来，所以这里的处理方法是**不将最后一个发送人的用户信息**放在请求头中，而是由当前用户存储。
+```cpp
+for(int i = 0; i < users.size(); i++) {
+    if(QString::fromUtf8(users[i].user_account) == m_session_info.sender) {
+        senderName = QString::fromUtf8(users[i].user_name);
+        break;
+    }
+}
+```
+遍历所有已经管理的数据，检查最后一条消息发送者是否存在于 datamanager 中
