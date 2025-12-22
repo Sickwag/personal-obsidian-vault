@@ -4568,6 +4568,32 @@ target_link_libraries(MyApp
 ```
 #### 使用 msBuild 构建
 在 [[QT6开发指南#^igwo85]] 和 [[QT6开发指南#^vjmdhz]] 中已经有提及
+#### 使用 qmake 构建
+通过 qt creator 图形化界面**只能添加一个 includePath 目录和一个 lib 文件**，这就需要手动调整 pro 文件
+```qmake
+# lib文件目录，不写具体文件名是因为后面要分类
+QtAntDesign_LIB_DIR = $$PWD/'../../../../../Code Files/QT/TimesRest/lib/QtAntDesign'
+
+INCLUDEPATH += $$PWD/'../../../../../Code Files/QT/TimesRest/ThirdParty/QtAntDesign/include' \
+               $$PWD/'../../../../../Code Files/QT/TimesRest/ThirdParty/fastGaussianBlur/include' \
+               $$PWD/'../../../../../Code Files/QT/TimesRest/ThirdParty/qrcode/include'
+DEPENDPATH += $$PWD/'../../../../../Code Files/QT/TimesRest/ThirdParty/QtAntDesign/include' \
+              $$PWD/'../../../../../Code Files/QT/TimesRest/ThirdParty/fastGaussianBlur/include' \
+              $$PWD/'../../../../../Code Files/QT/TimesRest/ThirdParty/qrcode/include'
+
+LIBS += -L$${QtAntDesign_LIB_DIR}
+
+# 区分 Debug 和 Release 版本的库链接， -l后接需要链接的lib名
+CONFIG(debug, debug|release) {
+    # Debug 配置
+    LIBS += -lQtAntDesignd
+    DEFINES += _DEBUG
+} else {
+    # Release 配置
+    LIBS += -lQtAntDesign
+    DEFINES += NDEBUG
+}
+```
 ### 区分可执行文件类型
 区分可执行文件是**依赖动态链接库**还是通过静态链接将依赖打包进入文件的方法，Visual studio 自带一个 dumpbin 工具，执行：
 ```powershell
