@@ -2597,7 +2597,6 @@ QTemporaryDir dir(specDir + "/TempDir_XXXXXX");     // 文件夹名称模板，�
 基本语法为：
 ```cpp
 描述字符串(文件模式);;描述字符串 (文件模式);;...
-QString filter = "Images (*.png *.xpm *.jpg);;Text Files (*.txt);;All Files (*)";
 ```
 - 文件拓展名**大小写不敏感**，但建议统一格式
 - 如果应用程序支持多语言，建议对描述部分进行本地化，使用 `tr("Images (*.png *.xpm *.jpg)")` 来支持翻译。
