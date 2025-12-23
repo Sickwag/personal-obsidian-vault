@@ -129,9 +129,9 @@ add_custom_command (
 )
 ```
 add_custom_target (generate ALL DEPENDS generated. h)
-✅ 用于生成代码、资源文件等。
-## 引入第三方库出现的问题
-### `CMP0167` 警告
+用于生成代码、资源文件等。
+# 实际工程中出现的问题
+## `CMP0167` 警告
 - 从 CMake 3.13 开始，官方推荐使用 **Config 模式**（即通过 `FindPackageConfig.cmake`）寻找某个模块的位置，如寻找 boost 库就会通过在库的安装目录寻找 `FindBoostConfig.cmake` 文件来引入 boost 库中的对应模块
 - 在没有设置工具链的情况下，CMake 会 fallback 到系统默认的 `FindBoost.cmake` —— 这个模块在 CMake 3.13+ 中已被标记为“废弃”，为了兼容没有删除，所以会报 **CMP0167 警告**。
 可以使用下面的代码强制使用 config 模式寻找模块
@@ -146,8 +146,8 @@ endif()
 find_package(Boost REQUIRED COMPONENTS system)
 ```
 方式强制使用 config 方式引入库，添加 `if(POLICY CMP0167)` 作用只是为了兼容老项目
-### cmake 不在指定目录中寻找 boost 库
-#### 构建正常场景
+## cmake 不在指定目录中寻找 boost 库
+### 构建正常场景
 ```cmake
 #  这是能够正常通过构建的代码
 cmake_minimum_required(VERSION 3.10.0)
@@ -172,7 +172,7 @@ target_link_libraries(learn_dll_lib PRIVATE
 [cmake]   Policy CMP0167 is not set: The FindBoost module is removed.  Run "cmake
 ```
 如果解开 `CMP0167` 警告，使用 config 方式寻找 `BoostConfig.cmake` 文件进行配置，就不会出现警告，不使用 `FindBoostConfig.cmake` 的而使用 config 方式寻找引入逻辑。
-#### 构建错误场景
+### 构建错误场景
 ```cmake
 #  这是不能正常通过构建的代码
 cmake_minimum_required(VERSION 3.10.0)
@@ -211,3 +211,223 @@ Call Stack (most recent call first):
   CMakeLists.txt:7 (find_package)
 ```
 这有两个原因，首先由于 toolset 位置，cmake 不知道有 vcpkg 的存在，第二是因为 cmake fallback 了，没有使用 config 方式寻找配置，而是使用了 findboost，所以才可以看到语法错误，cmake 需要 `at least 5 arguments total` 5 个参数进行正则查找，但是并没有满足
+
+## Visual studio 无法使用 cmake 项目
+### 问题
+可以创建项目，也可以通过 cmake 构建编译，运行 exe 程序，但是错误列表中出现大量无法打开源文件，头文件，标准库文件的报错。
+### 原因和解决
+没有设置 cmake 可信执行文件的目录
+![[Pasted image 20251011153910.png]]
+设置完后，问题解决
+
+## find_package 使用方法
+来源：[[BookManageSystem+mysql|自己写的图书管理系统]]
+### 问题
+怎么都找不到 vcpkg 的 tool_chain_file
+
+当通过 `settings.json` 和 `CMakePresets.json` 中设置 vcpkg 的 cmake 配置工具链文件都出现了找不到 vcpkg 安装库下对应第三方库文件的 cmake 配置文件时（无法找到 `xxxx-config.cmake`），可能是 cmake 在 `find_package` 命令执行时，按照系统环境变量搜索，而不是按照 `vcpkg/installed` 搜索，有的时候会搜索 anaconda 目录，这是由于安装了 Visual studio 造成。
+### 各种参数和工作原理
+如果还是找不到 vcpkg 的安装目录或者还是在 anaconda 中寻找：强制指定 vcpkg 库安装目录可以解决
+```cpp
+set(Boost_DEBUG ON)
+set(CMAKE_TOOLCHAIN_FILE "D:\\Program\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake")
+set(CMAKE_PREFIX_PATH "D:/Program/vcpkg/installed/x64-windows/" ${CMAKE_PREFIX_PATH})
+message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+```
+如果在 linux 中，在 find_package 函数中查找库路径，可以在括号最后面添加 `PATH path/to/boost` 来指定查找路径，也可以手动设置这个库的 include 和 lib 目录
+```cmake
+set(BOOST_ROOT "/usr/local/boost-1.89")
+set(Boost_INCLUDE_DIR "/usr/local/boost-1.89/include")
+set(Boost_LIBRARY_DIRS "/usr/local/boost-1.89/lib")
+find_package(Boost REQUIRED COMPONENTS headers context json regex url)
+```
+如果不指定 path，则 linux 会自动搜索：
+
+| 头文件路径                                       |     |
+| ------------------------------------------- | --- |
+| `/usr/include`                              |     |
+| `/usr/local/include`                        |     |
+| `/usr/local/boost*/include`                 |     |
+| `/opt/boost*/include`                       |     |
+| 库文件路径                                       |     |
+| `/usr/lib`  <br>`/usr/lib/x86_64-linux-gnu` |     |
+| `/usr/local/lib`  <br>`/usr/local/lib64`    |     |
+| `/opt/boost*/lib`                           |     |
+如果是 windows ，则会搜索环境变量
+如果项目中设置了：
+```cmake
+set (CMAKE_CXX_STANDARD 20)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
+```
+使用 `cout << __cpluspluse` 还是输出 1997 版本，那么就需要在编译时强制指定
+```cpp
+target_compile_options(BookManagePlus PRIVATE "/std:c++20" "/Zc:__cplusplus")
+```
+
+这时需要在环境变量 path 中调整 vcpkg 安装目录变量到 anaconda 上方，并且删除原有 build 目录，重新通过 cmake 生成工程，即可解决问题
+
+## cmake 引入外部库无法找到
+来源：[[csv_reader]]
+### 无法连接 vcpkg
+这是调用 vcpkg 的模板
+```cmake
+cmake_minimum_required(VERSION 3.10.0)
+
+# 设置vcpkg工具链
+set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+    CACHE STRING "Vcpkg toolchain file")
+
+project(cmake-test VERSION 0.1.0 LANGUAGES C CXX)
+
+# 查找Boost库并指定需要的组件
+find_package(Boost REQUIRED COMPONENTS filesystem system algorithm)
+
+add_executable(cmake-test src/main.cpp)
+
+# 链接Boost库
+target_link_libraries(cmake-test PRIVATE Boost::boost Boost::algorithm Boost::filesystem Boost::system)
+
+target_include_directories(cmake-test PRIVATE ${Boost_INCLUDE_DIRS})
+
+```
+其中：
+- `find_package` 用于指定需要连接的第三方库，还可以指定版本号 `find_package(OpenCV 4.5 REQUIRED)`
+- `target_include_directories` 这行代码的作用是指定编译器在查找头文件时应搜索的目录路径。
+- `${Boost_INCLUDE_DIRS}`: Boost 头文件所在的路径变量，这是通过
+### 不使用包管理器调用库
+| **场景**              | **推荐方式**            |
+| ------------------- | ------------------- |
+| 系统预装库（如 Boost）      | `find_package`      |
+| 本地库（手动下载）           | 直接指定路径              |
+| Git 子模块             | `add_subdirectory`  |
+| 从 GitHub 直接下载       | `FetchContent`      |
+| 需要自定义编译步骤           | `ExternalProject`   |
+| Unix 的 `pkg-config` | `pkg_check_modules` |
+
+#### 引入本地库
+```cmake
+cmake_minimum_required(VERSION 3.10)
+project(MyProject)
+
+# 假设 libfoo 的路径为 ${PROJECT_SOURCE_DIR}/third_party/libfoo 这个文件夹下是根目录，有include，bin，lib这样的文件夹
+set(LIBFOO_ROOT "${PROJECT_SOURCE_DIR}/third_party/libfoo")
+
+# 添加头文件路径
+target_include_directories(my_app PRIVATE "${LIBFOO_ROOT}/include")
+
+# 链接静态库
+target_link_libraries(my_app PRIVATE "${LIBFOO_ROOT}/lib/libfoo.a")
+
+# 如果是动态库（Windows 为 .dll，Linux 为 .so）
+target_link_libraries(my_app PRIVATE "${LIBFOO_ROOT}/lib/libfoo.so")
+```
+#### 使用 `FetchContent`
+```cmake
+include(FetchContent)
+
+# 下载并初始化 spdlog
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY "https://github.com/gabime/spdlog.git"
+  GIT_TAG        "v1.11.0"
+)
+FetchContent_MakeAvailable(spdlog)
+
+# 直接链接
+target_link_libraries(my_app PRIVATE spdlog::spdlog)
+```
+
+#### 使用 `ExternalProject`（复杂场景）
+
+适用于需要自定义编译步骤的库（如交叉编译）。  
+**示例：编译并引入 zlib**
+```cmake
+include(ExternalProject)
+
+ExternalProject_Add(
+  zlib_external
+  URL "https://zlib.net/zlib-1.2.11.tar.gz"
+  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+)
+# 获取 zlib 的路径
+ExternalProject_Get_Property(zlib_external install_dir)
+target_link_libraries(my_app PRIVATE "${install_dir}/lib/zlib.a")
+```
+#### 使用 `pkg-config`（Unix-like 系统）
+适用于通过 `pkg-config` 管理的库（如 GTK）。  
+**示例：引入 GTK 3**
+```cmake
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+
+target_include_directories(my_app PRIVATE ${GTK3_INCLUDE_DIRS})
+target_link_libraries(my_app PRIVATE ${GTK3_LIBRARIES})
+```
+#### 自定义 Find 模块（高级）
+如果库没有提供 CMake 支持，可以手动编写 `FindXXX.cmake` 文件。  
+**示例：自定义查找 `libfoo`**
+1. 创建 `cmake/FindLibFoo.cmake`：
+```cmake
+find_path(LIBFOO_INCLUDE_DIR foo.h PATH_SUFFIXES include)
+find_library(LIBFOO_LIBRARY foo PATH_SUFFIXES lib)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(LibFoo DEFAULT_MSG LIBFOO_LIBRARY LIBFOO_INCLUDE_DIR)
+```
+2. 在 `CMakeLists.txt` 中使用：
+```cmake
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+find_package(LibFoo REQUIRED)
+target_link_libraries(my_app PRIVATE ${LIBFOO_LIBRARY})
+```
+### CMake 创建内置变量
+当使用 `find_package` 命令时，会自动在包管理器中扫描创建内置变量供 cmake 使用，如：
+```cmake
+find_package(OpenCV REQUIRED)
+```
+会创建
+- OpenCV_LIBS
+- OpenCV_INCLUDE_DIRS
+- OpenCV_LIBRARIES（opencv 用到的库）
+指向对应的文件夹，调用它们的方法是使用 `${var_name}`
+
+## 工具链引入 head-only 库找不到头文件
+来源：自己写的项目 [[ExplainLNK2019]]
+
+### 问题
+httplib 是一个单头文件库，只需要使用 `find_package(httplib CONFIG REQUIRED)` 即可引入 `httplibConfig.cmake`，问题出在如果不使用 `target_link_libraries(httplib::httplib)`，项目会报错找不到 `httplib.h` 文件。原因未知。 #未知错误 
+### 找不到头文件和 `LNK2019` 错误
+一般引入单头文件库只需要将头文件复制到项目目录中并添加到 includepath 中即可，并不需要链接。但是如果通过包管理工具引入但头文件库，可能会将头文件编译为库，也有可能不会，所以保险起见还是都使用 `target_link_libraries()` 链接.
+
+添加链接之后错误消失，推测可能是 vcpkg 将 httplib 编译成了库，但是 everything 未查找到对应文件
+```cmake
+project(ExplainLNK2019 VERSION 0.1.0 LANGUAGES C CXX)
+find_package(httplib CONFIG REQUIRED)
+find_package(OpenSSL REQUIRED)
+add_executable(ExplainLNK2019 httplib.cpp)
+```
+修改为
+```cmake
+project(ExplainLNK2019 VERSION 0.1.0 LANGUAGES C CXX)
+
+find_package(httplib CONFIG REQUIRED)
+find_package(OpenSSL REQUIRED)
+
+add_executable(ExplainLNK2019 httplib.cpp)
+target_link_libraries(ExplainLNK2019 PRIVATE httplib::httplib OpenSSL::SSL OpenSSL::Crypto)
+```
+即可
+## 部分环境编译通过，部分大量 `LNK2019` 错误
+来源：自己写的项目 [[ExplainLNK2019]]
+### 问题
+在 vscode ，vs 和 qt creator中构建同一份 `CMakeLists.txt`，前两者编译构建通过，qt 构建通过，但编译出现大量 `LNK2019` 错误，cmake 代码和[[#工具链引入 head-only 库找不到头文件]] 一致
+### 原因
+其实是缺少了某个库，需要观察编译报错错误中所有的**无法解析的外部符号**来自哪个库，这就说明**项目的依赖也依赖某个外部库**，需要导入和链接
+```regex
+// 正则
+.*无法解析的外部符号\s(.*)函数.*
+// 替换为
+$1
+```
+查阅这些符号来自什么库，通过 find_package 和 target_link_libraries 链接接口
+
+msbuild 中对 vcpkg 有很好的支持（使用 `vcpkg install integate` 后），会自动在 vcpkg 中寻找，而 cmake 构建中，如果没有指定 tool_chain_file 就不会自动寻找，所以可能会导致问题（有的时候指定了也会这样，原因未知 #未知错误 ）

@@ -309,7 +309,7 @@ void CBlock::push_back(point_value_t *point) {
    - `FG_RED/FG_GREEN`是前景色
 
 2. **输出结构**：
-   ```plaintext
+```plaintext
    | 1 | 2 | 3 |
    | 4 | 5 | 6 |
    | 7 | 8 | 9 |
@@ -479,7 +479,6 @@ class Modifier
 ### 4. 运算符重载解析
 
 这段代码是C++中非常经典的输出流运算符重载：
-
 ```cpp
 friend std::ostream& operator<<(std::ostream &os, const Modifier &mod) {   
     return os << "\033[" << mod.md << ";" << mod.bg << ";" << mod.fg << "m";
@@ -785,7 +784,6 @@ if (0 == number.value)
 ### 1. 为什么`Modifier()`能重置颜色？
 
 关键在于`Modifier`类的**默认构造函数**设计（在color.h中）：
-
 ```cpp
 Modifier() : md(Color::RESET), bg(Color::BG_DEFAULT), fg(Color::FG_DEFAULT) {}
 ```
@@ -897,7 +895,7 @@ std::cout << Color::red << text;  // 危险！
 1. **`Modifier`类的本质**  
    - 是一个**ANSI控制序列生成器**，通过构造函数参数组合不同的终端控制码（颜色、样式等）
    - 示例：  
-     ```cpp
+```cpp
      Modifier(BOLD, BG_RED, FG_GREEN) → 生成 `\033[1;41;32m`
      Modifier() → 生成 `\033[0;49;39m`（重置指令）
      ```
@@ -907,7 +905,7 @@ std::cout << Color::red << text;  // 危险！
    - 必须显式发送重置指令才能恢复默认（"关闭开关"）
 
 3. **关键设计原则**  
-   ```cpp
+```cpp
    // 标准用法模板（你的理解完全命中）
    std::cout << Modifier(样式参数) << "目标内容" << Modifier(); 
    //                     ↑                          ↑
@@ -1244,7 +1242,7 @@ public:
 - 多个成员用逗号分隔
 - 初始化顺序**由成员声明顺序决定**（与初始化列表中的顺序无关）
 - 可以在列表中使用复杂表达式：
-  ```cpp
+```cpp
   : _val(calculateValue()), 
     _arr(new int[10]{1,2,3})
   ```
@@ -1463,7 +1461,7 @@ class CPointSort {
    - 无法正确判断坐标相等
    
    建议修改为：
-   ```cpp
+```cpp
    bool operator()(const point_t &lhs, const point_t &rhs) const {
        return (lhs.x < rhs.x) || (lhs.x == rhs.x && lhs.y < rhs.y);
    }
@@ -1519,7 +1517,7 @@ CPointSort为什么要重载()操作符？他比较了什么内容？看他的�
 
 2. **类型安全**  
    禁止以下危险操作：
-   ```cpp
+```cpp
    Difficulty d = 1;              // 编译错误（强枚举需显式转换）
    if (d == State::INITED) {...}  // 编译错误（不同类型不能比较）
    ```
@@ -1592,7 +1590,7 @@ bool operator()(const point_t &lhs, const point_t &rhs) const {
 **设计用途**：
 1. **作为STL容器的比较器**  
    例如：
-   ```cpp
+```cpp
    std::set<point_t, CPointSort> uniquePoints; // 唯一坐标集合
    std::map<point_t, value, CPointSort> grid;  // 数独格子映射
    ```
@@ -1605,7 +1603,7 @@ bool operator()(const point_t &lhs, const point_t &rhs) const {
 **比较内容**：
 - 按**先x后y**的字典序比较两个坐标
 - 示例：
-  ```cpp
+```cpp
   point_t a{1,2}, b{1,3};
   CPointSort comp;
   comp(a, b); // 返回true (1,2 < 1,3)
@@ -1746,12 +1744,12 @@ auto operator<=>(const point_t&) const = default;
    - 编译器会优化为高效代码
 
 2. **测试比较器**：
-   ```cpp
+```cpp
    static_assert(std::is_strict_weak_order_v<CPointSort, point_t, point_t>);
    ```
 
 3. **C++20 升级建议**：
-   ```cpp
+```cpp
    struct point_t {
        int x, y;
        auto operator<=>(const point_t&) const = default;
@@ -1788,7 +1786,7 @@ auto operator<=>(const point_t&) const = default;
 
 **关键区别**：
 - `zip` 是**横向处理多个序列**（跨集合操作）：
-  ```python
+```python
   names = ["Alice", "Bob"]
   scores = [85, 90]
   for name, score in zip(names, scores):  # 并行迭代
@@ -1796,7 +1794,7 @@ auto operator<=>(const point_t&) const = default;
   ```
   
 - `tie` 是**纵向处理单个对象的多个字段**（单对象解构）：
-  ```cpp
+```cpp
   struct Point { int x, y; };
   Point p{1, 2};
   auto [x, y] = p;  // C++17结构化绑定（类似解包）
@@ -1853,7 +1851,7 @@ a >= b;  // false
    - 比较规则：先比较第一个字段，相等时比较下一个字段
 
 3. **实际效果**：
-   ```cpp
+```cpp
    point_t{1,2} < point_t{1,3};  // true (先比较x，再比较y)
    point_t{1,2} == point_t{1,2}; // true
    point_t{2,1} > point_t{1,9};  // true (x优先)
@@ -1893,12 +1891,12 @@ struct Point {
 ### 5. 工程实践建议
 
 1. **升级到C++20**：
-   ```cmake
-   set(CMAKE_CXX_STANDARD 20)
-   ```
+```cmake
+set(CMAKE_CXX_STANDARD 20)
+```
 
 2. **默认使用三向比较**：
-   ```cpp
+```cpp
    struct Data {
        std::string name;
        int id;
@@ -1908,7 +1906,7 @@ struct Point {
    ```
 
 3. **特殊情况处理**：
-   ```cpp
+```cpp
    struct CustomCompare {
        std::string str;
        int priority;
@@ -1947,7 +1945,7 @@ default是C++关键字吗？他为设么可以请求编译器按成员字段声�
 
 - **编译器行为**：  
   编译器会按结构体/类的成员**声明顺序**生成逐字段比较的代码，等效于：
-  ```cpp
+```cpp
   auto operator<=>(const Point& other) const {
       if (auto cmp = x <=> other.x; cmp != 0) return cmp;
       if (auto cmp = y <=> other.y; cmp != 0) return cmp;
@@ -1973,7 +1971,7 @@ default是C++关键字吗？他为设么可以请求编译器按成员字段声�
 **关键点**：  
 - 如果成员类型混用（如 `int` + `float`），返回类型取最弱的（本例为 `partial_ordering`）
 - 自定义返回类型需显式声明：
-  ```cpp
+```cpp
   std::strong_ordering operator<=>(...) const; // 强制要求强排序
   ```
 
@@ -1992,7 +1990,7 @@ default是C++关键字吗？他为设么可以请求编译器按成员字段声�
 
 3. **与其它特性的协作**：  
    只有声明 `<=>` 后，相关操作才会被隐式生成：
-   ```cpp
+```cpp
    struct Point {
        int x, y;
        // 不声明 <=> 时，下面代码编译失败
@@ -2042,7 +2040,7 @@ a < b;  // 调用编译器生成的 <
 ### 6. 何时需要手动实现 `<=>`
 以下情况需避免 `= default`：
 1. **特殊比较逻辑**：  
-   ```cpp
+```cpp
    struct CaseInsensitiveString {
        std::string str;
        std::strong_ordering operator<=>(const CaseInsensitiveString& o) const {
@@ -2118,7 +2116,7 @@ constexpr char ARROW[] = "^";
 2. **Unicode编码使用**  
    - 采用Box Drawing字符集（U+2500-U+257F）
    - 显示效果对比：
-     ```text
+```text
      传统ASCII：+-----+    Unicode：┌─────┐
                |     |             │     │
                +-----+             └─────┘
@@ -2147,7 +2145,7 @@ std::cout << "[" << ARROW << "]";
 1. **终端兼容性**  
    - 需确保终端支持Unicode（现代终端基本都支持）
    - 可添加备用ASCII方案：
-     ```cpp
+```cpp
      #ifdef USE_ASCII
      constexpr char CORNER[] = "+";
      #endif
@@ -2155,7 +2153,7 @@ std::cout << "[" << ARROW << "]";
 
 2. **扩展建议**  
    可补充更多符号：
-   ```cpp
+```cpp
    constexpr char TOP_LEFT[] = "\u250F";  // ┏
    constexpr char HIGHLIGHT[] = "\u2588"; // █
    ```
@@ -2239,7 +2237,7 @@ class I18n {
 
 2. **语言数据加载**  
    - 实际实现中（未展示部分）应有类似：
-     ```cpp
+```cpp
      // 伪代码示例
      I18n::I18n() {
          dict_ = new Dict{
@@ -2252,14 +2250,14 @@ class I18n {
 
 #### 运行时操作
 1. **切换语言**  
-   ```cpp
+```cpp
    I18n::Instance().SetLanguage(Language::CHINESE);
    ```
    - 内部会释放旧字典
    - 加载新语言的键值映射（如中文翻译）
 
 2. **获取翻译文本**  
-   ```cpp
+```cpp
    std::string msg = I18n::Instance().Get(I18n::Key::ASK_QUIT);
    // 返回当前语言下的"是否退出？"或"Quit?"
    ```
@@ -2314,7 +2312,7 @@ std::cout << I18n::Instance().Get(I18n::Key::ASK_DIFFICULTY);
 #### 扩展性优化
 1. **外部资源文件**  
    将翻译文本放在JSON/XML中，避免硬编码：
-   ```json
+```json
    {
      "ENGLISH": {
        "ASK_QUIT": "Quit?",
@@ -2328,7 +2326,7 @@ std::cout << I18n::Instance().Get(I18n::Key::ASK_DIFFICULTY);
    ```
 
 2. **动态加载**  
-   ```cpp
+```cpp
    void LoadLanguage(Language lang, const std::string& jsonFile);
    ```
 
@@ -2514,7 +2512,7 @@ static I18n& Instance() {
 1. **内存管理风险**  
    - `dict_`指向全局变量，但若未来改为动态分配，需补充析构函数  
    - 建议改用智能指针：
-     ```cpp
+```cpp
      private:
          std::shared_ptr<Dict> dict_;  // 自动管理生命周期
      ```
@@ -2522,7 +2520,7 @@ static I18n& Instance() {
 2. **线程安全性**  
    - `SetLanguage()`和`Get()`并发调用会导致数据竞争  
    - 解决方案：
-     ```cpp
+```cpp
      #include <mutex>
      std::mutex mtx_;
      void SetLanguage(...) {
@@ -2533,7 +2531,7 @@ static I18n& Instance() {
 
 3. **错误处理不足**  
    - `assert`在Release模式会被移除，建议改用异常：
-     ```cpp
+```cpp
      std::string Get(Key key) const {
          if (!dict_->count(key)) throw std::out_of_range("Invalid I18n key");
          return (*dict_)[key];
@@ -2543,7 +2541,7 @@ static I18n& Instance() {
 #### 扩展性优化
 1. **按需加载语言**  
    当前所有语言字典常驻内存，可改为懒加载：
-   ```cpp
+```cpp
    void SetLanguage(Language lang) {
        static std::unordered_map<Language, Dict> langs {
            {Language::ENGLISH, english},
@@ -2555,7 +2553,7 @@ static I18n& Instance() {
 
 2. **支持热重载**  
    添加从文件加载字典的功能：
-   ```cpp
+```cpp
    void LoadLanguage(Language lang, const std::string& jsonPath) {
        // 解析JSON到临时Dict
        dict_ = &cachedDicts_[lang]; 
@@ -2819,7 +2817,7 @@ inline void message(const std::string& msg, bool lf = true) {
 1. **`random()`函数缺陷**  
    - 每次调用重建引擎（性能损耗）
    - 建议改为静态引擎：
-     ```cpp
+```cpp
      inline unsigned int random(int begin, int end) {
          static thread_local std::mt19937 engine{std::random_device{}()};
          return std::uniform_int_distribution(begin, end)(engine);
@@ -2828,7 +2826,7 @@ inline void message(const std::string& msg, bool lf = true) {
 
 2. **`system()`安全隐患**  
    可替换为：
-   ```cpp
+```cpp
    inline void cls() {
        std::cout << "\033[2J\033[1;1H"; // ANSI清屏序列
    }
@@ -2920,7 +2918,7 @@ mt19917是什么？random_devices{}()，g(rd())又是什么？
   - 均匀分布性好，适合模拟和游戏
   - 比传统`rand()`更高质量随机数
 - **典型用法**：
-  ```cpp
+```cpp
   std::mt19937 engine(seed);  // 用种子初始化引擎
   int num = engine();         // 生成随机数
   ```
@@ -2928,12 +2926,12 @@ mt19917是什么？random_devices{}()，g(rd())又是什么？
 #### （2）`random_device`：真随机数设备
 - **作用**：提供硬件熵源（如CPU热噪声）
 - `random_device{}()`的分解：
-  ```cpp
+```cpp
   random_device{}  // 构造临时设备对象
   ()              // 调用operator()获取随机种子
   ```
 - **典型用途**：
-  ```cpp
+```cpp
   std::random_device rd;
   std::mt19937 g(rd());  // 用真随机数种子初始化引擎
   ```
@@ -2956,12 +2954,12 @@ std::mt19937 g(seed);      // 用种子初始化引擎
 #### 数独场景的特殊需求
 - **核心需求**：生成1-9的**无重复随机排列**
 - 直接随机取数的问题：
-  ```cpp
+```cpp
   // 可能产生重复值（需额外去重逻辑）
   int num = random(1,9); 
   ```
 - `shuffle`的优势：
-  ```cpp
+```cpp
   std::vector<int> unit = {1,2,3,4,5,6,7,8,9};
   std::shuffle(unit.begin(), unit.end(), engine);
   // 结果示例：{3,7,2,9,1,5,4,8,6}（必定不重复）
@@ -2986,7 +2984,7 @@ std::mt19937 g(seed);      // 用种子初始化引擎
   - 存放模板实现（避免链接错误）
   - 集中管理短小工具函数
 - **与头文件关系**：
-  ```cpp
+```cpp
   // utility.h
   inline int helper();  // 声明
   
@@ -3000,7 +2998,7 @@ std::mt19937 g(seed);      // 用种子初始化引擎
   - **允许重复定义**：在多个翻译单元中可重复定义相同函数
   - **头文件函数必备**：避免链接时重复符号错误
 - **典型场景**：
-  ```cpp
+```cpp
   // 工具函数（<50行）
   inline void print(const std::string& msg) { 
       std::cout << msg; 
@@ -3314,7 +3312,7 @@ catch (const std::out_of_range&) {
    应改用`I18n`系统管理提示文本
 
 3. **输入验证不足**  
-   ```cpp
+```cpp
    // 当前：仅检查是否能转换为数字
    // 建议增加范围检查：
    if (input >= 1 && input <= 3) { ... }
@@ -3326,7 +3324,6 @@ catch (const std::out_of_range&) {
 ---
 
 ### 5. 典型调用流程示例
-
 ```mermaid
 sequenceDiagram
     participant UI
@@ -3370,7 +3367,6 @@ stoul是什么？他有什么作用？
 
 #### （1）枚举到整型的隐式转换
 在C++中，**枚举类型（enum/enum class）本质上就是整型值的命名集合**。当使用`static_cast`时：
-
 ```cpp
 enum class Difficulty { EASY=1, NORMAL=2, HARD=3 };
 int num = static_cast<int>(Difficulty::NORMAL); // 合法，输出2
@@ -3430,7 +3426,6 @@ auto l = static_cast<Language>(std::stoul(language) - 1);
 ---
 
 ### 3. 类型转换的完整过程分析（以语言选择为例）
-
 ```cpp
 // 用户输入"2"（中文）
 std::string language = "2";
@@ -4153,29 +4148,28 @@ if(available_num[key].size() <= 0) {
 
 #### （2）待改进点
 1. **资源管理**
-   ```cpp
+```cpp
    if(keyMap) delete keyMap; // 建议改用unique_ptr
    ```
 
 2. **异常安全**
-   ```cpp
+```cpp
    fs.open(...); // 无打开失败检查
    ```
 
 3. **移动语义**
-   ```cpp
+```cpp
    _vCommand.push_back(std::move(oCommand)); // 缺少移动构造函数
    ```
 
 4. **硬编码**
-   ```cpp
+```cpp
    for(int i=0; i<81; i++) // 应使用常量
    ```
 
 ---
 
 ### 6. 类关系图
-
 ```mermaid
 classDiagram
     class CScene {
@@ -4303,7 +4297,7 @@ CBlock _boxes[3][3];// 宫格视图
 #### （1）基本作用
 - **功能**：防止头文件被重复包含
 - **等价传统写法**：
-  ```cpp
+```cpp
   #ifndef _UNIQUE_NAME_
   #define _UNIQUE_NAME_
   /* 头文件内容 */
@@ -4320,14 +4314,14 @@ CBlock _boxes[3][3];// 宫格视图
 
 #### （3）使用场景
 1. **头文件保护**（必须使用）：
-   ```cpp
+```cpp
    // mylib.h
    #pragma once
    class MyClass {...};
    ```
 
 2. **与宏守卫配合使用**（高可靠性要求）：
-   ```cpp
+```cpp
    #ifndef MYLIB_H
    #define MYLIB_H
    #pragma once
@@ -4557,7 +4551,6 @@ if(strcmp(argv[1], "--help") == 0) {
 ---
 
 ### 4. 参数传递的完整生命周期
-
 ```mermaid
 sequenceDiagram
     participant User
@@ -4672,7 +4665,6 @@ inline void SetSystemEnv() { SetWindowsEnv(); }
 ### 1. 关于 `main` 函数参数解析的修正说明
 
 您对参数解析的理解**基本正确但需微调**：
-
 ```cpp
 int main(int argc, char** argv)
 ```
@@ -4824,7 +4816,7 @@ std::cout << "Current CP: " << GetConsoleOutputCP() << std::endl;
    - 跨平台项目需统一本地化策略
 
 3. **防御式编程**  
-   ```cpp
+```cpp
    if(argc > MAX_ARGS) {
        throw std::runtime_error("Too many arguments");
    }
@@ -4911,7 +4903,7 @@ std::vector<int> makeVec() {
 
 1. **`initializer_list`优先级**  
    如果类同时存在接受`initializer_list`和普通参数的构造函数，大括号初始化会**优先匹配**`initializer_list`版本：
-   ```cpp
+```cpp
    class Widget {
    public:
        Widget(int i, double d);  // (1)
@@ -4923,16 +4915,16 @@ std::vector<int> makeVec() {
 
 2. **空大括号的含义**  
    - 对基本类型：值初始化（设为0）
-     ```cpp
+```cpp
      int x{}; // x == 0
      ```
    - 对类类型：调用默认构造函数
-     ```cpp
+```cpp
      std::string s{}; // 调用默认构造函数
      ```
 
 3. **嵌套初始化**  
-   ```cpp
+```cpp
    std::vector<std::string> vs{
        {"hello"}, {"world"} // 每个元素都是initializer_list
    };
@@ -4943,7 +4935,7 @@ std::vector<int> makeVec() {
 1. **默认使用大括号初始化**（除非需要明确使用圆括号的情况）
 2. **在类接口设计中**谨慎提供`initializer_list`构造函数
 3. **模板编程中**注意类型推导差异：
-   ```cpp
+```cpp
    template<typename T>
    void f(T param);
    
@@ -4952,7 +4944,6 @@ std::vector<int> makeVec() {
    ```
 
 #### 7. 代码示例分析
-
 ```cpp
 // 项目中的实际应用
 point_value_t p = {UNSELECTED, State::ERASED}; 
@@ -4990,7 +4981,6 @@ std::pair<int, string> p{1, "one"};
 | C++20   | 支持在范围for循环中使用列表初始化                                        |
 
 #### 10. 典型错误案例
-
 ```cpp
 // 案例1：意外的initializer_list调用
 std::vector<int> v(10, 2);  // 10个2
