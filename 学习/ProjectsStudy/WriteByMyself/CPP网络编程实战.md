@@ -1,8 +1,8 @@
 ---
-source: https://www.bilibili.com/video/BV11HsqzFEUN/?spm_id_from=333.1387.favlist.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342
 crea: 2025年11月6日14:30:28
 ---
-# 简单 html 源代码获取脚本
+# 简单 html 源代码获取
+参考教程： https://www.bilibili.com/video/BV11HsqzFEUN/?spm_id_from=333.1387.favlist.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342
 ## curl 实现版本
 ### 获取 html 源码
 ```cpp
@@ -122,6 +122,7 @@ if (ec != CURLE_OK) {
 具体代码参考：[[C++ practice case#html/xml 解析#pugixml 解析]]
 
 ## Qt 实现版本
+使用 qt 网络模块可以参考 [[QT6开发指南#网络#基于 HTTP 的网络应用程序]]
 ### 代码实现
 具有完成错误处理和异步调用网络请求功能，还能获取资源下载进度
 ```cpp
@@ -415,3 +416,7 @@ QNetworkAccessManager.get(request)
     - 调用deleteLater()清理
 ```
 - `manager->get()` 函数是一个异步调用函数，刚调用 get 时**会立刻返回**，curentReply 中还没有数据，需要时间获取
+## Boost 版本
+较为高级的用法，根据网易云链接歌单/歌曲封面，本质还是获取 html 然后下载资源。参考自己写的项目 [[netease music cover downloader]]
+
+# 实现 ai 接口调用

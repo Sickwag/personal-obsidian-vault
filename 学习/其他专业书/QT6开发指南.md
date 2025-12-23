@@ -5806,7 +5806,7 @@ void MainWindow::do_socketReadyRead()
 ```
 
 ## 基于 HTTP 的网络应用程序
-简单的 html 爬取参考 [[CPP爬虫实战#Qt 实现版本]]
+简单的 html 爬取参考 [[CPP网络编程实战#Qt 实现版本]]
 Qt 网络模块提供一些类来实现 OSI 七层网络模型中高层的网络协议，如 HTTP、FTP、SNMP 等，这些类主要是 QNetworkRequest、QNetworkAccessManager 和 QNetworkReply，这里用来下载文件
 ### 代码编写
 ```cpp
