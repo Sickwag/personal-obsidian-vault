@@ -1874,7 +1874,7 @@ bool Widget::eventFilter(QObject *watched, QEvent *event)
 - 一个监视类对象filter（**任何 QObject 子类**都可以作为事件过滤器），专门用来处理其他对象发出的的事件，处理逻辑写在这个类的eventFilter函数中，当被监视对象发生事件时，这个函数就会被qt自动调用，并将被监视对象（watched参数）和被监视对象发生的事件（event参数）传入这个函数中，函数根据这两个参数来执行对应的事件处理逻辑。
 - 不在监视类对象处理逻辑范围内的事件通常会被 `return 父类::eventFilter(watched, event)` 这样代码交给父类来处理，这个监视器只会过滤他职责范围内的事件。
 - 监视类对象如果 `return true` 表示事件拦截，不会继续传递，如果 false 表示不处理，会传递给其他过滤器（包括父类过滤器）处理。**一旦某个过滤器返回 true，事件传递就终止了**，**父类过滤器只有在子类过滤器返回 false 时才会被调用**
-- 需要被监视的控件通过`installEventFilter()`安装某个监视类对象实例指针，这个类发生的事件就会交给这个对象接管。
+- 需要被监视的控件通过 `installEventFilter()` 安装某个监视类对象实例指针，这个类发生的事件就会交给这个对象接管。
 ## 拖放事件与拖放操作
 ### 拖放操作相关事件
 - 启动拖动操作需要一个 QDrag 对象描述拖动操作
@@ -2126,6 +2126,26 @@ bool Widget::eventFilter(QObject *watched, QEvent *event)
     // 表示事件已经被处理
 }
 ```
+### 事件处理注意事项
+#### watched 和 event 参数必须放在在同一个 if 中
+eventFilter 的签名为：`bool Widget::eventFilter(QObject *watched, QEvent *event)`，这个函数过于宽泛**管控所有的事件**会导致这个难以排查的问题
+```cpp
+bool eventFilter(QObject *watctded, QEvent *event)
+{
+	if(watched = ui->label){
+		if(event->type() == Qt::Wheel){
+		// 其他逻辑
+		}
+		return true;
+	}
+	return QWidget::eventFilter(watched, event);
+}
+```
+- eventFilter 过于宽泛的问题会在这里暴露，因为所有 ui 控件的更新重绘（paintEvent）都会交给 eventFilter，但是 eventFilter 在这里的本意是在鼠标滚轮在 label 上滚动时触发消息，**并返回 true 表示已经被处理**
+- 窗口在**每一次绘制时就会调用 `repaint()` 进而触发 paintEvent**，而重绘事件 `type()!=Qt::Wheel`，所以导致重绘事件被忽略（返回 true 并且没有交给父类处理），所以窗口中所有对 label 的绘制都会失效（根本不显示）
+
+> [!note]
+> 解决方法只能是**使用专门的事件重载类，在其中定义更细致的各种 eventFilter**，比如 MouseEvent。或者将 watcher 类型判断与事件类型判断放在同一 if 中。在 **watched 是 ui 控件时尤其注意**
 # 对话框和多窗口程序设计
 ## 标准对话框
 内置对话框
