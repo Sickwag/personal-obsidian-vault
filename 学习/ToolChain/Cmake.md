@@ -92,10 +92,10 @@ include(vcpkg.cmake)  # 或者 set(CMAKE_TOOLCHAIN_FILE "vcpkg.cmake")
 - `cmake_policy (SET CMPxxx NEW/OLD)`
 作用：设置 CMake 兼容性策略
 立即执行，但只对后续代码生效
-常用于避免旧版兼容问题（如 CMP 0167）
+常用于避免旧版兼容问题（如 `CMP0167 `）
 - `option (VARIABLE "Description" ON/OFF)`
 作用：定义用户可选的开关变量（常用于 GUI 或命令行）
-立即执行，可在 project () 之前或之后使用
+立即执行，可在 `project()` 之前或之后使用
 - `include (CMakeLists. txt) 或 include (Module. cmake)`
 作用：包含其他 CMake 文件
 立即执行，内容会被“内联”到当前脚本中
