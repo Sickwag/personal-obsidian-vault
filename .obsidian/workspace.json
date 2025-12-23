@@ -37,8 +37,7 @@
               "title": "Qt Official Tutorial"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -96,7 +95,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 243.5124969482422
+    "width": 243.5124969482422,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -201,8 +201,9 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "bfb7dc9d2a7216be",
+  "active": "af28e26c5bcbc2fd",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "学习/其他专业书/QT6开发指南.md",
     "Files & LongText/Attachments/PixPin_2025-12-21_22-14-25.png",
     "Files & LongText/Attachments/PixPin_2025-12-21_21-44-32.png",
@@ -228,7 +229,6 @@
     "学习/Language/C C++/Cmake.md",
     "学习/Language/C C++/QT6 开发高级教程.md",
     "学习/Language/C C++/Entrance of docs.md",
-    "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "Files & LongText/Long code/C++ practice case.md",
     "学习/ProjectsStudy/WriteByMyself/CPP爬虫实战.md",
     "学习/Language/SQL/MySQL.md",
