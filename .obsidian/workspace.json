@@ -91,12 +91,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -201,7 +201,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "0f471f04cbd7cd4d",
+  "active": "129968db299d0d8b",
   "lastOpenFiles": [
     "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
     "学习/ProjectsStudy/WriteByMyself/netease music cover downloader.md",
