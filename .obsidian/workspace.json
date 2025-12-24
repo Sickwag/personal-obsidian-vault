@@ -70,7 +70,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "ifstream",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
