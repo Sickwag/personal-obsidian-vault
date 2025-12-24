@@ -31,6 +31,15 @@ if (url.substr(0, 8) == "https://") {
 } else {
     return std::vector<char>(); // Return empty vector to indicate error
 }
+
+// 还可以使用更方便的解析方法（boost::url）
+std::pair<std::string, std::string> parse_url(const std::string& url) {
+	std::string host, path;
+	urls::url_view uv = urls::parse_uri(url).value();
+	host = uv.host();
+	path = uv.path();
+	return {host, path};
+}
 ```
 然后如果是 https，[[零碎但需要知道的#http和https协议区别#1. SSL/TLS 加密 (安全性)|就需要进行 ssl/tsl 验证]]，这也是为什么需要在这里区分，验证部分在 for 循环中执行
 ### ssl 验证逻辑
@@ -78,6 +87,12 @@ beast::get_lowest_layer(stream).connect(results);
 创建完 tcp 流对象用来处理 tcp 通信，然后就需要告知 tcp 需要和哪一个对象通信，即使用 `get_lowest_layer` 获得最底层的 tcp 连接句柄（因为选择了 https 连接协议，ssl 协议建立在 tcp 协议之上，所以会被 ssl 包装，如果不使用 `get_lowest_layer` 则会将 ssl 协议连接到 IP 地址服务器上），将他连接到 result 所指向的 ip 地址的服务器中
 ```cpp
 beast::ssl_stream<beast::tcp_stream&> ssl_stream{stream, ctx};
+
+// 设置sni字段，在tcp流中设置了sni字段验证，就需要提供主机名
+if (!SSL_set_tlsext_host_name(stream->native_handle(), host.c_str())) {
+    beast::error_code ec{static_cast<int>(::ERR_get_error()), boost::asio::error::get_ssl_category()};
+    throw beast::system_error{ec};
+}
 ```
 4. 创建 ssl 流包装对象用来操作 ssl，进行 ssl 验证。由于 ssl 建立在 tcp 之上，所以创建的 ssl_stream 对象必须要参考 stream 对象，并通过 ssl 的上下文 ctx 对象才能创建。
 	- `beast::tcp_stream&` - 表明 ssl_stream 将包装一个 tcp_stream 的引用
