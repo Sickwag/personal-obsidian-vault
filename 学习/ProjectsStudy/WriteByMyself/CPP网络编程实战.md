@@ -4,21 +4,25 @@ crea: 2025年11月6日14:30:28
 # 基本网络编程知识
 ## 网络请求分类
 ### POST
-本质是一段 http 文本，包含请求头和请求体部分，数据包含在请求头内容中，目的是**根据这些数据获取另一些数据**
+本质是一段 http 文本，包含请求头和请求体部分，数据包含在请求头内容中，目的是**根据这些数据获取另一些数据**，通常这些数据比较大并且复杂，需要高级语言来解析这些数据结构
 用于处理变更，请求体中的内容被服务器端解析，**根据解析结果在服务器端进行对应的操作**，再将操作结果发送回来。发送重复的 post 消息可能会造成不同的结果，因为执行了重复的操作
+post**仅仅只是数据不在链接中明文传输，数据包如果不加密仍然不安全**
 
 ### GET
-本质**只是一段 url 地址**，访问这个地址会让服务器解析地址中中的指明的资源地址，服务器访问对应位置的资源，根据URL参数处理，比如查询字符串（`?page=1&sort=name`）作为**过滤或补充信息**，再将**处理后的查询结果返回给客户端**
+#### 本质理解
+本质**只是一段 url 地址**，代码中的构建过程也只是构建一个url链接，只需要知道host地址，资源文件地址和需要传入的参数即可。访问这个地址会让服务器解析地址中中的指明的资源地址，服务器访问对应位置的资源，根据URL参数处理，比如查询字符串（`?page=1&sort=name`）作为**过滤或补充信息**，再将**处理后的查询结果返回给客户端** ^x43n1d
 ```http
 GET /api/products?category=electronics&minPrice=500 HTTP/1.1
 ```
 服务器：定位到 `/api/products` 资源集 → 应用 `category=electronics` 和 `minPrice=500` 过滤 → 返回过滤后的产品列表。
-严格的 GET 命令重复执行**的结果是相同的**，并且**没有写入操作**
-#### 适用场景
+严格的 GET 命令重复执行**的结果是相同的**，并且**没有写入操作**，但是技术上来说**也可以通过 url 中的参数实现修改数据**，但不建议这样做
+#### 适用场景和注意事项
 - 操作是**幂等**的（重复执行结果相同）
 - 只是**读取或查询**数据
 - 希望响应**被缓存**
-- 参数较少且非敏感（适合放URL中）
+- `Content-Type` 是必须的，告诉服务器如何解析请求体，`Content-Length` 通常自动计算
+- 参数较少且非敏感（适合放URL中，通常不能超过 2048 个字符）
+- 不能有空格，需要进行 url 编码 `"?name=John Doe&city=New York"` 需要被编码为：`?name=John%20Doe&city=New%20York"`
 
 # 简单网络请求
 
@@ -479,10 +483,112 @@ std::pair<std::string, std::string> parse_url(const std::string& url){
 	return {uv.host(), uv.path()};
 }
 ```
-
+#### 设置请求体
+```cpp
+      // 设置请求头
+      httplib::Headers headers = {
+          {"Authorization", "Bearer " + api_key},
+          {"Content-Type", "application/json"},
+          {"Accept", "application/json"},
+          {"User-Agent", "DeepSeek-CPP-Client/1.0"}};
+// 设置请求体
+      json request_body = {
+          {"model", model},
+          {"messages", messages},
+          {"stream", stream},
+          {"temperature", temperature},
+          {"max_tokens", max_tokens}};
+      // 发送POST请求
+      auto response = client->Post(path.c_str(), headers, request_body.dump(), "application/json");
+```
+post 请求中 content-type 字段是必须的，所以 `Post()` 中必须要传入 content-type 参数，这样 headers 中可以不设置
+剩下的就是 json 解析了
 ### Boost 实现
+#### 初始化和基本设置
+```cpp
+ssl::context ctx{ssl::context::tlsv12_client};
+ctx.set_verify_mode(ssl::verify_none)
+```
+由于使用了 https 协议，需要设置 ssl 协议版本，选择 tls 的 1.2 客户端版本，并且禁用 ssl 验证网站，如果使用了 `ssl::verify_peer` 会导致需要验证文件。
+
+#### 发送 https 请求
+```cpp
+// 创建解析对象
+tcp::resolver resolver(ioc);
+
+// 基本设置
+auto results = resolver.resolve(host, "443");
+stream = std::make_unique<ssl::stream<tcp::socket>>(ioc, ctx);
+if (!SSL_set_tlsext_host_name(stream->native_handle(), host.c_str())) {
+    beast::error_code ec{static_cast<int>(::ERR_get_error()), boost::asio::error::get_ssl_category()};
+    throw beast::system_error{ec};
+}
+
+// 链接
+asio::connect(beast::get_lowest_layer(*stream), results);
+stream->handshake(ssl::stream_base::client);
+```
+- 首先指定连接配置，设置连接哪一个主机，哪一个端口，域名是什么。因为一个主机地址可能需要管理多个域名，需要设置 sni 字段来**告诉主机到底需要访问哪一个域名**，具体验证机制[[netease music cover downloader#ssl 验证逻辑|参考]]。
+- 设置完后进行连接和招手
+#### 读取响应
+```cpp
+http::write(*stream, req);
+beast::flat_buffer buffer;
+http::response<http::dynamic_body> res;
+http::read(*stream, buffer, res);
+
+beast::error_code ec;
+stream->shutdown(ec);
+
+if (ec == boost::asio::error::eof || ec == ssl::error::stream_truncated) {
+    ec = {};
+}
+if (ec) {
+    throw beast::system_error{ec};
+}
+
+// 转换为字符串
+return beast::buffers_to_string(res.body().data());
+```
+- 读写后需要关闭网络流，检验是否关闭
+- 其他部分就是 json 解析
 ## 网络 api 接口使用
 ### 文本转二维码 base 64 编码图
 #### httplib 实现
 完整代码参考：[[C++ practice case#网络请求#基本网络请求#GET 请求将文本转二维码 base 64 编码信息]]
-
+```cpp
+json API::send_request(const std::string& user_message) {
+	httplib::Headers headers = {
+		//{"Host", "uapi.cn"},
+		//{"Content-Type", "application/json"}
+	};
+	httplib::Params params;
+	params.emplace("text", user_message);
+	params.emplace("size", "256");
+	params.emplace("format", "json");
+	const auto response = client->Get(path, params, headers);
+	int status = response->status;
+	if (status == httplib::StatusCode::OK_200) {
+		json parsed_content = json::parse(response->body);
+		std::cout << "response: " + response->body;
+		return parsed_content;
+	} else {
+		const std::string error_msg = std::string("status: ") + httplib::status_message(status);
+		throw std::runtime_error(error_msg);
+	}
+}
+```
+和 post 请求不同的是 GET 请求**通常不需要设置请求头**，[[CPP网络编程实战#^x43n1d|构建url]] 时需要设置 Params，然后发送命令，解析 json 即可，至于转换 base 64 编码转换为图像，可以使用 opencv 解析后，以 `std::ios::binay` 写入文件
+```cpp
+bool DecodeBase64::save_qr_to_file(std::string filepath, const std::string& decoded_string) {
+	std::ofstream file(filepath, std::ios::binary);
+	if (!file) {
+		std::cout << "cannot onpen file" + filepath;
+		return false;
+	}
+	file.write(reinterpret_cast<const char*>(decoded_string.data()), decoded_string.size());
+	file.close();
+	std::cout << "qr file saved as " + filepath;
+	return true;
+}
+```

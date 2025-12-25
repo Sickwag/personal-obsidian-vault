@@ -67,7 +67,7 @@ ctx.set_verify_mode(ssl::verify_none); // In a real application, set appropriate
 > **设置验证模式**
 > 当程序连接到服务器时，服务器会提供一个"数字证书"，**证明它确实是它声称的那个网站。证书验证就是检查这个证书是否真实有效**。
 > 项目中使用了 `verify_none` 是由于这个功能比较简单，没有那么多复杂的功能，省去验证证书带来的各种网络，验证是否过期的问题 
-> **`ssl:: verify_none` 的含义：**
+> **`ssl::verify_none` 的含义：**
 > - 不验证服务器的证书
 > - 任何证书都被接受
 > - 可以使用 `ssl::verify_peer` 设置验证服务器证书
@@ -90,7 +90,7 @@ beast::ssl_stream<beast::tcp_stream&> ssl_stream{stream, ctx};
 
 // 设置sni字段，在tcp流中设置了sni字段验证，就需要提供主机名
 if (!SSL_set_tlsext_host_name(stream->native_handle(), host.c_str())) {
-    beast::error_code ec{static_cast<int>(::ERR_get_error()), boost::asio::error::get_ssl_category()};
+    beast::error_code ec{static_cast<int>(::ERR_get_error()), asio::error::get_ssl_category()};
     throw beast::system_error{ec};
 }
 ```
