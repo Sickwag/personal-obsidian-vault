@@ -1,10 +1,12 @@
 ---
 crea: 2025年11月6日14:30:28
 ---
-# 简单 html 源代码获取
+## 简单网络请求
+
+### 静态 html 源代码获取
 参考教程： https://www.bilibili.com/video/BV11HsqzFEUN/?spm_id_from=333.1387.favlist.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342
-## curl 实现版本
-### 获取 html 源码
+#### curl 实现版本
+##### 获取 html 源码
 ```cpp
 #include <fstream>
 #include <curl/curl.h>
@@ -117,13 +119,13 @@ if (ec != CURLE_OK) {
     }
 }
 ```
-### html 源码解析
+##### html 源码解析
 需要用到另一个库 pugixml，这个库**只能解析 xml，如果手动将 html 中的单标签，特殊语法使其成为一个符合 xml 格式的文档并在 pugi 解析选项中使用宽松解析**，也可以用来解析 xml
 具体代码参考：[[C++ practice case#html/xml 解析#pugixml 解析]]
 
-## Qt 实现版本
+#### Qt 实现版本
 使用 qt 网络模块可以参考 [[QT6开发指南#网络#基于 HTTP 的网络应用程序]]
-### 代码实现
+##### 代码实现
 具有完成错误处理和异步调用网络请求功能，还能获取资源下载进度
 ```cpp
 // .h
@@ -300,7 +302,7 @@ void WebPageFetch::onDownloadProgress(qint64 bytesRecord, qint64 byteTotal)
 
 ```
 这一版本实现较为简单，qt 框架比较成熟
-### 代码实现中使用到的类
+##### 代码实现中使用到的类
 QNetworkRequest - 网络请求容器，专门用来处理网络请求的类，可以用来设置网页链接网址，设置html请求头，设置必要的网络连接目标信息，常用功能：
 ```cpp
 QNetworkRequest request(QUrl("https://www.example.com"));
@@ -416,7 +418,55 @@ QNetworkAccessManager.get(request)
     - 调用deleteLater()清理
 ```
 - `manager->get()` 函数是一个异步调用函数，刚调用 get 时**会立刻返回**，curentReply 中还没有数据，需要时间获取
-## Boost 版本
+#### Boost 版本
 较为高级的用法，根据网易云链接歌单/歌曲封面，本质还是获取 html 然后下载资源。参考自己写的项目 [[netease music cover downloader]]
 
-# 实现 ai 接口调用
+### 实现 ai 接口调用
+#### httplib 实现
+##### 基本设置
+```cpp
+// 设置客户端初始化和延时
+client = std::make_unique<httplib::SSLClient>(host);
+client->set_connection_timeout(30);
+client->set_read_timeout(60);
+client->set_write_timeout(30);
+```
+httplib默认基本只支持http协议，如果需要https支持需要定义`#define CPPHTTPLIB_OPENSSL_SUPPORT`宏
+##### 解析 url 提取主机和路径
+```cpp
+std::pair<std::string, std::string> parse_url(const std::string& url) {
+    std::string protocol, host, path;
+    size_t protocol_end = url.find("://");
+    if (protocol_end != std::string::npos) {
+        protocol = url.substr(0, protocol_end);
+        host = url.substr(protocol_end + 3);
+    } else {
+        protocol = "https";
+        host = url;
+    }
+
+    size_t path_start = host.find('/');
+    if (path_start != std::string::npos) {
+        path = host.substr(path_start);
+        host = host.substr(0, path_start);
+    } else {
+        path = "/";
+    }
+
+    return {host, path};
+}
+```
+传统做法太复杂，并且不太靠谱，这里使用 `boost.url` 辅助
+```cpp
+std::pair<std::string, std::string> parse_url(const std::string& url){
+	urls::url_view uv = urls::parse_uri(url);
+	return {uv.host(), uv.path()};
+}
+```
+
+#### Boost 实现
+### 网络 api 接口使用
+##### 文本转二维码 base 64 编码图
+###### httplib 实现
+完整代码参考：[[C++ practice case#网络请求#基本网络请求#GET 请求将文本转二维码 base 64 编码信息]]
+

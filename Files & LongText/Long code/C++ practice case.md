@@ -4993,4 +4993,451 @@ int main() {
     cleanup_curl();
     return 0;
 }
+
+```
+# 网络请求
+## 基本网络请求
+### POST 请求实现 Deepseek API 调用
+#### httplib 库实现
+```cpp
+// httplib_version.h
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include <string>
+#include <utility>
+#include <httplib.h>
+#include <memory>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
+class DeepseekClient {
+public:
+	DeepseekClient(const std::string& key = "", const std::string& url = "https://api.deepseek.com");
+	void set_proxy(const std::string proxy_host, unsigned int port);
+	void set_timeout(unsigned short connection, unsigned short read, unsigned short write);
+	json chat_completions_create(const json& message);
+
+	std::string simple_chat(const std::string& user_message, const std::string& system_message = "you're a helpful assissant");
+	void list_available_models();
+	std::string get_api_key();
+
+private:
+	std::unique_ptr<httplib::SSLClient> client;
+	std::string base_url;
+	std::string api_key;
+	std::string model = "deepseek-chat";
+	double temperature = 0.7;
+	unsigned int max_tokens = 2048;
+	int connection_timeout = 30, read_timeout = 60, write_timeout = 30;
+	bool stream = false;
+};
+
+std::pair<std::string, std::string> parse_url(const std::string& url);
+
+// http_version.cpp
+// deepseek_client_httplib.cpp
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include <httplib.h>  // cpp-httplib库
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <boost/url.hpp>
+
+#include "httplib_version.h"
+
+namespace urls = boost::urls;
+
+std::pair<std::string, std::string> parse_url(const std::string& url) {
+	urls::url_view uv = urls::parse_uri(url).value();
+	std::string host = uv.host();
+	std::string path = uv.path();
+	return {host, path};
+}
+
+DeepseekClient::DeepseekClient(const std::string& key, const std::string& url)
+	: base_url(url) {
+	if (key.empty()) {
+		api_key = get_api_key();
+	} else {
+		api_key = key;
+	}
+	auto [host, _] = parse_url(base_url);
+	client = std::make_unique<httplib::SSLClient>(host);
+	client->set_connection_timeout(this->connection_timeout);
+	client->set_read_timeout(this->read_timeout);
+	client->set_write_timeout(this->write_timeout);
+}
+
+void DeepseekClient::set_proxy(const std::string proxy_host, unsigned int port) {
+	client->set_proxy(proxy_host, port);
+}
+
+void DeepseekClient::set_timeout(unsigned short connection, unsigned short read, unsigned short write) {
+	this->client->set_connection_timeout(connection);
+	this->client->set_read_timeout(read);
+	this->client->set_write_timeout(write);
+}
+
+json DeepseekClient::chat_completions_create(const json& message) {
+	json request_body = {
+			{"model", this->model},
+			{"messages", message},
+			{"stream", this->stream},
+			{"temperature", this->temperature},
+			{"max_tokens", this->max_tokens}};
+	auto [_, base_path] = parse_url(base_url);
+	if (base_path.empty()) {
+		base_path.append("/");
+	}
+	std::string path = base_path + (base_path.back() == '/' ? "" : "/") + "chat/completions";
+	httplib::Headers headers = {{"Authorization", "Bearer " + api_key},
+								{"Content-Type", "application/json"},
+								{"Accept", "application/json"},
+								{"User-Agent", "sDeepSeek-CPP-Client/1.0"}};
+	auto response = client->Post(path, headers, request_body.dump(), "application/json"); // have not use path.c_str()
+	if (!response) {
+		throw std::runtime_error("request failed, no response");
+	}
+	if (response->status != 200) {
+		std::string api_error_message = "API Error: " + std::to_string(response->status);
+		if (response->body.empty()) {
+			try {
+				auto error_json = json::parse(response->body);
+				if (error_json.contains("error") && error_json["error"].is_object()) {
+					auto error_obj = error_json["error"];
+					if (error_obj.contains("message") && error_obj["message"].is_string()) {
+						api_error_message += " - " + error_obj["message"].get<std::string>();
+					}
+				}
+			}
+			catch (...) {
+				api_error_message += response->body;
+			}
+		}
+		throw std::runtime_error(api_error_message);
+	}
+	try {
+		return json::parse(response->body);
+	}
+	catch (const json::parse_error& e) {
+		throw std::runtime_error("Failed to parse JSON response: " + std::string(e.what()) + "\nRaw response: " + response->body);
+	}
+}
+
+
+std::string DeepseekClient::simple_chat(const std::string& user_message, const std::string& system_message) {
+	if (user_message.empty()) throw std::runtime_error("you have to input user message");
+	json message = {
+		{
+			{"role", "system"},
+			{"content", system_message}
+		},
+		{
+			{"role", "user"},
+			{"content", user_message}
+		}
+	};
+	auto response = chat_completions_create(message);
+	if (response.contains("choices") &&
+		response["choices"].is_array() &&
+		!response["choices"].empty() &&
+		response["choices"][0].contains("message") &&
+		response["choices"][0]["message"].contains("content")) {
+		return response["choices"][0]["message"]["content"].get<std::string>();
+	} else {
+		throw std::runtime_error("Invalid response format: " + response.dump());
+	}
+}
+
+void DeepseekClient::list_available_models() {
+	auto [_, base_path] = parse_url(base_url);
+	if (base_path.empty()) {
+		base_path.append("/");
+	}
+	std::string path = base_path + (base_path.back() == '/' ? "" : "/") + "models";
+
+	httplib::Headers headers = {
+		{"Authorization", "Bearer " + api_key},
+		{"Accept", "application/json"}};
+
+	auto response = client->Get(path.c_str(), headers);
+	if (!response) {
+		throw std::runtime_error("Request failed: No response received");
+	}
+	if (response->status != 200) {
+		throw std::runtime_error("API Error: " + std::to_string(response->status) + " - " + response->body);
+	}
+	try {
+		json models_json = json::parse(response->body);
+		if (models_json.contains("data") && models_json["data"].is_array()) {
+			std::cout << "available models:\n";
+			for (const auto& model : models_json["data"]) {
+				if (model.contains("id") && model["id"].is_string()) {
+					std::cout << "- " << model["id"].get<std::string>() << '\n';
+				}
+			}
+		}
+	}
+	catch (const json::parse_error& e) {
+		throw std::runtime_error("Failed to parse JSON response: " + std::string(e.what()));
+	}
+}
+
+std::string DeepseekClient::get_api_key() {
+	std::string api_key = std::getenv("DEEPSEEK_API_KEY");
+	if (api_key.empty()) {
+		std::fstream file("api_key.txt");
+		std::getline(file, api_key);
+		if (api_key.empty()) {
+			throw std::runtime_error("have no way to get api_key");
+		}
+	}
+	return api_key;
+}
+
+```
+#### boost 库实现
+```cpp
+// boost_version.h
+#pragma once
+#include <boost/asio.hpp>
+#include <boost/beast.hpp>
+#include <boost/beast/ssl.hpp>
+#include <nlohmann/json.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <memory>
+#include <string>
+
+namespace asio = boost::asio;
+namespace beast = boost::beast;
+namespace ssl = boost::asio::ssl;
+namespace http = beast::http;
+using json = nlohmann::json;
+using tcp = boost::asio::ip::tcp;
+
+class DeepseekClient {
+public:
+    DeepseekClient(const std::string& api = "", const std::string& url = "https://api.deepseek.com");
+    std::pair<std::string, std::string> parse_url(const std::string& url);
+    http::request<http::string_body> create_request(const std::string& host, const std::string& path, const std::string& method, const std::string& body = "");
+    std::string send_request(const http::request<http::string_body>& req);
+    json chat_completions_create(const json& message, const std::string& model_id = "deepseek-chat", bool stream = false, double temperature = 0.7);
+    std::string simple_chat(const std::string& user_message, const std::string& system_message = "you're a helpful assistant");
+
+private:
+    asio::io_context ioc;
+    ssl::context ctx{ssl::context::tlsv12_client};
+    std::unique_ptr<ssl::stream<tcp::socket>> stream;
+    std::string api_key, base_url;
+};
+
+// boost_version.cpp
+#include "boost_version.h"
+#include <boost/asio/ssl/verify_mode.hpp>
+#include <boost/url.hpp>
+#include <boost/url/url_view.hpp>
+#include <fstream>
+
+namespace urls = boost::urls;
+
+std::string get_api_key();
+
+DeepseekClient::DeepseekClient(const std::string& api, const std::string& url)
+	: base_url(url) {
+	if (api.empty()) {
+		api_key = get_api_key();
+	}
+	ctx.set_verify_mode(ssl::verify_none);
+}
+
+std::pair<std::string, std::string> DeepseekClient::parse_url(const std::string& url) {
+	std::string host, path;
+	urls::url_view uv = urls::parse_uri(url).value();
+	host = uv.host();
+	path = uv.path();
+	return {host, path};
+}
+
+http::request<http::string_body> DeepseekClient::create_request(const std::string& host, const std::string& path, const std::string& method, const std::string& body) {
+	http::request<http::string_body> req{http::verb::post, path, 11};
+	req.set(http::field::host, host);
+	req.set(http::field::user_agent, "DeepSeek-CPP-Client/1.0");
+	req.set(http::field::content_type, "application/json");
+	req.set(http::field::authorization, "Bearer " + api_key);
+	req.set(http::field::accept, "application/json");
+
+	if (!body.empty()) {
+		req.body() = body;
+		req.prepare_payload();
+	}
+	return req;
+}
+
+std::string DeepseekClient::send_request(const http::request<http::string_body>& req) {
+	auto [host, path] = parse_url(base_url);
+	tcp::resolver resolver(ioc);
+	auto results = resolver.resolve(host, "443");
+	this->stream = std::make_unique<ssl::stream<tcp::socket>>(ioc, ctx);
+
+	// validate sni field
+	if (!SSL_set_tlsext_host_name(stream->native_handle(), host.c_str())) {
+		beast::error_code ec{static_cast<int>(::ERR_get_error()), asio::error::get_ssl_category()};
+		throw beast::system_error(ec);
+	}
+	asio::connect(beast::get_lowest_layer(*stream), results);
+	stream->handshake(ssl::stream_base::client);
+	http::write(*stream, req);
+	beast::flat_buffer buffer;
+	http::response<http::dynamic_body> res;
+	http::read(*stream, buffer, res);
+
+	beast::error_code ec;
+	stream->shutdown(ec);
+
+	if (ec == asio::error::eof || ec == ssl::error::stream_truncated)  ec = {};
+	if (ec) throw beast::system_error(ec);
+
+	std::string response_body = beast::buffers_to_string(res.body().data());
+
+	if (res.result() != http::status::ok) {
+		throw std::runtime_error("HTTP error: " + std::to_string(static_cast<int>(res.result())) +
+			", response: " + response_body);
+	}
+
+	return response_body;
+}
+
+json DeepseekClient::chat_completions_create(const json& message, const std::string& model_id, bool stream, double temperature) {
+	json request_body = {
+			{"model", model_id},
+			{"messages", message},
+			{"stream", stream},
+			{"temperature", temperature}
+	};
+
+	auto [host, path] = parse_url(base_url);
+	path += "/chat/completions";
+
+	const auto req = create_request(host, path, "POST", request_body.dump());
+	const auto response_body = send_request(req);
+	try {
+		return json::parse(response_body);
+	}
+	catch (const json::parse_error& e) {
+		throw std::runtime_error("Failed to parse json response: " + std::string(e.what()) + "\nraw response: " + response_body);
+	}
+}
+
+std::string DeepseekClient::simple_chat(const std::string& user_message, const std::string& system_message) {
+	json messages = {
+		{{"role", "system"}, {"content", system_message}},
+		{{"role", "user"}, {"content", user_message}}
+	};
+	const auto response = chat_completions_create(messages);
+
+	if (response.contains("choices") && response["choices"].is_array() && !response["choices"].empty()) {
+		const auto& choice = response["choices"][0];
+		if (choice.contains("message") && choice["message"].contains("content")) {
+			return choice["message"]["content"];
+		}
+	}
+
+	throw std::runtime_error("Invalid response format: " + response.dump());
+}
+
+std::string get_api_key() {
+	std::string api_key = std::getenv("DEEPSEEK_API_KEY");
+	if (api_key.empty()) {
+		std::ifstream file("api_key.txt");
+		std::getline(file, api_key);
+		if (api_key.empty()) throw std::runtime_error("failed to get api key");
+	}
+	return api_key;
+}
+```
+### GET 请求将文本转二维码 base 64 编码信息
+#### httplib 库实现
+```cpp
+// API.h
+#pragma once
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+#include <memory>
+#include <httplib.h>
+#include <boost/url.hpp>
+#include <nlohmann/json.hpp>
+#include <string>
+#include <string_view>
+
+namespace urls = boost::urls;
+using json = nlohmann::json;
+
+
+class API {
+public:
+	API(const std::string url);
+	void make_request();
+	json send_request(const std::string& user_message);
+	std::string get_needs_from_response(const json& response);
+	void set_timeout(httplib::SSLClient& cnt, unsigned int connection = 30, unsigned int read = 80, unsigned int write = 30);
+
+private:
+	std::unique_ptr<httplib::SSLClient> client;
+	std::string host;
+	std::string path;
+	std::string method;
+
+	void parse_url(const std::string& url);
+};
+
+// API.cpp
+#include "API.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+
+API::API(const std::string api_url) {
+	parse_url(api_url);
+	client = std::make_unique<httplib::SSLClient>(host);
+	set_timeout(*client);
+}
+
+void API::make_request() {
+}
+
+void API::parse_url(const std::string& url) {
+	urls::url_view uv = urls::parse_uri(url).value();
+	this->host = uv.host();
+	this->path = uv.path();
+}
+
+void API::set_timeout(httplib::SSLClient& cnt, unsigned int connection, unsigned int read, unsigned int write) {
+	cnt.set_connection_timeout(connection);
+	cnt.set_read_timeout(read);
+	cnt.set_write_timeout(write);
+}
+
+json API::send_request(const std::string& user_message) {
+	httplib::Headers headers = {
+		//{"Host", "uapi.cn"},
+		//{"Content-Type", "application/json"}
+	};
+	httplib::Params params;
+	params.emplace("text", user_message);
+	params.emplace("size", "256");
+	params.emplace("format", "json");
+	const auto response = client->Get(path, params, headers);
+	int status = response->status;
+	if (status == httplib::StatusCode::OK_200) {
+		json parsed_content = json::parse(response->body);
+		std::cout << "response: " + response->body;
+		return parsed_content;
+	} else {
+		const std::string error_msg = std::string("status: ") + httplib::status_message(status);
+		throw std::runtime_error(error_msg);
+	}
+}
+
+std::string API::get_needs_from_response(const json& response) {
+	return response.at("qrcode_base64").get<std::string>();
+}
 ```
