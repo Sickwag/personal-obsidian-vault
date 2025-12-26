@@ -473,14 +473,42 @@ if (rc != SQLITE_OK) {
 sqlite3_bind_int(stmt, 1, chat_msg->msg_header.timestamp);
 sqlite3_bind_text(stmt, 2, chat_msg->sender_account, -1, SQLITE_TRANSIENT)
 sqlite3_bind_text(stmt, 3, chat_msg->receiver_account, -1, SQLITE_TRANSIENT)
-sqlite3_bind_int(stmt, 4, chat_msg->content_type);
-sqlite3_bind_int(stmt, 5, chat_msg->file_size);
-sqlite3_bind_int(stmt, 6, chat_msg->read_status);
-sqlite3_bind_text(stmt, 7, chat_msg->content, -1, SQLITE_TRANSIENT);
+
+// 执行简单sql语句
+int sqlite3_exec(							/* 返回结果 */
+  sqlite3*,                                 /* 数据库连接 */
+  const char *sql,                          /* SQL语句 */
+  int (*callback)(void*,int,char**,char**), /* 回调函数 */
+  void *,                                   /* 传递给回调的参数，SELECT时需要，INSERT/UPDATE/DELETE可为NULL*/
+  char **errmsg                             /* 错误信息输出 */
+);
 ```
-- `sqlite3_free` 作用是**释放 SQLite 内部分配的内存**，SQLite 在某些操作中会动态分配内存，调用者需要负责释放，比如这里的错误信息字符串长度是**动态的**，只有 sqlite 知道有多长，所以 sql 负责分配，**但是调用者负责释放，同理需要手动释放的还有 pazResult 结果集**。必须与 SQLite 的内存分配函数配对使用，不能用 C++的 delete 或 free
+- `sqlite3_free` 作用是**释放 SQLite 内部分配的内存**，SQLite 在某些操作中会动态分配内存，调用者需要负责释放，比如这里的错误信息字符串长度是**动态的**，只有 sqlite 知道有多长，所以 sql 负责分配，**但是调用者负责释放，同理需要手动释放的还有 pazResult 结果集，预处理语句**。必须与 SQLite 的内存分配函数配对使用，不能用 C++的 delete 或 free
 - 参数绑定部分需要注意不同类型数据绑定 api 不一样
-- 
+- 预处理对象需要使用 `sqlite3_stmt` 对象，预处理流程为：
+	- 创建预处理对象 stmt
+	- 编写预处理 sql 语句
+	- 编译预处理语句（如果有 sql 或者 C++中的 `？` 放置语法错误会在这里提示）
+	- 绑定参数
+	- `sqlite3_step(stmt)` 执行语句，返回值为：
+		- `SQLITE_ROW`: SELECT 查询有下一行数据
+		- `SQLITE_DONE`: 查询完成
+		- `SQLITE_ERROR`: 执行错误
+	- 执行 `sqlite3_finalize(stmt)` 释放内存
+- `sqlite3_exec` 性能较低，并且**不支持绑定参数**，还需要手动解析
+### 业务逻辑处理模块
+包含 `business.h/cpp`
+主要职责是：
+1. 消息分发中心
+	- 接收来自客户端的**原始消息**
+	- 根据消息类型分发到相应的处理函数
+	- 统一管理所有业务逻辑的入口
+2. 业务逻辑处理器
+	- 处理用户注册、登录、好友管理、群组管理、消息传递等业务
+	- 协调数据访问层 (data_handler) 和网络层 (tcp_server)
+3. 并发控制中心
+	- 使用线程池处理客户端请求
+	- 为每个客户端维护读写锁，防止并发冲突
 # 总结
 ## 通信流程
 Echat是一个基于C++和Qt框架的即时通讯(IM)系统，采用经典的客户端-服务器(C/S)架构：
@@ -490,6 +518,15 @@ Echat是一个基于C++和Qt框架的即时通讯(IM)系统，采用经典的客
 |     Qt客户端       | <------TCP-------> |    epoll服务器     |
 |                   |                    |                   |
 +-------------------+                    +-------------------+
+
+// 服务端
+TCP Server (tcp_server.cpp)
+    ↓ (接收客户端连接和消息头)
+Business Layer (business.cpp)
+    ↓ (业务逻辑处理)
+Data Handler Layer (data_handler.cpp)
+    ↓ (数据库/文件系统操作)
+SQLite3 + File System
 ```
 1. 注册流程: REGISTER_REQUEST → REGISTER_RESPONSE
 2. 登录流程: LOGIN_REQUEST → LOGIN_RESPONSE + 好友列表 + 群组列表 + 通知列表
