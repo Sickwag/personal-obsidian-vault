@@ -4438,6 +4438,8 @@ int main() {
 其中使用函数对象创建线程的方法需要注意，
 
 ### 互斥量，互斥锁和包装器
+2025年12月26日12:48:42：参考：[C++11互斥量mutex使用详解 - 知乎](https://zhuanlan.zhihu.com/p/598993031)
+
 互斥量是一种同步原语，用于控制对共享资源的互斥访问。互斥量**功能**被创建的主要目的是防止多个线程同时访问同一资源，从而避免数据竞争和其他并发问题。实现互斥量功能需要依赖**互斥锁（锁）**。互斥锁是互斥量的一种使用方式。
 
 - [[#^2i4zfm|关于两者关系的形象理解]]
@@ -4451,12 +4453,12 @@ int main() {
 | **互斥量（Mutual Exclusion）** | 操作系统层面的同步机制<br>- 是实现互斥锁的具体对象。<br>- 在 C++ 中，`std::mutex` 是最常用的互斥量类型。                                            |     |
 互斥锁有下面几种类型组成
 
-| 类型                         | 特点            |
-| -------------------------- | ------------- |
-| `std::mutex`               | 最基本的互斥锁，不可递归  |
-| `std::recursive_mutex`     | 允许同一线程多次加锁    |
-| `std::timed_mutex`         | 支持超时等待        |
-| `std::shared_mutex`（C++17） | 支持读写锁（多读者/单写者 |
+| 类型                         | 特点                                     |
+| -------------------------- | -------------------------------------- |
+| `std::mutex`               | 最基本的互斥锁，不可递归                           |
+| `std::recursive_mutex`     | 允许**同一线程**多次加锁，用于解决同一线程中不同函数调用时产生的死锁问题 |
+| `std::timed_mutex`         | 支持超时等待                                 |
+| `std::shared_mutex`（C++17） | 支持读写锁（多读者/单写者                          |
 #### 互斥量
 ##### 特性
 - **互斥量类型**：在 C++中，`mutex` 是互斥量的类型，它定义在 `<mutex>` 头文件中。
@@ -4482,11 +4484,11 @@ int main() {
 	- `std::scoped_lock`（C++17 引入）支持同时锁定多个互斥锁，避免死锁问题。
 > - 一个线程如果想要获取房间里的资源，就需要**占用 mtx 的一把钥匙**，这样别的线程就无法**同时**访问房间里的资源，因为只有一把钥匙
 
-^2 i 4 zfm
+^2i4zfm
 
 `td::lock_guard` 和 `unique_lock` 是两种常用的互斥锁类型。
 - 两者都会在创建互斥量时自动锁定，但 `unique_lcok` 才有手动解锁函数 `. unlock ()`
-- **lock_guard**：它是一个简单的 RAII 互斥锁，当创建 `lock_guard` 对象时，当 `lock_guard` 对象被销毁（例如，当它离开作用域时），它会自动解锁（在析构函数中）互斥量。`lock_guard` **不能显式地解锁或重新锁定**，它保证了互斥量在作用域结束时总是被解锁，即使在发生异常时也是如此。
+- **lock_guard**：它是一个简单的 RAII 互斥锁，当创建 `lock_guard` 对象时，当 `lock_guard` 对象被销毁（例如，当它离开作用域时），它会自动解锁（在析构函数中）互斥量。`lock_guard` **不能显式地解锁或重新锁定**，它保证了互斥量在作用域结束时总是被解锁，即使在发生异常时也是如此，抽象程度低使其性能更高
 - **unique_lock**：比 `lock_guard` 更灵活，它提供了更多的控制功能，如显式锁定和解锁、尝试锁定、延迟锁定等。`unique_lock` 通常用于需要更复杂锁定策略的场景。
 
 1. **`std::mutex`**
@@ -4498,6 +4500,33 @@ int main() {
    - **适用场景**：适用于需要在同一个线程中多次加锁的场景。
    - **优点**：支持递归加锁。
    - **缺点**：性能略低于 `std::mutex`。
+```cpp
+struct Complex {
+	std::recursive_mutex mutex;
+	int i;
+	Complex() : i(0){}
+	void mul(int x){
+		std::lock_guard<std::recursive_mutex> lock(mutex);
+		i *= x;
+	}
+	void div(int x){
+		std::lock_guard<std::recursive_mutex> lock(mutex);
+		i /= x;
+	}
+	void both(int x, int y)	{
+		std::lock_guard<std::recursive_mutex> lock(mutex);
+		mul(x);
+		div(y);
+	}
+};
+int main(void) {
+	Complex complex;
+	complex.both(32, 23); //因为同一线程可以多次获取同一互斥量，不会发生死锁
+	std::cout << "main finish\n";
+	return 0;
+}
+```
+**同一线程中**，由于 both 封装了很子操作，为了降低耦合，使开发者不需要关心子操作内部实现，只需要知道给资源加了锁，别的线程不能动这部分资源即可
 
 3. **`std::timed_mutex`**
    - **适用场景**：适用于需要在加锁时支持超时等待的场景。
@@ -4624,13 +4653,10 @@ int main () {
 通过 lock/unlock 可以保证任何时刻只有一个线程在访问共享资源, 从而避免数据竞争问题。
 
 具体使用方法是：
-1. 申请一个互斥锁专门用来对共享资源进行某种操作
+1. 申请一个互斥锁专门用来对共享资源进行某种操作（或者使用 `unique_lock` / `lock_guard` 自动出作用域时解锁）
 2. 将操作封装入函数，函数开头结尾锁定和解锁
 3. 调用函数时完成共享资源修改
 ```cpp
-#include <iostream>
-#include <mutex>
-#include <thread>
  mutex mutex;
 int count = 0;
 void thread 1 () {
@@ -4669,8 +4695,6 @@ int main () {
    避免手动调用 `lock ()` 和 `unlock ()`，减少代码冗余和出错概率。
 3. **线程安全**：  
    包装器确保锁的生命周期与作用域绑定，避免因异常或复杂控制流导致的锁未释放问题。
-
-
 ##### lock_guard
 - **适用场景**：  
   简单的代码块需要独占访问资源，且无需提前解锁或延迟加锁。
@@ -4716,15 +4740,28 @@ int main () {
 ```
 
 ##### shared_lock
+2025年12月26日12:52:45 参考：[std::shared_mutex使用 - 知乎](https://zhuanlan.zhihu.com/p/688003024)
 - **适用场景**：  
-  需要支持**共享读锁**和**独占写锁**的场景（需配合 `std::shared_mutex`）。  
+  允许多个线程同时拥有读（共享）锁，但在**任何时间点上只允许一个线程拥有写（独占）锁**。这种机制非常适合于**多读少写**的场景，这和 [[QT6开发指南#线程同步#基于读写锁的线程同步|qt读写锁QReadWriteLock]] 相似
 - **优点**：  
   - 允许多个读线程同时访问资源（共享锁）。  
   - 写线程独占资源时阻塞其他读/写线程。  
 - **缺点**：  
   - 复杂性较高，需配合 `std::shared_mutex` 使用。  
-- **典型用法**：  
-  
+两种锁定方式：
+
+>[!note]
+>
+>- **[独占锁定](https://zhida.zhihu.com/search?content_id=241019873&content_type=Article&match_order=1&q=%E7%8B%AC%E5%8D%A0%E9%94%81%E5%AE%9A&zhida_source=entity)（Exclusive Locking）：**
+> 	- `lock()`：以**独占方式**锁定[互斥量](https://zhida.zhihu.com/search?content_id=241019873&content_type=Article&match_order=1&q=%E4%BA%92%E6%96%A5%E9%87%8F&zhida_source=entity)。如果互斥量已经被锁定（无论是共享还是独占），当前线程将阻塞，直到互斥量变为可用。
+> 	- `try_lock()`：尝试以非阻塞的方式以独占方式锁定互斥量。如果互斥量当前未被任何线程锁定，它将锁定互斥量并立即返回true。如果互斥量已被锁定（无论是共享还是独占），它将不会阻塞当前线程，而是立即返回false。
+> 	- `unlock()`：释放锁。当一个线程完成了对共享资源的独占访问，它应该调用这个操作来释放独占锁。这将使互斥量变为未锁定状态，其他线程可以尝试锁定互斥量。
+> - **[共享锁定](https://zhida.zhihu.com/search?content_id=241019873&content_type=Article&match_order=1&q=%E5%85%B1%E4%BA%AB%E9%94%81%E5%AE%9A&zhida_source=entity)（Shared Locking）：**
+> 	- `lock_shared()`：尝试以**共享方式**锁定互斥量。如果互斥量已经被其他线程以共享方式锁定，当前线程也将获得锁定权限，可以继续执行。如果互斥量被独占锁定，则当前线程将阻塞，直到互斥量变为可用。
+> 	- `try_lock_shared()`：这个操作会尝试以非阻塞的方式以共享方式锁定互斥量。如果互斥量当前可用（无论是完全未锁定，还是已被其他线程以共享方式锁定），它将锁定互斥量并立即返回true。如果互斥量被独占锁定，它将不会阻塞当前线程，而是立即返回false。
+> 	- `unlock_shared()`：当一个线程完成了对共享资源的访问，它应该调用这个操作来释放共享锁。只有当所有持有共享锁的线程都释放了锁，互斥量才会变为未锁定状态。
+>
+
 ```cpp
   std:: shared_mutex rw_mtx;
   void read_func () {
@@ -4753,6 +4790,8 @@ int main () {
       // 同时安全访问由 mtx 1 和 mtx 2 保护的资源
   }
 ```
+##### 超时的互斥量 timed_mutex和 recursive_timed_mutex
+比 `std::mutex` 多了两个超时获取锁的接口：`try_lock_for` 和 `try_lock_until`，用于延时锁定和限制一直请求锁的时长
 ### 条件变量
 #### 性质与作用
 条件变量（`condition_variable`）是用于线程间同步的一种机制，允许线程在某些条件尚未满足时挂起执行（准备执行状态），直到其他线程通知这些条件已经满足。条件变量通常与互斥量（`mutex`）一起使用，以确保对共享资源的访问是同步的。

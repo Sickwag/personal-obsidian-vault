@@ -509,6 +509,37 @@ int sqlite3_exec(							/* 返回结果 */
 3. 并发控制中心
 	- 使用线程池处理客户端请求
 	- 为每个客户端维护读写锁，防止并发冲突
+#### 线程处理
+```cpp
+Business::Business(data_handler* DataHandler) {
+	/**
+	 * - thread_handle: 工作线程函数指针
+	 * - this: 传递给工作线程的用户数据
+	 * - 20: 线程池最大线程数
+	 * - FALSE: FALSE表示不预先创建所有线程
+	 * - NULL: 错误处理，NULL表示不关心错误处理
+	 */
+    m_pool = g_thread_pool_new(thread_handle, this, 20, FALSE, NULL);
+    m_db_handler = DataHandler;
+}
+```
+- 使用 `g_thread_pool_new`*较为方便地创建线程池*，其中的 thread_handle 是**线程工作函数**，每一个线程需要做什么事在这个函数中定义，定义为：`void (*GFunc) (gpointer data, gpointer user_data)`
+- gpointer 是 `typedef void* gpointer`
+	- data 是**这个线程工作函数中需要用到的本任务的特定数据**，本项目中是客户端通信的 socket（clientfd），因为程序设计为每一个线程用来处理一个客户端的请求任务
+	- user_data 是通过 g_thread_pool_new 传递的**全局数据**，在本项目的工作函数中使用的全局数据是 Business 类构造函数中的 DataHandler
+```cpp
+// 基本数据类型转换，需要特殊宏
+gpointer ptr = GINT_TO_POINTER(123);
+int value = GPOINTER_TO_INT(ptr);
+gpointer ptr2 = GUINT_TO_POINTER(456789L);
+gulong value2 = GPOINTER_TO_ULONG(ptr2);
+
+// 对象指针转换（不需要特殊宏）
+Business *business = new Business(handler);
+gpointer ptr = business;  // 直接赋值
+Business *recovered = static_cast<Business*>(ptr);  // 类型转换
+```
+
 # 总结
 ## 通信流程
 Echat是一个基于C++和Qt框架的即时通讯(IM)系统，采用经典的客户端-服务器(C/S)架构：
