@@ -431,3 +431,8 @@ $1
 查阅这些符号来自什么库，通过 find_package 和 target_link_libraries 链接接口
 
 msbuild 中对 vcpkg 有很好的支持（使用 `vcpkg install integate` 后），会自动在 vcpkg 中寻找，而 cmake 构建中，如果没有指定 tool_chain_file 就不会自动寻找，所以可能会导致问题（有的时候指定了也会这样，原因未知 #未知错误 ）
+# 包管理工具
+## vcpkg
+### 下载速度问题
+参考：[vcpkg国内镜像源替换-CSDN博客](https://blog.csdn.net/weixin_41364246/article/details/140123907)
+修改国内镜像之后，大部分包能够快速下载，但是不在 github 拖管的包需要自己替换源
