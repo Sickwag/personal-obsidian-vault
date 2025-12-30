@@ -723,15 +723,43 @@ apply_all_and_do(some_func, ...);   // 一个临时 Function（rvalue）
 auto& ref = some_func;
 apply_all_and_do(ref, ...);         // function 是 lvalue
 ```
-两者都可以传入 `apply_all_and_do` 中都能接受，在函数体中可以对两者设计不同的处理逻辑
-`T&&` 会：
+两者传入 `apply_all_and_do` 中都能接受，在函数体中可以对两者设计不同的处理逻辑
+**无论模板参数是什么类型的引用，当且仅当实参类型为右引用时，模板参数才能被推导为右引用类型**。这被称为*引用折叠规则*，他会在以下情况中触发：
 
-| T 推导为            | 形参身份                                  |
-| ---------------- | ------------------------------------- |
-| `T` 为 `MyClass&` | f 为 `MyClass& &&`，其最终被折叠为 `MyClass &` |
-| `T` 为 `MyClass`  | f 为 `MyClass&&` 指向右值引用                |
-| `&&` 与 auto 搭配   | 转发器巅峰部分搭档                             |
-**无论模板参数是什么类型的引用，当且仅当实参类型为右引用时，模板参数才能被推导为右引用类型**。这被称为*引用折叠规则*，
+| 场景 | 是否触发引用折叠 | 说明 |
+|------|------------------|------|
+| **模板类型推导（T&&）** | ✅ 是 | 在模板中使用 `T&&` 时，传入左值或右值会推导出嵌套引用类型 |
+| **decltype 表达式中** | ✅ 是 | 某些表达式结果类型可能包含嵌套引用，会触发折叠 |
+| **typedef / using 类型别名中** | ✅ 是 | 如果别名定义中出现嵌套引用，会折叠 |
+| **普通变量定义中** | ❌ 否 | 如 `int& &x = y;` 是非法的，不会编译通过 |
+推导规则为：
+
+| 类型表达式    | 折叠结果  |
+| -------- | ----- |
+| `T& &`   | `T&`  |
+| `T& &&`  | `T&`  |
+| `T&& &`  | `T&`  |
+| `T&& &&` | `T&&` |
+```cpp
+// 模板类型推导
+template<typename T>
+void foo(T&& arg) {
+    // ...
+}
+
+int x = 42;
+foo(x);     // T 被推导为 int&，T&& 变成 int& &&
+foo(42);    // T 被推导为 int， T&& 变成 int&&
+
+// decltype表达式
+typedef int& LRef;
+LRef&& ref = x;  // LRef&& → int& &&
+
+// decltype引用折叠
+int x = 10;
+int& y = x;
+decltype(y)&& z = x;  // decltype(y) 是 int&，所以 decltype(y)&& 是 int& &&
+```
 
 | 有 template T                                   | 参数 `T&&` 可变           |
 | ---------------------------------------------- | --------------------- |
@@ -754,9 +782,9 @@ constexpr Ty&& forward(Ty& Arg) noexcept {
 	return static_cast<Ty&&>(Arg);
 }
 int a = 10; // 不重要
-::forward<int>(a); // 返回 int&& 因为 Ty 是 int，把左值a通过static_cast<int&&>变化，根据转化规则，左值会被转化为右值
-::forward<int&>(a); // 返回 int& 因为 Ty 是 int&，把a当做int&左值引用，那么转换后还是左值引用 int&
-::forward<int&&>(a); // 返回 int&& 因为 Ty 是 int&&，把a当做int&&右值引用，根据规转换后是右值引用int&&
+::forward<int>(a); // 返回 int&& ，因为 Ty 是 int，把左值a通过static_cast<int&&>变化，根据转化规则，左值会被转化为右值
+::forward<int&>(a); // 返回 int& ，因为 Ty 是 int&，返回值Ty&& 触发引用折叠int&& & -> int&，
+::forward<int&&>(a); // 返回 int&& ，因为 Ty 是 int&&，返回值Ty&&触发引用折叠int&& && -> int&&
 ```
 ### Note：完美转发
 完美转发 (forward)(value) 是元编程的“身份还原复刻师”
