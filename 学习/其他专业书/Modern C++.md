@@ -488,7 +488,7 @@ printf1<int> (3)
 printf1<int, int> (2, 3) -> printf1<int> (2) + printf1<int> (3)
 printf1<int, int> (1, 2, 3) -> printf1<int> (1) + printf1<int, int> (2, 3) -> printf1<int> (1) + printf1<int> (2) + printf1<int> (3)
 ```
-- 通过模板实例化得到普通的函数，依次调用，即可完成边长类型变量的解析
+- 通过模板实例化得到普通的函数，依次调用，即可完成变长类型变量的解析
 - 在编译期会出现递归实例化，实例化出不同的模板代码，代码运行期时只会使用不同的函数调用来完成功能，没有实现递归
 
 ##### 初始化列表展开
@@ -520,6 +520,7 @@ std::apply(print_tuple, some_tuple); // 直接展开 tuple 为 parameter pack
 | **不是函数环绕执行环境变量**                         | 表达式中的 0、value 等是用来“伪造”初始化列表构造语法的技巧代码  |
 | **编译期与运行期混合思考**                          | 有时代码完全在运行期，但展开逻辑却在编译期完成，这就是泛型米花板的含金量！ |
 | **lambda + 逗号 + 模板类型推导 = 编译期逻辑运行的暴力破解术** | 虽然它可能看起来“不优雅”，但在模板函数里模拟逻辑执行是唯一手段！     |
+
 C++ 编译器不是一个真正的逻辑执行环境，但它 **可以模拟一个存在于模板“生成代码”和表达式“副作用机制”中的准逻辑执行语言**
 在 C++ 模板编程中，我们“不是运行逻辑”，而是写一个“生成逻辑”的构造。也就是说，模板不是“运算法”，而是“生成另一个 C++ 代码结构”的宏系统，这种编程方式被称为：
 
@@ -530,6 +531,7 @@ C++ 编译器不是一个真正的逻辑执行环境，但它 **可以模拟一�
 - "**模板元编程**" 就是你描述的：“根据模板生成其他模板逻辑”，也就是在一个以编译阶段为主控器的系统中“推演生成运行期逻辑”。
 ### Note：折叠表达式
 #### 含义和本质
+它的出现用于解决[[#变长参数模板]]中，处理变长参数列表式**还是需要统计参数数量或者使用递归方式处理参数**时代码复杂且难以维护
 语法支持 8 种（主要是左折叠、右折叠）：
 折叠表达式（C++17）是**参数包在元编程中被最优雅使用的语法延伸**。它的本质是：
 
@@ -549,6 +551,11 @@ C++ 编译器不是一个真正的逻辑执行环境，但它 **可以模拟一�
 ```
 其中 `op` 是任意重载或内置二元运算符（如 `+`, `-`, `<<`, 如果带自动推导的），`Args...` 是参数包。
 #### 标准语法
+**折叠表达式**可分为：
+
+- **一元折叠表达式（Unary Fold）**：对参数包中的每个参数应用一个一元操作符，*一元表达式分为前置一元折叠 `(op...argPack)` 和后置一元折叠 `(argPack...op)`*
+- **二元折叠表达式（Binary Fold）**：对参数包中的每个参数应用一个二元操作符，*二元表达式分为左折叠和右折叠*
+
 
 | 标准写法（fold expression） | 折叠类型                  | 编译期表达顺序展开逻辑                                      | 示例写法                           | 翻译为                                               |
 | --------------------- | --------------------- | ------------------------------------------------ | ------------------------------ | ------------------------------------------------- |
@@ -967,12 +974,13 @@ C++11 `std::function` 是一种通用、多态的函数封装，它的实例�
 | 任意具有 `operator()` 的仿函数 | `MyFunctor` 实例                       |
 [1]:由 Lambda 表达式创建的**匿名类对象（anonymous object）**，称为 **闭包对象（closure object）**
 
-### `std::bin`
+### `std::bind`
+参考[C++ std::bind()函数模板的用法（非常详细，附带实例） - C语言中文网](https://c.biancheng.net/view/ste2pge.html)
 #### 绑定函数和参数
 ```cpp
 auto bound_func = std::bind(f, 1, _1, _2); // 给 f 的第一参数绑定值1，剩下等待两个参数
 bound_func(a, b); // 实际调用就是 f(1, a, b);
---------------------或者这种形式-----------------------
+// --------------------或者这种形式-----------------------
 void deliver(std::string city, std::string phone) {
     std::cout << "Deliver to " << city << ", call at " << phone << std::endl;
 }
@@ -982,7 +990,7 @@ int main() {
     action("123-4567"); // 参数会填到 _1 的位置
 }
 ```
-- 一旦你调用 `std::bind(...)`，编译器就会把你绑定的实参拷贝进闭包，并将其绑定逻辑“封死”在一个包装器中。你无法从中提取或去掉某个参数。原因是：
+- 一旦你调用 `std::bind(...)`，编译器就会把你绑定的实参拷贝进闭包，并将其绑定逻辑“封死”在一个包装器中。你**无法从中提取或去掉某个参数**。原因是：
 - 绑定在编译期（Compile-time）即封装完成
 - `std::bind` 返回的是一个绑定器对象，其类型是未命名的，但它是可调用的，并且可以通过多次绑定继续扩展参数。
 #### 绑定函数指针到对象实例
@@ -994,9 +1002,112 @@ thread tp(std::bind(&P_and_C::producer, &pc));
 auto binder = [&pc] { pc.producer(); };
 thread tp(binder);
 ```
+如果绑定对象是成员函数，`std::bind` 将成员函数绑定到特定对象实例上时，实际上是创建了一个新的可调用对象，这个对象包含了指向成员函数的指针以及指向对象实例的指针
+#### 验证绑定对象
+使用 `std::bind` 绑定的对象的 `target()` 函数返回**绑定函数对象中存储的目标对象**，由于实例化 `std::bind` 对象是在编译器进行的，数据已经被编译无法在运行时获取，使用 get 需要手动指定绑定函数对象中存储的目标对象类型，如果手写的指定类型和存储类型一致，则返回这个函数的指针，否则返回 `nullptr`， target 签名为：
+```cpp
+template<typename T>
+T* target() noexcept;
+```
+获取普通函数和类成员函数（绑定了成员函数）的方法为：
+```cpp
+// 要求target返回一个返回值为void，接受两个int类型的函数指针*
+auto targetGlobalFunc = globalFunctionHandler.target<void (*)(int, int)>();
+
+// 同理，要求返回返回值为void，并且是Processor类的成员函数Processor::的参数为2个int的指针*
+auto targetMemberFunc = boundMemberFunc.target<void (Processor::*)(int, int)>();
+```
 ### `std::placeholder`
 一般和 [[Modern C++#`std bind`|bind]] 配合使用，作为绑定函数参数位置占位符
+参考代码：
+```cpp
+typedef std::function<void(int, int)> EventHandler;
 
+class EventManager {
+   public:
+    void registerHandler(EventHandler handler) {
+        handlers.push_back(handler);
+    }
+
+    // 触发事件
+    void triggerEvent(int eventType, int eventCode) {
+        std::cout << "Triggering event with type: " << eventType << " and code: " << eventCode << std::endl;
+        for (auto& handler : handlers) {
+            handler(eventType, eventCode);
+        }
+    }
+
+    // 打印所有处理器的类型信息
+    void printHandlersTypeInfo() {
+        for (auto& handler : handlers) {
+            std::cout << "Handler type info: " << handler.target_type().name() << std::endl;
+        }
+    }
+
+   private:
+    std::vector<EventHandler> handlers;
+};
+
+void handleEvent(int type, int code) {
+    std::cout << "Global function handling event with type: " << type << " and code: " << code << std::endl;
+}
+
+class Processor {
+   public:
+    void process(int type, int code) {
+        std::cout << "Processing event with type: " << type << " and code: " << code << std::endl;
+    }
+};
+
+int main() {
+    EventManager manager;
+
+    Processor processor;
+    manager.registerHandler(handleEvent);
+    EventHandler globalFunctionHandler = handleEvent;
+    EventHandler boundMemberFunc = std::bind(&Processor::process, &processor, std::placeholders::_1, std::placeholders::_2);
+    manager.registerHandler(boundMemberFunc);
+
+    int importantValue = 42;
+    manager.registerHandler([importantValue](int type, int code) {
+        std::cout << "Lambda handling event with type: " << type << " and code: " << code << " and important value: " << importantValue << std::endl;
+    });
+    manager.printHandlersTypeInfo();
+    std::cout << "      " << std::endl;
+    // 判断是否绑定了 Processor::process
+    auto targetMemberFunc = boundMemberFunc.target<void (Processor::*)(int, int)>();
+    if (targetMemberFunc && *targetMemberFunc == &Processor::process) {
+        std::cout << "The member function Processor::process is bound." << std::endl;
+    } else {
+        std::cout << "No matching target function bound for Processor::process." << std::endl;
+    }
+
+    // 判断是否绑定了 handleEvent
+    auto targetGlobalFunc = globalFunctionHandler.target<void (*)(int, int)>();
+    if (targetGlobalFunc && *targetGlobalFunc == handleEvent) {
+        std::cout << "Global function handleEvent is bound." << std::endl;
+    } else {
+        std::cout << "No matching target function bound for handleEvent." << std::endl;
+    }
+
+    std::cout << " " << std::endl;
+    manager.triggerEvent(11, 27);
+}
+```
+输出结果：
+```bash
+Handler type info: PFviiE
+Handler type info: St5_BindIFSt7_Mem_fnIM9ProcessorFviiEEPS1_St12_PlaceholderILi1EES6_ILi2EEEE
+Handler type info: Z4mainEUliiE_
+
+No matching target function bound for Processor::process.
+Global function handleEvent is bound.
+
+Triggering event with type: 11 and code: 27
+Global function handling event with type: 11 and code: 27
+Processing event with type: 11 and code: 27
+Lambda handling event with type: 11 and code: 27 and important value: 42
+```
 ## 3.3 右值引用
 ### 左值、右值的纯右值、将亡值、右值
 [[C++学习对话#左值引用和右值引用]]

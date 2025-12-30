@@ -7038,6 +7038,65 @@ std::function<void()> func = [] { std::cout << "Hello\n"; };
 | 状态携带、灵活封装    | lambda / 仿函数   | 可维护性强      |
 | 多态可调用对象封装    | std:: function | 提高通用性，牺牲性能 |
 
+# 查缺补漏
+## 基础语法细节
+### `std::bind` 和 `std::placeholder` 使用
+参考 [[Modern C++#3.2 函数对象包装器]]
+### `std::optional` 使用
+#### 工作原理
+参考[C++ std::optional的用法（附带实例） - C语言中文网](https://c.biancheng.net/view/2bsddmc.html)
+传统的 [C++](https://c.biancheng.net/cplus/) 编程常常使用[指针](https://c.biancheng.net/c/80/)、特殊返回值或者额外的状态检查来**表示某个值的缺失**（如使用 NULL 或 -1）。然而这些方法要么不安全（如裸指针），要么不直观（如特殊值），也不具有类型安全性。
+**概念实现**：
+```cpp
+template <typename T>
+class optional {
+    bool _initialized;
+    std::aligned_storage<sizeof(T), alignof(T)> _storage;
+};
+```
+`std::aligned_storage_t` 允许我们创建**未初始化的内存块**，用于保存给定类型的对象。如果类模板 `std::optional` 是*默认构造的、复制构造的，或者是从另一个空 optional 对象或 `std::nullopt_t` 值复制赋值的，则该类模板不包含值*。这是一个辅助类型，实现为一个空类，它指示一个状态为未初始化的 optional 对象。
+三个常用的接口 ：
+- `has_value()`：检查 `std::optional` 对象是否包含值。如果内部存储了值则返回 true
+- `value()`：当 `std::optional` 实例包含值时，这个函数返回存储的值的引用。反之抛出 `std::bad_optional_access` 异常。
+- `value_or(T&& default_value)`：提供一种安全的方式来获取存储的值或一个默认值。如果 `std::optional` 实例包含一个值，就返回这个值；否则返回**传递给** value_or 的默认值。
+#### 使用场景
+他出现的目的是**避免空指针，显式声明空值类型，避免空值检查代码，确保没有隐式转换**
+其中封装的空值使用 `std::nullopt` 表示，并且这个*对象*重载了 `!` 符，可以直接用在 if 中
+```cpp
+std::optional<std::string> getUserById(int id) {
+    if (id == 1) {
+        return "Alice";
+    } else if (id == 2) {
+        return "Bob";
+    } else {
+        return std::nullopt;  // 返回空值
+    }
+}
+
+int main() {
+    auto user = getUserById(1);
+    if (user) {
+        std::cout << "User found: " << *user << std::endl;
+    } else {
+        std::cout << "User not found" << std::endl;
+    }
+    return 0;
+}
+```
+可以用于函数定义时的*可选函数形参*，可选的将结构体类型成员（不传入默认 `std::nullopt`）
+```cpp
+std::string extract(std::string const & text, std::optional<int> start, std::optional<int> end) {
+    auto s = start.value_or(0);
+    auto e = end.value_or(text.length());
+    return text.substr(s, e - s);
+}
+auto v1 = extract("sample"s, {}, {});
+std::cout << v1 << '\n'; // sample
+auto v2 = extract("sample"s, 1, {});
+std::cout << v2 << '\n'; // ample
+auto v3 = extract("sample"s, 1, 4);
+std::cout << v3 << '\n'; // amp
+```
 # 常见问题及其技术细节
 ##  `vector<bool>` 的特殊性
 
