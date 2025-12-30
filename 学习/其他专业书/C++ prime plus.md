@@ -330,8 +330,6 @@ double convert(void){
 -----------------------------------------------------------
 #### 3.显示信息
 ```C++
-#include<iostream>
-using namespace std;
 void info_1(){
     cout << "Three blind mice" << endl;
 }
