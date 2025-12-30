@@ -551,9 +551,28 @@ C++ 编译器不是一个真正的逻辑执行环境，但它 **可以模拟一�
 ```
 其中 `op` 是任意重载或内置二元运算符（如 `+`, `-`, `<<`, 如果带自动推导的），`Args...` 是参数包。
 #### 标准语法
+一般在模板参数列表中使用 `Args` 表示类型参数包，在函数参数列表使用 `args` 表示形参参数包
 **折叠表达式**可分为：
 
 - **一元折叠表达式（Unary Fold）**：对参数包中的每个参数应用一个一元操作符，*一元表达式分为前置一元折叠 `(op...argPack)` 和后置一元折叠 `(argPack...op)`*
+```cpp
+(argPack op ...) --> (((arg1 op arg2) op arg3) op arg4....)// 前置
+(op... argPack)  --> (arg1 op (arg2 op (arg3 op ...))) // 后置
+
+template<typename... Args>
+void test(Args... args) {
+    std::cout << "Left Fold: " << (args + ...) << std::endl;  // 前置
+    std::cout << "Right Fold: " << (... + args) << std::endl; // 后置
+}
+
+int main() {
+    test(1, 2, 3);
+    return 0;
+}
+
+// Left Fold: ((1 + 2) + 3) = 6
+// Right Fold: (1 + (2 + 3)) = 6
+```
 - **二元折叠表达式（Binary Fold）**：对参数包中的每个参数应用一个二元操作符，*二元表达式分为左折叠和右折叠*
 
 
@@ -712,14 +731,33 @@ apply_all_and_do(ref, ...);         // function 是 lvalue
 | `T` 为 `MyClass&` | f 为 `MyClass& &&`，其最终被折叠为 `MyClass &` |
 | `T` 为 `MyClass`  | f 为 `MyClass&&` 指向右值引用                |
 | `&&` 与 auto 搭配   | 转发器巅峰部分搭档                             |
-**无论模板参数是什么类型的引用，当且仅当实参类型为右引用时，模板参数才能被推导为右引用类型**。
+**无论模板参数是什么类型的引用，当且仅当实参类型为右引用时，模板参数才能被推导为右引用类型**。这被称为*引用折叠规则*，
 
 | 有 template T                                   | 参数 `T&&` 可变           |
 | ---------------------------------------------- | --------------------- |
 | `T` 推导为 `int&`，传入是 lvalue                      | 那么实际该函数接收到 int&       |
 | `T` 推导为 `string`，传入是临时（rvalue）                 | 则实际接收 string&&        |
 | 使用 `std::forward<T>(x)` 进行类型“转发/generate 归类语言” | f(a), f(b) 传递过程中无类型丢失 |
+示例代码，看懂理解即可
+```cpp
+typedef int& lref;
+typedef int&& rref;
+int n;
+lref& r1 = n; // r1 的类型是 int&
+lref&& r2 = n; // r2 的类型是 int&
+rref& r3 = n; // r3 的类型是 int&
+rref&& r4 = 1; // r4 的类型是 int&&
 
+/////////////////分割线///////////////
+template <class Ty>
+constexpr Ty&& forward(Ty& Arg) noexcept {
+	return static_cast<Ty&&>(Arg);
+}
+int a = 10; // 不重要
+::forward<int>(a); // 返回 int&& 因为 Ty 是 int，把左值a通过static_cast<int&&>变化，根据转化规则，左值会被转化为右值
+::forward<int&>(a); // 返回 int& 因为 Ty 是 int&，把a当做int&左值引用，那么转换后还是左值引用 int&
+::forward<int&&>(a); // 返回 int&& 因为 Ty 是 int&&，把a当做int&&右值引用，根据规转换后是右值引用int&&
+```
 ### Note：完美转发
 完美转发 (forward)(value) 是元编程的“身份还原复刻师”
 使用完美转发+ [[Modern C++#Note：折叠表达式|折叠表达式]] + [[Modern C++#Note：`apaply` 与参数列表“完全解包”|apply参数处理]]三合一例子
