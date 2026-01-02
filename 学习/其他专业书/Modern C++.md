@@ -532,6 +532,7 @@ C++ 编译器不是一个真正的逻辑执行环境，但它 **可以模拟一�
 ### Note：折叠表达式
 #### 含义和本质
 它的出现用于解决[[#变长参数模板]]中，处理变长参数列表式**还是需要统计参数数量或者使用递归方式处理参数**时代码复杂且难以维护
+折叠表达式**必须在括号内使用**，参考 [[#Note：折叠表达式#总结和注意事项]]
 折叠表达式（C++17）是**参数包在元编程中被最优雅使用的语法延伸**。它的本质是：
 
 > [!note]
@@ -540,25 +541,25 @@ C++ 编译器不是一个真正的逻辑执行环境，但它 **可以模拟一�
 > ✦ 折叠表达式 `...` 的本质：不是为了**计算**某个表达式 —— 而是为了**在编译期根据参数包生成多个表达式片段**。每个 `args_i` 都会生成一份 `expr(args_i)` 逻辑代码。
 > ✦ 如果这个 expr 是 lambda、pair decay 表达式、嵌套函数计算 —— 仍然能在编译期转化成多个硬编码函数调用。
 
-#### 标准语法
+#### 折叠语法
 一般在模板参数列表中使用 `Args` 表示类型参数包，在函数参数列表使用 `args` 表示形参参数包
 - **“元”（arity）** 是一个术语，表示一个操作符、函数或模板接受的**参数个数**，三元的操作符号只有 `?:` 三目运算符。
-- 折叠表达式是左折叠还是右折叠，取决于 `...` 是在“形参包”的左边还是右边
+- 折叠表达式是左折叠还是右折叠，取决于 `...` 是在“形参包”的左边还是右边, 右折叠先算右边，左折叠先算左边，这里的**算**表示符号和运算符结合的这一行为，**不是计算的意思**，比如使用 `,` 运算符的 [[#Note：折叠表达式#一元右折叠|print函数示例]] 中，逗号运算符没有做任何计算
 - 基本表达方式为：
 ```md
-( args op ... ) (1)
+( args op ... ) (1) // 一元
 ( ... op args ) (2)
-( args op ... op 初值 ) (3)
+( args op ... op 初值 ) (3) // 二元
 ( 初值 op ... op args ) (4)
 
 1. 一元右折叠 (args op ...) 成为 (args1 op (... op (argsN-1 op argsN)))
 2. 一元左折叠 (... op args) 成为 (((args1 op args2) op ...) op argsN)
-3. 二元右折叠 (args op ... op args) 成为 (args1 op (... op (argsN−1 op (argsN op args))))
-4. 二元左折叠 (args op ... op args) 成为 ((((args op args1) op args2) op ...) op argsN)
+3. 二元右折叠 (args op ... op 初值) 成为 (args1 op (... op (argsN−1 op (argsN op args))))
+4. 二元左折叠 (初值 op ... op args) 成为 ((((args op args1) op args2) op ...) op argsN)
 ```
 **一元折叠表达式（Unary Fold）**：对参数包中的每个参数应用一个一元操作符
-**二元折叠表达式（Binary Fold）**：对参数包中的每个参数应用一个二元操作符
-#### 一元左折叠
+**二元折叠表达式（Binary Fold）**：对参数包中的每个参数应用一个二元操作符，二元表达式的初始值**必须要有返回值并且重载 op 符号**
+
 #### 一元右折叠
 ```cpp
 (argPack op ...) --> (((arg1 op arg2) op arg3) op arg4....)// 前置
@@ -590,35 +591,61 @@ args2 << ' '));
 - `...` 放在形参包右边，所以这是右折叠
 - 根据展开规则 `(args1 op (... op (argsN-1 op argsN)))`，推断为一大串用 `,` 分割的*独立表达式*，由于 `,` 运算符会以从左到右最后一个表达式值作为返回值，`std::cout<<` 会返回一个流对象，所以这是符合语法规则的
 
-| 标准写法（fold expression） | 折叠类型                  | 编译期表达顺序展开逻辑                                      | 示例写法                           | 翻译为                                               |
-| --------------------- | --------------------- | ------------------------------------------------ | ------------------------------ | ------------------------------------------------- |
-| `(操作 ...)`            | 右折叠（unary right fold） | `操作 first element op (second op (third op ...))` | `auto product = (args * ...)`  | `a0 * (a1 * (a2 * a3))`                           |
-| `(... 操作)`            | 左折叠（unary left fold）  | `(...(操作(previous_result, current_val))`         | `auto sum = (... + args)`      | `a0 + a1 + a2 + a3` 展开为 `(((a0 + a1) + a2) + a3)` |
-| `操作左边 ... 右边操作`       | 二元折叠中的左/右折叠符号决定       | 复杂，由位置决定顺序                                       | `(args_out << ... << args_in)` | `operator<< 把每一个 args_in 按顺序接上输出`                 |
-| 括号内有 , 与 ... 后随       | 折叠逗号表达式               | 几乎不执行中间求值，但能用于副作用                                | `(print(args), ...);`          | `print(a0), print(a1), print(a2), ...` 按顺序执行      |
-| 括号开头有 ...             | …初始位置不太好记，仅函数参数中作用    | 接着一个变参                                           | `f(args..., rest)`             | 习惯性写为函数参数包展开                                      |
-
-#### 左折叠
+#### 一元左折叠
+[[#一元右折叠]]的 print 例子也可以写成，只是**和符号结合的顺序因为括号而改变了**，实际效果是一样的，结合顺序的改变带来的后果可以在[[#总结和注意事项]]中参考
 ```cpp
-(... OP args)
-// OP 会以 args 的第一个为 leftmost 运算项：
-// 编译器在**编译时**生成：
-((args_0 OP args_1) OP args_2) OP args_3 ...
-```
-经典示例：
-```cpp
-template<typename... Args>
-auto sum(..., Args&&... args) {
-    return (0 + ... + args);  // 0 为起点，args... 为参数包
+template<typname...Args>
+void print(Args...args){
+	(..., (std::cout << args << " "));
+	// ((((... (std::cout << args2 << " "), (std::cout << args1 << " "));
 }
 ```
-
-#### 右折叠
+#### 二元左折叠
 ```cpp
-(args OP ...)
-// - 会在括号内部 **从右向左开始计算**
-// - 这种写法允许你以参数包作为的左值，运算符作为操作 / 动作。
+template<typename... Args>
+void print_left(Args&&... args){
+    (std::cout << ... << args);
+    // (((((std::cout << args1) << args2 ) << args3..... << argsN);  // 展开形式
+    // std::cout << ... << args; // 报错
+}
 ```
+这里需要注意 `std::cout` 作为了初始值，返回一个 `ostream` 对象，重载了 `<<` 操作符
+报错是因为没有遵循折叠表达式语法，参考 [[#Note：折叠表达式#含义和本质]]和 [[C++ Runoob Tutoral#各种符号在上下文中的语义#... 语义|...的语义]]
+#### 二元右折叠
+同理，套公式即可，但是由于 `()` 改变 `op` 顺序可能会有一些意外结果过
+```cpp
+template<typename... Args>
+void print_right(Args&&... args){
+    std::cout << (args << ... << std::endl);
+    // std::cout << (args1 << (args2 << (args3 << ... argsN << std::endl)))) // 展开
+}
+```
+报错内容为：
+```bash
+learn_template.cpp: In instantiation of 'void print_right(Args&& ...) [with Args = {int, int, int, int, int}]':
+learn_template.cpp:29:16:   required from here
+   29 |     print_right(1, 2, 3, 4, 5);
+      |     ~~~~~~~~~~~^~~~~~~~~~~~~~~
+learn_template.cpp:18:24: error: invalid operands of types 'int' and '<unresolved overloaded function type>' to binary 'operator<<' 
+   18 |     std::cout << (args << ... << std::endl);
+      |                  ~~~~~~^~~~~~~~~~~~~~~~~~~~
+```
+由于 `<<` 的符号结合顺序是从左向右， int类型是基本类型，没有重载 `<<`，后面括号中的内容没办法推断出类型，自然所以最开始的 `arg1 << (...)` 中，括号里的内容无法推断出类型，出现报错
+#### 总结和注意事项
+```cpp
+template<int...args>
+constexpr int v_right = (args - ...); // 一元右折叠
+template<int...args>
+constexpr int v_left = (... - args); // 一元左折叠
+int main(){
+	std::cout << v_right<4, 5, 6> << '\n'; //(4-(5-6)) 5
+	std::cout << v_left<4, 5, 6> << '\n'; //((4-5)-6) -7
+}
+```
+这个例子中 `-` 是二元操作符，但是展开语法是**一元折叠**的语法
+可以得出结论：“对于逗号运算符，一元左折叠和一元右折叠没有区别”。而对**非类型模板参数**有区别，因为**会因为展开之后括号的顺序改变运算结果**，逗号只是一个特例而已，真正让一元左右折叠不一样的原因是符号的语义
+
+
 #### 元编程之外的折叠表达式
 折叠表达式 **确实大多数出现在模板参数包 `args...` 的上下文中中**，因为它依赖 parameter pack（变参结构，他的常用场景也是变参解析）。
 ```cpp
@@ -628,25 +655,11 @@ static_assert(total == 1 + 2 + 3 + 4);
 ```
 
 #### 折叠表达式计算任意参数列表平均值
-不严谨写法：
+
 ```cpp
-template<typename num, typename... Args>
-auto calcu_avg(num n, Args... nums) {
-    int count = 1;
-    double sum = 0.0 + n;
-    ((sum += nums), ...);
-    return sum / count;
-}
-```
-- `<typename num, typename... Args>` 表示一定有一个以上的参数，使用 `tpyename... Args` 允许任意数量参数
-- 定义了 sum 为 double，则返回值一定为 double 类型
-- `sizeof... (参数列表变量)` 可以直接得到列表的长度
-```cpp
-auto average(T ... t) {
-    return (t + ... ) / sizeof...(t);
-}
-int main() {
-    std::cout << average(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) << std::endl;
+template<typename... T, typename Common = std::common_type_t<T...>>
+Common calculate_avg(const T&... args) {
+    return (args + ...) / sizeof...(args);
 }
 ```
 

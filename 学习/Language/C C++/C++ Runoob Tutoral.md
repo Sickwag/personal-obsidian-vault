@@ -7278,6 +7278,92 @@ auto b = vb[0];  // b是std::vector<bool>::reference，不是bool
 vb.push_back(true);  // 可能导致b变成悬空引用
 if (b) { /* 未定义行为 */ }  // b可能已经无效
 ```
+## 各种符号在上下文中的语义
+### ... 语义
+#### 可变参数函数（Variadic Functions）中的 `...`
+```cpp
+void foo(int count, ...);
+```
+含义：
+- 表示一个**可变参数列表**，用于 C 风格的变参函数。
+- 常见于 `printf`, `scanf` 等函数。
+- 必须配合 `<cstdarg>` 中的 `va_list`, `va_start`, `va_arg` 使用。
+```cpp
+#include <cstdarg>
+#include <iostream>
+void print_numbers(int count, ...) {
+    va_list args;
+    va_start(args, count);
+    for (int i = 0; i < count; ++i) {
+        std::cout << va_arg(args, int) << " ";
+    }
+    va_end(args);
+    std::cout << "\n";
+}
+
+print_numbers(3, 10, 20, 30);  // 输出：10 20 30 
+```
+#### 模板参数包（Parameter Pack）展开中的 `...`
+具体可以参考[[模板元编程#包展开和模式]]
+```cpp
+template<typename... Args>
+void bar(Args&&... args);
+```
+- 表示一个**模板参数包**或**函数参数包**。
+- 用于 C++11 引入的**可变参数模板（Variadic Templates）**中。
+- 可以结合折叠表达式（fold expression）使用。
+```cpp
+template<typename... Args>
+void print_sizes(Args&&... args) {
+    (std::cout << ... << sizeof(args)) << '\n';  // 折叠表达式
+}
+
+print_sizes(1, "hello", 3.14);  // 输出：458
+```
+#### 折叠表达式（Fold Expression）中的 `...`
+具体示例可以参考 [[Modern C++#Note：折叠表达式]]
+#### catch 块中的 `catch(...)` —— 捕获所有异常
+- 表示**捕获任何类型的异常**，即一个“通配符”catch。
+- 常用于兜底处理、日志记录、资源清理等场景。
+- 不能获取异常对象，只能用于忽略或统一处理。
+##### 示例：
+```cpp
+try {
+    throw std::runtime_error("Something went wrong");
+} catch (const std::exception& e) {
+    std::cout << "Caught std::exception: " << e.what() << "\n";
+} catch (...) {
+    std::cout << "Caught unknown exception\n";
+}
+```
+#### 数组声明中的 `...`（C++20 起）—— 非类型模板参数中的省略号
+##### 用法（C++20 起）：
+```cpp
+template<int... Values>
+struct IntList {};
+```
+##### 含义：
+- 表示一个**非类型模板参数包**。
+- 可以将多个整型值作为模板参数传入。
+##### 示例：
+```cpp
+template<int... Values>
+void print_values() {
+    ((std::cout << Values << " "), ...);
+    std::cout << "\n";
+}
+print_values<1, 2, 3>();  // 输出：1 2 3
+```
+###  总结表格：`...` 在不同上下文中的含义
+| 上下文 | 语法示例 | 含义说明 |
+|--|--|-|
+| 可变参数函数 | `void foo(int, ...);` | 表示可变参数列表 |
+| 模板参数包 | `template<typename... Args>` | 表示模板参数包 |
+| 函数参数包 | `Args&&... args` | 表示函数参数包 |
+| 折叠表达式 | `(args + ...)` | 对参数包进行折叠操作（C++17） |
+| catch 块 | `catch(...)` | 捕获所有类型的异常 |
+| 非类型模板参数包（C++20） | `template<int... Values>` | 表示多个整型模板参数 |
+
 
 ## `std::unorderedmap` 哈希实现
 ### 查找和插入复杂度
