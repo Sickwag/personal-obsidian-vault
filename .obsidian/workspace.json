@@ -37,8 +37,7 @@
               "title": "Modern C++"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -202,11 +201,11 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "ef05b9cb9d073d52",
+  "active": "f9f82c2426dede63",
   "lastOpenFiles": [
+    "学习/其他专业书/Modern C++.md",
     "学习/Language/C C++/模板元编程.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/其他专业书/Modern C++.md",
     "学习/其他专业书/C++ prime plus.md",
     "学习/algorithm/用法导向知识.md",
     "Files & LongText/Attachments/PixPin_2025-12-30_21-55-52.png",

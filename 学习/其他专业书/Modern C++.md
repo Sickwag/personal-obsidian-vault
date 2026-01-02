@@ -554,8 +554,8 @@ C++ 编译器不是一个真正的逻辑执行环境，但它 **可以模拟一�
 
 1. 一元右折叠 (args op ...) 成为 (args1 op (... op (argsN-1 op argsN)))
 2. 一元左折叠 (... op args) 成为 (((args1 op args2) op ...) op argsN)
-3. 二元右折叠 (args op ... op 初值) 成为 (args1 op (... op (argsN−1 op (argsN op args))))
-4. 二元左折叠 (初值 op ... op args) 成为 ((((args op args1) op args2) op ...) op argsN)
+3. 二元右折叠 (args op ... op 初值) 成为 (args1 op (... op (argsN−1 op (argsN op 初值))))
+4. 二元左折叠 (初值 op ... op args) 成为 ((((初值 op args1) op args2) op ...) op argsN)
 ```
 **一元折叠表达式（Unary Fold）**：对参数包中的每个参数应用一个一元操作符
 **二元折叠表达式（Binary Fold）**：对参数包中的每个参数应用一个二元操作符，二元表达式的初始值**必须要有返回值并且重载 op 符号**
@@ -572,6 +572,12 @@ void test(Args... args) {
 }
 // Left Fold: ((1 + 2) + 3) = 6
 // Right Fold: (1 + (2 + 3)) = 6
+
+
+template<typename... T, typename Common = std::common_type_t<T...>>
+Common calculate_avg(const T&... args) {
+    return (args + ...) / sizeof...(args);
+}
 
 template<typename... Args>
 void print(Args... args) {
@@ -645,25 +651,40 @@ int main(){
 这个例子中 `-` 是二元操作符，但是展开语法是**一元折叠**的语法
 可以得出结论：“对于逗号运算符，一元左折叠和一元右折叠没有区别”。而对**非类型模板参数**有区别，因为**会因为展开之后括号的顺序改变运算结果**，逗号只是一个特例而已，真正让一元左右折叠不一样的原因是符号的语义
 
-
-#### 元编程之外的折叠表达式
-折叠表达式 **确实大多数出现在模板参数包 `args...` 的上下文中中**，因为它依赖 parameter pack（变参结构，他的常用场景也是变参解析）。
 ```cpp
 int arr[] = {1, 2, 3, 4}; // runtime 数组常量在编译期已知大小
 constexpr int total = (... + arr); // 折叠式从 arr[0] 到 arr[3] 做加法
 static_assert(total == 1 + 2 + 3 + 4);
 ```
-
-#### 折叠表达式计算任意参数列表平均值
-
+折叠表达式 **确实大多数出现在模板参数包 `args...` 的上下文中中**，因为它依赖 parameter pack（变参结构，他的常用场景也是变参解析）。
+#### 有意思的例子
 ```cpp
-template<typename... T, typename Common = std::common_type_t<T...>>
-Common calculate_avg(const T&... args) {
-    return (args + ...) / sizeof...(args);
+template <class... Args>
+auto func(Args&&... args) {
+    std::vector<std::common_type_t<Args...>> res{};
+    bool tmp{false};
+    (tmp = ... = ((void)res.push_back(args), false));
+    // (((tmp = (res.push_back(args1), false)) = (res.push_back(args2), false)) = ...) = (res.push_back(argsN), false) // 展开
+    return res;
 }
 ```
-
-### Note：`apaply` 与参数列表“完全解包”
+这段代码的实际作用是将变长参数列表中的参数**逆序填入容器中并返回**
+- 由于 `=` 需要赋值，所以每一个[[模板元编程#包展开和模式|模式]] 必须要有一个值, 这里使用 `,` 运算符表达一个 false 作为返回值，副作用是 `push_back(args)` 没有返回值，所以需要手动定义一个
+- 由于我们不关心值，只关心副作用，所以这里使用[[模板元编程#弃值表达式]] `(void)` 忽略计算值
+- 可以看到展开之后是左折叠形式，按道理应该括号改变了结合顺序，**结合顺序**为先左边后右边，确实左边的括号层级比右边的深，但是 `=` 的**计算顺序**是先右边后左边
+- 每一个 `=` 先**计算**右边，自然就**逆序添加**元素了
+- 如果想要正向添加，就简单很多
+```cpp
+template <class... Args>
+auto func(Args&&... args) {
+    std::vector<std::common_type_t<Args...>> res{};
+	((res.push_back(args), ...), false);
+	// 或者
+	((void)res.push_back(args), ...);
+	return res;
+}
+```
+### Note：`apply` 与参数列表“完全解包”
 参考下面代码：
 ```cpp
 auto add = [](auto a, auto b) { return a + b; };
@@ -745,12 +766,12 @@ apply_all_and_do(ref, ...);         // function 是 lvalue
 两者传入 `apply_all_and_do` 中都能接受，在函数体中可以对两者设计不同的处理逻辑
 **无论模板参数是什么类型的引用，当且仅当实参类型为右引用时，模板参数才能被推导为右引用类型**。这被称为*引用折叠规则*，他会在以下情况中触发：
 
-| 场景 | 是否触发引用折叠 | 说明 |
-|------|------------------|------|
-| **模板类型推导（T&&）** | ✅ 是 | 在模板中使用 `T&&` 时，传入左值或右值会推导出嵌套引用类型 |
-| **decltype 表达式中** | ✅ 是 | 某些表达式结果类型可能包含嵌套引用，会触发折叠 |
-| **typedef / using 类型别名中** | ✅ 是 | 如果别名定义中出现嵌套引用，会折叠 |
-| **普通变量定义中** | ❌ 否 | 如 `int& &x = y;` 是非法的，不会编译通过 |
+| 场景                        | 是否触发引用折叠 | 说明                               |
+| ------------------------- | -------- | -------------------------------- |
+| **模板类型推导（T&&）**           | ✅ 是      | 在模板中使用 `T&&` 时，传入左值或右值会推导出嵌套引用类型 |
+| **decltype 表达式中**         | ✅ 是      | 某些表达式结果类型可能包含嵌套引用，会触发折叠          |
+| **typedef / using 类型别名中** | ✅ 是      | 如果别名定义中出现嵌套引用，会折叠                |
+| **普通变量定义中**               | ❌ 否      | 如 `int& &x = y;` 是非法的，不会编译通过     |
 推导规则为：
 
 | 类型表达式    | 折叠结果  |
