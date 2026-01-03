@@ -267,7 +267,7 @@ target_compile_options(BookManagePlus PRIVATE "/std:c++20" "/Zc:__cplusplus")
 这时需要在环境变量 path 中调整 vcpkg 安装目录变量到 anaconda 上方，并且删除原有 build 目录，重新通过 cmake 生成工程，即可解决问题
 
 ## cmake 引入外部库无法找到
-来源：[[csv_reader]]
+来源：[[MyTinyTools]]
 ### 无法连接 vcpkg
 这是调用 vcpkg 的模板
 ```cmake
