@@ -988,7 +988,7 @@ std::ostream& operator<<(
     return stream << static_cast<typename std::underlying_type<T>::type>(e);
 }
 ```
-1. **SFINAE 应用**：`std::enable_if<std::is_enum<T>::value, std::ostream>::type` 是一种静态检查，只有当 `T` 是枚举类型时，函数模板才参与重载解析。
+1. **[[#SFINAE 地狱出现|SFINAE]] 应用**：`std::enable_if<std::is_enum<T>::value, std::ostream>::type` 是一种静态检查，只有当 `T` 是枚举类型时，函数模板才参与重载解析。
 2. 如果 T 是枚举类型，`std::enable_if<std::is_enum<T>::value, std::ostream>::type` 会解析出枚举类型变量**值的类型**，然后 enable_if 的第二个参数才会被传入 operator 中，使用 `::tpye` 得到 ostream 的类型作为 operator 的参数，而第二个参数则是 T 类型的变量。函数体中解析出枚举类型变量的值
 3. **利用 `std::underlying_type` 得到底层类型**，然后将枚举变量 `e` 强制转换为该类型进行输出。
 简而言之，`operator<<` 的第一个参数是将 `T` 限制为 `enum` 才能继续解析
@@ -2217,7 +2217,7 @@ C++ STL 中在 `<type_traits>` 中定义的类型操作特性（Type Traits）�
 | `std::remove_extent<T>`                 | 去除数组维度（一维有效）                                                 | `int[10] → int`  <br>`int[10][20] → int[20]`           | `std::remove_extent<int[10]>::type` → `int`                 | 数组处理                      |
 | `_t` 后缀                                 | C++14 后的别名写法                                                 | 代替 `::type`                                            | `std::remove_const_t<const int>` → `int`                    | 简洁语法                      |
 | `std::remove_cvref<T>`                  | C++20 加入，等于 `decay` 裁剪版                                      | 去除 CV + reference，但不去数组、函数                             | `const int&& → int`  <br>`const char(&)[5] → const char[5]` | 实现 std::expected 等        |
-| `std::is_same_v<T, U>`                  | 类型比较                                                         | 返回 `true` / `false` 表示是否相同                             | 在模板中做 SFINAE 或条件分支                                          |                           |
+| `std::is_same_v<T, U>`                  | 类型比较                                                         | 返回 `true` / `false` 表示是否相同                             | 在模板中做 [[#SFINAE 地狱出现\|SFINAE ]] 或条件分支                       |                           |
 | `std::is_integral<T>`                   | 判断是否是整型                                                      | `int, bool, enum → true`  <br>`double → false`         |                                                             |                           |
 | `std::enable_if`                        | 类型选择器                                                        | 在 SFINAE 和条件模板中广泛使用                                    | 防止某些模板被匹配                                                   |                           |
 | `std::forward_as_tuple, std::declval` 等 | 配合类型 trait 使用                                                | 实现 forward, perfect forwarding, implicit conversions 等 |                                                             |                           |
