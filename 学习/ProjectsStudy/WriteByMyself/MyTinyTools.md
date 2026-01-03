@@ -554,4 +554,42 @@ struct CodeStats {
 # MdTitleAdjust
 ## 杂项
 ### QSpacerItem 的添加和修改
-QSpacerItem 在创建时根据构造函数中参数的不同填写方法决定 spacer 的延展方向和拓展策略，如果在拓展策略 ``
+QSpacerItem 在创建时根据构造函数中参数的不同填写方法决定 spacer 的延展方向和拓展策略，如果在拓展策略中没有填入 `QSizePolicy::Fixed`，那么前两个参数初始值无意义。
+QT 设置 spacer 一旦创建不得修改其大小和拓展策略，这导致**需要调整则要删除对象重新创建**
+```cpp
+void TitleBlock::do_button_right_clicked()
+{
+    if(spacer_h_->sizeHint().width() < indent_size_ * 6){
+        level_++;
+        mainlayout_->removeItem(spacer_h_);
+        delete spacer_h_;
+        spacer_h_ = new QSpacerItem(level_ * indent_size_, 0, QSizePolicy::Fixed, QSizePolicy::Minimum);
+        // mainlayout->addWidget(spacer_h_);
+    }
+}
+```
+这时候由于 `addWidget()` 是顺序插入的，`spacer_h_` 其实需要通过 `insertItem` 通过索引插入
+```cpp
+QHBoxLayout *layout = qobject_cast<QHBoxLayout*>(this->layout());
+if (layout) {
+     // 获取原spacer的索引
+     int spacer_index = -1;
+     for (int i = 0; i < layout->count(); ++i) {
+         if (layout->itemAt(i) == spacer_h_) {
+             spacer_index = i;
+             break;
+         }
+     }
+     if (spacer_index != -1) {
+         // 移除旧的spacer
+         layout->removeItem(spacer_h_);
+         delete spacer_h_;
+         // 插入新的spacer到原位置
+         layout->insertItem(spacer_index, new_spacer);
+         spacer_h_ = new_spacer;
+	}
+}
+```
+但是更好的方法是使用 `QWidget` 对象作为占位对象，这样也支持修改 `setFixedSize()`
+
+# EyesProtect

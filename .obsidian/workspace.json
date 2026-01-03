@@ -85,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "SFINAE",
+                "query": "",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -106,12 +106,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -216,7 +216,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "ad5e911bad46e1ab",
+  "active": "129968db299d0d8b",
   "lastOpenFiles": [
     "学习/ProjectsStudy/WriteByMyself/MyTinySTL.md",
     "学习/ProjectsStudy/WriteByMyself/CodeLineCounter.md",
