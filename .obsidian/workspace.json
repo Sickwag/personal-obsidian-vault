@@ -62,7 +62,8 @@
               "title": "新标签页"
             }
           }
-        ]
+        ],
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -226,13 +227,13 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "f9f82c2426dede63",
+  "active": "ad5e911bad46e1ab",
   "lastOpenFiles": [
+    "学习/Language/C C++/模板元编程.md",
     "Files & LongText/Long code/C++ practice case.md",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "学习/ProjectsStudy/FromDocs/args库（3000行）.md",
     "学习/其他专业书/Modern C++.md",
-    "学习/Language/C C++/模板元编程.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/其他专业书/C++ prime plus.md",
     "学习/algorithm/用法导向知识.md",
