@@ -7592,6 +7592,20 @@ void foo() {
 }
 ```
 这个符号（C++11 之后支持）不是宏，是一个*编译器自动生成的字符串*，类型为 `const char[]`，在函数中使用这个符号会返回函数名
+- `assert()` 调试验证宏，需要 `#include <cassert/assert.h>` 本质是实现代码为：
+```cpp
+#ifdef NDEBUG
+    #define assert(condition) ((void)0)  // 不做任何事
+#else
+    #define assert(condition) \
+        if (!(condition)) { \
+            std::cerr << "Assertion failed: " #condition ", file " __FILE__ ", line " << __LINE__ << std::endl; \
+            std::abort(); \
+        }
+#endif
+```
+这就导致了**如果在 `#include <cassert>` 之前**使用的预定义命令 `#define NDEBUG` 或者在编译命令中添加了 `g++ -DNDEBUG` 选项，所有 `assert()` 都会失效，如果没有，则会将 assert 中填入的表达式返回 false 时**终止程序，返回断言失败位置信息**
+一般不在代码中硬编码 `#define NDEBUG`，并且 `assert()` **不能检测出运行时错误**
 
 | 宏名                         | 类型  | 描述                 | 示例值                   |
 | -------------------------- | --- | ------------------ | --------------------- |

@@ -52,8 +52,7 @@
               "title": "C++ Runoob Tutoral"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -216,11 +215,11 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "ad50d205fa1f7403",
+  "active": "1eedb6ee4ddc35b5",
   "lastOpenFiles": [
-    "Chores/学习摘录.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
+    "Chores/学习摘录.md",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "Chores/operation in devices.md",
     "Chores/教资.md",
