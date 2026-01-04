@@ -608,3 +608,38 @@ if (layout) {
 TDD 是先写测试，再实现功能。好处是实现只会刚好满足测试，而不会写了一些不需要的代码，或是没有被测试的代码。
 一个极简的单元测试用宏替换来引入测试的符号，然后用各种*静态*函数来实现功能，在宏中调用这些测试函数
 ### 宏编写技巧
+用宏编写[[#单元测试编写|单元测试]]
+```cpp
+static int main_ret = 0;
+static int test_count = 0;
+static int test_pass = 0;
+
+#define EXPECT_EQ_BASE(equality, expect, actual, format) \
+    do {\
+        test_count++;\
+        if (equality)\
+            test_pass++;\
+        else {\
+            fprintf(stderr, "%s:%d: expect: " format " actual: " format "\n", __FILE__, __LINE__, expect, actual);\
+            main_ret = 1;\
+        }\
+    } while(0)
+
+#define EXPECT_EQ_INT(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%d")
+```
+正常而言，宏中如果单条语句过长，使用 `\` 换行，如果宏**替换部分有多条语句**，需要使用 `do-while` 包裹，因为如果在*因为单行而省略 `{}` 的语句*中，会出现这种问题：
+```cpp
+#define M() a(); b()
+// #define M() { a(); b(); }  // 使用{}包裹宏替换部分
+if (cond)
+    M();
+else
+    c();
+
+/* 预处理后 */
+if (cond)
+    a(); b(); /* b(); 在 if 之外，少读一句     */
+    // { a(); b(); }; // 最后的分号代表 if 语句结束，后面的else断开
+else          /* <- else 缺乏对应 if */
+    c();
+```
