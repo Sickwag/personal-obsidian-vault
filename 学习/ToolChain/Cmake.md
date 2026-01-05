@@ -416,6 +416,28 @@ add_executable(ExplainLNK2019 httplib.cpp)
 target_link_libraries(ExplainLNK2019 PRIVATE httplib::httplib OpenSSL::SSL OpenSSL::Crypto)
 ```
 即可
+## cmake 多配置管理
+如果需要 cmake 一次性编译出 debug 和 release 版本的文件，需要设置 `CMAKE_CONFIGURATION_TYPES` 变量，如果没有，那么需要：
+- 执行两次 cmake 命令
+- 每次指定不同的目录作为目标文件输出位置
+- 为不同编译指令制定不同的预定义选项
+```cmake
+if(CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
+endif()
+
+# 这样Debug和Release版本的可执行文件会分别放在不同的子目录中
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin/Debug
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/Release
+)
+
+# 为不同配置添加预处理器定义（可选）
+target_compile_definitions(${PROJECT_NAME}
+    PRIVATE $<$<CONFIG:Debug>:DEBUG_BUILD>
+    PRIVATE $<$<CONFIG:Release>:RELEASE_BUILD>
+)
+```
 ## 部分环境编译通过，部分大量 `LNK2019` 错误
 来源：自己写的项目 [[ExplainLNK2019]]
 ### 问题
