@@ -593,6 +593,35 @@ if (layout) {
 但是更好的方法是使用 `QWidget` 对象作为占位对象，这样也支持修改 `setFixedSize()`
 
 # EyesProtect
+## 杂项
+添加 spaceitem 作为布局填充时，参考[[#MdTitleAdjust#杂项#QSpacerItem 的添加和修改|对象QSpaceItem构造函数的参数意义]]
+## 防止信号循环触发槽函数
+要做到这样的效果
+![[PixPin_2026-01-05_23-34-07.mp4]]
+```cpp
+void Mainwindow::do_worktime_valueChanged(int value) {
+	if(this->check_recommend->isChecked()) {
+		disconnect(this->slider_worktime, &QSlider::valueChanged, this, &Mainwindow::do_worktime_valueChanged);
+		// ...
+		connect(this->slider_worktime, &QSlider::valueChanged, this, &Mainwindow::do_worktime_valueChanged);
+	}
+	else {
+		this->worktime->setText(QString("work time: %1m").arg(value));
+	}
+}
+
+void Mainwindow::do_interval_valueChanged(int value) {
+	if(this->check_recommend->isChecked()) {
+		disconnect(this->slider_interval, &QSlider::valueChanged, this, &Mainwindow::do_interval_valueChanged);
+		// ...
+		connect(this->slider_interval, &QSlider::valueChanged, this, &Mainwindow::do_interval_valueChanged);
+	}
+	else {
+		this->interval->setText(QString("interval: %1m").arg(value));
+	}
+}
+```
+在发生改变时先断开另一边的信号槽连接，防止循环信号触发
 
 # leptjson
 ## 杂项
