@@ -52,7 +52,8 @@
               "title": "C++ Runoob Tutoral"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -215,7 +216,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "1eedb6ee4ddc35b5",
+  "active": "e0c3504bc4537b68",
   "lastOpenFiles": [
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",

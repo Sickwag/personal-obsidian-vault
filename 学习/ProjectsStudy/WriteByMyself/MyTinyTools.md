@@ -624,8 +624,6 @@ static int test_pass = 0;
             main_ret = 1;\
         }\
     } while(0)
-
-#define EXPECT_EQ_INT(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%d")
 ```
 正常而言，宏中如果单条语句过长，使用 `\` 换行，如果宏**替换部分有多条语句**，需要使用 `do-while` 包裹，因为如果在*因为单行而省略 `{}` 的语句*中，会出现这种问题：
 ```cpp
@@ -643,3 +641,8 @@ if (cond)
 else          /* <- else 缺乏对应 if */
     c();
 ```
+在宏定义中使用参数时，无论它在哪里被使用，都应该用括号包裹，以保证参数作为一个整体参与表达式运算：
+```cpp
+#define EXPECT_EQ_INT(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%d")
+```
+由于 expect，actual 可能是返回某些值的表达式，宏只是文本替换，所以要考虑优先级问题
