@@ -438,6 +438,37 @@ target_compile_definitions(${PROJECT_NAME}
     PRIVATE $<$<CONFIG:Release>:RELEASE_BUILD>
 )
 ```
+## vscode 配置 cmake qt 环境
+首先 cmake 引入 qt 模块
+```cmake
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+
+# 或者这样引入qt5/6
+
+# find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+# find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+
+add_executable(use_qt main.cpp)
+target_link_libraries(use_qt PRIVATE Qt6::Core Qt6::Widgets)
+```
+然后在 `c_cpp_properties.json` 中设置 includepath
+```json
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "D:/OtherProgram/Qt/6.8.0/msvc2022_64/include/**", // 重点
+                "${vcpkgRoot}/x64-windows/include",
+                "${vcpkgRoot}/x86-windows/include"
+            ],
+			...
+        }
+    ],
+    "version": 4
+}
+```
 ## 部分环境编译通过，部分大量 `LNK2019` 错误
 来源：自己写的项目 [[ExplainLNK2019]]
 ### 问题

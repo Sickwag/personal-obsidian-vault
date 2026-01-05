@@ -1,7 +1,6 @@
 ---
 number headings: first-level 1, max 6, contents ^TOC, 1.1.
 ---
-
 参考教程文档 [C++ 教程 | 菜鸟教程 (runoob.com)](https://www.runoob.com/cplusplus/cpp-tutorial.html)
 # 基础知识
 ## 零碎知识

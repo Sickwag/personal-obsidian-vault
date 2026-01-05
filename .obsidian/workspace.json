@@ -67,8 +67,7 @@
               "title": "Cmake"
             }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "vertical"
@@ -100,7 +99,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "/#{1,}\\scmake/",
+                "query": "",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -232,11 +231,12 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "94dc2a03f173d60e",
+  "active": "1eedb6ee4ddc35b5",
   "lastOpenFiles": [
-    "Chores/学习摘录.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
+    "Chores/学习摘录.md",
+    "学习/ToolChain/Cmake.md",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "Chores/operation in devices.md",
     "Chores/教资.md",
@@ -258,7 +258,6 @@
     "Files & LongText/Attachments/PixPin_2025-12-30_16-50-52.png",
     "学习/Language/C C++/Modern C++.md",
     "学习/ProjectsStudy/FromProjects/Echat.md",
-    "学习/ToolChain/Cmake.md",
     "学习/ProjectsStudy/WriteByMyself/BookManageSystem+mysql.md",
     "学习/ToolChain/Linux/Linux Basics.md",
     "学习/ProjectsStudy/WriteByMyself/netease music cover downloader.md",
