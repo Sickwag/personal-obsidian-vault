@@ -355,8 +355,6 @@ qt 官方也将内容打包好了放在 [Index of /official_releases](https://do
 submodules 分模块下载，single 是所有模块文件打包下载，压缩包有 1.5 G，解压会有 8~9 G，所以一般分模块下载
 大部分使用核心组件的教程代码会放在 `qtbase-everywhere-src-6.8.0.zip` 这种名称的代码包里
 
-### 杂项
-如果调用一个对象函数，这个函数明明在文档里有些，但是 ide（creator）没有提示，可能是这个对象（控件）必须单独 include，而不是靠 ide 提示自动补全头文件
 ### 添加 qrc 资源管理
 #### 引入工程中
 ![[Pasted image 20251012153023.png]]
@@ -526,14 +524,7 @@ C++11 之前不存在这样的语法，所以有了这个宏，但是随着标�
 ![[Pasted image 20251012194440.png]]
 需要知道`takeItem()` 的行为是**将 `QListWidgetItem` 从 `QListWidget` 中“提取”出来**，但**它不会删除这个 item 的内存**。换句话说，你只是“移除”了它在列表中的显示，并没有销毁它的内部数据。所以，你需要手动释放这个 item 所占用的内存，否则会导致**内存泄漏**。
 
-这个函数返回的是指针，指向**提取出来的 item 组件**，如果不需要了，则需要手动删除这个指针 `delete item` 释放内存，也可以使用智能指针管理：
-```cpp
-auto item = std::unique_ptr<QListWidgetItem>(ui->qlistwidget->takeItem(row));
-// delete item; // 不需要显式删除，unique_ptr 会自动处理
-```
-qt 中其他组件也是用这样的逻辑
-
-| 控件           | Item 类                          | takeItem() 行为 | 是否需要手动 delete |
+| 控件           | Item 类                          | takeItem () 行为 | 是否需要手动 delete |
 | ------------ | ------------------------------- | ------------- | ------------- |
 | QListWidget  | QListWidgetItem                 | 移除 item，不释放内存 | ✅ 需要          |
 | QTreeWidget  | QTreeWidgetItem                 | 移除 item，不释放内存 | ✅ 需要          |
@@ -541,3 +532,64 @@ qt 中其他组件也是用这样的逻辑
 | QComboBox    | QStandardItem 或 QListWidgetItem | 移除 item，不释放内存 | ✅ 需要          |
 |              |                                 |               |               |
 |              |                                 |               |               |
+
+这个函数返回的是指针，指向**提取出来的 item 组件**，如果不需要了，则需要手动删除这个指针 `delete item` 释放内存，也可以使用智能指针管理：
+```cpp
+auto item = std::unique_ptr<QListWidgetItem>(ui->qlistwidget->takeItem(row));
+// delete item; // 不需要显式删除，unique_ptr 会自动处理
+```
+qt 中其他组件也是用这样的逻辑
+
+# 杂项
+## ide 使用
+如果调用一个对象函数，这个函数明明在文档里有些，但是 ide（creator）没有提示，可能是这个对象（控件）必须单独 include，而不是靠 ide 提示自动补全头文件
+## 宽字符和本地环境对象
+### 本地对象 std::locale
+`std::locale` 是 C++ 标准库中用于**本地化（Localization）** 的核心类，C++所有的 stdio 都需要根据本地环境对象来设置输出内容
+控制字符分类，数字，日期，货币的格式化，字符编码和 UTF-8 之间的转换。
+返回一个 `std::local` 对象，接受一个本地环境字符串
+
+| 参数值              | 含义                           |
+| ---------------- | ---------------------------- |
+| `"C"`            | 最基础的 locale，ASCII 字符集，不支持多语言 |
+| `"en_US.UTF-8"`  | 美国英语，使用 UTF-8 编码             |
+| `"zh_CN.UTF-8"`  | 简体中文，使用 UTF-8 编码             |
+| `"ja_JP.UTF-8"`  | 日语                           |
+| `""` 或 `nullptr` | 使用系统默认 locale（推荐）            |
+```cpp
+std::locale loc("zh_CN.UTF-8");  // 中文环境
+std::locale loc("en_US.UTF-8");  // 英文环境
+std::locale loc("");              // 系统默认 locale
+
+// 从另一个locale对象构建
+std::locale::locale(const locale& other, const locale& one, category);
+```
+常见类别：
+
+| 类别常量                       | 含义                  |
+| -------------------------- | ------------------- |
+| `std::locale::LC_CTYPE`    | 字符分类与转换（如大小写、是否是数字） |
+| `std::locale::LC_NUMERIC`  | 数字格式（如小数点符号）        |
+| `std::locale::LC_TIME`     | 时间格式（如日期输出）         |
+| `std::locale::LC_COLLATE`  | 字符串排序规则             |
+| `std::locale::LC_MONETARY` | 货币格式                |
+| `std::locale::LC_MESSAGES` | 消息语言（如错误提示）         |
+| `std::locale::LC_ALL`      | 所有类别                |
+
+### 使用环境对象
+```cpp
+std::locale::global(std::locale("zh_CN.UTF-8")); // 设置整个程序的对象
+std::wcout.imbue(std::locale(""));  // 为某个流设置对象
+```
+尤其在文件录入时，最好使用宽字符和 `std::locale` 确保输入没问题
+```cpp
+#include <iostream>
+#include <locale>
+int main() {
+    std::locale::global(std::locale(""));
+    std::wcout.imbue(std::locale());
+    std::wcout << L"你好，世界！" << std::endl;
+
+    return 0;
+}
+```
