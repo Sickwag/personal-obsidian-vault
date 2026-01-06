@@ -603,7 +603,7 @@ this->adjustSize();
 QSize miniumSize = this->minimumSize();
 this->resize(400, miniumSize.height());
 ```
-这样就不用通过布局管理器来调整，这里直接调整一整个 QWidget
+这样就不用通过布局管理器来调整，这里直接调整一整个 QWidget 
 ### 两个 find_package 查找 qt 模块
 qt 添加两个 find_package 命令来查找
 ```cmake
