@@ -594,7 +594,77 @@ if (layout) {
 
 # EyesProtect
 ## 杂项
+### QSpacerItem 布局填充
 添加 spaceitem 作为布局填充时，参考[[#MdTitleAdjust#杂项#QSpacerItem 的添加和修改|对象QSpaceItem构造函数的参数意义]]
+### 紧凑布局
+如果想要让所有控件都以最紧凑的形式排列，使用 
+```cpp
+this->adjustSize();
+QSize miniumSize = this->minimumSize();
+this->resize(400, miniumSize.height());
+```
+这样就不用通过布局管理器来调整，这里直接调整一整个 QWidget
+### 两个 find_package 查找 qt 模块
+qt 添加两个 find_package 命令来查找
+```cmake
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+```
+- 第一个 find_package 用于*查找拥有 Widgets 模块的库*，并且 qt 由于有多个版本，所以这里在 qt 6，qt 5 中查找，并且优先 qt 6，查找到之后就会定义 `$QT_VERSION_MAJOR` 变量。
+- 使用 `NAMES` 是为了指定 `config.cmake` 文件的名称，依次尝试查找 `Qt6Config.cmake` 或 `Qt5Config.cmake` 文件，如果找到了 `Qt6`，那么 `QT_VERSION_MAJOR` 变量会被设置为 `6`。
+- 使用 `REQUIRED COMPONENTS` 用于确保这个库中拥有 widgets 这个模块
+- 第二个根据 Qt 大版本号添加模块
+## 创建全屏无边框页面
+```cpp
+// 构造函数中设置
+this->setWindowState(Qt::WindowFullScreen);
+this->setWindowFlags(Qt::Window | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+
+void IntervalPage::showIntervalPage(quint16 intervalMinutes) {
+	QDateTime currentDateTime = QDateTime::currentDateTime();
+	QDateTime deadlineTime	  = currentDateTime.addSecs(intervalMinutes * 60);
+	QString	  deadline		  = deadlineTime.toString("hh:mm:ss");
+	QFont	  font;
+	font.setBold(true);
+	font.setPointSize(40);
+	info->setText(QString("Interval starts now and ends at %1").arg(deadline));
+	info->setFont(font);
+	info->setAlignment(Qt::AlignCenter);
+	info->adjustSize();
+	QScreen* screen = QGuiApplication::primaryScreen();
+	this->resize(screen->size());
+	this->show();
+	this->raise();
+	this->activateWindow();
+#ifdef Q_OS_WIN
+	AllowSetForegroundWindow(ASFW_ANY);
+	SetWindowPos(reinterpret_cast<HWND>(this->winId()), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	QTimer::singleShot(0, this, [this]() { SetWindowPos(reinterpret_cast<HWND>(this->winId()), HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE); });
+#endif
+#ifdef Q_OS_LINUX
+	QDBusInterface kwin("org.kde.kwin", "/Window", "org.kde.KWindow", QDBusConnection::sessionBus());
+	kwin.call("activateWindow", (quint32)this->winId());
+#endif
+```
+创建好全屏界面样式之后，构造函数中先表明这是一个全屏无边框窗口，展示窗后后 `raise()` 让窗口出现在最前端，`activateWindow()` 用于将焦点移动到窗口
+由于不同平台的设置焦点方法不一，需要使用宏定义
+```cpp
+#ifdef Q_OS_WIN
+	AllowSetForegroundWindow(ASFW_ANY);
+	SetWindowPos(reinterpret_cast<HWND>(this->winId()), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	QTimer::singleShot(0, this, [this]() { SetWindowPos(reinterpret_cast<HWND>(this->winId()), HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE); });
+#endif
+#ifdef Q_OS_LINUX
+	QDBusInterface kwin("org.kde.kwin", "/Window", "org.kde.KWindow", QDBusConnection::sessionBus());
+	kwin.call("activateWindow", (quint32)this->winId());
+#endif
+```
+主要作用是
+- (windows)允许进程获取窗口焦点
+- 临时将窗口设为最顶层（覆盖所有其他窗口）
+- 立即（下一事件循环）取消最顶层状态（不取消一直在顶层会让屏幕全都被覆盖无法关闭），但保留窗口在前台
+- (linux)创建与KDE窗口管理器（KWin）的DBus接口
+- 调用 `activateWindow` 方法激活指定窗口（使其获得焦点并前置）
 ## 防止信号循环触发槽函数
 要做到这样的效果
 ![[PixPin_2026-01-05_23-34-07.mp4]]
@@ -622,6 +692,8 @@ void Mainwindow::do_interval_valueChanged(int value) {
 }
 ```
 在发生改变时先断开另一边的信号槽连接，防止循环信号触发
+## 引入静态库 QAntDesign
+参考 [[QT6开发指南#创建和使用静态库#使用静态库]]
 
 # leptjson
 ## 杂项
