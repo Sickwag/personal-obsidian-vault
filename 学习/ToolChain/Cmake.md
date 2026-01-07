@@ -264,7 +264,7 @@ cd build && ninja
 | 1. 命令行参数 | `-DVAR=VAL`         | 优先级最高，覆盖所有预设 |
 | 2. 预设配置  | `CMakePresets.json` | 包含完整的配置参数    |
 | 3. 环境变量  | `CXX=clang++`       | 仅影响未显式配置的参数  |
-#### 文件集
+#### 文件集特性简要介绍
 CMake 3.23 新增功能，用于组织特定类型的文件（如头文件、C++ 模块）
 ```cmake
 target_sources(<target>
@@ -275,28 +275,6 @@ target_sources(<target>
       [FILES <files>...]
 )
 ```
-参数说明
-
-| 参数          | 说明                                                          |
-| ----------- | ----------------------------------------------------------- |
-| `FILE_SET`  | 定义一个文件集，名称需以小写字母或下划线开头（预定义集名称如 `HEADERS` 除外）。               |
-| `TYPE`      | 文件集类型，支持 `HEADERS`（头文件）和 `CXX_MODULES`（C++ 模块）。             |
-| `BASE_DIRS` | 基目录列表，用于定位文件集中的文件。相对路径相对于当前源码目录（`CMAKE_CURRENT_SOURCE_DIR`） |
-| `FILES`     | 要包含的文件列表，必须位于 `BASE_DIRS` 之一或其子目录中。                         |
-文件集类型
-
-| 类型            | 用途                                                               |
-| ------------- | ---------------------------------------------------------------- |
-| `HEADERS`     | 标记为头文件（`HEADER_FILE_ONLY` 属性为 `TRUE`），可通过 `install(TARGETS)` 安装。 |
-| `CXX_MODULES` | 包含 C++ 接口模块或分区单元（使用 `export` 关键字），不能有 `INTERFACE` 作用域。           |
-作用域区别
-
-| 作用域     | 当前目标构建 | 依赖目标可见 | 依赖目标使用 |
-|------------|--------------|--------------|--------------|
-| `PRIVATE`  | ✅            | ❌            | ❌            |
-| `PUBLIC`   | ✅            | ✅            | ✅            |
-| `INTERFACE` | ❌            | ✅            | ✅            |
-示例
 ```cmake
 add_library(MyLib lib.cpp)
 
@@ -314,10 +292,89 @@ target_sources(MyLib PRIVATE
     FILES src/module.cppm
 )
 ```
+参数说明
+
+| 参数          | 说明                                                          |
+| ----------- | ----------------------------------------------------------- |
+| `FILE_SET`  | 定义一个文件集，名称需以小写字母或下划线开头（预定义集名称如 `HEADERS` 除外）。               |
+| `TYPE`      | 文件集类型，支持 `HEADERS`（头文件）和 `CXX_MODULES`（C++ 模块）。             |
+| `BASE_DIRS` | 基目录列表，用于定位文件集中的文件。相对路径相对于当前源码目录（`CMAKE_CURRENT_SOURCE_DIR`） |
+| `FILES`     | 要包含的文件列表，必须位于 `BASE_DIRS` 之一或其子目录中。                         |
+文件集类型
+
+| 类型            | 用途                                                               |
+| ------------- | ---------------------------------------------------------------- |
+| `HEADERS`     | 标记为头文件（`HEADER_FILE_ONLY` 属性为 `TRUE`），可通过 `install(TARGETS)` 安装。 |
+| `CXX_MODULES` | 包含 C++ 接口模块或分区单元（使用 `export` 关键字），不能有 `INTERFACE` 作用域。           |
 #### target_source 添加文件
+##### 基本内容
+CMake采用"声明式+过程式"混合设计，`add_executable` / `add_library` 定义目标基本结构，`target_sources` 实现动态扩展。
+本质上是将文件集添加到目标，或将文件添加到现有文件集。
+目标具有零个或多个命名[[#文件集]]。每个文件集都有一个名称、一个类型、一个 `INTERFACE`、`PUBLIC` 或 `PRIVATE` 范围、一个或多个基目录以及这些目录中的文件
+语法：
+```cmake
+target_sources(<target>
+  <INTERFACE|PUBLIC|PRIVATE> [items1...]
+  [<INTERFACE|PUBLIC|PRIVATE> [items2...] ...]
+)
+```
+每个 item 可以是 `HEADERS` 头文件或者 `CXX_MODULES`
+作用域区别
+
+| 作用域     | 当前目标构建 | 依赖目标可见 | 依赖目标使用 |
+|------------|--------------|--------------|--------------|
+| `PRIVATE`  | ✅            | ❌            | ❌            |
+| `PUBLIC`   | ✅            | ✅            | ✅            |
+| `INTERFACE` | ❌            | ✅            | ✅            |
+##### 依赖传递机制
+```cmake
+add_library(A a.cpp)
+add_library(B b.cpp)
+
+target_sources(B PUBLIC b_extra.cpp)
+
+add_executable(C main.cpp)
+target_link_libraries(C PRIVATE B)
+```
+根据依赖传递机制
+
+| 构建产物     | 包含文件列表                | 说明                        |
+| -------- | --------------------- | ------------------------- |
+| `libA.a` | a.cpp                 | 仅包含显式指定的源文件               |
+| `libB.a` | b.cpp, b_extra.cpp    | 因`PUBLIC`作用域，两个文件均被包含     |
+| `C可执行文件` | main.cpp, b_extra.cpp | 通过依赖传递机制继承`B`的`PUBLIC`源文件 |
+常见使用情景有：
+1. 平台差异化编译实现：
+```cmake
+add_library(Network lib/network.cpp)
+
+if(WIN32)
+  target_sources(Network PRIVATE winsock.cpp)
+elseif(APPLE)
+  target_sources(Network PRIVATE darwin.cpp)
+endif()
+```
+2. 插件系统实现
+```cmake
+add_library(PluginCore core.cpp)
+
+# 按需添加功能模块
+foreach(module IN LISTS PLUGIN_MODULES)
+  target_sources(PluginCore PRIVATE ${module}.cpp)
+endforeach()
+```
+3. 条件编译
+```cmake
+add_executable(DebugTool main.cpp)
+
+target_sources(DebugTool PRIVATE
+  "$<$<CONFIG:Debug>:debug_gui.cpp>"
+  "$<$<CONFIG:Release>:release_monitor.cpp>"
+)
+```
 #### 交叉编译
 本质是：在一种架构的机器上生成另一种架构的可执行代码
-
+交叉编译通常需要引入工具链文件，来让编译过程找到对应架构的 sdk 进行编译，由于 vcpkg 支持下载不同平台的库用来编写代码，所以是需要引入工具链文件来让 `vcpkg.cmake` 中识别已经安装的库的架构，引入到项目中
 #### CMakePresets 配置
 `CMakePresets.json` 的作用是避免构建/编译/安装过程中的重复命令输入，统一配置，方便使用者直接使用 `--preset` 跳过这些步骤的配置文件
 ```md
@@ -326,6 +383,10 @@ target_sources(MyLib PRIVATE
 2. 构建阶段: cmake --build --preset build-debug
 3. 安装阶段: cmake --install --preset install-linux
 ```
+## 步骤 1：CMake 入门
+### 背景
+命令 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 是一个概念上简单的命令，但功能复杂。它通知 CMake，接下来的内容是描述一个具有给定名称的独立软件项目（而不是类 shell 脚本）。当 CMake 看到 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 命令时，它会执行各种检查以确保环境适合构建软件；例如，检查编译器和其他构建工具，并发现主机和目标机器的字节序等属性。
+在 CMake 的任何用法中，根 CML 中的**第一个命令都将是** [`cmake_minimum_required()`](https://cmake.com.cn/cmake/help/latest/command/cmake_minimum_required.html#command:cmake_minimum_required "cmake_minimum_required")。在**某些高级用法中**，[`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 可能不是 CML 中的第二个命令
 
 # 实际工程中出现的问题
 ## `CMP0167` 警告
