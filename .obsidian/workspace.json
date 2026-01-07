@@ -36,6 +36,16 @@
               "icon": "lucide-file",
               "title": "Cmake"
             }
+          },
+          {
+            "id": "7d8d4fbd4ae1a822",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
         "currentTab": 1
@@ -203,13 +213,13 @@
   },
   "active": "25267b475511a60d",
   "lastOpenFiles": [
+    "学习/ToolChain/Cmake.md",
     "Chores/学习摘录.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/其他专业书/Modern C++.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ProjectsStudy/FromBlogs/awesome cpp-backend blogs.md",
     "学习/ProjectsStudy/FromProjects/QTExamples.md",
-    "学习/ToolChain/Cmake.md",
     "学习/Language/C C++/模板元编程.md",
     "学习/其他专业书/C++ prime plus.md",
     "学习/Bases/开发情景&面试题/面试题.md",

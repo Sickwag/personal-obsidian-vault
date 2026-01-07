@@ -225,7 +225,7 @@ cd build && ninja
 注意不能在生成器间**重用构建目录**，-B 选项应该为不同生成器制定不同路径
 ### 单配置和多配置生成器
 底层构建系统是细节，编写 cmakelist 时不需要管
-配置构建即编译程序使用的方式，debug，release，relwithdebinfo 等，`CMAKE_BUILD_TYPE`**环境变量**会在第一个 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 或 [`enable_language()`](https://cmake.com.cn/cmake/help/latest/command/enable_language.html#command:enable_language "enable_language") 命令初始化，否则使用默认（一般是 debug 模式）。这个环境变量取自*进程环境*
+配置构建即编译程序使用的方式，debug，release，relwithdebinfo 等，`CMAKE_BUILD_TYPE`**缓存变量**会在第一个 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 或 [`enable_language()`](https://cmake.com.cn/cmake/help/latest/command/enable_language.html#command:enable_language "enable_language") 命令初始化，否则使用默认（一般是 debug 模式）。这个环境变量取自*进程环境*，可以通过 `-D` 和 CMakePresets 设置
 所谓单配置和多配置就是每次编译仅仅生成一/多个模式的编译文件，可以使用 `cmake --build --config <name>` 指定
 每个配置的构建方式在 `CMakePresets.json` 中设置
 ```json
@@ -242,7 +242,6 @@ cd build && ninja
 }
 ```
 然后使用 `--preset <name>` 即可调用对应的设置
-### 练习
 ### 额外知识
 #### cmake 部署项目逻辑
 总体使用 cmake 流程为：
@@ -300,6 +299,7 @@ target_sources(MyLib PRIVATE
 | `TYPE`      | 文件集类型，支持 `HEADERS`（头文件）和 `CXX_MODULES`（C++ 模块）。             |
 | `BASE_DIRS` | 基目录列表，用于定位文件集中的文件。相对路径相对于当前源码目录（`CMAKE_CURRENT_SOURCE_DIR`） |
 | `FILES`     | 要包含的文件列表，必须位于 `BASE_DIRS` 之一或其子目录中。                         |
+|             |                                                             |
 文件集类型
 
 | 类型            | 用途                                                               |
@@ -374,7 +374,7 @@ target_sources(DebugTool PRIVATE
 ```
 #### 交叉编译
 本质是：在一种架构的机器上生成另一种架构的可执行代码
-交叉编译通常需要引入工具链文件，来让编译过程找到对应架构的 sdk 进行编译，由于 vcpkg 支持下载不同平台的库用来编写代码，所以是需要引入工具链文件来让 `vcpkg.cmake` 中识别已经安装的库的架构，引入到项目中
+交叉编译通常需要引入工具链文件（toolchain file），用于指定目标平台的编译器、SDK 路径等信息。由于 vcpkg 支持下载不同架构的预编译库，因此在交叉编译时也需通过工具链文件告知 vcpkg 当前目标平台的架构，以便选择合适的库进行链接。
 #### CMakePresets 配置
 `CMakePresets.json` 的作用是避免构建/编译/安装过程中的重复命令输入，统一配置，方便使用者直接使用 `--preset` 跳过这些步骤的配置文件
 ```md
@@ -387,6 +387,16 @@ target_sources(DebugTool PRIVATE
 ### 背景
 命令 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 是一个概念上简单的命令，但功能复杂。它通知 CMake，接下来的内容是描述一个具有给定名称的独立软件项目（而不是类 shell 脚本）。当 CMake 看到 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 命令时，它会执行各种检查以确保环境适合构建软件；例如，检查编译器和其他构建工具，并发现主机和目标机器的字节序等属性。
 在 CMake 的任何用法中，根 CML 中的**第一个命令都将是** [`cmake_minimum_required()`](https://cmake.com.cn/cmake/help/latest/command/cmake_minimum_required.html#command:cmake_minimum_required "cmake_minimum_required")。在**某些高级用法中**，[`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 可能不是 CML 中的第二个命令
+### 练习 1 - 构建可执行文件
+ `add_executable()` 命令创建一个目标。在 CMake 的术语中，**目标是开发者为一组属性指定的名称**，目标的本质*只是名称，是此属性集合的句柄。*
+目标可能要跟踪的一些属性示例是
+- 构件种类（可执行文件、库、头文件集合等）
+- 源文件
+- 包含目录
+- 可执行文件或库的输出名称
+- 依赖项
+- 编译器和链接器标志
+所有目标中的路径字符**都是绝对路径或者相对于 `CMAKE_CURRENT_SOURCE_DIR` 的路径**，相对于当前 CMakeLists 的路径
 
 # 实际工程中出现的问题
 ## `CMP0167` 警告
