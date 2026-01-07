@@ -1,3 +1,9 @@
+---
+created: 2026-01-07
+参考: https://cmake.com.cn/cmake/help/latest/guide/tutorial/index.html
+version: CMake 4.2.0
+---
+
 ## Cmake 概述
 ### cmake编译过程
 make 工具是一个项目构建工具，省去了重复用命令行编译，链接源文件的麻烦。CMake 是一个项目构建工具。关于项目构建我们所熟知的还有 Makefile（通过 make 命令进行项目的构建），大多 IDE 软件都集成了 make。makefile 通常依赖于当前的编译平台，而且编写 makefile 的工作量比较大，解决依赖关系时也容易出错。
@@ -31,7 +37,6 @@ C 程序源文件到可执行文件需要经过：
 - make 命令在当前项目中执行 makefile 文件中的命令
 - 执行 makefile 中的命令会调用 gcc，clang 等编译工具进行**预处理，编译，汇编，链接**等操作得到**可执行文件或者动静态链接库**
 不暴露源代码或者源代码文件数量过多不好管理的情况下，可以将一个或者多个 c/cpp 文件打包成动静态链接库方便调用
-
 # CMake 编写规范
 ## 基本规范
 ### 配置书写顺序
@@ -130,6 +135,198 @@ add_custom_command (
 ```
 add_custom_target (generate ALL DEPENDS generated. h)
 用于生成代码、资源文件等。
+# CMake 教程
+参考：[CMake 教程 — CMake 4.2.0 文档 - CMake 构建系统](https://cmake.com.cn/cmake/help/latest/guide/tutorial/index.html)
+## 杂项内容
+### cmake cli 选项分类
+```
+Generate a Project Buildsystem
+ cmake [<options>] -B <path-to-build> [-S <path-to-source>]
+ cmake [<options>] <path-to-source | path-to-existing-build>
+
+Build a Project
+ cmake --build <dir> [<options>] [-- <build-tool-options>]
+
+Install a Project
+ cmake --install <dir> [<options>]
+
+Open a Project
+ cmake --open <dir>
+
+Run a Script
+ cmake [-D <var>=<value>]... -P <cmake-script-file>
+
+Run a Command-Line Tool
+ cmake -E <command> [<options>]
+
+Run the Find-Package Tool
+ cmake --find-package [<options>]
+
+Run a Workflow Preset
+ cmake --workflow <options>
+
+View Help
+ cmake --help[-<topic>]
+```
+
+| 命令模式       | 语法示例                                    | 核心作用      | 典型使用场景                    |
+| ---------- | --------------------------------------- | --------- | ------------------------- |
+| **构建系统生成** | `cmake -S . -B ./build`                 | 生成构建配置文件  | 首次配置项目/修改配置后重新生成          |
+| **项目构建**   | `cmake --./build ./build`               | 执行实际编译    | 编译源代码生成可执行文件              |
+| **安装部署**   | `cmake --install ./build --prefix /opt` | 安装构建产物    | 软件包部署/系统安装                |
+| **项目打开**   | `cmake --open ./build`                  | 启动IDE项目   | Visual Studio/Xcode等IDE集成 |
+| **脚本执行**   | `cmake -P script.cmake`                 | 运行CMake脚本 | 自动化配置/清理等任务               |
+| **工具模式**   | `cmake -E copy file.txt dest/`          | 执行系统命令    | 文件操作/环境检查等                |
+| **包查找**    | `cmake --find-package -DNAME=Threads`   | 查找系统库     | 依赖库定位调试                   |
+| **工作流执行**  | `cmake --workflow --preset ci`          | 执行预设工作流   | CI/CD自动化构建                |
+| **帮助查询**   | `cmake --help-command add_executable`   | 查看命令文档    | 学习CMake语法                 |
+- 安装部署模式下（已经使用了 `--install`），使用 `--prefix` 用于覆盖 `--prefix_install` 的设置，编译模式下使用 `--prefix-install` 指定安装目录
+总体构建流程参考 [[#CMake 教程#cmake 部署项目逻辑]]
+### cmake cli 选项和配置文件编写的对应关系
+| 命令行参数           | CMakeLists等价写法                       | 作用说明                    |
+| --------------- | ------------------------------------ | ----------------------- |
+| `-D<var>=<val>` | `set(<var> <val> CACHE ...)`         | 定义缓存变量（配置参数）            |
+| `-G<generator>` | `set(CMAKE_GENERATOR "<generator>")` | 指定构建系统生成器               |
+| `-H<dir>`       | 无直接对应（指定源目录）                         | 设置顶层源码目录                |
+| `-B<dir>`       | 无直接对应（指定构建目录）                        | 设置构建输出目录                |
+| `-U<glob>`      | 无直接对应                                | 从缓存中删除匹配变量              |
+| `-L[HLG]`       | `get_cmake_property(...)`            | 列出缓存变量                  |
+| `-N`            | `CMAKE_EXPORT_COMPILE_COMMANDS`      | 生成compile_commands.json |
+| `-T<title>`     | `project(... VERSION ...)`           | 设置项目标题                  |
+| `-P<script>`    | `cmake -P`模式专用                       | 执行纯CMake脚本              |
+
+| 功能需求    | CMakeLists.txt 写法                                                                                      | 含义说明                       |
+| ------- | ------------------------------------------------------------------------------------------------------ | -------------------------- |
+| 获取源码根目录 | `${CMAKE_SOURCE_DIR}`<br>`_PROJECT_SOURCE_DIR}`                                                        | 指向包含最外层 CMakeLists.txt 的目录 |
+| 获取构建根目录 | `${CMAKE_BINARY_DIR}`<br>`_PROJECT_BINARY_DIR}`                                                        | 指向最外层构建目录                  |
+| 子模块源码目录 | `${PROJECT_SOURCE_DIR}/src`                                                                            | 当前 project() 所在的源码目录       |
+| 子模块构建目录 | `${PROJECT_BINARY_DIR}/obj`                                                                            | 当前 project() 对应的构建输出目录     |
+| 添加子目录映射 | `add_subdirectory(src build_subdir)`<br>`add_subdirectory(src ${CMAKE_BINARY_DIR}/third_party/libpng)` | 控制子模块的构建位置                 |
+## 第 0 步：开始之前
+### cmake 生成器
+**CMake 的工作是根据 CMakeLists 配置文件生成构建系统文件** 
+- 这些文件能被其他构建工具理解和使用，而生成器负责生成这些文件
+- 不同的生成器会生成不同类型的构建系统文件
+- CMake 生成器是平台特定的，因此每个生成器可能只在特定平台上可用
+生成器分为：
+1. makefile 生成器，生成传统 Unix makefile，linux 的 make 工具可直接使用
+2. Nmakefiles 生成器，生成 windows 上适用的 makefile，windows make 使用
+3. ninja 生成器，生成 ninja 构建*纯文本*文件，理论上更快，跨平台，需要安装 ninja cli
+4. Visual studio/xcode/codeblock 生成器，生成 sln 或对应 ide 的工程文件
+```bash
+cmake -S /path/to/source -B /path/to/build -G <generate-name>
+# 不指定生成器使用默认，windows -> vs， linux -> make
+```
+使用不同的生成器生成文件之后，就可以用对应的构建工具生成文件
+```bash
+cmake -S . -B --build -G Ninja
+cd build && ninja
+```
+注意不能在生成器间**重用构建目录**，-B 选项应该为不同生成器制定不同路径
+### 单配置和多配置生成器
+底层构建系统是细节，编写 cmakelist 时不需要管
+配置构建即编译程序使用的方式，debug，release，relwithdebinfo 等，`CMAKE_BUILD_TYPE`**环境变量**会在第一个 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 或 [`enable_language()`](https://cmake.com.cn/cmake/help/latest/command/enable_language.html#command:enable_language "enable_language") 命令初始化，否则使用默认（一般是 debug 模式）。这个环境变量取自*进程环境*
+所谓单配置和多配置就是每次编译仅仅生成一/多个模式的编译文件，可以使用 `cmake --build --config <name>` 指定
+每个配置的构建方式在 `CMakePresets.json` 中设置
+```json
+{
+  "version": 3,
+  "configurePresets": [{
+    "name": "linux-debug",
+    "generator": "Unix Makefiles",
+    "binaryDir": "${sourceDir}/build/debug",
+    "cacheVariables": {
+      "CMAKE_BUILD_TYPE": "Debug" // 设置环境变量
+    }
+  }]
+}
+```
+然后使用 `--preset <name>` 即可调用对应的设置
+### 练习
+### 额外知识
+#### cmake 部署项目逻辑
+总体使用 cmake 流程为：
+```md
+[源代码] 
+    ↓ cmake -S -B 
+[构建系统生成] → [构建配置文件]
+    ↓ cmake --build 
+[编译链接阶段] → [可执行文件/库]
+    ↓ ctest 
+[测试验证] 
+    ↓ cmake --install 
+[安装部署]
+```
+部署过程中的选项有优先级：
+
+| 配置优先级    | 来源                  | 说明           |
+| -------- | ------------------- | ------------ |
+| 1. 命令行参数 | `-DVAR=VAL`         | 优先级最高，覆盖所有预设 |
+| 2. 预设配置  | `CMakePresets.json` | 包含完整的配置参数    |
+| 3. 环境变量  | `CXX=clang++`       | 仅影响未显式配置的参数  |
+#### 文件集
+CMake 3.23 新增功能，用于组织特定类型的文件（如头文件、C++ 模块）
+```cmake
+target_sources(<target>
+  [INTERFACE|PUBLIC|PRIVATE]
+    FILE_SET <set_name> 
+      [TYPE <HEADERS|CXX_MODULES>] 
+      [BASE_DIRS <dirs>...] 
+      [FILES <files>...]
+)
+```
+参数说明
+
+| 参数          | 说明                                                          |
+| ----------- | ----------------------------------------------------------- |
+| `FILE_SET`  | 定义一个文件集，名称需以小写字母或下划线开头（预定义集名称如 `HEADERS` 除外）。               |
+| `TYPE`      | 文件集类型，支持 `HEADERS`（头文件）和 `CXX_MODULES`（C++ 模块）。             |
+| `BASE_DIRS` | 基目录列表，用于定位文件集中的文件。相对路径相对于当前源码目录（`CMAKE_CURRENT_SOURCE_DIR`） |
+| `FILES`     | 要包含的文件列表，必须位于 `BASE_DIRS` 之一或其子目录中。                         |
+文件集类型
+
+| 类型            | 用途                                                               |
+| ------------- | ---------------------------------------------------------------- |
+| `HEADERS`     | 标记为头文件（`HEADER_FILE_ONLY` 属性为 `TRUE`），可通过 `install(TARGETS)` 安装。 |
+| `CXX_MODULES` | 包含 C++ 接口模块或分区单元（使用 `export` 关键字），不能有 `INTERFACE` 作用域。           |
+作用域区别
+
+| 作用域     | 当前目标构建 | 依赖目标可见 | 依赖目标使用 |
+|------------|--------------|--------------|--------------|
+| `PRIVATE`  | ✅            | ❌            | ❌            |
+| `PUBLIC`   | ✅            | ✅            | ✅            |
+| `INTERFACE` | ❌            | ✅            | ✅            |
+示例
+```cmake
+add_library(MyLib lib.cpp)
+
+# 定义头文件集
+target_sources(MyLib PUBLIC
+  FILE_SET HEADERS 
+    BASE_DIRS include 
+    FILES include/mylib.h
+)
+
+# 定义 C++ 模块文件集
+target_sources(MyLib PRIVATE
+  FILE_SET MODULES 
+    TYPE CXX_MODULES 
+    FILES src/module.cppm
+)
+```
+#### target_source 添加文件
+#### 交叉编译
+本质是：在一种架构的机器上生成另一种架构的可执行代码
+
+#### CMakePresets 配置
+`CMakePresets.json` 的作用是避免构建/编译/安装过程中的重复命令输入，统一配置，方便使用者直接使用 `--preset` 跳过这些步骤的配置文件
+```md
+# 标准化构建流程
+1. 配置阶段: cmake --preset linux-debug
+2. 构建阶段: cmake --build --preset build-debug
+3. 安装阶段: cmake --install --preset install-linux
+```
+
 # 实际工程中出现的问题
 ## `CMP0167` 警告
 - 从 CMake 3.13 开始，官方推荐使用 **Config 模式**（即通过 `FindPackageConfig.cmake`）寻找某个模块的位置，如寻找 boost 库就会通过在库的安装目录寻找 `FindBoostConfig.cmake` 文件来引入 boost 库中的对应模块
