@@ -1079,3 +1079,83 @@ target_compile_options(Tutorial PRIVATE -Wall)
 endif()
 ```
 ### 练习 3 - 包含和链接目录
+主要是引入 Vendor 库
+```cmake
+# 首先在Tutorialcmake配置中
+target_link_libraries(Tutorial
+	PRIVATE
+	MathFunctions
+	VendorLib
+)
+
+# 然后vendor cmake配置中
+target_include_directories(VendorLib INTERFACE include)
+target_link_directories(VendorLib INTERFACE lib)
+target_link_libraries(VendorLib INTERFACE Vendor)
+```
+1. `target_include_directories(VendorLib INTERFACE include)`，将 `include` 目录添加到 `VendorLib` 目标的头文件搜索路径中。这样，当**其他目标**（如 Tutorial）链接到 `VendorLib` 时，它们就能找到 `Vendor.h` 头文件。
+2. `target_link_directories(VendorLib INTERFACE lib)`，将 `lib` 目录添加到库文件搜索路径中。
+3. `target_link_libraries(VendorLib INTERFACE Vendor)` 告诉 CMake 将名为 `Vendor` 的库链接到 `VendorLib`。忽略后缀，cmake 会根据平台特性自动链接
+使用 `INTERFACE` 关键字意味着任何链接到 `VendorLib` 的目标也会继承这个包含目录。
+
+## 第 5 步：深入 CMake 库概念
+库有很多不同的形式。有静态库、共享库、模块库、对象库、仅头文件库，以及描述要由其他目标继承的高级 CMake 属性的库
+### 练习 1 - 静态库和共享库
+虽然 [`add_library()`](https://cmake.com.cn/cmake/help/latest/command/add_library.html#command:add_library "add_library") 命令支持显式设置 `STATIC` 或 `SHARED`，并且这有时是必要的，但最好将第二个参数留空，以便大多数“普通”库可以作为两者使用，具体取决于 [`BUILD_SHARED_LIBS`](https://cmake.com.cn/cmake/help/latest/variable/BUILD_SHARED_LIBS.html#variable:BUILD_SHARED_LIBS "BUILD_SHARED_LIBS") 的值。如果 [`BUILD_SHARED_LIBS`](https://cmake.com.cn/cmake/help/latest/variable/BUILD_SHARED_LIBS.html#variable:BUILD_SHARED_LIBS "BUILD_SHARED_LIBS") 为 true，将创建一个 `SHARED` 库，否则将创建 `STATIC` 库，不定义的情况下生成静态库
+cmake 不允许类似
+```cmake
+add_library(MyLib STATIC)
+add_library(MyLib SHARED)
+```
+因为目标名称是唯一的，这样并不会同时编译出两个库类型的文件，正确的方法是通过[[#文件集特性简要介绍|文件集]] /或者其他变量将两种情况下的文件收集起来，分别构建两个目标
+所用到的命令：
+```bash
+cmake --preset tutorial -DBUILD_SHARED_LIBS=ON  # 构建动态库
+cmake --build .\build\ -t MathFunctions # 只编译MathFunctions库
+```
+### 练习 2 - 接口库
+#### 背景
+接口库是指仅为其他目标通信使用要求，**自身不构建或生成任何文件的库**所以不需要 `target_link_libraries` 链接。因此，接口库的所有属性本身都必须是接口属性，**必须使用 `INTERFACE`** [作用域关键字](https://cmake.com.cn/cmake/help/latest/manual/cmake-buildsystem.7.html#target-command-scope) 指定。
+C++ 开发中最常见的接口库类型是仅头文件库。此类库不构建任何内容，只提供发现其头文件所需的标志。
+在之前关于 [`target_sources(FILE_SET)`](https://cmake.com.cn/cmake/help/latest/command/target_sources.html#command:target_sources "target_sources(file_set)") 的[[#target_source 添加文件|讨论]] 中，如果文件集的名称与其类型相同，则可以省略 `TYPE` 参数。将当前源目录用作唯一的基目录，则可以省略 `BASE_DIRS` 参数。
+这里引入第三个快捷方式：只有在计划安装头文件（例如库的公共头文件）时，才需要包含 `FILES` 参数。这里安装头文件库，所以不需要
+
+#### 为什么需要接口库
+**头文件库的依赖管理**
+- **场景**：若项目依赖一个仅头文件的库（如 `Eigen`、`fmt`），这些库通常通过 `find_package()` 或 `target_link_libraries()` 引入。
+- **问题**：传统方式需要手动设置头文件路径（`include_directories()`）和编译标志（`add_definitions()`），容易出错。
+- **解决方案**：使用接口库封装这些元数据，直接通过 `target_link_libraries()` 传递依赖。
+**统一编译标准**
+- **场景**：多个库或可执行文件需要一致的编译标准（如 `C++17`）。
+- **问题**：手动设置每个目标的 `target_compile_features()` 或 `CMAKE_CXX_STANDARD` 会导致重复代码。
+- **解决方案**：创建接口库定义编译标准，其他目标链接该接口库即可继承标准。
+**传递依赖关系**
+- **场景**：库 `A` 依赖库 `B`，可执行文件 `App` 依赖库 `A`。
+- **问题**：若库 `A` 使用 `PRIVATE` 作用域链接 `B`，`App` 无法自动继承 `B` 的依赖。
+- **解决方案**：库 `A` 使用 `PUBLIC` 或 `INTERFACE` 作用域链接 `B`，`App` 链接 `A` 时自动继承 `B` 的依赖。
+#### 本质
+将头文件路径、编译标志、依赖库等元数据封装为一个目标（Target）避免硬编码路径，供其他目标继承，自动传递依赖
+
+创建接口库只需要将**仅头文件库的所有头文件放入一个文件夹（不需要是工作目录）中**，然后添加一个 cmake 配置
+```cmake
+add_library(MyHeaderOnly INTERFACE)
+
+target_include_directories(MyHeaderOnly INTERFACE ${PROJECT_SOURCE_DIR}/path/to/headers)  # 这个目录中都是头文件
+
+# 或者这样
+target_sources(MathLogger INTERFACE
+	FILE_SET HEADERS
+)
+
+# 添加编译选项
+target_compile_features(MyHeaderOnly INTERFACE cxx_std_17)
+target_compile_definitions(MyHeaderOnly INTERFACE MY_HEADER_ONLY_ENABLED)
+```
+然后直接在项目中使用
+```cmake
+target_link_libraries(MyApp PRIVATE MyHeaderOnly)
+```
+就能像普通的库一样使用这个库
+### 练习 3 - 对象库
+对象库是 CMake 中一种特殊的库类型，**仅生成编译后的对象文件（`.o` 或 `.obj`）给其他库使用，不打包成静态库或动态库**。它的核心作用是**复用编译结果**，避免重复编译源文件。
+所以他本身不能被传递链接。如果一个对象库出现在目标的 [`INTERFACE_LINK_LIBRARIES`](https://cmake.com.cn/cmake/help/latest/prop_tgt/INTERFACE_LINK_LIBRARIES.html#prop_tgt:INTERFACE_LINK_LIBRARIES "INTERFACE_LINK_LIBRARIES") 中，那么链接该目标的依赖项将不会“看到”这些对象。在这种情况下，对象库将表现得像一个 `INTERFACE` 库。在一般情况下，对象库仅适用于通过 [`target_link_libraries()`](https://cmake.com.cn/cmake/help/latest/command/target_link_libraries.html#command:target_link_libraries "target_link_libraries") 进行 `PRIVATE` 或 `PUBLIC` 消费。
