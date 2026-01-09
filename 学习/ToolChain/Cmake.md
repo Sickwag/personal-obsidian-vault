@@ -747,9 +747,9 @@ target_sources(DebugTool PRIVATE
 ## 第 1 步：CMake 入门
 ### 背景
 命令 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 是一个概念上简单的命令，但功能复杂。它通知 CMake，接下来的内容是描述一个具有给定名称的独立软件项目（而不是类 shell 脚本）。当 CMake 看到 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 命令时，它会执行各种检查以确保环境适合构建软件；例如，检查编译器和其他构建工具，并发现主机和目标机器的字节序等属性。
-在 CMake 的任何用法中，根 CML 中的**第一个命令都将是** [`cmake_minimum_required()`](https://cmake.com.cn/cmake/help/latest/command/cmake_minimum_required.html#command:cmake_minimum_required "cmake_minimum_required")。在**某些高级用法中**，[`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 可能不是 CML 中的第二个命令
 ### 练习 1 - 构建可执行文件
- `add_executable()` 命令创建一个目标。在 CMake 的术语中，**目标是开发者为一组属性指定的名称**，目标的本质*只是名称，是此属性集合的句柄。*
+ `add_executable()` 命令创建一个目标。在 CMake 的术语中，**目标是开发者为一组属性指定的名称**，分为构建目标和小号目标。构建目标所需属性应使用 `PRIVATE` [作用域关键字](https://cmake.com.cn/cmake/help/latest/manual/cmake-buildsystem.7.html#target-command-scope) 描述，消耗目标所需属性使用 `INTERFACE` 描述，而两者都需要的属性则使用 `PUBLIC` 。三者区别参考：[[#cmake 访问修饰符]]
+ 目标的本质*只是名称，是此属性集合的句柄。*
 目标可能要跟踪的一些属性示例是
 - 构件种类（可执行文件、库、头文件集合等）
 - 源文件
@@ -836,6 +836,7 @@ target_sources(MathFunctions PRIVATE
 - `PRIVATE` 属性（也称为“非接口”属性）仅可供拥有它的目标使用，例如 `PRIVATE` 头文件将仅对附加到它们的目标可见。
 - `INTERFACE` 属性仅对*链接*拥有目标的那些目标可用。拥有目标本身无法访问这些属性。一个仅限头文件的库是 `INTERFACE` 属性集合的一个例子，因为仅限头文件的库本身不构建任何内容，也不需要访问自己的文件。
 - `PUBLIC` 不是一种独立的属性类型，而是 `PRIVATE` 和 `INTERFACE` 属性的并集。因此，使用 `PUBLIC` 描述的需求对于拥有目标和消费目标都可用。
+根据声明/作用域最小化原则，如果语言特性仅在实现文件中使用，则相应的编译特性应为 `PRIVATE`。如果目标的头文件使用这些特性，则应使用 `PUBLIC` 或 `INTERFACE`，*优先 private/interface，然后是 public*
 
 > [!note]
 > 不要类比这三个属性和[[C++ Runoob Tutoral#访问修饰符|类访问修饰符]]，protect 的访问范围
@@ -997,7 +998,7 @@ option 也会添加粘性变量，这样设置可以让最终生成内容中没�
 
 ### 练习 2 - CMAKE 变量
 CMake 提供了几个重要的普通变量和缓存变量，供打包者控制构建。编译器、默认标志、软件包搜索位置等决策都由 CMake 自有的配置变量控制。
-语言标准变量 `cmake_cxx_standard` 会对 abi 造成影响，所以不应在他们的 CML 中覆盖或隐藏它们。**打包过程中覆盖标准变量可能导致前面提到难以理解的错误**
+语言标准变量 `cmake_cxx_standard` 会对 abi 造成影响，所以不应在他们的 CML 中覆盖或隐藏它们，并且尽量不要全局设置这个变量，会造成命名污染。**打包过程中覆盖标准变量可能导致前面提到难以理解的错误**
 这些变量大多可通过配置文件和命令行 `-D` 选项配置
 ### 练习 3 - CMakePresets.json
 Presets 能够表达完整的 CMake 工作流程，从配置到构建，再到安装软件软件包，这次练习仅仅用于配置
@@ -1021,3 +1022,60 @@ Presets 能够表达完整的 CMake 工作流程，从配置到构建，再到�
 }
 ```
 ## 第 4 步：深入 CMake 目标命令
+### 背景
+本节不使用的命令
+[`get_target_property()`](https://cmake.com.cn/cmake/help/latest/command/get_target_property.html#command:get_target_property "get_target_property") 和 [`set_target_properties()`](https://cmake.com.cn/cmake/help/latest/command/set_target_properties.html#command:set_target_properties "set_target_properties") 命令可以通过名称直接访问目标的属性，甚至可以为任何目标直接附加上属性
+```cmake
+add_library(Example)
+set_target_properties(Example
+  PROPERTIES
+    Key Value
+    Hello World
+)
+
+get_target_property(KeyVar Example Key)
+get_target_property(HelloVar Example Hello)
+```
+CMake 语义上有意义的目标属性的完整列表已记录在 [`cmake-properties(7)`](https://cmake.com.cn/cmake/help/latest/manual/cmake-properties.7.html#manual:cmake-properties\(7\) "cmake-properties(7)") 中，但是其中大多数应该使用其专用命令进行修改而不是这样的语意不明函数
+[`target_precompile_headers()`](https://cmake.com.cn/cmake/help/latest/command/target_precompile_headers.html#command:target_precompile_headers "target_precompile_headers") 命令接受一个头文件列表，类似于 [`target_sources()`](https://cmake.com.cn/cmake/help/latest/command/target_sources.html#command:target_sources "target_sources")，并从中创建一个预编译头。然后，此预编译头将被强制包含到目标的所有翻译单元中。这对于构建性能可能很有用。
+### 练习 1 - 特性和定义
+许多库为了兼容多种编译环境，在构建时需要一组最少的必需特性，比如空出 C++标准设置和一些特定编译器的设置
+#### target_compile_features
+设置的最低C++标准或编译器特性
+- **避免全局污染**：不依赖全局变量 `CMAKE_CXX_STANDARD`，而是按目标精确控制语言标准。
+- **自动适配编译器**：如果编译器默认支持更高版本，则不强制修改；如果需要，CMake会自动添加启用对应标准的标志（如 `-std=c++20`）。
+```cmake
+target_compile_features(MyApp PRIVATE cxx_std_20)
+```
+如果编译器支持更高，则忽略，否则则提出警告。这一做法可以防止打包者**通过 cli 覆盖原本通过 `cmake_cxx_standard()` 的设置**，并且做到目标粒度控制
+- **`PRIVATE`**：当前目标的源文件需要此语言标准，但头文件不涉及。
+- **`INTERFACE`**：当前目标的头文件需要此语言标准，依赖它的目标必须启用此标准
+- **`PUBLIC`**：当前目标的源文件和头文件都需要此标准，依赖目标也必须启用
+#### target_compile_definitions
+将编译定义描述为目标属性，同样可通过 [[#cmake 访问修饰符]]控制宏的可见性：
+- **`PRIVATE`**：宏仅对当前目标的源文件可见
+- **`PUBLIC`**：宏对当前目标和依赖它的目标都可见
+- **`INTERFACE`**：宏仅对依赖当前目标的目标可见。
+**不需要也不应该**在命令行中定义 `target_compile_definitions` 中已经定义过的宏
+### 练习 2 - 编译和链接选项
+需要精确控制传递给编译和链接行的选项时，需要 [`target_compile_options()`](https://cmake.com.cn/cmake/help/latest/command/target_compile_options.html#command:target_compile_options "target_compile_options") 添加编译选项和 [`target_link_options()`](https://cmake.com.cn/cmake/help/latest/command/target_link_options.html#command:target_link_options "target_link_options") 添加链接选项
+给 msvc 和 gcc 设置不同的编译选项
+```cmake
+# TODO4: Add a compile feature for C++20 support to Tutorial
+target_compile_features(Tutorial PRIVATE cxx_std)
+if(
+	(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR
+	(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+)
+# TODO9: Add the /W3 compile flag to Tutorial
+target_compile_options(Tutorial PRIVATE /W3)
+
+elseif(
+	(CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR
+	(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+)
+	# TODO10: Add the -Wall compile flag to Tutorial
+target_compile_options(Tutorial PRIVATE -Wall)
+endif()
+```
+### 练习 3 - 包含和链接目录

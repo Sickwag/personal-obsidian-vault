@@ -184,7 +184,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 219.5
+    "width": 219.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -202,8 +203,8 @@
   },
   "active": "25267b475511a60d",
   "lastOpenFiles": [
-    "学习/ToolChain/Cmake.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/ToolChain/Cmake.md",
     "Chores/学习摘录.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/其他专业书/Modern C++.md",
