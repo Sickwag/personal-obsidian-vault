@@ -583,6 +583,7 @@ cd build && ninja
 ```
 注意不能在生成器间**重用构建目录**，-B 选项应该为不同生成器制定不同路径
 ### 单配置和多配置生成器
+教程中的完整说明：[[#练习 3 - CMakePresets.json]]
 底层构建系统是细节，编写 cmakelist 时不需要管
 配置构建即编译程序使用的方式，debug，release，relwithdebinfo 等，`CMAKE_BUILD_TYPE`**缓存变量**会在第一个 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 或 [`enable_language()`](https://cmake.com.cn/cmake/help/latest/command/enable_language.html#command:enable_language "enable_language") 命令初始化，否则使用默认（一般是 debug 模式）。这个环境变量取自*进程环境*，可以通过 `-D` 和 CMakePresets 设置
 所谓单配置和多配置就是每次编译仅仅生成一/多个模式的编译文件，可以使用 `cmake --build --config <name>` 指定
@@ -735,6 +736,7 @@ target_sources(DebugTool PRIVATE
 本质是：在一种架构的机器上生成另一种架构的可执行代码
 交叉编译通常需要引入工具链文件（toolchain file），用于指定目标平台的编译器、SDK 路径等信息。由于 vcpkg 支持下载不同架构的预编译库，因此在交叉编译时也需通过工具链文件告知 vcpkg 当前目标平台的架构，以便选择合适的库进行链接。
 #### CMakePresets 配置
+教程中的完整内容：[[#练习 3 - CMakePresets.json]]
 `CMakePresets.json` 的作用是避免构建/编译/安装过程中的重复命令输入，统一配置，方便使用者直接使用 `--preset` 跳过这些步骤的配置文件
 ```md
 # 标准化构建流程
@@ -931,3 +933,91 @@ endfunction()
 ```
 ### 练习 2 - 条件判断和循环
 CMake 中的所有对象都是字符串，因此双引号 `"` 常常是不必要的。但包含空格的字符串需要双引号，否则它们会被视为列表；CMake 会用分号将元素连接起来。
+### 练习 3 - 使用 include 进行组织
+构建过程中 cmake 需要用到的一些工具或者变量分开放置而不是只放在项目相关中的 `CMakeLists.txt` 中，就像组织代码一样讲这些内容放在其他 `.cmake` 文件中，*关注点分离*
+使用 `include` 命令讲这些文件引入即可
+## 第 3 步：配置和缓存变量
+### 背景
+我们有一个支持多种压缩算法的压缩软件 CMake 项目，我们可能希望让项目的打包者在构建我们的软件时决定启用哪些算法，可以使用编译选项 `-D` 实现，类似于*条件编译*
+```cmake
+# option用来设置帮助信息和默认值
+option(COMPRESSION_SOFTWARE_USE_ZLIB "Support Zlib compression" ON)
+option(COMPRESSION_SOFTWARE_USE_ZSTD "Support Zstd compression" ON)
+
+if(COMPRESSION_SOFTWARE_USE_ZLIB)
+  # Same as before
+# ...
+```
+通过 cmake 指令可以覆盖这些选项：
+```bash
+cmake -B build \
+    -DCOMPRESSION_SOFTWARE_USE_ZLIB=ON \
+    -DCOMPRESSION_SOFTWARE_USE_ZSTD=OFF
+```
+
+> [!warning]
+> [`-D`](https://cmake.com.cn/cmake/help/latest/manual/cmake.1.html#cmdoption-cmake-D) 标志和 [`option()`](https://cmake.com.cn/cmake/help/latest/command/option.html#command:option "option") 创建的名称不是普通变量，它们是 **缓存** 变量。缓存变量是全局可见的、_粘性_ 的变量，其值在首次设置后很难更改。以至于在项目模式下，CMake 会在多次配置之间保存和恢复缓存变量。如果一个缓存变量被设置一次，它将保持不变，直到另一个 [`-D`](https://cmake.com.cn/cmake/help/latest/manual/cmake.1.html#cmdoption-cmake-D) 标志覆盖了已保存的变量。
+> CMake 本身有几十个用于配置的普通变量和缓存变量。这些变量在 [`cmake-variables(7)`](https://cmake.com.cn/cmake/help/latest/manual/cmake-variables.7.html#manual:cmake-variables\(7\) "cmake-variables(7)") 中进行了文档说明，并且与项目提供的配置变量以相同的方式运行。
+
+[`set()`](https://cmake.com.cn/cmake/help/latest/command/set.html#command:set "set") 也可以用来操作缓存变量，但不会更改已创建的变量。
+```cmake
+# 在type参数位置填上cache string
+set(StickyCacheVariable "I will not change" CACHE STRING "")
+set(StickyCacheVariable "Overwrite StickyCache" CACHE STRING "")
+message("StickyCacheVariable: ${StickyCacheVariable}")
+```
+结果
+```bash
+# 直接运行，缓存变量不会在cmakelists中被set修改
+cmake -P StickyCacheVariable.cmake
+StickyCacheVariable: I will not change
+
+# 但可以诶命令行修改
+cmake \
+  -DStickyCacheVariable="Commandline always wins" \
+  -P StickyCacheVariable.cmake
+StickyCacheVariable: Commandline always wins
+```
+缓存变量通常不能更改，但它们可以被普通变量 *覆盖*。设置一个与缓存变量同名的变量会导致**变量名指向普通变量的值**，使用 `unset` 之后又会指向缓存变量
+
+### 练习 1 - 使用选项
+添加可选项：
+```cmake
+option(TUTORIAL_BUILD_UTILITIES "Build the Tutorial executable" ON)
+if(TUTORIAL_BUILD_UTILITIES)
+	add_subdirectory(Tutorial)
+endif()
+```
+option 也会添加粘性变量，这样设置可以让最终生成内容中没有可执行文件，只有 lib。有两种更改粘性变量的方法，
+- 所有粘性变量都存储在 `/path/to/build/CMakeCache.txt` 中，手动修改重新编译
+- 在构建阶段添加粘性变量指令后编译
+
+> [!note]
+> 需要注意的是，step 3 中的目录结构发生了变化，分成了三个 cmakelists. txt 构建，每一个都会在 build 中生成对应名称的文件夹，然后在其中分别放入 cmakefiles 文件夹（存储 cmake 版本等信息）和生成器/编译器等平台相关信息，所以 step 1 中 `mathfunctions.lib` 在 `build/Debug` 中，而 step 3 中在 `build/mathfunctions/Debug` 中
+
+### 练习 2 - CMAKE 变量
+CMake 提供了几个重要的普通变量和缓存变量，供打包者控制构建。编译器、默认标志、软件包搜索位置等决策都由 CMake 自有的配置变量控制。
+语言标准变量 `cmake_cxx_standard` 会对 abi 造成影响，所以不应在他们的 CML 中覆盖或隐藏它们。**打包过程中覆盖标准变量可能导致前面提到难以理解的错误**
+这些变量大多可通过配置文件和命令行 `-D` 选项配置
+### 练习 3 - CMakePresets.json
+Presets 能够表达完整的 CMake 工作流程，从配置到构建，再到安装软件软件包，这次练习仅仅用于配置
+命令行标志可以与 presets 混合。命令行标志优先于 preset 中的值。
+最常用的方法是用来设置粘性变量
+```json
+{
+  "version": 4,
+  "configurePresets": [
+    {
+      "name": "example-preset",
+      "cacheVariables": {
+        "EXAMPLE_FOO": "Bar",
+        "EXAMPLE_QUX": "Baz"
+      }
+    },
+    {
+      // 其他配置
+    }
+  ]
+}
+```
+## 第 4 步：深入 CMake 目标命令
