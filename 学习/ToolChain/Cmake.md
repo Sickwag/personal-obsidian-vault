@@ -1157,5 +1157,156 @@ target_link_libraries(MyApp PRIVATE MyHeaderOnly)
 ```
 就能像普通的库一样使用这个库
 ### 练习 3 - 对象库
+#### 本质
 对象库是 CMake 中一种特殊的库类型，**仅生成编译后的对象文件（`.o` 或 `.obj`）给其他库使用，不打包成静态库或动态库**。它的核心作用是**复用编译结果**，避免重复编译源文件。
-所以他本身不能被传递链接。如果一个对象库出现在目标的 [`INTERFACE_LINK_LIBRARIES`](https://cmake.com.cn/cmake/help/latest/prop_tgt/INTERFACE_LINK_LIBRARIES.html#prop_tgt:INTERFACE_LINK_LIBRARIES "INTERFACE_LINK_LIBRARIES") 中，那么链接该目标的依赖项将不会“看到”这些对象。在这种情况下，对象库将表现得像一个 `INTERFACE` 库。在一般情况下，对象库仅适用于通过 [`target_link_libraries()`](https://cmake.com.cn/cmake/help/latest/command/target_link_libraries.html#command:target_link_libraries "target_link_libraries") 进行 `PRIVATE` 或 `PUBLIC` 消费。
+如果一个对象库出现在目标的 [`INTERFACE_LINK_LIBRARIES`](https://cmake.com.cn/cmake/help/latest/prop_tgt/INTERFACE_LINK_LIBRARIES.html#prop_tgt:INTERFACE_LINK_LIBRARIES "INTERFACE_LINK_LIBRARIES") 中，那么链接该目标的依赖项将不会“看到”这些对象。**如果目标 A 链接了对象库 B**，目标 A 的依赖项 C 在链接目标 A 时，**无法自动继承对象库 B 的内容（头文件和实现）**。原因就是他只会生成（`.o` 或 `.obj`），不能被链接。在这种情况下，对象库将表现得像一个 `INTERFACE` 库。在一般情况下，对象库仅适用于通过 [`target_link_libraries()`](https://cmake.com.cn/cmake/help/latest/command/target_link_libraries.html#command:target_link_libraries "target_link_libraries") 进行 `PRIVATE` 或 `PUBLIC` 消费（显式声明依赖传递）。
+
+#### 具体实现
+##### 插件系统实现
+不同团队同时开发一个应用的不同插件：
+![[PixPin_2026-01-09_21-45-32.png]]
+```cmake
+# 主配置中：
+add_subdirectory(OpAdd)
+add_subdirectory(OpMul)
+add_subdirectory(OpSub)
+
+# 每一个功能模块配置：
+add_library(OpAdd OBJECT)
+
+target_sources(OpAdd
+  PRIVATE
+    OpAdd.cxx
+
+  INTERFACE
+    FILE_SET HEADERS
+    FILES
+      OpAdd.h
+)
+```
+声明一个对象库，然后在其中添加源文件和头文件，源文件由于**只会被当前对象库使用，所以使用 private**，头文件**需要被消费者使用，所以使用 interface**，最终只会编译成 `.o/obj` 文件（msvc 编译器在没有指定情况下还是会编译出 lib），在链接过程中会使用
+然后主库配置文件将所有插件对象库合并链接到 MathFunction 库中
+```cmake
+target_link_libraries(MathFunctions PRIVATE MathLogger)
+target_link_libraries(MathFunctions
+	PUBLIC
+	OpAdd
+	OpMul
+	OpSub
+)
+```
+##### 减少重复编译
+每个目标文件中的源文件改动，都需要在编译时**重新编译**，而如果有多个目标使用了同一套工具函数，那么现在有两种方法来让代码复用：
+1. 静态库
+```cmake
+add_library(Utils STATIC utils.cpp)  # 编译 utils.cpp -> utils.obj -> Utils.lib
+
+# 需要使用时链接到多个可执行文件
+add_executable(exe_a main_a.cpp)
+target_link_libraries(exe_a PRIVATE Utils)
+
+add_executable(exe_b main_b.cpp) 
+target_link_libraries(exe_b PRIVATE Utils)
+
+# 不要这样写，这样会导致每一个可执行对象编译时都编译出一个utils.o，浪费CPU
+add_executeble(exe_a main_a.cpp utils.cpp)
+add_executeble(exe_b main_b.cpp utils.cpp)
+```
+2. 对象库
+```cmake
+add_library(Utils OBJECT utils.cpp)  # 编译 utils.cpp -> utils.obj
+
+# 链接到多个可执行文件
+add_executable(exe_a main_a.cpp $<TARGET_OBJECTS:Utils>)
+add_executable(exe_b main_b.cpp $<TARGET_OBJECTS:Utils>)
+```
+构建最终可执行文件/库文件的行为对比：
+静态库：
+- 链接器从 `Utils.lib` 中提取需要的符号
+- 每个可执行文件都链接到完整的 `Utils.lib`
+- 如果 `Utils.lib` 很大并且由单个源文件编译而成，但可执行文件只使用其中一小部分，仍然会链接整个库，**主要成本在提取符号和链接过程中**
+- 这个问题可以通过编译选项/连接选项/编译器剪裁优化避免（参考：[AI回答](https://chat.qwen.ai/s/t_76de4fa8-8c9f-450a-a83c-29ad172a3d79?fev=0.1.32)）
+
+对象库：
+- 直接将 `utils.obj` 中的符号合并到最终可执行文件中
+- 没有中间的库文件，直接操作对象文件
+资源管理和利用层面对比：
+静态库：
+- 如果构成静态库文件较多，每次修改都会导致整个静态库重新编译，模块化/粒度不够细，浪费 CPU 资源
+- 资源管理上很集中，没有较细的逻辑分组（通常很多工具函数很难在逻辑上分类），只能最终合并为一个静态库
+对象库：
+- 在通用模块函数能够被逻辑分类或由多个团队并行开发时，使用对象库能够减少编译/开发时间，降低沟通成本
+- 高度模块化，拆分/变更方便
+## 第 6 步：深入系统自省
+### 背景
+CMake 的**系统自省**是指通过编译和运行小型测试程序，**自动检测目标系统和工具链的特性**，大部分名称前缀为 `Check` 并需要使用 `include()` 引入。这确保项目在不同平台和编译器环境下能够正确配置和构建实现跨平台兼容性
+比如判断当前平台/环境是否支持 C++17
+```cmake
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag(-std=c++17 COMPILER_SUPPORTS_CXX17) # 成功编译设置COMPILE_SUPPORTS_CXX17变量为true
+if(COMPILER_SUPPORTS_CXX17)
+  target_compile_options(my_target PRIVATE -std=c++17)
+endif()
+```
+本质上是成成一个使用了 `[[nodiscard]]` 特性的 cpp 程序，检测能够通过编译
+常见的系统自省函数有：
+
+| **模块**                 | **用途**                  |
+| ---------------------- | ----------------------- |
+| `CheckCXXCompilerFlag` | 检测编译器标志是否支持             |
+| `CheckIncludeFileCXX`  | 检测 C++ 头文件是否存在          |
+| `CheckFunctionExists`  | 检测函数是否存在于链接库中           |
+| `CheckSymbolExists`    | 检测特定符号（如宏、变量）是否存在       |
+| `CheckTypeSize`        | 检测数据类型大小（如 `size_t`）    |
+| `TestBigEndian`        | 检测系统是否为大端（Big Endian）   |
+| `CheckIncludeFiles`    | 检查一个或多个 C/C++ 头文件       |
+| `CheckCompilerFlag`    | 检查编译器是否支持给定的标志          |
+| `CheckSourceCompiles`  | 检查源代码是否可以为给定的语言进行构建     |
+| `CheckIPOSupported`    | 检查编译器是否支持过程间优化（IPO/LTO） |
+高度定制化，或者只针对某些库的特定版本的特性需要自定义自省模块和测试函数
+### 练习 1 - 检查包含文件
+```cmake
+include(CheckIncludeFiles)
+check_include_files(emmintrin.h HAS_EMMINTRIN LANGUAGE CXX)
+if(HAS_EMMINTRIN)
+	target_compile_definitions(MathFunctions PRIVATE TUTORIAL_USE_SSE2)
+endif()
+```
+使用这样一段代码查找 `emmintrin.h` 文件是否存在，如果存在则会在 cmake **构建过程（注意不是编译过程，提早了）** 中看到头文件被找到的信息：
+```bash
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.22000.
+-- Looking for include file emmintrin.h
+-- Looking for include file emmintrin.h - found
+-- Configuring done (4.3s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/Download/cmake-4.2.0-tutorial-source/Step6/build
+```
+### 练习 2 - 检查源文件编译
+检查编译器内建函数（GNU 内建函数是否存在）
+```cmake
+include(CheckSourceCompiles)
+check_source_compiles(CXX
+  "
+    int main() {
+      int a, b, c;
+      __builtin_add_overflow(a, b, &c);
+    }
+  "
+  HAS_CHECKED_ADDITION
+)
+```
+由于自省本质上是构建可执行程序检查编译结果，所以必须提供一个 main 函数
+### 练习 3 - 检查过程间优化
+过程间优化和链接时优化可以为某些软件提供显著的性能提升
+```cmake
+include(CheckIPOSupported)
+check_ipo_supported() # fatal error if IPO is not supported
+set_target_properties(MyApp
+  PROPERTIES
+    INTERPROCEDURAL_OPTIMIZATION TRUE
+)
+```
+## 第 7 步：自定义命令和生成文件
+### 背景
+构建过程中的任何步骤通常都可以用其输入和输出来描述。CMake 假定代码生成器和其他自定义过程遵循相同的原则。这样，代码生成器就与编译器、链接器和其他工具链元素一样运行；当输入比输出新（或输出不存在）时，将运行用户指定的命令来更新输出。
+核心是 **通过 `add_custom_command()` 和 `add_custom_target()` 实现代码生成**，并将其集成到项目构建流程中
