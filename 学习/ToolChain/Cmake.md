@@ -397,6 +397,79 @@ target_sources(DebugTool PRIVATE
 - 依赖项
 - 编译器和链接器标志
 所有目标中的路径字符**都是绝对路径或者相对于 `CMAKE_CURRENT_SOURCE_DIR` 的路径**，相对于当前 CMakeLists 的路径
+```cmake
+# TODO1: Set the minimum required version of CMake to be 3.23
+cmake_minimum_required(VERSION 3.15)
+# TODO2: Create a project named Tutorial
+project(Tutorial)
+# TODO3: Add an executable target called Tutorial to the project
+add_executable(Tutorial)
+# TODO4: Add the Tutorial/Tutorial.cxx source file to the Tutorial target
+target_sources(Tutorial PRIVATE
+	Tutorial/Tutorial.cxx
+)
+```
+注意如果使用 `add_executable` **只声明目标而不添加任何文件**不需要写访问修饰符
+### 练习 2 - 构建库
+描述一组头文件**最好使用 `FILE_SET`**，头文件是不必要的，就算在 `add_libraries` 或者 `add_executable` 中不添加头文件也不会影响程序编译，但是对于库的安装却需要头文件来**让 `install` 命令知道去哪里找到头文件**
+```cmake
+target_sources(MyLibrary
+  PRIVATE
+    library_implementation.cxx
+
+  PUBLIC
+    FILE_SET myHeaders
+    TYPE HEADERS
+    BASE_DIRS
+      include
+    FILES
+      include/library_header.h
+)
+```
+- `FILE_SET <name>` 是 `FILE_SET` 的名称。这是一个句柄，我们可以在其他上下文中用它来描述这个集合
+- `TYPE <type>` 是我们正在描述的文件类型。最常见的是头文件，但较新版本的 CMake 支持其他类型，如 C++20 模块。
+- `BASE_DIRS` 是文件的“基”位置。这可以最容易地理解为通过 `g++ -I` 标志向编译器描述的用于头文件发现的位置。
+> [!note]
+> 当编译器的头文件中需要使用其他文件夹中的头文件时，如果仅仅将头文件和源文件都通过 `g++ /path/to/head.h source.cpp -o main.exe` 就需要在 `source.cpp` 中的 include 中使用相对源文件的**相对路径**，而如果添加了 `-I` 选项，就相当于设置了 `includePath`，只用 include 头文件名即可
+> cmake 中在一个目标的 source 文件中，使用 base_dir 或者 `target_link_directories()` 标记一个文件夹作为头文件目录，就相当于告诉编译器，当编译这个目标时，使用 ` -I ` 选项将 base_dir 目录作为 includepath
+> ```bash
+> g++ -I/include_dir1 -I/include_dir2 source.cpp
+> ```
+- `FILES` 是文件列表，与之前的实现源列表相同。
+也可以给文件集命名为 `HEADERS` 不使用名称，可以省略 type 属性，如果不写 `BASE_DIR` cmake 会默认 `$CMAKE_CURRENT_SOURCE_DIR` 作为 base_dir
+### cmake 访问修饰符
+- `PRIVATE` 属性（也称为“非接口”属性）仅可供拥有它的目标使用，例如 `PRIVATE` 头文件将仅对附加到它们的目标可见。
+- `INTERFACE` 属性仅对*链接*拥有目标的那些目标可用。拥有目标本身无法访问这些属性。一个仅限头文件的库是 `INTERFACE` 属性集合的一个例子，因为仅限头文件的库本身不构建任何内容，也不需要访问自己的文件。
+- `PUBLIC` 不是一种独立的属性类型，而是 `PRIVATE` 和 `INTERFACE` 属性的并集。因此，使用 `PUBLIC` 描述的需求对于拥有目标和消费目标都可用。
+
+> [!note]
+> 不要类比这三个属性和[[C++ Runoob Tutoral#访问修饰符|类访问修饰符]]，protect 的访问范围
+> **允许访问的范围：**
+> - 类内部成员函数
+> - 友元函数/类
+> - **派生类成员函数**
+> **禁止访问的范围：**
+> - 类外部非友元函数
+> - 非派生类
+
+### cmake 路径管理
+路径管理常用函数/模式：
+
+| 命令类型                  | 作用对象       | 本质作用                     | 影响阶段       | 跨目标传递性 |
+|--------------------------|----------------|------------------------------|----------------|--------------|
+| include_directories      | 编译器参数     | 添加头文件搜索路径           | 编译阶段       | 可传递       |
+| file_set (BASE_DIRS)      | 文件集元数据   | 定义文件基准路径             | 构建配置阶段   | 可传递       |
+| target_link_directories  | 链接器参数     | 添加库文件搜索路径           | 链接阶段       | 可传递       |
+#### include_directories
+本质上是全局添加 `-I` 参数，参考[include_directories — CMake 4.2.0 文档 - CMake 构建系统](https://cmake.com.cn/cmake/help/latest/command/include_directories.html#command:include_directories)
+```cmake
+# 典型用法
+include_directories(
+  ${PROJECT_SOURCE_DIR}/include
+  ${THIRD_PARTY}/boost
+)
+```
+添加到当前 `CMakeLists` 文件的 [`INCLUDE_DIRECTORIES`](https://cmake.com.cn/cmake/help/latest/prop_dir/INCLUDE_DIRECTORIES.html#prop_dir:INCLUDE_DIRECTORIES "INCLUDE_DIRECTORIES") 目录属性中。它们也会被添加到当前 `CMakeLists` 文件**中每个目标**的 [`INCLUDE_DIRECTORIES`](https://cmake.com.cn/cmake/help/latest/prop_tgt/INCLUDE_DIRECTORIES.html#prop_tgt:INCLUDE_DIRECTORIES "INCLUDE_DIRECTORIES") 目标属性中
 
 # 实际工程中出现的问题
 ## `CMP0167` 警告
