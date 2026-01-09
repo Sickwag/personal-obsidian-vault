@@ -36,16 +36,6 @@
               "icon": "lucide-file",
               "title": "Cmake"
             }
-          },
-          {
-            "id": "7d8d4fbd4ae1a822",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "新标签页"
-            }
           }
         ],
         "currentTab": 1
@@ -213,8 +203,8 @@
   },
   "active": "25267b475511a60d",
   "lastOpenFiles": [
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ToolChain/Cmake.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Chores/学习摘录.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/其他专业书/Modern C++.md",
