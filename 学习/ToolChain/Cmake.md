@@ -1367,9 +1367,110 @@ install(
 根据[[#第 9 步：安装命令与概念#背景]]中的构建默认安装位置变量，可以知道通过
 `cmake --install ./build/ --prefix ./install/ --config Debug` 会将库中的二进制文件安装在 `./install/lib` ，头文件安装在 `./install/include` 中
 ![[PixPin_2026-01-10_11-15-36.png]]
+配置完成后用户就能通过 `cmake --install` 命令将项目安装到对应的位置并使用了
 ### 练习 2 - 导出目标
+但是对于库，使用[[#练习 1 - 安装构件]]的配置并不能实现要求，有些库在安装之后文件结构比较复杂，如果需要使用这些库需要在导入项目中使用很多 `target_link/include_XXX` 来指定文件路径，非常麻烦
+导出目标用来**将 CMake 项目中的目标（如库或可执行文件）导出为可重用的配置文件**，以便其他项目可以通过 `find_package()` 直接使用这些目标，由于 `find_package` 实际上会查找对应库的 `Config.cmake` 配置文件并引入，所以导出目标就需要设置这些内容
+#### 使用 install(TARGETS ... EXPORT) 导出目标
+```cmake
+install(
+  TARGETS MyApp MyLib
+  EXPORT MyProjectTargets
+)
+```
+- 将 `MyApp` 和 `MyLib` **目标标记为可导出**（这一步实际上目标并没有导出），并生成一个导出集（Export Set）`MyProjectTargets`。名为 `<ExportName>.cmake` 的文件，位于提供的 `DESTINATION` 中
+- 在构建时，CMake 会记录这些目标的元信息（如库路径、头文件路径、依赖关系）。
+- 在安装时，这些信息会被写入 `MyProjectTargets.cmake` 文件。
+#### 使用 install (EXPORT ...) 生成目标导出文件
+```cmake
+include(GNUInstallDirs)
 
+install(
+  EXPORT MyProjectTargets
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MyProject
+  NAMESPACE MyProject::
+)
+```
+- **参数解释**：
+  - `EXPORT MyProjectTargets`：引用之前标记的导出集。
+  - `DESTINATION ...`：指定导出文件的安装路径（通常是 `/usr/local/lib/cmake/MyProject`），注意这里生成的是 `target.cmake` 文件，这个文件**最终会被对应 `Config.cmake` 文件使用 `include` 引入**
+  - `NAMESPACE MyProject::`：为导出的目标添加命名空间前缀（在链接时需要引入 `MyProject::MyLib`）。
+- **生成文件**：在安装时生成 `MyProjectTargets.cmake`，内容类似：
+```cmake
+add_library(MyProject::MyLib STATIC IMPORTED)
+set_target_properties(MyProject::MyLib PROPERTIES
+    IMPORTED_LOCATION "/usr/local/lib/libMyLib.a"
+    INTERFACE_INCLUDE_DIRECTORIES "/usr/local/include"
+)
+```
+#### 创建 MyProjectConfig.cmake 并安装
+```cmake
+# 工作目录中的cmake/MyProjectConfig.cmake，其中include target.cmake文件
+include(${CMAKE_CURRENT_LIST_DIR}/MyProjectTargets.cmake)
+# 主配置文件中说明这个Config.cmake配置文件将会被安装在什么位置
+install(
+  FILES cmake/MyProjectConfig.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MyProject
+)
+```
+- **作用**：
+  - `MyProjectConfig.cmake` 是入口文件，其他项目通过 `find_package(MyProject)` 会自动加载它。 `find_package()` 查找路径一般在库目录的。project_name/lib/cmake/lib_name/lib_nameConfig.cmake 文件位置
+  - 变量 [`CMAKE_CURRENT_LIST_DIR`](https://cmake.com.cn/cmake/help/latest/variable/CMAKE_CURRENT_LIST_DIR.html#variable:CMAKE_CURRENT_LIST_DIR "CMAKE_CURRENT_LIST_DIR") 指定当前**正在运行**的 CMake 语言文件所在的目录，无论该文件是如何包含或启动的
+  - 通过 `include(...)` 引入目标导出文件，使目标可用。
+- **安装路径**：`/usr/local/lib/cmake/MyProject/MyProjectConfig.cmake`
+
+### 练习 3 - 导出版本文件
+#### 背景
+当从目标导出文件导入 CMake 目标时，没有办法“退出”或“撤销”该操作。如果发现包的版本不正确或不兼容，解决问题的方法是使用一个轻量级版本文件，该文件仅描述版本兼容性信息，可以在 CMake 完全导入文件之前进行检查。
+CMake 提供了帮助模块和脚本来生成这些版本文件，即 [`CMakePackageConfigHelpers`](https://cmake.com.cn/cmake/help/latest/module/CMakePackageConfigHelpers.html#module:CMakePackageConfigHelpers "CMakePackageConfigHelpers") 模块，通过下面代码来生成版本文件
+```cmake
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+	${CMAKE_CURRENT_BINARY_DIR}/MyProjectConfigVersion.cmake
+	COMPATIBILITY ExactVersion
+)
+
+# 生成内容大概是这样的：
+# MyProjectConfigVersion.cmake
+set(PACKAGE_VERSION "1.2.3")
+
+if(PACKAGE_VERSION VERSION_LESS PACKAGE_FIND_VERSION)
+  set(PACKAGE_VERSION_COMPATIBLE FALSE)
+else()
+  set(PACKAGE_VERSION_COMPATIBLE TRUE)
+  if(PACKAGE_FIND_VERSION_MAJOR STREQUAL "1"
+     AND NOT PACKAGE_VERSION VERSION_EQUAL PACKAGE_FIND_VERSION)
+    set(PACKAGE_VERSION_EXACT FALSE)
+  endif()
+endif()
+```
+`COMPATIBILITY` 参数定义版本兼容性规则，决定哪些版本被认为是兼容的：
+
+|**选项**|**含义**|
+|---|---|
+|**`AnyNewerVersion`**|允许任何更新的版本（如 `1.2.0` 兼容 `1.1.0`）。|
+|**`SameMajorVersion`**|要求主版本号相同（如 `1.2.0` 兼容 `1.3.0`，但不兼容 `2.0.0`）。|
+|**`SameMinorVersion`**|要求主版本号和次版本号相同（如 `1.2.3` 兼容 `1.2.5`，但不兼容 `1.3.0`）。|
+|**`ExactVersion`**|必须完全匹配版本号（如 `1.2.3` 仅兼容 `1.2.3`）。|
+
+`ARCH_INDEPENDENT` 参数- 标记包为架构无关（如纯头文件库、Python 包等），不依赖特定机器架构。
+```cmake
+write_basic_package_version_file(
+	MyProjectConfigVersion.cmake
+	COMPATIBILITY SameMajorVersion
+	ARCH_INDEPENDENT
+)
+```
+配置完后将这个文件安装
+```cmake
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/MyProjectConfigVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MyProject
+)
+```
 ### 额外知识
+#### 安装构建的其他方法
 使用 install 命令安装在需要精细控制库文件的安装位置时没法动态变化，可能会需要手动维护头文件列表：
 ```cmake
 install(FILES ${PROJECT_SOURCE_DIR}/include/math_functions.h
@@ -1389,3 +1490,79 @@ install(TARGETS MathFunctions
   INCLUDES DESTINATION include  # 配合 INSTALL_INTERFACE 使用
 )
 ```
+#### 构建可导出的目标总体方法
+总体目的是：将 CMake 项目中的库文件、头文件和构建配置信息导出为可重用的模块，使其他项目通过 `find_package()` 即可直接使用这些库
+1. 项目配置阶段
+- 定义项目和版本：
+```cmake
+cmake_minimum_required(VERSION 3.14)
+project(MyProject VERSION 1.2.3)  # 定义项目名称和版本
+```
+- 创建目标（库或可执行文件）：
+```cmake
+add_library(MyLib STATIC src/mylib.cpp)
+target_include_directories(MyLib PUBLIC include)  # 声明头文件目录
+```
+2. 导出目标（Export Targets）
+- 标记目标为可导出：
+```cmake
+install(
+	TARGETS MyLib
+	EXPORT MyProjectTargets  # 标记目标为可导出
+	FILE_SET HEADERS  # 如果有头文件则需要这一步
+)
+```
+- 生成目标导出文件（`MyProjectTargets.cmake`）：
+```cmake
+include(GNUInstallDirs)  # 获取标准安装路径（如 lib/cmake）
+install(
+	EXPORT MyProjectTargets
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MyProject  # 安装路径
+	NAMESPACE MyProject::  # 添加命名空间前缀（如 MyProject::MyLib）
+)
+```
+> [!warning]
+> 这两步顺序不能反过来
+
+3. 生成版本兼容性文件
+- 创建版本检查文件（`MyProjectConfigVersion.cmake`）：
+```cmake
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+	${CMAKE_CURRENT_BINARY_DIR}/MyProjectConfigVersion.cmake
+	COMPATIBILITY SameMajorVersion  # 兼容性规则
+)
+```
+4. 创建入口配置文件
+- 编写 `MyProjectConfig.cmake`：
+```cmake
+cmake/MyProjectConfig.cmake
+# 引入所有目标导出文件
+include(${CMAKE_CURRENT_LIST_DIR}/MyProjectTargets.cmake)
+```
+- 安装 `Config.cmake` 和版本文件：
+```cmake
+install(
+	FILES
+	${CMAKE_CURRENT_BINARY_DIR}/MyProjectConfigVersion.cmake
+	cmake/MyProjectConfig.cmake
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/MyProject
+)
+```
+5. 安装头文件
+- 安装头文件到标准路径：
+```cmake
+install(
+	DIRECTORY include/
+	DESTINATION include  # 头文件安装到 /usr/local/include/
+)
+```
+之后通常就能通过：
+```cmake
+# 其他项目的 CMakeLists.txt
+find_package(MyProject 1.2.0 REQUIRED)  # 自动加载 MyProjectConfig.cmake
+target_link_libraries(MyApp PRIVATE MyProject::MyLib)  # 使用导出的目标
+```
+引入库，前提是 find_package 可以通过：
+1. 环境变量
+2. cmake 内定义的 `cmake_prefix_path` **路径列表中的一条**指向位置
