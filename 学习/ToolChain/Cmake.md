@@ -622,6 +622,7 @@ cd build && ninja
 | 1. 命令行参数 | `-DVAR=VAL`         | 优先级最高，覆盖所有预设 |
 | 2. 预设配置  | `CMakePresets.json` | 包含完整的配置参数    |
 | 3. 环境变量  | `CXX=clang++`       | 仅影响未显式配置的参数  |
+但是如果某个变量（无论是用户自定义变量还是 cmake 内置粘性变量）如果在 set 中添加了 FORCE 参数 `set(var_name value FORCE)` 则**配置文件中的这个变量优先级会为最高**
 #### 文件集特性简要介绍
 CMake 3.23 新增功能，用于组织特定类型的文件（如头文件、C++ 模块）
 ```cmake
@@ -1372,6 +1373,7 @@ install(
 但是对于库，使用[[#练习 1 - 安装构件]]的配置并不能实现要求，有些库在安装之后文件结构比较复杂，如果需要使用这些库需要在导入项目中使用很多 `target_link/include_XXX` 来指定文件路径，非常麻烦
 导出目标用来**将 CMake 项目中的目标（如库或可执行文件）导出为可重用的配置文件**，以便其他项目可以通过 `find_package()` 直接使用这些目标，由于 `find_package` 实际上会查找对应库的 `Config.cmake` 配置文件并引入，所以导出目标就需要设置这些内容
 #### install(TARGETS ... EXPORT) 导出目标
+本质上是在**对目标定义安装规则**，这时候并没有安装，只用使用 `install(files)` 命令才会安装
 ```cmake
 install(
   TARGETS MyApp MyLib
@@ -1382,6 +1384,7 @@ install(
 - 在构建时，CMake 会记录这些目标的元信息（如库路径、头文件路径、依赖关系）。
 - 在安装时，这些信息会被写入 `MyProjectTargets.cmake` 文件。
 #### install (EXPORT ...) 生成目标导出文件
+本质是将目标的 cmake 配置信息**导出到对应的 target.cmake**文件中，最终在这个库被 find_package 找到时被因为 `include(XXXtarget.cmake)` 而读取这个库的配置
 ```cmake
 include(GNUInstallDirs)
 
@@ -1490,6 +1493,18 @@ install(TARGETS MathFunctions
   INCLUDES DESTINATION include  # 配合 INSTALL_INTERFACE 使用
 )
 ```
+#### 安装 Config.cmake 文件的其他方法
+除了使用 `install` 命令引入**手动编写的 Config.cmake**文件（教程中其实也就有 `include(XXXtarget.cmake)` 这样的内容），还可以通过 `configure_package_config_fie()` 函数实现自动编写
+```cmake
+include(GNUInstallDirs)
+configure_package_config_file(
+    ${PROJECT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in
+    ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    INSTALL_DESTINATION lib/cmake
+    PATH_VARS INCLUDE_DIRS LIBRARIES LIB_DIR
+    INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}
+)
+```
 #### 构建可导出的目标总体方法
 总体目的是：将 CMake 项目中的库文件、头文件和构建配置信息导出为可重用的模块，使其他项目通过 `find_package()` 即可直接使用这些库
 1. 项目配置阶段
@@ -1536,7 +1551,7 @@ write_basic_package_version_file(
 4. 创建入口配置文件
 - 编写 `MyProjectConfig.cmake`：
 ```cmake
-cmake/MyProjectConfig.cmake
+# cmake/MyProjectConfig.cmake
 # 引入所有目标导出文件
 include(${CMAKE_CURRENT_LIST_DIR}/MyProjectTargets.cmake)
 ```
@@ -1795,3 +1810,5 @@ $<PATH:ABSOLUTE_PATH[,NORMALIZE],...,base_dir>
 # Shell路径转换
 $<SHELL_PATH:...>  # 转换为平台特定路径样式（支持分号分割列表）
 ```
+## cmake 项目实例
+### ElaWidget 库
