@@ -95,8 +95,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -203,9 +202,10 @@
   },
   "active": "25267b475511a60d",
   "lastOpenFiles": [
+    "学习/ToolChain/Docker.md",
+    "学习/ToolChain/Cmake.md",
     "Files & LongText/Attachments/PixPin_2026-01-09_21-45-32.png",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/ToolChain/Cmake.md",
     "Chores/学习摘录.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/其他专业书/Modern C++.md",
@@ -240,7 +240,6 @@
     "Files & LongText/Attachments/PixPin_2025-12-21_21-44-32.png",
     "Files & LongText/Attachments/PixPin_2025-12-21_21-43-01.png",
     "Files & LongText/Attachments/PixPin_2025-12-21_20-40-48.png",
-    "Files & LongText/Attachments/PixPin_2025-12-21_20-40-09.png",
     "find_large_files.ps1"
   ]
 }
