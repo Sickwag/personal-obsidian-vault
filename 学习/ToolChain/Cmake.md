@@ -1557,12 +1557,65 @@ install(
 	DESTINATION include  # 头文件安装到 /usr/local/include/
 )
 ```
-之后通常就能通过：
+这条命令会将所有 cmake 在 include 路径中扫描到的头文件放在这个 destination 位置，如果 DIRECTORY 中的有头文件在其他位置使用了 `target_include_directories()` 添加到指定位置则会被忽略，之后通常就能通过：
 ```cmake
 # 其他项目的 CMakeLists.txt
 find_package(MyProject 1.2.0 REQUIRED)  # 自动加载 MyProjectConfig.cmake
 target_link_libraries(MyApp PRIVATE MyProject::MyLib)  # 使用导出的目标
 ```
-引入库，前提是 find_package 可以通过：
+引入库，前提是 find_package 可以下面的路径找到对应的 Config.cmake 文件
 1. 环境变量
 2. cmake 内定义的 `cmake_prefix_path` **路径列表中的一条**指向位置
+## 第 10 步：查找依赖项
+对于正确打包的项目，无需使用管理依赖的高级工具。如今，许多流行的库和实用程序项目都会生成正确的安装树，在[[#第 9 步：安装命令与概念|这种理想环境]]下，我们只需要[`find_package()`](https://cmake.com.cn/cmake/help/latest/command/find_package.html#command:find_package "find_package") 将依赖项导入到我们的项目中，除此之外，还有：
+- [`find_file()`](https://cmake.com.cn/cmake/help/latest/command/find_file.html#command:find_file "find_file")查找并报告指定文件的完整路径，这是`find`命令中最灵活的。
+- [`find_library()`](https://cmake.com.cn/cmake/help/latest/command/find_library.html#command:find_library "find_library")查找并报告静态归档或共享对象的完整路径，适用于与[`target_link_libraries()`](https://cmake.com.cn/cmake/help/latest/command/target_link_libraries.html#command:target_link_libraries "target_link_libraries")一起使用。
+- [`find_path()`](https://cmake.com.cn/cmake/help/latest/command/find_path.html#command:find_path "find_path")查找并报告*包含*文件的目录的完整路径。这通常与[`target_include_directories()`](https://cmake.com.cn/cmake/help/latest/command/target_include_directories.html#command:target_include_directories "target_include_directories")结合用于查找头文件。
+- [`find_program()`](https://cmake.com.cn/cmake/help/latest/command/find_program.html#command:find_program "find_program")查找并报告程序的可调用名称或路径。通常与[`execute_process()`](https://cmake.com.cn/cmake/help/latest/command/execute_process.html#command:execute_process "execute_process")或[`add_custom_command()`](https://cmake.com.cn/cmake/help/latest/command/add_custom_command.html#command:add_custom_command "add_custom_command")结合使用。
+
+这些命令应被视为“备用”选项，当主要的查找命令不适用时使用。主要的查找命令是[`find_package()`](https://cmake.com.cn/cmake/help/latest/command/find_package.html#command:find_package "find_package")。它使用全面的内置启发式方法和上游提供的打包文件，为请求的依赖项提供最佳接口。
+
+### 练习 1 - 使用 find_package()
+[`find_package()`](https://cmake.com.cn/cmake/help/latest/command/find_package.html#command:find_package "find_package") 通过 `<PackageName>_FOUND` 变量报告其结果，对于找到和未找到的包，该变量将分别设置为真或假值。
+这一练习在练习前使用构建/编译命令可以通过编译，而更改代码后不能通过，因为 install/lib/cmake 中没有 SimpleTestConfig.cmake
+#### find_package 详解
+核心参数：
+```cmake
+find_package(<PackageName> [version] [EXACT] [REQUIRED] [QUIET] [MODULE] [COMPONENTS <components>...] [OPTIONAL_COMPONENTS <components>...])
+```
+
+| **参数**                    | **作用**                                           |
+| ------------------------- | ------------------------------------------------ |
+| **`[version]`**           | 指定最小版本号（如 `1.2.0`）。                              |
+| **`EXACT`**               | 要求版本号**完全匹配**（如 `1.2.0` 仅匹配 `1.2.0`）。            |
+| **`REQUIRED`**            | 如果未找到包或版本不兼容，直接报错并终止构建。                          |
+| **`QUIET`**               | 禁用非必要输出（如“Found”消息），但错误信息仍会显示。                   |
+| **`MODULE`**              | 强制使用 **模块模式**（即查找 `Find<PackageName>.cmake` 文件）。 |
+| **`COMPONENTS`**          | 指定需要查找的组件（如 `Boost` 的 `system`、`filesystem`）。    |
+| **`OPTIONAL_COMPONENTS`** | 指定可选组件，即使未找到也不会报错。                               |
+
+#### 两种查找模式
+CMake 支持两种查找包的方式：**模块模式（Module Mode）** 和 **配置模式（Config Mode）**。
+1. 模块模式（Module Mode）
+	- **原理**：通过 `Find<PackageName>.cmake` 脚本定义查找逻辑
+	- **使用场景**：查找系统自带的通用库（如 `FindBoost.cmake`）
+	- 需要手动编写 `Find<PackageName>.cmake` 文件。
+	- 通常通过 `CMAKE_MODULE_PATH` 指定查找路径。
+	- 查找路径为：
+		1. `CMAKE_MODULE_PATH` 用户自定义的模块路径（通过 `set(CMAKE_MODULE_PATH ...)` 设置）
+		2. CMake 内置模块路径，CMake 安装目录下的 `share/cmake-<version>/Modules/`（如 `FindBoost.cmake`）
+```cmake
+# 设置模块路径
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
+
+find_package(Boost 1.70.0 REQUIRED)
+```
+2. 配置模式（Config Mode）
+	- **原理**：通过 `<PackageName>Config.cmake` 或 `<lowercasePackageName>-config.cmake` 文件定义配置信息
+	- **使用场景**：查找通过 `install()` 导出的项目（如 `MyProjectConfig.cmake`）
+	- 由项目自行生成并安装配置文件（如 `MyProjectConfig.cmake`）
+	- 无需手动编写查找脚本
+	- 查找路径为：
+		1. `<PackageName>_DIR`：用户手动设置的路径（如 `set(MyProject_DIR /usr/local/lib/cmake/MyProject)`）
+		2. 环境变量 `CMAKE_PREFIX_PATH` 多个路径的集合（如 `export CMAKE_PREFIX_PATH=/usr/local:/opt/mylib`）
+		3. 系统标准路径 `/usr/local/lib/cmake/MyProject/` ，`/usr/lib/cmake/MyProject/`，`C:/Program Files/MyProject/lib/cmake/MyProject/`（Windows）
