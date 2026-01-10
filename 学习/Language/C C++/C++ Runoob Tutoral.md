@@ -7279,6 +7279,9 @@ auto b = vb[0];  // b是std::vector<bool>::reference，不是bool
 vb.push_back(true);  // 可能导致b变成悬空引用
 if (b) { /* 未定义行为 */ }  // b可能已经无效
 ```
+### 正确使用方法
+- 不要将任意一个 `vector<bool>` 中的元素赋值给一个 auto 类型变量
+- 
 ## 各种符号在上下文中的语义
 ### ... 语义
 #### 可变参数函数（Variadic Functions）中的 `...`
