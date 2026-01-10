@@ -3,7 +3,6 @@ created: 2026-01-07
 参考: https://cmake.com.cn/cmake/help/latest/guide/tutorial/index.html
 version: CMake 4.2.0
 ---
-
 ## Cmake 概述
 ### cmake编译过程
 make 工具是一个项目构建工具，省去了重复用命令行编译，链接源文件的麻烦。CMake 是一个项目构建工具。关于项目构建我们所熟知的还有 Makefile（通过 make 命令进行项目的构建），大多 IDE 软件都集成了 make。makefile 通常依赖于当前的编译平台，而且编写 makefile 的工作量比较大，解决依赖关系时也容易出错。
@@ -637,8 +636,10 @@ target_sources(<target>
 ```cmake
 add_library(MyLib lib.cpp)
 
-# 定义头文件集
-target_sources(MyLib PUBLIC
+# 定义文件集
+target_sources(MyLib
+  PUBLIC
+	src/mylib.cpp
   FILE_SET HEADERS 
     BASE_DIRS include 
     FILES include/mylib.h
@@ -1307,6 +1308,84 @@ set_target_properties(MyApp
 )
 ```
 ## 第 7 步：自定义命令和生成文件
+#未完成 感觉没什么用，暂时跳过
 ### 背景
 构建过程中的任何步骤通常都可以用其输入和输出来描述。CMake 假定代码生成器和其他自定义过程遵循相同的原则。这样，代码生成器就与编译器、链接器和其他工具链元素一样运行；当输入比输出新（或输出不存在）时，将运行用户指定的命令来更新输出。
 核心是 **通过 `add_custom_command()` 和 `add_custom_target()` 实现代码生成**，并将其集成到项目构建流程中
+
+## 第 8 步：测试与 CTest
+### 背景
+其核心是，CTest 是一个任务启动器，它运行命令并报告它们返回零值还是非零值。我们将在这个层面上与 CTest 打交道。
+CMake 通过 [`enable_testing()`](https://cmake.com.cn/cmake/help/latest/command/enable_testing.html#command:enable_testing "enable_testing") 和 [`add_test()`](https://cmake.com.cn/cmake/help/latest/command/add_test.html#command:add_test "add_test") 命令与 CTest 直接集成。这些命令使 CMake 能够在构建文件夹中设置必要的基础设施
+测试命令：
+```bash
+# 运行所有可用的测试。
+ctest --test-dir build
+# 正则表达式运行特定测试。
+ctest --test-dir build -R SpecificTest
+```
+### 练习 1 - 添加测试
+具体建立测试步骤为：
+1. 在根目录中使用 `enable_testing()`
+2. 需要测试位置像创建一个可执行程序一样 `add_executable`，链接文件/库之后，为每一个测试编写 `add_test()`，并在其中声明 `NAME` 和 `COMMAND`，COMMAND 的用法就是命令行程序的用法，比如命令行程序名为 `main.exe`，那么 `add_test` 应该写成
+```cmake
+add_test(
+	NAME name
+	COMMAND ${ProjectName} --option=on --number=10
+)
+```
+3. 编写测试程序
+4. 在 `add_executable` 目标位置创建带入口函数的源文件，一般根据入口函数返回值是否为 0 判断测试是否通过
+## 第 9 步：安装命令与概念
+工程文件中构建/代码结构树通常比较复杂，这种将构建树中的构件移动到适合使用者使用的最终布局的操作称为安装
+### 背景
+所有 CMake 安装都通过一个单一命令 [`install()`](https://cmake.com.cn/cmake/help/latest/command/install.html#command:install "install") 来完成，该命令又细分为负责安装过程各个方面的多个子命令。**对于基于目标的 CMake 工作流程**，通常足以依赖安装目标本身，使用 [`install(TARGETS)`](https://cmake.com.cn/cmake/help/latest/command/install.html#targets "install(targets)")，而不是通过 [`install(FILES)`](https://cmake.com.cn/cmake/help/latest/command/install.html#files "install(files)") or [`install(DIRECTORY)`](https://cmake.com.cn/cmake/help/latest/command/install.html#directory "install(directory)")手动移动文件
+install 命令会自动寻找 cmake 中配置的头文件，库文件所在的位置信息，这就是为什么需要向将要安装的头文件集合（[[#练习 2 - 构建库]]，[[#练习 2 - 接口库]]）添加 `FILES`
+cmake 对大部分构件类型都有默认的安装位置
+
+| 目标类型                  | 变量                            | 内置默认值   |
+| --------------------- | ----------------------------- | ------- |
+| RUNTIME               | `${CMAKE_INSTALL_BINDIR}`     | bin     |
+| LIBRARY               | `${CMAKE_INSTALL_LIBDIR}`     | lib     |
+| ARCHIVE               | `${CMAKE_INSTALL_LIBDIR}`     | lib     |
+| PRIVATE_HEADER        | `${CMAKE_INSTALL_INCLUDEDIR}` | include |
+| PUBLIC_HEADER         | `${CMAKE_INSTALL_INCLUDEDIR}` | include |
+| FILE_SET（类型为 HEADERS） | `${CMAKE_INSTALL_INCLUDEDIR}` | include |
+CMake 默认不定义 `CMAKE_INSTALL_<dir>` 变量。如果项目希望指定安装到这些位置的某个子目录，则必须包含 [`GNUInstallDirs`](https://cmake.com.cn/cmake/help/latest/module/GNUInstallDirs.html#module:GNUInstallDirs "GNUInstallDirs") 模块，该模块将为所有尚未定义的 `CMAKE_INSTALL_<dir>` 变量提供值。
+
+### 练习 1 - 安装构件
+在需要导出可执行文件/库文件的位置添加
+```cmake
+install(
+	TARGETS <target_name>
+	FILE_SET HEADERS
+	DESTINATION lib_name/include
+)
+```
+- file_set 指定头文件导出目录，cmake 通过目标的 `target_include_directories()` 中，通过 `INSTALL_INTERFACE` 指定（public 或者 interface 访问修饰符修饰的）的头文件路径，并将其包含在安装流程中声明目标提供的头文件。
+- 不使用 file_set 则只会安装二进制文件
+根据[[#第 9 步：安装命令与概念#背景]]中的构建默认安装位置变量，可以知道通过
+`cmake --install ./build/ --prefix ./install/ --config Debug` 会将库中的二进制文件安装在 `./install/lib` ，头文件安装在 `./install/include` 中
+![[PixPin_2026-01-10_11-15-36.png]]
+### 练习 2 - 导出目标
+
+### 额外知识
+使用 install 命令安装在需要精细控制库文件的安装位置时没法动态变化，可能会需要手动维护头文件列表：
+```cmake
+install(FILES ${PROJECT_SOURCE_DIR}/include/math_functions.h
+  DESTINATION include
+)
+```
+更好的方法是在构建目标时指定，使用 `target_include_directories()`
+```cmake
+target_include_directories(MathFunctions
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include
+    $<INSTALL_INTERFACE:include>  # 声明头文件安装路径
+)
+# 在安装时可读性强很多
+install(TARGETS MathFunctions
+  ARCHIVE DESTINATION lib
+  INCLUDES DESTINATION include  # 配合 INSTALL_INTERFACE 使用
+)
+```
