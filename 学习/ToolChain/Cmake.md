@@ -1619,3 +1619,64 @@ find_package(Boost 1.70.0 REQUIRED)
 		1. `<PackageName>_DIR`：用户手动设置的路径（如 `set(MyProject_DIR /usr/local/lib/cmake/MyProject)`）
 		2. 环境变量 `CMAKE_PREFIX_PATH` 多个路径的集合（如 `export CMAKE_PREFIX_PATH=/usr/local:/opt/mylib`）
 		3. 系统标准路径 `/usr/local/lib/cmake/MyProject/` ，`/usr/lib/cmake/MyProject/`，`C:/Program Files/MyProject/lib/cmake/MyProject/`（Windows）
+> [!note]
+> 在 find_package 中的模块前添加 `CONFIG` / `MODULE` 可以显示指定查找方式
+### 练习 2 - 传递性依赖
+库经常相互构建，链式依赖，为表达这种传递性依赖需求，通过[`CMakeFindDependencyMacro`](https://cmake.com.cn/cmake/help/latest/module/CMakeFindDependencyMacro.html#module:CMakeFindDependencyMacro "CMakeFindDependencyMacro")模块来实现这一点，该模块提供了一种安全机制，供已安装的包递归地发现彼此。
+主要的目的是：A 依赖了 B，C，但 B 也依赖 C（A->B->C，A->C），为避免重复编译依赖文件，让 BC 相互可见
+1. A，B，C 模块的配置文件中都正常写 find_package 找到对应的依赖文件，但是这样会导致 A->C，A->B 依赖项被正确找到，而 B->C 找不到
+2. 在 B **构建生成的 config 文件 `B/cmake/BConfig.cmake` 中**添加：
+```cmake
+include(CMakeFindDependencyMacro)
+find_dependency(C) # 自动传递顶层参数（如 REQUIRED）
+
+# 自动生成的内容
+include(${CMAKE_CURRENT_LIST_DIR}/BTargets.cmake)
+```
+### 练习 3 - 查找其他类型的文件
+#### 背景
+- **理想情况**：依赖项已通过 `find_package()` 提供的 `FindXXX.cmake` 或 `XXXConfig.cmake` 自动管理（如系统库 `Boost`、`OpenCV`）。
+- **现实情况**：某些依赖项未正确打包（如第三方库未提供 CMake 配置文件），或需要没有放在标准路径中（如本地开发库）。
+这时可以使用 `find_path`：
+```cmake
+find_path(<VAR> name1 [path1 ...] [NO_DEFAULT_PATH] [REQUIRED])
+```
+
+| **参数**                | **作用**                                         |
+| --------------------- | ---------------------------------------------- |
+| **`<VAR>`**           | 存储找到的路径的变量名（如 `PackageIncludeFolder`）。         |
+| **`name1`**           | 要查找的文件名（如 `Package.h`）。                        |
+| **`path1 ...`**       | 可选路径列表（如 `PATH_SUFFIXES Package` 表示在路径中查找子目录）。 |
+| **`NO_DEFAULT_PATH`** | 仅在指定路径中查找，忽略系统默认路径。                            |
+| **`REQUIRED`**        | 如果未找到文件，报错并终止构建。                               |
+
+这样使用：
+```cmake
+# 有未打包的头文件
+find_path(PackageIncludeFolder Package.h REQUIRED
+  PATH_SUFFIXES
+    Package
+)
+target_include_directories(MyApp PRIVATE ${PackageIncludeFolder})
+
+# 未打包的依赖项->查找头文件和依赖库文件
+find_path(MYLIB_INCLUDE_DIR MyLib.h REQUIRED
+  PATHS /opt/mylib/include
+  PATH_SUFFIXES
+    MyLib
+)
+find_library(MYLIB_LIBRARY NAMES MyLib
+  PATHS /opt/mylib/lib
+)
+# 在需要用的地方使用：
+add_executable(MyApp main.cpp)
+target_include_directories(MyApp PRIVATE ${MYLIB_INCLUDE_DIR})
+target_link_libraries(MyApp PRIVATE ${MYLIB_LIBRARY})
+```
+- 查找名为 `Package.h` 的头文件，在以下路径中搜索：
+	1. 用户指定的路径（如通过 `CMAKE_PREFIX_PATH` 设置）
+	2. 系统默认路径（如 `/usr/local/include`）
+	3. 子目录 `Package`（如 `/usr/local/include/Package/Package.h`）
+	- 如果找到，`PackageIncludeFolder` 会被设置为包含 `Package.h` 的目录（如 `/usr/local/include/Package`）
+	- 如果未找到，CMake 报错并终止
+- 查找完之后手动添加到 includepath 中
