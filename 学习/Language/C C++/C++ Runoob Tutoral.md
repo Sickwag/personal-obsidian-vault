@@ -7280,8 +7280,14 @@ vb.push_back(true);  // 可能导致b变成悬空引用
 if (b) { /* 未定义行为 */ }  // b可能已经无效
 ```
 ### 正确使用方法
+```cpp
+auto a = vec[0];						// bad
+auto b = static_cast<bool>(vec[0]);		// good
+bool c = vec[0];						// better
+```
 - 不要将任意一个 `vector<bool>` 中的元素赋值给一个 auto 类型变量
-- 
+- 使用 `[]` 或者 `at()` 时配合 `static_cast<bool>` 转换
+- 将元素显式赋值给 bool 变量使用
 ## 各种符号在上下文中的语义
 ### ... 语义
 #### 可变参数函数（Variadic Functions）中的 `...`

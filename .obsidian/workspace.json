@@ -37,8 +37,7 @@
               "title": "C++ Runoob Tutoral"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -201,15 +200,15 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "3ff8f0c475720ca5",
+  "active": "1eedb6ee4ddc35b5",
   "lastOpenFiles": [
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Files & LongText/Attachments/0221DE4F.png",
     "学习/ToolChain/Cmake.md",
     "学习/ToolChain/IDEs.md",
     "Files & LongText/Attachments/PixPin_2026-01-10_11-15-36.png",
     "Chores/学习摘录.md",
     "学习/Language/C C++/模板元编程.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ToolChain/Docker.md",
     "Files & LongText/Attachments/PixPin_2026-01-09_21-45-32.png",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
@@ -240,7 +239,6 @@
     "Files & LongText/Attachments/PixPin_2025-12-30_16-50-52.png",
     "Files & LongText/Attachments/PixPin_2025-12-21_22-14-25.png",
     "Files & LongText/Attachments/PixPin_2025-12-21_21-44-32.png",
-    "Files & LongText/Attachments/PixPin_2025-12-21_21-43-01.png",
     "find_large_files.ps1"
   ]
 }

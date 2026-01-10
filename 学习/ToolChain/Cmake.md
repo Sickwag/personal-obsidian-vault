@@ -488,12 +488,12 @@ $1
 查阅这些符号来自什么库，通过 find_package 和 target_link_libraries 链接接口
 
 msbuild 中对 vcpkg 有很好的支持（使用 `vcpkg install integate` 后），会自动在 vcpkg 中寻找，而 cmake 构建中，如果没有指定 tool_chain_file 就不会自动寻找，所以可能会导致问题（有的时候指定了也会这样，原因未知 #未知错误 ）
-# 包管理工具
+# 包管理有关
 ## vcpkg
 ### 下载速度问题
 参考：[vcpkg国内镜像源替换-CSDN博客](https://blog.csdn.net/weixin_41364246/article/details/140123907)
 修改国内镜像之后，大部分包能够快速下载，但是不在 github 拖管的包需要自己替换源
-# CMake 教程
+# CMake 基本内容教程
 参考：[CMake 教程 — CMake 4.2.0 文档 - CMake 构建系统](https://cmake.com.cn/cmake/help/latest/guide/tutorial/index.html)
 ## 杂项内容
 ### cmake cli 选项分类
@@ -1371,7 +1371,7 @@ install(
 ### 练习 2 - 导出目标
 但是对于库，使用[[#练习 1 - 安装构件]]的配置并不能实现要求，有些库在安装之后文件结构比较复杂，如果需要使用这些库需要在导入项目中使用很多 `target_link/include_XXX` 来指定文件路径，非常麻烦
 导出目标用来**将 CMake 项目中的目标（如库或可执行文件）导出为可重用的配置文件**，以便其他项目可以通过 `find_package()` 直接使用这些目标，由于 `find_package` 实际上会查找对应库的 `Config.cmake` 配置文件并引入，所以导出目标就需要设置这些内容
-#### 使用 install(TARGETS ... EXPORT) 导出目标
+#### install(TARGETS ... EXPORT) 导出目标
 ```cmake
 install(
   TARGETS MyApp MyLib
@@ -1381,7 +1381,7 @@ install(
 - 将 `MyApp` 和 `MyLib` **目标标记为可导出**（这一步实际上目标并没有导出），并生成一个导出集（Export Set）`MyProjectTargets`。名为 `<ExportName>.cmake` 的文件，位于提供的 `DESTINATION` 中
 - 在构建时，CMake 会记录这些目标的元信息（如库路径、头文件路径、依赖关系）。
 - 在安装时，这些信息会被写入 `MyProjectTargets.cmake` 文件。
-#### 使用 install (EXPORT ...) 生成目标导出文件
+#### install (EXPORT ...) 生成目标导出文件
 ```cmake
 include(GNUInstallDirs)
 
@@ -1403,7 +1403,7 @@ set_target_properties(MyProject::MyLib PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "/usr/local/include"
 )
 ```
-#### 创建 MyProjectConfig.cmake 并安装
+#### install(FILES src_file ... ) 安装
 ```cmake
 # 工作目录中的cmake/MyProjectConfig.cmake，其中include target.cmake文件
 include(${CMAKE_CURRENT_LIST_DIR}/MyProjectTargets.cmake)
@@ -1579,6 +1579,7 @@ target_link_libraries(MyApp PRIVATE MyProject::MyLib)  # 使用导出的目标
 [`find_package()`](https://cmake.com.cn/cmake/help/latest/command/find_package.html#command:find_package "find_package") 通过 `<PackageName>_FOUND` 变量报告其结果，对于找到和未找到的包，该变量将分别设置为真或假值。
 这一练习在练习前使用构建/编译命令可以通过编译，而更改代码后不能通过，因为 install/lib/cmake 中没有 SimpleTestConfig.cmake
 #### find_package 详解
+参考：[find_package — CMake 4.2.0 文档 - CMake 构建系统](https://cmake.com.cn/cmake/help/latest/command/find_package.html#command:find_package)
 核心参数：
 ```cmake
 find_package(<PackageName> [version] [EXACT] [REQUIRED] [QUIET] [MODULE] [COMPONENTS <components>...] [OPTIONAL_COMPONENTS <components>...])
@@ -1615,10 +1616,12 @@ find_package(Boost 1.70.0 REQUIRED)
 	- **使用场景**：查找通过 `install()` 导出的项目（如 `MyProjectConfig.cmake`）
 	- 由项目自行生成并安装配置文件（如 `MyProjectConfig.cmake`）
 	- 无需手动编写查找脚本
-	- 查找路径为：
-		1. `<PackageName>_DIR`：用户手动设置的路径（如 `set(MyProject_DIR /usr/local/lib/cmake/MyProject)`）
-		2. 环境变量 `CMAKE_PREFIX_PATH` 多个路径的集合（如 `export CMAKE_PREFIX_PATH=/usr/local:/opt/mylib`）
-		3. 系统标准路径 `/usr/local/lib/cmake/MyProject/` ，`/usr/lib/cmake/MyProject/`，`C:/Program Files/MyProject/lib/cmake/MyProject/`（Windows）
+	- 查找路径为:
+		1. 在 [`CMAKE_FIND_PACKAGE_REDIRECTS_DIR`](https://cmake.com.cn/cmake/help/latest/variable/CMAKE_FIND_PACKAGE_REDIRECTS_DIR.html#variable:CMAKE_FIND_PACKAGE_REDIRECTS_DIR "CMAKE_FIND_PACKAGE_REDIRECTS_DIR") 目录中查找 Config.cmake
+		2. `<PackageName>_DIR`：用户手动设置的路径（如 `set(MyProject_DIR /usr/local/lib/cmake/MyProject)`）
+		3. 环境变量 `CMAKE_PREFIX_PATH` 多个路径的集合（如 `export CMAKE_PREFIX_PATH=/usr/local:/opt/mylib`）
+		4. 系统标准路径 `/usr/local/lib/cmake/MyProject/` ，`/usr/lib/cmake/MyProject/`，`C:/Program Files/MyProject/lib/cmake/MyProject/`（Windows）
+		5. 更为细致的搜索路径参考 [find_package#Config模式搜索过程](https://cmake.com.cn/cmake/help/latest/command/find_package.html#config-mode-search-procedure)
 > [!note]
 > 在 find_package 中的模块前添加 `CONFIG` / `MODULE` 可以显示指定查找方式
 ### 练习 2 - 传递性依赖
@@ -1680,3 +1683,115 @@ target_link_libraries(MyApp PRIVATE ${MYLIB_LIBRARY})
 	- 如果找到，`PackageIncludeFolder` 会被设置为包含 `Package.h` 的目录（如 `/usr/local/include/Package`）
 	- 如果未找到，CMake 报错并终止
 - 查找完之后手动添加到 includepath 中
+## 第 11 步：杂项功能
+### 练习 1：目标别名
+没什么意义，并且教程中缺失安装 SimpleTest 这一步
+### 练习 2：生成器表达式
+练习没什么意义，这里使用 ai 辅助
+[`生成器表达式`](https://cmake.com.cn/cmake/help/latest/manual/cmake-generator-expressions.7.html#manual:cmake-generator-expressions\(7\) "cmake-generator-expressions(7)") 是 CMake 中某些上下文支持的复杂特定领域语言。它们最容易理解为延迟求值的条件，它们表达的需求，其确定正确行为的输入在 CMake 配置阶段是未知的，主要用于在多配置构建（如 Debug/Release）或复杂条件逻辑中，根据上下文动态调整构建行为。
+#### 常见表达式核心语法
+参考：[cmake-generator-expressions](https://cmake.com.cn/cmake/help/latest/manual/cmake-generator-expressions.7.html#introduction)
+```cmake
+# 条件判断表达式，根据条件是否成立返回不同的值
+$<condition:true_string>  # false返回空值
+# 如果构建类型为 Debug，返回 "debug_value"，否则返回 "release_value"
+$<CONFIG:Debug>:debug_value
+$<CONFIG:Release>:release_value
+# 或者这种形式
+$<IF:condition,true_string,false_string>
+# 再或者直接将字符串转换为CMAKE标准BOOL类型字符串
+$<BOOL:string>  # 如果string为空或者其他OFF，NOTFOUND的值统一转换为0
+
+# 逻辑运算表达式
+$<AND:...>   # 逻辑与
+$<OR:...>    # 逻辑或
+$<NOT:...>   # 逻辑非
+# 如果构建类型是 Debug 且目标MyTarget的ENABLE_FEATURE属性为真（字符串不为空或者其他cmake false值），则返回 "value"
+$<AND:$<CONFIG:Debug>,$<TARGET_PROPERTY:MyTarget,ENABLE_FEATURE>>:value
+
+# 字符串比较表达式
+$<STREQUAL:string1,string2>  # **字符串变量/字符串**之间比较，大小写敏感
+$<STREQUAL:$<UPPER_CASE:${foo}>,BAR>  # 不敏感写法
+
+# 版本比较， true->1 false->0
+$<VERSION_LESS:v1,v2>
+$<VERSION_GREATER:v1,v2>
+$<VERSION_EQUAL:v1,v2>
+$<VERSION_LESS_EQUAL:v1,v2>
+$<VERSION_GREATER_EQUAL:v1,v2>
+
+# 字符串转换
+$<LOWER_CASE:string>
+$<UPPER_CASE:string>
+
+# 列表相关
+$<IN_LIST:string,list>  # 理解为contains
+$<LIST:LENGTH,list>		# list.size()
+$<LIST:GET,list,index,...>	# list中所有index位置的元素重新构成一个列表返回
+$<LIST:SUBLIST,list,begin,length>  # list<T>(l.begin() + begin, l.begin() + length)
+$<LIST:FIND,list,value>  # list.find(value) == list.end() ? index : -1
+
+# 列表拼接（保留空项）
+$<LIST:JOIN,list,glue>
+$<JOIN:list,glue>  # 删除空项后拼接
+
+# 列表修改
+$<LIST:APPEND,list,item,...>
+$<LIST:PREPEND,list,item,...>
+$<LIST:INSERT,list,index,item,...>
+
+# 列表删除
+$<LIST:POP_BACK,list>
+$<LIST:POP_FRONT,list>
+$<LIST:REMOVE_ITEM,list,value,...>
+$<LIST:REMOVE_AT,list,index,...>
+
+# 列表过滤
+$<LIST:FILTER,list,INCLUDE|EXCLUDE,regex>
+$<FILTER:list,INCLUDE|EXCLUDE,regex>  # 等价于前者
+
+# 列表去重
+$<LIST:REMOVE_DUPLICATES,list>
+$<REMOVE_DUPLICATES:list>  # 等价于前者
+
+# 列表排序/反转
+$<LIST:SORT,list[,(COMPARE|CASE|ORDER):...]>
+$<LIST:REVERSE,list>
+
+# 列表转换
+$<LIST:TRANSFORM,list,(APPEND|PREPEND),value[,SELECTOR]>
+$<LIST:TRANSFORM,list,(TOLOWER|TOUPPER)[,SELECTOR]>
+$<LIST:TRANSFORM,list,STRIP[,SELECTOR]>
+$<LIST:TRANSFORM,list,REPLACE,regex,replace[,SELECTOR]>
+
+# 路径比较
+$<PATH_EQUAL:path1,path2>  # 词法相等返回1
+
+# 路径查询
+$<PATH:IS_ABSOLUTE,path>
+$<PATH:IS_RELATIVE,path>
+$<PATH:HAS_*,path>  # HAS_ROOT_NAME/HAS_ROOT_DIRECTORY等
+$<PATH:IS_PREFIX[,NORMALIZE],path,input>
+
+# 路径分解
+$<PATH:GET_ROOT_NAME,...>
+$<PATH:GET_ROOT_DIRECTORY,...>
+$<PATH:GET_FILENAME,...>
+$<PATH:GET_EXTENSION[,LAST_ONLY],...>
+$<PATH:GET_PARENT_PATH,...>  # 可处理路径列表
+
+# 路径转换
+$<PATH:CMAKE_PATH[,NORMALIZE],...>
+$<PATH:NATIVE_PATH[,NORMALIZE],...>
+$<PATH:NORMAL_PATH,...>
+$<PATH:APPEND,...>
+$<PATH:REMOVE_FILENAME,...>
+$<PATH:REPLACE_FILENAME,...>
+$<PATH:REMOVE_EXTENSION[,LAST_ONLY],...>
+$<PATH:REPLACE_EXTENSION[,LAST_ONLY],...>
+$<PATH:RELATIVE_PATH,...>
+$<PATH:ABSOLUTE_PATH[,NORMALIZE],...,base_dir>
+
+# Shell路径转换
+$<SHELL_PATH:...>  # 转换为平台特定路径样式（支持分号分割列表）
+```
