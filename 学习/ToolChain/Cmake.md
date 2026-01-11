@@ -1372,17 +1372,20 @@ install(
 ### 练习 2 - 导出目标
 但是对于库，使用[[#练习 1 - 安装构件]]的配置并不能实现要求，有些库在安装之后文件结构比较复杂，如果需要使用这些库需要在导入项目中使用很多 `target_link/include_XXX` 来指定文件路径，非常麻烦
 导出目标用来**将 CMake 项目中的目标（如库或可执行文件）导出为可重用的配置文件**，以便其他项目可以通过 `find_package()` 直接使用这些目标，由于 `find_package` 实际上会查找对应库的 `Config.cmake` 配置文件并引入，所以导出目标就需要设置这些内容
-#### install(TARGETS ... EXPORT) 导出目标
+install 命令本质上只是在做定义工作，真正的导出文件行为会在使用 `install` 命令时执行
+#### install (TARGETS ...) 定义目标
 本质上是在**对目标定义安装规则**，这时候并没有安装，只用使用 `install(files)` 命令才会安装
 ```cmake
 install(
   TARGETS MyApp MyLib
-  EXPORT MyProjectTargets
+  # EXPORT MyProjectTargets
+  # FILES ${PROJECT_NAME}Target.cmake
 )
 ```
 - 将 `MyApp` 和 `MyLib` **目标标记为可导出**（这一步实际上目标并没有导出），并生成一个导出集（Export Set）`MyProjectTargets`。名为 `<ExportName>.cmake` 的文件，位于提供的 `DESTINATION` 中
 - 在构建时，CMake 会记录这些目标的元信息（如库路径、头文件路径、依赖关系）。
-- 在安装时，这些信息会被写入 `MyProjectTargets.cmake` 文件。
+- 如果添加了 EXPORT 参数或者再写一个 [[ #install (EXPORT ...) 生成目标导出文件|install(export)]] 就会在定义的同时导出。在安装时，这些信息会被写入 `MyProjectTargets.cmake` 文件。
+- 如果添加了 FILES，则**本质上只是在自定义导出文件名称**
 #### install (EXPORT ...) 生成目标导出文件
 本质是将目标的 cmake 配置信息**导出到对应的 target.cmake**文件中，最终在这个库被 find_package 找到时被因为 `include(XXXtarget.cmake)` 而读取这个库的配置
 ```cmake
@@ -1407,6 +1410,7 @@ set_target_properties(MyProject::MyLib PROPERTIES
 )
 ```
 #### install(FILES src_file ... ) 安装
+由于教程中的 Config.cmake 文件是手写的，才会有这一步，这一步本质上用于**手动将手写的 Config.cmake**添加到安装过程中，实际工程中常用[[#安装 Config.cmake 文件的其他方法|自动编写Config.cmake的方法]]
 ```cmake
 # 工作目录中的cmake/MyProjectConfig.cmake，其中include target.cmake文件
 include(${CMAKE_CURRENT_LIST_DIR}/MyProjectTargets.cmake)
@@ -1813,3 +1817,67 @@ $<SHELL_PATH:...>  # 转换为平台特定路径样式（支持分号分割列�
 ## cmake 项目实例
 ### ElaWidget 库
 #### 根目录配置
+msvc 编译器时**指定代码中字符使用 utf 编码**
+```cmake
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+```
+需要用到 qt 时，需要**添加 sdk 组件位置到 `CMAKE_PREFIX_PATH` 中**
+
+```cmake
+SET(QT_SDK_DIR "D:/OtherProgram/QT/6.8.0/msvc2022_64" CACHE PATH "QT SDK DIR" FORCE)
+list(APPEND CMAKE_PREFIX_PATH ${QT_SDK_DIR})
+```
+在非 windows 平台上设定 runtimepath，即使用安装命令后将二进制文件放在 `${CMAKE_INSTALL_RPATH}` 位置
+```cmake
+if (NOT WIN32)
+    add_link_options(-Wl,--disable-new-dtags)
+    set(CMAKE_SKIP_INSTALL_RPATH FALSE)
+    set(CMAKE_INSTALL_RPATH "${QT_SDK_DIR}/lib:${CMAKE_INSTALL_PREFIX}/ElaWidgetTools/lib")
+endif ()
+```
+跨平台**运行时**设置，由于不同平台运行时查找动态链接库的方法不一致，需要设置
+- Linux/macOS：使用动态链接，需要在运行时找到共享库
+- Windows：使用导入库(.lib)和 DLL，路径查找机制不同
+- CMAKE_INSTALL_RPATH：设置安装后二进制文件的运行时库搜索路径，**这些信息会被写入二进制文件头部**，在执行这些二进制文件时自动查找，所以叫做 runtimepath
+#### 库配置
+默认编译动态库，并且如果是 debug 模式编译，在二进制文件后添加 d 后缀（mingw 会自动添加。msvc 不会）
+```cmake
+option(ELAWIDGETTOOLS_BUILD_STATIC_LIB "Build static library." OFF)
+
+if (MINGW)
+    set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
+endif ()
+if (MSVC)
+    set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "d")
+endif ()
+```
+构建和安装过程配置
+```cmake
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
+
+install(
+    TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}
+    ARCHIVE DESTINATION ${PROJECT_NAME}/lib
+    LIBRARY DESTINATION ${PROJECT_NAME}/lib
+    RUNTIME DESTINATION ${PROJECT_NAME}/bin
+)
+install(TARGETS ${PROJECT_NAME}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/ElaWidgetToolsExample
+    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/ElaWidgetToolsExample
+)
+```
+这些 cmake 开头的选项用来设置**cmake 构建过程中将生成文件放在什么位置**，由于 cmake 默认会将构建文件放在 `build/[Debug | relase]/target_name/` 中，设置这几个变量仅仅是将默认位置修改而已。而 install 命令设置使用 ` --install ` 的**cmake 安装过程中将文件放在什么位置**
+![[PixPin_2026-01-11_13-28-08.png|build没有Debug/Relase文件夹，打开目录才有Debug/release之分]]
+![[PixPin_2026-01-11_13-28-42.png|install命令同理]]
+- 第一次 install 定义并导出目标信息到 ElaWidgetToolsTargets.cmake，在其中记录这个目标的二进制文件安装位置
+- 第二次 install 将标记当安装时，同时将这个库文件放到演示程序的对应位置中，延时程序也使用了这个库，需要库文件
+- 两者本质上是将相同文件安装到不同位置**的信息记录到 target.cmake 中**，真正执行 `--install` 命令时会读取 target.cmake 中的信息按照要求安装文件
+```cmake
+set(INCLUDE_DIRS include)			# std::string INCLUDE = "include"
+set(LIBRARIES ${PROJECT_NAME})
+set(LIB_DIR lib)					# std::string LIB_DIR = "lib"
+```
+设置一些临时*字符串变量*给下面的编写版本/入口文件的函数使用，剩下的 install 都是在安装头文件到库目录中，安装 Config.cmake 和 Version.cmake 到对应目录中
