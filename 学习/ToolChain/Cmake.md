@@ -1366,7 +1366,10 @@ install(
 - file_set 指定头文件导出目录，cmake 通过目标的 `target_include_directories()` 中，通过 `INSTALL_INTERFACE` 指定（public 或者 interface 访问修饰符修饰的）的头文件路径，并将其包含在安装流程中声明目标提供的头文件。
 - 不使用 file_set 则只会安装二进制文件
 根据[[#第 9 步：安装命令与概念#背景]]中的构建默认安装位置变量，可以知道通过
-`cmake --install ./build/ --prefix ./install/ --config Debug` 会将库中的二进制文件安装在 `./install/lib` ，头文件安装在 `./install/include` 中
+`cmake --install ./build/ --prefix ./install/ --config=Debug` 会将库中的二进制文件安装在 `./install/lib` ，头文件安装在 `./install/include` 中，安装位置只能通过：
+- 配置中定义 `CMAKE_INTALL_PREFIX`
+- 构建阶段定义 `-DCMAKE_INTALL_PREFIX=/path/to/install`
+- 安装阶段使用 `--prefix` 参数定义
 ![[PixPin_2026-01-10_11-15-36.png]]
 配置完成后用户就能通过 `cmake --install` 命令将项目安装到对应的位置并使用了
 ### 练习 2 - 导出目标
@@ -1851,6 +1854,19 @@ if (MSVC)
     set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "d")
 endif ()
 ```
+代码文件管理
+```cmake
+FILE(GLOB ORIGIN *.h *.cpp)
+FILE(GLOB PRIVATE private/*.h private/*.cpp)
+FILE(GLOB DEVELOPER DeveloperComponents/*.h DeveloperComponents/*.cpp)
+
+source_group(include FILES ${INCLUDE})
+source_group(private FILES ${PRIVATE})
+source_group(DeveloperComponents FILES ${DEVELOPER})
+```
+- `FILE(GLOB <name> <path/regex>)` 将路径中文件分组
+- `source_group` 用于在 vs 中显示文件分组（include 分组是空的，因为没有 `${INCLUDE}`）变量
+![[PixPin_2026-01-11_15-20-37.png]]
 构建和安装过程配置
 ```cmake
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
@@ -1881,3 +1897,92 @@ set(LIBRARIES ${PROJECT_NAME})
 set(LIB_DIR lib)					# std::string LIB_DIR = "lib"
 ```
 设置一些临时*字符串变量*给下面的编写版本/入口文件的函数使用，剩下的 install 都是在安装头文件到库目录中，安装 Config.cmake 和 Version.cmake 到对应目录中
+
+#### 示例程序配置
+```cmake
+if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    qt_add_executable(${PROJECT_NAME}
+        MANUAL_FINALIZATION
+        ${PROJECT_SOURCES}
+    )
+    #遍历所有资源文件
+    file(GLOB_RECURSE RES_PATHS *.png *.jpg *.svg *.ico *.ttf *.webp *.js)
+    foreach (filepath ${RES_PATHS})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" filename ${filepath})
+        list(APPEND resource_files ${filename})
+    endforeach (filepath)
+
+    qt_add_resources(${PROJECT_NAME} "ElaWidgetToolsExample"
+        RESOURCES PREFIX "/"
+        FILES
+        ${resource_files}
+    )
+else ()
+    qt5_add_big_resources(PROJECT_SOURCES
+        ElaWidgetToolsExample.qrc
+    )
+    add_executable(${PROJECT_NAME}
+        ${PROJECT_SOURCES}
+    )
+endif ()
+
+if (QT_VERSION_MAJOR EQUAL 6)
+    qt_finalize_executable(${PROJECT_NAME})
+endif ()
+```
+- qt 版本高于 6 使用 qt 专属的 cmake 配置 api 定义可执行文件和**纯文本形式的资源管理**，如果低于则使用 qrc 文件引入资源
+- 注意设置了 `MANUAL_FINALIZATION` 后要手动结束 `qt_finalize_executable(${PROJECT_NAME})`
+```cmake
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    ${BUNDLE_ID_OPTION}
+    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    MACOSX_BUNDLE TRUE
+    WIN32_EXECUTABLE TRUE
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}"
+    VS_DEBUGGER_COMMAND "${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/${PROJECT_NAME}.exe"
+)
+```
+由于这是一个 exe 程序，这里设置跨平台/ide 的可执行文件路径
+```cpp
+find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_SDK_DIR}/bin")
+if (WIN32)
+    install(CODE "
+    if(EXISTS \"${WINDEPLOYQT_EXECUTABLE}\" AND NOT EXISTS \"${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/platforms\")
+        execute_process(
+            COMMAND \"${CMAKE_COMMAND}\" -E env PATH=\"${QT_SDK_DIR}/bin\"
+                \"${WINDEPLOYQT_EXECUTABLE}\"
+                \"$<TARGET_FILE_DIR:${PROJECT_NAME}>/$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
+                --dir \"${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}\"
+                --no-compiler-runtime
+                --no-system-d3d-compiler
+                --no-opengl-sw
+                --verbose 1
+        )
+    endif()"
+    )
+endif ()
+```
+构建可执行程序时直接编译出打包之后的样子，调用 windeploy 部署
+### AntDesign 库
+#### 根目录配置
+相对简单，只有一个配置文件，需要注意的是
+```cmake
+set(CMAKE_AUTOUIC OFF)   # 关闭自动 UI
+set(CMAKE_AUTOMOC ON)    # MOC 仍自动
+set(CMAKE_AUTORCC ON)    # RCC 仍自动
+
+qt6_wrap_ui(UI_HEADERS ${FORM_FILES})
+
+add_executable(${PROJECT_NAME}
+    ${SRC_FILES}
+    ${HEADER_FILES}
+    ${UI_HEADERS}        # 手动生成的 ui_*.h
+    ${RESOURCE_FILES}
+    ${THIRD_PARTY_SRC}
+    ${THIRD_PARTY_HEADERS}
+)
+
+source_group("UI Generated Files" FILES ${UI_HEADERS})
+```
+当使用 AUTOUIC 自动处理时，CMake 会为每个.ui 文件自动生成对应的头文件，可能导致*非必要文件修改之后*总是重新编译（但是这里不是，仅仅是为了在 vs ide 中显示他们，更好地了解细节）
