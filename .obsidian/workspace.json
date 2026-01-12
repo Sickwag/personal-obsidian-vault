@@ -21,6 +21,16 @@
               "icon": "lucide-file",
               "title": "QT6开发指南"
             }
+          },
+          {
+            "id": "dd1b62ace00191fb",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ]
       }
@@ -169,8 +179,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 219.5,
-    "collapsed": true
+    "width": 219.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -188,6 +197,7 @@
   },
   "active": "e04f04ff485659ac",
   "lastOpenFiles": [
+    "学习/其他专业书/QT6开发指南.md",
     "学习/ToolChain/Cmake.md",
     "Files & LongText/Attachments/PixPin_2026-01-11_15-20-37.png",
     "Files & LongText/Attachments/PixPin_2026-01-11_13-28-42.png",
