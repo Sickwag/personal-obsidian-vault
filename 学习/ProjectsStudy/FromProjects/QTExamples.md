@@ -541,6 +541,17 @@ auto item = std::unique_ptr<QListWidgetItem>(ui->qlistwidget->takeItem(row));
 qt 中其他组件也是用这样的逻辑
 
 # 杂项
+## Maintenance Tool 下载源
+对应位置使用，本次 maintenance 下载加速
+```bash
+.\MaintenanceTool.exe --mirror https://mirrors.nju.edu.cn/qt
+# 其他源
+https://mirrors.nju.edu.cn/qt
+https://mirrors.tuna.tsinghua.edu.cn/qt
+https://mirrors.ustc.edu.cn/qt
+https://mirror.sjtu.edu.cn/qt
+```
+运行后会打开 maintenance tool
 ## ide 使用
 如果调用一个对象函数，这个函数明明在文档里有些，但是 ide（creator）没有提示，可能是这个对象（控件）必须单独 include，而不是靠 ide 提示自动补全头文件
 ## 宽字符和本地环境对象
