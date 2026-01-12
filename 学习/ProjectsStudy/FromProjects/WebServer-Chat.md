@@ -753,4 +753,60 @@ private:
 	void onMessage(const mnet::TcpConnectionPtr&, mnet::Buffer*, muduo::Timestamp) {}
 };
 ```
-- 必要的事情有：创建 TcpServer 对象，事件循环
+必要的事情有：
+- 创建 TcpServer 对象，事件循环 EventLoop 指针
+- 然后就需要设置构造函数的参数（无论是服务端还是客户端），创建连接和读写函数回调
+- 设置线程数让 muduo 自己分配，设置 start 开启事件循环
+### 添加信息交换功能
+```cpp
+class ChatServer {
+public:
+	ChatServer(mnet::EventLoop* loop, const mnet::InetAddress& listenAddr, const std::string& nameArg) : loop_(loop), server_(loop, listenAddr, nameArg) {
+		// set user connect callback
+		server_.setConnectionCallback(std::bind(&ChatServer::onConnection, this, std::placeholders::_1));
+		// set user write/read callback
+		server_.setMessageCallback(std::bind(&ChatServer::onMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+		// base the workflow of muduo, it will be 1 I/O thread process coonnect/disconnect, and 3 thread working
+		server_.setThreadNum(4);
+	};
+
+	void start() {
+		server_.start();
+	}
+
+private:
+	mnet::TcpServer	 server_;
+	mnet::EventLoop* loop_;
+
+	// deal with connection event
+	void onConnection(const mnet::TcpConnectionPtr& conn) {
+		if(conn->connected()) {
+			std::cout << conn->peerAddress().toIpPort() << " -> " << conn->localAddress().toIpPort() << "online\n";
+		}
+		else {
+			std::cout << conn->peerAddress().toIpPort() << " -> " << conn->localAddress().toIpPort() << "offline\n";
+			conn->shutdown();  // simliar to `close(fd)`
+							   // loop_->quit();  // none to connect doesn't means we should close server loop event
+		}
+	}
+
+	// deal with read/write event
+	void onMessage(const mnet::TcpConnectionPtr& conn, mnet::Buffer* buffer, muduo::Timestamp time) {
+		std::string buf = buffer->retrieveAllAsString();
+		std::cout << "[time: " << time.toString() << "]: recv data: " << buf  << '\n';
+		conn->send(buf);
+	}
+};
+```
+在 main 函数中绑定端口（0.0.0.0）接受所有外部连接（开启防火墙），（127.0.0.1）接受本地连接
+```cpp
+int main() {
+	mnet::EventLoop	  loop;
+	mnet::InetAddress addr("0.0.0.0", 3025, false);
+	ChatServer		  server(&loop, addr, "ChatServer");
+	server.start();
+	loop.loop();
+	return 0;
+}
+```
+![[PixPin_2026-01-12_17-42-04.png]]
