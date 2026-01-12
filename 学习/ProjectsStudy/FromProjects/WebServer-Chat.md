@@ -810,3 +810,85 @@ int main() {
 }
 ```
 ![[PixPin_2026-01-12_17-42-04.png]]
+## 业务模块代码
+### 首先搭建整体架构
+```bash
+├── bin
+├── build
+├── chat.sql
+├── CMakeLists.txt
+├── include
+│   ├── client
+│   └── server
+│       └── chatserver.hpp
+├── src
+│   ├── client
+│   │   ├── CMakeLists.txt
+│   │   └── main.cpp
+│   ├── CMakeLists.txt
+│   └── server
+│       ├── chatserver.cpp
+│       ├── CMakeLists.txt
+│       └── main.cpp
+└── test
+```
+只搭建 server 部分，对根目录&src 目录&src/client&src/server 都使用一个 cmake 配置管理，其中根目录，src 目录都没有对应的模块信息，只有**当前层级的最少但必要的内容**
+```cmake
+# 根目录
+cmake_minimum_required(VERSION 3.10.0)
+set(CMAKE_TOOLCHAIN_FILE "/root/program/vcpkg/scripts/buildsystems/vcpkg.cmake")
+project(Chat VERSION 0.1.0 LANGUAGES C CXX)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+
+include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/include/server)
+include_directories(${PROJECT_SOURCE_DIR}/include/client)
+add_subdirectory(src)
+
+# src
+add_subdirectory(client)
+add_subdirectory(server)
+
+# src/server
+set(muduo_DIR "/root/program/muduo/install/release-install-cpp11")
+include_directories(${muduo_DIR}/include)
+link_directories(${muduo_DIR}/lib)
+
+aux_source_directory(. SRC_LIST)
+add_executable(ChatServer ${SRC_LIST})
+
+set(nlohmann_json_DIR "/root/program/vcpkg/installed/x64-linux/share/nlohmann_json/")
+find_package(nlohmann_json CONFIG REQUIRED)
+
+target_link_libraries(ChatServer PRIVATE
+	nlohmann_json::nlohmann_json
+	muduo_net
+	muduo_base
+	pthread
+)
+
+# src/client
+aux_source_directory(. SRC_LIST)
+add_executable(ChatClient ${SRC_LIST})
+```
+主要部分代码和 [[#muduo 网络库工作基本原理]]中的框架代码一致
+```cpp
+ChatServer::ChatServer(net::EventLoop* loop, const net::InetAddress& listenAddr, const muduo::string& nameArg) : server_(loop, listenAddr, nameArg), loop_(loop) {
+	server_.setConnectionCallback(std::bind(&ChatServer::onConnect, this,  _1));
+	server_.setMessageCallback(std::bind(&ChatServer::onMessage, this, _1, _2, _3));
+	server_.setThreadNum(4);
+}
+
+ChatServer::~ChatServer() {}
+
+void ChatServer::start() {
+	server_.start();
+}
+
+void ChatServer::onConnect(const net::TcpConnectionPtr& conn) {}
+
+void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffer, muduo::Timestamp time) {
+	std::string buf = buffer->retrieveAllAsString();
+	json		j	= json::parse(buf);
+}
+```
