@@ -440,7 +440,7 @@ int main() {
 
 ## 异步链接
 ### mysql 数据库异步链接（boost. mysql）
-关于协程可以参考[[servertech-chat#前置要求#协程|协程基本知识点]]和 [[MySQL#协程和异步编程|mysql使用协程实现异步编程]]
+关于协程可以参考[[WebServer-Chat#前置要求#协程|协程基本知识点]]和 [[MySQL#协程和异步编程|mysql使用协程实现异步编程]]
 需要注意，如果链接通过协程实现，则需要 `io_context` 链接句柄生命周期长于 mysql 服务模块，可以参考[[#服务注册管理|服务注册管理]]，一个统一的协程管理对象管理所有的**需要用到协程的服务**，所以这个管理者的生命周期必须长于所有服务，这个对象在 main.cpp 中创建。
 代码参考： [[C++ practice case#boost.mysql 异步连接版本]]
 如果运行连接数据库功能时，提示 ssl plugin 缺失，需要传入 `mysql::ssl_mode ssl = mysql::ssl_mode::disable;` 打开 ssl 开关

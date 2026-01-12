@@ -1,5 +1,10 @@
-项目地址：(https://github.com/anarthal/servertech-chat.git)
-# 完整运行流程
+---
+resource_1: https://github.com/anarthal/servertech-chat.git
+resource_2: https://github.com/fixbug666/chatserver.git
+resource_3: https://www.bilibili.com/video/BV1114y117Yh?spm_id_from=333.788.player.switch&vd_source=876be08bc9c030f4a9ea1fb97e0d0342&p=9
+---
+
+# Servertech_chat
 ## 环境准备
 ### 工具安装
 - g++版本更新到 11 以上，支持 C++17 标准（ubuntu 使用 `apt install` 即可）
@@ -476,7 +481,7 @@ asio::awaitable<void> chat::run_server(...) {
     // 这个 while(true) 只有在 io_context 被停止时才会退出
 }
 ```
-根据 [[#src/main. cpp]] 中的代码：
+根据 [[#src/main. cpp|src/main. cpp]] 中的代码：
 ```cpp
 auto st = std::make_shared<shared_state>(doc_root, ctx.get_executor());
 // ....
@@ -705,3 +710,47 @@ XADD key * field1 value1 field2 value2 ...
 - JSON 字符串是值
 ```
 所以 `req.push("XADD", room_id, "*", "payload", serialize_redis_message(msg));` 会将 payload 作为字段名，对应的 json 字符串作为值
+
+# muduo-cluster-server-chat
+参考：[08 muduo网络库简介_ev_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1114y117Yh?spm_id_from=333.788.player.switch&vd_source=876be08bc9c030f4a9ea1fb97e0d0342&p=9)
+## muduo 网络库工作基本原理
+![[PixPin_2026-01-12_16-06-41.png]]
+运行程序的之后，程序根据**设备 CPU 数量来做到线程数约等于程序工作线程数**，从而做到*尽可能的高并发*
+- 主线程用来处理用户连接/断开，是 I/O 线程
+- 剩余（如果有）的线程用来处理用户网络读写操作（通过 socketfd 等）
+- 如果有耗时操作可能会**新开一个线程来解决**
+## 基本代码编写
+### 模板代码
+使用 muduo 编写服务器端基本上的实现
+```cpp
+#include <functional>
+#include <iostream>
+#include <muduo/net/EventLoop.h>
+#include <muduo/net/TcpServer.h>
+#include <string>
+
+namespace mnet = muduo::net;
+
+class ChatServer {
+public:
+	ChatServer(mnet::EventLoop* loop, const mnet::InetAddress& listenAddr, const muduo::string& nameArg) : loop_(loop), server_(loop, listenAddr, nameArg) {
+		// set user connect callback
+		server_.setConnectionCallback(std::bind(&ChatServer::onConnection, this, std::placeholders::_1));
+		// set user write/read callback
+		server_.setMessageCallback(std::bind(&ChatServer::onMessage, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+		// base the workflow of muduo, it will be 1 I/O thread process coonnect/disconnect, and 3 thread working
+		server_.setThreadNum(4);
+	};
+
+private:
+	mnet::TcpServer	 server_;
+	mnet::EventLoop* loop_;
+
+	// deal with connection event
+	void onConnection(const mnet::TcpConnectionPtr&) {}
+
+	// deal with read/write event
+	void onMessage(const mnet::TcpConnectionPtr&, mnet::Buffer*, muduo::Timestamp) {}
+};
+```
+- 必要的事情有：创建 TcpServer 对象，事件循环
