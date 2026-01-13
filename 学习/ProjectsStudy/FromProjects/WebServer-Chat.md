@@ -893,8 +893,12 @@ void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffe
 	json		j	= json::parse(buf);
 }
 ```
-### 基本业务->网络模块和业务模块解耦
-使用 chatservice 作为业务模块，chatserver 作为网络模块，解耦的目的是**让网络模块只处理网络部分，业务只处理业务**，两者之间用最少的代码进行连接，至少看对应模块代码看不到另外模块的信息
+### 基本业务
+#### 网络模块和业务模块解耦
+使用 chatservice 作为业务模块，chatserver 作为网络模块，解耦的目的是：
+- **让网络模块只处理网络部分，业务只处理业务**
+- 两者之间用最少的代码进行连接，至少看对应模块代码看不到另外模块的信息
+- 业务模块和数据模块用最少的代码连接，业务层只操作对象（或者只执行操作）
 方法：
 1. 创建 public.hpp 创建网络信号数据包结构定义，chatservice 和 chatserver 通过网络结构包中的信息相互识别
 2. 将网络结构包中的业务标识符和业务处理逻辑封装在一个表中，server 通过解析标识符调用业务处理功能
