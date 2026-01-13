@@ -713,6 +713,32 @@ XADD key * field1 value1 field2 value2 ...
 
 # muduo-cluster-server-chat
 参考：[08 muduo网络库简介_ev_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1114y117Yh?spm_id_from=333.788.player.switch&vd_source=876be08bc9c030f4a9ea1fb97e0d0342&p=9)
+## 编写过程中的问题
+学习阶段可以一步步跟着来然后修改，但是自己设计时一定要首先设计好数据结构和各种代码中的枚举值转换关系
+### 编写数据模块和业务模块交互
+在[[#业务模块代码#添加数据层]]时出现
+commit 01b82787cfd0ff719f70b9813475d4943f809aed
+usermodel.cpp 中的 user.state 默认设置为 Offline，而数据库中的结构为:
+```sql
+CREATE TABLE `user` (
+	`id` int(11) NOT NULL AUTO_INCREMENT,
+	`name` varchar(50) DEFAULT NULL,
+	`password` varchar(50) DEFAULT NULL,
+	`state` enum('online','offline') CHARACTER SET latin1 DEFAULT
+     'offline',
+	PRIMARY KEY (`id`),
+	UNIQUE KEY `name` (`name`)
+)
+```
+offline 是小写，这一点就很难发现，应该从一开始就严格规定：
+- 数据结构和代码中对象的对应/转化关系
+- 代码使用枚举值而不是字符串
+- 代码对象与数据库通信时对应的转换函数将枚举值转换为存储在数据库中的值
+编写 sql 语句的小 bug
+```cpp
+sprintf(sql, "insert into user(name, password, state) values('%s', '%s', '%s')", user.username_.c_str(), user.password_.c_str(), user.state_.c_str());
+// insert into User（大写错误）
+```
 ## muduo 网络库工作基本原理
 ![[PixPin_2026-01-12_16-06-41.png]]
 运行程序的之后，程序根据**设备 CPU 数量来做到线程数约等于程序工作线程数**，从而做到*尽可能的高并发*
@@ -972,4 +998,22 @@ void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffe
 通过发送 json 数据调用对应服务
 ![[PixPin_2026-01-13_10-05-49.png]]
 #### 添加数据层
-使用 mysqldb 类控制所有数据的 CURD
+数据层不止有一个，可以分为功能性数据模块&存储类数据模块，这里使用 mysqldb 类控制所有数据的 CURD，usermodel 控制客户端和 msyql 交互的数据，usermodel 再和业务层沟通
+所有接口围绕 `mysql_query` 函数构建
+```cpp
+class MysqlDB {
+public:
+	MysqlDB();
+	~MysqlDB();
+	bool connect();
+	bool update(std::string_view sql);
+	MYSQL_RES* query(std::string_view sql);
+	MYSQL* getConnection();
+
+private:
+	MYSQL* conn_;
+};
+```
+***要注意，如果创建 `MYSQL_RES*` 对象需要在使用后 `mysql_free_result(res）`***
+![[PixPin_2026-01-13_17-39-25.png]]
+数据层 usermodel 用来管理所有和用户信息有关的

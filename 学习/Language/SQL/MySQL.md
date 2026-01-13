@@ -4389,7 +4389,7 @@ FROM (
     SELECT
         e.*,
         -- 在每个部门内，按 salary 从大到小排雷；同薪同名次
-        DENSE_RANK() OVER (PARTITION BY departmentId ORDER BY salary DESC) AS dr
+        DENSE_RANK() OVER (PARTITION BY departmentId ORDER BY salary DESC) AS dr		
     FROM Employee e
 ) AS e
 JOIN Department d ON d.id = e.departmentId
