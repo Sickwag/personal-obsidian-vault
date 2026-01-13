@@ -812,7 +812,15 @@ int main() {
 ![[PixPin_2026-01-12_17-42-04.png]]
 ## 业务模块代码
 ### 搭建整体架构
-对应 git 提交 commit c7deb9c843b0fd04a9be2483124b66a4083aca30，但是这个提交中少了一行在 src/server/main.cpp 中的 server.start()
+> [!note]
+> ```bash
+> commit c7deb9c843b0fd04a9be2483124b66a4083aca30
+> Author: root <root@localhost.localdomain>
+> Date:   Mon Jan 12 21:15:17 2026 +0800
+>     basic framework
+> ```
+> 但是这个提交中少了一行在 src/server/main.cpp 中的 server.start()
+
 ```bash
 ├── bin
 ├── build
@@ -894,14 +902,24 @@ void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffe
 }
 ```
 ### 基本业务
+#### 各个模块和业务模块的关系
+1. 创建 public.hpp 创建网络信号数据包结构定义，chatservice 和 chatserver 通过网络结构包中的信息相互识别
+2. 将网络结构包中的业务标识符和业务处理逻辑封装在一个表中，server 通过解析标识符调用业务处理功能
+3. 业务模块和数据模块交互，所有的数据处理和实现的功能分开
 #### 网络模块和业务模块解耦
+> [!note]
+> ```bash
+> commit 01b82787cfd0ff719f70b9813475d4943f809aed (HEAD -> main)
+> Author: root <root@localhost.localdomain>
+> Date:   Tue Jan 13 10:09:06 2026 +0800
+>     basic json parse and call handler to different msg type
+> ```
+
 使用 chatservice 作为业务模块，chatserver 作为网络模块，解耦的目的是：
 - **让网络模块只处理网络部分，业务只处理业务**
 - 两者之间用最少的代码进行连接，至少看对应模块代码看不到另外模块的信息
 - 业务模块和数据模块用最少的代码连接，业务层只操作对象（或者只执行操作）
 方法：
-1. 创建 public.hpp 创建网络信号数据包结构定义，chatservice 和 chatserver 通过网络结构包中的信息相互识别
-2. 将网络结构包中的业务标识符和业务处理逻辑封装在一个表中，server 通过解析标识符调用业务处理功能
 ```cpp
 // public.hpp
 template<typename T>
@@ -953,3 +971,5 @@ void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffe
 ![[PixPin_2026-01-13_10-02-40.png]]
 通过发送 json 数据调用对应服务
 ![[PixPin_2026-01-13_10-05-49.png]]
+#### 添加数据层
+使用 mysqldb 类控制所有数据的 CURD
