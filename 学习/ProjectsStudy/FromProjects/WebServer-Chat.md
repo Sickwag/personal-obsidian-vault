@@ -811,7 +811,8 @@ int main() {
 ```
 ![[PixPin_2026-01-12_17-42-04.png]]
 ## 业务模块代码
-### 首先搭建整体架构
+### 搭建整体架构
+对应 git 提交 commit c7deb9c843b0fd04a9be2483124b66a4083aca30，但是这个提交中少了一行在 src/server/main.cpp 中的 server.start()
 ```bash
 ├── bin
 ├── build
@@ -892,3 +893,59 @@ void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffe
 	json		j	= json::parse(buf);
 }
 ```
+### 基本业务->网络模块和业务模块解耦
+使用 chatservice 作为业务模块，chatserver 作为网络模块，解耦的目的是**让网络模块只处理网络部分，业务只处理业务**，两者之间用最少的代码进行连接，至少看对应模块代码看不到另外模块的信息
+方法：
+1. 创建 public.hpp 创建网络信号数据包结构定义，chatservice 和 chatserver 通过网络结构包中的信息相互识别
+2. 将网络结构包中的业务标识符和业务处理逻辑封装在一个表中，server 通过解析标识符调用业务处理功能
+```cpp
+// public.hpp
+template<typename T>
+auto getEnumValue(T enumValue) {
+    if constexpr (std::is_enum_v<T>) {
+        return static_cast<int>(enumValue);
+    }
+    return 0;
+}
+
+enum MsgType {
+	LOGIN_MSG = 1,	// login
+	REG_MSG			// register
+};
+
+// chatservice.cpp
+// 封装标识符和业务处理逻辑函数
+ChatService::ChatService(){
+	msgHandlerMap_.insert({ getEnumValue(MsgType::LOGIN_MSG), std::bind(&ChatService::login, this, _1, _2, _3) });
+	msgHandlerMap_.insert({ getEnumValue(MsgType::REG_MSG), std::bind(&ChatService::reg, this, _1, _2, _3) });
+}
+void ChatService::login(const net::TcpConnectionPtr& conn, json& j, muduo::Timestamp time) {
+    LOG_INFO << "login event";
+}
+void ChatService::reg(const net::TcpConnectionPtr& conn, json& j, muduo::Timestamp time) {
+    LOG_INFO << "reg event";
+}
+MsgHandler ChatService::getHandler(int msgid) {
+	if(!msgHandlerMap_.contains(msgid)){
+		auto invaildHandle = [msgid](const net::TcpConnectionPtr& conn, json& j, muduo::Timestamp time) -> void { 
+		LOG_ERROR << "msgid: " << msgid << " cannot find handler"; 
+		};
+		return invaildHandle;
+	}else{
+		return msgHandlerMap_.at(msgid);
+	}
+}
+
+// chatserver.cpp
+// 只能看到调用了业务代码，单调用了什么完全分开
+void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffer, muduo::Timestamp time) {
+	std::string buf = buffer->retrieveAllAsString();
+	json		j	= json::parse(buf);
+	const auto& msgHandler = ChatService::instance()->getHandler(j["msgid"].get<int>());
+	msgHandler(conn, j, time);
+}
+```
+编译运行后能够看到正在监听对应端口
+![[PixPin_2026-01-13_10-02-40.png]]
+通过发送 json 数据调用对应服务
+![[PixPin_2026-01-13_10-05-49.png]]
