@@ -786,11 +786,39 @@ root@VM-20-9-ubuntu:~/CodeFiles/muduo-server-chat# cmake --build ./build
 [100%] Linking CXX executable /root/CodeFiles/muduo-server-chat/bin/ChatServer
 [100%] Built target ChatServer
 ```
+#### 解决
+调整 cmake 配置，将 server 层配置的所有 set 移动到开头
+主 cmake 设置中所有 set 调整到 project 之前
+rm -rf ./build 然后重新编译运行
 #### 教训
 - 设置 cmake 时确保所有 set 都在 project 之前
 - 使用 cmake 运行程序时注意工作目录变化
 - 当程序输出代码中没有的字符串时，最有可能的原因是**二进制文件过期**
 - rm build 目录之后重新编译注意 cmake **构建和编译过程中的输出**
+### linux telnet 终端输入
+#### 背景
+编写客户端断开连接之后服务端将 user.state 改为 offline 的逻辑，运行后发现 Ctrl+C 断开方式并不会调用 mysql 执行 sql 而是*服务端抛出异常并终止*
+#### 原因
+使用 telnet 连接上服务器之后，telnet 会进入一个**输入程序**，***此时的已经不是一个终端了***，ctrl+C 不会停止程序，而是**输入一个 `^[` 字符**，这时候客户端的 json 解析会解析到这个符号抛出异常
+```bash
+ [json.exception.parse_error.101] parse error at line 1, column 1: syntax error while parsing value - unexpected ']'
+```
+程序中断，json 错误解析发生在 chatserver 的 onMessage 阶段，
+- 按下 ctrl+c 发送信息
+- 服务端解析失败程序终止
+- 客户端先因为主机断连接所以 telnet 程序才会退出，**而不是因为 ctrl+c**
+- 收到消息发生在断开连接之前，所以 onMessage 回调先发生，不修改数据库
+#### 解决
+正确退 telnet 方式是按下 ctrl+] 回车，然后输入 quit
+```bash
+root@VM-20-9-ubuntu:~/CodeFiles/muduo-server-chat# telnet 127.0.0.1 3025
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.  # 退出方法
+telnet> quit
+root@VM-20-9-ubuntu:~/CodeFiles/muduo-server-chat#
+```
+添加 json 解析异常处理，参考[[#完善数据层功能]]
 ## muduo 网络库工作基本原理
 ![[PixPin_2026-01-12_16-06-41.png]]
 运行程序的之后，程序根据**设备 CPU 数量来做到线程数约等于程序工作线程数**，从而做到*尽可能的高并发*
@@ -1134,3 +1162,35 @@ void ChatService::reg(const net::TcpConnectionPtr& conn, json& j, muduo::Timesta
 ```
 主要是实现 reg 和 login 函数，CRUD 流程
 ![[PixPin_2026-01-14_09-35-11.png]]
+添加用户退出逻辑和 json 异常处理（让发送不合格式的消息时服务器不终止）
+```cpp
+void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffer, muduo::Timestamp time) {
+	std::string buf = buffer->retrieveAllAsString();
+	if(buf.empty()) {
+		LOG_WARN << "Received empty message from connection: " << conn->name();
+		return;
+	}
+
+	try {
+		json j = json::parse(buf);
+		const auto& msgHandler = ChatService::instance()->getHandler(j["msgid"].get<int>());
+		msgHandler(conn, j, time);
+	} catch (const json::parse_error& e) {
+		LOG_ERROR << "JSON parse error from connection " << conn->name() << ": " << e.what() << ", data: " << buf;
+	} catch (const std::exception& e) {
+		LOG_ERROR << "Exception in onMessage from connection " << conn->name() << ": " << e.what();
+	}
+}
+```
+用户退出逻辑，也就是断开连接，也由 onConnection 接管
+```cpp
+void ChatServer::onConnect(const net::TcpConnectionPtr& conn) {
+	LOG_INFO << "onConnect called, connected: " << conn->connected();
+	if(!conn->connected()){
+		LOG_INFO << "Connection closed, calling clientCloseException";
+		ChatService::instance()->clientCloseException(conn);
+		conn->shutdown();
+	}
+}
+```
+`clientCloseException()` 回调用来处理这种情况
