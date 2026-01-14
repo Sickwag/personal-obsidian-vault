@@ -739,6 +739,58 @@ offline 是小写，这一点就很难发现，应该从一开始就严格规定
 sprintf(sql, "insert into user(name, password, state) values('%s', '%s', '%s')", user.username_.c_str(), user.password_.c_str(), user.state_.c_str());
 // insert into User（大写错误）
 ```
+### cmake 变量失效导致不更新二进制文件
+发生在[[#添加数据层]]中
+#### 起因
+修改了主 cmake 配置，本意是优化 cmake 结构配置，明确语义，但 `set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)` 被设置到了 `project` 之前，导致这个变量失效。
+#### 后果
+但是旧的 cmake 缓存仍在，cmake 由于这个变量是失效的，但值又不为空，所以构建过程中会把输出目录设置为系统输出目录 `/usr/bin`，
+无论我如何只用 ` cmake -B build && cmake --build ./build ` 都会使用旧配置。这导致了 vscode 中点击运行会让程序在 `/usr/bin` 中运行，而我没有发现。在测试时一直使用 `./bin/ChatServer`
+这样我无论怎么修改日志，调试，测试结果都不会改变（不知情的情况下很奇怪）
+
+最后在 `rm -rf ./build && cmake -B build` 发现**编译**过程中在有
+```bash
+Linking CXX executable /bin/ChatServer
+# 而不是
+Linking CXX executable /root/CodeFiles/muduo-server-chat/bin/ChatServer
+```
+cmake 在编译过程中，目标输出相关内容都会用绝对路径，而代码-> `.o` 对象编译使用项目相对路径，发现二进制文件最终编译到了错误的目录，这使得测试失败和单步调试无法进行，定位到 cmake 配置的错误
+```bash
+# 完整日志
+root@VM-20-9-ubuntu:~/CodeFiles/muduo-server-chat# cmake -B ./build
+-- The C compiler identification is GNU 11.4.0
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found nlohmann_json: /root/program/vcpkg/installed/x64-linux/share/nlohmann_json/nlohmann_jsonConfig.cmake (found version "3.12.0")
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /root/CodeFiles/muduo-server-chat/build
+root@VM-20-9-ubuntu:~/CodeFiles/muduo-server-chat# cmake --build ./build
+[ 12%] Building CXX object src/client/CMakeFiles/ChatClient.dir/main.cpp.o
+[ 25%] Linking CXX executable /root/CodeFiles/muduo-server-chat/bin/ChatClient
+[ 25%] Built target ChatClient
+[ 37%] Building CXX object src/server/CMakeFiles/ChatServer.dir/chatserver.cpp.o
+[ 50%] Building CXX object src/server/CMakeFiles/ChatServer.dir/chatservice.cpp.o
+[ 62%] Building CXX object src/server/CMakeFiles/ChatServer.dir/main.cpp.o
+[ 75%] Building CXX object src/server/CMakeFiles/ChatServer.dir/usermodel.cpp.o
+[ 87%] Building CXX object src/server/CMakeFiles/ChatServer.dir/mysqldb/mysqldb.cpp.o
+[100%] Linking CXX executable /root/CodeFiles/muduo-server-chat/bin/ChatServer
+[100%] Built target ChatServer
+```
+#### 教训
+- 设置 cmake 时确保所有 set 都在 project 之前
+- 使用 cmake 运行程序时注意工作目录变化
+- 当程序输出代码中没有的字符串时，最有可能的原因是**二进制文件过期**
+- rm build 目录之后重新编译注意 cmake **构建和编译过程中的输出**
 ## muduo 网络库工作基本原理
 ![[PixPin_2026-01-12_16-06-41.png]]
 运行程序的之后，程序根据**设备 CPU 数量来做到线程数约等于程序工作线程数**，从而做到*尽可能的高并发*
@@ -1017,3 +1069,68 @@ private:
 ***要注意，如果创建 `MYSQL_RES*` 对象需要在使用后 `mysql_free_result(res）`***
 ![[PixPin_2026-01-13_17-39-25.png]]
 数据层 usermodel 用来管理所有和用户信息有关的
+#### 完善数据层功能
+```cpp
+void ChatService::login(const net::TcpConnectionPtr& conn, json& j, muduo::Timestamp time) {
+	int			id		 = j["id"].get<int>();
+	std::string password = j["password"];
+	User user = usermodel_.query(id);
+	json response;
+	if(user.id_ != -1 && user.password_ == password) {
+		if(user.state_ == "online") {
+			// user exist but already online
+			response["msgid"]  = getEnumValue(MsgType::LOGIN_MSG_ACK);
+			response["errno"]  = 2;
+			response["errmsg"] = std::string("user ") + user.username_ + " is already online";
+			LOG_INFO << "user "<< user.username_ <<" is already online";
+		} else {
+			// user login success
+			response["msgid"] = getEnumValue(MsgType::LOGIN_MSG_ACK);
+			response["errno"] = 0;
+			response["id"]	  = user.id_;
+			response["name"]  = user.username_;
+			user.state_		  = "online";
+			usermodel_.updateState(user);
+			LOG_INFO << "user "<< user.username_ << " login success";
+		}
+	} else {
+		// user doesn't exist or password error
+		response["msgid"] = getEnumValue(MsgType::LOGIN_MSG_ACK);
+		response["errno"] = 1;
+		if (user.id_ == -1) {
+			response["errmsg"] = std::string("user id ") + std::to_string(id) + " is not exist";
+			LOG_INFO << "user id "<< id <<" is not exist";
+		} else {
+			response["errmsg"] = std::string("password error for user ") + user.username_;
+			LOG_INFO << "password error for user "<< user.username_;
+		}
+	}
+	std::string responseStr = response.dump();
+	LOG_INFO << "Sending response: " << responseStr;
+	conn->send(responseStr);
+}
+
+void ChatService::reg(const net::TcpConnectionPtr& conn, json& j, muduo::Timestamp time) {
+	// LOG_INFO << "reg event";
+	std::string name	 = j["name"];
+	std::string password = j["password"];
+
+	User user;
+	user.username_ = std::move(name);
+	user.password_ = std::move(password);
+	if(usermodel_.insert(user)) {
+		json response;
+		response["msgid"] = getEnumValue(MsgType::REG_MSG_ACK);
+		response["errno"] = 0;	// 0 means success, 1 means failed
+		response["id"]	  = user.id_;
+		conn->send(response.dump());
+	} else {
+		json response;
+		response["msgid"] = getEnumValue(MsgType::REG_MSG_ACK);
+		response["errno"] = 1;
+		conn->send(response.dump());
+	}
+}
+```
+主要是实现 reg 和 login 函数，CRUD 流程
+![[PixPin_2026-01-14_09-35-11.png]]
