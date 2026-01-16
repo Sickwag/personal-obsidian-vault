@@ -818,6 +818,8 @@ telnet> quit
 root@VM-20-9-ubuntu:~/CodeFiles/muduo-server-chat#
 ```
 添加 json 解析异常处理，参考[[#完善数据层功能]]
+### 公用数据结构成员函数定义
+
 ## muduo 网络库工作基本原理
 ![[PixPin_2026-01-12_16-06-41.png]]
 运行程序的之后，程序根据**设备 CPU 数量来做到线程数约等于程序工作线程数**，从而做到*尽可能的高并发*
@@ -1342,3 +1344,7 @@ void ChatService::login(const net::TcpConnectionPtr& conn, const json& j, muduo:
 
 这里涉及到比较复杂的 sql 语句，编写代码前最好测试 sql
 同样是增删改查代码，和数据库对应的表进行交互，较简单
+
+### 客户端编写
+使用 socket 编程，无 GUI 界面，简单增删改查数据转换即可实现
+![[PixPin_2026-01-16_21-44-29.png]]
