@@ -1348,3 +1348,5 @@ void ChatService::login(const net::TcpConnectionPtr& conn, const json& j, muduo:
 ### 客户端编写
 使用 socket 编程，无 GUI 界面，简单增删改查数据转换即可实现
 ![[PixPin_2026-01-16_21-44-29.png]]
+需要注意：
+- 由于客户端也需要访问结构体 User，GroupUser，Group 这些**纯数据结构体**（也可能是类），这些*数据体中的工具函数实现*一般需要放在 hpp 文件中，不然可能导致**初始化找不到构造函数**，数据转换（序列/反序列化）已在头文件声明但找不到的问题，因实现在 cpp 文件中，没 include cpp 文件
