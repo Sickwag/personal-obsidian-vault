@@ -36,8 +36,21 @@
               "icon": "lucide-file",
               "title": "MySQL"
             }
+          },
+          {
+            "id": "a20e098f80877990",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.11.4"
+              },
+              "icon": "lucide-book-up",
+              "title": "版本说明 1.11.4"
+            }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -188,6 +201,7 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "bases:新建数据库": false,
       "switcher:打开快速切换": false,
       "graph:查看关系图谱": false,
       "daily-notes:打开/创建今天的日记": false,
@@ -195,17 +209,17 @@
       "command-palette:打开命令面板": false,
       "markdown-importer:打开 Markdown 格式转换器": false,
       "workspaces:管理工作区布局": false,
-      "bases:创建新数据库": false,
       "table-editor-obsidian:Advanced Tables Toolbar": false,
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "5016f7dee3d499a6",
+  "active": "a20e098f80877990",
   "lastOpenFiles": [
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "Files & LongText/Long code/C++ practice case.md",
     "学习/Language/SQL/MySQL.md",
-    "学习/ToolChain/杂项.md",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/ToolChain/杂项.md",
     "Files & LongText/Attachments/PixPin_2026-01-14_09-35-11.png",
     "Files & LongText/Attachments/PixPin_2026-01-13_17-39-25.png",
     "Files & LongText/Attachments/PixPin_2026-01-13_10-05-49.png",
@@ -238,7 +252,6 @@
     "Chores/草稿.md",
     "学习/algorithm/用法导向知识.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
-    "Files & LongText/Long code/C++ practice case.md",
     "find_large_files.ps1"
   ]
 }
