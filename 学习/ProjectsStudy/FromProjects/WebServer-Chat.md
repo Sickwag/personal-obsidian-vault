@@ -1341,3 +1341,4 @@ void ChatService::login(const net::TcpConnectionPtr& conn, const json& j, muduo:
 > ```
 
 这里涉及到比较复杂的 sql 语句，编写代码前最好测试 sql
+同样是增删改查代码，和数据库对应的表进行交互，较简单
