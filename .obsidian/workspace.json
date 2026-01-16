@@ -36,21 +36,8 @@
               "icon": "lucide-file",
               "title": "MySQL"
             }
-          },
-          {
-            "id": "a20e098f80877990",
-            "type": "leaf",
-            "state": {
-              "type": "release-notes",
-              "state": {
-                "currentVersion": "1.11.4"
-              },
-              "icon": "lucide-book-up",
-              "title": "版本说明 1.11.4"
-            }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -213,10 +200,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "a20e098f80877990",
+  "active": "5016f7dee3d499a6",
   "lastOpenFiles": [
-    "Files & LongText/Long code/C++ practice case.md",
     "学习/Language/SQL/MySQL.md",
+    "Files & LongText/Long code/C++ practice case.md",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ToolChain/杂项.md",
