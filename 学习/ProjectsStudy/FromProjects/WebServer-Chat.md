@@ -3,7 +3,6 @@ resource_1: https://github.com/anarthal/servertech-chat.git
 resource_2: https://github.com/fixbug666/chatserver.git
 resource_3: https://www.bilibili.com/video/BV1114y117Yh?spm_id_from=333.788.player.switch&vd_source=876be08bc9c030f4a9ea1fb97e0d0342&p=9
 ---
-
 # Servertech_chat
 ## 环境准备
 ### 工具安装
@@ -1162,7 +1161,9 @@ void ChatService::reg(const net::TcpConnectionPtr& conn, json& j, muduo::Timesta
 ```
 主要是实现 reg 和 login 函数，CRUD 流程
 ![[PixPin_2026-01-14_09-35-11.png]]
-添加用户退出逻辑和 json 异常处理（让发送不合格式的消息时服务器不终止）
+
+#### 客户端和服务端断开处理
+添加son 异常处理（让发送不合格式的消息时服务器不终止）
 ```cpp
 void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffer, muduo::Timestamp time) {
 	std::string buf = buffer->retrieveAllAsString();
@@ -1182,7 +1183,7 @@ void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffe
 	}
 }
 ```
-用户退出逻辑，也就是断开连接，也由 onConnection 接管
+用户退出逻辑，也就是断开连接（telnet 中按下 ctrl+\]或者直接关闭终端），也由 onConnection 接管，这里出现了一个问题，参考[[#编写过程中的问题#linux telnet 终端输入]]
 ```cpp
 void ChatServer::onConnect(const net::TcpConnectionPtr& conn) {
 	LOG_INFO << "onConnect called, connected: " << conn->connected();
@@ -1194,3 +1195,82 @@ void ChatServer::onConnect(const net::TcpConnectionPtr& conn) {
 }
 ```
 `clientCloseException()` 回调用来处理这种情况
+客户端因为断开/直接中断终端而**必须把所有用户设置为 offline**，这里需要在**服务器主线程中设置中断处理，而不是网络模块中**，需要 `signal.h` 文件提供 `signal` 函数
+`signal`函数的本质是一个**事件通知机制**，它允许程序在运行时响应来自外部的"中断"事件。通俗来说：
+- **信号**是操作系统发给进程的异步通知
+- **signal函数**就是设置"信号处理回调函数"的注册器
+- 当特定事件发生时，操作系统会中断当前程序执行，转而执行你注册的回调函数
+常见的信号类型：
+
+| 信号      | 值   | 说明             |
+| ------- | --- | -------------- |
+| SIGINT  | 2   | 终止进程（Ctrl+C）   |
+| SIGTERM | 15  | 终止进程（默认kill命令） |
+| SIGKILL | 9   | 强制终止进程（无法捕获）   |
+| SIGSEGV | 11  | 段错误（内存访问错误）    |
+| SIGFPE  | 8   | 浮点异常           |
+| SIGALRM | 14  | 定时器到期          |
+| SIGUSR1 | 10  | 用户自定义信号1       |
+| SIGUSR2 | 12  | 用户自定义信号2       |
+需要添加：
+```cpp
+void resetHandler(int){
+	ChatService::instance()->reset();
+	exit(0);
+}
+
+int main(){
+	signal(SIGINT, resetHandler);
+	net::InetAddress addr("127.0.0.1", 3025);
+	net::EventLoop	 loop;
+	ChatServer		 server(&loop, addr, "ChatServer");
+	server.start();
+	loop.loop();
+	return 0;
+}
+
+// chatservice.cpp
+void ChatService::reset() {
+	userModel_.resetState();
+}
+
+// usermodel.cpp
+void UserModel::resetState() {
+	char	sql[1024] = "update user set state = 'offline' where state = 'online'";
+	MysqlDB db;
+	if(db.is_connected()) {
+		if(db.update(sql)) {
+			LOG_INFO << "reset all user's states to \"offline\" success";
+		}else{
+			LOG_INFO << "sql update failed in resetting all user's states";
+		}
+	}
+}
+```
+注意这里没有直接将对应逻辑写在 chatservice 中，根据[[#各个模块和业务模块的关系]]的设计，调整 user.state 是用户数据层面的操作，委托给对应的类来执行
+中断操作未来也不止需要改用户状态，更细致的管理->更多的步骤都写在 chatservice 中统一业务管理而没有具体操作，高内聚低耦合
+
+> [!note]
+> 现代 C 更推荐使用 sigaction 函数
+> ```cpp
+> #include <signal.h>
+> #include <stdio.h>
+> 
+> void handle_signal(int sig, siginfo_t *info, void *context) {
+>     printf("收到信号: %d\n", sig);
+> }
+> 
+> int main() {
+>     struct sigaction sa;
+>     sa.sa_flags = SA_SIGINFO;
+>     sa.sa_sigaction = handle_signal;
+>     
+>     sigemptyset(&sa.sa_mask);
+>     sigaction(SIGINT, &sa, NULL);
+>     
+>     printf("等待信号...\n");
+>     pause();
+>     return 0;
+> }
+> ```
+
