@@ -1273,4 +1273,71 @@ void UserModel::resetState() {
 >     return 0;
 > }
 > ```
+### 复杂业务
+#### 添加好友
+本质是增删改查，添加一个 ADD_FRIEND 在 public.hpp 中，其他逻辑自然简单
+使用 friendmodel 类添加好友关系&查询用户的所有好友
+```cpp
+void FriendModel::insert(int userid, int friendid) {
+	char sql1[1024] = { 0 };
+	char sql2[1024] = { 0 };
+	sprintf(sql1, "insert into friend values(%d, %d);", userid, friendid);
+	sprintf(sql2, "insert into friend values(%d, %d);", friendid, userid);
+	MysqlDB db;
+	if(db.is_connected()) {
+		if(db.update(sql1) && db.update(sql2)){
+		// ...
+		}
+	}
+}
 
+std::vector<User> FriendModel::query(int userid) {
+	char sql[1024] = { 0 };
+	// 这条sql需要联合查询
+	sprintf(sql, "select a.id, a.name, a.state from user as a inner join friend as b on b.friendid = a.id where b.userid = %d", userid);
+	std::vector<User> vec;
+	MysqlDB					 db;
+	if(db.is_connected()) {
+		MYSQL_RES* res = db.query(sql);
+		if(res != nullptr) {
+			MYSQL_ROW row = mysql_fetch_row(res);
+			while(row != nullptr) {
+			 	// 把好友信息变为json字符串
+			}
+		}
+		mysql_free_result(res);
+	}
+	// ...
+	return vec;
+}
+```
+登录后通过调用 query，将返回的好友列表 `vector<User>` 转化为 json 发送
+```cpp
+void ChatService::login(const net::TcpConnectionPtr& conn, const json& j, muduo::Timestamp time) {
+	// 登陆成功时
+	std::vector<User> userVec = friendModel_.query(id);
+	if(!userVec.empty()){
+		User user;
+		std::vector<std::string> friendsStorage;
+		for(auto& u : userVec){
+			friendsStorage.push_back(std::move(u.to_json().dump()));
+		}
+		response["friends"] = friendsStorage;
+	}
+}
+```
+#### 添加群组
+> [!note]
+> ```bash
+> commit 08d71332976ad1ad43a4acfccdd9ff6099b4d4f7 (HEAD -> main)
+> Author: root <root@localhost.localdomain>
+> Date:   Fri Jan 16 14:33:06 2026 +0800
+> 
+>     - add add_friend function
+>     - add `row = mysql_fetch_row(res)`; in while loop to avoid memory explode
+>     - use friendmodel to storage & deal with every user's friends
+>     - use <signals.h> to make sure every online use to be offline when server term
+> inate
+> ```
+
+这里涉及到比较复杂的 sql 语句，编写代码前最好测试 sql

@@ -37,8 +37,7 @@
               "title": "杂项"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -185,7 +184,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 219.5
+    "width": 219.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -201,14 +201,14 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "2d673b89ec9d0a1d",
+  "active": "5016f7dee3d499a6",
   "lastOpenFiles": [
+    "学习/ToolChain/杂项.md",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/Language/SQL/MySQL.md",
     "Files & LongText/Long code/C++ practice case.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/ToolChain/杂项.md",
     "Files & LongText/Attachments/PixPin_2026-01-14_09-35-11.png",
     "Files & LongText/Attachments/PixPin_2026-01-13_17-39-25.png",
     "Files & LongText/Attachments/PixPin_2026-01-13_10-05-49.png",
