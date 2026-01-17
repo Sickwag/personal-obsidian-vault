@@ -818,8 +818,66 @@ telnet> quit
 root@VM-20-9-ubuntu:~/CodeFiles/muduo-server-chat#
 ```
 添加 json 解析异常处理，参考[[#完善数据层功能]]
+### 获取 mysql 数据避免无限循环
+获取 mysql 的数据时以行为单位，一定要在循环之后更新游标到下一行，否则会内存膨胀
+```cpp
+std::vector<std::string> OfflineMsgModel::query(int userid) {
+	if(db.is_connected()) {
+		MYSQL_RES* res = db.query(sql);
+		if(res != nullptr) {
+			MYSQL_ROW row = mysql_fetch_row(res);
+			while(row != nullptr) {
+				vec.emplace_back(row[0]);
+				row = mysql_fetch_row(res); // 必须
+			}
+		}
+		mysql_free_result(res);
+	}
+}
+```
+- 否则程序会在获取离线消息时进入死循环，不断读取而没有响应，最终导致内存和 CPU 占用拉满，主机强制关闭
 ### 公用数据结构成员函数定义
+通用的数据结构体/类应该将他们：
+- 放在一个 server/client 都能看见的头文件中（CS 架构）
+- 不宜添加过多成员函数，应该只提供基本的数据处理/转换接口
+- 提供了成员函数那么**最好将实现放在头文件中**，本例中 User 结构体本应该单独列出在一个头文件中，而我的实现放在了 usermodel.hpp 中，这就导致了其他代码想要获取 User 定义 `#include<usermodel.hpp>` 会读取到不需要的内容
+- 把实现放在 cpp 文件中头文件只提供定义可能会引发大量**找不到 XX 符号类型的报错**，文本量很大不太好排查
+### /usr/bin/ld 链接错误
+常见的连接错误
+#### 找不到文件（夹）错误
+```bash
+/usr/bin/ld: cannot find -lhiredis: No such file or directory
+collect2: error: ld returned 1 exit status
+# 下面都不用看，make编写反正也不懂
+gmake[2]: *** [src/server/CMakeFiles/ChatServer.dir/build.make:244: /root/CodeFiles/muduo-server-chat/bin/ChatServer] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:180: src/server/CMakeFiles/ChatServer.dir/all] Error 2
+gmake: *** [Makefile:91: all] Error 2
+```
+g++的 `-l` 参数意义是用来连接库文件，但是没有名为 hiredis 的库，而 cmake 中使用了 `target_link_libraries(${project_name} private hiredis};`，那么说明 hiredis 使用了**现代 cmake target**方法构建->整个 hiredis 库由多个 target 构成
+- 如果使用 config 模式 find_package 并且没有报错找不到 Config.cmake，那么通常是使用多 target 形式构建，应该写为 `<libname>::<targetname>`
+- vcpkg 的库大多使用这种形式
+- 使用 FindXXX.cmake 形式引入的库，一般只需要写库名，也有例外（boost）
+#### 找不到符号
+```bash
+/usr/bin/ld: CMakeFiles/ChatClient.dir/main.cpp.o: # 发生错误文件名
 
+# 发生错误的函数签名，由于需要写成完整形式，所以一般很长
+in function `doLoginResponse(nlohmann::json_abi_v3_12_0::basic_json<std::map, std::vector, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool, long, unsigned long, double, std::allocator, nlohmann::json_abi_v3_12_0::adl_serializer, std::vector<unsigned char, std::allocator<unsigned char> >, void>&)':
+
+# 具体错误位置在 0xe38 -> 第7070个字符位置
+# 错误内容为：undefined reference
+# 错误的函数为User::User(...)某种形式（根据内容）的构造函数
+main.cpp:(.text+0xe38): undefined reference to `User::User(int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)'
+
+# 同理没找到Group的构造函数
+/usr/bin/ld: main.cpp:(.text+0x1164): undefined reference to `Group::Group(int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)'
+
+# 因为没有构造函数而直接调用导致的符号找不到错误
+# 由于找不到符号引起的一些系统函数出现的链式调用报错
+/usr/bin/ld: CMakeFiles/ChatClient.dir/main.cpp.o: in function `__static_initialization_and_destruction_0(int, int)':
+main.cpp:(.text+0x45df): undefined reference to `User::User(int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)'
+```
+从上往下依次解决即可，类似 `main.cpp:(.text+0x45df)` 这样形式的报错在说明报错出现在源代码中字符流位置
 ## muduo 网络库工作基本原理
 ![[PixPin_2026-01-12_16-06-41.png]]
 运行程序的之后，程序根据**设备 CPU 数量来做到线程数约等于程序工作线程数**，从而做到*尽可能的高并发*
