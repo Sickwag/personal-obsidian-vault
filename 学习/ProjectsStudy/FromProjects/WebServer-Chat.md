@@ -1345,8 +1345,86 @@ void ChatService::login(const net::TcpConnectionPtr& conn, const json& j, muduo:
 这里涉及到比较复杂的 sql 语句，编写代码前最好测试 sql
 同样是增删改查代码，和数据库对应的表进行交互，较简单
 
-### 客户端编写
+## 客户端编写
 使用 socket 编程，无 GUI 界面，简单增删改查数据转换即可实现
 ![[PixPin_2026-01-16_21-44-29.png]]
 需要注意：
 - 由于客户端也需要访问结构体 User，GroupUser，Group 这些**纯数据结构体**（也可能是类），这些*数据体中的工具函数实现*一般需要放在 hpp 文件中，不然可能导致**初始化找不到构造函数**，数据转换（序列/反序列化）已在头文件声明但找不到的问题，因实现在 cpp 文件中，没 include cpp 文件
+## 负载均衡
+![[PixPin_2026-01-17_09-17-52.png]]
+负载均衡器的意义：
+1. 把 client 的请求按照负载算法分发到具体的业务服务器 ChatServer 上面
+2. 能够和 ChatServer 保持心跳机制，监测 ChatServer 故障
+3. 能够发现新添加的 ChatServer 设备，方便扩展服务器数量（最好是平滑更新，在不关闭服务器的情况下**重新读取配置**->发现新的 ChatServer）
+### 如何引入负载均衡
+### 如何解决跨服务器通信问题
+跨服务器通信并不能让所有的服务器间都通过 tcp 连接，强耦合并且占用大量 **socket 资源和空闲但是被占用带宽**
+![[PixPin_2026-01-17_09-29-16.png]]
+解决方法是使用中间件
+![[PixPin_2026-01-17_09-31-27.png]]
+有了消息队列之后，
+- 客户端只需要 **订阅(subscribe)** 消息队列（在消息队列中表明对 XXX 感兴趣）
+- 服务器端只需要在消息队列中 **发布(publish)** 消息
+- 消息队列根据 publish 和 subscribe 之间的关系，找到不同 Server 感兴趣的内容并 **推送(notify)** 给 Server，即可完成集群间的跨服务器通信
+### nginx 工作原理
+主配置 `/www/server/ngnix/conf/nginx.conf` 中记录 **nginx 的工作端口**，其他配置文件（tcp 配置文件在 `/www/server/panel/vhost/nginx/tcp`，http 配置文件在 `/www/server/panel/vhost/nginx/`）设置不同的服务配置
+主配置
+```nginx
+user  www www;
+worker_processes auto;
+error_log  /www/wwwlogs/nginx_error.log  crit;
+pid        /www/server/nginx/logs/nginx.pid;
+worker_rlimit_nofile 51200;
+
+stream {
+    log_format tcp_format '$time_local|$remote_addr|$protocol|$status|$bytes_sent|$bytes_received|$session_time|$upstream_addr|$upstream_bytes_sent|$upstream_bytes_received|$upstream_connect_time'; # 日志格式
+  
+    access_log /www/wwwlogs/tcp-access.log tcp_format;
+    error_log /www/wwwlogs/tcp-error.log;
+    include /www/server/panel/vhost/nginx/tcp/*.conf;  # 其他http配置文件位置
+}
+server
+    {
+        listen 888;
+        server_name phpmyadmin;
+        index index.html index.htm index.php;
+        root  /www/server/phpmyadmin;
+            location ~ /tmp/ {
+                return 403;
+            }
+        allow 127.0.0.1;
+        allow ::1;
+        deny all;
+    }
+	include /www/server/panel/vhost/nginx/*.conf; # tcp配置文件位置
+}
+```
+chatserver 的 nginx 配置，由于 chatserver 使用 tcp 进行连接，并且 include 语句包含了 tcp 文件夹路径，所以需要这样配置
+```nginx
+# /www/server/panel/vhost/nginx/tcp/chatserver.conf
+upstream mysql_backend {
+    server 127.0.0.1:3025;		# ChatServer1
+    server 127.0.0.1:3026;  	# ChatServer2
+}
+server {
+    listen 3099;  # 外部访问端口
+    proxy_pass mysql_backend;
+    proxy_timeout 3s;
+    proxy_responses 1;
+    proxy_connect_timeout 1s;
+}
+```
+配置之后测试语法
+```bash
+root@VM-20-9-ubuntu:/www/server/panel/vhost/nginx/tcp# nginx -t
+nginx: the configuration file /www/server/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /www/server/nginx/conf/nginx.conf test is successful
+```
+配置完成后：
+- nginx 会**运行在 888 端口**
+- nginx 会**监听 3099 端口**，如果有其他配置文件则同时监听其他端口
+- 客户端应该连接 3099 端口发送消息，发送的消息会被 nginx 通过内置的
+这里单独开一个文件作为 chatserver 的集群服务
+![[PixPin_2026-01-17_09-58-45.png]]
+- weight 配置权重，负载均衡会按照权重比分发对应数量的数据包，一般按照不同服务器的性能强弱配置
+- max_fails 和 timeout 用于设置心跳间隔时长和重试次数
