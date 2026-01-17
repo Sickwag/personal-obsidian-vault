@@ -1356,7 +1356,6 @@ void ChatService::login(const net::TcpConnectionPtr& conn, const json& j, muduo:
 1. 把 client 的请求按照负载算法分发到具体的业务服务器 ChatServer 上面
 2. 能够和 ChatServer 保持心跳机制，监测 ChatServer 故障
 3. 能够发现新添加的 ChatServer 设备，方便扩展服务器数量（最好是平滑更新，在不关闭服务器的情况下**重新读取配置**->发现新的 ChatServer）
-### 如何引入负载均衡
 ### 如何解决跨服务器通信问题
 跨服务器通信并不能让所有的服务器间都通过 tcp 连接，强耦合并且占用大量 **socket 资源和空闲但是被占用带宽**
 ![[PixPin_2026-01-17_09-29-16.png]]
@@ -1366,7 +1365,10 @@ void ChatService::login(const net::TcpConnectionPtr& conn, const json& j, muduo:
 - 客户端只需要 **订阅(subscribe)** 消息队列（在消息队列中表明对 XXX 感兴趣）
 - 服务器端只需要在消息队列中 **发布(publish)** 消息
 - 消息队列根据 publish 和 subscribe 之间的关系，找到不同 Server 感兴趣的内容并 **推送(notify)** 给 Server，即可完成集群间的跨服务器通信
-### nginx 工作原理
+参考[[#消息队列]]
+
+### 如何引入负载均衡
+#### nginx 工作原理
 主配置 `/www/server/ngnix/conf/nginx.conf` 中记录 **nginx 的工作端口**，其他配置文件（tcp 配置文件在 `/www/server/panel/vhost/nginx/tcp`，http 配置文件在 `/www/server/panel/vhost/nginx/`）设置不同的服务配置
 主配置
 ```nginx
@@ -1408,23 +1410,105 @@ upstream mysql_backend {
 }
 server {
     listen 3099;  # 外部访问端口
-    proxy_pass mysql_backend;
+    proxy_pass chatserver_backed;
     proxy_timeout 3s;
     proxy_responses 1;
     proxy_connect_timeout 1s;
 }
 ```
+也可以配置权重和心跳间隔&重试次数，server 用来配置连接参数：
+- `listen` 设置监听端口，即客户端往这个端口发送消息会被负载均衡机制监听到
+- `proxy_timeout` 控制代理连接的超时时间，指的是在没有数据传输的情况下，连接保持打开的最长时间。不是强制断开连接的时间，而是无活动超时时间
+- `proxy_responses` 指定 Nginx 期望从后端服务器接收多少个响应。设置为 1 意味着 Nginx 认为这是一个简单的请求-响应模式，一旦收到一个响应后就认为连接完成了，会关闭连接。这对于 HTTP 请求是合适的，但对于需要保持长连接的聊天 tcp 服务器就不合适
+- `proxy_connect_timeout`：设置连接到后端服务器的超时时间，即 Nginx 尝试连接到后端服务器（如 3025/3026 端口）的最大等待时间。
+#### 编写和启动配置
+这里单独开一个文件作为 chatserver 的集群服务
+![[PixPin_2026-01-17_09-58-45.png|图中配置为旧版nginx写在stream中]]
+- weight 配置权重，负载均衡会按照权重比分发对应数量的数据包，一般按照不同服务器的性能强弱配置
+- max_fails 和 timeout 用于设置心跳间隔时长和重试次数
 配置之后测试语法
 ```bash
 root@VM-20-9-ubuntu:/www/server/panel/vhost/nginx/tcp# nginx -t
 nginx: the configuration file /www/server/nginx/conf/nginx.conf syntax is ok
 nginx: configuration file /www/server/nginx/conf/nginx.conf test is successful
 ```
-配置完成后：
-- nginx 会**运行在 888 端口**
-- nginx 会**监听 3099 端口**，如果有其他配置文件则同时监听其他端口
-- 客户端应该连接 3099 端口发送消息，发送的消息会被 nginx 通过内置的
-这里单独开一个文件作为 chatserver 的集群服务
-![[PixPin_2026-01-17_09-58-45.png]]
-- weight 配置权重，负载均衡会按照权重比分发对应数量的数据包，一般按照不同服务器的性能强弱配置
-- max_fails 和 timeout 用于设置心跳间隔时长和重试次数
+配置完成后使用 `nginx -s reload` 重新加载配置文件
+1. Nginx 进程：单个 Nginx 主进程管理多个工作进程，监听多个端口
+2. nginx **主配置中的 888 端口**是宝塔面板设置的 phpadmin 监听任务，本质上和其他 http 配置文件中配置没有区别
+3. nginx 的 tcp 配置端口中设置了**监听 3099 端口**，如果有其他配置文件则同时监听其他端口
+4. 客户端应该**通过 tcp 连接 3099 端口发送消息**，发送的消息会被 nginx 通过内置的负载均衡算法将 3099 接收到的消息**转发给运行在 3025/3026**端口的服务器处理
+5. 数据流向：客户端 → 3099 端口 → Nginx → 3025/3026 端口 → 后端 chatserver
+
+> [!note]
+> 配置完成后，**客户端只知道需要向 3099 发消息，服务端只知道监听自己的端口**，并不管从哪一个客户端发来的消息，server 和 client 完全隔离，交流只通过 nginx，这就是中间件
+#### 配置运行结果
+实际上的配置文件
+```nginx
+upstream chatserver_backend {
+    server 127.0.0.1:3025 weight=1 max_fails=3 fail_timeout=30s;            # ChatServer1
+    server 127.0.0.1:3026 weight=1 max_fails=3 fail_timeout=30s;            # ChatServer2
+}
+server {
+    listen 3099;  # 外部访问端口
+    proxy_pass chatserver_backend;
+    proxy_timeout 1h;  # 设置较长的超时时间，允许长连接
+    proxy_connect_timeout 10s;  # 增加连接超时时间     
+    # 移除proxy_responses，允许持续的双向通信 
+}
+```
+![[PixPin_2026-01-17_12-43-53.png]]
+## 消息队列
+### redis 工作原理
+#### Redis 的基本架构
+Redis 采用 C/S（客户端/服务器）架构，主要组件包括：
+1. redis-server：Redis 服务器进程，负责：
+  - 监听客户端连接
+  - 存储数据
+  - 执行数据操作命令
+  - 持久化数据到磁盘
+  - 管理内存
+2. redis-cli：Redis 命令行客户端，负责：
+  - 连接到 Redis 服务器
+  - 发送命令请求
+  - 接收并显示服务器响应
+  - 提供交互式操作界面
+#### Redis 的配置
+1. 主配置文件
+- 位置：/www/server/redis/redis.conf
+- 作用：定义 Redis 服务器的运行参数
+- 关键配置项：
+```redis
+port 6379          # 监听端口
+bind 127.0.0.1     # 绑定IP地址
+daemonize yes      # 是否以后台进程运行
+requirepass foobared  # 密码认证（如果设置）
+```
+#### Redis 运行机制
+1. 服务运行机制
+	- 启动方式：redis-server /path/to/redis.conf
+	- 进程管理：单个 Redis 服务器进程处理所有客户端连接
+	- 数据存储：在内存中存储键值对数据
+2. 客户端-服务器通信
+	- 连接建立：客户端（如 redis-cli）连接到 Redis 服务器的指定端口
+	- 命令传输：客户端发送 Redis 命令（如 SET、GET 等）
+	- 响应返回：服务器执行命令并将结果返回给客户端
+为什么区分 redis-server 和 redis-cli？
+- redis-server：专注于数据存储和管理，通常部署在专用服务器上，持续运行
+- redis-cli：专注于提供用户交互接口，可以在任何地方运行，用于管理或访问 Redis
+
+Redis 与 Nginx 的对比
+```bash
+┌──────────┬────────────────────────────┬─────────────────────┐
+│ 特性     │ Nginx                      │ Redis               │
+├──────────┼────────────────────────────┼─────────────────────┤
+│ 架构     │ 反向代理/负载均衡器        │ 键值存储数据库      │
+│ 主进程   │ 单个主进程管理多个工作进程 │ 单个服务器进程      │
+│ 配置方式 │ 主配置文件+多子配置文件    │ 单一配置文件        │
+│ 端口监听 │ 可同时监听多个端口         │ 通常监听一个端口    │
+│ 数据处理 │ 转发请求到后端服务         │ 存储和检索数据      │
+│ 客户端   │ Web 浏览器、API 调用         │ redis-cli、应用程序 │
+└──────────┴────────────────────────────┴─────────────────────┘
+```
+Redis 数据流向
+1. 客户端应用 → redis-cli → TCP 连接 → redis-server → 内存存储 → 响应返回,
+2. 客户端应用 → TCP 连接 → redis-server → 内存存储 → 响应返回()
