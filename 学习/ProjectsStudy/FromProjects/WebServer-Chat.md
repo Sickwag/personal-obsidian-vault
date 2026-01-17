@@ -1356,17 +1356,6 @@ void ChatService::login(const net::TcpConnectionPtr& conn, const json& j, muduo:
 1. 把 client 的请求按照负载算法分发到具体的业务服务器 ChatServer 上面
 2. 能够和 ChatServer 保持心跳机制，监测 ChatServer 故障
 3. 能够发现新添加的 ChatServer 设备，方便扩展服务器数量（最好是平滑更新，在不关闭服务器的情况下**重新读取配置**->发现新的 ChatServer）
-### 如何解决跨服务器通信问题
-跨服务器通信并不能让所有的服务器间都通过 tcp 连接，强耦合并且占用大量 **socket 资源和空闲但是被占用带宽**
-![[PixPin_2026-01-17_09-29-16.png]]
-解决方法是使用中间件
-![[PixPin_2026-01-17_09-31-27.png]]
-有了消息队列之后，
-- 客户端只需要 **订阅(subscribe)** 消息队列（在消息队列中表明对 XXX 感兴趣）
-- 服务器端只需要在消息队列中 **发布(publish)** 消息
-- 消息队列根据 publish 和 subscribe 之间的关系，找到不同 Server 感兴趣的内容并 **推送(notify)** 给 Server，即可完成集群间的跨服务器通信
-参考[[#消息队列]]
-
 ### 如何引入负载均衡
 #### nginx 工作原理
 主配置 `/www/server/ngnix/conf/nginx.conf` 中记录 **nginx 的工作端口**，其他配置文件（tcp 配置文件在 `/www/server/panel/vhost/nginx/tcp`，http 配置文件在 `/www/server/panel/vhost/nginx/`）设置不同的服务配置
@@ -1458,6 +1447,17 @@ server {
 ```
 ![[PixPin_2026-01-17_12-43-53.png]]
 ## 消息队列
+### 如何解决跨服务器通信问题
+跨服务器通信并不能让所有的服务器间都通过 tcp 连接，强耦合并且占用大量 **socket 资源和空闲但是被占用带宽**
+![[PixPin_2026-01-17_09-29-16.png]]
+解决方法是使用中间件
+![[PixPin_2026-01-17_09-31-27.png]]
+有了消息队列之后，
+- 客户端只需要 **订阅(subscribe)** 消息队列的一个**频道(channel)**，在消息队列中表明对 XXX 感兴趣
+- 服务器端只需要在消息队列中 **发布(publish)** 消息
+- 消息队列根据 publish 和 subscribe 之间的关系，找到不同 Server 感兴趣的内容并 **推送(notify)** 给 Server，即可完成集群间的跨服务器通信
+参考[[#消息队列]]
+
 ### redis 工作原理
 #### Redis 的基本架构
 Redis 采用 C/S（客户端/服务器）架构，主要组件包括：
@@ -1497,18 +1497,60 @@ requirepass foobared  # 密码认证（如果设置）
 - redis-cli：专注于提供用户交互接口，可以在任何地方运行，用于管理或访问 Redis
 
 Redis 与 Nginx 的对比
-```bash
-┌──────────┬────────────────────────────┬─────────────────────┐
-│ 特性     │ Nginx                      │ Redis               │
-├──────────┼────────────────────────────┼─────────────────────┤
-│ 架构     │ 反向代理/负载均衡器        │ 键值存储数据库      │
-│ 主进程   │ 单个主进程管理多个工作进程 │ 单个服务器进程      │
-│ 配置方式 │ 主配置文件+多子配置文件    │ 单一配置文件        │
-│ 端口监听 │ 可同时监听多个端口         │ 通常监听一个端口    │
-│ 数据处理 │ 转发请求到后端服务         │ 存储和检索数据      │
-│ 客户端   │ Web 浏览器、API 调用         │ redis-cli、应用程序 │
-└──────────┴────────────────────────────┴─────────────────────┘
-```
-Redis 数据流向
+
+| 特性     | Nginx                      | Redis               |
+|----------|----------------------------|---------------------|
+| 架构     | 反向代理/负载均衡器        | 键值存储数据库      |
+| 主进程   | 单个主进程管理多个工作进程 | 单个服务器进程      |
+| 配置方式 | 主配置文件+多子配置文件    | 单一配置文件        |
+| 端口监听 | 可同时监听多个端口         | 通常监听一个端口    |
+| 数据处理 | 转发请求到后端服务         | 存储和检索数据      |
+| 客户端   | Web 浏览器、API 调用       | redis-cli、应用程序 |
+#### Redis 数据流向
 1. 客户端应用 → redis-cli → TCP 连接 → redis-server → 内存存储 → 响应返回,
-2. 客户端应用 → TCP 连接 → redis-server → 内存存储 → 响应返回()
+2. 客户端应用 → TCP 连接 → redis-server → 内存存储 → 响应返回（对于应用程序直接连接）
+### 代码编写
+简单来说就是封装一个 redis 类接管所有业务中涉及到的 redis 操作，使用 hiredis 库，需要注意 subscribe 操作在都是独占一个终端中执行**会阻塞操作直到退出**，未退出时只要其他人使用了 `publish message` ，redis 的 subscribe 界面就会收到消息。所以一个 redis 类中需要两个上下文分别控制
+![[PixPin_2026-01-17_14-50-00.png]]
+有其他人使用 publish 命令发送消息时会返回一个内容描述三元组
+```cpp
+bool Redis::connect() {
+	publishContext_ = redisConnect("127.0.0.1", 6379);
+	if(nullptr == publishContext_) {
+		std::cerr << "connect redis publish failed\n";
+		return false;
+	}
+	subscribeContext_ = redisConnect("127.0.0.1", 6379);
+	if(nullptr == subscribeContext_) {
+		std::cerr << "connect redis subscribe failed\n";
+		return false;
+	}
+	std::thread t([&]() {
+		// observer channel message and send to ChatServer, due to subscribe will block the thread, so use a detached thread
+		observerChannelMessage();
+	});
+	t.detach();
+	std::cout << "connect redis-server success\n";
+}
+```
+同理，发送 subscribe 的命令也需要避免线程阻塞，不能使用 
+```cpp
+redisReply* reply = (redisReply*)redisCommand(publishContext_, "PUBLISH %d %s", channel, message.c_str());
+```
+类似这样的命令组装语句之后直接执行，需写入缓冲区执行
+```cpp
+bool Redis::unsubscribe(int channel) {
+	if(REDIS_ERR == redisAppendCommand(this->subscribeContext_, "UNSUBSCRIBE %d", channel)) {
+		std::cerr << "unsubscribe command failed in construct command\n";
+		return false;
+	}
+	int done = 0;
+	while(!done) {
+		if(REDIS_ERR == redisBufferWrite(this->subscribeContext_, &done)) {
+			std::cerr << "unsubscribe command failed in `redisBufferWrite` command\n";
+			return false;
+		}
+	}
+	return true;
+}
+```
