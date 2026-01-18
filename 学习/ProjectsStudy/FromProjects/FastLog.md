@@ -42,14 +42,17 @@ std::format(fmt, "World", "wrong");    // 编译错误！类型不匹配
   工作原理
   1. 静态信息填充
 ```cpp
-#include <source_location>
 void example() {
-    auto loc = std::source_location::current();
-    // loc 包含的信息在编译时就已经填充好了
-    std::cout << "File: " << loc.file_name() << std::endl;
-	std::cout << "Line: " << loc.line() << std::endl;
-	std::cout << "Column: " << loc.column() << std::endl; // C++23
-    std::cout << "Function: " << loc.function_name() << std::endl; // 编译时已知
+	auto loc = std::source_location::current(); // 编译期记录loc对象创建时信息
+	std::cout << "File: " << loc.file_name() << std::endl;			// filename.cpp
+	std::cout << "Line: " << loc.line() << std::endl;				// 5
+	std::cout << "Column: " << loc.column() << std::endl;
+	// 42 std::source_location();
+	//						  ^ 由于第一个字符是\t，随意42指向位置是这里
+	std::cout << "Function: " << loc.function_name() << std::endl;	// void example()
+}
+int main(){
+	example();
 }
 ```
 当创建 `source_location` 对象（即第一行代码）时，编译器在执行这一行代码是就会记下第一行代码的源代码位置信息
@@ -68,6 +71,7 @@ void example() {
 LOG("Error occurred");  // 预处理后变成:
 // printf("%s:%d - Error occurred\n", "source.cpp", 23);
 ```
+`__FILE__`，`__LINE__` 预处理符号是什么意思参考 [[C++ Runoob Tutoral#宏定义符号和预处理标识符#常用符号]]
 ### 避免编译器自动推导类型
 ```cpp
 template <typename... Args>

@@ -120,7 +120,7 @@ const 可以用在：
  const 出现在星号左边，表示被指物是常量；
  如果出现在星号右边，表示指针自身是常最；
  如果出现在星号两边，表示被指物和指针两者都是常量。
- 可以参考 [[#const 声明|const 声明]]，和 constexpr，consteval 的对比参考 [[Modern C++#constexpr]]
+ 可以参考 [[#const 声明|const 声明]]，和 constexpr，consteval 的对比参考 [[Modern C++#constexpr]] 和 [[Modern C++#补充：consteval 关键字]]
  const 修饰不同内容，放置位置的区别可以参考 [[C++ Basics#const 常量]]
  
 ### STL 中的 const
@@ -134,6 +134,24 @@ const vector<int>::iterator iter = vec.begin();  // iter被限制只能指向vec
 vector<int>::const_iterator cIter = vec.begin(); // 指向内容的值不能改变，但可以更改指向
 *cIter = 10;
 ++cIter;
+```
+ constexpr 修饰函数/变量
+- 可能在编译期求值，也可能在运行时求值
+- 编译期：当用在常量表达式上下文中
+- 运行时：当用在非常量表达式上下文中
+```cpp
+constexpr int square(int x) {
+    return x * x;
+}
+
+int main() {
+    // 这些会在编译期计算
+    constexpr int a = square(5);     // ✅ 编译期
+    int arr[square(4)];              // ✅ 编译期作为数组大小
+ 	// 这个会在运行时计算
+    int runtime_value = 10;
+    int result = square (runtime_value);  // ✅ 运行时（因为参数不是常量表达式）
+}
 ```
 ### 什么时候使用 const
 #### const 设计理念

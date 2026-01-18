@@ -574,6 +574,8 @@ View Help
 ```bash
 cmake -S /path/to/source -B /path/to/build -G <generate-name>
 # 不指定生成器使用默认，windows -> vs， linux -> make
+# 当前cmake支持的生成器通过命令查看
+# cmake --help | grep -A 50 "The following generators"
 ```
 使用不同的生成器生成文件之后，就可以用对应的构建工具生成文件
 ```bash
