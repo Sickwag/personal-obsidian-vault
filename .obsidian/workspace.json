@@ -54,7 +54,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "hiredis",
+                "query": "纯文本",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -75,12 +75,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -185,7 +185,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "5016f7dee3d499a6",
+  "active": "129968db299d0d8b",
   "lastOpenFiles": [
     "Files & LongText/Attachments/PixPin_2026-01-18_09-51-42.png",
     "Files & LongText/Attachments/PixPin_2026-01-18_09-41-52.png",
