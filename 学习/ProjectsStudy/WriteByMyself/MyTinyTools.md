@@ -747,34 +747,3 @@ else          /* <- else 缺乏对应 if */
 #define EXPECT_EQ_INT(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%d")
 ```
 由于 expect，actual 可能是返回某些值的表达式，宏只是文本替换，所以要考虑优先级问题
-# 日志记录器
-参考：https://github.com/superlxh02/FastLog.git
-## 整体设计
-```md
-用户代码
-    ↓
-fastlog::file::make_logger()  ← manager.hpp提供工厂接口
-    ↓
-FileLoggerManager::make_logger()  ← 创建并管理日志器
-    ↓
-FileLogger对象  ← logger.hpp实现核心功能
-    ↓
-FileLogBuffer缓冲区  ← logbuffer.hpp提供底层存储
-    ↓
-logfstream文件流  ← 最终写入文件
-```
-## 代码编写
-### logbuffer.hpp
-专注内存管理，基于 `std::array` 的内存结构编写缓冲区
-
-- 为什么其中的所有函数都被设置为了 `noexception`？为什么要这么设计并且将有返回值的函数使用 `[[nodiscard]]` 修饰？
-- 缓冲区有什么用？为什么写日志到终端/文件中需要有缓冲区？
-- 你提到了"为什么不用 `std::ostringstream` 或 `std::string`？"是因为开销，拷贝成本和颗粒度不够细的原因，那你能给出一个使用它们的例子吗，让我清楚知道哪里会出现开销，哪里会出现颗粒度不够细
-- 你的回答中，什么叫做"缓冲区操作不应该抛出异常，确保日志系统稳定性"？为什么需要确保这一点？在什么时候通常需要给函数设置这个修饰？
-
-- 为什么整个 FileLogger 类使用模板？
-  因为缓冲区大小设计为了模板*非类型参数*，这样在**编译时确定大小，不再需要计算变长数组/字符串长度和动态分配内存**
-- 为什么缓冲区需要使用 `std::array` 作为存储日志的实现？
-  `std::array` 在栈上分配，`std::vector` 在堆上分配，栈分配内存更快，并且不需要动态分配内存，无数据迁移成本和带来的迁移不确定性（拓容之后内存位置会变动）
-- 为什么不使用 `std::string` 来记录写入 `std::array<char, SIZE> __data` 中?
-### logger.hpp

@@ -1,7 +1,41 @@
+---
+参考: https://github.com/superlxh02/FastLog.git
+created: 2026-02-18
+---
+# 整体设计
+```md
+用户代码
+    ↓
+fastlog::file::make_logger()  ← manager.hpp提供工厂接口
+    ↓
+FileLoggerManager::make_logger()  ← 创建并管理日志器
+    ↓
+FileLogger对象  ← logger.hpp实现核心功能
+    ↓
+FileLogBuffer缓冲区  ← logbuffer.hpp提供底层存储
+    ↓
+logfstream文件流  ← 最终写入文件
+```
+# logbuffer.hpp
+专注内存管理，基于 `std::array` 的内存结构编写缓冲区
+
+- 为什么其中的所有函数都被设置为了 `noexception`？为什么要这么设计并且将有返回值的函数使用 `[[nodiscard]]` 修饰？
+- 缓冲区有什么用？为什么写日志到终端/文件中需要有缓冲区？
+- 你提到了"为什么不用 `std::ostringstream` 或 `std::string`？"是因为开销，拷贝成本和颗粒度不够细的原因，那你能给出一个使用它们的例子吗，让我清楚知道哪里会出现开销，哪里会出现颗粒度不够细
+- 你的回答中，什么叫做"缓冲区操作不应该抛出异常，确保日志系统稳定性"？为什么需要确保这一点？在什么时候通常需要给函数设置这个修饰？
+
+- 为什么整个 FileLogger 类使用模板？
+  因为缓冲区大小设计为了模板*非类型参数*，这样在**编译时确定大小，不再需要计算变长数组/字符串长度和动态分配内存**
+- 为什么缓冲区需要使用 `std::array` 作为存储日志的实现？
+  `std::array` 在栈上分配，`std::vector` 在堆上分配，栈分配内存更快，并且不需要动态分配内存，无数据迁移成本和带来的迁移不确定性（拓容之后内存位置会变动）
+- 为什么不使用 `std::string` 来记录写入 `std::array<char, SIZE> __data` 中?
+- 为什么对于缓冲区的各种读写操作都使用 `noexcept` 修饰？
+  缓冲区在日志系统中作为存储系统的核心，作为基本操作不应该抛出异常，并且添加 `noexcept` 编译期能够更地好优化性能
+- 为什么手动操作 array 中的当期容量指针 `std::array<char, SIZE>::iterator__cur`？
+  手动内存管理带来更高性能，并且可以使用 `std::copy` 复制数据（底层使用 SIMD 或者 memcpy 指针操作），而不是通过 for 循环遍历复制，提高性能
 # logger.hpp
 重中之重是 logger. hpp 的逻辑
-## 概念约束和编译期求值
-### 常量求值关键字
+## 常量求值关键字
 ```cpp
 template <typename... Args>
 struct basic_format_string_wrapper {
@@ -20,24 +54,49 @@ struct basic_format_string_wrapper {
 -  consteval 表示这是一个立即常量求值函数，必须在编译时求值
 - consteval 关键字修饰之后的函数如果被调用了，它必须在编译期完成求值，**不能在运行时执行**
 - 如果想要某个对象\函数仅仅在编译期被使用（即提前在编译期计算某些值，提高运行时速度）那么可以考虑使用 consteval 关键字，如果在运行是这个函数被调用，**会编译失败**，与 constexpr 区别可以参考 [[Modern C++#constexpr#补充：consteval 关键字|consteval补充]]
-### std:: format_string 类型
-C++20 新增对象，是一个类型安全的格式化字符串包装器，主要功能是：
-1. **编译时**格式字符串验证
-2. 类型安全的参数检查
-  - 普通 format 字符串：
+## C++20 format 引入的几种字符串处理
+### std::format
+编程实例参考 [[BookManageSystem+mysql#format 使用限制]]
+它最常见的用于 `std::format` 的参数中，确保传入进来的是*编译期已知字符串*，format 工作原理为：
+```cpp
+std::format("complier {} time {} str", 10, "hello");
+										^ 		^
+// format先将args参数类型推导出来
+// 然后根据推导前面的参数**隐式**构造出第一个参数，std::format_string<int, std::string> 对象
+// 这样确保了format能够自动推导模板类型，而不是每次格式化不同参数类型的字符串都需要先手动定义format_string对象
+```
+如果单独使用 std::format_string 通常是为了显式定义一个字符串中可以被填入的参数类型，不允许修改，本质上只是将编译期的类型验证提前到代码编写阶段
+### std::format_string
+C++20 新增对象，是一个类型安全的**模板类**，本质是格式化字符串包装器，实现：
+1. **编译时**格式字符串验证，类型安全的参数检查
+- 普通 format 字符串：
 ```cpp
 const char* fmt = "Hello {}, age {}";  // 只包含字符串内容
 // 无法在编译时知道应该传什么类型的参数
-std::format(fmt, "World", "not_a_number");  // 编译通过，运行时可能出错
+std::format(fmt, "World", "not_a_number");  // 编译通过，但实际上传入不合理的值却不容易发现，因为没有报错
 ```
-  - `std::format_string`：
+- `std::format_string`：
+明确指明我不希望这段格式化字符串只能格式化我想要的数据类型，如果不对就报错
 ```cpp
 std::format_string<std::string, int> fmt = "Hello {}, age {}";  //包含参数类型信息
 // 编译器知道第一个参数应该是 std::string 类型，第二个是 int 类型
 std::format(fmt, "World", 25);         // 编译通过，类型匹配
-std::format(fmt, "World", "wrong");    // 编译错误！类型不匹配
+std::format(fmt, "World", "wrong");    // 编译错误！类型不匹配，是std::format的编译时类型检查报错，而不是
 ```
-### 源代码信息获取
+由于 format_string 处理的是**编译期字符串**，要求格式字符串是**编译期常量表达式**（即字符串字面量或 `constexpr` 字符串），所以必须要在创建对象时指定模板参数
+### std::vformat
+由于 format 和 format_string 都只能对编译阶段字符串进行格式化并且带有类型检查，那么运行期确定的字符串想要借助 format 头文件就需要 std::vformat
+```cpp
+int main() {
+    std::string runtime_fmt = "Name: {0}, Age: {1}";
+    std::string name = "Bob";
+    int age = 30;
+    auto args = std::make_format_args(name, age);
+    std::string result = std::vformat(runtime_fmt, args);
+    std::cout << result << '\n';
+}
+```
+## 源代码信息获取
   `std::source_location` 本质上是一个编译期常量对象，它**只能在编译时自动生成**并填充源代码信息（文件名、行号、函数名等），而不是在运行时通过栈回溯或其他方式获取这些信息。
   工作原理
   1. 静态信息填充
@@ -62,6 +121,21 @@ int main(){
 - 编译器内置支持：编译器知道当前正在编译的文件、行号和函数
 - 常量表达式：std::source_location:: current() 是一个 consteval 函数
 - 静态数据：所有信息在编译时就存储在二进制文件中
+通常调用的方法是这样：
+```cpp
+void log_message(const std::string& message, const std::source_location& location = std::source_location::current()) {
+    std::cout << "Log: " << message << "\n"
+              << "File: " << location.file_name() << "\n"
+              << "Line: " << location.line() << "\n"
+              << "Column: " << location.column() << "\n"
+              << "Function: " << location.function_name() << "\n";
+}
+
+int main() {
+    log_message("This is a test message"); // 会显示这一行所在的源代码信息
+    return 0;
+}
+```
 2. 传统 C 宏实现方法
 ```cpp
 // 这些宏在预处理器阶段就替换为字面量
@@ -72,7 +146,7 @@ LOG("Error occurred");  // 预处理后变成:
 // printf("%s:%d - Error occurred\n", "source.cpp", 23);
 ```
 `__FILE__`，`__LINE__` 预处理符号是什么意思参考 [[C++ Runoob Tutoral#宏定义符号和预处理标识符#常用符号]]
-### 避免编译器自动推导类型
+## 避免编译器自动推导类型
 ```cpp
 template <typename... Args>
 using format_string_wrapper =
@@ -131,12 +205,4 @@ ANSI 转义序列的本质 ：`\033[46m` 这样的字符串并不是 C++ 特有�
 并且这个类使用了
 - 工厂模式，make，delete，get ，工厂化生产不同类型的 Logger 对象
 - 对象池模式，所有对象统一用 unordered_map 管理，避免临时 Logger 对象**频繁创建和销毁**的开销
- 
----
-相类似 logbuffer.hpp 中的 `capacity()`，`size()` 等简单函数实现，可以使用 `[[nodiscard]]` 强制返回值接受，函数体使用 `<const> noexcept` 并且本项目中的这些函数统一使用后置返回值类型，相对于传统前置更凸显现代 C++语言风格
-# logger. hpp
-## 编译时多态--CRTP 模式
-传统使用虚函数实现的运行时多态
-- 虚函数调用有性能开销（虚表查找、间接调用）
-- 不能内联优化
-- 多态行为在运行时确定
+相类似 [[#logbuffer.hpp]] 中的 `capacity()`，`size()` 等简单函数实现，可以使用 `[[nodiscard]]` 强制返回值接受，函数体使用 `<const> noexcept` 并且本项目中的这些函数统一使用后置返回值类型，相对于传统前置更凸显现代 C++语言风格
