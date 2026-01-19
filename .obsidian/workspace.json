@@ -68,7 +68,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -231,14 +231,14 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "3ca72b826ba0c5ef",
+  "active": "7a7ea9262e27be8d",
   "lastOpenFiles": [
+    "学习/Bases/开发范式/C++开发范式.md",
+    "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Chores/学习摘录.md",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
-    "学习/Bases/开发范式/C++开发范式.md",
     "学习/其他专业书/Modern C++.md",
-    "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/ProjectsStudy/WriteByMyself/BookManageSystem+mysql.md",
     "学习/ToolChain/Cmake.md",

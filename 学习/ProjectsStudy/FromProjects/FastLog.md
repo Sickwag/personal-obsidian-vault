@@ -34,7 +34,6 @@ logfstream文件流  ← 最终写入文件
 - 为什么手动操作 array 中的当期容量指针 `std::array<char, SIZE>::iterator__cur`？
   手动内存管理带来更高性能，并且可以使用 `std::copy` 复制数据（底层使用 SIMD 或者 memcpy 指针操作），而不是通过 for 循环遍历复制，提高性能
 # logger.hpp
-重中之重是 logger. hpp 的逻辑
 ## 常量求值关键字
 ```cpp
 template <typename... Args>

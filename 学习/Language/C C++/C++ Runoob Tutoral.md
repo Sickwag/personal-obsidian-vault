@@ -3290,6 +3290,10 @@ virtual void disp (基类名称基类对象){//函数原型, 不加 virtual 如�
 - 抽象类无法实例化对象
 - 子类必须重写父类中的纯虚函数，否则也属于抽象类
 关于使用 new [创建指针](#^b5440b)类
+
+#### 虚函数表
+**虚函数表是 C++ 实现运行时多态的核心机制**，其他多态形式参考：[[C++ Runoob Tutoral#C++的多态形式|多态形式]]
+简单来说是一张“函数地址表”，如果类有虚函数，就会在**编译期**创建一个虚函数表，
 ### 数据抽象
 只向外界提供关键信息，并隐藏实现细节，即只表现必要的信息而不呈现细节。
 通过不同的访问修饰符将数据放入 private 或 protect 保护不被外部访问
@@ -7667,3 +7671,145 @@ bool c = vec[0];						// better
 - 使用 `[]` 或者 `at()` 时配合 `static_cast<bool>` 转换
 - 将元素显式赋值给 bool 变量使用
 ### C++提供的类型转换方式
+#### static_cast
+`static_cast<T*>(ptr)` 在以下情况下是合法的：
+- `ptr` 是一个指向某个类的指针
+- `T` 是该类的派生类（向下转型）
+- `ptr` 实际指向的是 `T` 类型的对象
+#### dynamic_cast
+#### reinterpret_cast
+#### const_cast
+#### qobject_cast
+#### any_cast
+### 类 this 指向内存的布局
+### C++的多态形式
+#### 运行时多态（动态多态）
+- **原理**：通过虚函数实现，虚函数表（vtable）在运行时决定调用哪个函数
+- **语法**：`virtual` 关键字
+- **优点**：灵活、支持运行时动态绑定
+- **缺点**：性能开销（虚函数调用、虚表）、不能内联优化
+```cpp
+struct Base {
+    virtual void foo() { cout << "Base\n"; }
+};
+struct Derived : Base {
+    void foo() override { cout << "Derived\n"; }
+};
+```
+#### 编译期多态（静态多态）
+- **原理**：通过模板参数传递子类类型，实现编译期绑定
+- **语法**：CRTP、模板方法
+- **优点**：零运行时开销、支持内联优化
+- **缺点**：代码复用性差、调试复杂
+```cpp
+template <typename Derived>
+struct Base {
+    void foo() { static_cast<Derived*>(this)->foo_impl(); }
+};
+struct Derived : Base<Derived> {
+    void foo_impl() { cout << "Static polymorphism\n"; }
+};
+```
+#### 函数重载（Overload）
+- **原理**：编译器根据参数类型选择不同函数
+- **优点**：简单、直观
+- **缺点**：仅限于函数名相同、参数不同
+参考 [[C++ Runoob Tutoral#函数重载]]
+#### 运算符重载（Operator Overload）
+- **原理**：为类定义运算符行为
+- **优点**：提升可读性和表达力
+- **缺点**：容易滥用导致代码混乱
+参考 [[C++ Runoob Tutoral#运算符重载]]
+#### 模板泛型多态（Generic Polymorphism）
+- **原理**：通过模板参数实现通用逻辑
+- **优点**：高度复用、类型安全
+- **缺点**：代码膨胀、编译时间长
+参考[[模板元编程]]
+#### 标签分发（Tag Dispatching）
+- **原理**：根据类型标签选择不同实现，是静态编译期多态的一种，使用空结构体作为“标签”，有点像函数重载，每个重载之间的参数列表不同，但不同的只有一项**作为标签**的参数，标签通常由一个*空结构体*标识这个重载用于什么场景
+- 利用函数重载或模板特化，根据标签选择不同实现
+- **优点**：清晰表达意图、支持 SFINAE，不同使用场景的调用的是相同的函数，但是传入不同的标签实现不同效果
+- **缺点**：代码略复杂
+```cpp
+struct input_iterator_tag {};
+struct random_access_iterator_tag {};
+
+template <typename Iterator>
+void advance(Iterator& it, int n, random_access_iterator_tag) {
+    it += n; // 随机访问迭代器支持直接加减
+}
+
+template <typename Iterator>
+void advance(Iterator& it, int n, input_iterator_tag) {
+    while (n--) ++it; // 输入迭代器只能逐个移动
+}
+
+template <typename Iterator>
+void advance(Iterator& it, int n) {
+    using category = typename Iterator::iterator_category;
+    advance(it, n, category{}); // 自动选择实现
+}
+```
+#### 策略模式（Policy-based Design）
+- **原理**：通过模板参数传入策略类，每个策略类封装一种行为，主类通过模板参数接受策略类，组合不同行为。一种业务可以被多种方式实现，每种方式都有自己的应用场景，每一个编写一套不相关的代码维护起来比较困难，使用时也需要知道每一种方式的存在。将每一个封装成一个类，用*策略类统一管理和调用*
+- **优点**：高度灵活、可组合
+- **缺点**：模板代码复杂
+```cpp
+struct LogToConsole {
+    static void log(const std::string& msg) {
+        std::cout << "[Console] " << msg << std::endl;
+    }
+};
+
+struct LogToFile {
+    static void log(const std::string& msg) {
+        // 写入文件
+    }
+};
+
+template <typename LogPolicy>
+class Logger : public LogPolicy {
+public:
+    void logMessage(const std::string& msg) {
+        LogPolicy::log(msg);
+    }
+};
+
+int main() {
+    Logger<LogToConsole> logger1;
+    logger1.logMessage("Hello Console");
+
+    Logger<LogToFile> logger2;
+    logger2.logMessage("Hello File");
+}
+```
+#### 类型擦除（Type Erasure）
+- **原理**：使用 `std::function`、`std::any` 等隐藏一段功能代码的类型特性，方便统一管理和调用，管理和调用时他们都是平等的，调用同一个对象，但是实现不同的功能
+- **优点**：统一接口、支持异构类型
+- **缺点**：性能开销、类型安全降低
+```cpp
+// 使用std::function
+int main() {
+    std::vector<std::function<void()>> tasks;
+
+    tasks.push_back([]() { std::cout << "Task 1\n"; });
+    tasks.push_back([]() { std::cout << "Task 2\n"; });
+
+    for (auto& task : tasks) {
+        task(); // 调用不同类型的函数对象
+    }
+}
+
+// std::any
+int main() {
+    std::any a = 42;
+    std::cout << std::any_cast<int>(a) << std::endl;
+
+    a = std::string("Hello");
+    std::cout << std::any_cast<std::string>(a) << std::endl;
+}
+```
+关于性能开销：
+- 如果使用虚函数实现类型擦除，会导致每次调用都通过虚函数查找（发生在运行时），无法内联优化
+- 通常 `std::function` 和 `std::any` 将对象 new 在栈上
+- 
