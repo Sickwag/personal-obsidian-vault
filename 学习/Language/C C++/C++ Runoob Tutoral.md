@@ -4809,14 +4809,15 @@ int main () {
 ### 条件变量
 #### 性质与作用
 条件变量（`condition_variable`）是用于线程间同步的一种机制，允许线程在某些条件尚未满足时挂起执行（准备执行状态），直到其他线程通知这些条件已经满足。条件变量通常与互斥量（`mutex`）一起使用，以确保对共享资源的访问是同步的。
-- **线程间通信**：条件变量允许线程等待某个条件成立，直到其他线程通知该条件已经满足。
+- **线程间通信**：本质上是一个**等待条件成立”的线程同步工具**，当某个条件不满足时，它阻塞线程等待；一旦条件满足，它就通知等待的线程继续执行。
 - **减少资源占用**：当线程需要等待某个条件时，条件变量可以挂起线程，释放 CPU 资源，直到条件满足时再唤醒线程继续执行。
-#### 条件变量的工作原理
-1. **等待（wait）**：线程调用条件变量的 `wait` 方法，将自己挂起，直到条件变量被通知。在等待期间，**线程会释放它所持有的互斥量**，允许其他线程访问共享资源。
-2. **通知（notify）**：线程调用条件变量的 `notify_one` 或 `notify_all` 方法来唤醒一个或所有等待该条件变量的线程。当条件变量被通知时，等待的线程会被唤醒，**重新尝试获取互斥量**，如果成功，它们将继续执行。
-3. `. wait ()` 有两个重载版本：
 
-`cv.wait ()` 函数第一个参数只能接受 `unique_lock` 类型，不能是 `lock_guard`
+#### 条件变量的工作原理
+1. **等待（wait）**：线程调用条件变量的 `wait` 方法，将自己挂起，传入**已经被占用的互斥锁被释放**，允许其他线程访问共享资源，直到条件变量被通知
+2. **通知（notify）**：线程调用条件变量的 `notify_one` 或 `notify_all` 方法来唤醒一个或所有等待该条件变量的线程。当条件变量被通知时，等待的线程会被唤醒，**重新尝试获取互斥量**，如果成功，它们将继续执行。
+3. `.wait()` 有两个重载版本：
+
+`cv.wait()` 函数第一个参数只能接受 `unique_lock` 类型，不能是 `lock_guard`
 
 - 无谓词版本
 ```cpp
@@ -4827,22 +4828,32 @@ void wait (unique_lock<mutex>& lock);
 template<class Predicate>
 void wait(unique_lock<mutex>& lock, Predicate pred);
 ```
-4. 有谓词版本的 wait 函数将会挂起线程，直到被通知并且谓词参数的 lambda 函数返回 1 的时候线程才会被唤醒，而无谓词版本的 wait 只要被通知线程立刻被唤醒
-#### 使用条件变量的步骤
+4. 有谓词版本的 wait 函数将会挂起线程，直到被通知并且谓词参数的 lambda 函数返回 true 的时候线程才会被唤醒，而无谓词版本的 wait 只要被通知线程立刻被唤醒
+```cpp
+// 等价于wait_until(lock, std::chrono::steady_clock::now() + rel_time);
+template< class Rep, class Period, class Predicate>
+bool wait_for(std::unique_lock<std::mutex>& lock,
+            	const std::chrono::duration<Rep, Period>& rel_time,
+                Predicate pred );
+// 等价于wait_until(lock, std::chrono::steady_clock::now() + rel_time, std::move(pred));
+template<class Rep, class Period>
+std::cv_status wait_for( std::unique_lock<std::mutex>& lock,
+                         const std::chrono::duration<Rep, Period>& rel_time );
 
-1. **创建互斥量和条件变量**：需要一个 `mutex` 对象来保护共享资源，以及一个 `condition_variable` 对象来同步线程。
-2. **等待条件**：线程在进入临界区之前，调用条件变量的 `wait` 方法。挂起执行。
+```
+- wait_for 添加了一个最长**线程阻塞时长**的参数，如果超过这个等待的时长，线程不再阻塞并且返回 `std::cv_status::timeout`，反之返回 `std::cv_status::no_timeout`
+- wait_until 则阻塞线程到指定时长/被通知/虚假唤醒时解锁互斥量，停止阻塞线程
+#### 使用条件变量的步骤
+1. **创建互斥量和条件变量**：需要一个[[#互斥锁包装器]] 对象来保护共享资源，以及一个 `condition_variable` 对象来同步线程。
+2. **等待条件**：线程在需要操作共享数据之前，调用条件变量的 `wait` 方法挂起
 3. **修改条件**：当条件变量的条件被满足时（==通常由其他线程完成==），调用 `notify_one` 或 `notify_all` 来唤醒等待的线程。
 4. **继续执行**：被唤醒的线程会尝试重新获取互斥量，如果成功，它们将继续执行。
-
 #### 实例
+通常用于[[详解设计模式（视频教程）#生产者-消费者模式|消费者-生产者模式]]
+- 一个线程等待“数据准备好”，另一个线程负责“生成数据”
+- 一个线程等待“任务队列非空”，另一个线程负责“添加任务”
+如果等待线程一直等待，并定时询问 CPU 资源是否准备好，会造成资源浪费，所以 C++提供了挂起线程，等待适合时机唤醒的操作
 ```cpp
-#include <iostream>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
-using namespace std;
-
 // define lock and ready 
 mutex mtx;
 condition_variable cv;
@@ -4863,6 +4874,8 @@ void mainThread() {
 - 其中，lock_guard 和 unique_lock 都是用来管理互斥锁的类模板，根据 mtx 的类型（一个 mutex 对象）创建 lock_guard 和 unique_lock 类对象
 - 当使用`condition_variable`的`notify_one`方法时，它会随机选择一个等待该条件变量的线程来唤醒。这意味着没有特定的顺序保证哪个线程会被唤醒。唤醒的线程是不确定的
 - 使用 `notify_all` 方法，这并不意味着所有线程都会同时开始执行，因为它们需要竞争获取互斥锁（如果使用 `unique_lock` 或 `lock_guard`）并由操作系统决定顺序
+- condition_variable 变量时传入的 unique_lock 包装器会在线程调入 wait 对象时将这个对象解锁，线程自己挂起，共享资源锁允许别的线程获取操作，当线程被通知时，则会**尝试获取互斥锁来工作**。
+- 如果通知了线程但一直无法获取到互斥锁，线程还是会被阻塞，直到成功获取，**避免这种情况是开发者需要承担的责任**
 ### 原子操作
 用于定义某些操作不会中断，原子操作确保对共享数据的访问是不可分割的，即在多线程环境下，原子操作要么完全执行，要么完全不执行，不会出现中间状态。
 #### 各种函数
