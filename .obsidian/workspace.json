@@ -66,9 +66,19 @@
               "icon": "lucide-file",
               "title": "C++ Runoob Tutoral"
             }
+          },
+          {
+            "id": "f61dc648ab5b986c",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -231,13 +241,13 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "5a3aee9fab1c027a",
+  "active": "f61dc648ab5b986c",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/FromProjects/FastLog.md",
     "test.exe",
     "test.cpp",
     "学习/Bases/开发范式/C++开发范式.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/Bases/设计模式/详解设计模式（视频教程）.md",
     "Chores/学习摘录.md",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
