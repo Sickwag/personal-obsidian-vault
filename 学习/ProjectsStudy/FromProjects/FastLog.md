@@ -2,7 +2,8 @@
 参考: https://github.com/superlxh02/FastLog.git
 created: 2026-01-18
 ---
-# 整体设计
+# 总结
+## 整体设计
 ```md
 用户代码
     ↓
@@ -16,6 +17,13 @@ FileLogBuffer缓冲区  ← logbuffer.hpp提供底层存储
     ↓
 logfstream文件流  ← 最终写入文件
 ```
+## 开发过程中的问题
+### cmake 使用 add_definitions 注意
+```cpp
+add_definitions(-DFILE_LOG_PATH1="${CMAKE_CURRENT_SOURCE_DIR}/logs/log1/")
+add_definitions(-DFILE_LOG_PATH2="${CMAKE_CURRENT_SOURCE_DIR}/logs/log2/")
+```
+直接使用 g++语法添加选项，注意 `=` 左右不能有空格，cmake 添加定义构建原理仅仅是复制粘贴
 # logbuffer.hpp
 专注内存管理，基于 `std::array` 的内存结构编写缓冲区
 - 为什么整个 FileLogBuffer 类使用模板？
