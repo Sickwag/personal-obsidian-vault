@@ -188,7 +188,7 @@ FileLogger 涉及文件读写，为减少磁盘 IO，设计三缓冲日志数据
 5. 如果运行标志为false,且当前缓冲区不为空，则处理关闭前剩余的日志记录，将当前缓冲区数据写入文件
 6. 刷新文件缓冲区，写入文件
 7. 将满缓冲区列表中的缓冲区移动到空缓冲区列表
-# loglevel. hpp
+# loglevel.hpp
 ## 控制终端输出颜色
 可以看到，to_color 可以控制终端输出颜色
 ```cpp
@@ -226,7 +226,7 @@ ANSI 转义序列的本质 ：`\033[46m` 这样的字符串并不是 C++ 特有�
 | 90–97   | 亮前景色      |
 | 100–107 | 亮背景色      |
 
-# manager. hpp
+# manager.hpp
 ## 根据语义设计 api
 在 FileLoggerManager 类中，make_logger 函数返回 FileLogger 对象引用，而 get_logger 函数返回对象指针。
 这种设计遵循了 C++ 的一个重要原则：
@@ -241,3 +241,64 @@ ANSI 转义序列的本质 ：`\033[46m` 这样的字符串并不是 C++ 特有�
 - 工厂模式，make，delete，get ，工厂化生产不同类型的 Logger 对象
 - 所有对象统一用 unordered_map 管理，避免临时 Logger 对象**频繁创建和销毁**的开销
 相类似 [[#logbuffer.hpp]] 中的 `capacity()`，`size()` 等简单函数实现，可以使用 `[[nodiscard]]` 强制返回值接受，函数体使用 `<const> noexcept` 并且本项目中的这些函数统一使用后置返回值类型，相对于传统前置更凸显现代 C++语言风格
+## 安全构造 logger 对象
+make/delete/get logger 的函数，都应该保证能够操作成功或者有对应处理措施
+```cpp
+// 省略巨长的返回值
+make_logger(const std::string& loggername, fs::path filepath) {
+	auto [it, inserted] = loggers_.try_emplace(loggername, filepath);
+	if(inserted) {
+		return it->second;
+	} else {
+		throw std::runtime_error("you've created logger named " + loggername);
+	}
+}
+
+delete_logger(const std::string& loggername) {
+	auto it = loggers_.find(loggername);
+	if(it != loggers_.end()) {
+		loggers_.erase(it);
+	} else {
+		throw std::runtime_error("logger named " + loggername + " doesn't exist");
+	}
+}
+
+get_logger(const std::string& loggername) {
+	auto it = loggers_.find(loggername);
+	if(it != loggers_.end()) {
+		return std::addressof(loggers_.at(loggername));
+	}
+	return nullptr;
+}
+```
+其中 `std::addressof` 是 C++11 引入的取地址函数，和 `&` 不同的是：
+
+| 特性       | `&` 取地址运算符    | `std::addressof` 函数 |
+| -------- | ------------- | ------------------- |
+| **可被重载** | ✅ 可以被类重载      | ❌ **不可被重载**         |
+| **获取地址** | 可能返回任意值       | **总是返回真实内存地址**      |
+| **使用场景** | 普通对象，无重载`&`的类 | 需要绕过`&`重载的场景        |
+| **头文件**  | 语言内置          | `#include <memory>` |
+防止（模板）类中（某个特化模板）内部重载了 `&` 操作符，导致使用&时 ide 也不会报出错误提示，调用对应重载函数而难以发现错误位置，有重载 `&` 的情况下会有轻微开销，没有则会被编译器优化，无开销
+
+# util.hpp
+## 不同线程获取时间字符串
+```cpp
+const auto now			  = std::chrono::system_clock::now();
+const auto time_t_now	  = std::chrono::system_clock::to_time_t(now);
+const auto current_second = std::chrono::seconds(time_t_now);
+std::tm* local_tm = std::localtime(&time_t_now);
+std::strftime(buf.data(), buf.size(), "%Y-%m-%d-%H-%M-%S", local_tm);
+```
+很难想象现代语言获取时间居然要写这么多代码，需要注意的是 windows 文件（夹）名称中不能出现 `:` 这种非法字符，可能导致错误，统一使用 `-`
+`static thread` 修饰 buf 和 last_second 有这几个作用：
+- __避免重复分配__：`static` 让其在每个线程生命周期中都存在，不用重复分配
+- __线程安全__：
+	- 多个线程可能同时调用此函数记录日志
+	- 如果使用普通的 static 变量，多线程访问会产生数据竞争，`thread_local` 确保每个线程都有自己的副本，线程之间不相互影响
+	- 时间字符串并不是什么很大/重要的资源，64 个 char 大小没必要使用互斥锁来提高代码维护复杂性，避免[[Modern C++#4. 竞态条件|竞态条件]]
+- __缓存优化__：
+  - `last_second` 用于缓存上次的时间，避免频繁格式化相同的时间
+  - 每个线程独立维护自己的时间缓存状态
+  - 提高性能的同时保证线程安全
+
