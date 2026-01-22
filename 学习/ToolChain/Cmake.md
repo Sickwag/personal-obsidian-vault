@@ -1966,6 +1966,36 @@ if (WIN32)
 endif ()
 ```
 构建可执行程序时直接编译出打包之后的样子，调用 windeploy 部署
+#### 其他项目使用的方法
+使用
+```cmake
+# 构建，debug类型并不编译example程序，动态库类型
+cmake -B ./build_debug -DCMAKE_BUILD_TYPE=Debug -DELAWIDGETTOOLS_BUILD_STATIC_LIB=OFF -DBUILD_EXAMPLES=OFF
+
+# debug形式构建
+cmake --build ./build_debug --config Debug
+
+# 安装，安装到指定位置
+cmake --install ./build_debug --config Debug --prefix "D:/Code Files/remote_push/ElaWidgetTool/debug-dynamic-install"
+```
+同理构建完 release 版本的库
+![[PixPin_2026-01-22_17-06-37.png]]
+在想要使用这个库的项目中
+```cmake
+# 直接设置库路径
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(ElaWidgetTools_DIR "D:/Code Files/Remote_push/ElaWidgetTools/release_dynamic_install/lib/cmake")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(ElaWidgetTools_DIR "D:/Code Files/Remote_push/ElaWidgetTools/debug_dynamic_install/lib/cmake")
+endif()
+
+find_package(ElaWidgetTools CONFIG REQUIRED)
+target_link_libraries(test_qt PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    ElaWidgetTools
+)
+```
+从库的 cmake 配置中可以得知，这个库是一个整体库，不能通过 find_package 的 COMPONENTS 模块化引入
 ### AntDesign 库
 #### 根目录配置
 相对简单，只有一个配置文件，需要注意的是
