@@ -81,9 +81,21 @@
               "icon": "lucide-file",
               "title": "WebServer-Chat"
             }
+          },
+          {
+            "id": "004d103b0e47bd13",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.11.5"
+              },
+              "icon": "lucide-book-up",
+              "title": "版本说明 1.11.5"
+            }
           }
         ],
-        "currentTab": 4
+        "currentTab": 5
       }
     ],
     "direction": "vertical"
@@ -246,7 +258,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "f61dc648ab5b986c",
+  "active": "004d103b0e47bd13",
   "lastOpenFiles": [
     "学习/ProjectsStudy/FromProjects/FastLog.md",
     "test.exe",
