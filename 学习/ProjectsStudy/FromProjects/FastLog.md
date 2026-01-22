@@ -24,6 +24,12 @@ add_definitions(-DFILE_LOG_PATH1="${CMAKE_CURRENT_SOURCE_DIR}/logs/log1/")
 add_definitions(-DFILE_LOG_PATH2="${CMAKE_CURRENT_SOURCE_DIR}/logs/log2/")
 ```
 直接使用 g++语法添加选项，注意 `=` 左右不能有空格，cmake 添加定义构建原理仅仅是复制粘贴
+### 智能指针的 `reset()` 函数
+智能指针中封装的类中最好不要定义 reset 函数，因为智能指针对象也有一个 reset 函数，在我想调用封装类的 reset 函数时，容易写成 `ptr.reset()` 调用：
+```cpp
+void reset( pointer ptr = pointer() ) noexcept;
+```
+默认将而将智能指针类资源释放掉，而不是调用封装类的函数，而正确需要写成 `ptr->reset()`，找了半天 bug 服了
 # logbuffer.hpp
 专注内存管理，基于 `std::array` 的内存结构编写缓冲区
 - 为什么整个 FileLogBuffer 类使用模板？
