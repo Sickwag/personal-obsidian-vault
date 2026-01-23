@@ -747,3 +747,6 @@ else          /* <- else 缺乏对应 if */
 #define EXPECT_EQ_INT(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%d")
 ```
 由于 expect，actual 可能是返回某些值的表达式，宏只是文本替换，所以要考虑优先级问题
+# 施磊手写线程池
+参考：[IO密集型和CPU密集型程序_ev_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Fb421H7ep?spm_id_from=333.788.player.switch&vd_source=876be08bc9c030f4a9ea1fb97e0d0342&p=3)
+资料：https://pan.baidu.com/s/1Q_fM-jpTIizA5WnWyj_h4A 提取码: kw9j
