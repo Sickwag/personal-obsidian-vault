@@ -56,10 +56,15 @@
             "id": "c435585ea5ecd9f0",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "Files & LongText/Long code/C++ practice case.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
               "icon": "lucide-file",
-              "title": "新标签页"
+              "title": "C++ practice case"
             }
           }
         ],
@@ -95,7 +100,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "内存模型",
+                "query": "boost/mysql",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -229,6 +234,8 @@
   },
   "active": "c435585ea5ecd9f0",
   "lastOpenFiles": [
+    "Files & LongText/Long code/MySQL Long Code Practice.md",
+    "Files & LongText/Long code/C++ practice case.md",
     "学习/Bases/设计模式/详解设计模式（视频教程）.md",
     "Chores/学习摘录.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
@@ -249,7 +256,6 @@
     "Files & LongText/Attachments/PixPin_2026-01-22_17-06-37.png",
     "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/ProjectsStudy/FromDocs/Boost库文档学习.md",
-    "Files & LongText/Long code/C++ practice case.md",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
     "test.exe",
     "test.cpp",
