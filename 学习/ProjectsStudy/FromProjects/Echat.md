@@ -75,7 +75,7 @@ void Bubble::setContent(const QString &text, int parent_width)
     int max_textwidth = parent_width - 300;
     ui->content_label->setMaximumWidth(max_textwidth);
     ui->content_label->setFont(QFont("Microsoft YaHei", 10));
-    
+
     // 计算整个字符串的长度占用
     QFontMetrics fm(ui->content_label->font());
     int textWidth = fm.horizontalAdvance(text);
@@ -110,7 +110,7 @@ void Bubble::setContent(const QString &text, int parent_width)
 - 当前设置的固定宽度 (setFixedWidth)
 - 是否启用换行 (setWordWrap)
 - 文本内容和字体
-- 样式表中的内边距（padding）
+- 样式表中内边距（padding）
 所以先重置尺寸，设置好计算的宽度后，调用 `adjustSize()` 函数刷新
 计算完气泡组件大小后，计算画布大小，调用 `this->setFixedSize()`，`ui->label->setFixedHeight(labelSize.height());` 让label字体垂直居中
 
@@ -118,7 +118,7 @@ void Bubble::setContent(const QString &text, int parent_width)
 #### 数据请求流程
 包含 `datamanager.h` ， `datamanager.cpp`，`business.h` 和 `business.cpp`
 UI 需要跟用户交互，用户的交互产生数据更新的需要，需要从 server 端拉取最新的数据。
-程序中的datamanager 类用来专门管理**当前用户**的：信息，好友列表，群组列表，消息缓存和有添加好友和添加群组的请求列表，并且为这些属性添加了一系列 setter 和 getter 接口，这些数据保存在本地 client 端中。
+程序中datamanager 类用来专门管理**当前用户**的：信息，好友列表，群组列表，消息缓存和有添加好友和添加群组的请求列表，并且为这些属性添加了一系列 setter 和 getter 接口，这些数据保存在本地 client 端中。
 
 business 类则用来构建出各种请求头，用于 networkmanager 对象的 `send_message()` 函数来发送网络数据请求，请求的结果被 datamanager 调用保存到 client 程序的内存中，这些数据最终会被用来更新 ui
 构建流程
@@ -146,10 +146,10 @@ UI更新显示
 - 网络协议本质上是二进制协议，数据在网络中传输的是字节流不是高级语言对象
 - 对于字符串，一般使用字符数组或者字符串指针，C 字符串内存布局完全确定，每个字段的位置和大小都固定，而 `QString` / `std::string`：内部结构复杂，包含额外的元数据（长度、容量、引用计数等），一般在无关网络请求的部分使用**减少代码编写工作量**
 - 网络前后端，或者网络协议需要被不同语言实现，使用基本类型能够保证被正确读取，**序列化和反序列化**
-- 性能考虑，零拷贝：可以直接发送内存中的数据，内存效率：没有额外的对象开销，并且只包含**实现功能所需的最小的数据**，节省流量
+- 性能考虑，零拷贝：可以直接发送内存中数据，内存效率：没有额外的对象开销，并且只包含**实现功能所需的最小的数据**，节省流量
 ### 自定义消息框
 包含 `custommessagebox.h` 和 `custommessagebox.cpp`
-继承 QDialog 是因为 QMessageBox 的外观受系统主题影响，并且只能使用**固定的布局（窗口标题，图标，正文内容，确定，否定，取消按钮**），QDialog 则可以完全自定义外观和布局
+继承 QDialog 是因 QMessageBox 的外观受系统主题影响，并且只能使用**固定的布局（窗口标题，图标，正文内容，确定，否定，取消按钮**），QDialog 则可以完全自定义外观和布局
 自定义窗口大小布局：
 ```cpp
 void CustomMessageBox::adjustSizeToContent()
@@ -308,7 +308,7 @@ void UserInfoPopup::showAtWidgetSide(QWidget *widget)
     this->raise();
 }
 ```
-在 mainwindow 中的头像位置偏右**显示并将本窗口置顶**，如果显示窗口后再次点击头像，为避免关闭，使用了 eventFilter
+在 mainwindow 中头像位置偏右**显示并将本窗口置顶**，如果显示窗口后再次点击头像，为避免关闭，使用了 eventFilter
 ```cpp
 bool UserInfoPopup::eventFilter(QObject *watched, QEvent *event)
 {
@@ -395,13 +395,13 @@ void mainWindow::update_friendlist(USER_INFO &user_info)
     }
 }
 ```
-friendItem 构造函数中并没有对 QListWidgetItem 的转换，但是 `friendItem *friItem = qobject_cast<friendItem*>(ui->friend_list->itemWidget(item));` 能够被 `qobject_cast` 转换的原因是在对应的 add 函数中使用了
+friendItem 构造函数中并没有对 QListWidgetItem 的转换，但 `friendItem *friItem = qobject_cast<friendItem*>(ui->friend_list->itemWidget(item));` 能够被 `qobject_cast` 转换的原因是在对应的 add 函数中使用了
 ```cpp
 QListWidgetItem * m_Item = new QListWidgetItem();
 ui->friend_list->insertItem(0, m_Item);
 ui->friend_list->setItemWidget(m_Item, friItem);
 ```
-通过 `setItemWidget()` 将 friendItem 与 QListWidgetItem 关联起来， QListWidget 内部管理的仍然是 QListWidgetItem 对象，如果需要获取其中的单个项，返回结果（如 `itemWidget()`）还是 `QWidget*` 需要手动转换
+通过 `setItemWidget()` 将 friendItem 与 QListWidgetItem 关联起来， QListWidget 内部管理的仍是 QListWidgetItem 对象，如果需要获取其中单个项，返回结果（如 `itemWidget()`）还是 `QWidget*` 需要手动转换
 
 # Server 端
 ## 具体文件
@@ -427,7 +427,7 @@ mkdir(avatar_dir, 0755			// 创建文件夹
 ```
 - C-style **操作**文件使用的是文件指针指向文件，使用 `fopen()` 函数打开文件 `FILE* file = fopen(avatar_path, "rb");`，这种类似 python 的方式
 - 获取文件大小需要先**将文件指针指向文件的尾部位置，然后根据 file 文件指针和尾部位置进行指针运算**得到文件大小。
-- 创建文件夹同时设置权限，权限**使用八进制数字表示**，因为 [[Linux Basics#文件和权限#通过数字修改权限|linux每一个权限组是3位的]]。
+- 创建文件夹同时设置权限，权限**使用八进制数字表示**，因 [[Linux Basics#文件和权限#通过数字修改权限|linux每一个权限组是3位的]]。
 - C-style 中获取文件的信息需要借助 `struct stat` 结构体和 `stat()` 函数，`if (stat(avatar_dir, &st) != 0) ` 判断文件是否存在
 #### sqlite3lib 库数据库操作
 ```cpp
@@ -483,12 +483,12 @@ int sqlite3_exec(							/* 返回结果 */
   char **errmsg                             /* 错误信息输出 */
 );
 ```
-- `sqlite3_free` 作用是**释放 SQLite 内部分配的内存**，SQLite 在某些操作中会动态分配内存，调用者需要负责释放，比如这里的错误信息字符串长度是**动态的**，只有 sqlite 知道有多长，所以 sql 负责分配，**但是调用者负责释放，同理需要手动释放的还有 pazResult 结果集，预处理语句**。必须与 SQLite 的内存分配函数配对使用，不能用 C++的 delete 或 free
+- `sqlite3_free` 作用是**释放 SQLite 内部分配的内存**，SQLite 在某些操作中会动态分配内存，调用者需要负责释放，比如这里的错误信息字符串长度是**动态的**，只有 sqlite 知道有多长，所以 sql 负责分配，**但调用者负责释放，同理需要手动释放的还有 pazResult 结果集，预处理语句**。必须与 SQLite 的内存分配函数配对使用，不能用 C++的 delete 或 free
 - 参数绑定部分需要注意不同类型数据绑定 api 不一样
 - 预处理对象需要使用 `sqlite3_stmt` 对象，预处理流程为：
 	- 创建预处理对象 stmt
 	- 编写预处理 sql 语句
-	- 编译预处理语句（如果有 sql 或者 C++中的 `？` 放置语法错误会在这里提示）
+	- 编译预处理语句（如果有 sql 或者 C++中 `？` 放置语法错误会在这里提示）
 	- 绑定参数
 	- `sqlite3_step(stmt)` 执行语句，返回值为：
 		- `SQLITE_ROW`: SELECT 查询有下一行数据
@@ -523,10 +523,10 @@ Business::Business(data_handler* DataHandler) {
     m_db_handler = DataHandler;
 }
 ```
-- 使用 `g_thread_pool_new`*较为方便地创建线程池*，其中的 thread_handle 是**线程工作函数**，每一个线程需要做什么事在这个函数中定义，定义为：`void (*GFunc) (gpointer data, gpointer user_data)`
+- 使用 `g_thread_pool_new`*较为方便地创建线程池*，其中 thread_handle 是**线程工作函数**，每一个线程需要做什么事在这个函数中定义，定义为：`void (*GFunc) (gpointer data, gpointer user_data)`
 - gpointer 是 `typedef void* gpointer`
-	- data 是**这个线程工作函数中需要用到的本任务的特定数据**，本项目中是客户端通信的 socket（clientfd），因为程序设计为每一个线程用来处理一个客户端的请求任务
-	- user_data 是通过 g_thread_pool_new 传递的**全局数据**，在本项目的工作函数中使用的全局数据是 Business 类构造函数中的 DataHandler
+	- data 是**这个线程工作函数中需要用到的本任务的特定数据**，本项目中是客户端通信的 socket（clientfd），因程序设计为每一个线程用来处理一个客户端的请求任务
+	- user_data 是通过 g_thread_pool_new 传递的**全局数据**，在本项目的工作函数中使用的全局数据是 Business 类构造函数中 DataHandler
 ```cpp
 // 基本数据类型转换，需要特殊宏
 gpointer ptr = GINT_TO_POINTER(123);
@@ -603,4 +603,4 @@ SQLite3 + File System
 - 消息头设计: 包含类型、长度、时间戳等信息
 - 柔性数组: 用于处理可变长度的消息体
 
-### 
+###

@@ -1,83 +1,83 @@
 - 零碎知识
-    
+
     [[关系运算符的优先级]]
-    
+
     [[三段循环代码的区别]]
-    
+
     [[函数]]
-    
+
     [[程序框架]]
-    
+
     [[基本错误提示]]
-    
+
 - runnoob自学
 - 作业
-    
+
     [[头歌作业题]]
-    
+
 - 实战
-    
+
     ### ——————基础逻辑———————
-    
+
     [[身高换算]]
-    
+
     [[计算时间差]]
-    
+
     [[整数四则运算]]
-    
+
     [[厘米换算英尺]]
-    
+
     [[进制转换]]
-    
+
     [[找零计算器（IF）]]
-    
+
     [[比较并找出最大的数]]
-    
+
     [[多路分支（Switchcase）]]
-    
+
     [[成绩转换 输出数字有几位数（while）]]
-    
+
     [[rand函数]]
-    
+
     [[猜数游戏]]
-    
+
     [[计算平均数]]
-    
+
     ### ———————遍历循环——————
-    
+
     [[整数逆序]]
-    
+
     [[计算阶乘（for）]]
-    
+
     [[判断一个数是不是素数（for语句重点）]]
-    
+
     [[计算出100以内的素数]]
-    
+
     [[凑硬币]]
-    
+
     [[累加分数计算公式]]
-    
+
     [[正序分解整数]]
-    
+
     [[水仙花数（自定义位数版代码）]]
-    
+
     [[计算数组的长度]]
-    
+
     [[输出一个99乘法表]]
-    
+
     [[计算两个整数之间的所有素数之和]]
-    
+
     [[循环次数计算]]
-    
+
     [[求最大公约数]]
-    
+
     [[求符合给定条件的整数集]]
-    
+
     [[计算范围内素数的个数和加和]]
-Srand(time(0));  
-Int a = rand()%100+1;  
-%100+1  
-这段代码的意思是  
+Srand(time(0));
+Int a = rand()%100+1;
+%100+1
+这段代码的意思是
 ![Untitled 208.png](../../../Files%20&%20LongText/Attachments/Untitled%20208.png)
 **然后再加上1**
 这样的话无论随机数是多少，对100取余后得到0-99的数
@@ -86,16 +86,16 @@ Int a = rand()%100+1;
 **如何让计算机产生规定任意范围之内的随机数呢？**
 要在C语言中生成位于 **15624** 到 **24586** 之间的随机数，你可以按照以下步骤编写代码：
 1. **播种随机数生成器**：首先，我们需要设置随机数生成器的种子。通常我们可以使用 `time(NULL)` 函数来获取当前时间作为种子，确保每次运行程序时都会产生不同的随机数序列 .
-2. **使用 rand() 函数生成随机数**：在C语言中，我们一般使用 `<stdlib.h>` 头文件中的 `rand()` 函数来生成随机数。它的用法为：
-    
+2. **使用 rand() 函数生成随机数**：在C语言中，我们一般使用 `<stdlib.h>` 头文件中 `rand()` 函数来生成随机数。它的用法为：
+
     ```C
     int rand(void);
     ```
-    
-    `rand()` 会随机生成一个位于 `0` 到 `RAND_MAX` 之间的整数。`RAND_MAX` 是 `<stdlib.h>` 头文件中的一个宏，它用来指明 `rand()` 所能返回的随机数的最大值。在实际编程中，我们不需要知道 `RAND_MAX` 的具体值，把它当做一个很大的数来对待即可。
-    
+
+    `rand()` 会随机生成一个位于 `0` 到 `RAND_MAX` 之间的整数。`RAND_MAX` 是 `<stdlib.h>` 头文件中一个宏，它用来指明 `rand()` 所能返回的随机数的最大值。在实际编程中，我们不需要知道 `RAND_MAX` 的具体值，把它当做一个很大的数来对待即可。
+
 3. **生成指定范围内的随机数**：我们可以利用取模的方法来限定随机数的范围。例如，要生成位于 **15624** 到 **24586** 之间的随机数，可以使用以下代码：
-    
+
     ```C
     \#include <stdio.h>#include <stdlib.h>#include <time.h>int main() {
         int a;
@@ -105,7 +105,7 @@ Int a = rand()%100+1;
         return 0;
     }
     ```
-    
+
     这里，`rand() % (24586 - 15624 + 1)` 会产生 `0` 到 `8949` 的随机数，后面的 `+ 15624` 确保 `a` 最小只能是 `15624`，最大就是 `8949 + 15624 = 24586`。
 当然可以。以下是for循环，while循环和do...while循环的示例代码：
 **1.** **For循环**：（当条件满足时执行循环体，直到不满足条件时停止）**
@@ -120,10 +120,10 @@ return0;
 for(初始化; 条件; 更新) {
 // 循环体}
 for循环主要由以下三个部分组成：
-**1.** **初始化（Initialization）**：这是for循环的第一部分，通常用于设置循环变量的初始值。这部分只在循环开始时执行一次。**  
-2.  
-**条件（Condition）**：这是for循环的第二部分，它是一个表达式，用于测试是否应继续循环。如果条件为真（非零），则执行循环体。如果条件为假（零），则退出循环。**  
-3.  
+**1.** **初始化（Initialization）**：这是for循环的第一部分，通常用于设置循环变量的初始值。这部分只在循环开始时执行一次。**
+2.
+**条件（Condition）**：这是for循环的第二部分，它是一个表达式，用于测试是否应继续循环。如果条件为真（非零），则执行循环体。如果条件为假（零），则退出循环。**
+3.
 **更新（Update）**：这是for循环的第三部分，通常用于更新循环变量的值。这部分在每次循环迭代结束时执行。**
 以下是一个for循环的示例，该循环从0开始，每次迭代都会增加1，直到达到10：
 for(inti = 0; i < 10; i++) {
@@ -169,7 +169,7 @@ while(i < 5) {
 printf("%d\n", i);
 i++;
 }
-**1.** **Do…While循环**：do...while循环与while循环类似，但它至少执行一次代码块，因为它在循环的底部检查条件。**
+**1.** **Do…While循环**：do...while循环与while循环类似，但它至少执行一次代码块，因它在循环的底部检查条件。**
 inti = 0;
 do{
 printf("%d\n", i);
@@ -185,11 +185,11 @@ i++;
 关系运算符的优先级
 ![Untitled 2 18.png](../../../Files%20&%20LongText/Attachments/Untitled%202%2018.png)
 ![Untitled 3 16.png](../../../Files%20&%20LongText/Attachments/Untitled%203%2016.png)
-要求：给出1角，2角，5角的硬币若干  
-凑出指定金额的方案有几种？分别是什么？  
+要求：给出1角，2角，5角的硬币若干
+凑出指定金额的方案有几种？分别是什么？
 代码：
 ![%E5%87%91%E7%A1%AC%E5%B8%81%E9%97%AE%E9%A2%98.cpp](%E5%87%91%E7%A1%AC%E5%B8%81%E9%97%AE%E9%A2%98.cpp)
-  
+
 ```C
 \#include <stdio.h>
 int main()
@@ -273,7 +273,7 @@ int main()
 ![Untitled 2 20.png](../../../Files%20&%20LongText/Attachments/Untitled%202%2020.png)
 - 可以在函数之中调用函数
 ![Untitled 3 18.png](../../../Files%20&%20LongText/Attachments/Untitled%203%2018.png)
-- return还有一个作用是直接跳出函数，因为已经有了返回值
+- return还有一个作用是直接跳出函数，因已经有了返回值
 **函数的形参与实参**
 - 定义：
 ![Untitled 4 17.png](../../../Files%20&%20LongText/Attachments/Untitled%204%2017.png)
@@ -282,15 +282,15 @@ int main()
 /ta
 ![Untitled 6 15.png](../../../Files%20&%20LongText/Attachments/Untitled%206%2015.png)
 - 而如果想让swap函数交换两个变量（直接操控），有两种方法：
-    
+
     - 第一种：重新修改swap函数的类型和功能
-        
+
         ```C
         \#include<stdio.h>
-        
+
         int a = 10;
         int b = 15;
-        
+
         void swap()
         {
         	int t;
@@ -298,7 +298,7 @@ int main()
         	a = b;
         	b = t;
         }
-        
+
         int main()
         {
         	swap();
@@ -306,15 +306,15 @@ int main()
         	return 0;
         }
         ```
-        
-          
-        
-    
+
+
+
+
     - 第二种：使用指针接管地址
-        
+
         ```C
         \#include<stdio.h>
-        
+
         void swap(int *a, int *b)
         {
         	int t;
@@ -322,7 +322,7 @@ int main()
         	*a = *b;
         	*b = t;
         }
-        
+
         int main()
         {
         	int a = 10;
@@ -332,25 +332,25 @@ int main()
         	return 0;
         }
         ```
-        
-          
-        
-          
-        
-          
-        
-    
-      
-    
+
+
+
+
+
+
+
+
+
+
     ```C
     \#include<stdio.h>
-    
+
     	int a = 10 ;
     	int b = 15;
     int swap(int a,int b)//需要注意的点
     /* 这里swap函数定义了两个int参数a和b，
     然后交换参数的值，并没有改变a和b全局变量的值
-    
+
     不识说int swap(int a,int b)就是swap函数有a，b两个变量
     而是这告诉编译器，这里有两个参数，一个用a表示，另一个用b表示，他们都是int
     然后swap函数在编译器中就会创建两个int隐形内部变量，叫做a，b，然后执行他们的交换*/
@@ -359,57 +359,57 @@ int main()
     	t = a ;
     	a = b ;
     	b = t ;
-    
+
     }
     int main()
     {
     	swap(a,b);
     	/*这一句话的意思是告诉编译器，交换swap函数参数的值，a，b是swap函数的参数
-    	而不是全局变量，因为你定义就是这么定义的*/ 
+    	而不是全局变量，因你定义就是这么定义的*/
     	printf("a = %d, b = %d",a,b);
     	printf("%d",printf("hello"));
     	return 0;
     }
     ```
-    
+
     **函数的调用**
-    
+
     函数可以作为一个表达式的某一项，单独的语句，作为参数
-    
-      
-    
+
+
+
     PS ：printf函数的返回值是printf的内容和字符数
-    
+
     - 其中转义字符\n \a 等都是一个字符
     - 格式控制符%d，%s之类同理
     - 头文件中封装好的函数名字其实是函数的地址
-    
+
 **函数的声明**
 - 函数的声名可以写在程序文件的任意位置
-    
+
     示例：
-    
+
     ![Untitled 7 15.png](../../../Files%20&%20LongText/Attachments/Untitled%207%2015.png)
-    
+
     解决方法：提前声明函数原型
-    
+
     void print（）;//函数原型提前声明，告诉编译器我有这个函数，你先不要报错，编译的时候，你去下面找
-    
+
     放在调用函数代码之前的地方
-    
+
     在函数下次调用的时候就会识别到
-    
+
 - 在函数中调用函数的时候，不需要写上函数的类型，不然int printf()函数就会被编译器认为实在函数中声明函数，调用只需写上名字就可以
-- 在函数的声明中，形参的函数是可以省略，因为参数会储存到函数的内部变量中
+- 在函数的声明中，形参的函数是可以省略，因参数会储存到函数的内部变量中
 思路：
 - 一个变量存储input
-- for循环判断是否有数字能被整除（因为已知循环总次数）  
-    for(test_num=2;test_num≠input;test_num++)  
-    
+- for循环判断是否有数字能被整除（因已知循环总次数）
+    for(test_num=2;test_num≠input;test_num++)
+
 - 判断是否是素数（input % test_num ==0）
 - 一旦匹配成功跳出循环
 ![%E5%88%A4%E6%96%AD%E7%B4%A0%E6%95%B0.cpp](%E5%88%A4%E6%96%AD%E7%B4%A0%E6%95%B0.cpp)
-  
+
 **1. 使用dowhile**
 ```C
 \#include <stdio.h>
@@ -553,7 +553,7 @@ chat的简化版本
 void print_assignment(char var, int value) {
     if(value==1)
         printf("%c will be assigned.\n", var);
-    else 
+    else
         printf("%c will not be assigned.\n", var);
 }
 int main() {
@@ -581,7 +581,7 @@ int main() {
 }
 ```
 ![Untitled 218.png](../../../Files%20&%20LongText/Attachments/Untitled%20218.png)
-**循环中出现的判断变量是不能大于for中的判断句限定的**
+**循环中出现的判断变量是不能大于for中判断句限定的**
 ![Untitled 1 32.png](../../../Files%20&%20LongText/Attachments/Untitled%201%2032.png)
 for循环和while循环的对比比较
 ![Untitled 2 26.png](../../../Files%20&%20LongText/Attachments/Untitled%202%2026.png)
@@ -612,7 +612,7 @@ int main(){
         sum += i;
         result += sum;
         i++;
-        
+
     }
     printf("sum=%d",result);
     return 0;
@@ -706,7 +706,7 @@ int main()
 }
 ```
 ![Untitled 210.png](../../../Files%20&%20LongText/Attachments/Untitled%20210.png)
-  
+
 思路：
 - 一个变量存储取余之后的数（digital）
 - 一个变量存储退位之后的数（backnum）
@@ -756,17 +756,17 @@ int main() {
 ![Untitled 216.png](../../../Files%20&%20LongText/Attachments/Untitled%20216.png)
 思路：
 - 首先计算有几位数（count）
-- while(input>0){  
-    input/10;  
-    count++;  
-    }\\count大小就是位数  
-    
+- while(input>0){
+    input/10;
+    count++;
+    }\\count大小就是位数
+
 - 从左到右消减位数又是一个循环
-- while(count>0){  
-    printf(”%d”,input_1 / pow(10,count-1));  
-    count—;  
-    }  
-    
+- while(count>0){
+    printf(”%d”,input_1 / pow(10,count-1));
+    count—;
+    }
+
 ![Untitled 1 31.png](../../../Files%20&%20LongText/Attachments/Untitled%201%2031.png)
 首先使用之前的倒序输出方法
 ![Untitled 2 25.png](../../../Files%20&%20LongText/Attachments/Untitled%202%2025.png)
@@ -780,7 +780,7 @@ int main() {
 ![Untitled 6 16.png](../../../Files%20&%20LongText/Attachments/Untitled%206%2016.png)
 也可以不用计数器
 ![Untitled 7 16.png](../../../Files%20&%20LongText/Attachments/Untitled%207%2016.png)
-最后的最后，当输入的数字等于1（x=1）就会导致dowhile循环中的循环体至少循环一次，从而导致，mask至少是10，而且因为有两轮循环的原因，x已经在第一轮循环之后改变了值，所以需要设置新的变量
+最后的最后，当输入的数字等于1（x=1）就会导致dowhile循环中循环体至少循环一次，从而导致，mask至少是10，而且因有两轮循环的原因，x已经在第一轮循环之后改变了值，所以需要设置新的变量
 ```C
 错误
 \#include<stdio.h>
@@ -799,9 +799,9 @@ printf("max = %d",b);
 return 0 ;
 }
 ```
-错误原因  
-使用,将两个%d隔开，这就意味着输入两个变量中间必须要使用，  
-否则如果使用空格键就回车，会无法读取到第二个数，默认为零  
+错误原因
+使用,将两个%d隔开，这就意味着输入两个变量中间必须要使用，
+否则如果使用空格键就回车，会无法读取到第二个数，默认为零
 正确
 ```C
 \#include<stdio.h>
@@ -820,8 +820,8 @@ printf("max = %d",b);
 return 0 ;
 }
 ```
-反思  
-更简洁版本代码  
+反思
+更简洁版本代码
 ```C
 \#include<stdio.h>
 int main()
@@ -866,9 +866,9 @@ int main()
 **错误原因**
 1. 在 `**for**` 循环中，你的循环条件是 `**i<N**`，这是错误的。你应该遍历所有的 `**N**` 位数，所以循环条件应该是 `**i<n**`。
 2. 你在 `**while**` 循环中重新定义了 `**sum**`，这会导致每次循环 `**sum**` 都被重置为 `**0**`。你应该在 `**while**` 循环外部定义 `**sum**`，并在循环内部累加每个位数的 `**N**` 次方。
-    
+
     确实需要注意，重新定义会导致数据初始化
-    
+
 3. 在检查一个数是否是水仙花数时，你使用了 `**shu = i**`，这是错误的。你应该检查 `**sum**` 是否等于 `**i**`，即 `**sum == i**`。==号总是写成=
 ```C
 \#include<stdio.h>
@@ -907,8 +907,8 @@ int main()
     return 0;
 }
 ```
-热身题  
-要求，输入两个数求出它们的最小公约数，如不符合要有错误信息  
+热身题
+要求，输入两个数求出它们的最小公约数，如不符合要有错误信息
 ![Untitled 219.png](../../../Files%20&%20LongText/Attachments/Untitled%20219.png)
 ```C
 \#include<stdio.h>
@@ -968,8 +968,8 @@ int main()
 ```
 知识：辗转相除法
 ![Untitled 2 27.png](../../../Files%20&%20LongText/Attachments/Untitled%202%2027.png)
-上面的本质是穷举法，效率不高  
-使用辗转相除法  
+上面的本质是穷举法，效率不高
+使用辗转相除法
 ![Untitled 3 24.png](../../../Files%20&%20LongText/Attachments/Untitled%203%2024.png)
 ```C
 #include<stdio.h>
@@ -1028,8 +1028,8 @@ int main()
 	return 0;
 }
 ```
-要求：猜大猜小有提示  
-猜完给出猜的次数  
+要求：猜大猜小有提示
+猜完给出猜的次数
 构思：
 - 一个变量number存储计算机给出的随机数
 - 一个可以更新的变量input存储用户给出的数字
@@ -1050,7 +1050,7 @@ int num = rand()%100+1,input,count=1;
 printf("i ve made a number between 1-100 , let s start the game .\n");
 printf("please input the number you reckon : ");
 scanf("%d",&input);
-while(input != num){	
+while(input != num){
 	if (input > num){
 		printf("your number is bigger than the NUM !\n");
 		count++;
@@ -1122,7 +1122,7 @@ int main()
 	scanf("%d",&n);
 	for( i = 1;i<=n;i++){
 		sum += 1.0/i;
-		
+
 	}
 	printf("f(%d) = %f",n,sum);
 }
@@ -1140,7 +1140,7 @@ int main()
 			sum += -1.0/i;
 			}
 		sum += 1.0/i;
-	
+
 	}
 	printf("f(%d) = %f",n,sum);
 }
@@ -1199,7 +1199,7 @@ int main()
 ```
 思路
 - [[判断一个数是不是素数（for语句重点）]]，将printf提示语改为直接输出
-- 遍历1~100，因为次数已经固定，所以使用for(start=2;start≤100;start++)
+- 遍历1~100，因次数已经固定，所以使用for(start=2;start≤100;start++)
 - 当合格，直接打印结果
 ![%E8%AE%A1%E7%AE%97100%E4%BB%A5%E5%86%85%E7%B4%A0%E6%95%B0.cpp](%E8%AE%A1%E7%AE%97100%E4%BB%A5%E5%86%85%E7%B4%A0%E6%95%B0.cpp)
 ```C
@@ -1299,7 +1299,7 @@ int main() {
 	int ages[]={1,2,3,4,5};
 	int len =sizeof(ages)/ sizeof(ages[0]);
 ```
-  
+
 ![Untitled 217.png](../../../Files%20&%20LongText/Attachments/Untitled%20217.png)
 ![Untitled 201.png](../../../Files%20&%20LongText/Attachments/Untitled%20201.png)
 ```C
@@ -1319,7 +1319,7 @@ printf("%d%d",hour3,min3);
 return 0;
 }
 ```
-  
+
 ![Untitled 1 23.png](../../../Files%20&%20LongText/Attachments/Untitled%201%2023.png)
 ```C
 \#include <stdio.h>
@@ -1340,8 +1340,8 @@ return 0;
 ```
 PS 提取出多位数任意一位的数字值
 ![Untitled 2 21.png](../../../Files%20&%20LongText/Attachments/Untitled%202%2021.png)
-第一次写  
-  
+第一次写
+
 ```C
 \#include<stdio.h>
 int main ()
@@ -1477,15 +1477,15 @@ int main()
 	return 0;
 }
 ```
-## 运行结果  
-输入  
-5 7  
-输出  
-your height is :1.524000 cm  
-Process exited after 4.188 seconds with return value 0  
+## 运行结果
+输入
+5 7
+输出
+your height is :1.524000 cm
+Process exited after 4.188 seconds with return value 0
 Press any key to continue . . .
 **本题要求对任意给定的1位正整数N，输出从1*1到N*N的部分口诀表。**
-  
+
 错误示例1
 ```C
 \#include<stdio.h>
@@ -1503,9 +1503,9 @@ int main()
 		if (second==n){
 		printf("\n");
 		}
-		
+
 		}
-	
+
 	}
 	return 0;
 }
@@ -1550,7 +1550,7 @@ int main()
 ```
 Ps：制表位的作用
 在C语言中，`**\t**` 是一个特殊字符，代表制表符（Tab）。当你在 `**printf**` 语句中使用 `**\t**`，它会在输出中添加一定数量的空格，使得输出内容对齐到下一个制表位。制表位的位置通常是每隔8个字符就设置一个，但这可能会根据你的环境或设置有所不同。
-因此，当你在两个等式之间添加 `**\t**`，无论每个等式的长度如何，下一个等式都会开始于下一个制表位，从而实现了等式的左对齐。这就是为什么你的乘法表中的等式看起来是整齐的，每列的等式都是左对齐的。
+因此，当你在两个等式之间添加 `**\t**`，无论每个等式的长度如何，下一个等式都会开始于下一个制表位，从而实现了等式的左对齐。这就是为什么你的乘法表中等式看起来是整齐的，每列的等式都是左对齐的。
 ![Untitled 204.png](../../../Files%20&%20LongText/Attachments/Untitled%20204.png)
 进制转换的标识符的使用也有用
 ![Untitled 1 25.png](../../../Files%20&%20LongText/Attachments/Untitled%201%2025.png)

@@ -41,7 +41,7 @@ cmake . -DCMAKE_CXX_STANDARD=17 && make
 那么由于这四个过程必须顺序执行，
 ### 协程基本概念和原理
 协程是**可以重入的特殊函数**。就是这个函数在执行的过程，可以（通过 `co_await` ,或者 `co_yield`）挂起，然后在外部（通过 `coroutine_handle`）恢复运行。主要目的是用于**异步编程**。
-> [!应用场景] 
+> [!应用场景]
 > 每次一次协程的挂起都可以视为协程进入一个等待状态，比如请求一个网络，需要HTTP get一个文件，然后对文件进行分析。那么就可以用协程来包装整个处理，在发起HTTP请求后，挂起协程（处理其他事情），等待应答或者超时后，再恢复协程的运行。
 
 - 协程分为无栈协程和有栈协程两种，**无栈指可挂起/恢复的函数**，有栈协程则相当于用户态线程。有栈协程切换的成本是用户态线程切换的成本，而无栈协程切换的成本则相当于**函数调用的成本**。
@@ -50,10 +50,10 @@ cmake . -DCMAKE_CXX_STANDARD=17 && make
 
 > [!有栈协程]
 > 有栈（stackful）协程通常的实现手段是在堆上提前分配一块较大的内存空间（比如 64K），也就是协程所谓的“栈”，**参数、return address 等**都可以存放在这个“栈”空间上。如果需要协程切换，那么通过 swapcontext 一类的形式来让系统认为这个堆上空间就是普通的栈，这就实现了上下文的切换。
-> 
+>
 > “栈”空间普遍是比较小的，在使用中有栈溢出的风险；而如果让“栈”空间变得很大，对内存空间又是很大的浪费。无栈协程则没有这些限制，既没有溢出的风险，也无需担心内存利用率的问题。
-> 
-> 有栈协程在切换时确实比系统线程要轻量，但是和无栈协程相比仍然是偏重的，无栈协程可以做到**纳秒级**切换
+>
+> 有栈协程在切换时确实比系统线程要轻量，但和无栈协程相比仍是偏重的，无栈协程可以做到**纳秒级**切换
 
 普通的函数函数体顺序执行，无法暂停挂起，跟别说恢复，协程函数可以
 ![[v2-7a2e0860eecee953296458dc06cb2b40_720w.webp]]
@@ -67,7 +67,7 @@ C++的协程（协程函数）内部可以用**co_await** , **co_yield**. 两�
 func_1 是普通函数，func_2 是协程函数，则 func_2 会存储在**堆**中，运行 func_2 的过程中对他的挂起是将**栈里的 func_2 状态复制到堆中**然后栈销毁 func_2 的内存，恢复是栈中分配一夸内存，将**堆中 func_2 复制回栈中**的位置
 
 
- 
+
 ### 协程关键字
 `co_await` 调用一个awaiter对象（可以认为是一个接口），根据其内部定义决定其操作是挂起，还是继续，以及挂起，恢复时的行为。其呈现形式为
 ```cpp
@@ -117,10 +117,10 @@ co_await expr 通常用于表示等待一个任务(可能是 lazy 的，也可�
 ## 设计方法
 ### 低内聚，高耦合--精简头文件内容
 除非是编写纯头文件库，否则建议将一个文件中函数/变量定义和实现分开。
-但是也不是源文件中的所有函数/变量都需要在头文件中对应，如果头文件的某些函数实现需要很多工具函数辅助，但是他们只会帮助头文件中函数的实现，而对外部没有帮助，这时候就可以**不必将他们在头文件中声明，而在 cpp 文件中写入定义+声明**。
+但也不是源文件中所有函数/变量都需要在头文件中对应，如果头文件的某些函数实现需要很多工具函数辅助，但他们只会帮助头文件中函数的实现，而对外部没有帮助，这时候就可以**不必将他们在头文件中声明，而在 cpp 文件中写入定义+声明**。
 - 减少头文件 include 的成本，代码复制也是时间
 - 他们不在其他文件使用，**如果考虑可能有命名污染还可以用匿名命名空间包裹**
-- 如果他们被频繁使用但是作用于局限于当前文件，考虑使用 `static const` 修饰
+- 如果他们被频繁使用但作用于局限于当前文件，考虑使用 `static const` 修饰
 ## http 响应格式
 1. 什么是 HTTP
  HTTP (HyperText Transfer  Protocol)。它是互联网上应用最广泛的一种网络协议，用于从 Web  服务器传输超文本到本地浏览器。
@@ -170,7 +170,7 @@ Content-Length: 12345
 4. Set-Cookie 的工作原理是什么？
   Set-Cookie 是一个特殊的 HTTP 响应头。它的工作原理是：
    - 服务器发送 `Set-Cookie`：当服务器希望浏览器保存一些信息时（例如用户登录成功后），它会在 HTTP 响应中添加一个 Set-Cookie 头。
-   - 浏览器保存 Cookie：浏览器收到 Set-Cookie 头后，会根据其中的指示，将这些信息（Cookie）存储在本地。
+   - 浏览器保存 Cookie：浏览器收到 Set-Cookie 头后，会根据其中指示，将这些信息（Cookie）存储在本地。
    - 浏览器自动发送 `Cookie`：在后续的每次请求中，只要请求的 URL 符合 Cookie 的域和路径等条件，浏览器都会自动将之前保存的 Cookie 信息放在 Cookie 请求头中发送给服务器。
    - 服务器识别用户：服务器收到 Cookie 请求头后，就能从中读取信息，从而识别出是哪个用户发来的请求，并根据这些信息来维护用户的状态。
 4. 什么是 HTTP 规范的 Set-Cookie 字符串，为什么需要它？
@@ -226,15 +226,15 @@ static bool is_cookie_value_char(char c) noexcept {
     return tab[static_cast<unsigned char>(c)];
 }
 ```
-这两个函数中使用了 `static char constexpr tab[]` 查找表，这是一种**提高性能的做法**，由于合法的 HTTP token 和 cookie-value 字段只能是 **ASCII 字符中的英文字母**。
+这两个函数中使用了 `static char constexpr tab[]` 查找表，这是一种**提高性能的做法**，由于合法的 HTTP token 和 cookie-value 字段只能是 **ASCII 字符中英文字母**。
 tab 表是一个 256 字节的表，其中中为 1 的位置表示 ascii 表中这个位置的字符是可用的。
 CPU 缓存友好，程序需要判断一个字符时，它只需要将字符的 ASCII值作为索引去访问 tab 数组相应位置，即可得到他是否是合法的。
-常规写法 `if(c >= 'a' && c <= 'z' || c >='A' && c <= 'Z'))` 中 if 分支会因为 CPU 分支预测，缓存未命中带来性能损失。
+常规写法 `if(c >= 'a' && c <= 'z' || c >='A' && c <= 'Z'))` 中 if 分支会因 CPU 分支预测，缓存未命中带来性能损失。
 查找表在**未出现溢出错误**的情况下没有分支，速度极快。
 #### 零拷贝 cookie 解析器
 cookie_list 类是一个零拷贝（Zero-Copy）的解析器，用于解析客户端发送的 `Cookie`   请求头字符串。它的主要目的是高效地从一个长字符串中提取出所有的 Cookie 名称-值对，而无需进行额外的内存分配和字符串复制。
-其中的响应头解析使用的字符串是 `const char*` 类型了，所有的工具函数都是用了指针运算加快速度，可能会有点晕。本质上是：
-将 http 响应头放入构造函数中，就够造了一个可迭代对象，每次迭代返回头中的一个键值对
+其中响应头解析使用的字符串是 `const char*` 类型了，所有的工具函数都是用了指针运算加快速度，可能会有点晕。本质上是：
+将 http 响应头放入构造函数中，就够造了一个可迭代对象，每次迭代返回头中一个键值对
 ```cpp
 chat::cookie_list cookies(raw_cookie_header);
 // 2. 遍历 cookie_list 来查找特定的 Cookie
@@ -253,14 +253,14 @@ cookie_pair
 ### src/util/email. cpp & include/util/email. hpp
 email. cpp 及其头文件的功能是否是我理解诶的那样：
 1. is_email 函数用来判断一个电子邮件地址字符串是否符合合法的电子邮件格式，由于电子邮件地址中可能包含 Unicode 字符
-2. 而标准库中的 regex 不支持，所以这里使用了 `boost:: make_u32regex` 函数来构建一个能够匹配含有 Unicode 字符的电子邮件地址正则表达式对象
+2. 而标准库中 regex 不支持，所以这里使用了 `boost:: make_u32regex` 函数来构建一个能够匹配含有 Unicode 字符的电子邮件地址正则表达式对象
 ### src/util/scrypt. cpp & include/util/scrypt. hpp
 #### 加密函数工作原理
 - `scrypt_generate_hash` 的工作原理：
   `scrypt_generate_hash` 函数接收用户输入的明文密码字符串 (passwd)、一个随机生成的盐值 (salt) 和 scrypt 算法的参数 (params)。它通过调用底层的 OpenSSL 库，执行 scrypt算法，计算出一个固定大小的哈希值。这个哈希值是一个**二进制数据块(blob)**，存储在 `std::array<unsigned char, hash_size>` 中
 -  `scrypt_phc_parse` 的作用:
 	- **函数的作用绝不是将哈希值“解码”回原始密码。密码哈希是不可逆的。**
-	-  1. 它接收一个 PHC 格式的字符串（例如`$scrypt$ ln=14, r=8, p=1 $somesalt$ somehash`）。这个字符串是服务器在用户注册时，将 scrypt算法的参数、随机盐值和计算出的哈希值序列化后存储在数据库中的。
+	-  1. 它接收一个 PHC 格式的字符串（例如`$scrypt$ ln=14, r=8, p=1 $somesalt$ somehash`）。这个字符串是服务器在用户注册时，将 scrypt算法的参数、随机盐值和计算出的哈希值序列化后存储在数据库中。
        2. 它的任务是解析这个 PHC 字符串，从中提取出 scrypt 算法的参数          (scrypt_params)、原始的盐值 (salt) 和原始的哈希值 (hash)。
        3. 它将这些提取出来的信息封装到 scrypt_data 结构体中返回。
 #### 密码加密&匹配原理
@@ -276,7 +276,7 @@ email. cpp 及其头文件的功能是否是我理解诶的那样：
 ### src/error. cpp & include/error.hpp
 #### 问题
 - 为什么 `to_string` 和 `chat_category` 对象 `cat` 要放在匿名命名空间中？
-  匿名命名空间（`namespace { ... }`）的作用是**将符号（函数、变量等）限制在当前编译单元（Translation Unit）内**，相当于C语言中的 `static` 修饰符，避免全局命名冲突。
+  匿名命名空间（`namespace { ... }`）的作用是**将符号（函数、变量等）限制在当前编译单元（Translation Unit）内**，相当于C语言中 `static` 修饰符，避免全局命名冲突。
 	- `to_string` 是一个辅助函数，仅在 `chat_category::message(int)` 中被调用，不需要暴露给外部代码。
 	- `chat_category cat` 是单例对象，用于注册错误类别，外部无需直接访问它。
 	- 如果放在匿名命名空间外，可能会造成**符号污染**或与其他模块的同名符号冲突。
@@ -286,11 +286,11 @@ email. cpp 及其头文件的功能是否是我理解诶的那样：
 	- 如果使用了自定义类并且继承自 `boost::system::error_category`，就必须要在 boost:: system 命名空间中创建一个特化模板，它的格式为：
 ```cpp
 template <>
-struct is_error_code_enum<chat::errc> { 
+struct is_error_code_enum<chat::errc> {
    static constexpr bool value = true;
 };
 ```
-模板类型名称一定要为 `struct is_error_code_enum`，才能够将 `chat::errc` 中的错误类型假入 boost:: system 管理。
+模板类型名称一定要为 `struct is_error_code_enum`，才能够将 `chat::errc` 中错误类型假入 boost:: system 管理。
 #### 整体结构
 1. error. hpp 中定义 enum class errc 定义所有可能出现的错误，error. cpp 中使用 `BOOST_DESCIBE_ENUM` 描述 to_string 之后的信息。
 2. to_string 创建转换规则，将 `char::ec`；类型对应的 BOOST_DESCIBE_ENUM 类型对应，转换为对应字符串。和 chat_category 将自定义错误注册让 boost:: system 来管理。to_strng 名为了避免冲突，并且他只服务于 chat_category 中，所以放在匿名 namespace 中。
@@ -332,8 +332,8 @@ using any_client_event = boost::variant2::variant<
 ### src/main. cpp
 #### 整体工作流程
 `main_impl` 函数中先创建事件管理器 ctx
-shared_state 是所有会话，服务中都需要的数据，通用接口函数都被放在其中。使用一个 `shared_ptr` 通过引用计数的方法保证只要还有一个服务在使用 shared_state 中的内容，就不会释放其内存，避免悬空引用。
-`listening_endpoint` 记录下当前监听的端口号（默认使用输入参数中的 `0.0.0.0:8888`），这里只是一个封装作用
+shared_state 是所有会话，服务中都需要的数据，通用接口函数都被放在其中。使用一个 `shared_ptr` 通过引用计数的方法保证只要还有一个服务在使用 shared_state 中内容，就不会释放其内存，避免悬空引用。
+`listening_endpoint` 记录下当前监听的端口号（默认使用输入参数中 `0.0.0.0:8888`），这里只是一个封装作用
 `signal_set` 是一个**异步信号管理器**，它在 `Boost.Asio` 的事件驱动框架中提供了安全、异步的信号处理机制，用于异步监听和处理系统信号（signals）。**在不阻塞主事件循环**的情况下处理进程信号。**允许程序在收到信号时执行清理操作**，可以接受的信号有：
 ```md
 ┌─────────┬──────┬────────────────────┬──────────────────────────────────┐
@@ -349,7 +349,7 @@ shared_state 是所有会话，服务中都需要的数据，通用接口函数�
 │ SIGCHLD │ 17   │ 子进程退出           │ 子进程状态改变                     │
 └─────────┴──────┴────────────────────┴──────────────────────────────────┘
 ```
-构造函数中第一个参数表明这个信号接收器会接受那个上下文中的信号，对其中发出的信号进行管理。
+构造函数中第一个参数表明这个信号接收器会接受那个上下文中信号，对其中发出的信号进行管理。
 可以通过无参构造后使用 `add()` 函数添加多个信号。
 后续代码中：
 ```cpp
@@ -371,12 +371,12 @@ signals.async_wait([st, &ctx](boost::system::error_code, int) {
 ```
 同理，由于协程运行过程中有可能被终止，所以使用 `signals.async_wait` 同样作为协程添加给 ctx 管理，一旦出现 signals 中有的信号，就执行其中 lambda 函数的逻辑，停止 redis 和 mysql 的服务，实现优雅退出。
 ### src/server. cpp 和 src/include/server. hpp
-`log_exception` 用来重新抛出异常（因为需要将这个异常信息记录到日志中）
+`log_exception` 用来重新抛出异常（因需要将这个异常信息记录到日志中）
 `run_server` 是一个协程，用来启动所有服务
 使用 `asio::ip::tcp::acceptor` 接受所有的**入站请求**，所有由外部发送到**其监听端口**的 tcp 都由 acceptor 统一接受管理，并转交给内核。
 关于 `SO_REUSEADDR`：
 当你关闭一个 TCP 服务器时，操作系统内核会将该端口保持在 `TIME_WAIT` 状态（通常为 2-4 分钟）。这是 **TCP协议的正常行为**，确保所有延迟的数据包能被正确处理。
-但是开发过程中需要频繁运行项目，不使用 reuseaddr 会导致下次传入同样的端口**绑定失败**，需要几分钟之后才可以（这是由系统内核管控的）
+但开发过程中需要频繁运行项目，不使用 reuseaddr 会导致下次传入同样的端口**绑定失败**，需要几分钟之后才可以（这是由系统内核管控的）
 
 在原生 C 代码中，连接到 tcp 服务需要：
 ```cpp
@@ -436,7 +436,7 @@ int main() {
         perror("accept");
         exit(EXIT_FAILURE);
     }
-    
+
     // 读取客户端数据
     int valread = read(new_socket, buffer, 1024);
     std::cout << "收到消息: " << buffer << std::endl
@@ -480,7 +480,7 @@ asio::awaitable<void> chat::run_server(...) {
     // 这个 while(true) 只有在 io_context 被停止时才会退出
 }
 ```
-根据 [[#src/main. cpp|src/main. cpp]] 中的代码：
+根据 [[#src/main. cpp|src/main. cpp]] 中代码：
 ```cpp
 auto st = std::make_shared<shared_state>(doc_root, ctx.get_executor());
 // ....
@@ -530,7 +530,7 @@ struct api_endpoint {
     handler_fn handler;       // 处理函数指针
 };
 ```
-这样规范了所有 api 分类中的请求，如果发送的 http 请求路径是 api/create-account，**并且请求类型为 POST**，那么就执行对应的 `handle_create_account` 函数，login 同理
+这样规范了所有 api 分类中请求，如果发送的 http 请求路径是 api/create-account，**并且请求类型为 POST**，那么就执行对应的 `handle_create_account` 函数，login 同理
 下面通过遍历方法来找到对应操作的执行方法
 ```cpp
 // 匹配 URL 路径到处理函数
@@ -566,7 +566,7 @@ boost::beast::http::request<boost::beast::http::string_body>   // 构建请求�
 response_builder 类用来通过 api 方便地构建各式各样的 http 响应头，用来让服务器端给客户端发送回复。
 其核心是使用 `boost::beast::http::message_generator` 构建返回响应头的 body 部分。其中 response_type 是完整的响应头，包含 head 和 body 部分，可以返回如 method_not_allowed，not_found_text 等错误请款发生时的响应和 json 格式内容响应
 
-request_context 则用来解析客户端发来的 http 请求头内容，解析出其中的 url 信息，如果请求头的 body 是 json 格式，则解析出 json 数据内容，最后通过 response_builder 生成响应头内容
+request_context 则用来解析客户端发来的 http 请求头内容，解析出其中 url 信息，如果请求头的 body 是 json 格式，则解析出 json 数据内容，最后通过 response_builder 生成响应头内容
 
 ### include/redis_client. hpp & src/services/redis_client. cpp
 #### `boost::system::result` 和传统错误处理方法比较
@@ -603,7 +603,7 @@ if (result.has_value()) {
 使用了 pimpl 模式，头文件中只实现接口，源文件中实现接口定义，并且实现接口的方法不是简单实现，而使继承实现。头文件中只暴露一个工厂函数接口
 
 #### 消息处理
-如果知道房间号，那么就可以调用 `get_root_history` 获取房间号中对应的所有聊天记录，使用message_batch型封装，其中的 `std::vector<message>` 中保存了所有这个房间的信息。如果一次受限于常数essage_batch_size大小，所有聊天记录条数大于这个常数，那么就会给batch标识 `has_more =true`，这样如果客户端想要加载更多消息之后再次发送的请求中只需要记录上次看到的最后一条消息的 message_id 就能够实现滚动无限加载
+如果知道房间号，那么就可以调用 `get_root_history` 获取房间号中对应的所有聊天记录，使用message_batch型封装，其中 `std::vector<message>` 中保存了所有这个房间的信息。如果一次受限于常数essage_batch_size大小，所有聊天记录条数大于这个常数，那么就会给batch标识 `has_more =true`，这样如果客户端想要加载更多消息之后再次发送的请求中只需要记录上次看到的最后一条消息的 message_id 就能够实现滚动无限加载
 ```cpp
 asio::awaitable<result<std::vector<message_batch>>> get_room_history(
     std::span<const room_history_request> input) final override {
@@ -641,7 +641,7 @@ asio::awaitable<result<std::vector<message_batch>>> get_room_history(
     co_return std::move(*result);
 }
 ```
-注意这里将一**一个用户对于所有房间的请求**封装在一个 req 中，减少了网络 io 次数，执行 redis 请求的代码是固定的。解析响应函数（如 `parse_room_history_batch`）用于将 redis 返回内容解析为对应房间中的所有消息
+注意这里将一**一个用户对于所有房间的请求**封装在一个 req 中，减少了网络 io 次数，执行 redis 请求的代码是固定的。解析响应函数（如 `parse_room_history_batch`）用于将 redis 返回内容解析为对应房间中所有消息
 
 其中 `XREVANGE` 这个 redis 命令用法为：
 ```redis
@@ -677,7 +677,7 @@ XREVRANGE "beast" "(1698123456789-0" "-" COUNT 20
 
 
 最终返回值中由于 `*result` 是一个左值 `auto result = parse_batch_xadd_response(*res);`，并且拥有数据的同时数据产生之后就要马上使用，并不需要长生命周期保存。
-虽然 C++中的 std 容器都实现了移动语义，但是这种情况仅发生在**返回函数内部局部 std 对象**（C++17 以后还可能直接在栈上构造，不需要复制或者移动）时触发，具体可以参考 [[Modern C++#移动语义]]
+虽然 C++中 std 容器都实现了移动语义，但这种情况仅发生在**返回函数内部局部 std 对象**（C++17 以后还可能直接在栈上构造，不需要复制或者移动）时触发，具体可以参考 [[Modern C++#移动语义]]
 
 ### include/services/redis_serialization. hpp & src/services/redis_serialization. cpp
 parse_room_history_batch 函数用来解析 redis stream XREVRANGE 命令返回非常复杂的嵌套数组结构：
@@ -695,7 +695,7 @@ parse_room_history_batch 函数用来解析 redis stream XREVRANGE 命令返回�
  ]
 ```
 - Boost.Redis 不能直接解析 Redis Stream 响应,它只提供底层的 resp3:: node 数组，需要手动解析
-- 如果尝试 json 解析会报错，因为 Redis 返回的不是标准 JSON，而是 RESP 3 协议格式
+- 如果尝试 json 解析会报错，因 Redis 返回的不是标准 JSON，而是 RESP 3 协议格式
 - 反正最终结果是将 redis 的 resp 3 协议内容的消息（类 json）用 message 类封装，用 res 保存所有 message
 
 serialize_redis_message 函数用来构造 json 字符串给 redis 存储，redis 没有 json 这个数据结构，只存储 K-V 结构数据，语法：
@@ -712,12 +712,12 @@ XADD key * field1 value1 field2 value2 ...
 
 # muduo-cluster-server-chat
 参考：[08 muduo网络库简介_ev_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1114y117Yh?spm_id_from=333.788.player.switch&vd_source=876be08bc9c030f4a9ea1fb97e0d0342&p=9)
-## 编写过程中的问题
-学习阶段可以一步步跟着来然后修改，但是自己设计时一定要首先设计好数据结构和各种代码中的枚举值转换关系
+## 编写过程中问题
+学习阶段可以一步步跟着来然后修改，但自己设计时一定要首先设计好数据结构和各种代码中枚举值转换关系
 ### 编写数据模块和业务模块交互
 在[[#业务模块代码#添加数据层]]时出现
 commit 01b82787cfd0ff719f70b9813475d4943f809aed
-usermodel.cpp 中的 user.state 默认设置为 Offline，而数据库中的结构为:
+usermodel.cpp 中 user.state 默认设置为 Offline，而数据库中结构为:
 ```sql
 CREATE TABLE `user` (
 	`id` int(11) NOT NULL AUTO_INCREMENT,
@@ -732,7 +732,7 @@ CREATE TABLE `user` (
 offline 是小写，这一点就很难发现，应该从一开始就严格规定：
 - 数据结构和代码中对象的对应/转化关系
 - 代码使用枚举值而不是字符串
-- 代码对象与数据库通信时对应的转换函数将枚举值转换为存储在数据库中的值
+- 代码对象与数据库通信时对应的转换函数将枚举值转换为存储在数据库中值
 编写 sql 语句的小 bug
 ```cpp
 sprintf(sql, "insert into user(name, password, state) values('%s', '%s', '%s')", user.username_.c_str(), user.password_.c_str(), user.state_.c_str());
@@ -743,7 +743,7 @@ sprintf(sql, "insert into user(name, password, state) values('%s', '%s', '%s')",
 #### 起因
 修改了主 cmake 配置，本意是优化 cmake 结构配置，明确语义，但 `set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)` 被设置到了 `project` 之前，导致这个变量失效。
 #### 后果
-但是旧的 cmake 缓存仍在，cmake 由于这个变量是失效的，但值又不为空，所以构建过程中会把输出目录设置为系统输出目录 `/usr/bin`，
+但旧的 cmake 缓存仍在，cmake 由于这个变量是失效的，但值又不为空，所以构建过程中会把输出目录设置为系统输出目录 `/usr/bin`，
 无论我如何只用 ` cmake -B build && cmake --build ./build ` 都会使用旧配置。这导致了 vscode 中点击运行会让程序在 `/usr/bin` 中运行，而我没有发现。在测试时一直使用 `./bin/ChatServer`
 这样我无论怎么修改日志，调试，测试结果都不会改变（不知情的情况下很奇怪）
 
@@ -793,7 +793,7 @@ rm -rf ./build 然后重新编译运行
 - 设置 cmake 时确保所有 set 都在 project 之前
 - 使用 cmake 运行程序时注意工作目录变化
 - 当程序输出代码中没有的字符串时，最有可能的原因是**二进制文件过期**
-- rm build 目录之后重新编译注意 cmake **构建和编译过程中的输出**
+- rm build 目录之后重新编译注意 cmake **构建和编译过程中输出**
 ### linux telnet 终端输入
 #### 背景
 编写客户端断开连接之后服务端将 user.state 改为 offline 的逻辑，运行后发现 Ctrl+C 断开方式并不会调用 mysql 执行 sql 而是*服务端抛出异常并终止*
@@ -805,7 +805,7 @@ rm -rf ./build 然后重新编译运行
 程序中断，json 错误解析发生在 chatserver 的 onMessage 阶段，
 - 按下 ctrl+c 发送信息
 - 服务端解析失败程序终止
-- 客户端先因为主机断连接所以 telnet 程序才会退出，**而不是因为 ctrl+c**
+- 客户端先因主机断连接所以 telnet 程序才会退出，**而不是因 ctrl+c**
 - 收到消息发生在断开连接之前，所以 onMessage 回调先发生，不修改数据库
 #### 解决
 正确退 telnet 方式是按下 ctrl+] 回车，然后输入 quit
@@ -853,7 +853,7 @@ gmake[2]: *** [src/server/CMakeFiles/ChatServer.dir/build.make:244: /root/CodeFi
 gmake[1]: *** [CMakeFiles/Makefile2:180: src/server/CMakeFiles/ChatServer.dir/all] Error 2
 gmake: *** [Makefile:91: all] Error 2
 ```
-g++的 `-l` 参数意义是用来连接库文件，但是没有名为 hiredis 的库，而 cmake 中使用了 `target_link_libraries(${project_name} private hiredis};`，那么说明 hiredis 使用了**现代 cmake target**方法构建->整个 hiredis 库由多个 target 构成
+g++的 `-l` 参数意义是用来连接库文件，但没有名为 hiredis 的库，而 cmake 中使用了 `target_link_libraries(${project_name} private hiredis};`，那么说明 hiredis 使用了**现代 cmake target**方法构建->整个 hiredis 库由多个 target 构成
 - 如果使用 config 模式 find_package 并且没有报错找不到 Config.cmake，那么通常是使用多 target 形式构建，应该写为 `<libname>::<targetname>`
 - vcpkg 的库大多使用这种形式
 - 使用 FindXXX.cmake 形式引入的库，一般只需要写库名，也有例外（boost）
@@ -872,7 +872,7 @@ main.cpp:(.text+0xe38): undefined reference to `User::User(int, std::__cxx11::ba
 # 同理没找到Group的构造函数
 /usr/bin/ld: main.cpp:(.text+0x1164): undefined reference to `Group::Group(int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)'
 
-# 因为没有构造函数而直接调用导致的符号找不到错误
+# 因没有构造函数而直接调用导致的符号找不到错误
 # 由于找不到符号引起的一些系统函数出现的链式调用报错
 /usr/bin/ld: CMakeFiles/ChatClient.dir/main.cpp.o: in function `__static_initialization_and_destruction_0(int, int)':
 main.cpp:(.text+0x45df): undefined reference to `User::User(int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)'
@@ -984,7 +984,7 @@ int main() {
 > Date:   Mon Jan 12 21:15:17 2026 +0800
 >     basic framework
 > ```
-> 但是这个提交中少了一行在 src/server/main.cpp 中的 server.start()
+> 但这个提交中少了一行在 src/server/main.cpp 中 server.start()
 
 ```bash
 ├── bin
@@ -1045,7 +1045,7 @@ target_link_libraries(ChatServer PRIVATE
 aux_source_directory(. SRC_LIST)
 add_executable(ChatClient ${SRC_LIST})
 ```
-主要部分代码和 [[#muduo 网络库工作基本原理]]中的框架代码一致
+主要部分代码和 [[#muduo 网络库工作基本原理]]中框架代码一致
 ```cpp
 ChatServer::ChatServer(net::EventLoop* loop, const net::InetAddress& listenAddr, const muduo::string& nameArg) : server_(loop, listenAddr, nameArg), loop_(loop) {
 	server_.setConnectionCallback(std::bind(&ChatServer::onConnect, this,  _1));
@@ -1068,8 +1068,8 @@ void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffe
 ```
 ### 基本业务
 #### 各个模块和业务模块的关系
-1. 创建 public.hpp 创建网络信号数据包结构定义，chatservice 和 chatserver 通过网络结构包中的信息相互识别
-2. 将网络结构包中的业务标识符和业务处理逻辑封装在一个表中，server 通过解析标识符调用业务处理功能
+1. 创建 public.hpp 创建网络信号数据包结构定义，chatservice 和 chatserver 通过网络结构包中信息相互识别
+2. 将网络结构包中业务标识符和业务处理逻辑封装在一个表中，server 通过解析标识符调用业务处理功能
 3. 业务模块和数据模块交互，所有的数据处理和实现的功能分开
 #### 网络模块和业务模块解耦
 > [!note]
@@ -1114,8 +1114,8 @@ void ChatService::reg(const net::TcpConnectionPtr& conn, json& j, muduo::Timesta
 }
 MsgHandler ChatService::getHandler(int msgid) {
 	if(!msgHandlerMap_.contains(msgid)){
-		auto invaildHandle = [msgid](const net::TcpConnectionPtr& conn, json& j, muduo::Timestamp time) -> void { 
-		LOG_ERROR << "msgid: " << msgid << " cannot find handler"; 
+		auto invaildHandle = [msgid](const net::TcpConnectionPtr& conn, json& j, muduo::Timestamp time) -> void {
+		LOG_ERROR << "msgid: " << msgid << " cannot find handler";
 		};
 		return invaildHandle;
 	}else{
@@ -1243,7 +1243,7 @@ void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffe
 	}
 }
 ```
-用户退出逻辑，也就是断开连接（telnet 中按下 ctrl+\]或者直接关闭终端），也由 onConnection 接管，这里出现了一个问题，参考[[#编写过程中的问题#linux telnet 终端输入]]
+用户退出逻辑，也就是断开连接（telnet 中按下 ctrl+\]或者直接关闭终端），也由 onConnection 接管，这里出现了一个问题，参考[[#编写过程中问题#linux telnet 终端输入]]
 ```cpp
 void ChatServer::onConnect(const net::TcpConnectionPtr& conn) {
 	LOG_INFO << "onConnect called, connected: " << conn->connected();
@@ -1255,7 +1255,7 @@ void ChatServer::onConnect(const net::TcpConnectionPtr& conn) {
 }
 ```
 `clientCloseException()` 回调用来处理这种情况
-客户端因为断开/直接中断终端而**必须把所有用户设置为 offline**，这里需要在**服务器主线程中设置中断处理，而不是网络模块中**，需要 `signal.h` 文件提供 `signal` 函数
+客户端因断开/直接中断终端而**必须把所有用户设置为 offline**，这里需要在**服务器主线程中设置中断处理，而不是网络模块中**，需要 `signal.h` 文件提供 `signal` 函数
 `signal`函数的本质是一个**事件通知机制**，它允许程序在运行时响应来自外部的"中断"事件。通俗来说：
 - **信号**是操作系统发给进程的异步通知
 - **signal函数**就是设置"信号处理回调函数"的注册器
@@ -1315,19 +1315,19 @@ void UserModel::resetState() {
 > ```cpp
 > #include <signal.h>
 > #include <stdio.h>
-> 
+>
 > void handle_signal(int sig, siginfo_t *info, void *context) {
 >     printf("收到信号: %d\n", sig);
 > }
-> 
+>
 > int main() {
 >     struct sigaction sa;
 >     sa.sa_flags = SA_SIGINFO;
 >     sa.sa_sigaction = handle_signal;
->     
+>
 >     sigemptyset(&sa.sa_mask);
 >     sigaction(SIGINT, &sa, NULL);
->     
+>
 >     printf("等待信号...\n");
 >     pause();
 >     return 0;
@@ -1392,7 +1392,7 @@ void ChatService::login(const net::TcpConnectionPtr& conn, const json& j, muduo:
 > commit 08d71332976ad1ad43a4acfccdd9ff6099b4d4f7 (HEAD -> main)
 > Author: root <root@localhost.localdomain>
 > Date:   Fri Jan 16 14:33:06 2026 +0800
-> 
+>
 >     - add add_friend function
 >     - add `row = mysql_fetch_row(res)`; in while loop to avoid memory explode
 >     - use friendmodel to storage & deal with every user's friends
@@ -1407,7 +1407,7 @@ void ChatService::login(const net::TcpConnectionPtr& conn, const json& j, muduo:
 使用 socket 编程，无 GUI 界面，简单增删改查数据转换即可实现
 ![[PixPin_2026-01-16_21-44-29.png]]
 需要注意：
-- 由于客户端也需要访问结构体 User，GroupUser，Group 这些**纯数据结构体**（也可能是类），这些*数据体中的工具函数实现*一般需要放在 hpp 文件中，不然可能导致**初始化找不到构造函数**，数据转换（序列/反序列化）已在头文件声明但找不到的问题，因实现在 cpp 文件中，没 include cpp 文件
+- 由于客户端也需要访问结构体 User，GroupUser，Group 这些**纯数据结构体**（也可能是类），这些*数据体中工具函数实现*一般需要放在 hpp 文件中，不然可能导致**初始化找不到构造函数**，数据转换（序列/反序列化）已在头文件声明但找不到的问题，因实现在 cpp 文件中，没 include cpp 文件
 ## 负载均衡
 ![[PixPin_2026-01-17_09-17-52.png]]
 负载均衡器的意义：
@@ -1427,7 +1427,7 @@ worker_rlimit_nofile 51200;
 
 stream {
     log_format tcp_format '$time_local|$remote_addr|$protocol|$status|$bytes_sent|$bytes_received|$session_time|$upstream_addr|$upstream_bytes_sent|$upstream_bytes_received|$upstream_connect_time'; # 日志格式
-  
+
     access_log /www/wwwlogs/tcp-access.log tcp_format;
     error_log /www/wwwlogs/tcp-error.log;
     include /www/server/panel/vhost/nginx/tcp/*.conf;  # 其他http配置文件位置
@@ -1481,7 +1481,7 @@ nginx: configuration file /www/server/nginx/conf/nginx.conf test is successful
 ```
 配置完成后使用 `nginx -s reload` 重新加载配置文件
 1. Nginx 进程：单个 Nginx 主进程管理多个工作进程，监听多个端口
-2. nginx **主配置中的 888 端口**是宝塔面板设置的 phpadmin 监听任务，本质上和其他 http 配置文件中配置没有区别
+2. nginx **主配置中 888 端口**是宝塔面板设置的 phpadmin 监听任务，本质上和其他 http 配置文件中配置没有区别
 3. nginx 的 tcp 配置端口中设置了**监听 3099 端口**，如果有其他配置文件则同时监听其他端口
 4. 客户端应该**通过 tcp 连接 3099 端口发送消息**，发送的消息会被 nginx 通过内置的负载均衡算法将 3099 接收到的消息**转发给运行在 3025/3026**端口的服务器处理
 5. 数据流向：客户端 → 3099 端口 → Nginx → 3025/3026 端口 → 后端 chatserver
@@ -1499,14 +1499,14 @@ server {
     listen 3099;  # 外部访问端口
     proxy_pass chatserver_backend;
     proxy_timeout 1h;  # 设置较长的超时时间，允许长连接
-    proxy_connect_timeout 10s;  # 增加连接超时时间     
-    # 移除proxy_responses，允许持续的双向通信 
+    proxy_connect_timeout 10s;  # 增加连接超时时间
+    # 移除proxy_responses，允许持续的双向通信
 }
 ```
 ![[PixPin_2026-01-17_12-43-53.png]]
 ## 消息队列
 ### 如何解决跨服务器通信问题
-跨服务器通信并不能让所有的服务器间都通过 tcp 连接，强耦合并且占用大量 **socket 资源和空闲但是被占用带宽**
+跨服务器通信并不能让所有的服务器间都通过 tcp 连接，强耦合并且占用大量 **socket 资源和空闲但被占用带宽**
 ![[PixPin_2026-01-17_09-29-16.png]]
 解决方法是使用中间件
 ![[PixPin_2026-01-17_09-31-27.png]]
@@ -1591,7 +1591,7 @@ bool Redis::connect() {
 	std::cout << "connect redis-server success\n";
 }
 ```
-同理，发送 subscribe 的命令也需要避免线程阻塞，不能使用 
+同理，发送 subscribe 的命令也需要避免线程阻塞，不能使用
 ```cpp
 redisReply* reply = (redisReply*)redisCommand(publishContext_, "PUBLISH %d %s", channel, message.c_str());
 ```
@@ -1643,7 +1643,7 @@ bool Redis::unsubscribe(int channel) {
 - 单台 server 并发数量有限，所以通过 nginx 进行**长连接**负载均衡
 - 不同的 server 实例之间需要通信来收发消息，所以引入 redis 接管所有广播和订阅消息，减轻服务器 mysql 压力
 ### 项目问题
-这些问题不一定得实现，但是必须得说得出来怎么实现，**逻辑清楚&方案正确**是重点
+这些问题不一定得实现，但必须得说得出来怎么实现，**逻辑清楚&方案正确**是重点
 #### 数据安全
 不能直接说没做，不会，需要提到的点：
 - 需要引入一种加密算法，客户端发送和服务端返回时都需要加密，反之需要解密，加密解密密钥动态更新
@@ -1675,12 +1675,12 @@ bool Redis::unsubscribe(int channel) {
 	- 三级结构之间使用动态更新形式，定期迭代三级结构间的数据存储位置
 #### 消息如何按序到达
 由于网络不稳定性，想要让消息按顺序发送/接受需要在消息中添加时间需要（**注意不是时间戳**）
-因为 IM 客户端是长连接的（不能是基于 http 的 B/S 无状态短连接），服务器端会保留客户端的 socket 长连接通信
+因 IM 客户端是长连接的（不能是基于 http 的 B/S 无状态短连接），服务器端会保留客户端的 socket 长连接通信
 短连接服务端不能向客户端发送消息，那么客户端必须按照一定周期向服务器请求，每个请求占用一个 socket，造成大量资源浪费
 
-- 不能给消息添加时间戳，因为后发送的消息仍然有可能先到达客户端（不同的消息通过不同路由发送），根据每一条消息的事件进行排序那么需要设置一个排序周期，比如 1s 内 client 接收到的 server 消息进行排序后显示，如果网络延迟>1s 仍会出错
+- 不能给消息添加时间戳，因后发送的消息仍有可能先到达客户端（不同的消息通过不同路由发送），根据每一条消息的事件进行排序那么需要设置一个排序周期，比如 1s 内 client 接收到的 server 消息进行排序后显示，如果网络延迟>1s 仍会出错
 - 所以应该根据序号排序，如果序号之间出现间隔则说明出现丢包->等待 timeout->重试请求->客户端显示网络异常这才是正确做法
 - 最好需要对每一个群/个人，client 都需要维护一个 sequence ，接收消息成功之后色 sequence++
 - 由于 sequence 的存在，实现**消息撤回**功能也很方便，消息撤回操作相当于发送一条 sequence=X 的指令
 - tcp/ip 基于的 ttl 协议中报文在网络环境中**最大跳数为 64**,超过这个大小则认为这个数据包应该被丢弃，不会再有路由器转发，这就是**丢包**
-- 
+-

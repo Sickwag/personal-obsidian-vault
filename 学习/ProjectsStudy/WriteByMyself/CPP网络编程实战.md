@@ -5,17 +5,17 @@ crea: 2025年11月6日14:30:28
 ## 网络请求分类
 ### POST
 本质是一段 http 文本，包含请求头和请求体部分，数据包含在请求头内容中，目的是**根据这些数据获取另一些数据**，通常这些数据比较大并且复杂，需要高级语言来解析这些数据结构
-用于处理变更，请求体中的内容被服务器端解析，**根据解析结果在服务器端进行对应的操作**，再将操作结果发送回来。发送重复的 post 消息可能会造成不同的结果，因为执行了重复的操作
-post**仅仅只是数据不在链接中明文传输，数据包如果不加密仍然不安全**
+用于处理变更，请求体中内容被服务器端解析，**根据解析结果在服务器端进行对应的操作**，再将操作结果发送回来。发送重复的 post 消息可能会造成不同的结果，因执行了重复的操作
+post**仅仅只是数据不在链接中明文传输，数据包如果不加密仍不安全**
 
 ### GET
 #### 本质理解
-本质**只是一段 url 地址**，代码中的构建过程也只是构建一个url链接，只需要知道host地址，资源文件地址和需要传入的参数即可。访问这个地址会让服务器解析地址中中的指明的资源地址，服务器访问对应位置的资源，根据URL参数处理，比如查询字符串（`?page=1&sort=name`）作为**过滤或补充信息**，再将**处理后的查询结果返回给客户端** ^x43n1d
+本质**只是一段 url 地址**，代码中构建过程也只是构建一个url链接，只需要知道host地址，资源文件地址和需要传入的参数即可。访问这个地址会让服务器解析地址中中指明的资源地址，服务器访问对应位置的资源，根据URL参数处理，比如查询字符串（`?page=1&sort=name`）作为**过滤或补充信息**，再将**处理后的查询结果返回给客户端** ^x43n1d
 ```http
 GET /api/products?category=electronics&minPrice=500 HTTP/1.1
 ```
 服务器：定位到 `/api/products` 资源集 → 应用 `category=electronics` 和 `minPrice=500` 过滤 → 返回过滤后的产品列表。
-严格的 GET 命令重复执行**的结果是相同的**，并且**没有写入操作**，但是技术上来说**也可以通过 url 中的参数实现修改数据**，但不建议这样做
+严格的 GET 命令重复执行**的结果是相同的**，并且**没有写入操作**，但技术上来说**也可以通过 url 中参数实现修改数据**，但不建议这样做
 #### 适用场景和注意事项
 - 操作是**幂等**的（重复执行结果相同）
 - 只是**读取或查询**数据
@@ -105,7 +105,7 @@ curl_easy_setopt(curl, CURLOPT_HEADER, (user_agent + "\r\n" + referer).c_str());
 headers = curl_slist_append(headers, "Referer:https://www.douban.com");
 headers = curl_slist_append(headers, "User - Agent : Mozilla / 5.0(Windows NT 10.0; Win64; x64)AppleWebKit / 537.36(KHTML, like Gecko)Chrome / 141.0.0.0 Safari / 537.36 Edg / 141.0.0.0 ");
 curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-curl_slist_free_all(headers);  // 不是必要，但是最好记得
+curl_slist_free_all(headers);  // 不是必要，但最好记得
 ```
 添加 user_agent 请求头之后服务器的 html 返回结果也会包含请求头
 ![[PixPin_2025-11-06_14-48-13.png]]
@@ -116,24 +116,24 @@ if (ec != CURLE_OK) {
     std::cout << "curl easy perform failed: " << curl_easy_strerror(ec) << '\n';
 } else {
     std::cout << "Download completed!\n";
-    
+
     // 使用libcurl内置函数获取响应信息
     long response_code;
     double total_time;
     char* content_type = nullptr;
     long redirect_count;
-    
+
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
     curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &total_time);
     curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &content_type);
     curl_easy_getinfo(curl, CURLINFO_REDIRECT_COUNT, &redirect_count);
-    
+
     std::cout << "\n=== Response Information ===\n";
     std::cout << "Status Code: " << response_code << "\n";
     std::cout << "Total Time: " << total_time << " seconds\n";
     std::cout << "Content Type: " << (content_type ? content_type : "Unknown") << "\n";
     std::cout << "Redirect Count: " << redirect_count << "\n";
-    
+
     // 检查HTTP状态
     if (response_code == 200) {
         std::cout << "✓ Request successful!\n";
@@ -143,7 +143,7 @@ if (ec != CURLE_OK) {
 }
 ```
 #### html 源码解析
-需要用到另一个库 pugixml，这个库**只能解析 xml，如果手动将 html 中的单标签，特殊语法使其成为一个符合 xml 格式的文档并在 pugi 解析选项中使用宽松解析**，也可以用来解析 xml
+需要用到另一个库 pugixml，这个库**只能解析 xml，如果手动将 html 中单标签，特殊语法使其成为一个符合 xml 格式的文档并在 pugi 解析选项中使用宽松解析**，也可以用来解析 xml
 具体代码参考：[[C++ practice case#html/xml 解析#pugixml 解析]]
 
 ### Qt 实现版本
@@ -172,7 +172,7 @@ public:
 
 private:
     void setProxy(const QString& host, quint16 port, const QString& username = QString(), const QString& password = QString());
-    
+
     QScopedPointer<QNetworkAccessManager> manager;
     QNetworkReply *currentReply;
     int m_timeout;
@@ -388,7 +388,7 @@ connect(reply, &QNetworkReply::readyRead, []() {
     // 有数据可读
 });
 
-connect(reply, &QNetworkReply::downloadProgress, 
+connect(reply, &QNetworkReply::downloadProgress,
         [](qint64 bytesReceived, qint64 bytesTotal) {
     // 下载进度更新
 });
@@ -528,7 +528,7 @@ if (!SSL_set_tlsext_host_name(stream->native_handle(), host.c_str())) {
 asio::connect(beast::get_lowest_layer(*stream), results);
 stream->handshake(ssl::stream_base::client);
 ```
-- 首先指定连接配置，设置连接哪一个主机，哪一个端口，域名是什么。因为一个主机地址可能需要管理多个域名，需要设置 sni 字段来**告诉主机到底需要访问哪一个域名**，具体验证机制[[netease music cover downloader#ssl 验证逻辑|参考]]。
+- 首先指定连接配置，设置连接哪一个主机，哪一个端口，域名是什么。因一个主机地址可能需要管理多个域名，需要设置 sni 字段来**告诉主机到底需要访问哪一个域名**，具体验证机制[[netease music cover downloader#ssl 验证逻辑|参考]]。
 - 设置完后进行连接和招手
 #### 读取响应
 ```cpp

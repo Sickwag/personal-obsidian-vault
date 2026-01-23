@@ -25,7 +25,7 @@ manifests 中主要用来存放 **AndroidManifest.xml** 文件。这个文件�
 ### 更新文本
 #### 程序入口
 - `onCreate()` 函数是此应用的入口点，并会调用其他函数来构建 UI。在 Kotlin 程序中，`main()` 函数是 Kotlin 编译器在代码中开始编译的特定位置；在 Android 应用中，则是由 `onCreate()` 函数来担任这个角色。
-- `onCreate()` 函数中的 [`setContent()`](https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ComposeView?hl=zh-cn#setContent(kotlin.Function0)) 函数用于通过可组合函数定义布局。任何标有 `@Composable` 注解的函数都可通过 `setContent()` 函数或其他可组合函数进行调用。
+- `onCreate()` 函数中 [`setContent()`](https://developer.android.google.cn/reference/kotlin/androidx/compose/ui/platform/ComposeView?hl=zh-cn#setContent(kotlin.Function0)) 函数用于通过可组合函数定义布局。任何标有 `@Composable` 注解的函数都可通过 `setContent()` 函数或其他可组合函数进行调用。
 #### Composable 组合函数**注解**
 - 在 `MainActivity.kt` 中，一个函数前声明 `@composable` 的作用：
 - `@Composable` 是 **Jetpack Compose** 提供的一个注解，用于标记一个函数为可组合函数（Composable Function）。可组合函数是构建 UI 的基本单元，它们可以描述 UI 并且能够根据状态的变化自动更新 UI。
@@ -60,11 +60,11 @@ fun GreetingPreview() {
 }
 ```
 ![[Pasted image 20250108114808.png|400]]
-- `Greeting`函数显示出text中的文本内容，由于使用了`@Composable`注解表示这个函数将被解析为一个UI 
-- `GreetingPreview`由于使用了`@Preview`注解，这个函数将会只在代码编辑页面需要显示页面预览的时候调用并将预览页面的背景设置为显示状态（`showBackground = true`），并因为`@Composalble`注解将他解释为一个UI，函数将会调用其中的Follow_ofiicial函数，进而调用`Greeting`函数来在预览页面显示文本内容
+- `Greeting`函数显示出text中文本内容，由于使用了`@Composable`注解表示这个函数将被解析为一个UI
+- `GreetingPreview`由于使用了`@Preview`注解，这个函数将会只在代码编辑页面需要显示页面预览的时候调用并将预览页面的背景设置为显示状态（`showBackground = true`），并因`@Composalble`注解将他解释为一个UI，函数将会调用其中Follow_ofiicial函数，进而调用`Greeting`函数来在预览页面显示文本内容
 - 使用`@Preview` 注解的函数只在`Preview`页面中被调用不会打包进 apk
-- **最终**，`onCreate` 函数中的 `setContent` 函数将其中的 `Follow_official` 函数作为一个 UI 解释并显示在最终将 `Greeting `而不是 `GreetingPreview `打包进 apk 中
-- 但是**如果预览函数中的参数和实际参数不一样而两者未分离**会导致预览代码中的参数覆盖原始代码的参数而最呈现预览代码在 App 中
+- **最终**，`onCreate` 函数中 `setContent` 函数将其中 `Follow_official` 函数作为一个 UI 解释并显示在最终将 `Greeting `而不是 `GreetingPreview `打包进 apk 中
+- 但**如果预览函数中参数和实际参数不一样而两者未分离**会导致预览代码中参数覆盖原始代码的参数而最呈现预览代码在 App 中
 #### 更改背景颜色
 需要使用 [`Surface`](https://developer.android.google.cn/reference/kotlin/androidx/compose/material/package-summary?hl=zh-cn#Surface(androidx.compose.ui.Modifier,androidx.compose.ui.graphics.Shape,androidx.compose.ui.graphics.Color,androidx.compose.ui.graphics.Color,androidx.compose.foundation.BorderStroke,androidx.compose.ui.unit.Dp,kotlin.Function0)) 将文本包围起来。`Surface` 是一个容器，代表界面的某一部分，您可以在其中更改外观（如背景颜色或边框）
 ![[Pasted image 20250108122322.png]]
@@ -81,7 +81,7 @@ Surface(color = Color.Magenta) {
 设置文本背景颜色（类似于 HTML）
 #### 添加内边距
 在 Greeting 函数中调整 modifier 参数 `modifier = Modifier.padding(24.dp)`（使用 dp 单位需要导入 `import androidx.compose.ui.unit.dp`）可以创建内边距
-使用的边距类型由 `setContent` 中的 `Greeting` 函数控制 `modifier = Modifier.padding(innerPadding)`
+使用的边距类型由 `setContent` 中 `Greeting` 函数控制 `modifier = Modifier.padding(innerPadding)`
 
 ##  创建交互式 Dice Roller 应用
 参考教程[创建交互式 Dice Roller 应用](https://developer.android.google.cn/codelabs/basic-android-kotlin-compose-build-a-dice-roller-app?hl=zh-cn&continue=https%3A%2F%2Fdeveloper.android.google.cn%2Fcourses%2Fpathways%2Fandroid-basics-compose-unit-2-pathway-2%3Fhl%3Dzh-cn%23codelab-https%3A%2F%2Fdeveloper.android.com%2Fcodelabs%2Fbasic-android-kotlin-compose-build-a-dice-roller-app#0)
@@ -102,11 +102,11 @@ fun DiceRollerApp() {
 ```
 ### 创建布局架构
 #### 基本骨架
-- 使用 DiceWithButtonAndImage 中传入的 modifier 对象会因为 `fillMaxSize` 填满整个屏幕
+- 使用 DiceWithButtonAndImage 中传入的 modifier 对象会因 `fillMaxSize` 填满整个屏幕
 - 将 `wrapContentSize()` 方法链接到 `Modifier` 对象，然后传递 `Alignment.Center` 作为实参以将组件居中。`Alignment.Center` 会指定组件同时在水平和垂直方向上居中。
 #### modifier 作用和工作原理
 `Modifier` 是 Jetpack Compose 提供的一种 **用于描述 UI 元素行为和布局的对象**，它可以**链式调用**来组合多个功能。
-简单来说，`Modifier` 是 Compose 中的属性设置工具，它可以修改、扩展或调整**可组合函数**的外观和行为。
+简单来说，`Modifier` 是 Compose 中属性设置工具，它可以修改、扩展或调整**可组合函数**的外观和行为。
 **Modifier 是一种声明式的属性设置工具**，可以在组件树中**向下传递**并对 UI 元素进行调整。
 - 在 `DiceWithButtonAndImage(modifier: Modifier = Modifier)` 中，你将 `modifier` 定义为一个默认值 `Modifier`。默认情况下，这只是一个“**空的修饰器**”（即没有任何样式或行为），不会对 UI 布局产生影响。
 - 然而，当调用方（比如 `@Preview` 或 `setContent`）传递了一个非空的 `Modifier`，如 `Modifier.fillMaxSize().wrapContentSize()`，这个修饰器会覆盖默认值，作为最终的 `modifier` 参数。
@@ -131,7 +131,7 @@ fun DiceWithButtonAndImage(modifier: Modifier = Modifier) {
 ```
 这需要再 res 文件夹 string 资源中创建一个 name 属性为 roll 的 String 标签，Text 将会显示标签的内容
 - 图片
-图片使用工具窗口中的 Resource Manage 导入图片，布局等资源，Compose 本身会**依序放置界面组件**。也就是说，哪个可组合函数声明在先，就会先行显示。
+图片使用工具窗口中 Resource Manage 导入图片，布局等资源，Compose 本身会**依序放置界面组件**。也就是说，哪个可组合函数声明在先，就会先行显示。
 所以需要在 Button 之前创建图片元素，由于图片是一种布局而不是 UI 元素，只需要显示而不需要行为逻辑，所以不需要函数调用
 - 调整元素位置
 如果需要调整元素间距，可以使用 `spacer` 对象
@@ -149,7 +149,7 @@ fun DiceWithButtonAndImage(modifier: Modifier = Modifier) {
 - Jetpack Compose 是基于**声明式 UI 编程模型**，在这种模型中，UI 是由当前的应用状态驱动的。状态的变化会触发重新构建（重组）整个界面，确保 UI 始终与状态保持同步。
 - UI 的状态仅仅取决于输入输出，可组合函数没有内部的长期状态存储机制（例如成员变量或全局变量），所有的状态都需要通过**外部传入**或者由**状态管理机制**提供（如 `remember` 或 `State`）。
 
-> 函数中的变量发生改变如果需要函数察觉并做出相应改变，则需要将这个变量标记为可观察状态，由于@Composable 注解的函数会被解释为 UI 元素，所以通过可观察状态的变量动态调整 UI 的内容
+> 函数中变量发生改变如果需要函数察觉并做出相应改变，则需要将这个变量标记为可观察状态，由于@Composable 注解的函数会被解释为 UI 元素，所以通过可观察状态的变量动态调整 UI 的内容
 
 ##### 状态管理机
 - **`remember`**：用于在函数作用域中记住值，避免重置。
@@ -164,7 +164,7 @@ fun DiceWithButtonAndImage(modifier: Modifier = Modifier) {
     - 确保变量 `result` 的值在函数的生命周期内保留。
     - 当函数被重组时（即再次调用），`result` 不会被重置为初始值，而是保留上次的值。
 - **`mutableStateOf` 的作用**：创建一个可观察的状态对象（`MutableState`），当 `result` 的值变化时，Compose 会检测到并自动触发重组。
-- `remember` 将这个状态与当前的可组合函数绑定，以确保在函数的生命周期内，`result` 的值不会因为重组而丢失。
+- `remember` 将这个状态与当前的可组合函数绑定，以确保在函数的生命周期内，`result` 的值不会因重组而丢失。
 - `by` 委托语法，使得 `result` 可以直接访问和修改状态值，而无需使用 `.value`，将变量的值**绑定到**状态容器中，不用 `setter` 和 `getter`。
 ---
 ##### 委托语法
@@ -228,7 +228,7 @@ Compose 是一种[声明性编程范式](https://developer.android.google.cn/dev
 #### 简单可组合函数
 所有可组合函数都必须带有此 `@Composable` 注释；此注释可告知 Compose 编译器：此函数旨在将数据转换为界面。
 可组合函数通过调用其他可组合函数来发出界面层次结构。
-发出界面的 Compose 函数不需要返回任何内容，因为它们描述所需的屏幕状态，而不是构造界面 widget 传递数据
+发出界面的 Compose 函数不需要返回任何内容，因它们描述所需的屏幕状态，而不是构造界面 widget 传递数据
 #### 声明性范式转变
 - 在 Compose 的声明式方法中，widget 相对无状态，并且不提供 setter 或 getter 函数。
 - 当用户与界面交互时，界面会发起 `onClick` 等事件。这些事件应通知应用逻辑，应用逻辑随后可以改变应用的状态。当状态发生变化时，系统会使用新数据**再次调用可组合函数**。这会导致重新绘制界面元素，此过程称为“**重组**”。
@@ -252,7 +252,7 @@ Compose 是一种[声明性编程范式](https://developer.android.google.cn/dev
 ### Jetpack Compose 的阶段
 
 ### 基础知识
-可组合函数是 Compose 的基本构建块。可组合函数是返回值为 `Unit` 的函数，用于描述界面中的某一部分。该函数接受一些输入并生成屏幕上显示的内容，也就是 **UI**
+可组合函数是 Compose 的基本构建块。可组合函数是返回值为 `Unit` 的函数，用于描述界面中某一部分。该函数接受一些输入并生成屏幕上显示的内容，也就是 **UI**
 一个可组合函数可能会**容纳**多个界面元素。不过在未提供任何规则的情况下，Compose 会按照默认排序方式（堆叠）排列
 #### 基本布局元素
 ```kotlin
@@ -448,7 +448,7 @@ fun TextSample() {
     )
 }
 ```
-![[Pasted image 20250201182441.png]] 
+![[Pasted image 20250201182441.png]]
 将文本控件用 `SelectionContainer` 包裹让文字允许被选中
 - 如果想让一个 Text 语句中有不同的样式，需要使用到 AnnotaedString
 ---
@@ -498,7 +498,7 @@ ClickableText(
 - `ClickableText` 在内部管理着文本的布局和点击位置与字符索引的映射。当用户点击文本时，`ClickableText` 会计算出点击的字符索引（即 `offset`），并将其传递给 `onClick` 回调函数。
 	- 索引即用户点击位置是字符串中哪一个字的返回的指针
 ![[Pasted image 20250206214510.png]]
-- 返回**带注解的字符串对应索引**位置的注解列表，`.firstOrNull()` 是 Kotlin 的**集合操作函数**，用于返回集合中的第一个元素。如果没有找到任何元素，则返回 `null`。
+- 返回**带注解的字符串对应索引**位置的注解列表，`.firstOrNull()` 是 Kotlin 的**集合操作函数**，用于返回集合中第一个元素。如果没有找到任何元素，则返回 `null`。
  - `let` 是 Kotlin 的一个作用域函数，用于在不为 `null` 的情况下对对象执行特定的代码块。
 ### Button
 #### 原型和常用参数
@@ -567,7 +567,7 @@ fun Icon(
 )
 ```
 图标的 image 可以使用 `painter = painterResource()` 加载媒体图片，`imageVector` 加载矢量图，`Icon.Default` 类中提供官方矢量图
-注意 `contentDescription` 是**必填项**但是可以写 `null`
+注意 `contentDescription` 是**必填项**但可以写 `null`
  - `Icon` 中一般使用矢量图而不是位图，这样才可以**根据主题改变颜色**，如果使用位图，则默认*不显示位图的颜色*，需要手动设置 `tint = Color.Unspecified` 显示图片原本的颜色
  - `Icon.Default` 中提供的矢量图会根据主体变化，并且有默认的透明度等参数
  - 如果不显式指定 `tint`，默认采用*黑色填充位图的大小的范围*
@@ -595,7 +595,7 @@ modifer 的主要功能：
 - 添加信息，比如无障碍辅助信息
 - 处理用户输入
 - 增加高级交互，比如点击、滚动、拖动或缩放等等
-系统内置的布局会根据内容大小显示，但是你可以通过 `size` 来控制布局的大小
+系统内置的布局会根据内容大小显示，但你可以通过 `size` 来控制布局的大小
 
 > 如果指定的大小不满足父布局的约束，则尺寸将会**无效**。如果强制设置请使用而不考虑父控件约束，可以使用 `requiredSize`
 
@@ -626,7 +626,7 @@ fun ImageSample() {
 ```
 ![[Pasted image 20250206231021.png]]
 ## 状态
-> 应用中的状态是指可以随时间变化的任何值。这个定义很广泛包括数据库或类中变量的所有内容。由于Compose 是**声明式的**，所以当需要改变其任何内容的时候，通过设置新的参数调用**同一组声明**，这些参数就是 UI 的表现形式。每State 更新时，都会发生重组——UI 发生变化
+> 应用中状态是指可以随时间变化的任何值。这个定义很广泛包括数据库或类中变量的所有内容。由于Compose 是**声明式的**，所以当需要改变其任何内容的时候，通过设置新的参数调用**同一组声明**，这些参数就是 UI 的表现形式。每State 更新时，都会发生重组——UI 发生变化
 
 Composable中可以使用 `remember` 来记住单个对象。系统会在初始化由 `remember` 计算的值存储在Composable中，并在重组的时候返回存储的值。`remember` 既可以存储可变对象，也可以存储不可变对象。
 

@@ -51,7 +51,7 @@ def func(g, arr):
 ```python
 map(function, sequence)
 ```
-**解释**：对 sequence 中的 item 依次执行 function(item)，并将结果组成一个 List 返回，也就是：
+**解释**：对 sequence 中 item 依次执行 function(item)，并将结果组成一个 List 返回，也就是：
 ```python
 [function(item1), function(item2), function(item3), ...]
 ```
@@ -103,7 +103,7 @@ def make_pow(n):
         return pow(x, n)   # 注意这里引用了外部函数的 n
     return inner_func
 ```
-闭包的最大特点就是引用了自由变量，即使生成闭包的环境已经释放，闭包仍然存在
+闭包的最大特点就是引用了自由变量，即使生成闭包的环境已经释放，闭包仍存在
 ```python
 >>> pow2 = make_pow(2)  # pow2 是一个函数，参数 2 是一个自由变量
 >>> pow2
@@ -133,7 +133,7 @@ def count():
         funcs.append(f)
     return funcs
 ```
-原因在于上面的函数 `f` 引用了变量 `i`，但函数 `f` 并非立刻执行，当 `for` 循环结束时，此时变量 `i` 的值是3，`funcs` 里面的函数引用的变量都是 3，最终结果也就全为 3。 
+原因在于上面的函数 `f` 引用了变量 `i`，但函数 `f` 并非立刻执行，当 `for` 循环结束时，此时变量 `i` 的值是3，`funcs` 里面的函数引用的变量都是 3，最终结果也就全为 3。
 
 > [!note]
 >闭包 = 函数 + 当时的环境快照，用得好是“轻量级的状态机”，用不好则成为“隐晦的内存坑”。
@@ -151,12 +151,12 @@ print([f() for f in funcs])   # [0, 1, 2]
 ```python
 def hello():
     return 'hello world'
-    
+
 def makeitalic(func):
     def wrapped():
         return "<i>" + func() + "</i>"
     return wrapped
-    
+
 >>> hello = makeitalic(hello)  # 将 hello 函数传给 makeitalic
 >>> hello()
 '<i>hello world</i>'
@@ -213,7 +213,7 @@ def hello():
 >>> hello.__name__
 'wrapped'
 ```
-解决方法是在内部装饰其中提供Python 中的 functools 包提供了 wraps 装饰器
+解决方法是在内部装饰其中提供Python 中 functools 包提供了 wraps 装饰器
 ```python
 from functools import wraps
 
@@ -239,12 +239,12 @@ def multiply(x, y):
 通过下面方式可以绑定 exp 参数值为 2
 ```python
 from functools import partial
- 
+
 def power(base, exp):
     return base ** exp
- 
+
 square = partial(power, exp=2)   # 把 exp 绑成 2
-print(square(5))   
+print(square(5))
 ```
 注意：
 1. **位置参数必须按顺序绑定**，一旦绑错无法“跳过”。
@@ -252,7 +252,7 @@ print(square(5))
 3. **可变性陷阱**：如果绑定了一个可变对象（如列表、dict），所有 `partial` 实例共享同一对象，易踩坑。
 ```python
 from functools import partial
-   
+
 def append_and_sort(x, items):
    items.append(x)
    items.sort()
@@ -278,7 +278,7 @@ square = partial(power, exp=2)
 ### 类
 使用 `type(obj)` 来获取对象的相应类型：
 使用 `isinstance(obj, type)` 判断对象是否为指定的 type 类型的实例：
-使用 `hasattr/getattr/setattr`    
+使用 `hasattr/getattr/setattr`
 - 使用 `hasattr(obj, attr)` 判断对象是否具有指定属性/方法；
 - 使用 `getattr(obj, attr[, default])` 获取属性/方法的值, 要是没有对应的属性则返回 default 值（前提是设置了 default），否则会抛出 AttributeError 异常；
 - 使用 `setattr(obj, attr, value)` 设定该属性/方法的值，类似于 obj.attr=value；
@@ -299,7 +299,7 @@ class Foo(object):
 >>> Foo('ethan')
 'Foo object (name: ethan) by refer' # 否则显示内存地址<__main__.Foo at 0x10c37a490>
 >>> print(Foo('ethan'))
-'Foo object (name: ethan) by print' # <__main__.Foo object at 0x10c37aa50> 
+'Foo object (name: ethan) by print' # <__main__.Foo object at 0x10c37aa50>
 ```
 
 在某些情况下，我们希望实例对象可被用于 `for...in` 循环，这时我们需要在类中定义 `__iter__` 和 `next`（在 Python3 中是 `__next__`）方法，其中，`__iter__` 返回一个迭代对象，`next` 返回容器的下一个元素，在没有后续元素时抛出 `StopIteration` 异常。
@@ -309,11 +309,11 @@ class Fib(object):
         self.a, self.b = 0, 1
 
     def __iter__(self):  # 返回迭代器对象本身
-        return self      
+        return self
 
     def next(self):      # 返回容器下一个元素
         self.a, self.b = self.b, self.a + self.b
-        return self.a    
+        return self.a
 
 >>> fib = Fib()
 >>> for i in fib:
@@ -323,7 +323,7 @@ class Fib(object):
 ...
 ```
 
-希望可以使用 `obj[n]` 这种方式对实例对象进行取值，比如对斐波那契数列，我们希望可以取出其中的某一项，这时我们需要在类中实现 `__getitem__` 方法
+希望可以使用 `obj[n]` 这种方式对实例对象进行取值，比如对斐波那契数列，我们希望可以取出其中某一项，这时我们需要在类中实现 `__getitem__` 方法
 ```python
 class Fib(object):
     def __getitem__(self, n):
@@ -357,7 +357,7 @@ class Fib(object):
 ```
 #### 动态绑定属性
 ```python
-class Point(object):    
+class Point(object):
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
@@ -375,9 +375,9 @@ python 会将所有属性通过 `__dict__` 属性，也就是一个字典来存�
 - **查找更快**：数组偏移访问比哈希表 O(1) 更稳定、CPU cache 友好。
 - **限制随意加属性**：接口更“契约化”。
 - **不能再动态增删属性**，除非把名字提前写进 `__slots__`。
-- **多重继承麻烦**：  
+- **多重继承麻烦**：
     - 若父类有 `__dict__` 而子类想用 `__slots__`，必须显式在子类再声明 `'__dict__'` 才能继续动态加属性；否则 `AttributeError`。
-- **弱引用 & 私有变量**：  
+- **弱引用 & 私有变量**：
     - 需要 `__weakref__` 时得显式加入 `__slots__ = ('x', '__weakref__')`。
 - **与 `@dataclass(slots=True)` 混用**：Python 3.10+ 原生支持，避免手写冗长列表。
 - **调试信息变少**：`vars(obj)` 会失败；需要 `obj.__slots__` 才能看有哪些槽位。
@@ -443,7 +443,7 @@ Foo = type('Foo', (object, ), {'foo': True, 'greet': greet})
 class PrefixMetaclass(type):
     def __new__(cls, name, bases, attrs):
         # 给所有属性和方法前面加上前缀 my_
-        _attrs = (('my_' + name, value) for name, value in attrs.items())  
+        _attrs = (('my_' + name, value) for name, value in attrs.items())
 
         _attrs = dict((name, value) for name, value in _attrs)  # 转化为字典
         _attrs['echo'] = lambda self, phrase: phrase  # 增加了一个 echo 方法
@@ -466,7 +466,7 @@ class Foo(metaclass=PrefixMetaclass):
 ### 高级特性
 #### 迭代
 **在 Python 中，迭代器是指遵循迭代器协议（iterator protocol）的对象。**
-可迭代对象（Iterable）＝“**能被 for 循环的东西**”；  
+可迭代对象（Iterable）＝“**能被 for 循环的东西**”；
 迭代器（Iterator）＝“**真正干活的运输小车**”，它记住当前位置，每次 `next()` 吐一个元素。
 
 python 协议只有两条：
@@ -522,18 +522,18 @@ class Node:
 tree = Node(2, Node(1), Node(3))
 print(list(tree))   # [1, 2, 3]
 ```
-为什么不用 `print(tree)`？因为 print 会默认查找对象的 `__str__` 方法，Node 对象没有定义这个方法（没有就退而求其次 `__repr__()`），所以会返回内存地址。而 List 化的 Node 对象。只要传进 list 的对象满足**可迭代协议**（即实现了 `__iter__`），`list()` 就能通过 `iter()` / `next()` 把元素逐个拿光，再组装成一个新的列表返回。
+为什么不用 `print(tree)`？因 print 会默认查找对象的 `__str__` 方法，Node 对象没有定义这个方法（没有就退而求其次 `__repr__()`），所以会返回内存地址。而 List 化的 Node 对象。只要传进 list 的对象满足**可迭代协议**（即实现了 `__iter__`），`list()` 就能通过 `iter()` / `next()` 把元素逐个拿光，再组装成一个新的列表返回。
 两个函数的解释：
-- `__iter__` 的职责只有一句：  
+- `__iter__` 的职责只有一句：
 	“请 return 给我一个 **迭代器**”。
-- `__next__` 的职责也只有一句：  
-	“把下一项 return 给我，没了就抛 `StopIteration`”。  
+- `__next__` 的职责也只有一句：
+	“把下一项 return 给我，没了就抛 `StopIteration`”。
 	因此不存在“**iter** 设置迭代器迭代到下一个对象”这种说法；它只是**返回**迭代器，而“下一个对象”由迭代器自己决定。
 
 `for` 循环就是先通过对象的成员函数 `iter()` 获得一个迭代器，然后不断调用 `next()` 函数实现。
 
 #### 生成器
-##### 方法一：将列表生成式的 `[]` 改为 `()` 
+##### 方法一：将列表生成式的 `[]` 改为 `()`
 ```python
 >>> L = [x * x for x in range(10)]
 >>> L

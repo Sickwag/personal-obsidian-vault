@@ -8,7 +8,7 @@ SELECT
 FROM
 	(
 	SELECT
-		-- 引用子查询中的部门平均工资表
+		-- 引用子查询中部门平均工资表
 		AVG(salary) ag,
 		department_id
 	FROM
@@ -47,7 +47,7 @@ WHERE
 		e.department_id
 	FROM
 		employees e);
-		
+
 -- 查询和zlotkey相同部门的员工姓名和工资
 SELECT
 	last_name,
@@ -62,7 +62,7 @@ WHERE
 		employees
 	WHERE
 		last_name = 'zlotkey');
-		
+
 -- #2.查询工资比公司平均工资高的员工的员工号，姓名和工资。
 SELECT round(avg(salary),0) FROM employees e ;
 
@@ -100,7 +100,7 @@ INNER JOIN (
 		department_id
 ) ag_dep
 ON
-	e.department_id = ag_dep.department_id 
+	e.department_id = ag_dep.department_id
 -- 注意这里需要连接的条件一定要写在子连接的SELECT
 -- 中(创建名为ag_dep的虚拟表，SELECT就是虚拟表要显示的东西)
 WHERE
@@ -114,7 +114,7 @@ FROM
 	employees e
 WHERE
 	last_name LIKE '%u%'; -- 结果是一个列表，这个列表作为筛选条件
-	
+
 SELECT
 	last_name ,
 	employee_id
@@ -133,9 +133,9 @@ WHERE
 SELECT DISTINCT department_id FROM departments d WHERE location_id = 1700;
 
 SELECT
-	employee_id 
+	employee_id
 FROM
-	employees e 
+	employees e
 WHERE
 	department_id =ANY(
 	SELECT
@@ -155,7 +155,7 @@ SELECT
 FROM
 	employees e
 WHERE
-	manager_id =ANY(  
+	manager_id =ANY(
 -- 如果k_ing只有一个人，使用=即可，但如果多个或不确定（动态变化），则使用in或=any
 	SELECT
 		employee_id
@@ -229,14 +229,14 @@ FROM
 		employees e
 	GROUP BY
 		department_id ) AS ag_dep;
-	
+
 SELECT
 	min(ag),-- 聚合函数创造出来的列
 	department_id -- 数据源表（from后）本身含有的列
 	/*不能再后面加上,ag_dep.department_id以为可以同时
 	显示出最低工资和最低工资的部门编号,
 	SQL 标准不允许在同一个 SELECT 列表中混合使用
-	这是因为 min(ag) 已经是一个聚合值，而不是一个列，
+	这是因 min(ag) 已经是一个聚合值，而不是一个列，
 	你不能在外层查询中同时选择一个聚合函数的结果和原始的列
 	聚合函数的结果和非聚合列*/
 FROM
@@ -252,13 +252,13 @@ FROM
 GROUP BY
 	department_id;
 -- ---------------------------------
-	-- 因为出现了聚合值，所以要显示部门编号只能再进行一次筛选
+	-- 因出现了聚合值，所以要显示部门编号只能再进行一次筛选
 SELECT
 	avg(salary) AS ag,
 	department_id
 FROM
 	employees e
-GROUP BY 
+GROUP BY
 	department_id
 HAVING
 	ag = (
@@ -278,7 +278,7 @@ HAVING
 #3.1查询平均工资最低的部门信息和该部门的平均工资
 -- 查询最低平均工资
 SELECT
-	avg(salary) avs,department_id 
+	avg(salary) avs,department_id
 FROM
 	employees e
 GROUP BY
@@ -288,7 +288,7 @@ ORDER BY
 LIMIT 1;
 
 -- 根据最低平均工资筛选，这里使用inner丽娜姐忽略所有NULL
--- 因为最低平均部门工资只有两列一行，其中一列department_id作为连接条件
+-- 因最低平均部门工资只有两列一行，其中一列department_id作为连接条件
 SELECT
 	d.*
 FROM
@@ -383,7 +383,7 @@ INNER JOIN (
 	FROM
 		employees e) AS num ON
 	num.manager_id = e.employee_id
-	
+
 -- 方法二
 SELECT
 	*
@@ -398,7 +398,7 @@ WHERE
 #7．各个部门中最高工资中最低的那个部门的最低工资是多少
 -- 最高工资的部门
 SELECT
-	department_id 
+	department_id
 FROM
 	employees e
 GROUP BY
@@ -452,11 +452,11 @@ WHERE
 		avg(salary) DESC
 	LIMIT 1)
 
--- 也可以所有人中有谁的employee_id = department表中的manager_id
+-- 也可以所有人中有谁的employee_id = department表中manager_id
 
 SELECT *
 FROM
-	employees e2 
+	employees e2
 WHERE
 	department_id = (
 	SELECT
@@ -547,7 +547,7 @@ SELECT
 FROM
 	student s
 GROUP BY
-	majorid 
+	majorid
 
 -- 六、查询专业和张翠山一样的学生的最低分
 SELECT studentno FROM student s WHERE studentname = '张翠山';
@@ -564,7 +564,7 @@ WHERE
 		student s
 	WHERE
 		studentname = '张翠山');
-	
+
 -- 七、查询大于60分的学生的姓名、密码、专业名
 SELECT
 	s.studentname,
@@ -590,7 +590,7 @@ FROM
 LEFT JOIN student s ON
 	m.majorid = s.majorid
 WHERE
-	s.studentno IS NULL; 
+	s.studentno IS NULL;
 -- 十一、查询没有成绩的学生人数
 SELECT
 	count(*)
@@ -599,13 +599,13 @@ FROM
 LEFT JOIN `result` r ON
 	r.studentno = s.studentno
 WHERE
-	score IS NULL; 
+	score IS NULL;
 ```
 
 ## 视图
 ```sql
 -- 1.查询姓名中包含a字符的员工名、部门名和工种信息
-CREATE VIEW myv1 AS 
+CREATE VIEW myv1 AS
 SELECT e.last_name,department_name,job_title
 FROM
 	employees e
@@ -626,7 +626,7 @@ FROM
 	employees e
 INNER JOIN departments d ON
 	e.employee_id = d.department_id
-INNER JOIN job_grades jg ON -- 这里注意不能写avg(e.salary因为下面已经按部门分类了
+INNER JOIN job_grades jg ON -- 这里注意不能写avg(e.salary因下面已经按部门分类了
 	(
 	SELECT
 		avg(e.salary) -- 需要把按部门分类的一列使用between and
@@ -640,7 +640,7 @@ GROUP BY
 SELECT * FROM myv2;
 -- 	3.查询平均工资最低的部门信息
 DROP VIEW IF EXISTS myv3;
-CREATE VIEW myv3 AS 
+CREATE VIEW myv3 AS
 SELECT
 	e.department_id
 FROM
@@ -649,7 +649,7 @@ INNER JOIN departments d ON
 	e.department_id = d.department_id
 GROUP BY
 	e.department_id
-ORDER BY  -- 注意不能将order by放在视图外筛选，因为视图外e.salary不可视，视图外没有e表
+ORDER BY  -- 注意不能将order by放在视图外筛选，因视图外e.salary不可视，视图外没有e表
 	min(e.salary) ASC;
 
 SELECT
@@ -664,8 +664,8 @@ LIMIT 1 ;
  CREATE VIEW myv3
  AS
  SELECT * FROM myv2 ORDER BY avs LIMIT 1;
- 
- 
+
+
  SELECT d.*,m.asv
  FROM myv3 m
  JOIN departments d
@@ -698,7 +698,7 @@ INSERT INTO emp2 VALUES(123,123456);
 COMMIT;
 -- 3、创建视图，实现查询价格大于100的书名和类型名
 CREATE OR REPLACE
-VIEW myv7 AS 
+VIEW myv7 AS
 SELECT
 	e.last_name,
 	e.department_id
@@ -709,7 +709,7 @@ FROM
 ### 创建存储过程实现传入用户名和密码，插入到admin表中
 ```sql
 delimiter $
-CREATE PROCEDURE mp1(IN uname varchar(20), IN upassword varchar(20)) 
+CREATE PROCEDURE mp1(IN uname varchar(20), IN upassword varchar(20))
 BEGIN
 INSERT
 	INTO
@@ -727,7 +727,7 @@ SELECT * FROM admin a ;
 -- 二、创建存储过程实现传入女神编号，返回女神名称和女神电话
 CREATE PROCEDURE mp2(IN gnumber int ,OUT gname varchar(20),
 gphone varchar(11))
-BEGIN 
+BEGIN
 	SELECT
 	g.name ,
 	g.phone
@@ -745,7 +745,7 @@ SELECT @gname,@gphone ;-- 查看查询结果
 
 -- 三、创建存储存储过程或函数实现传入两个女神生日，返回大小
 CREATE PROCEDURE mp3(IN birth1 datetime ,IN birth2 datetime,OUT RESULT int)
-BEGIN 
+BEGIN
 	SELECT datediff(birth1,birth2) INTO RESULT;
 END $
 CALL mp3('1998-1-1',now(),@result)$ -- 注意时间格式需要用''包裹
@@ -755,7 +755,7 @@ SELECT @result$
 ### 设定考试及格线，并将未及格人信息显示
 注：以下代码在 sql server 中实现
 ```sql
-CREATE PROCEDURE Usp_unpass 
+CREATE PROCEDURE Usp_unpass
     @subname VARCHAR(50),  -- 课程名称
     @score   INT           -- 成绩阈值
 AS
@@ -798,8 +798,8 @@ DECLARE @subject_no INT;       -- 课程编号
 -- 无参函数
 -- 返回所有员工数量
 delimiter $
-CREATE FUNCTION myf1() RETURNS int 
-BEGIN 
+CREATE FUNCTION myf1() RETURNS int
+BEGIN
     DECLARE c int DEFAULT 0;
     SET c = (SELECT count(*) FROM employees);
     RETURN c;
@@ -809,8 +809,8 @@ SELECT myf1()$
 
 -- 有参函数
 -- 根据员工名返回工资
-CREATE FUNCTION myf2(ename varchar(20)) RETURNS int 
-BEGIN 
+CREATE FUNCTION myf2(ename varchar(20)) RETURNS int
+BEGIN
 	DECLARE rsal int DEFAULT 0;
 	SET rsal = (SELECT e.salary FROM employees e WHERE e.last_name = ename);
 -- 也可以这样写 	SELECT e.salary INTO rsal FROM employees e WHERE e.last_name = enmae;
@@ -821,8 +821,8 @@ SELECT myf2('k_ing')$ -- 有两个人叫做k-ing，函数只能有一个返回�
 SELECT myf2('Kochhar')$
 
 -- 案例2：根据部门名，返回该部门的平均工资
-CREATE FUNCTION myf3(dname varchar(20)) RETURNS int 
-BEGIN 
+CREATE FUNCTION myf3(dname varchar(20)) RETURNS int
+BEGIN
 	SELECT
 	avg(e.salary)
 INTO
@@ -842,7 +842,7 @@ SELECT myf3('Adm')$
 
 -- 创建函数，实现传入两个float，返回二者之和
 CREATE FUNCTION myf4(float1 float ,float2 float) RETURNS float
-BEGIN 
+BEGIN
 	DECLARE sum float DEFAULT 0;
 	SET sum = float1 + float2;
 	RETURN sum;
@@ -858,9 +858,9 @@ SELECT myf4(1.25,2.75)$
 
 delimiter $
 CREATE PROCEDURE pro_while1(IN insertcount int)
-BEGIN 
+BEGIN
 	DECLARE i int DEFAULT 1;
-	WHILE i < insertcount do 
+	WHILE i < insertcount do
 		INSERT INTO admin
 	VALUES(NULL,concat('azzato', i),'666');
 SET i = i+1;
@@ -871,16 +871,16 @@ CALL pro_while(10)$
 
 -- 批量插入，根据次数插入到admin表中多条记录，如果次数>20则停止
 CREATE PROCEDURE pro_while2(IN insertcount int)
-BEGIN 
+BEGIN
 	DECLARE i int DEFAULT 1;
-a:WHILE i < insertcount do 
+a:WHILE i < insertcount do
 INSERT
 	INTO
 	admin(username,
 	`password`)
 VALUES(concat('xiaoming', i),'12345');
--- 
-IF i >=20 THEN LEAVE a; 
+--
+IF i >=20 THEN LEAVE a;
 END IF;
 -- if 跳出当前循环
 SET i = i+1;
@@ -893,10 +893,10 @@ truncate table admin$
 delimiter $
 CREATE PROCEDURE pro_while3(IN insertcount int)
 -- 到这只创建了一个存储过程，begin表示存储过程的开始
-BEGIN 
+BEGIN
 	DECLARE i int DEFAULT 0; -- 定义语句不要放在循环内，不然每次都初始化
-	a:WHILE i<insertcount do 
-	-- 
+	a:WHILE i<insertcount do
+	--
 		SET i = i + 1;
 		IF MOD(i,2) != 0 THEN ITERATE a;
 	-- i为奇数时insert不记录，iterate跳出循环
@@ -921,19 +921,19 @@ delimiter $
 CREATE TABLE stringcontent( id int PRIMARY KEY AUTO_INCREMENT ,content varchar(20))$
 
 CREATE PROCEDURE random_insert(IN insertcount int)
-BEGIN 
+BEGIN
 	DECLARE i int DEFAULT 1;
 	DECLARE str varchar(26) DEFAULT 'abcdefghijklmnopqrstuvwxyz';
 	DECLARE startindex int;
 	DECLARE len int;
-	WHILE i<=insertcount do 
+	WHILE i<=insertcount do
 		SET startindex = floor(rand()*26+1);
 		SET len = floor(rand()*(20-startindex+1)+1);
 		-- 注意：(26-startindex+1)只是len的最大值，随机取数取0-最大值
-		-- 因为字符串最大长度为20，所以len最大长度到不了26	
+		-- 因字符串最大长度为20，所以len最大长度到不了26
 	INSERT INTO stringcontent(content) VALUES(substr(str,startindex,len));
-	SET i = i+1; 
-	END WHILE; 
+	SET i = i+1;
+	END WHILE;
 END $
 ```
 ## C++数据库编程
@@ -1213,7 +1213,7 @@ db.prepareExecute("INSERT INTO users (name, age) VALUES (?, ?)", params);
  * @brief 执行带参数的 SQL 查询语句并返回结果集。
  *
  * @param sql 带占位符（`?`）的 SQL 查询语句。
- * @param params 参数列表，按顺序替换 SQL 中的占位符。
+ * @param params 参数列表，按顺序替换 SQL 中占位符。
  * @return std::unique_ptr<sql::ResultSet> 查询结果集的智能指针。
  * @throw sql::SQLException 如果 SQL 执行失败。
  *
@@ -1237,7 +1237,7 @@ std::unique_ptr<sql::ResultSet> MySQLDB::prepare_query(
  * @brief 执行带参数（如 INSERT, UPDATE, DELETE）的 SQL 查询语句并返回结果集。
  *
  * @param sql 带占位符（`?`）的 SQL 查询语句。
- * @param params 参数列表，按顺序替换 SQL 中的占位符。
+ * @param params 参数列表，按顺序替换 SQL 中占位符。
  * @return std::unique_ptr<sql::ResultSet> 查询结果集的智能指针。
  * @throw sql::SQLException 如果 SQL 执行失败。
  *

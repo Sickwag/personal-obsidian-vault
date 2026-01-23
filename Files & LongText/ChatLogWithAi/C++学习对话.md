@@ -50,7 +50,7 @@
 ### 3. 在代码中判断左值和右值
 
 - 左值：
-  - 变量：`int x = 5;` 中的 `x`
+  - 变量：`int x = 5;` 中 `x`
   - 函数返回引用：`int& foo() { ... }`
   - 成员访问：`obj.member`（如果 `obj` 是左值）
 - 右值：
@@ -83,7 +83,7 @@
 ## VS cmake 项目配置
 
 ### USER
-我现在有一个 cmake 项目，我想通过 CMakeLists. txt 文件，定义项目的编译器为我本地电脑中的 mingw，而不使用 Visual studio 中的 msvc 或者 ninja，应该如何写 cmake 文件？
+我现在有一个 cmake 项目，我想通过 CMakeLists. txt 文件，定义项目的编译器为我本地电脑中 mingw，而不使用 Visual studio 中 msvc 或者 ninja，应该如何写 cmake 文件？
 
 ### ASSISTANT
 在 CMake 中指定使用 **MinGW** 编译器而不是默认的 MSVC 或 Ninja，你需要做的是：
@@ -201,7 +201,7 @@ The CXX compiler identification is GNU ...
 如果你提供你的 `CMakeLists.txt` 内容，我可以帮你检查并优化配置！需要我继续吗？
 
 ### USER
-请你写一个 CMakeLists. txt，包含必要的内容，并且指定编译器使用我本地电脑中的 mingw
+请你写一个 CMakeLists. txt，包含必要的内容，并且指定编译器使用我本地电脑中 mingw
 这是我项目的文件结构图
 ```cmd
 D:\CODE FILES\VSSTUDIO\MYTINYTOOLS\MYTINYTOOLS
@@ -446,7 +446,7 @@ if (POLICY CMP0141)
 endif()
 
 ```
-但是 vs 给出下面的错误
+但 vs 给出下面的错误
 严重性代码说明项目文件行抑制状态详细信息
 错误		CMake Error at D:\Code Files\vsstudio\MyTinyTools\CMakeLists. txt: 9 (project):
   The CMAKE_CXX_COMPILER:
@@ -458,7 +458,7 @@ endif()
 
   Tell CMake where to find the compiler by setting either the environment
   variable "CXX" or the CMake cache entry CMAKE_CXX_COMPILER to the full path
-  to the compiler, or to the compiler name if it is in the PATH.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists. txt	9		
+  to the compiler, or to the compiler name if it is in the PATH.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists. txt	9
 
 这是什么原因导致的？该如何解决？
 
@@ -479,11 +479,11 @@ CMake Error at CMakeLists.txt:9 (project):
 ### ❓问题原因分析
 
 ##### 1. **你在 Visual Studio 中使用了默认的 MSVC 构建环境**
-Visual Studio 默认会使用 Microsoft 的 MSVC 编译器 (`cl.exe`) 来构建项目。即使你在 `CMakeLists.txt` 中设置了 MinGW 的编译器路径，**这并不会生效**，因为：
+Visual Studio 默认会使用 Microsoft 的 MSVC 编译器 (`cl.exe`) 来构建项目。即使你在 `CMakeLists.txt` 中设置了 MinGW 的编译器路径，**这并不会生效**，因：
 
 > **CMakeLists. txt 中设置的编译器会在命令行调用时被覆盖**，尤其是当你在 IDE（如 VS）中打开项目时。
 
-IDE 会自己选择生成器和编译器，而不是读取你写在 `CMakeLists.txt` 中的 `set(CMAKE_CXX_COMPILER ...)`。
+IDE 会自己选择生成器和编译器，而不是读取你写在 `CMakeLists.txt` 中 `set(CMAKE_CXX_COMPILER ...)`。
 
 ---
 
@@ -494,7 +494,7 @@ IDE 会自己选择生成器和编译器，而不是读取你写在 `CMakeLists.
 ##### 🛠 步骤如下：
 
 1. 打开你的项目文件夹（不是 `.sln` 文件）；
-2. 点击菜单栏中的：
+2. 点击菜单栏中：
    ```
    CMake -> Change CMake Settings -> MyTinyTools
    ```
@@ -562,7 +562,7 @@ mingw32-make
 
 ### 🚫 为什么不能只靠 `CMakeLists.txt` 设置编译器？
 
-因为在大多数 IDE（包括 Visual Studio、CLion、VS Code）中：
+因在大多数 IDE（包括 Visual Studio、CLion、VS Code）中：
 
 - 当你打开项目时，IDE 会自动选择一个“工具链”（toolchain）和“生成器”（generator）；
 - 它不会读取你在 `CMakeLists.txt` 中设置的 `set(CMAKE_CXX_COMPILER ...)`，除非你强制通过命令行传递这些变量；
@@ -601,7 +601,7 @@ g++ --version
 ### ASSISTANT
 明白了！你是在 **Visual Studio** 中打开一个 **文件夹项目（Open Folder）**，而不是 `.sln` 解决方案。在这种模式下，Visual Studio 会自动生成 `CMakeSettings.json` 文件来配置 CMake 构建行为。
 
-如果你没有看到这个文件，那是因为它默认只在你第一次选择构建配置时才会生成。
+如果你没有看到这个文件，那是因它默认只在你第一次选择构建配置时才会生成。
 
 ---
 
@@ -686,7 +686,7 @@ D:\Code Files\vsstudio\MyTinyTools\CMakeSettings.json
 > ⚠️ 注意：
 >
 > - 替换上面的路径为你自己的 MinGW 安装路径；
-> - Windows 下路径中的反斜杠 `\` 需要写成双反斜杠 `\\` 或使用正斜杠 `/`；
+> - Windows 下路径中反斜杠 `\` 需要写成双反斜杠 `\\` 或使用正斜杠 `/`；
 > - 比如 `D:/Program/mingw64/bin/g++.exe` 也可以。
 
 ---
@@ -1041,7 +1041,7 @@ The CXX compiler identification is GNU ...
 是否需要我为你写一个命令行构建脚本？
 
 ### USER
-我已经将你的 CMakePresets. json 内容写入问的项目文件中，但是这个
+我已经将你的 CMakePresets. json 内容写入问的项目文件中，但这个
 严重性代码说明项目文件行抑制状态详细信息
 错误		CMake Error at D:\Code Files\vsstudio\MyTinyTools\CMakeLists. txt: 9 (project):
   The CMAKE_CXX_COMPILER:
@@ -1053,11 +1053,11 @@ The CXX compiler identification is GNU ...
 
   Tell CMake where to find the compiler by setting either the environment
   variable "CXX" or the CMake cache entry CMAKE_CXX_COMPILER to the full path
-  to the compiler, or to the compiler name if it is in the PATH.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists. txt	9		
-问题仍然存在，这是什么原因导致的？该如何解决？
+  to the compiler, or to the compiler name if it is in the PATH.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists. txt	9
+问题仍存在，这是什么原因导致的？该如何解决？
 
 ### ASSISTANT
-你已经正确地将 `CMakePresets.json` 添加到项目中并配置了 MinGW，但仍然出现如下错误：
+你已经正确地将 `CMakePresets.json` 添加到项目中并配置了 MinGW，但仍出现如下错误：
 
 ```
 CMake Error at CMakeLists.txt:9 (project):
@@ -1242,17 +1242,17 @@ mingw32-make
 需要我为你写一个 `.bat` 脚本用于一键构建整个项目吗？这样你可以随时用双击脚本来测试构建流程。欢迎继续提问！
 
 ### USER
-好了，通通过修改配置，将当前配置调整为 MinGW release，但是又出现了下面的问题
+好了，通通过修改配置，将当前配置调整为 MinGW release，但又出现了下面的问题
 ```error
 严重性	代码	说明	项目	文件	行	抑制状态	详细信息
 错误		CMake Error at D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt:20 (add_subdirectory):
   add_subdirectory given source "csv_parser" which is not an existing
-  directory.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	20		
+  directory.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	20
 
 严重性	代码	说明	项目	文件	行	抑制状态	详细信息
 错误		CMake Error at D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt:21 (add_subdirectory):
   add_subdirectory given source "json_parser" which is not an existing
-  directory.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	21		
+  directory.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	21
 
 ```
 这是主 CMakeLists. txt 内容
@@ -1530,7 +1530,7 @@ json_parser/
     ...
 ```
 
-但你仍然遇到以下错误：
+但你仍遇到以下错误：
 
 ```
 CMake Error at CMakeLists.txt:20 (add_subdirectory):
@@ -1676,7 +1676,7 @@ dir
 需要我帮你生成完整的 `csv_parser/CMakeLists.txt` 和 `json_parser/CMakeLists.txt` 吗？这样你可以直接填入源码即可开始编译。欢迎继续提问！
 
 ### USER
- 通过你的设置，我已经配置好了我的项目，但是启动项由两个
+ 通过你的设置，我已经配置好了我的项目，但启动项由两个
 csv_parser_test. exe (csv_parser\csv_parser_test. exe)
 json_parser_test. exe (json_parser\json_parser_test. exe)
 并且我并不明白这两个启动项做了什么？为什么由两个启动项，请你说明为什么，我该如何设定启动项？
@@ -1704,7 +1704,7 @@ json_parser_test.exe (json_parser\json_parser_test.exe)
 
 ### 📚 为什么会有两个启动项？
 
-因为你有两个独立的功能模块（`csv_parser` 和 `json_parser`），每个模块都包含自己的源码、头文件和测试代码。因此，在 CMake 配置中你分别为它们创建了测试程序：
+因你有两个独立的功能模块（`csv_parser` 和 `json_parser`），每个模块都包含自己的源码、头文件和测试代码。因此，在 CMake 配置中你分别为它们创建了测试程序：
 
 ##### ✅ 示例结构回顾
 
@@ -1728,7 +1728,7 @@ json_parser/
 
 ### 🔍 它们分别做了什么？
 
-这些测试程序通常使用一个 C++ 单元测试框架（如 Google Test、Catch 2 或你自己写的简单测试逻辑）对模块中的类和函数进行验证。
+这些测试程序通常使用一个 C++ 单元测试框架（如 Google Test、Catch 2 或你自己写的简单测试逻辑）对模块中类和函数进行验证。
 
 比如：
 
@@ -1780,7 +1780,7 @@ All tests passed!
 
 - 在 Visual Studio 中点击“本地 Windows 调试器”（Local Windows Debugger）按钮；
 - 或者在构建完成后，手动打开终端进入构建目录并运行：
-  
+
   ```bash
   out/build/mingw-release/csv_parser/csv_parser_test.exe
   out/build/mingw-release/json_parser/json_parser_test.exe
@@ -1792,7 +1792,7 @@ All tests passed!
 
 | 内容 | 说明 |
 |------|------|
-| 为什么有两个启动项？ | 因为你有两个模块，每个模块都有自己的测试程序 |
+| 为什么有两个启动项？ | 因你有两个模块，每个模块都有自己的测试程序 |
 | 启动项是什么？ | 就是编译出来的可执行测试程序（`.exe`） |
 | 它们做什么？ | 运行单元测试，验证模块功能是否正常 |
 | 如何设置默认启动项？ | 在 Solution Explorer 中右键选择 "Set as StartUp Project" |
@@ -1812,7 +1812,7 @@ All tests passed!
 需要我帮你添加一个主程序模板（比如 `main.cpp` + 对应的 `app/` 目录），让整个项目可以作为一个完整工具运行吗？欢迎继续提问！
 
 ### USER
-是文件中的什么内容导致出现了这两个启动项的出现？
+是文件中什么内容导致出现了这两个启动项的出现？
 我在什么地方可以修改，添加，自定义启动项？
 如果我现在在某一个文件中添加了一个 main 函数，是否就会多出一个启动项来启动这个文件编译之后得到的 exe 文件？
 现在所有头文件和源文件的内容都是空的，我没有写入任何内容，整个项目中没有任何一个文件中有 main 函数，为什么还会出现这两个启动项？
@@ -1822,11 +1822,11 @@ All tests passed!
 
 ---
 
-### 🧩 一、是文件中的什么内容导致出现了这两个启动项？
+### 🧩 一、是文件中什么内容导致出现了这两个启动项？
 
 ##### ✅ 答案：**你在 `CMakeLists.txt` 中使用了 `add_executable(...)` 定义了可执行文件**
 
-这两个启动项（`csv_parser_test.exe` 和 `json_parser_test.exe`）之所以存在，是因为你在各自的模块中写了类似这样的代码：
+这两个启动项（`csv_parser_test.exe` 和 `json_parser_test.exe`）之所以存在，是因你在各自的模块中写了类似这样的代码：
 
 ```cmake
 ## csv_parser/CMakeLists.txt 示例
@@ -1870,7 +1870,7 @@ target_link_libraries(my_app PRIVATE csv_parser json_parser)
 
 ##### 3. **重命名启动项**
 
-修改 `add_executable(名字 ...)` 中的名字即可更改启动项名称：
+修改 `add_executable(名字 ...)` 中名字即可更改启动项名称：
 
 ```cmake
 add_executable(csv_test test/CSVParserTest.cpp)
@@ -1899,12 +1899,12 @@ add_executable(csv_test test/CSVParserTest.cpp)
 add_executable(csv_parser_test test/CSVParserTest.cpp)
 ```
 
-CMake 就会尝试将它编译为一个 `.exe` 文件。虽然链接可能会失败（因为没有 `main()`），但 Visual Studio 仍然会在加载时认为这是一个潜在的启动项。
+CMake 就会尝试将它编译为一个 `.exe` 文件。虽然链接可能会失败（因没有 `main()`），但 Visual Studio 仍会在加载时认为这是一个潜在的启动项。
 
 也就是说：
 
 - 启动项的出现 **不是由源文件内容决定的**；
-- 而是由 CMakeLists. txt 中的 `add_executable(...)` 决定的。
+- 而是由 CMakeLists. txt 中 `add_executable(...)` 决定的。
 
 ---
 
@@ -1912,8 +1912,8 @@ CMake 就会尝试将它编译为一个 `.exe` 文件。虽然链接可能会失
 
 | 情况 | 是否生成启动项 | 原因 |
 |------|----------------|------|
-| 有 `add_executable(mytest test.cpp)`，但 `test.cpp` 是空的 | ✅ 会显示为启动项 | 因为 CMake 认为你要构建这个 exe |
-| 没有 `add_executable(...)`，哪怕 `main.cpp` 里有完整逻辑 | ❌ 不会显示为启动项 | 因为 CMake 根本没把它当作目标 |
+| 有 `add_executable(mytest test.cpp)`，但 `test.cpp` 是空的 | ✅ 会显示为启动项 | 因 CMake 认为你要构建这个 exe |
+| 没有 `add_executable(...)`，哪怕 `main.cpp` 里有完整逻辑 | ❌ 不会显示为启动项 | 因 CMake 根本没把它当作目标 |
 
 ---
 
@@ -1921,10 +1921,10 @@ CMake 就会尝试将它编译为一个 `.exe` 文件。虽然链接可能会失
 
 | 问题 | 回答 |
 |------|------|
-| 是什么导致出现两个启动项？ | `CMakeLists.txt` 中的 `add_executable(...)` |
+| 是什么导致出现两个启动项？ | `CMakeLists.txt` 中 `add_executable(...)` |
 | 我应该在哪修改或添加启动项？ | 在 CMakeLists. txt 中修改或新增 `add_executable(...)` |
 | 添加 `main()` 是否产生启动项？ | 不会，除非也被 `add_executable(...)` 包含 |
-| 为什么没有 `main()` 还有两个启动项？ | 因为 CMakeLists. txt 中已经声明了可执行目标 |
+| 为什么没有 `main()` 还有两个启动项？ | 因 CMakeLists. txt 中已经声明了可执行目标 |
 
 ---
 
@@ -2000,7 +2000,7 @@ add_executable(json_parser_test
 ```
 这两段代码是否表示
 创建两个启动项，分别命名为 json_parser_test 和 csv_parser_test，并将    test/JSONParserTest. cpp 和 test/JSONSchemaTest. cpp 编译为 json_parser_test. exe，同理将    test/CSVParserTest. cpp 和 test/CSVEditorTest. cpp 编译为 csv_parser_test. exe，通过两个启动项空值两个 exe 的启动？
-那么这里还有一个疑问，既然启动项（如 csv_parser_test. exe）是由两个文件组成，那么这两个文件中是否只会允许出现一个 main 函数？而且这两个 main 函数不会影响到外部代码中（或者说其他启动项中）的 main 函数。启动对应的启动项就会通过对应文件中的 main 函数执行程序？
+那么这里还有一个疑问，既然启动项（如 csv_parser_test. exe）是由两个文件组成，那么这两个文件中是否只会允许出现一个 main 函数？而且这两个 main 函数不会影响到外部代码中（或者说其他启动项中）的 main 函数。启动对应的启动项就会通过对应文件中 main 函数执行程序？
 
 ### ASSISTANT
 你对 CMake 和 Visual Studio 启动项的理解已经非常接近真相了！我们来 **系统、清晰地解答你的问题**。
@@ -2051,7 +2051,7 @@ add_executable(json_parser_test
 
 ##### ✅ 答案是：**是的，只能有一个 `main()` 函数**
 
-###### 因为：
+###### 因：
 
 - 每个可执行程序（`.exe`）都必须有且只有一个入口函数 `main()`。
 - 所以在 `csv_parser_test.exe` 的所有源文件中（`CSVParserTest.cpp` + `CSVEditorTest.cpp`），**必须也只能有一个 `main()` 函数**；
@@ -2070,7 +2070,7 @@ add_executable(json_parser_test
 | `csv_parser_test.exe` | `CSVParserTest.cpp` 或 `CSVEditorTest.cpp` | 只在这个 exe 中有效 |
 | `json_parser_test.exe` | `JSONParserTest.cpp` 或 `JSONSchemaTest.cpp` | 只在这个 exe 中有效 |
 
-> ⚠️ 因此，**不同可执行目标中的 `main()` 是相互独立的**，不会造成命名冲突。
+> ⚠️ 因此，**不同可执行目标中 `main()` 是相互独立的**，不会造成命名冲突。
 
 ---
 
@@ -2081,7 +2081,7 @@ add_executable(json_parser_test
 - **运行** 或 **调试**（F 5）
 - 或者点击工具栏上的 ▶ 按钮
 
-VS 会运行当前选中的 **启动项**（Startup Project）对应的 `.exe`，并从该 `.exe` 的 `main()` 开始执行。
+VS 会运行当前选中 **启动项**（Startup Project）对应的 `.exe`，并从该 `.exe` 的 `main()` 开始执行。
 
 你可以通过右键项目 → "Set as Startup Project" 来切换当前要运行的是哪个测试程序。
 
@@ -2115,7 +2115,7 @@ json_parser/
 
 | 问题 | 回答 |
 |------|------|
-| 启动项是怎么来的？ | 来自 `CMakeLists.txt` 中的 `add_executable(...)` 声明 |
+| 启动项是怎么来的？ | 来自 `CMakeLists.txt` 中 `add_executable(...)` 声明 |
 | 每个启动项对应一个 `.exe` 吗？ | 是的 |
 | 一个 `.exe` 对应多个 `.cpp` 文件吗？ | 是的，但只能有一个 `main()` |
 | 多个 `.exe` 可以各自有 `main()` 吗？ | 可以，互不影响 |
@@ -2143,7 +2143,7 @@ json_parser/
 
 ### USER
 启动项的名字是否会是生成的 exe 文件的名称？
-这个 cmake 项目中的. vs 文件夹中是否有统一管理启动项的配置文件？现在的启动项名称为
+这个 cmake 项目中. vs 文件夹中是否有统一管理启动项的配置文件？现在的启动项名称为
 csv_parser_test. exe (csv_parser\csv_parser_test. exe)
 json_parser_test. exe (json_parser\json_parser_test. exe)
 这两个名称非常长，启动项名称中一定会在括号中包含启动项的路径，这样很长而且非常影响可读性。
@@ -2155,7 +2155,7 @@ json_parser_test. exe (json_parser\json_parser_test. exe)
 
 ### ✅ 一、启动项名称是否就是生成的 `.exe` 文件名？
 
-##### 是的！  
+##### 是的！
 **Visual Studio 中显示的启动项名称默认就是 `.exe` 文件的名字（不带扩展名）**。
 
 例如：
@@ -2282,7 +2282,7 @@ my_tool.exe (app\my_tool.exe)
 |------|------|
 | 启动项名字是否就是 `.exe` 名字？ | 是的 |
 | `.vs` 文件夹中有无启动项配置？ | 有，但不建议手动修改 |
-| 启动项名称为何这么长？ | 因为默认包含路径信息 |
+| 启动项名称为何这么长？ | 因默认包含路径信息 |
 | 如何让启动项名称更简洁？ | 可以重命名 `.exe`，或设置 `VS_DEBUGGER_SHORT_NAME` 属性 |
 | 是否能隐藏路径部分？ | 不完全支持，但可以通过自定义名称优化显示 |
 
@@ -2458,7 +2458,7 @@ split_cpp_to_h_cpp('MyClass.cpp')
 是否需要我为你生成对应文件？欢迎继续提问！
 
 ### USER
-我安装了 Visual assist 之后，在使用 include 语句包含内容时，出现无法打开源文件报错，但是安装之前可以使用这些源文件（标准库中的源文件），这是什么原因导致的？该如何解决？
+我安装了 Visual assist 之后，在使用 include 语句包含内容时，出现无法打开源文件报错，但安装之前可以使用这些源文件（标准库中源文件），这是什么原因导致的？该如何解决？
 
 ### ASSISTANT
 你遇到的问题是：
@@ -2609,7 +2609,7 @@ split_cpp_to_h_cpp('MyClass.cpp')
 ##### 🧩 出现现象：
 - 所有标准库头文件都无法识别；
 - 报错为：“无法打开源文件 'vector'”、“无法打开源文件 'memory'”等；
-- 代码仍然可以正常构建（Build）成功；
+- 代码仍可以正常构建（Build）成功；
 - 说明：这是 **编辑器的语法分析错误（IntelliSense 错误）**，不是真正的编译错误。
 
 ---
@@ -2628,7 +2628,7 @@ split_cpp_to_h_cpp('MyClass.cpp')
 
 ##### ✅ 2. Visual Studio 自带的 IntelliSense 设置错误
 
-即使你没有安装 VA，VS 的原生 IntelliSense 也可能因为以下原因出错：
+即使你没有安装 VA，VS 的原生 IntelliSense 也可能因以下原因出错：
 
 - 没有正确识别当前使用的编译器（MSVC / MinGW）；
 - 没有正确加载标准库路径；
@@ -2650,7 +2650,7 @@ set(CMAKE_C_COMPILER   "D:/Program/mingw64/bin/gcc.exe")
 set(CMAKE_CXX_COMPILER "D:/Program/mingw64/bin/g++.exe")
 ```
 
-但是 **Visual Studio 并不能自动理解这些设置**，它默认使用 MSVC 编译器和路径。
+但 **Visual Studio 并不能自动理解这些设置**，它默认使用 MSVC 编译器和路径。
 
 ###### 解决方式：
 
@@ -2791,7 +2791,7 @@ g++ -E -v -x c++ nul
 是否需要我帮你生成一个完整配置模板？欢迎继续提问！
 
 ### USER
-我发现我的 cmake 工程无法读取标准库目录，写代码时也没有任何代码自动补全提示，很多报错但是又能够编译运行成功，这是什么原因导致的？该如何解决？
+我发现我的 cmake 工程无法读取标准库目录，写代码时也没有任何代码自动补全提示，很多报错但又能够编译运行成功，这是什么原因导致的？该如何解决？
 
 ### ASSISTANT
 你遇到的问题总结如下：
@@ -3000,7 +3000,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 是否需要我帮你生成一个完整配置模板？或者想了解如何迁移到 VSCode 开发环境？欢迎继续提问！
 
 ### USER
-出现这种问题（cmake 在当前源文件目录或生成系统路径中找到标准库文件，编辑器没有代码补全提示）的原始是否是因为我没有在主 CMakeLists. txt 中设置 target_include_directory 导致的？但是我已经设置了两个解析器
+出现这种问题（cmake 在当前源文件目录或生成系统路径中找到标准库文件，编辑器没有代码补全提示）的原始是否是因我没有在主 CMakeLists. txt 中设置 target_include_directory 导致的？但我已经设置了两个解析器
 set (CMAKE_C_COMPILER   "D:\\Program\\mingw 64\\bin\\gcc. exe")
 set (CMAKE_CXX_COMPILER "D:\\Program\\mingw 64\\bin\\g++. exe")
 难道不应该自动填入吗？
@@ -3009,7 +3009,7 @@ set (CMAKE_CXX_COMPILER "D:\\Program\\mingw 64\\bin\\g++. exe")
 ### ASSISTANT
 你问得非常好，我们来系统地解释：
 
-> **出现“找不到标准库头文件”、“没有代码补全提示”等问题的根源** 是否是因为你没有在 `CMakeLists. txt` 中使用 `target_include_directories (...)`？
+> **出现“找不到标准库头文件”、“没有代码补全提示”等问题的根源** 是否是因你没有在 `CMakeLists. txt` 中使用 `target_include_directories (...)`？
 
 ---
 
@@ -3153,7 +3153,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 | 问题 | 回答 |
 |------|------|
 | 没有 `target_include_directories (...)` 导致找不到标准库？ | ❌ 不是，标准库由编译器管理 |
-| 为什么设置了编译器路径还是没补全？ | ❌ 因为 VS 的 IntelliSense 不读取 CMake 设置 |
+| 为什么设置了编译器路径还是没补全？ | ❌ 因 VS 的 IntelliSense 不读取 CMake 设置 |
 | 如何解决？ | ✅ 告诉 VS 使用 MinGW 构建配置 / 配置 VA / 清理缓存 |
 
 ---
@@ -3184,7 +3184,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 ```cmake
 CMAKE_TOOLCHAIN_FILE:STRING=D:/Code Files/PackageManage/vcpkg/scripts/buildsystems/vcpkg. cmake
 ```
-这项是根据什么生成的？由于我已经将 vcpkg 安装位置移动，所以这一项一定会出现错误，但是我发现我无法修改这个文件，重新修改这个文件之后在使用 cmake 构建应用时这一项的值还是会被修改为 D:/Code Files/PackageManage/vcpkg/scripts/buildsystems/vcpkg. cmake 这个错误的值，这是什么原因导致的？该如何解决？
+这项是根据什么生成的？由于我已经将 vcpkg 安装位置移动，所以这一项一定会出现错误，但我发现我无法修改这个文件，重新修改这个文件之后在使用 cmake 构建应用时这一项的值还是会被修改为 D:/Code Files/PackageManage/vcpkg/scripts/buildsystems/vcpkg. cmake 这个错误的值，这是什么原因导致的？该如何解决？
 
 ### ASSISTANT
 你遇到的问题是由于 CMake 在生成 `CMakeCache. txt` 文件时自动设置了 `CMAKE_TOOLCHAIN_FILE` 变量为旧的 vcpkg 路径。这个变量通常用于指定工具链文件（toolchain file），在使用 vcpkg 时，它指向了 `vcpkg. cmake` 文件。
@@ -3207,7 +3207,7 @@ CMAKE_TOOLCHAIN_FILE:STRING=D:/Code Files/PackageManage/vcpkg/scripts/buildsyste
 
 ## 🔁 为什么你改完又被重置？
 
-当你修改了 `CMakeCache. txt` 中的 `CMAKE_TOOLCHAIN_FILE` 后，重新构建时该值又被还原，这说明：
+当你修改了 `CMakeCache. txt` 中 `CMAKE_TOOLCHAIN_FILE` 后，重新构建时该值又被还原，这说明：
 
 - **你没有清除构建目录的缓存**：CMake 会优先读取已有缓存内容。
 - **CMake 配置流程中被某个地方显式或隐式地再次设置**。
@@ -3320,7 +3320,7 @@ cmake -H. -Bbuild -DCMAKE_TOOLCHAIN_FILE="D:/new/path/to/vcpkg/scripts/buildsyst
 如果你能提供你是如何触发 CMake 构建的（比如命令行？CMake Tools？还是 IDE？），我可以给出更具体的建议。希望这些信息能帮你彻底解决这个问题！
 
 ### USER
-问题出在 settings. json 中已经将 vcpkg. cmake 路径写死，我通过修改 settings. json 已经解决了这个问题，但是现在又有一些问题，我现在通过 cmake 创建了一个命令行项目，其运行的输出结果取决于命令行参数，比如我要在命令行中输入 main. cpp --filename test. txt, -n 10 然后运行程序，但是 vscode 使用 cmake 调试过程中直接运行了 ."path/to/myprogram. exe"这个命令而没有输入参数，我应该在哪里调整这个设置？
+问题出在 settings. json 中已经将 vcpkg. cmake 路径写死，我通过修改 settings. json 已经解决了这个问题，但现在又有一些问题，我现在通过 cmake 创建了一个命令行项目，其运行的输出结果取决于命令行参数，比如我要在命令行中输入 main. cpp --filename test. txt, -n 10 然后运行程序，但 vscode 使用 cmake 调试过程中直接运行了 ."path/to/myprogram. exe"这个命令而没有输入参数，我应该在哪里调整这个设置？
 
 ### ASSISTANT
 你遇到的问题是：**在 VSCode 中使用 CMake 配置调试时，程序没有传入命令行参数（如 `--filename test. txt -n 10`）**。这会导致你的程序无法正常运行或测试。
@@ -3540,7 +3540,7 @@ task. json
 
 ## 🔍 问题分析
 
-你在 `launch. json` 中的 `"args"` 设置如下：
+你在 `launch. json` 中 `"args"` 设置如下：
 
 ```json
 "args": ["-f test. txt -n 88 -v 10.0 -i test 1. txt, test 2. cpp, test 3. cpp"]
@@ -3559,7 +3559,7 @@ CLI 11 会尝试解析这个完整的字符串为一个参数，这显然无法�
 
 ## ✅ 正确的写法应该是：
 
-将每个参数拆分为数组中的独立元素：
+将每个参数拆分为数组中独立元素：
 
 ```json
 "args": [
@@ -3678,12 +3678,12 @@ int main (int argc, char** argv) {
 如果你还有问题，比如运行时报错、路径找不到、或 CLI 11 安装问题，也可以继续问我 😊
 
 ### USER
-我已经将 launch. json 修改为你给出的样子，但是 cmake 还是没有输入我想要的参数，我点击调试按钮看到它的启动命令为：
+我已经将 launch. json 修改为你给出的样子，但 cmake 还是没有输入我想要的参数，我点击调试按钮看到它的启动命令为：
 PS D:\Code Files\vscode\CCpp\projects\CLI 11 learning>  & 'c:\Users\Sickwag\. vscode\extensions\ms-vscode. cpptools-1.26.3-win 32-x 64\debugAdapters\bin\WindowsDebugLauncher. exe' '--stdin=Microsoft-MIEngine-In-s 00 mcztp. oht' '--stdout=Microsoft-MIEngine-Out-0 u 0 qnjzu. skz' '--stderr=Microsoft-MIEngine-Error-2 rbpcluk. 3 ji' '--pid=Microsoft-MIEngine-Pid-ypnefqz 5. adv' '--dbgExe=D:/Program/mingw 64/bin/gdb. exe' '--interpreter=mi'
 请你看看是否有别的遗漏地方，帮我解决这个问题
 
 ### ASSISTANT
-你已经正确配置了 `launch. json`，但在调试时程序仍然没有接收到命令行参数。从你提供的日志：
+你已经正确配置了 `launch. json`，但在调试时程序仍没有接收到命令行参数。从你提供的日志：
 
 ```
 PS D:\Code Files\vscode\projects\CLI 11 learning>  & 'c:\Users\Sickwag\. vscode\extensions\ms-vscode. cpptools-1.26.3-win 32-x 64\debugAdapters\bin\WindowsDebugLauncher. exe' ...
@@ -3696,7 +3696,7 @@ PS D:\Code Files\vscode\projects\CLI 11 learning>  & 'c:\Users\Sickwag\. vscode\
 ## 🔍 问题分析
 
 ### ✅ 正确流程应该是：
-1. VSCode 使用 `launch. json` 中的 `"program"` 指定路径找到你的程序。
+1. VSCode 使用 `launch. json` 中 `"program"` 指定路径找到你的程序。
 2. 然后用 GDB 启动该程序，并传入 `"args"` 中指定的参数。
 
 但目前看起来：
@@ -3723,7 +3723,7 @@ cmake --build .
 
 ---
 
-### ✅ 第二步：检查 `launch. json` 中的 `program` 路径是否正确
+### ✅ 第二步：检查 `launch. json` 中 `program` 路径是否正确
 
 你现在写的是：
 
@@ -3748,7 +3748,7 @@ D:/Code Files/vscode/CCpp/projects/CLI 11 learning/build/CLI 11 learning. exe
 
 你的 `tasks. json` 是用于编译单个文件的，但它和 CMake 并无关联。你需要确认你在点击调试前，CMake 已经构建完成。
 
-你可以修改 `launch. json` 中的 `preLaunchTask` 为 CMake 构建任务，而不是只编译当前文件：
+你可以修改 `launch. json` 中 `preLaunchTask` 为 CMake 构建任务，而不是只编译当前文件：
 
 ##### 修改 `launch. json`：
 
@@ -3894,8 +3894,8 @@ CLI 11 learning. exe -f test. txt -n 88 -v 10.0 -i test 1. txt test 2. cpp test 
     }
 }
 ```
-再调试，就能够看到参数被正确地传入程序中，这是什么原因？我还发现我在 vscode 的配置文件也叫 settings. json，并且其中也支持输入 cmake. debugConfig 这个值，是否 vscode 的运行逻辑就是运行代码时先读取本身的 settings. json 文件，应用其中的设置，然后如果当前工作目录中含有. vscode 文件夹，就读取其中的 settings. json 文件作为只针对本项目（本工作目录）的设置来覆盖（如果有）自身 settings. json 中的值？
-settings. json 中 cmake. debugConfig 这一项是否由 vscode 中的 cmake 插件提供？读取这一文件并应用到 cmake 调试过程中这一行为是否也由它来执行？
+再调试，就能够看到参数被正确地传入程序中，这是什么原因？我还发现我在 vscode 的配置文件也叫 settings. json，并且其中也支持输入 cmake. debugConfig 这个值，是否 vscode 的运行逻辑就是运行代码时先读取本身的 settings. json 文件，应用其中设置，然后如果当前工作目录中含有. vscode 文件夹，就读取其中 settings. json 文件作为只针对本项目（本工作目录）的设置来覆盖（如果有）自身 settings. json 中值？
+settings. json 中 cmake. debugConfig 这一项是否由 vscode 中 cmake 插件提供？读取这一文件并应用到 cmake 调试过程中这一行为是否也由它来执行？
 
 ### ASSISTANT
 你发现的这个解决方法非常棒，而且你的理解也非常接近事实！下面我们来详细解释一下：
@@ -3956,11 +3956,11 @@ settings. json 中 cmake. debugConfig 这一项是否由 vscode 中的 cmake 插
 ### 2. **工作区设置（`. vscode/settings. json`）**
 - 放在当前项目的 `. vscode` 文件夹中。
 - 只对当前项目生效。
-- **会覆盖全局设置中的相同键值。**
+- **会覆盖全局设置中相同键值。**
 
 ### 3. **语言特定设置、远程开发设置等（略复杂）**
 - 比如针对某个语言（如 C++）的设置。
-- 或者远程开发（SSH/Docker）中的设置。
+- 或者远程开发（SSH/Docker）中设置。
 
 ---
 
@@ -4000,7 +4000,7 @@ settings. json 中 cmake. debugConfig 这一项是否由 vscode 中的 cmake 插
 |------|------|
 | `. vscode/settings. json` 中 `cmake. debugConfig` 是哪个插件支持的？ | ✅ 是 **CMake Tools 插件** 提供的 |
 | VSCode 是否优先使用 `. vscode/settings. json`？ | ✅ 是的，它是“工作区级别”的设置，优先级高于全局设置 |
-| `cmake. debugConfig` 的参数是如何被应用到调试过程中的？ | ✅ CMake Tools 在启动调试时会读取该配置，并将其合并进临时或现有 `launch. json` 配置中 |
+| `cmake. debugConfig` 的参数是如何被应用到调试过程中？ | ✅ CMake Tools 在启动调试时会读取该配置，并将其合并进临时或现有 `launch. json` 配置中 |
 | 我应该继续用这个方式还是改回 `launch. json`？ | ✅ 如果你已经有 `launch. json`，推荐直接在 `launch. json` 中写 `args`，更直观可控；如果想快速设置且不想维护 `launch. json`，可以用 `cmake. debugConfig` |
 
 ---
@@ -4022,7 +4022,7 @@ settings. json 中 cmake. debugConfig 这一项是否由 vscode 中的 cmake 插
 
 如果你只是想快速测试：
 
-### ✔️ 使用 `. vscode/settings. json` 中的 `cmake. debugConfig`：
+### ✔️ 使用 `. vscode/settings. json` 中 `cmake. debugConfig`：
 
 ```json
 {
@@ -4369,7 +4369,7 @@ CMake: Show Debug Configuration
 ### 📌 举例说明
 
 - `"includePath"`：
-  - 包含了你项目中的头文件路径和标准库路径（如 `<vector>`, `<iostream>`）。
+  - 包含了你项目中头文件路径和标准库路径（如 `<vector>`, `<iostream>`）。
   - 如果你使用了第三方库（如 OpenCV、Boost），也需要在这里添加它们的头文件路径。
 
 - `"compilerPath"`：
@@ -4405,7 +4405,7 @@ CMake: Show Debug Configuration
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "gdb Debug",  // 显示在调试器下拉菜单中的名称
+      "name": "gdb Debug",  // 显示在调试器下拉菜单中名称
       "type": "cppdbg",  // 使用 Microsoft 的 C++ 调试器
       "request": "launch",  // 启动一个新的调试会话
       "program": "D:\\Code Files\\vscode\\Drafts\\CCppOutput\\${fileBasenameNoExtension}. exe",  // 要调试的程序路径
@@ -4744,7 +4744,7 @@ your-project/
 | C/C++ | Microsoft 官方 C++ 插件，提供智能感知 |
 | CMake Tools | 支持 CMake 项目的构建和调试 |
 | Code Runner | 快速运行代码片段 |
-| Better Comments | 高亮注释中的 TODO、FIXME 等 |
+| Better Comments | 高亮注释中 TODO、FIXME 等 |
 | GitLens | 增强 Git 功能 |
 
 ---

@@ -46,7 +46,7 @@ FROM
 		p.email) AS record
 WHERE
 	record.appear > 1;
-	
+
 --自连接
 SELECT
 	DISTINCT p1.Email
@@ -56,7 +56,7 @@ FROM
 WHERE
 	p1.Email = p2.Email
 	AND p1.Id != p2.Id;
-	
+
 -- having作为列**聚合之后**筛选条件
 SELECT
 	Email
@@ -67,9 +67,9 @@ GROUP BY
 HAVING
 	count(p.email)>1;
 ```
-- 注意 from 中使用临时表，那么 select 中需要使用临时表中的数据**必须要给临时表命名**
-- Sql 中的比较是通过一条一条记录（record，也可以成为**行**）为单位进行匹配对比的，对比操作常使用自连接
-- 第三种方法**不能使用 where 替换 having**，原因为：where字句无法与聚合函数一起使用。因为where子句的运行**顺序排在第**二（参考：[[MySQL#DQL 语句执行和书写顺序]]），运行到where时，表还没有被分组。
+- 注意 from 中使用临时表，那么 select 中需要使用临时表中数据**必须要给临时表命名**
+- Sql 中比较是通过一条一条记录（record，也可以成为**行**）为单位进行匹配对比的，对比操作常使用自连接
+- 第三种方法**不能使用 where 替换 having**，原因：where字句无法与聚合函数一起使用。因where子句的运行**顺序排在第**二（参考：[[MySQL#DQL 语句执行和书写顺序]]），运行到where时，表还没有被分组。
 - `HAVING` 子句的主要作用是对分组后的数据进行筛选，通常用于对聚合函数的结果进行过滤。它与 `WHERE` 子句的区别在于：
 	- **`WHERE`**：在分组和聚合之前对原始数据进行筛选。
 	- **`HAVING`**：在分组和聚合之后对分组结果进行筛选。
@@ -88,7 +88,7 @@ WHERE
 ```
 - 注意外连接保留下来的信息是哪一边的！，参考 [[MySQL#内外连接总结]]
 - 使用 in 方法时用于子查询或值列表的，而不是直接用于表的字段
-- 不能用 in 来检测一个值是否在表中的某个**字段中**，如果想要达到这样的功能需要将这个字段提取出来作为临时表给 in 用
+- 不能用 in 来检测一个值是否在表中某个**字段中**，如果想要达到这样的功能需要将这个字段提取出来作为临时表给 in 用
 ```sql
 SELECT
 	c.name
@@ -96,7 +96,7 @@ FROM
 	Customers c,
 	[Order] o
 WHERE
-	c.id NOT IN o.CustomerId; 
+	c.id NOT IN o.CustomerId;
 ```
 ***这样写是错误的***
 Exists 方法
@@ -143,7 +143,7 @@ FROM
 LEFT JOIN Department d
 	ON
 	e.departmentId = d.id
-WHERE 
+WHERE
 	(e.salary, e.departmentId) IN (
 	SELECT
 		max(e.salary),
@@ -214,7 +214,7 @@ CREATE TEMPORARY TABLE temp_min_ids AS
 SELECT MIN (id) AS min_id
 FROM person
 GROUP BY email;
--- 删除不在临时表中的记录
+-- 删除不在临时表中记录
 DELETE FROM person
 WHERE id NOT IN (
     SELECT min_id
@@ -262,7 +262,7 @@ WHERE p 2. Min_id IS NULL;
 1. **`LEFT JOIN` 机制**：`LEFT JOIN` 会先生成一个临时结果集，这个结果集是基于子查询 (`SELECT MIN(id) ...`) 和 `person` 表的连接。
 2. **锁定分离**：
     - 子查询 (`SELECT MIN(id) ...`) 会先执行并生成临时结果集。
-    - `DELETE` 语句只操作临时结果集和 `person` 表，不会直接引用子查询中的 `person` 表。
+    - `DELETE` 语句只操作临时结果集和 `person` 表，不会直接引用子查询中 `person` 表。
 3. **锁定顺序**：
     - MySQL 先锁定了子查询的结果（临时结果集）。
     - 然后锁定 `person` 表进行删除操作。
@@ -278,7 +278,7 @@ on w1.recordDate = date_add(w2.recordDate,interval 1 day)
 where w1.temperature > w2.temperature;
 
 -- 自连接
-select a.id from weather a 
+select a.id from weather a
 left join weather b
 on a.temperature > b.temperature
 where datediff(a.recordDate, b.recordDate) = 1;

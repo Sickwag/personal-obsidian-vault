@@ -4,7 +4,7 @@
 ```bash
 [root@localhost sickwag]# yum search wget
 Failed to set locale, defaulting to C.UTF-8
-CentOS Linux 8 - AppStream                   0.0  B/s |   0  B     00:00    
+CentOS Linux 8 - AppStream                   0.0  B/s |   0  B     00:00
 Errors during downloading metadata for repository 'appstream':
   - Curl error (6): Couldn't resolve host name for http://mirrorlist.centos.org/?release=8&arch=x86_64&repo=AppStream&infra=stock [Could not resolve host: mirrorlist.centos.org]
 ```
@@ -32,7 +32,7 @@ systemctl restart chronyd.service
 所有的匹配结果均已经被参数的模块化过滤条件筛除: mysql-community-server
 -----------------------------
 file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mysql 的 GPG 公钥(0x5072E1F5)已安装
-仓库 "MySQL 8.0 Community Server" 的 GPG 公钥已安装，但是不适用于此软件包。
+仓库 "MySQL 8.0 Community Server" 的 GPG 公钥已安装，但不适用于此软件包。
 ..........................。
 GPG检查失败
 ```
@@ -69,7 +69,7 @@ Dbeaver 新建连接，在 linux 端使用 ifconfig 查看 IP 地址，在新建
 ```shell
 null, message from server: “Host ‘192.168.170.1‘ is not allowed to connect to this MySQL server“
 ```
-则是因为 mysql 没有启动远程访问权限导致
+则是因 mysql 没有启动远程访问权限导致
 
 ### 解决方法
 登入 mysql

@@ -1,5 +1,5 @@
 ---
-title: "ArcGIS Pro 中的 Notebooks 入门"
+title: "ArcGIS Pro 中 Notebooks 入门"
 source: "https://learn.arcgis.com/zh-cn/projects/get-started-with-notebooks-in-arcgis-pro/"
 author:
 published:
@@ -9,7 +9,7 @@ tags:
   - "clippings"
 ---
 ## 基础知识
-### ArcGIS 中的“要素”
+### ArcGIS 中“要素”
 
 #### 1. 要素的定义
 
@@ -59,7 +59,7 @@ ArcGIS 通过以下方式识别文件类型：
 arcpy.management.AddXY("ambulances")
 ```
 运行该工具的结果显示在下方。在这种情况下，该工具不会生成新的要素类，而是更新现有要素类的属性表。该工具返回的结果是对当前地图中现有 ambulances 要素图层的引用。
-1. **识别 `"ambulances"` 这个点要素类**，并为其中的每个点几何对象计算 X 和 Y 坐标。
+1. **识别 `"ambulances"` 这个点要素类**，并为其中每个点几何对象计算 X 和 Y 坐标。
 2. **将坐标值添加到属性表中**，作为新的字段（`POINT_X` 和 `POINT_Y`）。
 3. ArcGIS 会根据数据的地理或投影坐标系，自动计算每个点的 X 和 Y 坐标。
 - **添加字段(而不是筛选出 ambulance 内容)**：执行代码后，属性表中会新增两个字段：
@@ -67,8 +67,8 @@ arcpy.management.AddXY("ambulances")
     - `POINT_Y`: 存储点的 Y 坐标。
 - **不筛选数据**：这段代码并不会筛选出 `"ambulances"` 要素，而是在现有要素类的属性表中添加坐标字段。
 ---
-代码行 `arcpy.management.AddXY("ambulances")` 有多个不同部分。首先是 ArcPy 模块 arcpy，它可以在 Python 中使用 ArcGIS Pro 的大部分功能，包括几乎所有的地理处理工具。下一个元素 management 是添加 XY 坐标工具所在的**数据管理工具箱的工具箱别名**（这个工具箱的工具被打包放在 management 中）。下一个元素是 AddXY，它是 ArcPy 函数的名称，相当于 ArcGIS Pro 中的添加 XY 坐标工具。
-Arcpy 中的注记命名规范为：
+代码行 `arcpy.management.AddXY("ambulances")` 有多个不同部分。首先是 ArcPy 模块 arcpy，它可以在 Python 中使用 ArcGIS Pro 的大部分功能，包括几乎所有的地理处理工具。下一个元素 management 是添加 XY 坐标工具所在的**数据管理工具箱的工具箱别名**（这个工具箱的工具被打包放在 management 中）。下一个元素是 AddXY，它是 ArcPy 函数的名称，相当于 ArcGIS Pro 中添加 XY 坐标工具。
+Arcpy 中注记命名规范为：
 ```python
 arcpy.<toolboxalias>.<toolname>
 arcpy.<toolname>_<toolboxalias>
@@ -76,7 +76,7 @@ arcpy.<toolname>_<toolboxalias>
 两种可以互换使用，这也就是刚才使用 `arcpy.management.GetCount` 和 `arcpyGetCount_management` 功能相同
 ### 缓冲区
 #### 1. 缓冲区的定义
-缓冲区是指在地理空间分析中，围绕某个地理要素（如点、线、面）生成的一个特定范围的区域。缓冲区的宽度可以是一个固定值，也可以基于属性表中的字段值动态设定。
+缓冲区是指在地理空间分析中，围绕某个地理要素（如点、线、面）生成的一个特定范围的区域。缓冲区的宽度可以是一个固定值，也可以基于属性表中字段值动态设定。
 #### 2. 缓冲区的返回值
 缓冲区工具会生成一个新的 **面要素类**，该要素类包含原始要素的缓冲区域。
 #### 3. 缓冲区工具的调用
@@ -103,19 +103,19 @@ arcpy.<toolname>_<toolboxalias>
 - **`field_values`**: 指定输出要素类的字段值。
 
 `arcpy.Buffer_analysis` 生成的要素类会保存到你指定的 `out_feature_class` 路径中
-`rcpy.ListFeatureClasses()` 动态获取工作空间中的所有要素类：
+`rcpy.ListFeatureClasses()` 动态获取工作空间中所有要素类：
 ```python
 arcpy.PairwiseErase_analysis("etobicoke", "fire_buffer", "no_service")
 ```
 这段代码的意思是从 etobicoke 要素（通常是地图块）中减去 fire_buffer 要素之后留下来的内容转化为一个要素，存储在 no_servive 中
 ### 差集擦除
-ArcGIS 中的 `arcpy.PairwiseErase_analysis` 工具，它的作用是进行 **“差集”**（Erase）空间分析。具体来说，它会从第一个输入要素类（`"etobicoke"`）中移除与第二个输入要素类（`"fire_buffer"`）重叠的部分，并将结果保存到第三个参数指定的输出要素类（`"no_service"`）中。
+ArcGIS 中 `arcpy.PairwiseErase_analysis` 工具，它的作用是进行 **“差集”**（Erase）空间分析。具体来说，它会从第一个输入要素类（`"etobicoke"`）中移除与第二个输入要素类（`"fire_buffer"`）重叠的部分，并将结果保存到第三个参数指定的输出要素类（`"no_service"`）中。
 
 ### 描述函数的用法
 
 #### 1. 什么是 `arcpy.da.Describe`？
 
-`arcpy.da.Describe` 是 ArcPy 中的一个函数，用于 **获取地理数据的元数据信息**。它可以返回一个==字典==，包含指定地理数据集（如要素类、栅格、字段等）的详细信息。
+`arcpy.da.Describe` 是 ArcPy 中一个函数，用于 **获取地理数据的元数据信息**。它可以返回一个==字典==，包含指定地理数据集（如要素类、栅格、字段等）的详细信息。
 
 #### 2. 返回值
 
@@ -144,7 +144,7 @@ arcpy.da.Describe(input_data)
 | `shapeType`        | 几何类型（如 `Point`、`Polyline`、`Polygon`）。    |
 | `spatialReference` | 坐标系信息。                                   |
 | `fields`           | 字段列表（包含字段名称、类型等信息）。                      |
-### 列出工作空间中的要素类，表和数据集
+### 列出工作空间中要素类，表和数据集
 ```python
 import arcpy
 mypath = "C:/Lessons/PythonDesc"
@@ -154,8 +154,8 @@ files = arcpy.ListTables() 		   #列出表 dbf
 files = arcpy.ListDatasets()  	   #数据集
 print(files)
 ```
-列出所有工作目录中的**要素类**，原型为 `ListFeatureClasses ({wild_card}, {feature_type}, {feature_dataset})`
-`arcpy.ListFeatureClasses` 是 ArcPy 中的一个函数，用于 **列出当前工作空间中的所有要素类（Feature Classes）**。它可以方便地获取指定文件夹、地理数据库或要素数据集中的要素类名称列表。
+列出所有工作目录中**要素类**，原型为 `ListFeatureClasses ({wild_card}, {feature_type}, {feature_dataset})`
+`arcpy.ListFeatureClasses` 是 ArcPy 中一个函数，用于 **列出当前工作空间中所有要素类（Feature Classes）**。它可以方便地获取指定文件夹、地理数据库或要素数据集中要素类名称列表。
 
 ---
 #### 返回值
@@ -192,4 +192,4 @@ arcpy.ListFeatureClasses({wildcard},{feature_type},{feature_dataset})
     - `"Dimension"`：仅列出尺寸标注要素类。
 3. `feature_dataset` (可选)
 - 用途：在地理数据库中，指定要列出要素类的要素数据集路径。
-- 示例：`"C:/data/geodatabase.gdb/Transportation"`，仅列出 `Transportation` 要素数据集中的要素类。
+- 示例：`"C:/data/geodatabase.gdb/Transportation"`，仅列出 `Transportation` 要素数据集中要素类。

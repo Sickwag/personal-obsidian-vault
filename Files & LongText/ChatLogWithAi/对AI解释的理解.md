@@ -1,14 +1,14 @@
 我有点明白这个设计运作的逻辑了，下面是我对你的回答的理解和问题,请你对他们逐条做出回答,解释或者评价,有错误的话请提出修改：
 - 对于service_locator.h文件，mtx_实现了资源互斥锁，保证services_这个变量的线程安全
-- 有一些“模块”需要一些服务提供的功能，但是由于这些类的功能大多比较复杂，往往只需要其中的一小部分功能，如果在每一个模块类中都加上这些服务对象成员，这样会导致实例化资源浪费、连接爆炸、难以管理
+- 有一些“模块”需要一些服务提供的功能，但由于这些类的功能大多比较复杂，往往只需要其中一小部分功能，如果在每一个模块类中都加上这些服务对象成员，这样会导致实例化资源浪费、连接爆炸、难以管理
 - 现在提供provide函数接受任意类型的对象，他们都是“服务”，本质是MySQLDB，Logger这些提供各式各样功能的类。每个将会被用到的服务类由service_locator管理。每调用一次provide就会将一个已经初始化的服务加入到管理，任意的模块如果需要这些服务，就需要添加一个指向这些服务的指针，在构造函数初始化变量时初始化指针指向。
 - get函数可以获取对应服务的指针，通过在services_中搜索对应服务，通过`*std::static_pointer_cast<T>(it->second)`返回对应指针给模块调用。这样每个模块通过get调用的指针都会指向同一个服务类实例，节省了资源开销，通过指针传递服务也加快了速度。
 - 正应为services_中是`std::unordered_map<std::type_index, std::shared_ptr<void>>`结构，所以ServiceLocator中每个服务只能存在一个，如果需要多种相同但由细微差异的服务则需要改变services_的数据结构，然后在get函数传入参数来选中具体需要哪一个服务。
-- 传入MySQLDB构造函数中的executor到底是什么？他有什么作用？应该传入什么参数？如果我传入co_await asio::this::coro::executor代表什么意思？
+- 传入MySQLDB构造函数中executor到底是什么？他有什么作用？应该传入什么参数？如果我传入co_await asio::this::coro::executor代表什么意思？
 
 我在main函数中调用
 ```cpp
-int main(int argc, char* argv[]) { 
+int main(int argc, char* argv[]) {
 
     if (argc != 9) {
         std::cerr << "Usage: " << argv[0] << " smtp_server port username password from to subject body" << std::endl;
@@ -184,7 +184,7 @@ Error: cannot open INSERT INTO test_users VALUES (1, 'Alice'); INSERT INTO test_
 < 250-ID
 < 250 8BITMIME
 > AUTH PLAIN
-< 334 
+< 334
 > AEF6emF0b1dheWRlbGxAMTI2LmNvbQBIUlV5VXNaUDNSd2duRno0
 < 235 Authentication successful
 > MAIL FROM:<AzzatoWaydell@126.com>
@@ -194,4 +194,4 @@ Error: cannot open INSERT INTO test_users VALUES (1, 'Alice'); INSERT INTO test_
 > DATA
 < 354 End data with <CR><LF>.<CR><LF>
 ```
-但是我登录我的收件邮箱（也就是to参数的邮箱），并没有看到我发送的邮件，这是什么原因导致的？该如何解决？
+但我登录我的收件邮箱（也就是to参数的邮箱），并没有看到我发送的邮件，这是什么原因导致的？该如何解决？

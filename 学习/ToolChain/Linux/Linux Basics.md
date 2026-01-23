@@ -108,17 +108,17 @@ WSL直接连宿主机的硬件, 性能远超虚拟机
 ![Untitled 6 22.png](Untitled%206%2022.png)
 - 通过指令混写同时进行两种命令的选项,表示同时进行all和list命令, 列表全展示
 - 参数和指令也可以混写
-    
+
     ![Untitled 7 22.png](Untitled%207%2022.png)
-    
+
 -h表示通过易于阅读的样式列出文件, 只能和-l命令一起使用将字节大小转换为kb等易于阅读的单位制
 **cd命令(不是选项)** 是change directory 没有参数表示回到home, 有路径表示进入路径
 **pwd命令(不是选项)** print work directory 没有参数表示查看当前工作目录,只输出工作目录路径一条信息,而不会打开看目录中有什么文件
 ### 相对绝对路径
 相对路径以当前目录作为起点
 绝对路径表示以根目录作为起点
-cd /home/itheima/Desktop  
-cd Desktop  
+cd /home/itheima/Desktop
+cd Desktop
 ### 特殊路径符
 |   |   |
 |---|---|
@@ -137,9 +137,9 @@ mkdir [OPTION]... DIRECTORY...
 - `DIRECTORY...` 表示 `DIRECTORY` 是必须的参数，但可以指定多个。你可以一次性创建多个目录，只需在命令行中列出所有想要创建的目录名称即可。
 `mkdir -p dir1 dir2 dir3`
 这个命令会创建三个目录：`dir1`、`dir2` 和 `dir3`。每个目录都会被创建，如果它们的父目录不存在，`-p` 参数会确保它们被创建
-> 要在/home/user/a/b/c/d/file folder这样的目录,a,b,c,d,file folder文件夹都不存在.我需要执行以下命令,  
-> mkdir -p /home/a/b/c/d/file\ folder  
->   
+> 要在/home/user/a/b/c/d/file folder这样的目录,a,b,c,d,file folder文件夹都不存在.我需要执行以下命令,
+> mkdir -p /home/a/b/c/d/file\ folder
+>
 > **注意最后一个反斜杠是转义字符,表示转义空格**
 ### touch 命令
 - **全称**: 无特定全称，直接是 `touch`。
@@ -304,8 +304,8 @@ less -20 filename
 ##### 快速移动命令
 - **g**：移动到文件的开头。
 - **G**：移动到文件的末尾。
-- **nG**：移动到文件中的第n行（n为数字）。
-- **:** + **n**：移动到文件中的第n行（n为数字）。
+- **nG**：移动到文件中第n行（n为数字）。
+- **:** + **n**：移动到文件中第n行（n为数字）。
 
 ##### 查找命令
 - **/** + **搜索词**：向下搜索指定的字符串。
@@ -327,7 +327,7 @@ less -20 filename
 - **h**：显示帮助信息。
 - **v**：使用默认的文本编辑器打开当前文件（需要配置环境变量）。
 - **:** + **!命令**：执行一个shell命令（例如 `:!ls` 会列出当前目录的文件）。
-- **:** + **s** + **/old/new**：替换文件中的字符串（例如 `:s/foo/bar/g` 会将当前行中的所有“foo”替换为“bar”）。
+- **:** + **s** + **/old/new**：替换文件中字符串（例如 `:s/foo/bar/g` 会将当前行中所有“foo”替换为“bar”）。
 ### 修改别名
 修改用户的 shell 配置文件来设置别名（alias），这样就可以为常用的命令或服务创建简短的替代名称。最常见的配置文件是 .bashrc（对于 Bash shell 用户）和 .zshrc（对于 Zsh 用户）。
 - 对于 Bash 用户，使用文本编辑器打开 `.bashrc` 文件：
@@ -350,8 +350,8 @@ source ~/.zshrc
 	- 别名只在当前用户的 shell 环境中有效。如果希望对所有用户都有效，需要将别名添加到 `/etc/bashrc` 或 `/etc/profile` 文件中（取决于系统和 shell）。
 	- 如果为一个已经存在的命令创建了别名，那么这个别名会覆盖原有的命令。如果你希望在使用别名的同时还能调用原始命令，可以使用反斜杠 `\` 来取消别名，例如 `\ls`。
 ### source 命令
-- **加载配置文件**：`source` 命令可以用来加载 `.bashrc`、`.bash_profile`、`.profile`、`.bashAliases` 等配置文件，使得配置文件中的设置立即生效。
-- **执行脚本中的命令**：在脚本中，`source` 可以用来执行另一个脚本文件中的命令，而不是创建一个新的子 shell。
+- **加载配置文件**：`source` 命令可以用来加载 `.bashrc`、`.bash_profile`、`.profile`、`.bashAliases` 等配置文件，使得配置文件中设置立即生效。
+- **执行脚本中命令**：在脚本中，`source` 可以用来执行另一个脚本文件中命令，而不是创建一个新的子 shell。
 - `source` 命令只需要一个参数，即要执行的脚本或配置文件的路径。
 ### grep 命令
 `grep` 命令是 Linux 和类 Unix 系统中用于搜索文本的工具。它通过模式匹配搜索文件内容，并打印出匹配模式的行。`grep` 是 "Global Regular Expression Print" 的缩写，它支持正则表达式
@@ -371,7 +371,7 @@ source ~/.zshrc
 	- `-w`：匹配整个单词。
 	- `-s`：静默模式，不显示不存在或无法读取文件的错误消息。
 	- `-q`：静默模式，不输出任何内容，仅通过退出状态表示是否找到匹配。
-	
+
 - 返回值
 	- `0`：表示至少有一个匹配。
 	- `1`：表示没有找到匹配。
@@ -405,40 +405,40 @@ ls -l | cat > test4.txt
 这个命令会列出当前目录的内容，并通过 `more` 命令逐页显示这些内容。
  **文件操作命令2（cp、mv、rm）**
 > cp [-r] 参数1 参数2
-> 
+>
 > - r选项， 可选，用于复制文件夹使用，表示递归
 > - 参数1，被复制的文件
 > - 参数2，复制去的地方
-> 
+>
 > mv 参数1 参数2
-> 
+>
 > - 被移动的文件或文件夹
 > - 移动去的地方路径
-> 
+>
 > rm [-r -f] 参数1 参数2 ..... 参数N
-> 
+>
 > - r 用于删除文件夹
 > - f 表示force，强制删除（不会弹出提示确认信息）
 > - `普通用户删除内容不会弹出提示，只有root管理员用户删除内容会有提示`
 > - `所以一般普通用户用不到-f选项`
 > - 参数1 参数2 ..... 参数N 表示要删除的文件或文件夹路径，空格隔开
-> 
+>
 > rm命令支持通配符*，用来做模糊匹配
-> 
+>
 > - test*
 > - test
 > - _test_
 使用su root 并输入密码使当前用户进入管理员模式,exit命令退出
 ### grepi\\wc\\管道符
-> 从文件中通过关键字过滤文件行  
-> grep [-n] 关键字 文件路径(或者内容输入)  
+> 从文件中通过关键字过滤文件行
+> grep [-n] 关键字 文件路径(或者内容输入)
 
 在文件中过滤相匹配的内容
 ![Pasted image 20240813113115.png](Pasted%20image%2020240813113115.png)
 ![Pasted image 20240813113134.png](Pasted%20image%2020240813113134.png)
-> 统计文件的行数、单词数量  
-> wc [-c -m -l -w] 文件路径  
-> 
+> 统计文件的行数、单词数量
+> wc [-c -m -l -w] 文件路径
+>
 > - 选项，-c，统计bytes数量
 > - 选项，-m，统计字符数量
 > - 选项，-l，统计行数
@@ -472,8 +472,8 @@ ls -l | cat > test4.txt
 **反引号**
 反引号包围的内容会被作为命令执行
 **重定向符**
-\> 将左侧命令的结果，覆盖写入到符号右侧指定的文件中  
-\>> 将左侧命令的结果，追加写入到符号右侧指定的文件中  
+\> 将左侧命令的结果，覆盖写入到符号右侧指定的文件中
+\>> 将左侧命令的结果，追加写入到符号右侧指定的文件中
 ![Pasted image 20240813113520.png](Pasted%20image%2020240813113520.png)
 tail命令查看文件尾部内容
 ```C++
@@ -535,7 +535,7 @@ ctrl+c强制停止当前命令
 **临时超级用户权限获取：sudo**
 语法：sudo 其它命令
 在其它命令之前，带上 sudo，即可为这一条命令临时赋予 root 授权
-但是并不是所有的用户，都有权利使用 sudo，我们需要为普通用户**配置 sudo 认证**
+但并不是所有的用户，都有权利使用 sudo，我们需要为普通用户**配置 sudo 认证**
 配置方法
 ![visudo不是vi sudo](Pasted%20image%2020240813114442.png)
 ### 用户和用户组
@@ -629,13 +629,13 @@ groups username
 
 3. 查看用户配置文件
 ```bash
-# 查看/etc/passwd中的用户信息
+# 查看/etc/passwd中用户信息
 grep username /etc/passwd
 
-# 查看/etc/shadow中的密码信息（需要root权限）
+# 查看/etc/shadow中密码信息（需要root权限）
 grep username /etc/shadow
 
-# 查看/etc/group中的组信息
+# 查看/etc/group中组信息
 grep username /etc/group
 ```
 
@@ -796,7 +796,7 @@ Linux 系统很多软件（内置或第三方）均支持使用 systemctl 命令
 #### 软连接
 使用 `ln -s` 命令
 在系统中创建软链接，可以将文件、文件夹链接到其它位置。
-类似 windows 系统中的《快捷方式》
+类似 windows 系统中《快捷方式》
 语法：`ln -s` 参数 1 参数 2
 - -s 选项，创建软连接
 - 参数 1：被链接的文件或文件夹
@@ -838,7 +838,7 @@ lrwxrwxrwx. 1 root root 8 9月  16 20:49 test.txt -> test.txt
 [root@localhost learnlinux]# date +"%Y-%m-%d %H:%M:%S"
 2024-09-16 21:27:16
 ```
-![Pasted image 20240917122753.png](Pasted%20image%2020240917122753.png) 
+![Pasted image 20240917122753.png](Pasted%20image%2020240917122753.png)
 -d 参数用于计算日期
 ![Pasted image 20240917152716.png](Pasted%20image%2020240917152716.png)
 ```bash
@@ -930,7 +930,7 @@ PING ba 1 du. com (39.156.66.20) 56（84) bytes of data
 ```
 结果表示联通，延迟 8 ms 左右
 ###### wget 命令
- `wget [-b ] url` 表示将将链接中的文件下载到当前工作目录，-b 表示后台下载，后台下载的下载进度会保存在 wgetlog 文件中，使用 `tail -f wget log` 持续跟踪下载进度
+ `wget [-b ] url` 表示将将链接中文件下载到当前工作目录，-b 表示后台下载，后台下载的下载进度会保存在 wgetlog 文件中，使用 `tail -f wget log` 持续跟踪下载进度
 ###### curl 命令
 curl 可以发送 http 网络请求，可用于：下载文件、获取信息等
 语法：curl[-o]url
@@ -977,15 +977,15 @@ Nmap done: 1 IP address (1 host up) scanned in 1.67 seconds
 `netstat -anp | grep 端口号` 可以查看端口被哪个程序占用
 ```bash
 [root@sickwag ~]# netstat -anp | grep 111
-tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      1/systemd           
-tcp6       0      0 :::111                  :::*                    LISTEN      1/systemd           
+tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      1/systemd
+tcp6       0      0 :::111                  :::*                    LISTEN      1/systemd
 .............................................。
 ```
 LISTEN 表示端口正在监听，netstat 命令可以搜索层序名或者端口号，所以可以用来判断端口是否空闲
 ### 进程管理
-为管理运行的程序，每一个程序在运行的时候，便被操作系统注册为系统中的一个进程分配一个独有的：进程 ID（进程号）
+为管理运行的程序，每一个程序在运行的时候，便被操作系统注册为系统中一个进程分配一个独有的：进程 ID（进程号）
 #### ps 命令
-可以通过 ps 命令查看 Linux 系统中的进程信息
+可以通过 ps 命令查看 Linux 系统中进程信息
 语法：`ps[-e-f]`
 选项：`-e`，显示出全部的进程
 选项：`-f`，以完全格式化的形式展示信息（展示全部信息）
@@ -993,7 +993,7 @@ LISTEN 表示端口正在监听，netstat 命令可以搜索层序名或者端�
 ```bash
 [root@sickwag ~]# ps -ef
 UID          PID    PPID  C STIME TTY          TIME CMD
-root           1       0  0 15:39 ?        00:00:02 /usr/lib/systemd/systemd 
+root           1       0  0 15:39 ?        00:00:02 /usr/lib/systemd/systemd
 root           2       0  0 15:39 ?        00:00:00 [kthreadd]
 root           3       2  0 15:39 ?        00:00:00 [rcu_gp]
 root           4       2  0 15:39 ?        00:00:00 [rcu_par_gp]
@@ -1009,7 +1009,7 @@ root      209416    2291  0 16:58 pts/0    00:00:00 grep --color=auto tail
 在 Windows 系统中，可以通过任务管理器选择进程后，点击结束进程从而关闭它。
 同样，在 Linux 中，可以通过 kill 命令关闭进程。
 语法：`kill [-9] 进程 ID`
-选项：-9，表示强制关闭进程。不使用此选项会向进程发送信号要求其关闭，但是否关闭看进程自身的处理机制
+选项：-9，表示强制关闭进程。不使用此选项会向进程发送信号要求其关闭，但否关闭看进程自身的处理机制
 在另外窗口中打开 tail 命令但不输入指令（未退出进程）
 ```bash
 [root@sickwag ~]# ps -ef | grep tail
@@ -1225,7 +1225,7 @@ lrwxrwxrwx. 1 root root   12 9月  17 11:51 yum.conf -> etc/yum.conf
 ## linux 部署软件
 文档参考： [Linux系统软件安装](Linux系统软件安装.md)
 注意所有 IP 地址访问软件页面 IP 地址是虚拟机的 IP 地址，可以在虚拟机中使用 `127.0.0.1:端口` 访问，但在外部 Windows 中不能用本机回环地址，要用虚拟机的 192 地址
-### MySQL 
+### MySQL
 使用 8. x 版本安装
 按部就班即可
 - **初始密码获取**：`grep 'temporary password' /var/log/mysqld.log` 从文件中过滤 password 字段
@@ -1235,7 +1235,7 @@ lrwxrwxrwx. 1 root root   12 9月  17 11:51 yum.conf -> etc/yum.conf
 ```
 - 第一次设置远程连接或 MySQL 启动密码时，需要密码有大小写字母，特殊符号和数字，否则不能调整密码强度设置简单的密码
 
-### Tomcat 
+### Tomcat
 - 下载好的文件放在 `/home/sickwag/download_files` 文件夹中
 - 通过软连接链接文件夹目的是使保留版本号可查，更新之后只需要更改软连接指向即可使用新版本
 - java_home 在配置环境变量中是为了防止使用新 Java 版本导致环境变量错乱。使用 java_home 中转，有新的 Java 版本只需要修改 java_home 即可
@@ -1250,18 +1250,18 @@ Tomcat 一般使用普通用户创建，防止网站被黑而拿到本机 linux 
 ```shell
 [root@sickwag server]# chown -R tomcat:tomcat /export/server/*tomcat*
 [root@sickwag server]# su tomcat
-[tomcat@sickwag server]$ /export/server/tomcat/bin/startup.sh 
+[tomcat@sickwag server]$ /export/server/tomcat/bin/startup.sh
 Using CATALINA_BASE:   /export/server/tomcat
 Using CATALINA_HOME:   /export/server/tomcat
 Using CATALINA_TMPDIR: /export/server/tomcat/temp
 Using JRE_HOME:        /export/server/jdk
 Using CLASSPATH:       /export/server/tomcat/bin/bootstrap.jar:/export/server/tomcat/bin/tomcat-juli.jar
-Using CATALINA_OPTS:   
+Using CATALINA_OPTS:
 Tomcat started.
 [tomcat@sickwag server]$ netstat -anp | grep 8080
 (Not all processes could be identified, non-owned process info
  will not be shown, you would have to be root to see it all.)
-tcp6       0      0 :::8080                 :::*                    LISTEN      1372012/java  
+tcp6       0      0 :::8080                 :::*                    LISTEN      1372012/java
 ```
 - 为了在虚拟机外部链接 8080 端口，需要关闭 linux 内部的防火墙，linux 内部可用 `curl 虚拟机IP地址:8080` 访问到网页 html 源码但外部 Windows 浏览器被禁止 ^1a483c
 
@@ -1284,7 +1284,7 @@ firewall-cmd --reload								# 重新加载防火墙规则
 配置用户密码
 ```bash
 # 设置控制台用户名(admin)和密码(sickwag)
-[root@sickwag server]# rabbitmqctl add_user admin 'sickwag' 
+[root@sickwag server]# rabbitmqctl add_user admin 'sickwag'
 Adding user "admin" ...
 Done. Don't forget to grant the user permissions to some virtual hosts! See 'rabbitmqctl help set_permissions' to learn more.
 # 设置账号权限
@@ -1298,7 +1298,7 @@ Setting tags for user "admin" to [administrator] ...
 ### redis
 同上
 ### elasticsearch
-按照文档走，但是还未解决无法连接上[主机 IP 地址:9200](连接主机控制台) 问题
+按照文档走，但还未解决无法连接上[主机 IP 地址:9200](连接主机控制台) 问题
 ### 集群化环境前置准备
 创建多台虚拟机之后 [Linux long text explanation \> centos 修改 linuxIP 地址](Linux%20long%20text%20explanation.md#centos%20修改%20linuxIP%20地址)
 在修改 IP 地址时，由于没有实现设置静态 IP，所以 ifcfg 文件中内容与视频中不一样，并且 centos 8 以上版本中**重启网络服务旧命令已被弃用**
@@ -1339,7 +1339,7 @@ scp -r jdk node2:$PWD      # 将本机当前路径的jdk文件夹，复制到nod
 - myid 的目的是标识主机是哪一台，1 表示 node 1 主机
 - zookeeper 启动命令是 `/export/server/zookeeper/bin/zkServer.sh start`
 
-### kafka 
+### kafka
 - 启动 kafka 命令中 `/export/server/kafka/bin/kafka-server-start.sh /export/server/kafka/config/server.properties` 前一个是启动命令，后一个是配置文件路径，表示根据配置文件的方式启动
 - 前台启动 kafka 在 finnalshell 关闭或 Ctrl+C 就会立即退出，一般不执行，需要后台启动时使用方式二静默运行，同时进行其他操作
 - nohup 命令后接受的所有参数（程序执行路径）都表示会在后台运行，用 `&` 符号表示结束
@@ -1515,4 +1515,4 @@ ls -la my_folder/
 - **删除**：`rm`（-r 删除目录，-f 强制）
 - **权限**：`chmod`（符号/数字），`chown`（属主/属组）
 
-通过上述命令，可完成 Linux 系统中的用户管理、文件操作和权限控制任务。
+通过上述命令，可完成 Linux 系统中用户管理、文件操作和权限控制任务。

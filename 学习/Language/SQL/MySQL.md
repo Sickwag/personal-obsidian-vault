@@ -3,12 +3,12 @@
 笔记链接 [MySQL自学笔记(零基础到考试6天)-CSDN博客](https://blog.csdn.net/m0_46153949/article/details/107116168)
 脚本文件和源代码 https://pan.baidu.com/s/11389Eo6P6krpcpsAdbfISw?pwd=1234
 测试数据库[数据库学习：MYSQL的测试数据库myemployees girls job_grades_myemployees.sql-CSDN博客](https://blog.csdn.net/GongmissYan/article/details/102937816)
-笔记链接 2 https://blog.csdn.net/weixin_45260385/article/details/113881457 
+笔记链接 2 https://blog.csdn.net/weixin_45260385/article/details/113881457
 		  https://blog.csdn.net/weixin_45260385/article/details/114047703
 建议 sql 语句大全 [MySQL高级篇（高阳）建表sql语句大全-CSDN博客](https://blog.csdn.net/qq_42826747/article/details/106674270)
 之前的 python 基础
 [Python Basics \> SQL](Python%20Basics.md#SQL)
-在安装目录中的 `my. ini` 文件是配置文件
+在安装目录中 `my. ini` 文件是配置文件
 ## 学校作业总结
 ### 学习通实验报告
 - 插入语句使用 `insert into table_name (field_name1,field_name2,......) values(value1,value2,.............)` 注意是 values 不是 value，单条记录之间通过 `()` 包裹内容，通过 `,` 隔开括号
@@ -21,11 +21,11 @@ SELECT xs.学号,
        xs.出生日期
 FROM   xs
 WHERE  xs.出生日期 >= '1984-9-9'
-       AND xs.出生日期 <= '1985-9-9'; 
+       AND xs.出生日期 <= '1985-9-9';
 ```
 - `datetime` 类型的书写方式是使用 `-` 分割时间单位
 - 设置[[#级联操作|级联操作]] 和[[#分类：六大约束|外键注意事项]]
-- 为什么使用 `group by` 语句时，`select` 中的查询内容需要和 `group by` 中一样
+- 为什么使用 `group by` 语句时，`select` 中查询内容需要和 `group by` 中一样
 - 使用多种方法查询多表连接，多表条件判断题
 
 > 查询选修的所有课程成绩都大于等于 60 分的学生的学号、姓名。
@@ -49,7 +49,7 @@ WHERE NOT EXISTS (
     WHERE xk.学号 = xs.学号 AND xk.成绩 <= 60
 );
 ```
-查询满足 `xk.学号 = xs.学号 AND xk.成绩 <= 60` 的结果，如果有返回值，则通过 `select 1` 返回一个**布尔值 `true` 表示有结果**，这样做比使用 `select *` 要快，因为 `select 1` 只返回 `bool`，而 `select *` 需要返回内容
+查询满足 `xk.学号 = xs.学号 AND xk.成绩 <= 60` 的结果，如果有返回值，则通过 `select 1` 返回一个**布尔值 `true` 表示有结果**，这样做比使用 `select *` 要快，因 `select 1` 只返回 `bool`，而 `select *` 需要返回内容
 **方法三**：使用 `ALL` 关键字
 ```sql
 SELECT xs.学号, xs.姓名
@@ -73,7 +73,7 @@ OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY;
 ```
 - 查询获得“数据库原理”最高成绩的学生的学号和姓名。（**有坑**）
 	- 第一种只能显示一个最高分，如果出现多人同时为最高分，method 1 会出现错误，method 2 通过子查询查找最高分，再通过源数据中筛选出符合最高分和课程名的人。
-	- *较为复杂的问题*首先考虑子查询做法，比较复杂但是稳定
+	- *较为复杂的问题*首先考虑子查询做法，比较复杂但稳定
 ```sql
 -- method 1
 SELECT TOP 1 xs.姓名,
@@ -84,7 +84,7 @@ FROM   xs
        INNER JOIN kc
                ON kc.课程编号 = xk.课程号
 WHERE  kc.课程名称 = '数据库原理'
-ORDER  BY xk.成绩 DESC; 
+ORDER  BY xk.成绩 DESC;
 -- method 2
 SELECT xs.姓名,
        xs.学号
@@ -97,7 +97,7 @@ WHERE  kc.课程名称 = '数据库原理'
        AND xk.成绩 = (SELECT Max(xk.成绩) AS max_grade
                     FROM   xk
                     INNER JOIN kc
-                    ON kc.课程编号 = xk.课程号); 
+                    ON kc.课程编号 = xk.课程号);
 ```
 ### 学习通章节测验
 - 删除表中字段之前要删除相应字段的约束
@@ -112,7 +112,7 @@ SELECT kc.课程名称,
 FROM   kc
        INNER JOIN xk
 		   ON kc.课程编号 = xk.课程号
-GROUP  BY kc.课程名称; 
+GROUP  BY kc.课程名称;
 ```
 - 查看执行情况
 ![[Pasted image 20241109172412.png|400]]
@@ -126,8 +126,8 @@ GROUP  BY kc.课程名称;
 1. 将数据放到表中，表再放到库中
 2. 一个数据库中可以有多个表，每个表都有一个的名字，用来标识自己。表名具有唯一性。
 3. **表**具有一些特性，这些特性定义了数据在表中如何存储，类似 java 中 “**类**”的设计。
-4. 表由列组成，我们也称为字段。所有表都是由一个或多个列组成的，**每一列**类似 java 中的”**属性**”
-5. 表中的数据是按行存储的，**每一行**类似于 java 中的“**对象**”。
+4. 表由列组成，我们也称为字段。所有表都是由一个或多个列组成的，**每一列**类似 java 中”**属性**”
+5. 表中数据是按行存储的，**每一行**类似于 java 中“**对象**”。
 6. 没有内容的单元格会被标记为 NULL [+号作用](#+号作用)
 7. 变量名、命令代码大小写不敏感[学习/SQL/MySQL \> 调整步长](#调整步长)
 
@@ -153,7 +153,7 @@ Show databases;
 Show tables;
 use <database_name>          使用库
 Show tables from databases  使用 use 命令后，在其他库 show 不会跳转到 show 的库
-creat table <table_name>      
+creat table <table_name>
 Select database;                      查看当前数据库位置，注意是 database 不加 s
 ```sql
 create table stuinfo (
@@ -221,7 +221,7 @@ select version();
 #### 书写和注释
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240816223400.png)
 #### 限定名书写
-sql 中的层级模式是 `数据库名.模式名.表名`，如果没有指定模式可以跳过，如 `db_name..table_name`
+sql 中层级模式是 `数据库名.模式名.表名`，如果没有指定模式可以跳过，如 `db_name..table_name`
 
 ---
 ## 语法命令
@@ -238,9 +238,9 @@ sql 中的层级模式是 `数据库名.模式名.表名`，如果没有指定�
 - ^4132 db
 - 操作符一般用于查询中，起到一种筛选的作用，在[[#约束填写|设置约束]]时并不适用，这种情况下一般用 `IN/NOT IN`
 ```sql
--- wrong 
+-- wrong
 create table test(
-	grade char(1)  
+	grade char(1)
 	constraint chk_test_grade check(grade = any ('A','B','C'))
 );
 -- right
@@ -251,7 +251,7 @@ CREATE TABLE test(
 ```
 ##### 基础查询筛选选
 ![Untitled 159 6.png](Files%20&%20LongText/Attachments/Untitled%20159%206.png)
-- 查询列表可以是：表中的字段、常量值、表达式、函数
+- 查询列表可以是：表中字段、常量值、表达式、函数
 - 查询的结果是一个虚拟的表格（意为使用 select 语句表示选中一个表格，对他的 group by，order by 的命令并不会影响实际物理表的内容，仅做显示，select 表本质是只读和临时的）
 ```sql
 SELECT  last_name from employees e ; -- check single field
@@ -263,13 +263,13 @@ SELECT * from employees e ;  -- check out all fields
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240818122230.png)
 ##### 起别名
 提高代码、结果可读性：其中 employee; 的别名为 e
-![375](Files%20&%20LongText/Attachments/Pasted%20image%2020240818122833.png) 
+![375](Files%20&%20LongText/Attachments/Pasted%20image%2020240818122833.png)
 其中 as 可以省略
 ##### 将查询结果（返回值）取别名
 ![375](Files%20&%20LongText/Attachments/Pasted%20image%2020240818123221.png)
 取别名之后的需要使用有别名的对象时，只能用别名，原始名称会报错
 ##### 去重操作
-将返回结果中的所有重复值唯一显示，注意作用范围
+将返回结果中所有重复值唯一显示，注意作用范围
 ```sql
 -- 显示员工中所有的部门编号
 SELECT department_id from employees e ;
@@ -303,20 +303,20 @@ employees e ;
 ![400](Files%20&%20LongText/Attachments/Pasted%20image%2020240818131726.png)
 ##### 模糊查找和精确查找
 ###### LIKE
- `LIKE` 通常用于模糊匹配，它允许你在查询中使用[通配符](../Scattered%20knowlegde/通配符.md)来匹配列中的特定模式。
+ `LIKE` 通常用于模糊匹配，它允许你在查询中使用[通配符](../Scattered%20knowlegde/通配符.md)来匹配列中特定模式。
 - **通配符**
   - `%`：代表任意数量（包括零个）的字符。
   - `_`：代表任意单个字符。
 - **适用数据类型**: 主要用于字符串类型的字段，也可以用于其他数据类型
 
 ###### ESCAPE
-一般配合 `LIKE` 一起使用，表示 like 中的某些字段是转义字符
+一般配合 `LIKE` 一起使用，表示 like 中某些字段是转义字符
 如要匹配名称中有 `_` 的结果，不能使用 `select * from table where name like '%\_%'`，这样 `\_` 会被识别为**一个转义字符加任意单个字符**，需要显示标明 `\` 是转义字符
 ```sql
 select * from table where name like '%\_%' escape '\';
 ```
 ###### IN
-`IN` 用于指定一个值列表，返回字段值在这个列表中的记录。
+`IN` 用于指定一个值列表，返回字段值在这个列表中记录。
 - **适用数据类型**: 可以用于任何数据类型，包括数字、字符串和日期等。
 - **逻辑**: `IN` 通常用于简化多个 `OR` 条件的写法，提高 SQL 语句的可读性。
 ###### 功能差异
@@ -324,19 +324,19 @@ select * from table where name like '%\_%' escape '\';
    - `IN` 用于精确匹配，适用于需要匹配列表中任一确切值的场景。
    - `LIKE` 主要用于字符串类型，尽管技术上可以用于其他类型，但不是其主要用途。
    - `IN` 可以用于任何数据类型，使用范围更广。
-   - 在某些情况下，尤其是当 `IN` 列表中的值非常多时，`IN` 可能比 `LIKE` 更高效。
-   - `LIKE` 使用通配符时，尤其是 `%` 在模式的开头，可能会导致查询效率下降，因为数据库可能无法有效利用索引。
+   - 在某些情况下，尤其是当 `IN` 列表中值非常多时，`IN` 可能比 `LIKE` 更高效。
+   - `LIKE` 使用通配符时，尤其是 `%` 在模式的开头，可能会导致查询效率下降，因数据库可能无法有效利用索引。
 #### 条件查询
 ##### 普通查询
 `where` 表示条件筛选，对象时选中列表的每一行的数据，符合条件显示这一行，执行顺序和书写顺序不一样
 ![350](Files%20&%20LongText/Attachments/Pasted%20image%2020240818132014.png)
 ```sql
-select 
+select
 	要查询的字段|表达式|常量值|函数
-from 
+from
 	表
-where 
-	条件 
+where
+	条件
 ```
 分类：
 ##### 一、条件表达式
@@ -408,10 +408,10 @@ WHERE
 	-- **顺序颠倒等于闭区间反选**，
 ```
 **in 关键字**
-含义：判断某字段的值是否属于 in 列表中的某一项
+含义：判断某字段的值是否属于 in 列表中某一项
 特点：
 In 列表的值类型必须一致或兼容
-In 列表中不支持通配符 
+In 列表中不支持通配符
 ```sql
 SELECT
 	last_name,
@@ -436,7 +436,7 @@ WHERE
 如果两者都不为 `NULL` 并且相等，则返回 `TRUE`。
 简而言之，`<=>` 运算符在处理 `NULL` 值时提供了一种类似于 `=` 运算符的行为，但增加了对 `NULL` 值的特殊处理。
 ![450](Files%20&%20LongText/Attachments/Pasted%20image%2020240818144854.png)
-Salary 等于 12000 的被筛选出，不等于 12000 和 NULL 值被忽略，因为返回 false 的行在 where 栏中不显示
+Salary 等于 12000 的被筛选出，不等于 12000 和 NULL 值被忽略，因返回 false 的行在 where 栏中不显示
 ```sql
 -- 查询员工号为176的员工姓名和部门号和年薪
 SELECT
@@ -457,7 +457,7 @@ select
 	要查询的东西
 from
 	表
-where 
+where
 	条件
 order by 排序的字段|表达式|函数|别名 【asc|desc】 -- 不填排序方法默认asc升序
 -- 询员工信息，要求工资从高到低排序
@@ -627,13 +627,13 @@ SELECT ROUND (1.567,2);
 **mod 取余**
 ```sql
 /*
-mod (a, b) ： --本质上进行 a-a/b*b，注意编程语言中的除法会丢弃小数部分
+mod (a, b) ： --本质上进行 a-a/b*b，注意编程语言中除法会丢弃小数部分
 mod (-10,-3):-10- (-10)/(-3)*（-3）=-1
 */
 SELECT MOD (10,-3);
 SELECT 10%3;
 ```
-**rand** 随机 0~1 之间的数，可以取到 0 但是达不到 1，可以使用 round 变为 sigm 函数取到 0 或者 1
+**rand** 随机 0~1 之间的数，可以取到 0 但达不到 1，可以使用 round 变为 sigm 函数取到 0 或者 1
 ##### 日期类型
 所有返回时间的函数返回格式遵循 `YYYY-MM-DD HH:MM:SS`，now 或者其他读取日期的函数从中解析出所需的时间字段
 **now** 返回当前系统日期+时间
@@ -698,7 +698,7 @@ PS：对于旧版本的 5.7 MySQL 还有一个 `PASSWORD` 函数也可以加密�
 ##### 流程控制函数
 语法中所有的执行体（即判断成功后执行的动作，如 when 判断之后的 then 后就是动作）如果是一个值表达式（返回一个值显示）那么条件句结尾不需要分号，如果是一个执行语句需要在每个操作后结尾使用分号
 ###### If/case when（Switch case）判断语句
-If 和 excel 中的 if 语句以一样的语法
+If 和 excel 中 if 语句以一样的语法
 ```sql
 SELECT
 	last_name ,
@@ -711,7 +711,7 @@ FROM
 -- 注意sql中字符串最好使用''而不用双引号，单引号也不是只能括起字符常量内容
 ```
 ###### Case 多条件判断
-类似于 C++中的 switch case
+类似于 C++中 switch case
 两种用法一种是范围判断，一种精确值判断
 **条件判断**
 ```sql
@@ -733,7 +733,7 @@ FROM
 SELECT
 	last_name,
 	salary,
-	CASE 
+	CASE
 		CASE
 			WHEN salary>20000 THEN 'A'
 			WHEN salary>15000 THEN 'B'
@@ -753,7 +753,7 @@ SELECT
 	    WHEN 'B' THEN 'briliant'
 	    WHEN 'C' THEN 'nice'
 	    WHEN 'D' THEN 'good'
-	Case		--条件判断，但是精确条件
+	Case		--条件判断，但精确条件
 		WHEN level = 'A' THEN 'excellent'
 	    WHEN level = 'B' THEN 'briliant'
 	    WHEN level = 'C' THEN 'nice'
@@ -768,7 +768,7 @@ From 表
 【where 筛选条件】
 Group by 分组的字段
 【order by 排序的字段】;
-##### Group by 和 select 中的字段
+##### Group by 和 select 中字段
 选择选修了 2 门或以上课程的学生姓名和学号
 ```sql
 SELECT xs.姓名,
@@ -791,21 +791,21 @@ Avg 平均值
 Count 计数
 以上五个的简单使用都是放入一个参数计算相应的值
 **特点**
-1. 以上五个分组函数都忽略 null 值（）不参与运算，除了 count (\*) ，**参与运算会使所有内容变为 0**——— [原因](#+号作用)，count 类似于 excel 中统计不为空单元格个数，**不统计 NULL** 
+1. 以上五个分组函数都忽略 null 值（）不参与运算，除了 count (\*) ，**参与运算会使所有内容变为 0**——— [原因](#+号作用)，count 类似于 excel 中统计不为空单元格个数，**不统计 NULL**
 2. Sum 和 avg 一般用于处理数值型，在其中放入字符串，时间类型使函数失去意义，**不报错但不代表支持这样的写法**，max、min、count 可处理任何数据类型（能排序说明有比较性）
-3.  Avg 函数可能会产生与现实逻辑的偏差，因为忽略 null 值，100 人中有 50 人为 null，使用 avg 计算得到 50 人的平均值而不是 100，需要计算 100 人的则需要将 null 替换为 0 ，用 count 统计非 NULL 字段或 IFNULL 逻辑语句
+3.  Avg 函数可能会产生与现实逻辑的偏差，因忽略 null 值，100 人中有 50 人为 null，使用 avg 计算得到 50 人的平均值而不是 100，需要计算 100 人的则需要将 null 替换为 0 ，用 count 统计非 NULL 字段或 IFNULL 逻辑语句
 4. 都可以搭配 distinct 使用，用于统计去重后的结果
 5. Count 的参数可以支持：字段、\*、常量值，一般放 1，建议使用 count (\*) 统计行数 `SELECT count(*) FROM employees;` 每行中只要不是全部单元格为 NULL 就统计一次，填任何非 NULL 字段都表示统计所有行。
 	![](Files%20&%20LongText/Attachments/Pasted%20image%2020240819113858.png)
 **关于 count 函数**
 *和分组函数一同出现的字段在 GROUP BY 后也要求要出现*
  COUNT (\*)
-- `COUNT(*)` 计算的是结果集中的行数，不管这些行中包含的是什么值（包括 NULL 值）。它实际上计算的是结果集中的行数，而不是列中的非空值的数量。
+- `COUNT(*)` 计算的是结果集中行数，不管这些行中包含的是什么值（包括 NULL 值）。它实际上计算的是结果集中行数，而不是列中非空值的数量。
 - `COUNT(*)` 会计算所有行，包括那些包含 NULL 值的行，以及由 `JOIN` 操作产生的重复行。
-- `COUNT(*)` 是 SQL 标准中推荐的计数方式，因为它不依赖于任何特定的列，且性能通常优化得较好。
+- `COUNT(*)` 是 SQL 标准中推荐的计数方式，因它不依赖于任何特定的列，且性能通常优化得较好。
 COUNT (1)
 - `COUNT(1)` 忽略 NULL 值。
-- `COUNT(1)` 也是计算结果集中的行数，包括包含 NULL 值的行和 `JOIN` 操作产生的重复行。
+- `COUNT(1)` 也是计算结果集中行数，包括包含 NULL 值的行和 `JOIN` 操作产生的重复行。
 
 使用分组函数注意字段长度匹配问题，`select avg(salary),employee_id from employee;` 中 avg 得到一行，employee 为所有行，长度不匹配但不报错，数据失去了意义
 本质上是对 group by 中每一个对象进行一次 SELECT 中**操作数据的**语句
@@ -831,13 +831,13 @@ FROM
 WHERE
 	commission_pct IS NOT NULL
 GROUP BY
-	manager_id ; 
+	manager_id ;
 ```
 ##### 二次分组
 一旦出现 where 筛选之后 GROUP 分组，分组之后还需要筛选，马上想到使用 having
 - 使用 having 关键字，oracleSQL 和 SQLsever 可能不支持在 having 中使用别名
 - Having 作用是将 having 上面得到的结果表再进行二次筛选
-- 因为 **`WHERE` 子句不能直接使用聚合函数（如 `MIN`、`MAX`、`SUM` 等）**。聚合函数只能在 `HAVING` 子句中使用
+- 因 **`WHERE` 子句不能直接使用聚合函数（如 `MIN`、`MAX`、`SUM` 等）**。聚合函数只能在 `HAVING` 子句中使用
 - **`WHERE`**：
     - 用于过滤 **单行数据**。
     - 在分组（`GROUP BY`）之前执行。
@@ -856,11 +856,11 @@ FROM
 WHERE
 	commission_pct IS NOT NULL
 GROUP BY
-	job_id 
+	job_id
 HAVING
-	m>12000 ; 
+	m>12000 ;
 -- #案例3：领导编号>102的每个领导手下的最低工资大于5000的领导编号和最低工资
-SELECT 
+SELECT
 	manager_id,
 	MIN(salary)
 FROM
@@ -877,17 +877,17 @@ FROM
 	employees e
 GROUP BY
 	len
-HAVING 
+HAVING
 	len > 5
-ORDER BY 
+ORDER BY
 	num DESC ;
 ```
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240819221448.png)
 ##### 多字段分组
 多个分组条件，即类似**每个部门中每个工种**大分类小分类分组查询
-类似于 excel 中的分类汇总
+类似于 excel 中分类汇总
 ![300](Files%20&%20LongText/Attachments/Pasted%20image%2020240819145532.png)
-组要注意，分类汇总中的大分类和小分类通过 SELECT 字段中排序决定
+组要注意，分类汇总中大分类和小分类通过 SELECT 字段中排序决定
 ```sql
 SELECT
 	department_id,
@@ -929,8 +929,8 @@ WHERE
 ![其中全外连接MySQL不支持](Files%20&%20LongText/Attachments/Pasted%20image%2020240819155049.png) ^b 30 bab
 ###### 等值连接
 多表等值连接条件需要多个表中有相互连接的属性（列）
-N 个表连接，需要 n-1 个连接条件 
-连接条件是多个表中的共有部分，作为“跳板”
+N 个表连接，需要 n-1 个连接条件
+连接条件是多个表中共有部分，作为“跳板”
 ```sql
 -- 查询员工名对应的部门名
 SELECT
@@ -940,7 +940,7 @@ FROM
 	employees e,
 	departments d
 WHERE
-	e.department_id = d.department_id ;  
+	e.department_id = d.department_id ;
 -- 查询有奖金的员工名，部门名
 SELECT
 	e.last_name,
@@ -950,7 +950,7 @@ FROM
 	departments d
 WHERE
 	e.commission_pct IS NOT NULL
-	AND e.department_id = d.department_id ; 
+	AND e.department_id = d.department_id ;
 -- 查询每个城市的部门个数
 SELECT
 	city,
@@ -959,9 +959,9 @@ FROM
 	departments d ,
 	locations l
 WHERE -- 多表连接一定要使用链接条件，没有连接条件会出现笛卡尔乘积错误
-	d.location_id = l.location_id 
+	d.location_id = l.location_id
 GROUP BY
-	l.city ; 
+	l.city ;
 -- 查询有奖金的每个部门的部门名和部门的领导编号和该部门的最低工资
 SELECT
 	department_name,
@@ -973,9 +973,9 @@ FROM
 	employees e
 WHERE
 	e.commission_pct IS NOT NULL
-	AND d.department_id = e.department_id 
+	AND d.department_id = e.department_id
 	-- 只有employees表员工存在的部门在department表中登记了才会显示，否则虚空上班
-GROUP BY 
+GROUP BY
 	d.department_name ,d.manager_id ;-- 每个部门
 ```
 ###### 非等值连接
@@ -988,7 +988,7 @@ SELECT  -- 链接工资和工资等级评测两张表
 FROM
 	employees e ,
 	job_grades jg
-WHERE 
+WHERE
 	e.salary BETWEEN jg.lowest_sal AND jg.highest_sal-- 每一个e对象的salary属性在between参数筛选
 	AND jg.grade_level BETWEEN 'A' AND 'C'-- 每一个jg对象的level属性根据级别字母筛选
 ORDER BY jg.grade_level ;-- 通过级别字母排序
@@ -1001,7 +1001,7 @@ SELECT
 	e.last_name,
 	e.employee_id,
 	m.last_name ,
-	m.manager_id 
+	m.manager_id
 FROM
 	employees e ,
 	employees m
@@ -1015,7 +1015,7 @@ WHERE
 ```sql
 select 查询列表
 from 表 1 别名 【连接类型】-- 不写连接类型默认inner
-join 表 2 别名 
+join 表 2 别名
 on 连接条件 -- 之前的筛选和连接条件全写在where中
 【where 筛选条件】
 【group by 分组】
@@ -1027,7 +1027,7 @@ on 连接条件 -- 之前的筛选和连接条件全写在where中
 	左外(★):left 【outer】
 	右外(★)：right 【outer】
 	全外：full【outer】
-交叉连接：cross 
+交叉连接：cross
 ```
 ###### 等值连接
 ```sql
@@ -1070,11 +1070,11 @@ SELECT
 	j.job_title
 FROM
 	departments d
-INNER JOIN employees e ON -- 将超出两个的表全放在join后不报错但是**不推荐**
+INNER JOIN employees e ON -- 将超出两个的表全放在join后不报错但**不推荐**
 	d.department_id = e.department_id -- 代码一行行执行，所以执行到这里编译器只知道e和d，写e.job_id = j.job_id编译器不知道j是什么，不能将没有引入的表作为连接条件
-INNER JOIN jobs j ON 
+INNER JOIN jobs j ON
 	e.job_id = j.job_id -- 多表连接每连接一次都要写一次join表明连接方式，代码更清晰
-ORDER BY 
+ORDER BY
 	d.department_name DESC ;
 ```
 ###### 非等值连接
@@ -1110,9 +1110,9 @@ WHERE
 ##### 外连接
 外连接连接多个表，它允许从表中返回所有行，即使在另一个表中没有找到匹配的行，连接的表有主从之分，用于处理不完全匹配的情况。[内连接](#SQL%2092%20内连接)仅仅只能处理两表中有相同字段（属性），且只能返回字段中属性值一样的字段对象
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240820151116.png)**用于查询一个表中有，另一个表中没有的记录**
-1. 外连接的查询结果为主表中的所有记录
+1. 外连接的查询结果为主表中所有记录
    如果从表中有和它匹配的，则显示匹配的值
-   如果从表中没有和它匹配的，则显示 nul 
+   如果从表中没有和它匹配的，则显示 nul
    **外连接查询结果=内连接结果+主表中有而从表没有的记录**，查询的记录主要来自主表
 2. 左外连接，leftjoin 左边的是主表
    右外连接，rightjoin 右边的是主表
@@ -1125,7 +1125,7 @@ WHERE
 - 主表中有，副表中匹配不到的，副表显示为 NULL
 - 主表中没有，副表中有的，不会被主表匹配，忽略不显示
 - SELECT 字段中表中字段顺序决定显示顺序（从左到右）
-- 最终查询的信息来自哪个表，那个表就是主表，因为主表中内容（不加 where）都会显示，附表中没被匹配都会忽略
+- 最终查询的信息来自哪个表，那个表就是主表，因主表中内容（不加 where）都会显示，附表中没被匹配都会忽略
 - 不支持表示使用后没有效果，不会报错，同[列级约束](#^c8a865)
 
 ```sql
@@ -1140,7 +1140,7 @@ LEFT OUTER JOIN boys bo ON
 WHERE
 	bo.id IS NOT NULL;   -- boyid不为NULL表示只显示被主表匹配到的
 ```
- Where 函数最好写值一定不为 NULL 的属性，否则语句逻辑没错但是结果错（数据录入不规范） 
+ Where 函数最好写值一定不为 NULL 的属性，否则语句逻辑没错但结果错（数据录入不规范）
 ![使用user\_cp做匹配会多出一个anglebaby](Files%20&%20LongText/Attachments/Pasted%20image%2020240820165221.png)
 ```sql
 -- 查询哪个部门没有员工
@@ -1152,7 +1152,7 @@ LEFT OUTER JOIN employees e ON
 	e.department_id = d.department_id
 /*员工信息中填部门id在部门信息总表中能够查到的，
 department_name会被显示出来*/
-WHERE e.employee_id IS NULL; 
+WHERE e.employee_id IS NULL;
 /*这种显示的方式是两表拼接方式，
  * 拼接只显示SELECT字段中要求显示的部分
 employees表是副表，拼接后主表department主表中查不到empolyee的信息，
@@ -1173,7 +1173,7 @@ employees表是副表，拼接后主表department主表中查不到empolyee的�
 ###### 所有连接的本质
 -  from join 拼接主从两张表
 - On 调整连接条件，决定了哪一项会显示 NULL
-- 拼接之后的表通过 where 筛选出某个字段中的哪些符合条件的值会（行）被显示
+- 拼接之后的表通过 where 筛选出某个字段中哪些符合条件的值会（行）被显示
 - SELECT 确定哪些字段（列）**从拼接表中截取出来**显示
 - 如果是外连接，拼接之后的表保留主表所有内容，副表中没有被主表中匹配填充 NULL
 ###### 工作原理
@@ -1207,7 +1207,7 @@ employees表是副表，拼接后主表department主表中查不到empolyee的�
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240826184102.png)
 - 左外连接，显示左表所有内容。
 - 剔除右表中匹配不上左表连接条件的==行== （如右表 id=5 的左表查不到，忽略一整行）
-- 右表匹配不上左表的列，用 NULL 填充（因为左表所有内容必须保留）
+- 右表匹配不上左表的列，用 NULL 填充（因左表所有内容必须保留）
 - **右外连接**反之同理
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240820175815.png)
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240820181354.png)
@@ -1233,7 +1233,7 @@ employees表是副表，拼接后主表department主表中查不到empolyee的�
 - 标量子查询（结果集只有一行一列）
 - 列子查询（结果集只有一列多行）
 - 行子查询（结果集有一行多列）
-- 表子查询（结果集一般为多行多列- 
+- 表子查询（结果集一般为多行多列-
 ##### Where 或 having 后
 ###### 标量子查询（单行子查询）
 [单行操作符](#^4132db) 只能用于标量子查询
@@ -1249,7 +1249,7 @@ WHERE
 	e.last_name = 'Abel';
 -- 第二步将查询条件放入即可
 SELECT
-	last_name 
+	last_name
 FROM
 	employees e
 WHERE
@@ -1281,7 +1281,7 @@ WHERE
 		employees e
 	WHERE
 		employee_id = 141)
-	AND 
+	AND
 	salary > (
 	SELECT
 		salary
@@ -1299,8 +1299,8 @@ SELECT
 FROM
 	employees e
 WHERE
-	department_id IN ( -- in表示列表中的一个，所以等价于department_id = ANY(...)
-	SELECT -- 这里不能用distinct，因为1400或1700号一个部门中
+	department_id IN ( -- in表示列表中一个，所以等价于department_id = ANY(...)
+	SELECT -- 这里不能用distinct，因1400或1700号一个部门中
 	-- 可能不止一个员工使用distinct会缺少信息
 		department_id
 	FROM
@@ -1379,7 +1379,7 @@ SELECT
 	WHERE
 		e.department_id = d.department_id) AS peopl_in_count
 FROM
-	departments d; 
+	departments d;
 ```
 注意：子查询只能查询一行一列的数据，在子查询 SELECT 或 where 中添加或减少条件都会报错
 #####  from 后
@@ -1392,7 +1392,7 @@ SELECT
 FROM
 	(
 	SELECT
-		-- 引用子查询中的部门平均工资表
+		-- 引用子查询中部门平均工资表
 		AVG(salary) ag,
 		department_id
 	FROM
@@ -1405,20 +1405,20 @@ INNER JOIN job_grades g
 ON
 	ag_dep.ag BETWEEN lowest_sal AND highest_sal;
 ```
-子查询中的内容：
+子查询中内容：
 ![350](Files%20&%20LongText/Attachments/Pasted%20image%2020240824135242.png)
 现在要求新加上一列，而且这一列来自别的表，所以只能外层嵌套一个 SELECT 放入这一列
 #####  exist 后（相关子查询）
 `EXISTS` 是一个布尔操作符，用于检查子查询是否返回任何行。如果子查询返回至少一行，`EXISTS` 返回 `TRUE`；如果没有返回任何行，`EXISTS` 返回 `FALSE`
 - **性能考虑**：`EXISTS` 通常在找到第一个匹配项后就会停止执行子查询，这使得它在某些情况下比 `IN` 更高效，尤其是在子查询返回大量数据时。
-- **子查询返回值**：`EXISTS` 只关心子查询是否返回行，而不关心返回的具体值。因此，在 `EXISTS` 的子查询中，通常使用 `SELECT 1` 或其他常量，因为具体的返回值并不重要。
+- **子查询返回值**：`EXISTS` 只关心子查询是否返回行，而不关心返回的具体值。因此，在 `EXISTS` 的子查询中，通常使用 `SELECT 1` 或其他常量，因具体的返回值并不重要。
 - Exists 的返回值只有 0 和 1，如果使用**NOT exists**则反之
 
 | 特性                      | `NOT EXISTS`                 | `NOT IN`                                              |
 | ----------------------- | ---------------------------- | ----------------------------------------------------- |
 | **逻辑**                  | 检查子查询是否返回任何行。如果没有返回行，则条件为真。  | 检查某个值是否不在子查询的结果集中。                                    |
 | **子查询结果包含 `NULL` 时的行为** | 不受 `NULL` 值影响，只检查子查询是否返回任何行。 | 如果子查询结果中包含 `NULL`，则整个 `NOT IN` 条件返回未知（通常被视为 `FALSE`）。 |
-| **性能**                  | 通常更高效，因为它可以在找到第一个匹配行时停止搜索。   | 需要对整个子查询结果集进行比较，可能效率较低。                               |
+| **性能**                  | 通常更高效，因它可以在找到第一个匹配行时停止搜索。   | 需要对整个子查询结果集进行比较，可能效率较低。                               |
 | **适用场景**                | 适合处理复杂条件或关联查询。               | 适合处理简单的值列表过滤。                                         |
 ```sql
 -- 查询由部门编号的员工来自哪个部门
@@ -1453,7 +1453,7 @@ WHERE
 `in (array)`  equals to `= any (array)`
 `< any (array`) equals to `< ... max`
 `> any (array)` equals to `> ... min`
-`not in (array) ` equals to `<> all (array)` 
+`not in (array) ` equals to `<> all (array)`
 #### 分页查询
 数据在一页中显示不完需要分也显示
 语法
@@ -1508,9 +1508,9 @@ FROM employees2;
 在 [DML 语言](#^096846) 中可作为插入多条数据的连接符
 注意：
 5. **列数和数据类型**：参与 `UNION` 的每个 `SELECT` 语句必须有相同数量的列，并且对应列的数据类型需要兼容。如果数据类型不兼容，SQL 会尝试进行隐式转换。
-6. **列名**：在使用 `UNION` 时，列名通常来自第一个 `SELECT` 语句。后续的 `SELECT` 语句中对应的列名可以不同，但它们的数据类型必须与第一个 `SELECT` 语句中的列类型相匹配。
+6. **列名**：在使用 `UNION` 时，列名通常来自第一个 `SELECT` 语句。后续的 `SELECT` 语句中对应的列名可以不同，但它们的数据类型必须与第一个 `SELECT` 语句中列类型相匹配。
 7. **去重**：`UNION` 默认去除两个 SELECT 中查询字段中相同的值的数据（即[上面代码中](#^ba687a) name 和 department 都相同的数据行）。如希望保留所有行，可以使用 `UNION ALL`。
-8. **排序**：`UNION` 不保留各个 `SELECT` 语句中的排序。如果需要对最终结果进行排序，需要在 `UNION` 之后使用 `ORDER BY`
+8. **排序**：`UNION` 不保留各个 `SELECT` 语句中排序。如果需要对最终结果进行排序，需要在 `UNION` 之后使用 `ORDER BY`
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240825112318.png)
 ### DML （datebase manage language）
 #### 插入语句
@@ -1563,7 +1563,7 @@ UPDATE beauty SET phone = '13899888855' WHERE name LIKE '周%';
 -- 多属性设置
 UPDATE boys SET boyName = '张飞',userCP = 1000 WHERE id = 2;
 ```
-注意修改语句要一般需要加 where 前置条件，不然会**无差别更新所有 update 中的字段** ^f 003 b 6
+注意修改语句要一般需要加 where 前置条件，不然会**无差别更新所有 update 中字段** ^f 003 b 6
 ##### 修改多表记录【补充】
 语法：
 Sql 92 语法：
@@ -1618,7 +1618,7 @@ WHERE bo. `boyName` ='张无忌';
 5. Truncate 删除不能回滚，delete 删除可以回滚.
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240825152631.png)
 ### DDL (date define language)
-和 DML 语言不一样，DML 操作的是数据，对行，**没有列**，表中的数据进行操作，DDL 操作的是库，表存储单元
+和 DML 语言不一样，DML 操作的是数据，对行，**没有列**，表中数据进行操作，DDL 操作的是库，表存储单元
 #### 库相关
 创建库；`create database  [if not exists]库名 character set 字符集名;`
 修改库：`RENAME DATABASE books TO 新库名;` 现版本已废弃，所以一般不修改库名称
@@ -1652,7 +1652,7 @@ DESC author;
 对于 add 添加列可以在语句默认添加在最后，语句后补充 `【first|after  字段名】` 表示新添加列的位置
 ```sql
 -- 添加新列
-ALTER TABLE author ADD COLUMN annual DOUBLE; 
+ALTER TABLE author ADD COLUMN annual DOUBLE;
 -- 修改列名
 ALTER TABLE book CHANGE COLUMN（column可以省略） publishdate（旧名） pubDate（新名） DATETIME（类型）
 -- 修改列的类型或约束 更改原类型（不写）为TIMESTAMP
@@ -1667,9 +1667,9 @@ ALTER TABLE author RENAME TO book_author;
 仅复制结构：`CREATE TABLE new_table LIKE old_table;`
 复制部分结构：
 ```sql
-CREATE TABLE new_table 
-SELECT 
-	部分字段名称 
+CREATE TABLE new_table
+SELECT
+	部分字段名称
 WHERE 0 -- 0 表示不会成立的内容，不会有数据行匹配成功
 ```
 复制结构和数据：`CREATE TABLE new_table SELECT * FROM old_table;`
@@ -1703,7 +1703,7 @@ CREATE TABLE  表名();
 	较短的文本：char、varchar
 	较长的文本：text、blob（较长的二进制数据）
 日期型：
-###### 整形： 
+###### 整形：
 - 输入图中数据类型默认为有符号，定义无符号需在**后面**加 UNDESIGN
 - 如果不设置长度，使用操作系统默认长度，长度代表了显示的最大宽度，如果不够会用 0 在左边填充，但必须搭配 `zerofill` 使用！
 - 如果插入的数值超出了整型的范围, 会报 `out of range` 异常，并且插入临界值
@@ -1733,7 +1733,7 @@ SELECT * FROM tab_float;
 -- 所选择的类型越简单越好，能保存数值的类型越小越好。能提高速度
 ```
 ###### 字符型
-Char 和 varchar 的区别在于定义列为 char (10) 表示该字段中的内容都会分配 10 **字符空间**（如“中国”，“hi”都占用两个字符长度）而不论输入内容的真实长度，varchar 是可变的，不够就加，多了就减。
+Char 和 varchar 的区别在于定义列为 char (10) 表示该字段中内容都会分配 10 **字符空间**（如“中国”，“hi”都占用两个字符长度）而不论输入内容的真实长度，varchar 是可变的，不够就加，多了就减。
 - 无论实际存储的字符串长度如何，`CHAR` 类型都会占用指定长度的空间。如果存储的字符串长度小于声明的长度，剩余的空间会用空格填充。
 - 由于 `CHAR` 类型是固定长度，读取和写入操作通常更快
 
@@ -1743,12 +1743,12 @@ Char 和 varchar 的区别在于定义列为 char (10) 表示该字段中的内�
 [关于LENGTH函数识别字符长度和字节长度](#^3ce0f3)
 Binary 和 varbinary 类似于 char 和 varchar 名单是他们只能包含二进制字符串
 Enum（Enumerate）表示枚举类型（**不区分大小写**）
-	`NUM` 类型列只能存储预定义值列表中的值。尝试插入不在列表中的值会导致错误或自动转换为列表中的一个有效值（在枚举中的字符大小写转换，不在其中的转换为空格，这点会根据数据库系统而自动修正）。
+	`NUM` 类型列只能存储预定义值列表中值。尝试插入不在列表中值会导致错误或自动转换为列表中一个有效值（在枚举中字符大小写转换，不在其中转换为空格，这点会根据数据库系统而自动修正）。
 	![400](Files%20&%20LongText/Attachments/Pasted%20image%2020240825205430.png)
 	![注意插入空值而不是NULL](Files%20&%20LongText/Attachments/Pasted%20image%2020240825205514.png)
 Set 与 enum 类似，但支持子枚举列表插入
 ![插入枚举列表的子列表内容](Files%20&%20LongText/Attachments/Pasted%20image%2020240825210158.png)
-如果 `set` 枚举列表是 unioncode 中的所有字符，那么理论上可以插入任意文本内容
+如果 `set` 枚举列表是 unioncode 中所有字符，那么理论上可以插入任意文本内容
 ###### 日期型
 ![400](Files%20&%20LongText/Attachments/Pasted%20image%2020240825212421.png)
 一般能使用 timestamp 就用，超出范围再考虑 datatime
@@ -1779,7 +1779,7 @@ CREATE TABLE Orders (
 );
 ```
 **说明**: 
-- `Orders` 表中的 `EmployeeID` 列是外键，引用 `Employees` 表的 `EmployeeID` 列。这意味着 `Orders` 表中的 `EmployeeID` 必须作为**主键或者唯一键**存在于 `Employees` 表中，同时数据类型必须要**完全相同**
+- `Orders` 表中 `EmployeeID` 列是外键，引用 `Employees` 表的 `EmployeeID` 列。这意味着 `Orders` 表中 `EmployeeID` 必须作为**主键或者唯一键**存在于 `Employees` 表中，同时数据类型必须要**完全相同**
 - 并且如果 A 表的 a 列与 B 表的 b 列设置了外键约束（`constrain fk_A_b foreign key (a) references B(b);`）那么*外人优先*，只有先在 B 表 b 列中插入相应的值，A 表中才能**插入 B 表 b 列中允许的值**，相当于在外部表设置了 `check`
 - `check` 条件约束一般使用 `ALTER` 对整个表**所有列**设置约束，具体怎么设置填写在括号中，参考 [[#check 条件约束|check 条件约束]]
 ###### 添加约束的时机：
@@ -1791,7 +1791,7 @@ USE students;
 DROP TABLE stuinfo;
 CREATE TABLE stuinfo (
 	id INT PRIMARY KEY, -- #主键，默认非空
-	stuName VARCHAR (20) NOT NULL UNIQUE, -- 定义unique唯一但可为空，再添加非空 
+	stuName VARCHAR (20) NOT NULL UNIQUE, -- 定义unique唯一但可为空，再添加非空
 	gender CHAR (1) CHECK (gender='男' OR gender ='女'), -- #检查，check后可用筛选语句写法，如 gender in(‘m’，‘f’)
 	seat INT UNIQUE, -- #唯一
 	age INT DEFAULT  18, -- #默认约束，类型和字段类型int保持一致
@@ -1805,7 +1805,7 @@ CREATE TABLE stuinfo (
 列级约束中外键约束不用 foreign key，在标记约束中才会加上
 ![主键、外键、唯一键自动生成索引](Files%20&%20LongText/Attachments/Pasted%20image%2020240826094111.png)
  ^c 8 a 865
-###### 表级约束：	
+###### 表级约束：
 除了非空、默认，其他的都支持
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240826095755.png)
 语法：在各个字段的最下面
@@ -1831,7 +1831,7 @@ CREATE TABLE stuinfo (
 	1、外键链接语法需要放在表级约束中，不然没效果
 	2、从表的外键列的类型和主表的关联列类型要求一致或兼容，名称无要求（但一般一样）
 	3、主表的关联列必须是一个 key（一般是主键或唯一列），使用外键连接的列是主键列时主键列在 MYSQL 中不支持改名（默认为 PRIMARY KEY）
-	4、因为定义表时还没有插入数据，插入数据时，先插入主表，再插入从表。删除数据时，先删除从表，再删除主表
+	4、因定义表时还没有插入数据，插入数据时，先插入主表，再插入从表。删除数据时，先删除从表，再删除主表
 ###### 修改表时添加约束
 在[修改表](#修改表)语法中，
 - **添加约束**: 使用 `ADD CONSTRAINT` 或 `MODIFY`。
@@ -1849,14 +1849,14 @@ ALTER  TABLE table_name [ CONSTRAINT refrain_name ] restrain_type quota_foreign_
 -- 删除非空约束、默认、主键、唯一
 ALTER TABLE stuinfo MODIFY COLUMN stuName varchar(20) NULL;
 ALTER TABLE stuinfo MODIFY COLUMN age int; -- 重新定义一次，这次不设置默认
-ALTER TABLE stuinfo DROP PRIMARY KEY; 
--- 不用指定哪一列是主键列，因为主键列是对单列或多列的整体约束，不是针对每列设置有主键属性
-ALTER TABLE stuinfo DROP INDEX seat; 
+ALTER TABLE stuinfo DROP PRIMARY KEY;
+-- 不用指定哪一列是主键列，因主键列是对单列或多列的整体约束，不是针对每列设置有主键属性
+ALTER TABLE stuinfo DROP INDEX seat;
 -- 每个唯一列独立，对每一列单独设置的唯一属性，需指定
 ALTER TABLE stuinfo DROP FOREIGN KEY fk_name;
 -- 注意删除使用的是**自定义的**外键名而不是外键的字段名
 ```
-![](Files%20&%20LongText/Attachments/Pasted%20image%2020240827190304.png) 
+![](Files%20&%20LongText/Attachments/Pasted%20image%2020240827190304.png)
 ###### 约束使用示例
 ```sql
 use Exam;
@@ -1865,7 +1865,7 @@ CREATE TABLE major
   (
      major_name VARCHAR(15),
      major_id   INT primary key
-  ); 
+  );
 drop table if exists test;
 CREATE TABLE test
   (
@@ -1885,7 +1885,7 @@ CREATE TABLE test
 	 -- 列级约束写法 primary key(stu_number),
      CONSTRAINT fk_test_majorid FOREIGN KEY(majorid) REFERENCES major(major_id) ON DELETE CASCADE
 	 -- 列级约束写法 majorid references major(major_id),
-  ); 
+  );
   -- 删除seat列
   alter table Exam..test drop constraint uq;
   -- 如果不在表级约束中使用uq别名，直接使用drop constraint UNIQUE 会影响id和stu_info两列
@@ -1900,7 +1900,7 @@ Sql 中对不同的约束会使用哈希算法计算唯一一个代号指代每�
 DROP TABLE IF EXISTS test;
 CREATE TABLE test(id int PRIMARY KEY AUTO_INCREMENT ,
 `name` varchar(20));
-INSERT INTO test values(1,'john'); -- 不加自增长标识每次添加数据必须重写序号，因为是PRIMARY
+INSERT INTO test values(1,'john'); -- 不加自增长标识每次添加数据必须重写序号，因是PRIMARY
 INSERT INTO test values(null,'john'); -- 自增长列添加数据为NULL或省略，系统自动补充
 ```
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240827191526.png)
@@ -1909,7 +1909,7 @@ INSERT INTO test values(null,'john'); -- 自增长列添加数据为NULL或省�
 2、一个表可以有几个标识列？至多一个！
 3、标识列的类型只能是数值型
 ```sql
-INSERT INTO test values(1,'john'); -- 不加自增长标识每次添加数据必须重写序号，因为是PRIMARY
+INSERT INTO test values(1,'john'); -- 不加自增长标识每次添加数据必须重写序号，因是PRIMARY
 INSERT INTO test values(null,'john'); -- 自增长列添加数据为NULL，系统自动补充
 SHOW variables LIKE '%auto_increment%'; -- 查看MYSQL中各种操作的默认变量
 SHOW variables; -- 查看所有变量和值，关于auto_increment有两个变量，步长和偏移量（索引起始值，一般从1开始）
@@ -1925,18 +1925,18 @@ ALTER TABLE test MODIFY id int PRIMARY KEY; -- 修改表时删除自增列（重
 ```
 ##### 级联操作
 ###### 级联修饰符
-- **`CASCADE`**: 自动删除或更新从表中的相关记录。如果从表中有记录则执行操作
-- **`RESTRICT`**: 阻止删除或更新主表中的记录，如果从表中存在引用则阻止执行操作
+- **`CASCADE`**: 自动删除或更新从表中相关记录。如果从表中有记录则执行操作
+- **`RESTRICT`**: 阻止删除或更新主表中记录，如果从表中存在引用则阻止执行操作
 - **`NO ACTION`**: 与 `RESTRICT` 类似，阻止删除或更新，表示删除或者更新时没有操作。
-- **`SET NULL`**: 将从表中的引用列设置为 `NULL`。
-- **`SET DEFAULT`**: 将从表中的引用列设置为默认值。
+- **`SET NULL`**: 将从表中引用列设置为 `NULL`。
+- **`SET DEFAULT`**: 将从表中引用列设置为默认值。
 在一般这些修饰符用于外键链接时，保证数据库的*参照完整性*，如：
 ###### 数据库完整性操作实例
 （1）删除 xs 表中记录的同时删除 xk 表中与该记录学号字段值相同的记录；
 `on delete cascade`, 如果 xk （外键表）中没有对应的记录会被拒绝修改
 （2）修改 xs 表某记录的学号时，若 xk 表中与该字段值对应的有若干条记录，则拒绝修改；
 `on update restrict`
-（3）修改 kc 表课程号字段值时，该字段在 xk 表中的对应值也应修改；
+（3）修改 kc 表课程号字段值时，该字段在 xk 表中对应值也应修改；
 `on update cascade`
 （4）删除 kc 表一条记录时，若该字段在在 xk 表中存在，则删除该字段对应的记录；
 `on delete cascade`
@@ -1970,8 +1970,8 @@ CHECK (
 - 定义学生成绩数据库中 xs 表中学生年龄值在 16-25 范围内；
 ```sql
 ALTER TABLE xs
-ADD CONSTRAINT chk_xs_age 
-CHECK(xs.age BETWEEN 16 AND 25); 
+ADD CONSTRAINT chk_xs_age
+CHECK(xs.age BETWEEN 16 AND 25);
 ```
 - 定义学生成绩数据库中 xs 表中学生姓名长度在 2-8 之间；
 ```sql
@@ -2001,7 +2001,7 @@ ADD CONSTRAINT chk_xs_age_new
 CHECK (年龄 BETWEEN 15 AND 30);
 ```
 ##### 定义规则并绑定
-规则（Rule）和 CHECK 约束（Check Constraint）都可以用来限制列中的数据，但它们在功能、应用范围和实现方式上有一些关键区别。
+规则（Rule）和 CHECK 约束（Check Constraint）都可以用来限制列中数据，但它们在功能、应用范围和实现方式上有一些关键区别。
 - 规则是一个独立的对象，可以定义一次并应用于多个列或多个表。
 - CHECK 约束是表定义的一部分，直接在表创建或修改时定义。
 ###### 规则（Rule）和 CHECK 约束
@@ -2009,7 +2009,7 @@ CHECK (年龄 BETWEEN 15 AND 30);
 - **多列应用**: 规则可以应用于多个列，甚至多个表。
 - **灵活性**: 规则可以定义一次，然后在多个地方重复使用。
 - **功能**: 规则主要用于定义数据的格式和范围，但不支持复杂的逻辑。
-- **限制**: 规则不能引用其他列或表中的数据。
+- **限制**: 规则不能引用其他列或表中数据。
 - **示例**: 一个规则可以同时应用于 `xs` 表的 `年龄` 列和 `xk` 表的 `成绩` 列。
 
 ---
@@ -2017,12 +2017,12 @@ Check 约束
 - **单列应用**: 每个 CHECK 约束通常只应用于一个列（尽管可以定义多个 CHECK 约束）。
 - **表级约束**: CHECK 约束是表的一部分，不能直接应用于多个表。
 - **示例**: 一个 CHECK 约束只能应用于 `xs` 表的 `年龄` 列，或者 `xk` 表的 `成绩` 列。
-- **功能**: CHECK 约束可以包含复杂的逻辑，可以引用同一行中的其他列，甚至可以引用其他表中的数据。
+- **功能**: CHECK 约束可以包含复杂的逻辑，可以引用同一行中其他列，甚至可以引用其他表中数据。
 
 **规则**适用于简单的、重复性的数据验证需求，尤其是在多个列或多个表中需要应用相同的验证规则时。
 **CHECK 约束**适用于需要复杂逻辑或跨列、跨表引用的数据验证需求。
 ###### 定义并使用
-限定课程表中的课程号字段值为 5 个数字字符的
+限定课程表中课程号字段值为 5 个数字字符的
 ```sql
 -- 定义规则
 CREATE RULE rule_course_number  -- 规则命名：rule_规则所限定的内容描述
@@ -2036,7 +2036,7 @@ AS
 EXEC sp_bindefault 'rule_course_number', 'kc.课程号';
 EXEC sp_bindefault 'rule_course_number', 'kc.年龄;
 ```
-- `@value BETWEEN 16 AND 25`; 表示使用这个规则的列中每行单元格内容中的 value 部分（作用于一个表中的一列）要满足 `BETWEEN 16 AND 25`, 类似于 [[C++ practice case#读写二进制文件||提取fstream对象读取到文件内容的字符部分]] `file.write(iteration_record.name.data(), nameLength);` 中读取结构体中 `string name` 成员变量中用二进制表示的*数据部分*
+- `@value BETWEEN 16 AND 25`; 表示使用这个规则的列中每行单元格内容中 value 部分（作用于一个表中一列）要满足 `BETWEEN 16 AND 25`, 类似于 [[C++ practice case#读写二进制文件||提取fstream对象读取到文件内容的字符部分]] `file.write(iteration_record.name.data(), nameLength);` 中读取结构体中 `string name` 成员变量中用二进制表示的*数据部分*
 - `@年龄` 表示规则仅仅作用于年龄一列，`@NEW.年龄` 表示之作用于新插入年龄列的数据需要满足
 - 如果要将规则应用于多行，需要**重复调用**`EXEC sp_bindefault` 语句
 
@@ -2064,7 +2064,7 @@ CREATE LOGIN stu1 WITH PASSWORD = 'secret', DEFAULT_DATABASE = [学生成绩数�
 ```
 ##### 调整用户权限
 ###### 添加用户到数据库
-需要将某些用户添加为特定数据库中的用户时
+需要将某些用户添加为特定数据库中用户时
 ```sql
 USE [学生成绩数据库];
 GO
@@ -2072,15 +2072,15 @@ GO
 CREATE USER [alias] FOR LOGIN [domain_name\user_name];
 ```
 - `GO` 表示分批次执行 sql 语句，是分批次标识符**不是 sql 语句**，被 DBMS 识别，用于确保不同部分 sql 代码块按批次执行。在高级编程语言中可能会出错
-- **批处理**: 在 SQL Server 中，批处理是指一组 SQL 语句，这些语句会被一起提交给数据库引擎执行。批处理由 `GO` 语句分隔，在 SQL Server 中，`CREATE PROCEDURE` 语句必须是批处理中的唯一语句。
+- **批处理**: 在 SQL Server 中，批处理是指一组 SQL 语句，这些语句会被一起提交给数据库引擎执行。批处理由 `GO` 语句分隔，在 SQL Server 中，`CREATE PROCEDURE` 语句必须是批处理中唯一语句。
 - **原因**:
     `CREATE PROCEDURE` 需要在编译时确定存储过程的定义，因此必须在独立的批处理中执行。
     如果在一个批处理中混合使用 `CREATE PROCEDURE` 和其他 SQL 语句，SQL Server 无法正确解析存储过程的定义，从而导致错误。
-###### 用户在数据库中的权限
+###### 用户在数据库中权限
 ```sql
 -- 赋予用户 zhang 创建数据库的权限
 GRANT CREATE DATABASE TO [zhang];
--- 赋予用户 stu1 对 sc 表的 INSERT、UPDATE 和 DELETE 权限 
+-- 赋予用户 stu1 对 sc 表的 INSERT、UPDATE 和 DELETE 权限
 GRANT INSERT, UPDATE, DELETE ON sc TO stu1;
 -- 赋予用户 stu2 和 stu3 对 xs 表和 kc 表的所有操作权限，并允许再授权
 GRANT SELECT, INSERT, UPDATE, DELETE ON xs TO stu2, stu3 WITH GRANT OPTION;
@@ -2098,7 +2098,7 @@ GRANT UPDATE (姓名) ON xs TO member1, member2, member3, member4, member5;
 -- 赋予 member1 到 member5 对 xk 表的 INSERT、UPDATE 和 DELETE 权限
 GRANT INSERT, UPDATE, DELETE ON xk TO member1, member2, member3, member4, member5;
 ```
-对于服务器层面上的权限需要通过修改*服务器角色*完成，服务器角色类似于一个拥有可以管理服务器层面的较高权限的**用户组**，添加到服务器角色中的用户拥有**一系列**高权限
+对于服务器层面上的权限需要通过修改*服务器角色*完成，服务器角色类似于一个拥有可以管理服务器层面的较高权限的**用户组**，添加到服务器角色中用户拥有**一系列**高权限
 ```sql
 -- 将登录帐号 cheng 添加到 serveradmin 服务器角色
 EXEC sp_addsrvrolemember 'cheng', 'serveradmin';
@@ -2129,9 +2129,9 @@ Update 表 set 郭襄的余额=1500 where name='郭襄'（执行失败）
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240827203959.png)
 ##### 事务的 ACID 属性
 1. 原子性（Atomicity）
-	原子性是指事务不可分割，事务中的操作要么都发生，要么都不发生。
+	原子性是指事务不可分割，事务中操作要么都发生，要么都不发生。
 2. 一致性（Consistency）可以粗略理解为“**数据的准确性**”
-	事务必须使数据库从一个一致性状态变换到另外一个一致性状态（就是数据库中的数据仍然准确，不会出现[转账过程失败](#^19949e)而导致总金额从 2000 变为 1500）
+	事务必须使数据库从一个一致性状态变换到另外一个一致性状态（就是数据库中数据仍准确，不会出现[转账过程失败](#^19949e)而导致总金额从 2000 变为 1500）
 3. 隔离性（lsolation）
 	事务的隔离性是指一个事务的执行不能被其他事务干扰，即一个事务内部的操作及使用的数据对并发的其他事务是隔离的，并发执行的各个事务之间不能互相干扰。（可以设置设置隔离级别调整）
 4. 持久性（Durability）
@@ -2141,7 +2141,7 @@ Update 表 set 郭襄的余额=1500 where name='郭襄'（执行失败）
 比如 insert、update、delete 语句, 每一句命令都是一个单独的事务
 显式事务：事务具有明显的开启和结束的标记
 前提：必须先设置自动提交功能为禁用
-创建事务的一组逻辑语句中，**只支持** DQL，DML 和 TCL 中的语句，如 `select`, `insert`, `update`, `delete` 等，**不支持** `create`，`alter` 等 DDL 语言。因为 DDL 执行时会立即更改数据库，并且更改是自动提交的（即使 autocommit 被关闭），导致它们不能被回滚。
+创建事务的一组逻辑语句中，**只支持** DQL，DML 和 TCL 中语句，如 `select`, `insert`, `update`, `delete` 等，**不支持** `create`，`alter` 等 DDL 语言。因 DDL 执行时会立即更改数据库，并且更改是自动提交的（即使 autocommit 被关闭），导致它们不能被回滚。
 ```sql
 SHOW variables LIKE '%autocommit%';
 SET autocommit = 0;-- 事务自动提交只存在于一个会话中，每次打开sql都需要设置一遍
@@ -2153,7 +2153,7 @@ COMMIT/ROLLBACK TO point_name-- 结束事务
 **事务的上下文**：`ROLLBACK` 命令的作用范围是当前事务。`ROLLBACK` 会撤销自上一次 `COMMIT` 之后的所有更改。执行 `COMMIT` 所有在该 `COMMIT` 之前执行的语句已经被永久保存到数据库中。还没有 `COMMIT` 都可以通过 `ROLLBACK` 来撤销。
 **数据库连接**：只要数据库连接保持开启状态，未提交的更改就存在于该连接的事务中。关闭连接所有未提交的更改都会丢失。
 **会话超时**：大多数数据库管理系统允许设置会话超时时间。如果在指定时间内没有任何活动，数据库会话可能会自动关闭
-显式事务提交操作类似于 git 中的暂存区机制
+显式事务提交操作类似于 git 中暂存区机制
 ```sql
 DROP TABLE IF EXISTS account;
 CREATE TABLE account(id int PRIMARY KEY AUTO_INCREMENT ,
@@ -2177,7 +2177,7 @@ SET autocommit =0;
 START TRANSACTION;
 UPDATE account SET balance = 1000 WHERE username = 'alpha';
 UPDATE account SET balance = 1000 WHERE username = 'beta';
--- 内存中的信息是两人都是1000，
+-- 内存中信息是两人都是1000，
 ROLLBACK;-- 但使用rollback将操作撤销
 ```
 ##### 数据库隔离级别
@@ -2260,7 +2260,7 @@ INNER JOIN departments d ON
 	d.department_id = e.department_id
 WHERE
 	e.last_name LIKE '%s%';
--- 因为v1是新的表，所以可以嵌套筛选（两个WHERE）而不报错
+-- 因v1是新的表，所以可以嵌套筛选（两个WHERE）而不报错
 SELECT
 	*
 FROM
@@ -2268,7 +2268,7 @@ FROM
 WHERE
 	last_name LIKE '%a%';
 ```
-- 虽然 v 1 是虚拟表，但 from v 1 操作不是简单将封装的代码粘贴进来，而是创建虚拟表后放入注意最后 `WHERE last_name LIKE '%a%';` 时不要加 `e.last_name`，因为虚拟表是**新表**！
+- 虽然 v 1 是虚拟表，但 from v 1 操作不是简单将封装的代码粘贴进来，而是创建虚拟表后放入注意最后 `WHERE last_name LIKE '%a%';` 时不要加 `e.last_name`，因虚拟表是**新表**！
 - 由于 `employees` 表和 `departments` 表都包含名为 `department_id` 的列，因此在使用 `SELECT *` 选择所有列时，这两个列名发生了冲突。**在创建视图或执行联合查询**时，必须明确指定列名，或者为冲突的列名提供别名，以确保每个列名都是唯一的。
 ![MySQL Long Code Practice \> 视图](Files%20&%20LongText/Long%20code/MySQL%20Long%20Code%20Practice.md#视图)
 ##### 视图修改
@@ -2285,7 +2285,7 @@ CREATE OR REPLACE VIEW myv1
 AS
 SELECT last_name,email
 FROM employees;
--- 更新操作，注意每更新一次源数据都会改变一次，因为视图记录的操作逻辑不能没有根据
+-- 更新操作，注意每更新一次源数据都会改变一次，因视图记录的操作逻辑不能没有根据
 SELECT * FROM myv1;
 SELECT * FROM employees;
 -- #1.插入
@@ -2301,7 +2301,7 @@ DELETE FROM myv1 WHERE last_name = '张无忌';
 - Select 中包含子查询
 - From 一个不能更新的视图
 - Join 连接（只要是连接两表无所谓用什么语法连接）两个表形成的视图
-- Where 子句的子查询引用了 from 子句中的表（因为新建的视图建立基于 from 中的表，WHERE 又根据 from 中的表筛选，引用自身会导致一些不稳定因素出现）
+- Where 子句的子查询引用了 from 子句中表（因新建的视图建立基于 from 中表，WHERE 又根据 from 中表筛选，引用自身会导致一些不稳定因素出现）
 ```sql
 ON m.`department_id`=d.`department_id`;
 -- 常量视图不能更改
@@ -2321,7 +2321,7 @@ UPDATE myv5 SET salary = 10000 ; -- 将所有工资改为10000一定运行不了
 -- 不能插入有连接的表，使用join的99语法和，的92语法，只要用到链接都不能
 -- 可以更新某个单元格的值但不能插入行
 CREATE OR REPLACE
-VIEW myv6 AS 
+VIEW myv6 AS
 SELECT
 	e.department_id,
 	e.employee_id,
@@ -2402,7 +2402,7 @@ SELECT @变量名;
 -- 声明
 DECLARE 变量名 类型;
 DECLARE 变量名 类型 【DEFAULT 值】;
--- declare定义的变量只能放在begin end中的第一句
+-- declare定义的变量只能放在begin end中第一句
 -- 赋值（更新变量的值）
 -- 方式一：
 	SET 局部变量名=值;
@@ -2473,7 +2473,7 @@ END;
 - 存储过程体中可以包含多条 SQL 语句，包括 `SELECT`、`INSERT`、`UPDATE`、`DELETE` 等。
 
 ---
-##### MySQL 
+##### MySQL
 a. 创建函数（Function）
 ```sql
 CREATE FUNCTION 函数名 (参数1 数据类型, 参数2 数据类型, ...)
@@ -2543,7 +2543,7 @@ END;
 	**out**：该参数可以作为输出，也就是该参数可以作为返回值
 	**inout**：该参数既可以作为输入又可作为输出，也就是该参数既需要传入值，又可以返回值
 2. 如果存储过程体仅仅只有一句话，begin end 可以省略.
-3. 存储过程体中的每条 sql 语句的结尾要求必须加分号。
+3. 存储过程体中每条 sql 语句的结尾要求必须加分号。
 4. 存储过程的结尾可以使用 delimiter 重新设置，语法为 `delimiter 结束标记`
 ```sql
 -- 插入固定内容数据
@@ -2606,9 +2606,9 @@ CALL myp2('sickwag','12345');
 通过设置 out 参数值，有时可以省略定义变量的过程
 ```sql
 delimiter $
-CREATE PROCEDURE myp5(IN gname varchar(20), OUT bname varchar(20),bcharm int) 
-BEGIN 
-	SELECT b.boyname,b.usercp 
+CREATE PROCEDURE myp5(IN gname varchar(20), OUT bname varchar(20),bcharm int)
+BEGIN
+	SELECT b.boyname,b.usercp
        INTO bname,bcharm
   FROM beauty g
  RIGHT JOIN boys b
@@ -2637,7 +2637,7 @@ SELECT @myValue; -- 输出修改后的值
 定义结束符后，新的结束符号仅在 begin 和 end 之间生效
 ##### 删除、修改、查看存储过程
 `DROP PROCEDURE [IF EXISTS] procedure_name;`
-注意查看存储过程结构不能使用 `desc procedure_name;`，因为存储过程本质上不是一个表
+注意查看存储过程结构不能使用 `desc procedure_name;`，因存储过程本质上不是一个表
 语法：`show create procedure procedure_name;`
 存储过程一般不修改，只允许增删改 in 、out 属性，begin  and 之间的内容**不能修改**
 ##### 实例
@@ -2666,7 +2666,7 @@ Return 值; 函数体中仅有一句话，则可以省略 begin end
 **注意**：创建函数时可能出现报错
 > ERROR 1418 (HY 000): This function has none of DETERMINISTIC, NO SQL, or READS SQL DATA in its declaration and binary logging is enabled (you *might* want to use the less safe log_bin_trust_function_creators variable)
 
-因为 sql 开启了 bin-log，信任创建的函数，解决方法是：`set global log_bin_trust_function_creators=TRUE;`
+因 sql 开启了 bin-log，信任创建的函数，解决方法是：`set global log_bin_trust_function_creators=TRUE;`
 在 MySQL 5.7 版本中，mysql 数据库中有 proc 表（8.0 中没有）记录了所有函数和存储过程
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240831203949.png)
 - 实例：
@@ -2675,7 +2675,7 @@ Return 值; 函数体中仅有一句话，则可以省略 begin end
 ###### If
 实现双分支
 ###### Case
-情况 1：类似于 java 中的 switch 语句，一般用于实现等值判断
+情况 1：类似于 java 中 switch 语句，一般用于实现等值判断
 ```sql
 CASE 变量|表达式|字段
 WHEN 要判断的值 THEN 返回的值1或语句1：
@@ -2684,7 +2684,7 @@ ELSE 要返回的值n或语句n；
 END CASE;
 -- 如果是语句需要加;，只是值不加
 ```
-情况 2：类似于 java 中的多重 IF 语句，一般用于实现区间判断
+情况 2：类似于 java 中多重 IF 语句，一般用于实现区间判断
 **注意 case 判断形式中每个条件判断成功后会跳出**，相当于一个 break;
 ```sql
 CASE
@@ -2699,8 +2699,8 @@ END CASE;
 ```sql
 delimiter $
 CREATE PROCEDURE test_case (IN score int)
-BEGIN 
-	CASE 
+BEGIN
+	CASE
 		WHEN score >90 AND score <=100 THEN SELECT 'A';
 		WHEN score >80 AND score <=90 THEN SELECT 'B';
 		WHEN score >70 AND score <=80 THEN SELECT 'C';
@@ -2719,18 +2719,18 @@ CALL test_case(50)$
 */
 -- 也可以使用set方式
 CREATE PROCEDURE test_case2 (IN score int)
-BEGIN 
+BEGIN
 	DECLARE grade char(1);
-	CASE 
+	CASE
 		WHEN score >90 AND score <=100 THEN set grade = 'A';
 		WHEN score >80 AND score <=90 THEN set grade = 'B';
 		WHEN score >70 AND score <=80 THEN set grade = 'C';
 		ELSE SET grade = 'D';
 	END CASE;
-	-- 定义变量方式会自动显示结果，因为没有select，所以还要加上
+	-- 定义变量方式会自动显示结果，因没有select，所以还要加上
 	SELECT grade;
 END $
--- 结果为 
+-- 结果为
 /*
 +-------+
 | grade |
@@ -2748,7 +2748,7 @@ Endif;
 ```sql
 -- if多重分支结构
 CREATE FUNCTION test_if (score int) RETURNS char(1)
-BEGIN 
+BEGIN
 	if score >90 AND score <=100 THEN return 'A';
 	elseif score >80 THEN return 'B';
 	elseif score >70 THEN return 'C';
@@ -2758,7 +2758,7 @@ END $
 SELECT test_if(90) AS level$
 -- 创建变量形式
 CREATE FUNCTION test_if (score INT) RETURNS CHAR(1)
-BEGIN 
+BEGIN
     DECLARE slevel CHAR(1);
     IF score >= 90 AND score <= 100 THEN
         SET slevel = 'A';
@@ -2813,14 +2813,14 @@ end repeat 【标签】;
 ###### 三种循环框架区别
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240901140343.png)
 # MySQL 高级
-## Linux 环境中的 MySQL 安装
+## Linux 环境中 MySQL 安装
 ### 前置知识准备
 #### 各种 Linux 命令
 ##### 检查服务（MySQL）是否开机自启
 命令 `systemctl is-enabled server_name.service`
 同理也可以检测命令是否开机关闭，正在运行。
 服务名称后一定要加 service，可以通过修改软件别名来不加
-##### 检查 MySQL 
+##### 检查 MySQL
 - 检查版本号 `mysqladmin --version`
 - 检查 MySQL 是否运行 `ps -ef | grep mysql`
 - 操作 MySQL（5.5 版本） `service mysql start|stop|enable|restart`
@@ -2839,7 +2839,7 @@ end repeat 【标签】;
 ```
  - 检查 MySQL 是否自启动 `systemctl list-unit-files | grep mysql`
  - 使用图形化页面管理启动项 `ntsysv`（可能需要安装软件包）
- - Windows 下的配置文件一般叫 `my.ini`，Linux 中的一般叫做 `my.cnf`
+ - Windows 下的配置文件一般叫 `my.ini`，Linux 中一般叫做 `my.cnf`
  - MySQL 配置文件在 centos 中路径 `/etc/my.cnf`，可以使用 find 命令查找 `my.ini` 文件
  - 如果 MySQL 中出现中文字符乱码，尝试 `show variables like "%char%"` 列出数据库使用字符集列表，一般 file_system 、database、result 需要调整为 utf-8 方法是修改配置文件，在配置文件下添加 `字符集列表中字段名=utf-8` 即可
  - 配置文件中 `sort_buffer_size` 变量表示搜索和分组缓冲区大小
@@ -2870,7 +2870,7 @@ mysql> show variables like "%engine%";
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240921141511.png)
 ### 索引优化
 #### Sql 性能下载原因
-![](Files%20&%20LongText/Attachments/Pasted%20image%2020240921142305.png) 
+![](Files%20&%20LongText/Attachments/Pasted%20image%2020240921142305.png)
 Sql 加载顺序
 ![手写](Files%20&%20LongText/Attachments/Pasted%20image%2020240921142807.png)
 ![机器执行](Files%20&%20LongText/Attachments/Pasted%20image%2020240921142728.png)
@@ -2879,12 +2879,12 @@ Sql 加载顺序
 #### 什么是索引
 MySQL 官方对索引的定义为：索引（Index）是帮助 MySQL 高效获取数据的数据结构。可以得到索引的本质：**索引是数据结构**。
 索引的目的在于提高查找效率，可**类比**字典
-排好序的快速查找的数据结构（也就是索引的定义）是提高效率的原因，索引会影响 `order by` 和 `Group by` 
+排好序的快速查找的数据结构（也就是索引的定义）是提高效率的原因，索引会影响 `order by` 和 `Group by`
  ![索引的原理](Files%20&%20LongText/Attachments/Pasted%20image%2020240927183019.png)
  - 为了加快 CoI 2 的查找，可以维护一个右边所示的二叉查找树，每个节点分别包含索引键值和一个指向对应数据记录物理地址的指针，这样就可以运用二叉查找在一定的复杂度内获取到相应数据，从而快速的检索出符合条件的记录（**类似于二分查找**）
 - 数据本身之外，数据库还维护着一个满足**特定查找算法的数据结构**（上面的例子中使用的是 B+树），这些数据结构以**某种方式**（上面使用指针）指向数据，这样就可以在这些数据结构的基础上实现高级查找算法，这种数据结构就是索引。
-- 数据库中的索引一般都与数据内容绑定，所以软件开发过程中，为保障查找速度，在版本更新之后会根据最新版数据更新索引（重建）
-- 数据库中查找数据速度远高于增删改，因为增删改过程中需要修改索引
+- 数据库中索引一般都与数据内容绑定，所以软件开发过程中，为保障查找速度，在版本更新之后会根据最新版数据更新索引（重建）
+- 数据库中查找数据速度远高于增删改，因增删改过程中需要修改索引
 - 一般来说索引本身也很大，不可能全部存储在内存中，因此索引往往以索引文件的形式存储的磁盘上
 #### 建立索引的优劣
 **优势**（来自硬件层面）
@@ -2893,7 +2893,7 @@ MySQL 官方对索引的定义为：索引（Index）是帮助 MySQL 高效获�
 **劣势**
 - 索引也是一张表，该表保存了主键与索引字段，并指向实体表的记录，索引列要占用空间
 - 虽然索引大大提高了查询速度，同时却会降低更新表的速度，增删改等操作
-- 更新表时，MySQL 不仅要保存数据，还要保存索引文件每次更新添加了索引列的字段，都会调整因为更新所带来的键值变化后的索引信息
+- 更新表时，MySQL 不仅要保存数据，还要保存索引文件每次更新添加了索引列的字段，都会调整因更新所带来的键值变化后的索引信息
 - 索引只是提高效率的一个因素，如果 MySQL 有大数据量的表，就需要花时间研究建立**最优秀的**索引，或优化查计，根据查询什么内容最多或其他来调整建立什么索引
 #### 索引分类
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240927190535.png)
@@ -2907,7 +2907,7 @@ MySQL 官方对索引的定义为：索引（Index）是帮助 MySQL 高效获�
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240927191918.png)
 ##### 查找过程
 - 如果要查找数据项 29，那么首先会把**磁盘块 1 由磁盘加载到内存**，此时发生一次 IO，
-	在内存中用二分查找确定 29 在 17 和 35 之间，锁定磁盘块 1 的 P 2 指针，内存时间因为非常短（相比磁盘的 IO）可以忽略不计，
+	在内存中用二分查找确定 29 在 17 和 35 之间，锁定磁盘块 1 的 P 2 指针，内存时间因非常短（相比磁盘的 IO）可以忽略不计，
 - 通过磁盘块 1 的 P 2 指针的磁盘地址把**磁盘块 3 由磁盘加载到内存**，发生第二次 1 O，
 - 29 在 26 和 30 之间，锁定磁盘块 3 的 P 2 指针，通过指针加载磁盘块 8 到内存，发生第三次 1 O，同时内存中做二分查找找到 29
 - 结束查询，总计三次 IO。
@@ -2919,7 +2919,7 @@ MySQL 官方对索引的定义为：索引（Index）是帮助 MySQL 高效获�
 1. 主键自动建立唯一索引
 2. 频繁作为查询条件的字段应该创建索引
 3. 查询中与其它表关联的字段，外键关系建立索引
-4. 频繁更新的字段不适合创建索引◎因为每次更新不单单是更新了记录还会更新索引
+4. 频繁更新的字段不适合创建索引◎因每次更新不单单是更新了记录还会更新索引
 5. Where 条件里用不到的字段不创建索引
 6. 单键/组合索引的选择问题，who？（在高并发下倾向创建组合索引）
 7. 查询中排序的字段，排序字段若通过索引去访问将大大提高排序速度
@@ -2928,7 +2928,7 @@ MySQL 官方对索引的定义为：索引（Index）是帮助 MySQL 高效获�
 300 万行左右的数据 mysql 性能开始下降
 1. 表记录太少
 2. 经常增删改的表
-	因为更新表时，MySQL 不仅要保存数据，还要保存一下索引文件
+	因更新表时，MySQL 不仅要保存数据，还要保存一下索引文件
 3. 数据重复且分布平均的表字段，因此应该只为最经常查询和最经常排序的数据列建立索引。（如性别列只有男女两种）
 
 索引的选择性是指索引列中不同值的数目与表中记录数的比。如果一个表中有 2000 条记录，表索引列有 1980 个不同的值，那么这个索引的选择性就是 1980/2000=0.99，**索引的选择性越接近于 1，这个索引的效率就越高**
@@ -2954,7 +2954,7 @@ ORDER BY column_high_priority [ASC | DESC],
 ```
 SQL 引擎会首先按照 `ORDER BY` 子句中 **最先列出的列 (`column_high_priority`)** 进行排序。
 - 如果第一列的值有相同的，那么在相同值的记录内部， SQL 引擎会 **再按照 `ORDER BY` 中 _第二列_ (`column_medium_priority`) 进行排序**。
-- 如果第二列的值仍然有相同的，则继续按照 _第三列_ (`column_low_priority`) 排序，依此类推。
+- 如果第二列的值仍有相同的，则继续按照 _第三列_ (`column_low_priority`) 排序，依此类推。
 - 只有当所有高优先级列的值都相同时，才会考虑更低优先级的列的排序。
 
 编写 SQL 语句，查找所有至少订购了总量 100 个的 BR 01、BR 02 或 BR 03 的订单。你需要返回 OrderItems 表的订单号（order_num）、产品 ID（prod_id）和数量，并按产品 ID 和数量进行过滤。提示：根据编写过滤器的方式，可能需要特别注意求值顺序。
@@ -2965,15 +2965,15 @@ SQL 引擎会首先按照 `ORDER BY` 子句中 **最先列出的列 (`column_hig
 语法模板：`函数() OVER (PARTITION BY … ORDER BY … [ASC|DESC])`
 #### Over 字句
 - `OVER()` 子句是所有窗口函数的核心。它定义了窗口函数操作的**数据集范围**（window），也就是函数计算时所依据的**数据分区**和**排序方式**。
-    
+
 - **用法：** `OVER()` 子句通常与排序子句 `ORDER BY` 和分区子句 `PARTITION BY` 结合使用。
-    
+
     - **`OVER (ORDER BY column1 [ASC|DESC], column2 [ASC|DESC], ...)`**: 指定窗口内的数据**排序规则**。窗口函数会根据指定的列排序，并基于这个排序进行计算（例如，排名）。
     - **`OVER (PARTITION BY column1, column2, ... ORDER BY column3, ...)`**: 在 `ORDER BY` 的基础上，增加了 **`PARTITION BY`** 子句，用于将数据**划分为多个分区**。窗口函数会在每个分区内独立执行计算。可以理解为先分组，然后在每个组内进行排序和窗口函数计算。
     - **`OVER ()`**: 如果 `OVER()` 子句内为空，表示窗口是**整个结果集**。函数会基于整个结果集进行计算。
 - **重要性：** `OVER()` 子句决定了窗口函数如何处理数据，是定义计算范围和顺序的关键。所有的排名函数（以及其他窗口函数，例如 `LAG()`, `LEAD()`, `SUM() OVER()`, `AVG() OVER()`, 等）都必须与 `OVER()` 子句一起使用，才能指定其操作的数据范围。
 #### Rank 函数
-- **意思：** `RANK()` 函数为结果集中的每一行分配一个**排名**。如果存在**并列**（tie），即多行具有相同的值（根据 `ORDER BY` 子句），则并列的行会获得**相同的排名**，并且排名会**跳跃**。
+- **意思：** `RANK()` 函数为结果集中每一行分配一个**排名**。如果存在**并列**（tie），即多行具有相同的值（根据 `ORDER BY` 子句），则并列的行会获得**相同的排名**，并且排名会**跳跃**。
 - **用法：** `RANK() OVER ( [PARTITION BY partition_column, ...] ORDER BY sort_column [ASC|DESC], ...)`
 - **行为：**
     - 按照 `ORDER BY` 子句指定的列对数据进行排序。
@@ -2981,17 +2981,17 @@ SQL 引擎会首先按照 `ORDER BY` 子句中 **最先列出的列 (`column_hig
     - **如果遇到并列值，并列的行获得相同的排名。**
     - **排名会跳跃。** 例如，如果有两行并列第 1 名，则接下来一行的排名将是第 3 名，跳过了第 2 名。
 #### DENSE_RANK () 函数
-- **意思：** `DENSE_RANK()` 函数也为结果集中的每一行分配一个**排名**，与 `RANK()` 类似，也处理并列排名。但是，`DENSE_RANK()` **不会跳跃排名**。
+- **意思：** `DENSE_RANK()` 函数也为结果集中每一行分配一个**排名**，与 `RANK()` 类似，也处理并列排名。但，`DENSE_RANK()` **不会跳跃排名**。
 - **用法：** `DENSE_RANK() OVER ( [PARTITION BY partition_column, ...] ORDER BY sort_column [ASC|DESC], ...)`
 - **行为：**
     - 按照 `ORDER BY` 子句指定的列对数据进行排序。
     - 为每一行分配排名，从 1 开始。
     - **如果遇到并列值，并列的行获得相同的排名。**
-    - **排名不会跳跃。** 即使有并列排名，下一个排名仍然是紧随其后的连续排名。例如，如果有两行并列第 1 名，则接下来一行的排名将是第 2 名
+    - **排名不会跳跃。** 即使有并列排名，下一个排名仍是紧随其后的连续排名。例如，如果有两行并列第 1 名，则接下来一行的排名将是第 2 名
 [178. 分数排名 - 力扣（LeetCode）](https://leetcode.cn/problems/rank-scores/)
 这里使用到了这一个方法
 #### ROW_NUMBER () 函数
-- **意思：** `ROW_NUMBER()` 函数为结果集中的每一行分配一个**唯一的连续序号**。它**不考虑并列**，即使值相同，也会分配不同的序号。
+- **意思：** `ROW_NUMBER()` 函数为结果集中每一行分配一个**唯一的连续序号**。它**不考虑并列**，即使值相同，也会分配不同的序号。
 - **用法：** `ROW_NUMBER() OVER ( [PARTITION BY partition_column, ...] ORDER BY sort_column [ASC|DESC], ...)`
 - **行为：**
     - 按照 `ORDER BY` 子句指定的列对数据进行排序。
@@ -3048,26 +3048,26 @@ ORDER BY
 ### 窗口函数
 这类函数可以访问窗口中其他行的值，常用于计算环比、同比等。
 - **`LAG(value_expression, offset, default_value) OVER (...)`**: 访问窗口中**当前行之前** `offset` 行的 `value_expression` 的值。如果向前 `offset` 行超出窗口范围，则返回 `default_value`（如果指定了）或 NULL。
-    
+
     - `value_expression`: 要获取值的列或表达式。
     - `offset`: 向前偏移的行数，正整数。
     - `default_value` (可选): 如果超出窗口范围，返回的默认值。
     - **使用场景:** 计算与前一天的差值、环比增长率、获取上一个订单的信息等。
 - **`LEAD(value_expression, offset, default_value) OVER (...)`**: 访问窗口中**当前行之后** `offset` 行的 `value_expression` 的值。超出窗口范围的处理方式与 `LAG()` 类似。
-    
+
     - **使用场景:** 预测未来趋势、与未来数据进行比较、按时间顺序处理事件。
-- **`FIRST_VALUE(value_expression) OVER (...)`**: 返回窗口中**第一行**的 `value_expression` 的值。窗口的第一行是根据 `OVER()` 子句中的 `ORDER BY` 确定的。
-    
+- **`FIRST_VALUE(value_expression) OVER (...)`**: 返回窗口中**第一行**的 `value_expression` 的值。窗口的第一行是根据 `OVER()` 子句中 `ORDER BY` 确定的。
+
     - **使用场景:** 获取每个分组的起始值、每个用户首次访问时间等。
 - **`LAST_VALUE(value_expression) OVER (...)`**: 返回窗口中**最后一行**的 `value_expression` 的值。默认情况下，`LAST_VALUE()` 的窗口框架是 `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`，这意味着在默认情况下，它只考虑当前行及其之前的行作为窗口。要获取整个窗口的最后一行值，通常需要显式指定窗口框架为 `RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING` 或 `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING`。
-    
+
     - **使用场景:** 获取每个分组的结束值、每个用户最后一次访问时间等。
 - **`NTH_VALUE(value_expression, n) OVER (...)`**: 返回窗口中**第 `n` 行**的 `value_expression` 的值。
-    
-    - `n`: 要返回的值的行号，正整数。
-    - **使用场景:** 获取窗口中的特定位置的值，例如每个分组的第二高分、第三个订单信息等。
 
-- `PERCENTILE_CONT` 和 `PERCENTILE_DISC` 的关键区别在于如何处理位于两个实际数据点之间的百分位数位置。 `PERCENTILE_CONT` 通过插值得到一个可能不在原始数据集中的连续值，而 `PERCENTILE_DISC` 则直接从原始数据集选择一个最接近的值。
+    - `n`: 要返回的值的行号，正整数。
+    - **使用场景:** 获取窗口中特定位置的值，例如每个分组的第二高分、第三个订单信息等。
+
+- `PERCENTILE_CONT` 和 `PERCENTILE_DISC` 的关键区别在于如何处理位于两个实际数据点之间的百分位数位置。 `PERCENTILE_CONT` 通过插值得到一个可能不在原始数据集中连续值，而 `PERCENTILE_DISC` 则直接从原始数据集选择一个最接近的值。
 ```sql
 PERCENTILE_CONT(percentile)
 WITHIN GROUP (ORDER BY sort_expression [ASC|DESC])
@@ -3080,12 +3080,12 @@ OVER ([partition_clause])
 |特性| `PERCENTILE_CONT` (连续百分位数)| `PERCENTILE_DISC` (离散百分位数)|
 |---|---|---|
 |计算方式|线性插值|从数据集中选择值|
-|结果值类型|**可能不是**原始数据中的值|**必须是**原始数据中的值|
+|结果值类型|**可能不是**原始数据中值|**必须是**原始数据中值|
 |平滑性|结果值随 `percentile` 平滑变化|结果值可能跳跃变化|
 |应用场景|需要更精确的百分位数，平滑变化|需要从数据集中选择代表性的百分位数，数据离散时|
-|性能|通常稍慢，因为需要插值计算|通常稍快，只需选择数据值|
-- **`PERCENTILE_CONT`**: 计算出的百分位数可能**不是**原始数据中的值，它会在排序数据中，根据百分比位置，通过**线性插值**估算出一个值。这个值会落入排序后的数据集中两个相邻值之间，体现了数据的“连续性”。
-- **`PERCENTILE_DISC`**: 计算出的百分位数**必须是**原始数据中的值。它从排序后的数据集中直接挑选出一个值，这个值的位置最接近百分比位置。因此，当 percentile 的值变化时，结果可能会“跳跃”到数据集中另一个实际存在的值上，体现了结果的“离散性”。
+|性能|通常稍慢，因需要插值计算|通常稍快，只需选择数据值|
+- **`PERCENTILE_CONT`**: 计算出的百分位数可能**不是**原始数据中值，它会在排序数据中，根据百分比位置，通过**线性插值**估算出一个值。这个值会落入排序后的数据集中两个相邻值之间，体现了数据的“连续性”。
+- **`PERCENTILE_DISC`**: 计算出的百分位数**必须是**原始数据中值。它从排序后的数据集中直接挑选出一个值，这个值的位置最接近百分比位置。因此，当 percentile 的值变化时，结果可能会“跳跃”到数据集中另一个实际存在的值上，体现了结果的“离散性”。
 - 线性插值是一种**估算**数值的方法。当你已知两个点的值，想要估算它们之间某个位置的值时，线性插值就假设这两个点之间是**线性变化**的，用一条直线连接这两个点，然后根据你要估算的位置在这条线上的哪个地方，来计算估算值。
 ## 使用通配符进行过滤
 通配符%看起来像是可以匹配任何东西，**但 NULL 例外**，子句 WHERE prod_name LIKE '%'不会匹配产品名称为 NULL 的行
@@ -3129,7 +3129,7 @@ select concat(rtrim(v.vend_name), '(', rtrim(v.vend_country), ')') from vendors 
 | `TRIM()`            | 去除字符串两侧的空格或指定字符           | 默认去除空格，可以指定去除的字符                 | `TRIM(' Hello ')` 返回 `'Hello'`                                 |
 | `LTRIM()`           | 去除字符串左侧的空格或指定字符           | 默认去除空格，可以指定去除的字符                 | `LTRIM(' Hello')` 返回 `'Hello'`                                 |
 | `RTRIM()`           | 去除字符串右侧的空格或指定字符           | 默认去除空格，可以指定去除的字符                 | `RTRIM('Hello ')` 返回 `'Hello'`                                 |
-| `REPLACE()`         | 替换字符串中的指定子字符串             | 区分大小写，如果替换的子字符串不存在，返回原字符串        | `REPLACE('Hello World', 'World', 'MySQL')` 返回 `'Hello MySQL'`  |
+| `REPLACE()`         | 替换字符串中指定子字符串             | 区分大小写，如果替换的子字符串不存在，返回原字符串        | `REPLACE('Hello World', 'World', 'MySQL')` 返回 `'Hello MySQL'`  |
 | `UPPER()`           | 将字符串转换为大写                 | 不改变原字符串，返回新字符串                   | `UPPER('Hello')` 返回 `'HELLO'`                                  |
 | `LOWER()`           | 将字符串转换为小写                 | 不改变原字符串，返回新字符串                   | `LOWER('HELLO')` 返回 `'hello'`                                  |
 | `INSTR()`           | 返回子字符串在字符串中第一次出现的位置       | 如果未找到子字符串，返回 `0`，位置从 1 开始           | `INSTR('Hello World', 'World')` 返回 `7`                         |
@@ -3146,16 +3146,16 @@ select concat(rtrim(v.vend_name), '(', rtrim(v.vend_country), ')') from vendors 
 | `CHAR()`            | 根据 ASCII 码值返回对应的字符          | 可以传入多个 ASCII 码值，返回拼接后的字符串          | `CHAR(65, 66, 67)` 返回 `'ABC'`                                  |
 | `SOUNDEX()`         | 返回字符串的 SOUNDEX 编码，用于语音相似性比较 | 仅适用于英文字符，结果为一个 4 字符的编码             | `SOUNDEX('Hello')` 返回 `'H400'`                                 |
 | `SUBSTRING_INDEX()` | 根据指定的分隔符返回字符串的子字符串        | 如果计数为正数，从左开始；如果为负数，从右开始          | `SUBSTRING_INDEX('www.mysql.com', '.', 2)` 返回 `'www.mysql'`    |
-| `ELT()`             | 根据索引返回列表中的字符串             | 索引从 1 开始，如果索引超出范围，返回 `NULL`         | `ELT(2, 'Apple', 'Banana', 'Cherry')` 返回 `'Banana'`            |
-| `FIELD()`           | 返回字符串在列表中的位置              | 如果字符串不在列表中，返回 `0`                 | `FIELD('Banana', 'Apple', 'Banana', 'Cherry')` 返回 `2`          |
-| `FIND_IN_SET()`     | 返回字符串在逗号分隔的字符串列表中的位置      | 如果字符串不在列表中，返回 `0`                 | `FIND_IN_SET('Banana', 'Apple,Banana,Cherry')` 返回 `2`          |
+| `ELT()`             | 根据索引返回列表中字符串             | 索引从 1 开始，如果索引超出范围，返回 `NULL`         | `ELT(2, 'Apple', 'Banana', 'Cherry')` 返回 `'Banana'`            |
+| `FIELD()`           | 返回字符串在列表中位置              | 如果字符串不在列表中，返回 `0`                 | `FIELD('Banana', 'Apple', 'Banana', 'Cherry')` 返回 `2`          |
+| `FIND_IN_SET()`     | 返回字符串在逗号分隔的字符串列表中位置      | 如果字符串不在列表中，返回 `0`                 | `FIND_IN_SET('Banana', 'Apple,Banana,Cherry')` 返回 `2`          |
 | `MAKE_SET()`        | 根据位掩码返回由逗号分隔的字符串列表        | 位掩码的每一位对应一个字符串，从右到左              | `MAKE_SET(3, 'Apple', 'Banana', 'Cherry')` 返回 `'Apple,Banana'` |
-| `QUOTE()`           | 将字符串用单引号括起来，并转义特殊字符       | 主要用于生成 SQL 语句中的字符串字面量              | `QUOTE("O'Reilly")` 返回 `"'O\'Reilly'"`                         |
+| `QUOTE()`           | 将字符串用单引号括起来，并转义特殊字符       | 主要用于生成 SQL 语句中字符串字面量              | `QUOTE("O'Reilly")` 返回 `"'O\'Reilly'"`                         |
 | `REGEXP`            | 判断字符串是否匹配正则表达式            | 返回 `1`（匹配）或 `0`（不匹配）               | `'Hello' REGEXP '^H'` 返回 `1`                                   |
-| `REGEXP_REPLACE()`  | 使用正则表达式替换字符串中的匹配部分        | 需要 MySQL 8.0 及以上版本支持               | `REGEXP_REPLACE('Hello123', '[0-9]', '')` 返回 `'Hello'`         |
+| `REGEXP_REPLACE()`  | 使用正则表达式替换字符串中匹配部分        | 需要 MySQL 8.0 及以上版本支持               | `REGEXP_REPLACE('Hello123', '[0-9]', '')` 返回 `'Hello'`         |
 | `REGEXP_SUBSTR()`   | 返回字符串中匹配正则表达式的子字符串        | 需要 MySQL 8.0 及以上版本支持               | `REGEXP_SUBSTR('Hello123', '[0-9]+')` 返回 `'123'`               |
 | `REGEXP_INSTR()`    | 返回字符串中匹配正则表达式的子字符串的起始位置   | 需要 MySQL 8.0 及以上版本支持               | `REGEXP_INSTR('Hello123', '[0-9]+')` 返回 `6`                    |
-SOUNDEX 是一个将任何文本串转换为描述其语音表示的字母数字模式的算法。SOUNDEX 考虑了类似的发音字符和音节，使得能对字符串进行发音比较而不是字母比较。**仅支持 ASCII 字符**，中文使用 Unicode 字符不支持，但是可以通过存储拼音字段配合辅助函数解决这个问题
+SOUNDEX 是一个将任何文本串转换为描述其语音表示的字母数字模式的算法。SOUNDEX 考虑了类似的发音字符和音节，使得能对字符串进行发音比较而不是字母比较。**仅支持 ASCII 字符**，中文使用 Unicode 字符不支持，但可以通过存储拼音字段配合辅助函数解决这个问题
 ```python
 from pypinyin import pinyin, lazy_pinyin, Style
 def get_pinyin(text):
@@ -3203,27 +3203,27 @@ SELECT STR_TO_DATE('05-10-2023', '%d-%m-%Y'); -- 返回 2023-10-05
 ### 聚合函数
 | 函数名                | 作用                                                                                                     | 返回值类型  | 适用场景             |
 | ------------------ | ------------------------------------------------------------------------------------------------------ | ------ | ---------------- |
-| `COUNT()`          | 计算行数， COUNT (column) 对特定列中具有值的行进行计数，忽略 NULL 值，`COUNT(*)` 用于计算表中的总行数，包括所有列和所有行。它的作用是统计数据的总行数，而不是基于某一列的值。 | 整数     | 统计行数或非空值数量       |
+| `COUNT()`          | 计算行数， COUNT (column) 对特定列中具有值的行进行计数，忽略 NULL 值，`COUNT(*)` 用于计算表中总行数，包括所有列和所有行。它的作用是统计数据的总行数，而不是基于某一列的值。 | 整数     | 统计行数或非空值数量       |
 | `SUM()`            | 计算数值列的总和                                                                                               | 数值     | 计算总和（如工资总额）      |
 | `AVG()`            | 计算数值列的平均值                                                                                              | 数值     | 计算平均值（如平均工资）     |
-| `MIN()`            | 返回列中的最小值，在**一些 DBMS 中**在用于文本数据时，MIN () 返回该列排序后最前面的行                                                    | 与列类型相同 | 查找最小值（如最低工资）     |
-| `MAX()`            | 返回列中的最大值，**在一些 DBMS 中**在用于文本数据时，MAX () 返回按该列排序后的最后一行。                                                  | 与列类型相同 | 查找最大值（如最高工资）     |
-| `GROUP_CONCAT()`   | 将分组中的值连接成一个字符串                                                                                         | 字符串    | 合并分组中的值（如员工姓名列表） |
+| `MIN()`            | 返回列中最小值，在**一些 DBMS 中**在用于文本数据时，MIN () 返回该列排序后最前面的行                                                    | 与列类型相同 | 查找最小值（如最低工资）     |
+| `MAX()`            | 返回列中最大值，**在一些 DBMS 中**在用于文本数据时，MAX () 返回按该列排序后的最后一行。                                                  | 与列类型相同 | 查找最大值（如最高工资）     |
+| `GROUP_CONCAT()`   | 将分组中值连接成一个字符串                                                                                         | 字符串    | 合并分组中值（如员工姓名列表） |
 | `STDDEV()`         | 计算数值列的标准差                                                                                              | 数值     | 分析数据分布的离散程度      |
 | `VAR_POP()`        | 计算数值列的总体方差                                                                                             | 数值     | 分析数据的总体波动        |
 | `VAR_SAMP()`       | 计算数值列的样本方差                                                                                             | 数值     | 分析数据的样本波动        |
-| `BIT_AND()`        | 对分组中的值进行按位与操作                                                                                          | 整数     | 处理按位逻辑运算         |
-| `BIT_OR()`         | 对分组中的值进行按位或操作                                                                                          | 整数     | 处理按位逻辑运算         |
-| `BIT_XOR()`        | 对分组中的值进行按位异或操作                                                                                         | 整数     | 处理按位逻辑运算         |
-| `JSON_ARRAYAGG()`  | 将分组中的值聚合为 JSON 数组                                                                                        | JSON 数组 | 生成 JSON 格式的分组数据    |
-| `JSON_OBJECTAGG()` | 将分组中的键值对聚合为 JSON 对象                                                                                      | JSON 对象 | 生成 JSON 格式的分组键值对   |
+| `BIT_AND()`        | 对分组中值进行按位与操作                                                                                          | 整数     | 处理按位逻辑运算         |
+| `BIT_OR()`         | 对分组中值进行按位或操作                                                                                          | 整数     | 处理按位逻辑运算         |
+| `BIT_XOR()`        | 对分组中值进行按位异或操作                                                                                         | 整数     | 处理按位逻辑运算         |
+| `JSON_ARRAYAGG()`  | 将分组中值聚合为 JSON 数组                                                                                        | JSON 数组 | 生成 JSON 格式的分组数据    |
+| `JSON_OBJECTAGG()` | 将分组中键值对聚合为 JSON 对象                                                                                      | JSON 对象 | 生成 JSON 格式的分组键值对   |
 由于 `count(*)` 中不涉及到表达式，所以不能使用 distinct 去重，`DISTINCT` 的作用是基于某一列或表达式的值去重，因此它必须明确指定去重的对象
 ## 分组数据
 - GROUP BY 子句可以包含任意数目的列，因而可以对分组进行嵌套，更细致地进行数据分组。
 - 如果在 GROUP BY 子句中嵌套了分组，数据将在最后指定的分组上进行汇总。换句话说，在建立分组时，指定的所有列都一起计算（所以不能从个别的列取回数据）。
 - GROUP BY 子句中列出的每一列都必须是检索列或有效的表达式（但不能是聚集函数）。如果在 SELECT 中使用表达式，则必须在 GROUP BY 子句中指定相同的表达式。不能使用别名。
 - 大多数 SQL 实现不允许 GROUP BY 列带有**长度可变的数据类型**（如文本或备注型字段）。
-- 除聚集计算语句外，SELECT 语句中的每一列都必须在 GROUP BY 子句中给出。
+- 除聚集计算语句外，SELECT 语句中每一列都必须在 GROUP BY 子句中给出。
 - 如果分组列中包含具有 NULL 值的行，则 NULL 将作为一个分组返回。**如果列中有多行 NULL 值，它们将分为一组**。
 - GROUP BY 子句必须出现在 WHERE 子句之后，ORDER BY 子句之前
 ---
@@ -3232,16 +3232,16 @@ HAVING 非常类似于 WHERE。事实上，目前为止所学过的所有类型�
 ### 子查询的执行方式
 1. **逐行处理**：
     复杂度：`O(N * M)`，其中 `N` 是外部查询的行数，`M` 是子查询的行数
-    - 子查询中的查询语句会对外部查询的每一行执行一次。
-    - 在给定的代码中，对于 `Employee` 表中的每一行，子查询都需要执行一次，以查找对应经理的工资。
+    - 子查询中查询语句会对外部查询的每一行执行一次。
+    - 在给定的代码中，对于 `Employee` 表中每一行，子查询都需要执行一次，以查找对应经理的工资。
     - 如果表中数据量较大（例如有 1000 行），子查询就需要执行 1000 次。
 2. **子查询的性能瓶颈**：
-    
+
     - 子查询的效率依赖于子查询本身的执行速度和外部查询的数据量。
     - 如果子查询本身涉及大表或复杂查询，执行时间会显著增加。
     - 子查询无法充分利用索引或批量处理优化，导致效率较低。
 3. **索引的使用**：
-    
+
     - 即使 `managerId` 和 `id` 字段上有索引，子查询每次执行时都需要重新查找索引，增加了开销。
     - 而在自连接中，数据库可以一次性利用索引完成连接操作。
 
@@ -3252,11 +3252,11 @@ HAVING 非常类似于 WHERE。事实上，目前为止所学过的所有类型�
     - 自连接会一次性将两个表（或同一个表）进行连接，生成中间结果。
     - 数据库优化器可以根据连接条件和索引优化查询计划，减少扫描的数据量。
 2. **索引优化**：
-    
+
     - 如果 `managerId` 和 `id` 字段上有索引，自连接可以利用索引快速定位匹配的记录。
     - 数据库优化器可以生成高效的执行计划，避免不必要的全表扫描。
 3. **减少重复计算**：
-    
+
     - 自连接只需要执行一次连接操作，而子查询需要对外部查询的每一行重复执行，导致重复计算。
 
 # C++数据库编程（mysql-connenctor-cpp）
@@ -3265,7 +3265,7 @@ mysql-connector-cpp 安装步骤 [2025最新版VS2022配置C++ connector连接my
 ![[Pasted image 20250620144029.png]]
 随着 mysql 更新，`mysqlcppconnXXXXXXX.dll` 文件数字可能有变化，需要对应地调整
 ![[Pasted image 20250620144354.png]]
-中的第二项 `mysqlcppconn8.lib`
+中第二项 `mysqlcppconn8.lib`
 
 > 记下这里时（2025 年 6 月 20 日14:45:29）已经升级到了 `mysqlcppconnx.dll`（10）所以需要在图片中位置相应改动
 
@@ -3330,18 +3330,18 @@ int main() {
 教程中代码仅仅只能用于 release 中，debug 模式下会出现堆栈异常
 
 > PS：
-> - 代码中的 driver，con 和 stmt 对象是指针，需要手动释放资源
+> - 代码中 driver，con 和 stmt 对象是指针，需要手动释放资源
 > - **`driver`**：获取驱动实例，用于创建连接。由单例模式函数 `get_driver_instance()` 函数的单例对象控制，不需要手动控制
 - **`con`**：通过驱动实例创建连接对象，使用指针以便后续管理连接的生命周期。多个连接可以共用一个驱动
 - **`stmt`**：通过连接对象创建语句对象，同样使用指针以便执行 SQL 语句和资源管理。生命周期和 con 绑定，连接管理了自然不会有语句对象
 ### 连接数据库参数
 #### 使用参数或者纯字符串连接
-连接的各项指标 `options` 字符串参数填写**必须使用 `(const) char*` 字符数组**初始化的变量，**不能使用 `string`**，因为会在末尾填上 `\n` 导致
+连接的各项指标 `options` 字符串参数填写**必须使用 `(const) char*` 字符数组**初始化的变量，**不能使用 `string`**，因会在末尾填上 `\n` 导致
 ```sql
 SQL Error: Access denied for user 'sickwag'@'42.97.247.141' (using password: YES)
 Error Code: 1045
 ```
-1045 错误**最有可能表示的是**账号密码输入错误，在 sprintboot 或者会自动添加 `\n` 的 `string` 对象代码中出现，也可能是因为拼写错误
+1045 错误**最有可能表示的是**账号密码输入错误，在 sprintboot 或者会自动添加 `\n` 的 `string` 对象代码中出现，也可能是因拼写错误
 正确参考：
 ```cpp
 const char* host = "mysql2.sqlpub.com";
@@ -3407,8 +3407,8 @@ MySQLDB::MySQLDB(const std::string& host, int port, const std::string& user, con
 | `"OPT_FIDO_CALLBACK"`                   | FIDO 回调函数                         | 用于 FIDO 认证（如 MySQL 8.0 的 FIDO 认证） |
 
 其中：
-如果没有分行解析 sql 的需求，想要将整个 sql 文件中的所有内容转化为纯字符发送到 mysql 数据库一次性执行，就需要开启多语句支持 `CLIENT_MULTI_STATEMENT`，多结果集返回查询需要开启 `CLIENT_MULTI_RESULTS`
-使用 option 作为连接需要获取 options 中的参数时，需要通过 `get()` 获取类型
+如果没有分行解析 sql 的需求，想要将整个 sql 文件中所有内容转化为纯字符发送到 mysql 数据库一次性执行，就需要开启多语句支持 `CLIENT_MULTI_STATEMENT`，多结果集返回查询需要开启 `CLIENT_MULTI_RESULTS`
+使用 option 作为连接需要获取 options 中参数时，需要通过 `get()` 获取类型
 如options 中存储了数据库名称，现在需要通过  `setSchema` 来设置默认连接的数据库，则需要使用
 ```cpp
 on->setSchema(options["schema"].get<sql::SQLString>()->asStdString());
@@ -3667,7 +3667,7 @@ sql error code: 1064
 sql statement: 42000
 sql description: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 1
 ```
-乍看之下还看不出哪里有问题，语法错误，通过调试会发现，statement 字符串值显示为 `<字符串中的字符无效。>`，打开其中内容发现其中有大量 `\0` 无意义字符，判定为文件编码问题，修改为 utf-8 即可解决
+乍看之下还看不出哪里有问题，语法错误，通过调试会发现，statement 字符串值显示为 `<字符串中字符无效。>`，打开其中内容发现其中有大量 `\0` 无意义字符，判定为文件编码问题，修改为 utf-8 即可解决
 
 ## 解析数据库返回内容
 由于[[MySQL Long Code Practice#mysql-connector-cpp 链接模板|链接模板]]预输入代码将所有插入内容视为字符串插入
@@ -3777,8 +3777,8 @@ QSqlDatabase::database().commit();
 | 定位      | `previous()`   | 指向上一条记录，每执行一次该函数，便指向相邻的上一条记录 |
 | 获取记录    | `record()`     | 获得当前指向的记录                    |
 | 取值      | `value(int n)` | 获得属性的值                       |
-| 获取记录编号  | `at()`         | 获取当前记录在结果集中的编号               |
-| 获取总行数   | `size()`       | 返回结果中的总行数                    |
+| 获取记录编号  | `at()`         | 获取当前记录在结果集中编号               |
+| 获取总行数   | `size()`       | 返回结果中总行数                    |
 
 如果数据库查询时，**只需要前向查询**，则可以在调用 exec() 之前调用[QSqlQuery::setForwardOnly](https://doc.qt.io/qt-6/zh/qsqlquery.html#setForwardOnly)(true)。这是一种简单的优化方法，在操作大型结果集时，可以显著加快查询速度
 ### 数据库支持功能查询
@@ -3836,12 +3836,12 @@ private slots:
 ```cpp
 QString password_hash = QString::fromUtf8(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256).toHex());
 ```
-`toHex()` 函数返回的是一个 `QByteArray` 对象，但是他可以被转换成 `QString`，参考 [[Qt Official Tutorial#QT 中的字符串编码|QString字符编码]]，如果只使用了 `QString::fromUtf8(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256)`， ：
+`toHex()` 函数返回的是一个 `QByteArray` 对象，但他可以被转换成 `QString`，参考 [[Qt Official Tutorial#QT 中字符串编码|QString字符编码]]，如果只使用了 `QString::fromUtf8(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256)`， ：
 1. QCryptographicHash:: hash()返回一个 QByteArray，它包含 32 字节的二进制哈希数据
 2. QString:: fromUtf 8 () 尝试将这些二进制数据解释为 UTF-8 编码的字符串
 这会将**二进制转换为 utf-8 编码字符串**，结果是一串乱码，所以需要在后面添加 `.toHex()` 函数，将这串**本质上还是二进制数据的内容**转换为 16 进制表示的字符串
 代码中采用本地加密密码字符串方式，将 16 进制加密字符串上传到服务器的方式。服务器端永远**不知道明文密码是什么**
-还有一种方式，在 sql 语句中使用 `select * from table where password_hash = SHA256(password)`，在服务器端加密字符串，**服务器也看不到明文，但是网络传输截获的数据包中包含的密码是明文**
+还有一种方式，在 sql 语句中使用 `select * from table where password_hash = SHA256(password)`，在服务器端加密字符串，**服务器也看不到明文，但网络传输截获的数据包中包含的密码是明文**
 
 # C++数据库编程（Boost:mysql）
 参考链接：[Boost 入门 - 1.88.0 - Boost C++ 函数库](https://boost.ac.cn/doc/libs/1_88_0/more/getting_started/index.html)
@@ -3916,7 +3916,7 @@ int main(int argc, char** argv) {
 
 ### 前置知识
 #### result 结果集容器
-`boost::mysql::results` 是 Boost.MySQL 提供的 **结果集容器**，用于存储 SQL 查询的返回数据。其中的方法支持链式调用，支持显式类型转换，但 **不自动转换**
+`boost::mysql::results` 是 Boost.MySQL 提供的 **结果集容器**，用于存储 SQL 查询的返回数据。其中方法支持链式调用，支持显式类型转换，但 **不自动转换**
 `.rows()`
 - 返回一个包含所有 **结果** 的数组。
 - 一个 SQL 查询可能返回多个结果集（如存储过程执行多个 `SELECT`），但  （截至 Boost 1.84，2025年）并不支持多结果集，可能需要调用 C 的一些库才能实现对应的功能
@@ -3927,8 +3927,8 @@ int main(int argc, char** argv) {
 - `.rows()` 返回一个 `rows_view`，表示一个结果集**的所有行数据部分**，包含多行（`row_view`）。
 
 > [!NOTICE]
-> 
-> - 注意，`rows (). at (i)` 返回一行内容，可以调用 `as_vector()` 将结果转化为 vector，但是其中元素必须是同一类型，否则抛出错误
+>
+> - 注意，`rows (). at (i)` 返回一行内容，可以调用 `as_vector()` 将结果转化为 vector，但其中元素必须是同一类型，否则抛出错误
 > - `rows().at(i).at(j)` 返回一个单元格值，可以调用 `as_type()` 转换为各种类型，不能隐式转换，比如将 int（mysql 数据类型）转化为 string（C++数据类型）会抛出 `bad_value_access` 错误
 #### 常用 api 写法
 ##### 处理 null 值
@@ -4042,7 +4042,7 @@ try {
 ```cpp
 asio::co_spawn(
     ctx, // 事件处理器
-    coro_main(conn, "mysql2.sqlpub.com:3307", "sickwag", "LqX9jBDqvDJYeooE"), // 协程和他的操作内容 
+    coro_main(conn, "mysql2.sqlpub.com:3307", "sickwag", "LqX9jBDqvDJYeooE"), // 协程和他的操作内容
     asio::detached // 事件处理器对协程的处理行为
 );
 ```
@@ -4071,7 +4071,7 @@ asio::co_spawn(
 - 所有 `async_*` 操作（通过 `co_await` 标记的操作）都注册到 `io_context` 的 epoll/kqueue/iocp 等待队列中；
 - **当 I/O 完成，`io_context` 会唤醒对应的协程**。
 - 协程本质是一个 **可挂起/恢复的函数**，内部包含通过 `co_await` 修饰的操作和协程所需的局部变量，资源。
-- 协程的局部变量 **不会因挂起丢失**，因为编译器会将其分配在堆内存中（而非普通函数的栈内存）。
+- 协程的局部变量 **不会因挂起丢失**，因编译器会将其分配在堆内存中（而非普通函数的栈内存）。
 异步连接数据库代码示例：
 ```cpp
 asio::awaitable<void> coro_main(
@@ -4189,17 +4189,17 @@ int main(int argc, char** argv) {
 其他方法参考[[#预处理语句（防止 SQL 注入）]]
 
 ### 静态接口
-Boost 库中的“静态接口”是指 **不依赖对象实例** 的***类方法***或自由函数（free function），**通过类名直接调用**，可以是类的静态成员函数，不访问对象内部状态（即不使用 this 指针），常用于封装**异步操作**和**资源管理**的通用逻辑，简化代码结构并提升可维护性
+Boost 库中“静态接口”是指 **不依赖对象实例** 的***类方法***或自由函数（free function），**通过类名直接调用**，可以是类的静态成员函数，不访问对象内部状态（即不使用 this 指针），常用于封装**异步操作**和**资源管理**的通用逻辑，简化代码结构并提升可维护性
 它不像传统反射（如 Java/Python）那样在运行时动态获取类型信息，而是 **在编译时生成结构体的元数据**，供程序使用。
 你告诉编译器：“这个结构体有哪些字段”，它会 **自动生成一个描述结构体成员的元信息结构**，比如字段名和字段类型。
 #### 结构体元数据解析
-`BOOST_DESCRIBE_STRUCT` 是 Boost.Describe 库中的一个宏，用于 **为结构体或类定义成员变量的元数据（metadata）**，以便在编译时或运行时 **访问其字段名、字段类型、字段值**，实现 **静态反射（Static Reflection）**。
+`BOOST_DESCRIBE_STRUCT` 是 Boost.Describe 库中一个宏，用于 **为结构体或类定义成员变量的元数据（metadata）**，以便在编译时或运行时 **访问其字段名、字段类型、字段值**，实现 **静态反射（Static Reflection）**。
 #### 多结果集查询
 使用多结果集查询需要先在单个 `connection::execute` 调用中运行多个分号分隔的文本查询。出于安全考虑，此功能默认禁用。启用它需要在连接之前设置 `handshake_params::multi_queries`
 它的定义为：
 ![[Pasted image 20250722152355.png]]
 使用构造函数初始化并将 multi_queries 设置为 true
-像 `DELIMITER` 这样的语句使用此功能 **不起作用**。这是因为 `DELIMITER` 是 `mysql` 命令行工具的伪命令，而不是实际的 SQL。
+像 `DELIMITER` 这样的语句使用此功能 **不起作用**。这是因 `DELIMITER` 是 `mysql` 命令行工具的伪命令，而不是实际的 SQL。
 #### 静态接口结构体解析数据类型
 需要注意的是，使用静态接口解析***行数据结构体*** 需要 mysql 表中字段类型和 C++对应类型字段匹配，`ptr_by_name` 认为**行数据结构体**中成员名称必须和字段名相同。存储的是表的字段名。其实存储的将会是***字段值***
 
@@ -4214,23 +4214,23 @@ struct Info{
     std::string id, name, nick_name, priority;
     std::optional<std::string> phone;
 };
-// 但是通过下面代码使用名称解析
+// 但通过下面代码使用名称解析
 mysql::static_results<mysql::pfr_by_name<Info>> result;
 short id = 3;
 co_await conn.async_execute(
     mysql::with_params("select id, name, nick_name, priority, phone from users where id = {};", id),
     result);
-    
+
 // 如果使用boost::mysql::ptr_by_postion，则会按照查询结果字段顺序解析到结构体中
 mysql::static_results<mysql::pfr_by_postion<Info>> result;
-// 按顺序赋值到Info中的元素
+// 按顺序赋值到Info中元素
 ```
 最终 mediumint 类型被解析到 `std::string` 类型中导致报错
 `std::int32_t` 与 `TINYINT`（1 字节整数）兼容，但不与 `BIGINT`（8 字节整数）兼容。有关允许的字段类型的完整列表，[请参阅此表](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/static_interface.html#mysql.static_interface.readable_field_reference)。
 
 #### mysql 允许为空字段 C++解析报错
 如果设置了一个字段在 MySQL 中是可以为 `NULL` 的，那么在***行数据结构体***中对应的 C++数据类型可能要转换，比如 `std::string` 类型不能为 NULL（`std::string` 是一个类类型（class type），**它不是指针**，因此**不存在 "NULL" 或 `nullptr` 的概念**。像 C 风格的 `char*` 字符串那样可能指向 `NULL` 或 `nullptr`。）可以通过使用 `std::optional<std::string>` 类型来让变量可以为 `NULL`
-这个字段可以为 `NULL`，可能查询值中的字段非空，但是为了安全性，代码会选择在编译器报错杜绝运行期类型转换带来的风险，Boost. MySQL 的静态接口无法将 `NULL` 值赋给 `std::string`，于是抛出此异常。
+这个字段可以为 `NULL`，可能查询值中字段非空，但为了安全性，代码会选择在编译器报错杜绝运行期类型转换带来的风险，Boost. MySQL 的静态接口无法将 `NULL` 值赋给 `std::string`，于是抛出此异常。
 解决方法是：修改结构体，将可能为 `NULL` 的字段改为 `std::optional<T>`，对封装类 `option<T>` 的解析和操作，需要注意[[#复杂类型误用未定义操作符报错]]，或者***不使用静态接口映射***，使用 `rows().at().at()` 手动解析
 ##### 复杂类型误用未定义操作符报错
 
@@ -4240,10 +4240,10 @@ mysql::static_results<mysql::pfr_by_postion<Info>> result;
 ![[Pasted image 20250722004123.png]] 通过筛选器筛选**输出**关键词，问题列表中也可以筛选从而快速定位
 ```bash
 error # 注意error后有空格，一般错误以 字母+数字 编写，可以用筛选器正则表达筛选快速找到错误所在
-warning 
+warning
 ```
 ![[Pasted image 20250722004106.png]]
-并通过下面这段代码来输出包装器中的值：
+并通过下面这段代码来输出包装器中值：
 ```cpp
 if (info.phone.has_value()) {
     std::cout << "Phone: " << info.phone.value() << '\n';
@@ -4364,7 +4364,7 @@ co_await conn->async_execute(
     result
 );
 ```
-当 `pooled_connection` 被销毁时，连接将返回到池中。底层连接将使用轻量级会话重置机制进行清理和回收。后续的 `async_get_connection` 调用可能会检索到相同的连接。这提高了效率，因为会话建立的成本很高。
+当 `pooled_connection` 被销毁时，连接将返回到池中。底层连接将使用轻量级会话重置机制进行清理和回收。后续的 `async_get_connection` 调用可能会检索到相同的连接。这提高了效率，因会话建立的成本很高。
 ```cpp
 // This will wait until a healthy connection is ready to be used.
 // pooled_connection grants us exclusive access to the connection until
@@ -4389,7 +4389,7 @@ FROM (
     SELECT
         e.*,
         -- 在每个部门内，按 salary 从大到小排雷；同薪同名次
-        DENSE_RANK() OVER (PARTITION BY departmentId ORDER BY salary DESC) AS dr		
+        DENSE_RANK() OVER (PARTITION BY departmentId ORDER BY salary DESC) AS dr
     FROM Employee e
 ) AS e
 JOIN Department d ON d.id = e.departmentId
@@ -4398,7 +4398,7 @@ WHERE e.dr <= 3;   -- 只取前三档工资
 - 分片（PARTITION BY departmentId）
 	- 以后所有的运算只在每一块内部进行，互不干扰。
 	- 这里使用 `PARTITION BY departmentId` 表示根据 `departmentId` 分块
-- `DENSE_RANK()`给这排好的序打上 **分档号**。  
+- `DENSE_RANK()`给这排好的序打上 **分档号**。
     - `DENSE_RANK()` 的规则： • 只要值不同，就跳到下一个整数。相同薪水的人**始终拿到同样的档号**。
     - 上一步算完后，临时表 e2 里**每条记录都多了一个新的列 `dr`**，告诉你“这名员工**在自己部门内属于第几档工资**”。
 不使用窗口函数：
@@ -4408,13 +4408,13 @@ FROM employee a
 LEFT JOIN employee b
        ON a.departmentId = b.departmentId
       AND a.salary < b.salary
-      
-      -- a表中的每行数据都会匹配上b表中的**同一部门**中薪水比这一行数据高的数据
+
+      -- a表中每行数据都会匹配上b表中**同一部门**中薪水比这一行数据高的数据
 	  -- ab相同，所以最终是自连接，合并成更大一张表
 LEFT JOIN department d
        ON a.departmentId = d.id
-       
-       -- 加入departmentId信息，不然上面left join会出错       
+
+       -- 加入departmentId信息，不然上面left join会出错
 where a.departmentId = d.id 	-- 简单筛选
 GROUP BY a.id          			-- 按照部门id聚成一行
 HAVING COUNT(distinct b.salary) <=2
@@ -4441,16 +4441,16 @@ where datediff(a.event_date, r.first_login) = 1;
 
 -- 正确写法
 select round(avg(a.event_date is not null), 2) fraction
-from 
+from
     (select player_id, min(event_date) as login
     from activity
-    group by player_id) p 
-left join activity a 
+    group by player_id) p
+left join activity a
 on p.player_id=a.player_id and datediff(a.event_date, p.login)=1
 ```
-注意 where 会筛选 join 之后的表，按行筛选，也就是说，left join 会保留坐标的行，而 on 中的筛选条件会筛选掉右边拼接到左边的行中的这一部分
+注意 where 会筛选 join 之后的表，按行筛选，也就是说，left join 会保留坐标的行，而 on 中筛选条件会筛选掉右边拼接到左边的行中这一部分
 如果使用 where 做筛选，那么和 inner join 没有区别了
-这里需要保留原表 `Activity` 中的 `player_id` 做计算，不能保留右边的表（第一次登录表）中的信息，所以 left join 的是 Activity，From 的是第一次登录表
+这里需要保留原表 `Activity` 中 `player_id` 做计算，不能保留右边的表（第一次登录表）中信息，所以 left join 的是 Activity，From 的是第一次登录表
 
 # Mysql 机制探究
 ## 数据库索引是什么？
@@ -4462,7 +4462,7 @@ on p.player_id=a.player_id and datediff(a.event_date, p.login)=1
 
 ### 最左前缀匹配规则
 在联合索引上，这条规则是；只有某个字段（笔画）**左边的所有字段**（部首）都被使用了，才能使用该字段上的索引
-联合索引中的字段，即使某个字段（部首）右边的其他字段（笔画）没有被使用，该字段之前（含）的所有字段仍然可以正常使用索引。例如，有索引 `INDEX idx_i2(col_a, col_b, col_c)`，则查询条件 `where col_a = 1 and col_b = 2` 在字段 `col_a` 和 `col_b` 上仍然可以走索引。
+联合索引中字段，即使某个字段（部首）右边的其他字段（笔画）没有被使用，该字段之前（含）的所有字段仍可以正常使用索引。例如，有索引 `INDEX idx_i2(col_a, col_b, col_c)`，则查询条件 `where col_a = 1 and col_b = 2` 在字段 `col_a` 和 `col_b` 上仍可以走索引。
 所以可以得到
 
 > 如果有一个 SQL 查询语句需要执行，则只有从索引最左边的第一个字段开始到 SQL 语句查询条件中不包含的字段（不含）或范围条件字段（含）为止的部分才会使用索引进行加速。
@@ -4483,11 +4483,11 @@ on p.player_id=a.player_id and datediff(a.event_date, p.login)=1
 | `WHERE name='A' AND salary=5000`           | 使用 `(name)`     | 跳过`age`字段，`salary`不连续，仅`name`生效    |
 | `WHERE name='A' AND age BETWEEN 20 AND 30` | 使用 `(name,age)` | `BETWEEN`属于范围查询，`salary`字段失效       |
 ### 什么是聚集索引？
-从上文的部首目录和拼音目录同时存在但是实际的字典内容只有一份这一点上可以看出，在数据库中一张表上是可以有多个索引的，即一行记录可以被多个索引找到
+从上文的部首目录和拼音目录同时存在但实际的字典内容只有一份这一点上可以看出，在数据库中一张表上是可以有多个索引的，即一行记录可以被多个索引找到
 ![[1460000018156726.webp]]
 
 
-像拼音目录这样的索引，数据会根据索引中的顺序进行排列和组织的，这样的索引就被称为**聚集索引**，而**非聚集索引**就是其他的一般索引。因为数据只能按照一种规则排序，所以一张表至多有一个聚集索引，但可以有多个非聚集索引。
+像拼音目录这样的索引，数据会根据索引中顺序进行排列和组织的，这样的索引就被称为**聚集索引**，而**非聚集索引**就是其他的一般索引。因数据只能按照一种规则排序，所以一张表至多有一个聚集索引，但可以有多个非聚集索引。
 以为所有的数据（字）都是根据拼音来排布的，拼音的优先级高于偏旁部首，所以拼音就是聚集索引
 
 ## 数据库索引融会贯通
@@ -4496,4 +4496,4 @@ on p.player_id=a.player_id and datediff(a.event_date, p.login)=1
 1、局部性原理
 数据和程序都有聚集成群的倾向，之前被访问过的数据很可能再次被查询，空间局部性，时间局部性
 2、磁盘预读中
-内存跟磁盘在发生数据交互的时候，一般情况下有一个最小的逻辑单元，称之为页，datapage，页一般由操作系统决定是多大，**一般是 4 k 或者 8 k**，而我们在进行数据交互的时候，可以取页的整数倍来进行读取，innodb 存储引擎每次读取数据读取 16 k 
+内存跟磁盘在发生数据交互的时候，一般情况下有一个最小的逻辑单元，称之为页，datapage，页一般由操作系统决定是多大，**一般是 4 k 或者 8 k**，而我们在进行数据交互的时候，可以取页的整数倍来进行读取，innodb 存储引擎每次读取数据读取 16 k

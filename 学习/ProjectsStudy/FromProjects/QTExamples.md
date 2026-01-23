@@ -3,20 +3,20 @@ source: https://github.com/XMuli/QtExamples
 crea: 2025年10月11日09:56:36
 ---
 # QT生成原理和运行机制
-## Make、Makefile、Cmake、QMake 的区别 
+## Make、Makefile、Cmake、QMake 的区别
 参考 [Make、Makefile、Cmake、QMake 的区别](https://xmuli.blog.csdn.net/article/details/98170236)
 ## Qt 中 namespace Ui { class Widget； } 解析
 参考：[Qt 编程中 namespace Ui { class Widget； } 解析_namespace ui { class widget; }-CSDN博客](https://xmuli.blog.csdn.net/article/details/98122981)
 ### 问题背景
 很多项目，包括创建空白 qt 项目时，都会创建的默认的类中，存在这样一段代码
 ```cpp
-namespace Ui { 
-	class widget; 
-} 
+namespace Ui {
+	class widget;
+}
 ```
-导致如果要使用 widget 类所对应的 ui 文件，就需要 `#include "ui_widget.h"` 文件，并且使用 ui 文件中的组件时，需要使用 `ui->component`
+导致如果要使用 widget 类所对应的 ui 文件，就需要 `#include "ui_widget.h"` 文件，并且使用 ui 文件中组件时，需要使用 `ui->component`
 ### 原因分析
-Designer使用了 [[C++开发范式#PImpl (Pointer to Implementation)|pimpl手法]]，pImpl手法[[C++开发范式#qt 的 d-pointer 模式|在 qt 中的主要作用]] 是解开类的使用接口和实现的耦合，即为了减少各个源文件之间的联系。可以参考链接
+Designer使用了 [[C++开发范式#PImpl (Pointer to Implementation)|pimpl手法]]，pImpl手法[[C++开发范式#qt 的 d-pointer 模式|在 qt 中主要作用]] 是解开类的使用接口和实现的耦合，即为了减少各个源文件之间的联系。可以参考链接
 # 常规GUI控件
 ## moc 的元对象和属性的用法
 标题太长简化，参考[元对象系统moc(Meat-Object System)的对象MetaObject和(含动态)属性Propert的用法_metaobject 判断 有无该字段-CSDN博客](https://xmuli.blog.csdn.net/article/details/105925608)
@@ -35,7 +35,7 @@ timer->inherits ("QAbstractButton");//返回false. 不是QAbatractButton的子�
 ```
 - `QObject::tr()` 和 `Qbjet::trUtf8()` 函数可翻译字符串，用于多语言界面设计。
 - `QObjct:setProperty()` 和 `Q0bjct:property()` 函数通过属性名称动态设置和获取属性值。
-- 专门为 QObject 对象设计的动态投射（`qobject_cast`），拓展于 `dynamic_cast`，[[Qt Official Tutorial#QT 框架中的 qobject_cast|参考]]
+- 专门为 QObject 对象设计的动态投射（`qobject_cast`），拓展于 `dynamic_cast`，[[Qt Official Tutorial#QT 框架中 qobject_cast|参考]]
 ### 元对象属性
 **元对象系统由以下三个基础组成：**
 - QObject 类是所有使用元对象系统的类的基类。
@@ -49,7 +49,7 @@ timer->inherits ("QAbstractButton");//返回false. 不是QAbatractButton的子�
 ```cpp
 Q_PROPERTY(type name
              (READ getFunction [WRITE setFunction] |
-              MEMBER memberName [(READ getFunction | 
+              MEMBER memberName [(READ getFunction |
               WRITE setFunction)])
              [RESET resetFunction]
              [NOTIFY notifySignal]
@@ -93,9 +93,9 @@ class QPushButton : public QAbstractButton {
     - `property("flat")` → 实际调用`isFlat()`函数
     - `setProperty("flat")` → 实际调用`setFlat()`函数
 - **生命周期绑定**：
-    - 属性与类定义强绑定，修改类定义需重新编译，无法在运行时创建新的属性，但是可以修改已在编译时确定有的属性
+    - 属性与类定义强绑定，修改类定义需重新编译，无法在运行时创建新的属性，但可以修改已在编译时确定有的属性
 ##### 2. 动态属性
-运行时添加的属性，不写在 `Q_PROPERTY` 中的属性，属性**键必须是 `QByteArray` 类型，值只能是 `QVariant` 类型（可以包装几乎所有Qt和标准C++类型）**
+运行时添加的属性，不写在 `Q_PROPERTY` 中属性，属性**键必须是 `QByteArray` 类型，值只能是 `QVariant` 类型（可以包装几乎所有Qt和标准C++类型）**
 - **元对象系统无注册**：
     - 不出现在`QMetaObject::property()`列表中
     - `Q_PROPERTY`声明的静态属性≠动态属性
@@ -127,7 +127,7 @@ class QPushButton : public QAbstractButton {
 #### qt 定义类属性
 属性系统还有一个宏Q CLASSINFO0.可以为类的元对象定义“名称-值” 信息
 ```cpp
-class QMyC1ass : public QObject { 
+class QMyC1ass : public QObject {
   Q_OBJECT
   Q_CLASSINFO("author", "Wang" )
   Q_CLASSINFO("company", "UPC" )
@@ -150,7 +150,7 @@ for (int i = meta->propertyOffset(); i < meta->propertyCount(); i++) {
 ## `QString` 在 2 ／8／10／16 进制之间转换
 参考 https://xmuli.blog.csdn.net/article/details/100860030
 ### 基本编码格式
-`QString` 使用基于**Unicode码点的UTF-16编码**，而 C++标准中的 char，char\[\] 和 `std::string` 都依赖于本地环境编码，string 甚至没有内建编码方式
+`QString` 使用基于**Unicode码点的UTF-16编码**，而 C++标准中 char，char\[\] 和 `std::string` 都依赖于本地环境编码，string 甚至没有内建编码方式
 
 | 类型            | 存储本质               | 编码依赖因素               | 典型使用场景           |
 | ------------- | ------------------ | -------------------- | ---------------- |
@@ -169,7 +169,7 @@ for (int i = meta->propertyOffset(); i < meta->propertyCount(); i++) {
 > ps: C++11 引入了字符串 `u8` 前缀，可以让 string 类型按照 utf-8 编码
 
 ### QString 的隐式共享
-在传统C++中，如果想要为函数传入一个字符串参数，为了避免字符串复制，一般会使用 `const std::string& str` 作为传入参数，使用QString 时则不需要，因为 QString 对象之间，如果**没有对老 QString 的修改操作**，新对象从老对象中获得数据的方式是**共享同一块内存地址**，QString 内部也使用了[[Modern C++#5.1 RAII 与引用计数|引用计数]]的方法
+在传统C++中，如果想要为函数传入一个字符串参数，为了避免字符串复制，一般会使用 `const std::string& str` 作为传入参数，使用QString 时则不需要，因 QString 对象之间，如果**没有对老 QString 的修改操作**，新对象从老对象中获得数据的方式是**共享同一块内存地址**，QString 内部也使用了[[Modern C++#5.1 RAII 与引用计数|引用计数]]的方法
 - `QString`：使用隐式共享，直到修改才会复制时共享数据
 - `std::string`：C++11前通常是深拷贝，C++11后可能有短字符串优化
 ```cpp
@@ -185,7 +185,7 @@ void modifyString(QString str) {
 ```
 只有性能极其敏感的场景，才会考虑使用 const 引用传递
 ### 字符串对象转数字
-QString 对象中的各个 to 开头的函数可以实现，并且支持进制转换
+QString 对象中各个 to 开头的函数可以实现，并且支持进制转换
 ```cpp
 int QString::toInt(bool *ok = Q_NULLPTR, int base = 10) const
 ```
@@ -196,7 +196,7 @@ int QString::toInt(bool *ok = Q_NULLPTR, int base = 10) const
 
 QString &QString::setNum(float n, char format = 'g', int precision = 6)
 ```
-其中的 format 参数可以按照类型格式化字符
+其中 format 参数可以按照类型格式化字符
 
 | 格式符   | 形式     | 使用场景                 | 典型输出（n=123.456）    |
 | ----- | ------ | -------------------- | ------------------ |
@@ -268,7 +268,7 @@ void bar_collection::on_bar_value_changed(int value) {
 void bar_collection::on_bar_value_changed(int value) {
 	QObject* sender_obj = QObject::sender(); // 获取调用这个函数的对象
 	if (sender_obj == ui.v_progress_bar) {
-		// code 
+		// code
 	}
 	// code
 }
@@ -293,7 +293,7 @@ void bar_collection::on_bar_value_changed(int value) {
 |    digitCount     |                                           显示的数的位数，如果是小数，小数点也算一个数位                                           |
 | smallDecimalPoint |                                            是否有小数点，如果有小数点，就可以显示小数                                            |
 |       mode        |          数的显示进制，通过调用函数setDecMode）、setBinMode（）、setOctMode）、setHexMode（）可以设置为常用的十进制、二进制、八进制、十六进制格式。          |
-|       value       | 返回显示值，浮点数。若设置为显示整数，会自动四舍五入后得到整数，设置为intValue的值。如果smallDecimalPoint=true，设置value时可以显示小数，但是数的位数不能超过digitCount。 |
+|       value       | 返回显示值，浮点数。若设置为显示整数，会自动四舍五入后得到整数，设置为intValue的值。如果smallDecimalPoint=true，设置value时可以显示小数，但数的位数不能超过digitCount。 |
 |     intValue      |                                                  返回显示的整数值                                                   |
 
 若 `smallDecimalPoint==true`，`digitCount==3`，设置 `value=2.36`，则界面上LCDNumber组件会显示为2.4；
@@ -327,10 +327,10 @@ Qt 中有专门用于日期、时间编辑和显示的界面组件，介绍如�
 - **OCalendarWidget**:一个用日历形式选择日期的组件。
 简单通过 setText，setDate，setTime 函数就能够完成，这些函数只能接受对应类型的参数，比如 setDate 只能接受 QDate ，setTime 只能接受 QTime。
 而 qt 中对应的类也有对应的函数，比如 QDateTime 可以使用 `.date()` 返回 QDate，`.time()` 返回 QTime，然后可以使用 `.toString(QString formatstring)` 函数来格式化日期字符串
-获取 calendar_widget 中的**选中日期**，使用 selectDate 函数，返回 `QDate` 类型。
+获取 calendar_widget 中**选中日期**，使用 selectDate 函数，返回 `QDate` 类型。
 
 常用日期显示格式：
-![[Pasted image 20251012100626.png]] 
+![[Pasted image 20251012100626.png]]
 # QComboBox和QPlainTextEdit的讲解和使用
 参考 [QComboBox和QPlainTextEdit的讲解和使用_qt富文本下拉插入-CSDN博客](https://xmuli.blog.csdn.net/article/details/101127870)
 ## 一些 qt creater 使用经验
@@ -362,7 +362,7 @@ submodules 分模块下载，single 是所有模块文件打包下载，压缩�
 需要在 `target_link_libraries` 之前引入
 想在项目视图下看见这个文件（cmake 构建的项目中认为项目有关的文件只会在 `add_executable` 和 `add_library` 中出现），所以还要添加
 ```cmake
-qt_add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} resource.qrc) 
+qt_add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} resource.qrc)
 ```
 `resource.qrc` 是管理资源文件的**文件**名称，在其中管理所有的资源文件
 ![[Pasted image 20251012153638.png|464]]
@@ -427,7 +427,7 @@ qt 对 qrc 路径解析规则为：
 │   └───────── qresource的prefix值
 └───────────── 资源路径标识符
 ```
-Qt会忽略 `<file>` 标签中前面的路径部分（`icons/`），只使用文件名，因为 prefix 标签已经实行过分类的作用了（prefix 标签可以不止一级），file 标签记录**文件相对当前 qrc 文件的相对位置**
+Qt会忽略 `<file>` 标签中前面的路径部分（`icons/`），只使用文件名，因 prefix 标签已经实行过分类的作用了（prefix 标签可以不止一级），file 标签记录**文件相对当前 qrc 文件的相对位置**
 ### 添加组件和类
 qt creater 不像 vs，能够在添加继承自 widget 的类的同时选择是否添加 ui 文件，而是需要自己添加完 h\cpp 文件之后自己再添加一次 ui 文件
 ![[Pasted image 20251012120655.png]]
@@ -452,14 +452,14 @@ class combobox_and_plain : public QWidget
     Q_OBJECT
 public:
     explicit combobox_and_plain(QWidget *parent = nullptr);
-    
+
 private:
     Ui::combobox_and_plainClass* ui; // 添加ui指针
 signals:
 };
 ```
 - 对于这段代码 `Ui::combobox_and_plainClass* ui;` 如果提示 Ui 中找不到 `combobox_and_plain`，则说明 ui 文件**所属的类**有问题，在[[QTExamples#^6zk649|创建ui文件时给ui类命名时用了别的名字]]（且极有可能名为 `Form.ui`）
-- 应该填入 UI 编辑器中的最上面一层的名字
+- 应该填入 UI 编辑器中最上面一层的名字
 ![[Pasted image 20251012145405.png]]
 
 ### 组件命名规范
@@ -468,7 +468,7 @@ signals:
 - 如果其中提到其他的组件，则不使用下划线分开
 
 > 像这样：
-> `button_add_plaintextedit_to_combo` 表示添加 plaintextedit 组件中的内容到 combo，其中 button 表示组件类型是 button，功能是 add something to combo，指代的组件名为 plaintextedit
+> `button_add_plaintextedit_to_combo` 表示添加 plaintextedit 组件中内容到 combo，其中 button 表示组件类型是 button，功能是 add something to combo，指代的组件名为 plaintextedit
 
 ### 代码编写
 #### QMap 使用
@@ -503,26 +503,26 @@ void ExQcomboBox::on_btnRightInit_clicked()
 ```cpp
 for(item : container) {}
 ```
-C++11 之前不存在这样的语法，所以有了这个宏，但是随着标准更新，这个宏被发现性能问题，表意也不如标准库语法，所以废弃。
+C++11 之前不存在这样的语法，所以有了这个宏，但随着标准更新，这个宏被发现性能问题，表意也不如标准库语法，所以废弃。
 
 #### QPlain TextEdit属性：
 
-`QPlainTextEdit`是一个多行文本编辑器，用于显示和编辑多行简单文本。另外，还有一个**QTextEdit**  
+`QPlainTextEdit`是一个多行文本编辑器，用于显示和编辑多行简单文本。另外，还有一个**QTextEdit**
 组件，是一个所见即所得的可以编辑带格式文本的组件，以**HTML**格式标记符定义文本格式。
 
 `QPlainTextEdit` 提供cut( )、copy( )、paste( )、undo( )、redo( )、clear( )、selectAll( )标准编辑功能的槽函数，`QPlainTextEdit`还提供一个标准的右键快捷菜单。
-`QPlainTextEdit`的文字内容以**QTextDocument**类型存储，函数`document()`返回这个文档对象的指针。  
-**QTextDocument**是内存中的文本对象，以文本块的方式存储，一个文本块就是一个段落，每个段落以回车符结束。**QTextDocument**提供一些函数实现对文本内容的存取。
+`QPlainTextEdit`的文字内容以**QTextDocument**类型存储，函数`document()`返回这个文档对象的指针。
+**QTextDocument**是内存中文本对象，以文本块的方式存储，一个文本块就是一个段落，每个段落以回车符结束。**QTextDocument**提供一些函数实现对文本内容的存取。
 可以通过观察 ide 提示，知道他的工作原理
 ![[Pasted image 20251012164856.png]]
 ## 列表控件QListWidget和工具按钮QToolButton的和用法
 参考： [列表控件QListWidget和工具按钮QToolButton的和用法_qlistwidgetitem button-CSDN博客](https://xmuli.blog.csdn.net/article/details/101314908)
 ### QListWidget 组件注意事项
 ![[Pasted image 20251012190342.png]]
-移除其中的一个 item 使用的是 `takeItem` 函数
+移除其中一个 item 使用的是 `takeItem` 函数
 根据这个函数的文档：
 ![[Pasted image 20251012194440.png]]
-需要知道`takeItem()` 的行为是**将 `QListWidgetItem` 从 `QListWidget` 中“提取”出来**，但**它不会删除这个 item 的内存**。换句话说，你只是“移除”了它在列表中的显示，并没有销毁它的内部数据。所以，你需要手动释放这个 item 所占用的内存，否则会导致**内存泄漏**。
+需要知道`takeItem()` 的行为是**将 `QListWidgetItem` 从 `QListWidget` 中“提取”出来**，但**它不会删除这个 item 的内存**。换句话说，你只是“移除”了它在列表中显示，并没有销毁它的内部数据。所以，你需要手动释放这个 item 所占用的内存，否则会导致**内存泄漏**。
 
 | 控件           | Item 类                          | takeItem () 行为 | 是否需要手动 delete |
 | ------------ | ------------------------------- | ------------- | ------------- |
@@ -553,7 +553,7 @@ https://mirror.sjtu.edu.cn/qt
 ```
 运行后会打开 maintenance tool
 ## ide 使用
-如果调用一个对象函数，这个函数明明在文档里有些，但是 ide（creator）没有提示，可能是这个对象（控件）必须单独 include，而不是靠 ide 提示自动补全头文件
+如果调用一个对象函数，这个函数明明在文档里有些，但 ide（creator）没有提示，可能是这个对象（控件）必须单独 include，而不是靠 ide 提示自动补全头文件
 ## 宽字符和本地环境对象
 ### 本地对象 std::locale
 `std::locale` 是 C++ 标准库中用于**本地化（Localization）** 的核心类，C++所有的 stdio 都需要根据本地环境对象来设置输出内容

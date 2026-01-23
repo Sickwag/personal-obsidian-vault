@@ -3,7 +3,7 @@ description: 一级标题名就是项目名称，大部分项目放在/Code File
 ---
 # CSVReader
 ## 写项目时出现的问题
-- 类中的 const 成员必须在类内（最好是构造函数中）通过初始化列表初始化
+- 类中 const 成员必须在类内（最好是构造函数中）通过初始化列表初始化
 - `getline` 不接受 const 流（`fstream` 对象被 const 修饰）
 - 文件编码保存问题可能会导致路径无法读取，比如文件路径通过字面量硬编码进代码中，**包含中文会导致无法读入**，这个问题在[[MySQL#8. 直接提交 sql 脚本|读写sql脚本]]时也出现过，可以参考保存方法。
   最新版 Visual studio 才会添加一个默认保存方式，旧版本需要使用 ***forceUTF 8***插件完成
@@ -49,7 +49,7 @@ struct base : std::exception {
 - **C++ 更推荐使用 `<fstream>`**（如 `std::ifstream`/`std::ofstream`）。
 - 但在 **C 兼容代码**或 **底层高性能 I/O** 中，`FILE*` 仍有用武之地。
 - 如果处理的是 **文本文件**，也可以考虑 `fgets()`/`fscanf()`，而二进制数据推荐 `fread()`/`fwrite()`。
-##### `setvbuf()`：设置文件流的缓冲模式  
+##### `setvbuf()`：设置文件流的缓冲模式
 控制文件流的 **缓冲策略**（缓冲机制影响 I/O 性能）。
 
 | 参数       | 说明                                                    |
@@ -79,14 +79,14 @@ size_t fread(void *ptr, size_t size, size_t count, istream is)
 |`count`|要读取的数据项数量|
 |`stream`|文件流（`FILE*`）|
 |**返回值**|成功读取的 **数据项数量**（可能小于 `count`）|
-**作用**：  
+**作用**：
 从文件流中读取 **二进制数据**（或文本数据），通常与 `fwrite()` 配对使用。
 ### 各类模块设计
 #### namespace error
 ##### 总体设计
 - 在namespace error中定义很多结构体，这些结构体分别对应一种错误类型
 - 每一个错误类型结构体必须重写format_error_message()方法，用来显示错误信息。
-- 显示的错误信息如果和文件名（file_name），列名（column_name）这些外部由具体csv文件决定的内容时，对应的结构体中就会通过接受这些从文件中读取出来的内容来初始化结构体中的对应变量（一般是用来存储信息且有固定最大值的字符数组），做一些简单的处理（比如在末尾填上'\0'）并限制缓冲区大小，防止内存占用过大。
+- 显示的错误信息如果和文件名（file_name），列名（column_name）这些外部由具体csv文件决定的内容时，对应的结构体中就会通过接受这些从文件中读取出来的内容来初始化结构体中对应变量（一般是用来存储信息且有固定最大值的字符数组），做一些简单的处理（比如在末尾填上'\0'）并限制缓冲区大小，防止内存占用过大。
 
 ##### 设计意义
 之所以分的很细，每一个类也只有format_error_message()和缓冲区字符数组两个成员是为了：
@@ -97,13 +97,13 @@ size_t fread(void *ptr, size_t size, size_t count, istream is)
 
 # CodeLineCount
 ## 简单实现
-1. 在一个类中，如果类中的函数方法体用 `const` 修饰，说明这个方法不会改变类的状态，所以返回值如果要返回类名&引用，则需要加上 const，变为 `const class_name& func()`
+1. 在一个类中，如果类中函数方法体用 `const` 修饰，说明这个方法不会改变类的状态，所以返回值如果要返回类名&引用，则需要加上 const，变为 `const class_name& func()`
 2. 如果写着写着发现 vscode 的提示抽风，明明没有错误的代码出现 `此声明没有存储类类型说明符` 这样的报错，并且：
 	- 使用 `using` 自定义的类型 vscode 在输入时无提示
 	- 其他标准库有提示和自动补全
 	这是需要重置 intellisense 的提示来源
 	![[Pasted image 20250718231419.png]]
-	选择对应的编译器，或者 cmake 工程中的配置文件配置
+	选择对应的编译器，或者 cmake 工程中配置文件配置
 3. 当一个类中有引用类型变量时，必须在类中初始化或者在构造函数初始化列表中初始化
 4. 对于下面这段代码：
 ```cpp
@@ -111,7 +111,7 @@ std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterato
 // and
 std::string content(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
 ```
-   粗看两者相同，但是第一行会被解释为构造一个 string 对象，第二个会被解释为返回值为 string 的函数声明，这样会导致再使用
+   粗看两者相同，但第一行会被解释为构造一个 string 对象，第二个会被解释为返回值为 string 的函数声明，这样会导致再使用
 5. 如果通过头文件引入第三方库，为了防止 `F2` 重构名称或者其他批量操作时影响库文件，可以在 `settings.json` 中添加：
 ```json
 "files.readonlyInclude": {
@@ -119,7 +119,7 @@ std::string content(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<
    }
 ```
    保护文件为只读
-6. vscode 写代码时，如果想通过 cmake 传入参数，在 launch. json 中设置的 args 会被 settings. json 中的 `cmake.DebugConfig。args` 覆盖
+6. vscode 写代码时，如果想通过 cmake 传入参数，在 launch. json 中设置的 args 会被 settings. json 中 `cmake.DebugConfig。args` 覆盖
 ## API 使用
 ### parse 引出的 CallForHelp 异常解析
 #### 现象
@@ -422,7 +422,7 @@ int generate_bitmask(const json::object& section_obj) {
     return bitmask;
 }
 ```
-- 创建开关组初始值 `int bitmask = 0;` 
+- 创建开关组初始值 `int bitmask = 0;`
 - 新增开关状态使用 ` bitmask |= static_cast<int>(枚举值)`
 - 验证开关组中某个开关是否打开 `bool flag = bitmask & static_cast<int>(枚举值)`
 ### 踩坑
@@ -435,7 +435,7 @@ int generate_bitmask(const json::object& section_obj) {
 **/out/build/
 **/.vscode/
 ```
-其中的匹配规则符合 glob 语法规则，对于已经被 git 跟踪的文件，再写就没有意义了
+其中匹配规则符合 glob 语法规则，对于已经被 git 跟踪的文件，再写就没有意义了
 #### 不要把密钥明文写入代码中
 git 提交是不可删除的，除非将整个 git 存储目录重置（删除 .git 目录），如果所有修改的提交记录如下
 ```bash
@@ -445,10 +445,10 @@ git 提交是不可删除的，除非将整个 git 存储目录重置（删除 .
 -- fix bugs2(first contains key)
 -- cannot run version
 ```
-因为提交 no api key 版本不会影响之前的提交记录，所以有以下几种方法解决
+因提交 no api key 版本不会影响之前的提交记录，所以有以下几种方法解决
 - 最好的方法就是更改密钥。
 - 删除本地 ,git 目录，然后使用 `git init && git push --force` 将本地代码覆盖远程仓库，这回清空所有提交记录
-- 使用专业工具解析 git 本地记录文件，删除记录中的所有密钥字符串然后提交，这样比较复杂，而且只能全字匹配密钥字符串。
+- 使用专业工具解析 git 本地记录文件，删除记录中所有密钥字符串然后提交，这样比较复杂，而且只能全字匹配密钥字符串。
 #### api 使用
 ##### boost. json 不支持格式化文件
 boost. json 对象在使用 `file << boost::json::serialize(json_object)` 写入文件之后是未格式化的版本。不能在代码层面中使用锁紧格式化，也不支持在文件中插入注释。
@@ -590,20 +590,20 @@ if (layout) {
 	}
 }
 ```
-但是更好的方法是使用 `QWidget` 对象作为占位对象，这样也支持修改 `setFixedSize()`
+但更好的方法是使用 `QWidget` 对象作为占位对象，这样也支持修改 `setFixedSize()`
 
 # EyesProtect
 ## 杂项
 ### QSpacerItem 布局填充
 添加 spaceitem 作为布局填充时，参考[[#MdTitleAdjust#杂项#QSpacerItem 的添加和修改|对象QSpaceItem构造函数的参数意义]]
 ### 紧凑布局
-如果想要让所有控件都以最紧凑的形式排列，使用 
+如果想要让所有控件都以最紧凑的形式排列，使用
 ```cpp
 this->adjustSize();
 QSize miniumSize = this->minimumSize();
 this->resize(400, miniumSize.height());
 ```
-这样就不用通过布局管理器来调整，这里直接调整一整个 QWidget 
+这样就不用通过布局管理器来调整，这里直接调整一整个 QWidget
 ### 两个 find_package 查找 qt 模块
 qt 添加两个 find_package 命令来查找
 ```cmake
@@ -726,7 +726,7 @@ static int test_pass = 0;
         }\
     } while(0)
 ```
-正常而言，宏中如果单条语句过长，使用 `\` 换行，如果宏**替换部分有多条语句**，需要使用 `do-while` 包裹，因为如果在*因为单行而省略 `{}` 的语句*中，会出现这种问题：
+正常而言，宏中如果单条语句过长，使用 `\` 换行，如果宏**替换部分有多条语句**，需要使用 `do-while` 包裹，因如果在*因单行而省略 `{}` 的语句*中，会出现这种问题：
 ```cpp
 #define M() a(); b()
 // #define M() { a(); b(); }  // 使用{}包裹宏替换部分
@@ -755,10 +755,10 @@ else          /* <- else 缺乏对应 if */
 多线程程序一定好吗？
 不一定，需要根据当前程序的类型来做判断：
 - 多核 CPU
-	- IO 密集型，程序里面指令的执行，涉及一些 IO 操作，比如设备、文件、网络操作，IO 操作是可以把程序阻塞住的比如等待客户端的连接，等待日志写入。这些操作**更适合**设计为多线程程序，因为大部分 IO 密集型操作*准备好接受调度的时间是不确定的*，不会放在操作系统就绪队列中，而是在阻塞队列中
+	- IO 密集型，程序里面指令的执行，涉及一些 IO 操作，比如设备、文件、网络操作，IO 操作是可以把程序阻塞住的比如等待客户端的连接，等待日志写入。这些操作**更适合**设计为多线程程序，因大部分 IO 密集型操作*准备好接受调度的时间是不确定的*，不会放在操作系统就绪队列中，而是在阻塞队列中
 	- CPU 密集型程序里面的指令都是做计算用的，不会被阻塞。CPU 密集型也可以设计为多线程程序，每一个线程执行一个计算任务，发现任务执行完之后继续安排
 - 单核 CPU
-	- IO 密集型，适合设计为多线程，因为单核一旦被阻塞程序卡死了
+	- IO 密集型，适合设计为多线程，因单核一旦被阻塞程序卡死了
 	- CPU 密集型**不适合设计为多线程**，线程越多上下文切换开销越大
 
 ### 线程池的设计
@@ -804,9 +804,10 @@ cache 模式：根据任务数量动态增减线程
 
 #### 线程的状态
 1. **就绪态** (Ready) - 线程已创建，等待 CPU 调度。在代码中体现为创建 `std::thread` 对象并关联了可执行函数
-2. **运行态** (Running) - 线程正在执行
-3. **阻塞态** (Blocked) - 线程因等待资源或事件而暂停，可以是因为互斥锁/条件变量而阻塞/挂起，也可是线程中的关联函数调用 `std::thread::sleep` 系列函数。**这个状态不会被操作系统内核分配时间片**
-4. **终止态** (Terminated) - 线程执行完毕或被终止。线程可执行函数 return 或者线程中抛出异常但是外部没有接受，或者调用了 `std::terminate()`
+2. **等待态** (Waiting) - 线程被挂起，条件变量调用 wait 系列函数，notify 系列函数会退出这个状态
+3. **阻塞态** (Blocked) - 线程没有被挂起，但因等待没有获取互斥锁无法访问资源或事件而暂停，也可线程中关联函数调用 `std::thread::sleep` 系列函数。**这个状态不会被操作系统内核分配时间片**
+4. **运行态** (Running) - 线程正在执行
+5. **终止态** (Terminated) - 线程执行完毕或被终止。线程可执行函数 return 或者线程中抛出异常但外部没有接受，或者调用了 `std::terminate()`
 ### 线程同步
 #### 线程互斥方式
 互斥锁，参考 [[C++ Runoob Tutoral#互斥量，互斥锁和包装器]]

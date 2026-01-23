@@ -105,7 +105,7 @@ int main()
 int main(){
     using namespace std;
     int i=100;
-    
+
     while(i>=100&&i<1000){
         int hundred = i / 100;
         int tenth = (i - 100 * hundred) / 10;
@@ -174,8 +174,8 @@ struct Addressbooks
 // add person function
 
 void AddorModifyInfo(Addressbooks *abs,int sequence){
- 
-    /* 
+
+    /*
     core function ,add and modify have to call it beacuse they have simmilar module
     add--- check the wherther the content == MAX and add 'abs->m_Size ++;' update the m_size
     */
@@ -284,7 +284,7 @@ void deletePerson(Addressbooks *abs)
         for (int i = res; i < abs->m_Size;i++){
             abs->personArray[i] = abs->personArray[i + 1];
             //attension ! assign the lastest var to the forehead var
-            abs->m_Size--; // overwriter forward 1 seat 
+            abs->m_Size--; // overwriter forward 1 seat
         }
         cout << "you have delete the " << name << endl;
     }else{
@@ -384,7 +384,7 @@ void truncateinfo(Addressbooks *abs)
     }
 ```
 
-## C++ Prime Plus 
+## C++ Prime Plus
 ### 第五章编程练习题
 ```cpp
 //chapter 5 practice
@@ -440,7 +440,7 @@ void get_words(){
             break;
         }
         word_count++;
-    }  
+    }
 }
 
 
@@ -1092,17 +1092,17 @@ std::vector<std::string_view> MySQLDB::split_script(const std::string& script) {
     std::vector<std::string_view> statements;
     size_t start = 0;
     size_t pos = 0;
-    
+
     while (pos < script.length()) {
         // 查找分号
         pos = script.find(';', start);
         if (pos == std::string_view::npos) {
             pos = script.length();
         }
-        
+
         // 提取语句
         std::string_view stmt = script.substr(start, pos - start);
-        
+
         // 去除首尾空白字符
         while (!stmt.empty() && (stmt.front() == ' ' || stmt.front() == '\t' || stmt.front() == '\n' || stmt.front() == '\r')) {
             stmt.remove_prefix(1);
@@ -1110,13 +1110,13 @@ std::vector<std::string_view> MySQLDB::split_script(const std::string& script) {
         while (!stmt.empty() && (stmt.back() == ' ' || stmt.back() == '\t' || stmt.back() == '\n' || stmt.back() == '\r')) {
             stmt.remove_suffix(1);
         }
-        
+
         if (!stmt.empty()) {
             statements.push_back(stmt);
         }
         start = pos + 1;
     }
-    
+
     return statements;
 }
 ```
@@ -1161,7 +1161,7 @@ class InputValidator {
     bool validate(const T& input) const;
     InputValidator& prompt(const std::string& prompt);
     InputValidator& enum_str(const std::vector<std::string>& allowed, const std::string& error_msg = "You must input one of ({}).");
-    
+
     template <typename U = T, typename = std::enable_if_t<std::is_arithmetic_v<U>>>
     InputValidator& range(U min, U max, const std::string& error_fmt = "Must be between {} and {}.");
     InputValidator& regex(const std::string& pattern, const std::string& error_msg = "Input does not match the required pattern.");
@@ -1395,7 +1395,7 @@ class MyVector {
             ++ptr_;
             return *this;
         }
-        iterator operator++(int) {  // 后置自增，可选，因为迭代使用前置
+        iterator operator++(int) {  // 后置自增，可选，因迭代使用前置
             iterator tmp{ptr_};
             ++ptr_;
             return tmp;
@@ -1563,8 +1563,8 @@ class MyVector {
 
 
 ## redis
-hiredis 是纯 C 库，没有 redis api 支持但使用简单，可以直接写原生的 redis 命令，但是由于 C 语言没有对象，返回值需要手动封装 `redisReply* reply = (redisReply*)redisCommand(context, "GET key");`，redisCommand 函数返回类型为 `void*`
-boost. redis 是 C++库，但没有 redis api 支持，redis 命令需要用多个字符串保存一条命令中的参数，比如 `set mykey value` 命令要写成 `res.push("set","mykey", "value")` 要麻烦一点，但是和 co_await，asio 配合密切，能直接使用异步和协程。
+hiredis 是纯 C 库，没有 redis api 支持但使用简单，可以直接写原生的 redis 命令，但由于 C 语言没有对象，返回值需要手动封装 `redisReply* reply = (redisReply*)redisCommand(context, "GET key");`，redisCommand 函数返回类型为 `void*`
+boost. redis 是 C++库，但没有 redis api 支持，redis 命令需要用多个字符串保存一条命令中参数，比如 `set mykey value` 命令要写成 `res.push("set","mykey", "value")` 要麻烦一点，但和 co_await，asio 配合密切，能直接使用异步和协程。
 ### hiredis 连接
 ```cpp
 #include <hiredis/hiredis.h>
@@ -1582,7 +1582,7 @@ void handleError(redisContext* c, const char* operation) {
 
 void testStringOperations(redisContext* c) {
     printf("\n=== String Operations ===\n");
-    
+
     // SET command
     redisReply* reply = (redisReply*)redisCommand(c, "SET name Redis_Test");
     if (reply->type == REDIS_REPLY_ERROR) {
@@ -1591,7 +1591,7 @@ void testStringOperations(redisContext* c) {
         printf("SET name \"Redis Test\" -> %s\n", reply->str);
     }
     freeReplyObject(reply);
-    
+
     // GET command
     reply = (redisReply*)redisCommand(c, "GET name");
     if (reply->type == REDIS_REPLY_ERROR) {
@@ -1600,11 +1600,11 @@ void testStringOperations(redisContext* c) {
         printf("GET name -> %s\n", reply->str);
     }
     freeReplyObject(reply);
-    
+
     // INCR command
     reply = (redisReply*)redisCommand(c, "SET counter 10");
     freeReplyObject(reply);
-    
+
     reply = (redisReply*)redisCommand(c, "INCR counter");
     if (reply->type == REDIS_REPLY_ERROR) {
         printf("INCR Error: %s\n", reply->str);
@@ -1616,7 +1616,7 @@ void testStringOperations(redisContext* c) {
 
 void testHashOperations(redisContext* c) {
     printf("\n=== Hash Operations ===\n");
-    
+
     // HSET command
     redisReply* reply = (redisReply*)redisCommand(c, "HSET user:1000 name \"Alice\" age 25 email \"alice@example.com\"");
     if (reply->type == REDIS_REPLY_ERROR) {
@@ -1625,7 +1625,7 @@ void testHashOperations(redisContext* c) {
         printf("HSET user:1000 -> %lld fields added\n", reply->integer);
     }
     freeReplyObject(reply);
-    
+
     // HGETALL command
     reply = (redisReply*)redisCommand(c, "HGETALL user:1000");
     if (reply->type == REDIS_REPLY_ERROR) {
@@ -1641,7 +1641,7 @@ void testHashOperations(redisContext* c) {
 
 void testListOperations(redisContext* c) {
     printf("\n=== List Operations ===\n");
-    
+
     // LPUSH command
     redisReply* reply = (redisReply*)redisCommand(c, "LPUSH mylist \"item1\" \"item2\" \"item3\"");
     if (reply->type == REDIS_REPLY_ERROR) {
@@ -1650,7 +1650,7 @@ void testListOperations(redisContext* c) {
         printf("LPUSH mylist -> %lld elements\n", reply->integer);
     }
     freeReplyObject(reply);
-    
+
     // LRANGE command
     reply = (redisReply*)redisCommand(c, "LRANGE mylist 0 -1");
     if (reply->type == REDIS_REPLY_ERROR) {
@@ -1666,7 +1666,7 @@ void testListOperations(redisContext* c) {
 
 void testSetOperations(redisContext* c) {
     printf("\n=== Set Operations ===\n");
-    
+
     // SADD command
     redisReply* reply = (redisReply*)redisCommand(c, "SADD myset \"member1\" \"member2\" \"member3\" \"member1\"");
     if (reply->type == REDIS_REPLY_ERROR) {
@@ -1675,7 +1675,7 @@ void testSetOperations(redisContext* c) {
         printf("SADD myset -> %lld elements added\n", reply->integer);
     }
     freeReplyObject(reply);
-    
+
     // SMEMBERS command
     reply = (redisReply*)redisCommand(c, "SMEMBERS myset");
     if (reply->type == REDIS_REPLY_ERROR) {
@@ -1694,9 +1694,9 @@ int main() {
     const char* hostname = "121.43.98.198";
     int port = 6379;
     const char* password = "123456";
-    
+
     printf("Connecting to Redis server at %s:%d...\n", hostname, port);
-    
+
     // 建立连接
     redisContext* c = redisConnect(hostname, port);
     if (c == NULL || c->err) {
@@ -1708,9 +1708,9 @@ int main() {
         }
         exit(1);
     }
-    
+
     printf("Connected successfully!\n");
-    
+
     // 进行身份验证
     redisReply* auth_reply = (redisReply*)redisCommand(c, "AUTH %s", password);
     if (auth_reply == NULL || c->err) {
@@ -1725,33 +1725,33 @@ int main() {
         redisFree(c);
         exit(1);
     }
-    
+
     if (auth_reply->type == REDIS_REPLY_ERROR) {
         printf("Authentication Error: %s\n", auth_reply->str);
         freeReplyObject(auth_reply);
         redisFree(c);
         exit(1);
     }
-    
+
     printf("Authenticated successfully!\n");
     freeReplyObject(auth_reply);
-    
+
     // 测试各种Redis操作
     testStringOperations(c);
     testHashOperations(c);
     testListOperations(c);
     testSetOperations(c);
-    
+
     // 清理测试数据
     printf("\n=== Cleaning up ===\n");
     redisReply* reply = (redisReply*)redisCommand(c, "DEL name counter user:1000 mylist myset");
     printf("Cleaned up %lld keys\n", reply->integer);
     freeReplyObject(reply);
-    
+
     // 关闭连接
     redisFree(c);
     printf("\nConnection closed. All tests completed successfully!\n");
-    
+
     return 0;
 }
 
@@ -1880,14 +1880,14 @@ int main() try
     cfg.addr.port = "6379";           // Redis 默认端口
     cfg.username = "default";         // 用户名，默认为 "default"
     cfg.password = "123456";          // Redis 服务器密码
-    
-    std::cout << "Connecting to Redis server at " << cfg.addr.host << ":" << cfg.addr.port 
+
+    std::cout << "Connecting to Redis server at " << cfg.addr.host << ":" << cfg.addr.port
               << " with password authentication" << std::endl;
 
     // 创建 io_context 和连接
     asio::io_context ioc;
     auto conn = std::make_shared<redis::connection>(ioc);
-    
+
     // 启动连接并等待连接完成
     std::cout << "Starting connection..." << std::endl;
     conn->async_run(cfg, {}, [&](boost::system::error_code ec) {
@@ -1940,7 +1940,7 @@ private:
     asio::io_context ioc;
     std::shared_ptr<redis::connection> conn;
     redis::config cfg;
-    
+
 public:
     RedisDemo() {
         // 配置连接到远程 Redis 服务器
@@ -1948,14 +1948,14 @@ public:
         cfg.addr.port = "6379";           // Redis 默认端口
         cfg.username = "default";         // 用户名，默认为 "default"
         cfg.password = "123456";          // Redis 服务器密码
-        
+
         conn = std::make_shared<redis::connection>(ioc);
     }
-    
+
     void connect() {
-        std::cout << "Connecting to Redis server at " << cfg.addr.host << ":" << cfg.addr.port 
+        std::cout << "Connecting to Redis server at " << cfg.addr.host << ":" << cfg.addr.port
                   << " with password authentication" << std::endl;
-        
+
         conn->async_run(cfg, {}, [this](boost::system::error_code ec) {
             if (ec) {
                 std::cerr << "Connection error: " << ec.message() << std::endl;
@@ -1964,21 +1964,21 @@ public:
             }
         });
     }
-    
+
     void run() {
         ioc.run();
     }
-    
+
     asio::io_context& getIoContext() {
         return ioc;
     }
-    
+
     // 1. PING 命令模块
     void testPing() {
         std::cout << "\n=== PING Command Test ===" << std::endl;
         redis::request req;
         req.push("PING");
-        
+
         conn->async_exec(req, redis::ignore, [](boost::system::error_code ec, std::size_t) {
             if (ec) {
                 std::cerr << "PING error: " << ec.message() << std::endl;
@@ -1987,11 +1987,11 @@ public:
             }
         });
     }
-    
+
     // 2. 字符串操作模块
     void testStringOperations() {
         std::cout << "\n=== String Operations Test ===" << std::endl;
-        
+
         // SET 命令
         redis::request set_req;
         set_req.push("SET", "test_key", "Hello Redis from C++!");
@@ -2000,7 +2000,7 @@ public:
                 std::cerr << "SET error: " << ec.message() << std::endl;
             } else {
                 std::cout << "SET command executed successfully!" << std::endl;
-                
+
                 // GET 命令
                 redis::request get_req;
                 get_req.push("GET", "test_key");
@@ -2014,11 +2014,11 @@ public:
             }
         });
     }
-    
+
     // 3. 哈希操作模块
     void testHashOperations() {
         std::cout << "\n=== Hash Operations Test ===" << std::endl;
-        
+
         // HSET 命令
         redis::request hset_req;
         hset_req.push("HSET", "user:1000", "name", "Alice", "age", "25", "city", "Beijing");
@@ -2027,7 +2027,7 @@ public:
                 std::cerr << "HSET error: " << ec.message() << std::endl;
             } else {
                 std::cout << "HSET command executed successfully!" << std::endl;
-                
+
                 // HGET 命令
                 redis::request hget_req;
                 hget_req.push("HGET", "user:1000", "name");
@@ -2041,11 +2041,11 @@ public:
             }
         });
     }
-    
+
     // 4. 列表操作模块
     void testListOperations() {
         std::cout << "\n=== List Operations Test ===" << std::endl;
-        
+
         // LPUSH 命令
         redis::request lpush_req;
         lpush_req.push("LPUSH", "fruits", "apple", "banana", "orange");
@@ -2054,7 +2054,7 @@ public:
                 std::cerr << "LPUSH error: " << ec.message() << std::endl;
             } else {
                 std::cout << "LPUSH command executed successfully!" << std::endl;
-                
+
                 // LRANGE 命令
                 redis::request lrange_req;
                 lrange_req.push("LRANGE", "fruits", "0", "-1");
@@ -2068,11 +2068,11 @@ public:
             }
         });
     }
-    
+
     // 5. 集合操作模块
     void testSetOperations() {
         std::cout << "\n=== Set Operations Test ===" << std::endl;
-        
+
         // SADD 命令
         redis::request sadd_req;
         sadd_req.push("SADD", "languages", "C++", "Python", "JavaScript");
@@ -2081,7 +2081,7 @@ public:
                 std::cerr << "SADD error: " << ec.message() << std::endl;
             } else {
                 std::cout << "SADD command executed successfully!" << std::endl;
-                
+
                 // SMEMBERS 命令
                 redis::request smembers_req;
                 smembers_req.push("SMEMBERS", "languages");
@@ -2095,11 +2095,11 @@ public:
             }
         });
     }
-    
+
     // 6. 有序集合操作模块
     void testSortedSetOperations() {
         std::cout << "\n=== Sorted Set Operations Test ===" << std::endl;
-        
+
         // ZADD 命令
         redis::request zadd_req;
         zadd_req.push("ZADD", "scores", "90", "Alice", "85", "Bob", "95", "Charlie");
@@ -2108,7 +2108,7 @@ public:
                 std::cerr << "ZADD error: " << ec.message() << std::endl;
             } else {
                 std::cout << "ZADD command executed successfully!" << std::endl;
-                
+
                 // ZRANGE 命令
                 redis::request zrange_req;
                 zrange_req.push("ZRANGE", "scores", "0", "-1", "WITHSCORES");
@@ -2122,11 +2122,11 @@ public:
             }
         });
     }
-    
+
     // 7. 其他常用命令模块
     void testOtherCommands() {
         std::cout << "\n=== Other Common Commands Test ===" << std::endl;
-        
+
         // EXISTS 命令
         redis::request exists_req;
         exists_req.push("EXISTS", "test_key");
@@ -2135,7 +2135,7 @@ public:
                 std::cerr << "EXISTS error: " << ec.message() << std::endl;
             } else {
                 std::cout << "EXISTS command executed successfully!" << std::endl;
-                
+
                 // TTL 命令
                 redis::request ttl_req;
                 ttl_req.push("TTL", "test_key");
@@ -2144,7 +2144,7 @@ public:
                         std::cerr << "TTL error: " << ec.message() << std::endl;
                     } else {
                         std::cout << "TTL command executed successfully!" << std::endl;
-                        
+
                         // DEL 命令
                         redis::request del_req;
                         del_req.push("DEL", "test_key");
@@ -2164,40 +2164,40 @@ public:
 
 int main() try {
     std::cout << "Starting Redis client demo with modular design..." << std::endl;
-    
+
     RedisDemo demo;
     demo.connect();
-    
+
     // 等待连接建立
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    
+
     // 依次执行各个测试模块
     demo.testPing();
     // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     demo.testStringOperations();
     // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     demo.testHashOperations();
     // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     demo.testListOperations();
     // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     demo.testSetOperations();
     // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     demo.testSortedSetOperations();
     // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     demo.testOtherCommands();
     // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
+
     std::cout << "\nRunning io_context to process all async operations..." << std::endl;
     demo.run();
-    
+
     std::cout << "\nAll Redis operations completed successfully!" << std::endl;
-    
+
     return 0;
 } catch (const std::exception& e) {
     std::cerr << "Exception: " << e.what() << std::endl;
@@ -2439,7 +2439,7 @@ void FileProcessor::process_directory(
         error_handler->clearErrors();
         for (auto it = fs::recursive_directory_iterator(dirpath); it != fs::recursive_directory_iterator(); ++it) {
             const fs::path& entry_path = it->path();
-            
+
             if (!exclude.empty() && fs::is_regular_file(entry_path) && matches_exclude_pattern(entry_path, exclude)) {
                 continue;
             }
@@ -2565,7 +2565,7 @@ std::unique_ptr<ErrorHandler> ErrorHandlerFactory::createDefaultHandler() {
 
 #### 特性
 1. `process_single_file`：使用自定义处理器函数处理单个文件
-2. `process_directory`：递归处理目录中的所有文件
+2. `process_directory`：递归处理目录中所有文件
 3. 排除模式支持，跳过某些文件/目录
 4. 回调支持，用于后处理操作
 5. 集成错误处理和日志记录
@@ -2594,7 +2594,7 @@ FileProcessor::process_directory(
 
 #### 实现细节
 
-#### 文件处理器中的模板设计
+#### 文件处理器中模板设计
 
 文件处理器使用模板来处理任何处理器函数返回类型：
 
@@ -2741,9 +2741,9 @@ std::string getFileMD5Win(const std::string& filename) {
     constexpr DWORD BUFSIZE = 16384;
     BYTE rgbFile[BUFSIZE];
     DWORD cbRead = 0;
-    
+
     // 打开文件
-    hFile = CreateFileA(filename.c_str(), GENERIC_READ, FILE_SHARE_READ, 
+    hFile = CreateFileA(filename.c_str(), GENERIC_READ, FILE_SHARE_READ,
                        NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (INVALID_HANDLE_VALUE == hFile) {
         throw std::runtime_error("文件打开失败");
@@ -2860,7 +2860,7 @@ quickWidget::quickWidget(QWidget *parent)
     buttonLayout->addWidget(updateButton);
     buttonLayout->addWidget(exitButton);
     mainLayout->addLayout(buttonLayout);
-    
+
     connect(updateButton, &QPushButton::clicked, this, &quickWidget::onUpdateButtonClicked);
     connect(exitButton, &QPushButton::clicked, this, &quickWidget::onExitButtonClicked);
 }
@@ -2873,11 +2873,11 @@ quickWidget::~quickWidget()
 void quickWidget::onUpdateButtonClicked()
 {
     QFont font = this->display_area->font();
-    
+
     // 获取当前光标并选中所有文本
     QTextCursor cursor = display_area->textCursor();
     cursor.select(QTextCursor::Document);
-    
+
     QTextCharFormat format;
     if(this->BlackColorButton->isChecked()){
         format.setForeground(QBrush(QColor("black")));
@@ -2886,7 +2886,7 @@ void quickWidget::onUpdateButtonClicked()
     } else if(this->RedColorButton->isChecked()){
         format.setForeground(QBrush(QColor("red")));
     }
-    
+
     if(this->BoldCheckbox->isChecked()){
         font.setBold(true);
     } else {
@@ -2902,7 +2902,7 @@ void quickWidget::onUpdateButtonClicked()
     } else {
         font.setUnderline(false);
     }
-    
+
     display_area->setFont(font);
     cursor.mergeCharFormat(format);  // 应用颜色格式
     display_area->setTextCursor(cursor);
@@ -3418,7 +3418,7 @@ void TextEditorMainWindow::buildSignalsSlots()
 void TextEditorMainWindow::do_fontsize_changed(int fontsize)
 {
     QTextCursor cursor = ui->plainTextEdit->textCursor();
-    
+
     QTextCharFormat format;
     format.setFontPointSize(fontsize);
     if (cursor.hasSelection()) {
@@ -3429,7 +3429,7 @@ void TextEditorMainWindow::do_fontsize_changed(int fontsize)
         currentFont.setPointSize(fontsize);
         ui->plainTextEdit->setFont(currentFont);
     }
-    
+
     progressbarOfFontSize->setValue(fontsize);
 }
 
@@ -3437,15 +3437,15 @@ void TextEditorMainWindow::do_font_selected(const QFont &font)
 {
     this->labelOfFontInfo->setText(QString("current font family: %1").arg(font.family()));
     QTextCursor cursor = ui->plainTextEdit->textCursor();
-    
+
     QTextCharFormat format;
     format.setFontFamily(font.family());
     if (cursor.hasSelection()) {
-        cursor.mergeCharFormat(format);  // 对光标选中的字符有效
+        cursor.mergeCharFormat(format);  // 对光标选中字符有效
     } else {
         ui->plainTextEdit->mergeCurrentCharFormat(format); // 对接下来输入的内容有效
 
-        // cursor.select(QTextCursor::Document);  // 对文档中的所有文字有效
+        // cursor.select(QTextCursor::Document);  // 对文档中所有文字有效
         // cursor.mergeCharFormat(format);
     }
 }
@@ -4544,7 +4544,7 @@ void TreeWidgetMainWindow::display_image(QTreeWidgetItem *item)
     this->label_node_text->setText(item->text(colItem));
 
     if (pixmap_.load(filepath)) {
-        // 将图片显示在 scrollArea 中的 label 上，调整大小以适应标签并保持宽高比
+        // 将图片显示在 scrollArea 中 label 上，调整大小以适应标签并保持宽高比
         ui->label->setPixmap(pixmap_.scaled(ui->label->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
         ui->label->setAlignment(Qt::AlignCenter);
         ui->label->setScaledContents(false); // 确保图片缩放适应显示
@@ -4679,7 +4679,7 @@ void TreeWidgetMainWindow::on_actiondock_visible_triggered(bool checked)
 ```
 ## html/xml 解析
 ### pugixml 解析
-配合 curl 库获取 html 源码实现解析豆瓣书单中的所有书籍信息
+配合 curl 库获取 html 源码实现解析豆瓣书单中所有书籍信息
 ```cpp
 #include <curl/curl.h>
 #include <fstream>

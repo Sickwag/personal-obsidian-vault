@@ -1,5 +1,5 @@
  参考教材：《第一行代码》
- 
+
 # 第一章基础知识
 ### Android 系统架构
 - Linux 内核层
@@ -13,11 +13,11 @@ Android 系统是基于 Linux 内核的，这一层为 Android 设备的各种�
 
 ## Android 应用开发特色
 - 四大组件
-Android 系统四大组件分别是 Activity、Service、BroadcastReceiver 和ContentProvider。其中 
-Activity 是所有 Android 应用程序的门面，凡是在应用中你看得到的东西，都是放在 Activity 中的。
-	- Service 就比较低调了，你无法看到它，但它会在后台默默地运行，即使用户退出了应用，Service 仍然是可以继续运行的。
+Android 系统四大组件分别是 Activity、Service、BroadcastReceiver 和ContentProvider。其中
+Activity 是所有 Android 应用程序的门面，凡是在应用中你看得到的东西，都是放在 Activity 中。
+	- Service 就比较低调了，你无法看到它，但它会在后台默默地运行，即使用户退出了应用，Service 仍是可以继续运行的。
 	- BroadcastReceiver 允许你的应用接收来自各处的广播消息，比如电话、短信等，
-	- ContentProvider 则为应用程序之间共享数据提供了可能，比如你想要读取系统通讯录中的联系人，就需要通过 ContentProvider 来实现。
+	- ContentProvider 则为应用程序之间共享数据提供了可能，比如你想要读取系统通讯录中联系人，就需要通过 ContentProvider 来实现。
 - 丰富的系统控件
 Android 系统为开发者提供了丰富的系统控件，使得我们可以很轻松地编写出漂亮的界面。当然如果你品位比较高，不满足于系统自带的控件效果，完全可以定制属于自己的控件。
 - SQLite 数据库
@@ -45,36 +45,36 @@ Android 系统还提供了丰富的多媒体服务
 	此处是用来编写 Unit Test 测试用例的，是对项目进行自动化测试的另一种方式。- .gitignore
 	这个文件用于将 app 模块内指定的目录或文件排除在版本控制之外，作用和外层的. gitignore 文件类似。
 - app. iml
-	IntelliJ IDEA 项目自动生成的文件，我们不需要关心或修改这个文件中的内容。- build. gradle
-	这是 app 模块的 gradle 构建脚本，这个文件中会指定很多项目构建相关的配置，我们稍后将会详细分析 gradle 构建脚本中的具体内容。
+	IntelliJ IDEA 项目自动生成的文件，我们不需要关心或修改这个文件中内容。- build. gradle
+	这是 app 模块的 gradle 构建脚本，这个文件中会指定很多项目构建相关的配置，我们稍后将会详细分析 gradle 构建脚本中具体内容。
 - proguard-rules. pro
 	这个文件用于指定项目代码的混淆规则，当代码开发完成后打包成安装包文件，如果不希望代码被别人破解，通常会将代码进行混淆，从而让破解者难以阅读。
 
 `AndroidManifest. xml` 文件中最重要的代码是：
 ```xml
-<activity  
-    android:name=".MainActivity"  
-    android:exported="true"  
-    android:label="@string/app_name"  
-    android:theme="@style/Theme.LearnTest">  
-    <intent-filter>        
-    	<action android:name="android.intent.action.MAIN" />  
-        <category android:name="android.intent.category.LAUNCHER" />  
+<activity
+    android:name=".MainActivity"
+    android:exported="true"
+    android:label="@string/app_name"
+    android:theme="@style/Theme.LearnTest">
+    <intent-filter>
+    	<action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
     </intent-filter></activity>
 </activity>
 ```
 整段代码：
 - 创建一个 activity 标签，属性由下面四个 name，exported，label，theme 定义，这是一个注册活动的行为，name 为 `. MainActivity` 表示它是启动 app 而展现的主要类
 - `android:exported="true"` 表示这个 activity 可以被其他外部组件（显式或者隐式）访问
-- `@string/app_name` 是指向 `res/values/strings.xml` 文件中的一个字符串资源。它代表一个键值对，其中 `"app_name"` 是该字符串资源的名称。
+- `@string/app_name` 是指向 `res/values/strings.xml` 文件中一个字符串资源。它代表一个键值对，其中 `"app_name"` 是该字符串资源的名称。
 	- 原因是 lable 属性需要一个 `string` 属性的资源，`@string` 表示查找 string 类型的资源，`app_name` 表示 string 类型资源的属性应为 `app_name`
-	- Android 中的资源都有自己专属的文件夹，所以不用指定路径，系统会自动在 Android 路径中查找。在 Project视图中看不到
+	- Android 中资源都有自己专属的文件夹，所以不用指定路径，系统会自动在 Android 路径中查找。在 Project视图中看不到
 	![[Pasted image 20241210170605.png]]
 	- 对 theme 则同理
 	- 指定 activity 标签为 ![[Pasted image 20241210170906.png]] LearnTest，该 activity 的主题为 `@style/Theme.LearnTest`，即
-	![[Pasted image 20241210171042.png]] 
+	![[Pasted image 20241210171042.png]]
 	父类继承
-- `<intent-filter>`用于定义**此**`Activity`响应的意图（Intent），从而决定它在应用和系统中的行为方式。
+- `<intent-filter>`用于定义**此**`Activity`响应的意图（Intent），从而决定它在应用和系统中行为方式。
 	- `<action android.intent.action.MAIN>` 表示该 `Activity` 是应用的主入口，用于接收系统的主启动意图。说明这一个 activity 是程序的主入口
 	- `<category android:name="android.intent.category.LAUNCHER" />` 说明当前 activity 是程序的启动界面，启动当前 activity 时会进入这个标签所指示的启动页面
 	- 两者配合表示点击应用程序图标时，程序入口由当前 activity 进入，进入的这个 activity 是启动页面
@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
 - 所有以“mipmap”开头的目录都是用来放应用图标的
 - 所有以“values”开头的目录都是用来放字符串、样式、颜色等配置的
 - 所有以“layout”开头的目录都是用来放布局文件的。
-之所以有这么多“mipmap”开头的目录，其实主要是为了让程序能够**更好地兼容各种设备**。drawable 目录也是相同的道理，更多的时候美工只会提供给我们一份图片，这时你把所有图片都放在 `drawable-xxhdpi` 目录下就好了，因为这是最主流的设备分辨率目录。
+之所以有这么多“mipmap”开头的目录，其实主要是为了让程序能够**更好地兼容各种设备**。drawable 目录也是相同的道理，更多的时候美工只会提供给我们一份图片，这时你把所有图片都放在 `drawable-xxhdpi` 目录下就好了，因这是最主流的设备分辨率目录。
 ### 资源是如何使用的
 ```xml
 <resources>
@@ -168,9 +168,9 @@ class MainActivity : ComponentActivity() {
 - 其中 `activity` 标签声明一个 `Activity`（活动），这是 Android 应用的界面组件。
 	- `android:name=".MainActivity"` 定义活动的类名。`.` 表示相对路径，Android 系统会在 `package` 中寻找 `MainActivity` 类。
 	- `android:exported="true"`指定活动是否可以被其他应用调用。设置为 `true` 表示允许外部应用通过显式或隐式意图访问此活动。
-	- `android:label="@string/app_name"` 活动的标签，显示标题栏或任务列表中的名称。
+	- `android:label="@string/app_name"` 活动的标签，显示标题栏或任务列表中名称。
 	- `android:theme="@style/Theme.LearnTest"` 活动的主题样式，可以覆盖全局主题。
-- `intent-filter` 标签定义活动响应的意图（Intent），决定该活动在应用中的作用。
+- `intent-filter` 标签定义活动响应的意图（Intent），决定该活动在应用中作用。
 
 ### 应用是如何构建的
 目录外层的 build. gradle 文件
@@ -194,7 +194,7 @@ allprojects {
 }
 ```
 - 构建的文件都是配置性质的，在其中声明配置有全局影响
-- 两处 repositories 的闭包中都声明了 `google ()` 和 `jcenter () `这两行配置，那么它们是什么意思呢？其实它们分别对应了一个**代码仓库**，google 仓库中包含的主要是 Google 自家的扩展依赖库，而 jcenter 仓库中包含的大多是一些第三方的开源库。声明了这两行配置之后，我们就可以在项目中轻松引用任何 google 和 jcenter 仓库中的依赖库了。
+- 两处 repositories 的闭包中都声明了 `google ()` 和 `jcenter () `这两行配置，那么它们是什么意思呢？其实它们分别对应了一个**代码仓库**，google 仓库中包含的主要是 Google 自家的扩展依赖库，而 jcenter 仓库中包含的大多是一些第三方的开源库。声明了这两行配置之后，我们就可以在项目中轻松引用任何 google 和 jcenter 仓库中依赖库了。
 - Gradle 并不是专门为构建 Android 项目而开发的，如果我们要想使用它来构建Android 项目，则需要声明 com. android. tools. build:gradle: 3.5.2 这个插件
 外部 build. gradle 文件
 ```gradle
@@ -238,11 +238,11 @@ dependencies {					// 指定当前项目的所有依赖关系
 - `Log.d()`。用于打印一些调试信息，这些信息对你调试程序和分析问题应该是有帮助的。对应级别 debug，比 verbose 高一级。
 - `Log.i()`。用于打印一些比较重要的数据，这些数据应该是你非常想看到的、可以帮你分析用户行为的数据。对应级别 info，比 debug 高一级。
 - `Log.w()`。用于打印一些警告信息，提示程序在这个地方可能会有潜在的风险，最好去修复一下这些出现警告的地方。对应级别 warn，比 info 高一级。
-- `Log.e()`。用于打印程序中的错误信息，比如程序进入了 catch 语句中。当有错误信息打印出来的时候，一般代表你的程序出现严重问题了，必须尽快修复。对应级别 error，比warn 高一级。
+- `Log.e()`。用于打印程序中错误信息，比如程序进入了 catch 语句中。当有错误信息打印出来的时候，一般代表你的程序出现严重问题了，必须尽快修复。对应级别 error，比warn 高一级。
 logcat 中会输出日志工具打印的日志，使用 log 工具打印日志可以比较方便地师徒值日志标签，通过过滤器过滤
 ![[Pasted image 20241211212511.png]]
 对日志分类，只显示出想要看到的日志
-Logcat 中的日志级别当前我们选中的级别是 Verbose，也就是最低等级。这意味着不管我们使用哪一个方法打印日志，这条日志都一定会显示出来。而如果我们将级别选中为 Debug，这时只有我们使用 Debug及以上级别方法打印的日志才会显示出来，级别并没有向下覆盖
+Logcat 中日志级别当前我们选中级别是 Verbose，也就是最低等级。这意味着不管我们使用哪一个方法打印日志，这条日志都一定会显示出来。而如果我们将级别选中为 Debug，这时只有我们使用 Debug及以上级别方法打印的日志才会显示出来，级别并没有向下覆盖
 
 # Kotlin 编程
 ## 编程语言解惑
@@ -268,7 +268,7 @@ fun largeNumber(nums: Int,num2: Int){
 ```kotlin
 fun largerNumber(num1: Int, num2: Int): Int {
 	return if (num1 > num2) {
-		num1// 因为kotlin把单独的左值看做值而不是expression
+		num1// 因kotlin把单独的左值看做值而不是expression
 	} else {
 		num2
 	}
@@ -280,7 +280,7 @@ fun largerNumber(num1: Int, num2: Int) = if (num1 > num2) num1 else num2
 - when 语句对多条件分支有特殊优化 ^128b5c
 	- when 语句允许传入**一个任意类型**的参数，可以在 when 的结构体中定义一系列的条件，格式是：
 	- `匹配值 -> { 执行逻辑 }` 注意 `->` 后接执行逻辑，可以是代码块（**可以看做是简化版的 Switch case 语句**）
-	- 可以配合 `is` 判断变量类型，is 关键字就是类型匹配的核心，它相当于 Java 中的 instanceof 关键字
+	- 可以配合 `is` 判断变量类型，is 关键字就是类型匹配的核心，它相当于 Java 中 instanceof 关键字
 	- `when` 的分支中可以包含多个操作，每个操作都会看做是一个表达式，操作成功返回 true，反之 false，最终返回值取决于该分支中 **最后执行的语句**。
 ```kotlin
 fun getScore(name: String) = when (name) {
@@ -371,7 +371,7 @@ class Student : Person(){
 	- 如果需要在创建对象时进行一些初始化操作需要使用 `init` 关键字定义
 	- `init` 会在主构造函数**运行完后立刻运行**
 	- 次构造函数用来处理**多种不同类型或数量参数**的情况下的初始化任务。允许定义多个
-	- 子类中的构造函数必须调用父类中的构造函数
+	- 子类中构造函数必须调用父类中构造函数
 ```kotlin
 open class Person(var name: String, var age: Int) {
 //    val name = "" 由于主构造函数已经定义，不用重复声明成员变量了
@@ -437,8 +437,8 @@ class Student(val sno: String, val grade: Int, name: String, age: Int) :Person(n
 > 如果类中没有主构造函数，[[#^csbpqh|类的继承不用写括号]]情况下，有需要满足调用主构造函数要求，则必须使用 `super` 调用父类构造函数
 
 #### 接口——对象多态
-Java 是单继承结构的语言，任何一个类最多只能继承一个父类，但是却可以实现任意多个接口，Kotlin 也是如此。
-接口由类实现，Java 中继承使用 `extends`，实现接口使用 `implements`，而 Kotlin 中统一使用冒号，中间用逗号进行分隔。接口的后面不用加上括号，因为它没有构造函数可以去调用
+Java 是单继承结构的语言，任何一个类最多只能继承一个父类，但却可以实现任意多个接口，Kotlin 也是如此。
+接口由类实现，Java 中继承使用 `extends`，实现接口使用 `implements`，而 Kotlin 中统一使用冒号，中间用逗号进行分隔。接口的后面不用加上括号，因它没有构造函数可以去调用
 ```kotlin
 class Student(val sno :String ,val grade :Int) : Person("Alice",18),Study{
     override fun readBooks() {
@@ -463,8 +463,8 @@ fun main(){
 ---
 调用接口时使用的函数可见性修饰符
 Java 中有 public、private、protected 和 default（什么都不写）这 4 种函数可见性修饰符
-- private 修饰符在两种语言中的作用是一模一样的，都表示只对当前类内部可见
-- public 两者表示对所有类都可见，但是在 Kotlin 中 public 修饰符是默认项，而在 Java 中 default 才是默认项
+- private 修饰符在两种语言中作用是一模一样的，都表示只对当前类内部可见
+- public 两者表示对所有类都可见，但在 Kotlin 中 public 修饰符是默认项，而在 Java 中 default 才是默认项
 - protected 关键字在 Java 中表示对当前类、子类和同一包路径下的类可见，在 Kotlin 中则表示只对当前类和子类可见。
 - default 可见性（同一包路径下的类可见）
 
@@ -474,7 +474,7 @@ Java 中有 public、private、protected 和 default（什么都不写）这 4 �
 | private   | 当前类可见             | 当前类可见     |
 | protected | 当前类、子类、同一包路径下的类可见 | 当前类、子类可见  |
 | default   | 同一包路径下的类可见（默认）    | 无         |
-| internal  | 无                 | 同一模块中的类可见 |
+| internal  | 无                 | 同一模块中类可见 |
 
 #### 数据类和单例类
 ##### 数据类
@@ -507,11 +507,11 @@ public class Cellphone {
 }
 ```
 
-创建数据类的固定功能是**固定而毫无逻辑**的，在一个类前面声明了 data 关键字时，就表明你希望这个类是一个数据类，Kotlin 会根据主构造函数中的参数帮你将 `equals()`、`hashCode()`、`toString()` 等固定且无实际逻辑意义的方法自动生成。
+创建数据类的固定功能是**固定而毫无逻辑**的，在一个类前面声明了 data 关键字时，就表明你希望这个类是一个数据类，Kotlin 会根据主构造函数中参数帮你将 `equals()`、`hashCode()`、`toString()` 等固定且无实际逻辑意义的方法自动生成。
 ```kotlin
 data class Cellphone(val brand: String, val price: Double)
 ```
-- 如果一个类中没有任何代码，可以将 `{}` 省略，但不建议，因为行业默认约定
+- 如果一个类中没有任何代码，可以将 `{}` 省略，但不建议，因行业默认约定
 - 直接对 data 类使用 `println` 默认调用 `toString()` 实现，打印格式为：`ClassName(property1=value1, property2=value2, ...)`
 - `equal` 调用返回 `boolean`
 
@@ -519,7 +519,7 @@ data class Cellphone(val brand: String, val price: Double)
 单例模式是最基本的设计模式，保证全局只有一个类的实例，
 ```java
 public class Singleton {
-    private static Singleton instance;      // 在类中创建一个对象，并且是静态的，保证只有类的内部成员函数才能访问，因为只创建了一个，所以只能容纳一个instance，所以叫做单例模式
+    private static Singleton instance;      // 在类中创建一个对象，并且是静态的，保证只有类的内部成员函数才能访问，因只创建了一个，所以只能容纳一个instance，所以叫做单例模式
     private Singleton(){}
 
     public synchronized static Singleton getInstance() {
@@ -605,7 +605,7 @@ map["Orange"] = 3
 ```kotlin
 val map = mapOf("Apple" to 1, "Banana" to 2, "Orange" to 3, "Pear" to 4, "Grape" to 5)
 ```
-其中的 `to` 是一个 `infix` 函数
+其中 `to` 是一个 `infix` 函数
 ### lambda 函数语法
 #### lambda 机制
 
@@ -623,7 +623,7 @@ val map = mapOf("Apple" to 1, "Banana" to 2, "Orange" to 3, "Pear" to 4, "Grape"
 #### 常用函数式 API
 ##### map
 
-map 用于将集合中的每个元素都映射成一个另外的值，映射的规则在 Lambda 表达式中指定，最终生成一个新的集合
+map 用于将集合中每个元素都映射成一个另外的值，映射的规则在 Lambda 表达式中指定，最终生成一个新的集合
 lambda 的作用便是可以自定义构建逻辑函数，放在需要规则作为参数的函数中
 ```kotlin
 val list = listOf("alpha","beta","charlie")
@@ -638,7 +638,7 @@ for(y in list3){
 ```
 
 ##### filter
-过滤作用，其中的 lambda 函数时判断逻辑而不是执行逻辑
+过滤作用，其中 lambda 函数时判断逻辑而不是执行逻辑
 ```kotlin
 val list = listOf("alpha","beta","charlie")
 val filteredList = list.filter { it.length >=5 }.map { it.uppercase() }
@@ -727,7 +727,7 @@ fun main(){
 #### 判空辅助工具
 ##### 调用符号
 - `?.`：表示对象不为空时正常调用对象的方法，为空时什么都不做
-- `?:` 同理，如果左边表达式的结果不为空就返回左边表达式的结果，否则就返回右边表达式的结果，注意 kotlin 的 `returnable_expre ?: b` （只有左边对象不是 `null` 时执行左边表达式，为空右边） 要和 C++中的 `judge_expre ? a : b` 不一致
+- `?:` 同理，如果左边表达式的结果不为空就返回左边表达式的结果，否则就返回右边表达式的结果，注意 kotlin 的 `returnable_expre ?: b` （只有左边对象不是 `null` 时执行左边表达式，为空右边） 要和 C++中 `judge_expre ? a : b` 不一致
 ```kotlin
 if(a != null){
 	a.doSomething()
@@ -757,15 +757,15 @@ fun main(){
 }
 ```
 - 代码中 `content` 在全局声明为**一个可以为空**的变量
-- `printUppercase()` 函数中没有判空就直接使用 `uppercase` 方法，但是这个方法需要一个不为空的对象才能调用，也可以理解为只有 `?.` 和 `!!.` 才能调用一个**可能为空的对象本来有的方法**，即手动表明这个变量不可能为空
+- `printUppercase()` 函数中没有判空就直接使用 `uppercase` 方法，但这个方法需要一个不为空的对象才能调用，也可以理解为只有 `?.` 和 `!!.` 才能调用一个**可能为空的对象本来有的方法**，即手动表明这个变量不可能为空
 
 - 有五种方法可以解决这个问题：
 	1. if-else 语句提前判空
 	2. 将 content 类型声明为 `content:String` 去掉可能为空标志
 	3. 使用 `?:` 添加为空默认值
 	4. 使用 `!!` 强制判定非空
-	5. 使用 `?.` 表示是一个可能为空的引用，为空时什么都不做（虽然它一定不为空，但是在 `printUppercase` 函数作用域中无法得知）
-main 函数能得知是因为它显式执行了 `content!=null` 得知了 `content` 是常量
+	5. 使用 `?.` 表示是一个可能为空的引用，为空时什么都不做（虽然它一定不为空，但在 `printUppercase` 函数作用域中无法得知）
+main 函数能得知是因它显式执行了 `content!=null` 得知了 `content` 是常量
 ##### let 函数
 如果一个对象不为空时有很多操作要做，但 kotlin 并没有提供一种*代码块性质的调用*
 ```kotlin
@@ -792,17 +792,17 @@ fun doStudy(study: Study?) {
 ```
 其中由于 lambda 函数作为 `let` 唯一参数，所以省略 `()`，其中只有一个参数所以省略用 `it`
 
-## kotlin 中的小魔术
+## kotlin 中小魔术
 ### 字符串内嵌表达式
 语法：`"hello, ${obj.name1，obj.name2.....。}. nice to meet you!"`
 Python 的前置 f 已经支持内嵌，C++更是使用 `<<` 集流控制和内嵌一体，java 到现在还不支持？
 ```kotlin
 println("Cellphone(brand=" + brand + ", price=" + price + ")")
-println("Cellphone(brand=$brand, price=$price)")// 但是kotlin支持
+println("Cellphone(brand=$brand, price=$price)")// 但kotlin支持
 ```
 
-### kotlin 中的传参
-如果一个函数参数列表中都是一种类型的参数，那么给他们中的部分设置默认值时，想让某些参数使用默认值而其他用传入的值就**不能使用位置传参**，必须使用键值对传参方式[[Python Basics#函数传参使用方式|同Python，其他语言中也存在这样的机制]]
+### kotlin 中传参
+如果一个函数参数列表中都是一种类型的参数，那么给他们中部分设置默认值时，想让某些参数使用默认值而其他用传入的值就**不能使用位置传参**，必须使用键值对传参方式[[Python Basics#函数传参使用方式|同Python，其他语言中也存在这样的机制]]
 ```kotlin
 class Student(val sno: String = "", val grade: Int = 0, name: String = "", age: Int = 0) :
 	Person(name, age) {
@@ -814,7 +814,7 @@ kotlin 中由于 val 必须有初始值，一般在主构造函数中将所有�
 ## Activity 是什么
 Activity 是最容易吸引用户的地方，它是一种可以包含用户界面的组，主要用于和用户进行交互。
 创建 Android 项目时选中 `No activity` 会使 com. example. project_name 中没有文件
-![[Pasted image 20241215171722.png]] 
+![[Pasted image 20241215171722.png]]
 可以右键创建一个新的 `activity`，不勾选 Generate Layout File和 Launcher Activity 则表示这个 activity 是真正“空”的
 - 勾选 Generate Layout File 表示会自动为 FirstActivity 创建一个对应的布局文件
 - 勾选Launcher Activity 表示会自动将 FirstActivity 设置为当前项目的主 Activity
@@ -827,20 +827,20 @@ Activity 是最容易吸引用户的地方，它是一种可以包含用户界�
 ## 布局编辑
 ### Activity 设置、注册和显示
 ```xml
-<?xml version="1.0" encoding="utf-8"?>  
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout   //根元素设置在这里体现
-xmlns:android="http://schemas.android.com/apk/res/android"  
-    xmlns:tools="http://schemas.android.com/tools"  
-    android:layout_width="match_parent"  
-    android:layout_height="match_parent">  
-  
+xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
     <Button
 		android:id="@+id/button"  // Android元素的唯一标识符
         android:layout_width="wrap_content"  // 设置控件宽度刚好包裹内容
-        android:layout_height="wrap_content"  
+        android:layout_height="wrap_content"
         android:text="Get Postion"  // 按钮上展示的内容
         tools:layout_editor_absoluteX="153dp"  // 按钮绝对位置
-        tools:layout_editor_absoluteY="623dp" />  
+        tools:layout_editor_absoluteY="623dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>
 ```
 ![[Pasted image 20241216113038.png]]
@@ -870,7 +870,7 @@ class FirstActivity : AppCompatActivity() {
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER"/>
         </intent-filter>
-        
+
     </activity>
 ```
 其中：
@@ -890,14 +890,14 @@ tools:layout_editor_absoluteY="623dp"
 ```
 标签中也可以看到是在 editor 中生效，绝对位置属性已经弃用（不能适用多种分辨率），现在一般使用 `layout_constraint***` 来约束控件相对位置
 #### 闪退原因
-如果应用发生闪退，可能是因为 AndroidManifest 中的 applicantion 没有导入 `Android:theme` 的标签，具体少了哪一个可以通过 logcat 查看，一般通过软编码引用 style. xml 文件中的 theme 标签指向的数据 
+如果应用发生闪退，可能是因 AndroidManifest 中 applicantion 没有导入 `Android:theme` 的标签，具体少了哪一个可以通过 logcat 查看，一般通过软编码引用 style. xml 文件中 theme 标签指向的数据
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="AppTheme" parent="Theme.AppCompat.Light"/>
 </resources>
 ```
-再修改 Activity 标签中的 `android:theme="@style/AppTheme"` 或者修改 application 标签中的 `android:theme` 内容保证全局所有 Activity 都使用这个主题
+再修改 Activity 标签中 `android:theme="@style/AppTheme"` 或者修改 application 标签中 `android:theme` 内容保证全局所有 Activity 都使用这个主题
 ### 使用 Toast
 #### 弹出消息
 Toast 作用是调用底层接口，弹出一小段信息，如果是文本，通过 makeText 第三个参数控制时间长短，只有两个选项，通常设置为 int 类型，表示秒数
@@ -914,13 +914,13 @@ class FirstActivity : AppCompatActivity() {
 }
 ```
 首先在 Firstactivity 文件中使用逻辑布局将一个 button 变量和真实存在的 button 按钮联系起来，真实存在的按钮是一个**控件**，在 R 文件中**具有唯一 id**，所以可以使用
-- 其中，所有 Andriod 中的预定义组件中，都会在`android.widget` 包中。Android SDK 已经为所有常用的 UI 组件（如 `Button`、`TextView`、`EditText` 等）提供了预定义的类。
+- 其中，所有 Andriod 中预定义组件中，都会在`android.widget` 包中。Android SDK 已经为所有常用的 UI 组件（如 `Button`、`TextView`、`EditText` 等）提供了预定义的类。
 - 所有 UI 组件类（如 `Button`）都继承自 `android.view.View`，并且在 Android Studio 中通过导入相应的包来使用。(使用类会自动导包)
 ![[Pasted image 20241216124437.png]]
 - this 表示点击 button 出现的内容会在当前*上下文*中显示，即我点击按钮不会有消息弹出在上一层界面或其他地方，只在当前界面弹出
 - `findViewById()` 方法的作用就是获取布局文件中控件的实例
 #### findViewById() 方法使用
-为每一个控件使用一次 findViewById() 函数有点麻烦但是kotlin-android-extensions 已经在 kotlin 1.4 版本弃用，viewBinding 似乎也不能在 Gradle 中启用，所以最好的办法是使用 Jetpack compose 或者继续使用 findViewById 
+为每一个控件使用一次 findViewById() 函数有点麻烦但kotlin-android-extensions 已经在 kotlin 1.4 版本弃用，viewBinding 似乎也不能在 Gradle 中启用，所以最好的办法是使用 Jetpack compose 或者继续使用 findViewById
 ### 创建菜单
 在 res 中创建一个 menu 文件，在 FirstActivity 中重写（Ctrl+O），来改变应用打开之后显示菜单（需要调整 activity 的先后顺序 ）
 ```kotlin
@@ -954,7 +954,7 @@ val bookPages = book.pages
 ```
 kotlin 默认为为**所有公共成员变量**都创建 setter （如果他是 var）和 getter
 #### inflate
-指的是从 **XML 布局文件** 或 **菜单 XML 文件** 中读取内容并将其转换成相应的 **View 对象**，**布局文件 (`XML`)** 是静态的，而 **View** 是动态的。`inflate` 的作用就是将布局文件（例如，`activity_main.xml`）中的定义转化成实际的 UI 组件（即 `View` 对象），这些组件才会在屏幕上显示。（通过返回值形式，需要用变量存储）
+指的是从 **XML 布局文件** 或 **菜单 XML 文件** 中读取内容并将其转换成相应的 **View 对象**，**布局文件 (`XML`)** 是静态的，而 **View** 是动态的。`inflate` 的作用就是将布局文件（例如，`activity_main.xml`）中定义转化成实际的 UI 组件（即 `View` 对象），这些组件才会在屏幕上显示。（通过返回值形式，需要用变量存储）
 常用的有：
 - **`LayoutInflater.inflate()`** 用于将 **布局 XML 文件** 转换成 `View` 对象（通常用于加载 UI 布局）。
 - **`MenuInflater.inflate()`** 用于将 **菜单 XML 文件** 转换成菜单项，动态加载并显示菜单。
@@ -977,9 +977,9 @@ override fun onOptionsItemSelected(item: MenuItem): Boolean {
     }
 }
 ```
-- 其中 `onCreateOptionsMenu` 函数在一个 Activity 被调用时自动调用，用来管理所有的菜单对象，`onOptionsItemSelected` 在**用户点击菜单视图时**自动调用，**一个 Activity 中的所有菜单对象统一由它管理**
+- 其中 `onCreateOptionsMenu` 函数在一个 Activity 被调用时自动调用，用来管理所有的菜单对象，`onOptionsItemSelected` 在**用户点击菜单视图时**自动调用，**一个 Activity 中所有菜单对象统一由它管理**
 - 其中 when 语句的语法可以参考 [[#^128b5c|When的逻辑]]
-- 在 `onCreateOptionsMenu` 方法中，`menu` 参数是由 Android 系统自动传递给你的，它是一个 **Menu** 类型的对象，代表当前 `Activity` 中的菜单。这个 `menu` 对象由系统在 `Activity` 创建时初始化，并在 `onCreateOptionsMenu` 方法被调用时传入。
+- 在 `onCreateOptionsMenu` 方法中，`menu` 参数是由 Android 系统自动传递给你的，它是一个 **Menu** 类型的对象，代表当前 `Activity` 中菜单。这个 `menu` 对象由系统在 `Activity` 创建时初始化，并在 `onCreateOptionsMenu` 方法被调用时传入。
 - **菜单自动放置在右上角** 是由 Android 的 UI 设计标准和 **ActionBar** / **Toolbar** 控制的。可以通过自定义 `Toolbar` 布局来改变菜单项的位置。
 ### 销毁一个 Activity
 使用 app 时退出一个页面（按下 back 键或其他导致页面关闭而不是挂载在后台的行为）当前 activity 就会销毁，在程序中用 `finish()` 函数完成
@@ -988,13 +988,13 @@ override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
 > Intent 是 Android 程序中各组件之间进行交互的一种重要方式，它不仅可以指明当前组件想要执行的动作，还可以在不同组件之间传递数据。Intent 一般可用于启动 Activity、启动 Service 以及发送广播等场景
 
-**Intent** 不是仅仅用来在 `Activity` 之间跳转的，还可以作为 Android 系统中的一种通信机制，在应用中的不同组件（如 `Activity`、`Service`、`BroadcastReceiver` 等）之间传递数据和控制信息。
+**Intent** 不是仅仅用来在 `Activity` 之间跳转的，还可以作为 Android 系统中一种通信机制，在应用中不同组件（如 `Activity`、`Service`、`BroadcastReceiver` 等）之间传递数据和控制信息。
 Intent 大致可以分为两种：显式 Intent 和隐式 Intent
 ### 显式 Intent
 点击按钮跳转 Activity，intent 跳转到***具体的***类中
 ```kotlin
 button1.setOnClickListener{
-	val intent = Intent(this,SecondActivity::class.java)  
+	val intent = Intent(this,SecondActivity::class.java)
 	startActivity(intent)
 }
 ```
@@ -1043,14 +1043,14 @@ startActivity(intent)
 val intent = Intent("com.example.myapp.ACTION_VIEW")
 startActivity(intent)
 ```
-- 这个隐式 `Intent` 并没有指定具体的 `Activity`，但是，如果 `AndroidManifest.xml` 中存在符合 `ACTION_VIEW` 动作的 `Activity`，系统会启动该 `Activity`（`android.intent.category.DEFAULT` 是一种默认的category，在调用startActivity()方法的时候会自动将这个category添加到Intent中）。
+- 这个隐式 `Intent` 并没有指定具体的 `Activity`，但，如果 `AndroidManifest.xml` 中存在符合 `ACTION_VIEW` 动作的 `Activity`，系统会启动该 `Activity`（`android.intent.category.DEFAULT` 是一种默认的category，在调用startActivity()方法的时候会自动将这个category添加到Intent中）。
 - 每个 Intent 中只能指定一个 action，但能指定多个 category，对 `Intent` 类型变量使用 `addCategory()` 函数增加
-- action 和 category 标签中的字段类型是 `String`，**可以自定义**，也可以用内置的
+- action 和 category 标签中字段类型是 `String`，**可以自定义**，也可以用内置的
 - **`category` 是可选的**，如果没有指定，系统会默认假设使用 `DEFAULT` 类别。
 - 当使用 `Intent` 进行隐式调用时，需要 `action` 和 `category` 两个参数。只有当这两个参数同时满足时，系统才会启动所有符合这两个标签的**第一个匹配的** Activity，然后中断匹配，启动该 Activity。
-- 匹配的顺序是在 `AndroidManifest.xml` 中的注册顺序
+- 匹配的顺序是在 `AndroidManifest.xml` 中注册顺序
 ---
-- 再添加自定义 `category` 标签时，需要在 AndroidManifest 中需要被匹配上的 Activity 的 intent-fliter 中额外添加一条（因为使用 Intent 对象默认包含了默认 category） `<category android:name="android.intent.category.DEFAULT"/>` 其次才是自定义标签，否则不匹配
+- 再添加自定义 `category` 标签时，需要在 AndroidManifest 中需要被匹配上的 Activity 的 intent-fliter 中额外添加一条（因使用 Intent 对象默认包含了默认 category） `<category android:name="android.intent.category.DEFAULT"/>` 其次才是自定义标签，否则不匹配
 - 能被匹配上的 Activity 都需要**支持 export**，即在 AndroidManifest 注册时需要属性
 ```kotlin
 <activity

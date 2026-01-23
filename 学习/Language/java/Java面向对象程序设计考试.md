@@ -13,10 +13,10 @@ List<Integer> primes = new ArrayList<>();
 - **右边 `ArrayList<>()`**：
     - `<>`：钻石操作符（Java 7+），编译器自动推断泛型类型（与左侧一致）。
     - `()`：调用无参构造器。
-- **为什么不用重复写 `Integer`**？  
+- **为什么不用重复写 `Integer`**？
     Java 编译器通过左侧类型自动推断右侧泛型类型，避免冗余。
 - C++：`std::vector<int> v;`
-- Java：`List<Integer> list = new ArrayList<>();` `List` 是接口，`ArrayList` 是实现类。 
+- Java：`List<Integer> list = new ArrayList<>();` `List` 是接口，`ArrayList` 是实现类。
     （Java 必须用包装类，不能直接用 `int`）
 
 ### `int` vs `Integer`
@@ -32,7 +32,7 @@ List<Integer> primes = new ArrayList<>();
 ### 为什么用 `.get()` 而非 `[]`？
 - **`List` 是接口**，不保证连续存储（如 `LinkedList`），所以不能用 `[]` 语法。
 - **数组 `Integer[]`**：可以用 `arr[j]`，但 `List` 必须用 `list.get(j)`。
-- **设计差异**：  
+- **设计差异**：
     Java 严格区分数组和集合，C++中 `std::vector` 重载了 `[]`，但 Java 的 `List` 没有。
 
 ### private constructor 警告
@@ -40,7 +40,7 @@ List<Integer> primes = new ArrayList<>();
     - 添加私有构造器：防止被意外实例化
     - 将类声明为 `final`：禁止继承
     - - 工具类不需要实例化，私有构造器是防御性编程手段
-- 类似 C++中的 `= delete`：
+- 类似 C++中 `= delete`：
 ```cpp
 class Solution {
 public:
@@ -51,7 +51,7 @@ public:
 **类名以 `Test` 结尾**：IDEA 默认会将 `*Test` 结尾的类视为测试类（即使没有注解）
 ## 程序 3
 - Java 的 doxygen 写法和 C++一样，各种标签都一样，并且可 javadoc 命令生成文档
-### Java 中的类实例化
+### Java 中类实例化
 | 特性    | Java                              | C++                                                   |
 | ----- | --------------------------------- | ----------------------------------------------------- |
 | 实例化语法 | `ClassName obj = new ClassName()` | `ClassName obj;` 或 `ClassName* ptr = new ClassName()` |
@@ -251,7 +251,7 @@ Arr1 : [1, 2, 3, 4, 5]
 | `Arrays.asList()` | 固定大小（不可增删） | 允许 `null`   | Java 1.2 + |
 | `List.of()`       | 完全不可变      | 不允许 `null`  | Java 9 +   |
 ##### 为什么 `Arrays.asList()` 返回的 `List` 不能修改？
-- 它返回的是基于数组的 `List`，底层仍然是数组，所以不能改变大小（不能 `add` 或 `remove`）。
+- 它返回的是基于数组的 `List`，底层仍是数组，所以不能改变大小（不能 `add` 或 `remove`）。
 
 ##### 如何动态添加多个元素到 `List`？
 ```java
@@ -315,24 +315,24 @@ Arr1 : [1, 2, 3, 4, 5]
 | **ConcurrentHashMap** | 线程安全，分段锁优化             | 高并发环境      |
 | **Hashtable**         | 线程安全，全表锁，不允许 `null`    | 旧代码兼容      |
 1. **HashMap**
-    
+
     - 最常用，基于哈希表实现。
     - 查找/插入/删除平均时间复杂度为 O (1)。
     - 无序，线程不安全。
 2. **LinkedHashMap**
-    
+
     - 继承自 `HashMap`，维护双向链表记录顺序。
     - 支持按插入顺序或访问顺序遍历。
 3. **TreeMap**
-    
+
     - 基于红黑树实现，按键排序。
     - 查找/插入/删除时间复杂度 O (log n)。
 4. **ConcurrentHashMap**
-    
+
     - 线程安全，分段锁减少锁竞争。
     - 高并发场景首选。
 5. **Hashtable**
-    
+
     - 线程安全但性能差，全表锁。
     - 遗留类，不推荐使用。
 #### 1. 如何在创建哈希表的同时初始化内容？
@@ -360,7 +360,7 @@ Map<String, Integer> map = Map.of(
 );
 ```
 - **特点**：
-- 适用于**少量键值对**（最多 10 个，因为 `Map.of()` 有参数限制）。
+- 适用于**少量键值对**（最多 10 个，因 `Map.of()` 有参数限制）。
 - 返回的是**不可变 Map**（不能修改）。
 
 ##### Java 9 + 的 `Map.ofEntries()`
@@ -537,7 +537,7 @@ List<Integer> arr = Arrays.asList(12,43,12,2,32,2,57,8);
 
 🔹1. 是否除 static 内部类外，不能在类内部声明 static 成员？
 
-✅ 不完全是。Java 中的类内部可以声明多种 `static` 成员，包括：
+✅ 不完全是。Java 中类内部可以声明多种 `static` 成员，包括：
 
 - `static` 变量（静态变量）
 - `static` 方法（静态方法）
@@ -605,7 +605,7 @@ class Outer {
 | `private` 方法 | ✅ 有方法体 | Java 9+ | 用于辅助 `default` 或 `static` 方法 |
 | `private static` 方法 | ✅ 有方法体 | Java 9+ | 用于辅助静态方法 |
 
-✅ 示例：Java 8 接口中的 `default` 和 `static` 方法
+✅ 示例：Java 8 接口中 `default` 和 `static` 方法
 
 ```java
 interface MyInterface {
@@ -677,8 +677,8 @@ interface Animal {
 ❗注意：
 
 - Java 9 之前，接口默认就是 `abstract`；
-- Java 9+ 中，接口可以包含默认方法和静态方法，但接口本身仍然是 `abstract` 的；
-- 你不能使用 `final interface`，因为接口不能被 `final` 修饰。
+- Java 9+ 中，接口可以包含默认方法和静态方法，但接口本身仍是 `abstract` 的；
+- 你不能使用 `final interface`，因接口不能被 `final` 修饰。
 
 ---
 
@@ -823,7 +823,7 @@ char c = (char)bf.read();
 | `char`    | 2 字节                 | 无符号 Unicode 字符，范围：0 ~ 65535 |
 | `boolean` | 1 位（但通常 JVM 中用 1 字节） | 只有两个值：`true` 或 `false`      |
 
-java 中的 main 方法一定要有 `String[] args` 作为参数
+java 中 main 方法一定要有 `String[] args` 作为参数
 
 继承 Applet 的类必须要实现 `actionPerformed` 方法
 
@@ -850,7 +850,7 @@ public static void show(Animal a) {
     }
 }
 ```
-写在同一目录下的两个文件，如果没有有声明 package 所属，不需要 import，Java 会自动识别同一包中的类
+写在同一目录下的两个文件，如果没有有声明 package 所属，不需要 import，Java 会自动识别同一包中类
 java 中方法重载满足下面任意 1 个要求
 - **参数类型不同**：`void foo(int a)` vs `void foo(String a)`
 - **参数个数不同**：`void foo(int a)` vs `void foo(int a, int b)`
@@ -896,7 +896,7 @@ class Rectangle {
     }
 }
 class Cuboid extends Rectangle {
-    private double height; 
+    private double height;
     public Cuboid(double length, double width, double height) {
         super(length, width);
         this.height = height;
@@ -920,18 +920,18 @@ java 中表达式是从左到右执行的，`1+2+“aa” + 3` 的值为 `“3aa
 构造函数不能有返回值类型（包括 `void`），但可以有访问修饰符（如 `public`、`protected`、`private`、默认），用于控制该构造函数的访问权限。
 ---
 - 在两个没有关系和有继承关系的类对象使用强制类型转换时，判断是否能够转换的机制是什么？
-Java 中的强制类型转换（向下转型）只有在两个类之间存在继承关系时才可能成功。如果两个类没有继承关系，编译时就会报错。
+Java 中强制类型转换（向下转型）只有在两个类之间存在继承关系时才可能成功。如果两个类没有继承关系，编译时就会报错。
 运行时如果类型不匹配，会抛出 `ClassCastException`。
 
 - 接口能否继承实体类？接口是如何实现多重继承的？
 接口不能继承实体类（即 `class`），只能继承其他接口（**使用 `extends`**），并且可以继承多个接口，从而实现多重继承。
-接口本身不包含状态（Java 8 之前），所以不能继承类。Java 9+ 中接口可以有私有方法，但仍然不能继承类。
+接口本身不包含状态（Java 8 之前），所以不能继承类。Java 9+ 中接口可以有私有方法，但仍不能继承类。
 
-- 类中protect属性的成员是否能被同一包中的不同类访问？
+- 类中protect属性的成员是否能被同一包中不同类访问？
 是的，`protected` 成员可以被：
-- 同一个包中的其他类访问；
-- 不同包中的子类访问（即使不在同一个包中）；
-- 但不能被不同包中的非子类访问。
+- 同一个包中其他类访问；
+- 不同包中子类访问（即使不在同一个包中）；
+- 但不能被不同包中非子类访问。
 
 ---
 - `BufferReader br = new BufferReader(new InputStream(System.in));`代码中，是否等号左边是一种声明变量的方法，即使写`BufferReader br`也是合法的？等号右边是实现，是用new创建对象，调起类的BufferReader构造函数(括号中又创建了InputStream对象并初始化，传入BufferReader对象的构造函数中)的方法？
@@ -969,7 +969,7 @@ public class MyClass { ... }
 ---
 - `>>>` 是什么意思？`<<<` 呢？
 
-`>>>` 是 Java 中的 **无符号右移运算符**，将二进制位向右移动，高位补 0（不管符号位）。
+`>>>` 是 Java 中 **无符号右移运算符**，将二进制位向右移动，高位补 0（不管符号位）。
 `<<<` 不是 Java 的合法运算符。Java 有 `<<`（左移），但没有 `<<<`。
 
 ---
@@ -979,7 +979,7 @@ Java 中没有指针概念，`this` 和 `super` 是**引用**，分别指向当�
 - `this`：当前对象的引用；
 - `super`：父类对象的引用。
 
-它们不能像 C/C++ 中的指针那样进行地址运算。
+它们不能像 C/C++ 中指针那样进行地址运算。
 
 ---
 - java 如何抛出异常？请举出例子
@@ -1103,14 +1103,14 @@ public class Outer {
 
 ---
 
-- 静态方法中可以调用实例方法吗？静态方法是否只能调用其他静态方法，访问其他静态成员？静态方法如果要调用同类中的静态方法，是否需要使用 this 关键字？
+- 静态方法中可以调用实例方法吗？静态方法是否只能调用其他静态方法，访问其他静态成员？静态方法如果要调用同类中静态方法，是否需要使用 this 关键字？
 
-静态方法中 **不能直接调用实例方法或访问实例变量**，因为它们依赖于对象实例。
+静态方法中 **不能直接调用实例方法或访问实例变量**，因它们依赖于对象实例。
 
 静态方法只能直接访问：
 - 静态变量；
 - 静态方法；
-- 不能使用 `this` 或 `super`。因为这是实例才有的
+- 不能使用 `this` 或 `super`。因这是实例才有的
 
 如果要调用实例方法，必须先创建类的实例。
 
@@ -1170,7 +1170,7 @@ a.speak(); // 输出 "Dog barks"，运行时多态（重写体现）
 
 - 抽象接口（java 8 之前）的方法访问修饰符是什么？如果不写访问修饰符默认是什么？
 
-在 Java 8 之前，接口中的方法默认是：
+在 Java 8 之前，接口中方法默认是：
 - `public abstract`（即使不写，也默认是 `public` 和 `abstract`）
 
 例如：
@@ -1186,7 +1186,7 @@ interface MyInterface {
 
 - java 中构造方法是否可以重载？
 
-是的，Java 中的构造方法可以重载。
+是的，Java 中构造方法可以重载。
 
 构造方法重载是指在同一个类中定义多个构造方法，它们具有相同的名称（类名）但参数列表不同。
 
@@ -1239,7 +1239,7 @@ class FrameInOut extends Frame implements ActionsListener{
 ```java
 public class Gh extends Applet implements ActionListener{
 	.....
-	
+
 	public void actionPerformed(ActionEvent e){
 		a = new Integer(tfd1.getText()).intValue();
 	}
@@ -1250,12 +1250,12 @@ public class Gh extends Applet implements ActionListener{
 ## 变量与数据类型
 ### 字符串不可变性
 java 的 string 类型实例化得到的是一个指向字符串对象的引用变量
-如果使用 `=` 对它重新赋值的操作是创建一个新的字符串对象，并将这个引用变量指向它，原字符串通过 gc 机制被回收。但是 java 中**字符串对象本身是不可以被改变的**
+如果使用 `=` 对它重新赋值的操作是创建一个新的字符串对象，并将这个引用变量指向它，原字符串通过 gc 机制被回收。但 java 中**字符串对象本身是不可以被改变的**
 
 | C++（以 std:: string 为例）       | Java（String 类）                       | 行为对照理解                                      |
 | --------------------------- | ------------------------------------ | ------------------------------------------- |
 | 支持 `s += "new"` 直接修改自身对象    | `String` 不能修改其自身，必须接受如拷贝的新对象         | 类似发生如 `j = s + "new";` 返回新的对象，`s` 自已还是 Hello |
-| 提供 `append`, `insert` 改原字符串 | 无这些方法，在 `String` 上再也无法改变             | 要修改用 `StringBuilder` 中的方法才对（这和 C++ 技术很相似）   |
+| 提供 `append`, `insert` 改原字符串 | 无这些方法，在 `String` 上再也无法改变             | 要修改用 `StringBuilder` 中方法才对（这和 C++ 技术很相似）   |
 | 使用 “字符串常量池”（Java 有）          | 类似 `String` 在 Java 中可复用相同值字符串，效果上性能高一些 |                                             |
 ### 运算符优先级
 1. **单目运算符** (最高优先级之一)
@@ -1276,7 +1276,7 @@ int x = -a++ + ~b ? c : d--;
 | **C++**  | 仅限于循环内（局部）    | ✅ 允许遮蔽     | 灵活，方便编写短小局部代码   |
 | **Java** | 整个方法/作用域      | ❌ 不允许同名变量  | 更严格，避免潜在错误和代码混淆 |
 具体体现在：
-java 中整个函数是一个局部作用域，其中的循环，初始化部分不会单独作为一个作用域而是与外部共享，C++分的更细，允许遮蔽 
+java 中整个函数是一个局部作用域，其中循环，初始化部分不会单独作为一个作用域而是与外部共享，C++分的更细，允许遮蔽
 ### 默认修饰符
 在 Java 中，如果类中不显式声明成员变量的可见性（即不使用 `public`、`private` 或 `protected` 修饰符），则该成员变量的默认可见性是 `包级私有（package-private）`（也叫 "默认访问权限"）。
 
@@ -1324,7 +1324,7 @@ G、位置 7
 | **访问方式** | 必须通过对象访问（`obj.a`） | 类名或对象均可（`MyClass.b`） |
 | **内存分配** | 每个对象独立一份          | 全局共享一份               |
 | **生命周期** | 对象创建时分配，销毁时回收     | 类加载时分配，程序结束时回收       |
-静态方法不能直接调用其他类中的普通方法
+静态方法不能直接调用其他类中普通方法
 ![[Pasted image 20250628144922.png|350]]
 可以使用 `static {}` 创建静态代码块
 ## 封装，继承和多态
@@ -1336,7 +1336,7 @@ G、位置 7
 - 子类可以用自己的方式实现父类的方法；
 
 子类实例化时的行为：
-> 子类对象在实例化时会默认先去调用父类中的无参构造方法，之后再调用本类中的相应构造方法
+> 子类对象在实例化时会默认先去调用父类中无参构造方法，之后再调用本类中相应构造方法
 
 ```java
 class Student extends Person{
@@ -1425,7 +1425,7 @@ int num1 = 100;
 ```java
 int score = 67;
 Integer score1 = new Integer(score);
-double score2 = score1.doubleValue(); 
+double score2 = score1.doubleValue();
 float score3 = score1.floatValue();
 int score4 = score1.intValue();
 ```
@@ -1445,7 +1445,7 @@ public class ReverStr{
 	}
 }
 ```
-Scanner 可以使用 `sc. nextXXX（对象名称类型）` 将流中的字符解析并返回对应的类型
+Scanner 可以使用 `sc. nextXXX（对象名称类型）` 将流中字符解析并返回对应的类型
 ## Math 类
 需要先导入 `import java. lang. Math;`
 提供常用方法

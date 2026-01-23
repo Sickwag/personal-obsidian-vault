@@ -15,7 +15,7 @@ db_config.user = "sickwag";
 db_config.password = "LqX9jBDqvDJYeooE";
 db_config.database = "sickwag_learning";
 db_config.ssl = mysql::ssl_mode::enable;
-// 如果使用普通变量，那么get函数返回的配置仍然是空的
+// 如果使用普通变量，那么get函数返回的配置仍是空的
 auto db_config = ServiceLocator::get<DBConfig>();
   ```
 - 非模板函数不能放在头文件中，否则会出现类似"多重定义"某个符号的 msvc 生成错误：
@@ -67,7 +67,7 @@ protected:
 };
 
 // librarian.h
-#pragma once 
+#pragma once
 #include "user.h"
 #include "utils.h"
 class Librarian : public User {
@@ -91,7 +91,7 @@ public:
 ```
 ```error
 严重性	代码	说明	项目	文件	行	抑制状态	详细信息
-错误	C2504	“Librarian”: 未定义基类	mysql-connect-demo	D:\Code Files\vsstudio\mysql-connect-demo\mysql-connect-demo\sys_admin.h	5		
+错误	C2504	“Librarian”: 未定义基类	mysql-connect-demo	D:\Code Files\vsstudio\mysql-connect-demo\mysql-connect-demo\sys_admin.h	5
 ```
 **![[Pasted image 20250712150300.png]]**
 ## 单例模式使用模板
@@ -251,7 +251,7 @@ void utils::register_user() {
 - 其中 length 和 range 函数的实现中使用了较新的 C++特性 format，让 C++ 能够像 python 一样格式化字符串，需要注意 [[#format 使用限制|format 使用限制]]
 需要实现**链式调用+组合方法**，一般的设计规则为：
 - **允许链式调用**：每个验证方法返回当前对象引用
-- **支持多规则组合**：内部维护一个验证器链表，链表每一个节点存储一个链式调用中规定的输入验证规则，最后实现一个 render 函数遍历链表中的所有逻辑
+- **支持多规则组合**：内部维护一个验证器链表，链表每一个节点存储一个链式调用中规定的输入验证规则，最后实现一个 render 函数遍历链表中所有逻辑
 - **支持类型泛化**：适用于 `int`, `std::string`, `double` 等
 [[C++ practice case#输入验证器#定义]]
 #### 验证器实现
@@ -264,11 +264,11 @@ void utils::register_user() {
 
 意思是，`format(fmt_string，fmt_arg1，fmt_arg2, ...)` 其中，fmt_string 必须是**编译期就能确定的**字符串常量或者字面量，不能传入一个 string 对象（运行期确定的）。
 需要使用 `std::vformat(prompt, std::make_format_args(min, max))` 将字符串转化为 format 可以接受的字符串。
-不能使用 `string_view`，因为视图仍然是通过一个***已经存在的 string 对象***生成的视图，本质上还是在运行期去决定
+不能使用 `string_view`，因视图仍是通过一个***已经存在的 string 对象***生成的视图，本质上还是在运行期去决定
 
 > [!Note]
 > std:: format 在 C++20 引入，它的核心目标是：
-> - 类型安全：确保格式字符串中的占位符 {} 与实际参数类型匹配（避免 printf 式的类型不安全）。
+> - 类型安全：确保格式字符串中占位符 {} 与实际参数类型匹配（避免 printf 式的类型不安全）。
 > - 性能优化：在编译期解析格式字符串，避免运行时解析开销。
 > - 错误提前暴露：有错误直接在编译期报错，而不是运行时崩溃
 
@@ -378,7 +378,7 @@ foo(s);        // ❌ N 无法在编译期推导（除非 s 是 constexpr）
 
 ## 常用操作
 ### 将字符串根据字符串分类存放
-[[用法导向知识#按字符（串）划分子串|字符串分类]]中已经提到使用基本 stl 库实现这一功能，但是这里使用 boost 库实现
+[[用法导向知识#按字符（串）划分子串|字符串分类]]中已经提到使用基本 stl 库实现这一功能，但这里使用 boost 库实现
 #### Boost. StringAlgorithms
 ```cpp
 #include <boost/algorithm/string.hpp>
@@ -477,8 +477,8 @@ awaitable<void> Reader::login_with_pwd(const std::string& name, const std::strin
 ## 服务注册管理
 ### 问题背景
 - 有一些“模块类”（如 Reader，Librarian 这些类）需要一些“服务类”（如 MySQLDB 提供数据库连接，Logger 提供日志记录）提供的功能
-- 由于这些类的功能大多比较复杂，往往只需要其中的部分功能，如果在每一个模块类中都加上这些服务对象成员，这样会导致实例化资源浪费、连接爆炸、难以管理
-- 如果每个“模块类”中的“服务类”对象都使用引用传递，这样可以解决资源浪费问题，但是每个“模块类”实例化都需要
+- 由于这些类的功能大多比较复杂，往往只需要其中部分功能，如果在每一个模块类中都加上这些服务对象成员，这样会导致实例化资源浪费、连接爆炸、难以管理
+- 如果每个“模块类”中“服务类”对象都使用引用传递，这样可以解决资源浪费问题，但每个“模块类”实例化都需要
 	- 提前创建***生命周期长于模块类对象***的服务类对象，将对象传入模块类的构造函数中
 	- 如果模块类需要的服务很多，构造函数需要传入很多参数，可读性降低，不好维护
 	- 新增模块类的时候需要了解底层实现，了解各类服务都是什么
@@ -534,7 +534,7 @@ inline std::unordered_map<std::type_index, std::shared_ptr<void>> ServiceLocator
 ### 注意事项和使用
 - 函数模板实现放在头文件中，否则会引发 LNK 2019 错误 ![[#^quxnvg|^quxnvg]]
 - 类型指针和引用转换
-	- 因为 services_中存储的“服务”是任意类型的，所以 `it->second` → 类型是 `std::shared_ptr<void>`，它是一个“类型擦除”的智能指针，**指向一个 `T` 类型的对象，但编译器不知道具体类型**
+	- 因 services_中存储的“服务”是任意类型的，所以 `it->second` → 类型是 `std::shared_ptr<void>`，它是一个“类型擦除”的智能指针，**指向一个 `T` 类型的对象，但编译器不知道具体类型**
 	- `static_pointer_cast` 是 `shared_ptr` 的类型转换工具,它不改变引用计数，只做指针转换（类似 `static_cast<T*>(ptr)`）,转换后得到：`std::shared_ptr<T>`
 	- 对 `std::shared_ptr<T>` 解引用 `*std::shared_ptr<T>  →  T&`，最终返回的是：**一个对原始对象的引用（`T&`）**
 - 服务管理逻辑：
@@ -583,12 +583,12 @@ int main() {
 
 int main() {
     Py_Initialize();
-    
+
     boost::python::object module = boost::python::import("script");
     boost::python::object result = module.attr("main")("arg1", "arg2");
-    
+
     std::cout << "Result: " << boost::python::extract<std::string>(result) << std::endl;
-    
+
     Py_Finalize();
     return 0;
 }

@@ -1,13 +1,13 @@
 ---
-      
+
 title: arcpy AddXY 工具添加救护车坐标
-      
+
 created: 2025-04-16
-      
+
 source: Cherry Studio
-      
+
 tags: #AI问答,#地理,#gis
-      
+
 ---
 ### 🤖 Assistant
 
@@ -15,7 +15,7 @@ tags: #AI问答,#地理,#gis
 
 #### 1. 什么是 ArcGIS 模型环境？
 
-ArcGIS 模型环境（Model Environment）是 ArcGIS 中的一个概念，指的是 **地理处理工具的运行时环境和配置**。它决定了工具如何处理数据、执行分析以及输出结果。模型环境包括一系列参数设置，会影响工具的行为和输出结果。
+ArcGIS 模型环境（Model Environment）是 ArcGIS 中一个概念，指的是 **地理处理工具的运行时环境和配置**。它决定了工具如何处理数据、执行分析以及输出结果。模型环境包括一系列参数设置，会影响工具的行为和输出结果。
 
 #### 2. 模型环境的组成部分
 

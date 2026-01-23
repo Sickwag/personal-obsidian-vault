@@ -227,7 +227,7 @@ git add .                                  �
 git commit -m 'xxx'                                       # 提交
 git commit --amend -m 'xxx'                               # 合并上一次提交（用于反复修改）
 git commit -am 'xxx'                                      # 将add和commit合为一步
-git rm xxx                                                # 删除index中的文件
+git rm xxx                                                # 删除index中文件
 git rm -r *                                               # 递归删除
 git log                                                   # 显示提交日志
 git log -1                                                # 显示1行日志 -n为n行

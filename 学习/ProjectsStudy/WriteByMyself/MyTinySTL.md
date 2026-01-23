@@ -44,7 +44,7 @@ wchar_t* fill_n(wchar_t* first, Size n, const wchar_t& value) {
     return first + n;
 }
 ```
-其中的 memset 是 C 语言函数，由于其直接操作内存块写入数据，比一个个元素赋值要快
+其中 memset 是 C 语言函数，由于其直接操作内存块写入数据，比一个个元素赋值要快
 - 使用 memset 进行内存块填充，比逐个元素赋值更高效
 - memset 是 C 语言的内存填充函数，直接操作字节数组
 - `(last - first) * sizeof (wchar_t)` 计算总字节数
@@ -74,14 +74,14 @@ OutputIterator fill_n(OutputIterator first, Size n, const T& value) {
 }
 ```
 观察代码可知：
-- 使用 `ForwardIterator` 是因为第一个重载中没有获得 last 到 first 指针的距离，所以只能通过 `first==last` 的比较两个迭代器（本质是指针的值，也就是两个指针指向的内存地址）是否一致。使用到了指针值的比较，就需要使用 ForwardIterator，OutputIterator 不具备这个功能所以不用。
-- 但是 `last - first` 可以直接得到元素个数，**前提是 first 和 last 都是随机访问迭代器**
+- 使用 `ForwardIterator` 是因第一个重载中没有获得 last 到 first 指针的距离，所以只能通过 `first==last` 的比较两个迭代器（本质是指针的值，也就是两个指针指向的内存地址）是否一致。使用到了指针值的比较，就需要使用 ForwardIterator，OutputIterator 不具备这个功能所以不用。
+- 但 `last - first` 可以直接得到元素个数，**前提是 first 和 last 都是随机访问迭代器**
 -  `ForwardIterator` 不支持减法，只能需使用`!=`比较
 ## 堆模拟
 计算机中：
 - 物理存储：计算机内存是线性的，所有数据都存储在连续的地址中
 - 逻辑结构：堆是树形结构，有父子关系
-这种逻辑和物理上的差异导致了计算机只能通过某种映射关系来让数组中的某个位置的元素表示堆中的对应元素，对于索引为 i 的节点：
+这种逻辑和物理上的差异导致了计算机只能通过某种映射关系来让数组中某个位置的元素表示堆中对应元素，对于索引为 i 的节点：
 1. 父节点索引: `(i-1)/2`
 2. 左子节点索引: `i*2+1`
 3. 右子节点索引: `i*2+2`
@@ -118,7 +118,7 @@ static void down(RandomAccessIterator first, RandomAccessIterator last, RandomAc
     }
 }
 ```
-## count_if 实现中的细节
+## count_if 实现中细节
 ### typename 显式标注类型名称
 ```cpp
 template <class InputIterator, class UnaryPredicate>

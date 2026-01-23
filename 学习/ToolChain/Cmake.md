@@ -33,8 +33,8 @@ C 程序源文件到可执行文件需要经过：
 #### Cmake 的本质
 为了解决 makefile 需要根据不同平台写入不同的makefile 操作指令，cmake 制定了一套规则，让相同的源代码，在不同平台编译时，根据不同的平台生成不同的 Makefile 编译文件，实现跨平台
 - Cmake 命令对当前需要编译的文件生成 makefile 文件
-- make 命令在当前项目中执行 makefile 文件中的命令
-- 执行 makefile 中的命令会调用 gcc，clang 等编译工具进行**预处理，编译，汇编，链接**等操作得到**可执行文件或者动静态链接库**
+- make 命令在当前项目中执行 makefile 文件中命令
+- 执行 makefile 中命令会调用 gcc，clang 等编译工具进行**预处理，编译，汇编，链接**等操作得到**可执行文件或者动静态链接库**
 不暴露源代码或者源代码文件数量过多不好管理的情况下，可以将一个或者多个 c/cpp 文件打包成动静态链接库方便调用
 # CMake 编写规范
 ## 基本规范
@@ -44,7 +44,7 @@ C 程序源文件到可执行文件需要经过：
 
 > `set(...)` 和 `cmake_...` 命令在它们出现时**立即执行**，但它们对 CMake 行为的影响，可能要在 `project()` 后才“生效”或“被使用”。
 
-- `find_package()` 必须放在 `project()` 之后，因为 CMake 需要**先初始化项目环境（编译器、语言、架构）**，才能正确查找和链接外部库。
+- `find_package()` 必须放在 `project()` 之后，因 CMake 需要**先初始化项目环境（编译器、语言、架构）**，才能正确查找和链接外部库。
 
 ### 工具链文件预处理逻辑
 
@@ -64,7 +64,7 @@ vcpkg integrate project
 	- 在本机开发多个项目，都使用 vcpkg
 	- 简化 CMakeLists.txt，不每次都写 `set(CMAKE_TOOLCHAIN_FILE ...)`
 	- 用 Qt Creator / VSCode / Visual Studio 等 IDE，希望自动识别依赖
-使用这句之后，在 cmake 项目中即使不写 `CMAKE_TOOLCHAIN_FILE` cmake 仍然能够正确识别 vcpkg 中安装的库，而不是在别的地方寻找
+使用这句之后，在 cmake 项目中即使不写 `CMAKE_TOOLCHAIN_FILE` cmake 仍能够正确识别 vcpkg 中安装的库，而不是在别的地方寻找
 
 > [!NOTE]
 > 可以通过运行 `vcpkg integrate remove` 清除全局集成
@@ -80,7 +80,7 @@ vcpkg integrate install
 include(vcpkg.cmake)  # 或者 set(CMAKE_TOOLCHAIN_FILE "vcpkg.cmake")
 ```
 不影响系统环境，只对当前项目生效
-更适合多项目共存、不同版本依赖、CI 构建等场景。我自己使用 vcpkg 进行包管理，但是别人不是，所以关于 vcpkg 的配置只有我需要做，所以我需要将我对 vcpkg 的设置单独分开来，不然别人使用我混合有 vcpkg 配置的 `CMakeLists.txt` 文件会导致问题
+更适合多项目共存、不同版本依赖、CI 构建等场景。我自己使用 vcpkg 进行包管理，但别人不是，所以关于 vcpkg 的配置只有我需要做，所以我需要将我对 vcpkg 的设置单独分开来，不然别人使用我混合有 vcpkg 配置的 `CMakeLists.txt` 文件会导致问题
 
 ### 语句执行流程
 ```md
@@ -136,7 +136,7 @@ add_custom_target (generate ALL DEPENDS generated. h)
 用于生成代码、资源文件等。
 # 实际工程中出现的问题
 ## `CMP0167` 警告
-- 从 CMake 3.13 开始，官方推荐使用 **Config 模式**（即通过 `FindPackageConfig.cmake`）寻找某个模块的位置，如寻找 boost 库就会通过在库的安装目录寻找 `FindBoostConfig.cmake` 文件来引入 boost 库中的对应模块
+- 从 CMake 3.13 开始，官方推荐使用 **Config 模式**（即通过 `FindPackageConfig.cmake`）寻找某个模块的位置，如寻找 boost 库就会通过在库的安装目录寻找 `FindBoostConfig.cmake` 文件来引入 boost 库中对应模块
 - 在没有设置工具链的情况下，CMake 会 fallback 到系统默认的 `FindBoost.cmake` —— 这个模块在 CMake 3.13+ 中已被标记为“废弃”，为了兼容没有删除，所以会报 **CMP0167 警告**。
 可以使用下面的代码强制使用 config 模式寻找模块
 ```cpp
@@ -144,7 +144,7 @@ if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
 endif()
 ```
-如果不使用这段代码，就会**使用 `FindPackageConfig.cmake` 中定义的方式来寻找模块**，这也就是为什么虽然这时候使用 `find_package` 不出现报错了，但是构建时会出现
+如果不使用这段代码，就会**使用 `FindPackageConfig.cmake` 中定义的方式来寻找模块**，这也就是为什么虽然这时候使用 `find_package` 不出现报错了，但构建时会出现
 如果一个库支持 config 调用，那么可以使用
 ```cmake
 find_package(Boost REQUIRED COMPONENTS system)
@@ -197,7 +197,7 @@ target_link_libraries(learn_dll_lib PRIVATE
 )
 ```
 由于 find_package 在 project 之前，并且由于 ***[[#基本规范#配置书写顺序|所有的 set 语句设置的变量直到 project 语句时才会执行]]***，所以 cmake 在不知道使用什么语言和编译器的情况下 （unknow toolsest）被告知**需要寻找 boost 库**，CMake fallback 到 FindBoost.cmake（虽然设了 CMP0167 NEW，但在` project()` 之前无效）
-这就会导致 cmake 在 Anaconda 的 Boost 库中的 BoostDetectToolset-1.82.0. cmake 中的
+这就会导致 cmake 在 Anaconda 的 Boost 库中 BoostDetectToolset-1.82.0. cmake 中
 ```cmake
 string(REGEX MATCHALL "[0-9]+" _BOOST_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
 ```
@@ -214,11 +214,11 @@ Call Stack (most recent call first):
   D:/Program/Cmake/share/cmake-4.0/Modules/FindBoost.cmake:609 (find_package)
   CMakeLists.txt:7 (find_package)
 ```
-这有两个原因，首先由于 toolset 位置，cmake 不知道有 vcpkg 的存在，第二是因为 cmake fallback 了，没有使用 config 方式寻找配置，而是使用了 findboost，所以才可以看到语法错误，cmake 需要 `at least 5 arguments total` 5 个参数进行正则查找，但是并没有满足
+这有两个原因，首先由于 toolset 位置，cmake 不知道有 vcpkg 的存在，第二是因 cmake fallback 了，没有使用 config 方式寻找配置，而是使用了 findboost，所以才可以看到语法错误，cmake 需要 `at least 5 arguments total` 5 个参数进行正则查找，但并没有满足
 
 ## Visual studio 无法使用 cmake 项目
 ### 问题
-可以创建项目，也可以通过 cmake 构建编译，运行 exe 程序，但是错误列表中出现大量无法打开源文件，头文件，标准库文件的报错。
+可以创建项目，也可以通过 cmake 构建编译，运行 exe 程序，但错误列表中出现大量无法打开源文件，头文件，标准库文件的报错。
 ### 原因和解决
 没有设置 cmake 可信执行文件的目录
 ![[Pasted image 20251011153910.png]]
@@ -343,7 +343,7 @@ target_link_libraries(my_app PRIVATE spdlog::spdlog)
 
 #### 使用 `ExternalProject`（复杂场景）
 
-适用于需要自定义编译步骤的库（如交叉编译）。  
+适用于需要自定义编译步骤的库（如交叉编译）。
 **示例：编译并引入 zlib**
 ```cmake
 include(ExternalProject)
@@ -358,7 +358,7 @@ ExternalProject_Get_Property(zlib_external install_dir)
 target_link_libraries(my_app PRIVATE "${install_dir}/lib/zlib.a")
 ```
 #### 使用 `pkg-config`（Unix-like 系统）
-适用于通过 `pkg-config` 管理的库（如 GTK）。  
+适用于通过 `pkg-config` 管理的库（如 GTK）。
 **示例：引入 GTK 3**
 ```cmake
 find_package(PkgConfig REQUIRED)
@@ -368,7 +368,7 @@ target_include_directories(my_app PRIVATE ${GTK3_INCLUDE_DIRS})
 target_link_libraries(my_app PRIVATE ${GTK3_LIBRARIES})
 ```
 #### 自定义 Find 模块（高级）
-如果库没有提供 CMake 支持，可以手动编写 `FindXXX.cmake` 文件。  
+如果库没有提供 CMake 支持，可以手动编写 `FindXXX.cmake` 文件。
 **示例：自定义查找 `libfoo`**
 1. 创建 `cmake/FindLibFoo.cmake`：
 ```cmake
@@ -398,11 +398,11 @@ find_package(OpenCV REQUIRED)
 来源：自己写的项目 [[ExplainLNK2019]]
 
 ### 问题
-httplib 是一个单头文件库，只需要使用 `find_package(httplib CONFIG REQUIRED)` 即可引入 `httplibConfig.cmake`，问题出在如果不使用 `target_link_libraries(httplib::httplib)`，项目会报错找不到 `httplib.h` 文件。原因未知。 #未知错误 
+httplib 是一个单头文件库，只需要使用 `find_package(httplib CONFIG REQUIRED)` 即可引入 `httplibConfig.cmake`，问题出在如果不使用 `target_link_libraries(httplib::httplib)`，项目会报错找不到 `httplib.h` 文件。原因未知。 #未知错误
 ### 找不到头文件和 `LNK2019` 错误
-一般引入单头文件库只需要将头文件复制到项目目录中并添加到 includepath 中即可，并不需要链接。但是如果通过包管理工具引入但头文件库，可能会将头文件编译为库，也有可能不会，所以保险起见还是都使用 `target_link_libraries()` 链接.
+一般引入单头文件库只需要将头文件复制到项目目录中并添加到 includepath 中即可，并不需要链接。但如果通过包管理工具引入但头文件库，可能会将头文件编译为库，也有可能不会，所以保险起见还是都使用 `target_link_libraries()` 链接.
 
-添加链接之后错误消失，推测可能是 vcpkg 将 httplib 编译成了库，但是 everything 未查找到对应文件
+添加链接之后错误消失，推测可能是 vcpkg 将 httplib 编译成了库，但 everything 未查找到对应文件
 ```cmake
 project(ExplainLNK2019 VERSION 0.1.0 LANGUAGES C CXX)
 find_package(httplib CONFIG REQUIRED)
@@ -492,7 +492,7 @@ msbuild 中对 vcpkg 有很好的支持（使用 `vcpkg integrate install` 后�
 ## vcpkg
 ### 下载速度问题
 参考：[vcpkg国内镜像源替换-CSDN博客](https://blog.csdn.net/weixin_41364246/article/details/140123907)
-修改国内镜像之后，大部分包能够快速下载，但是不在 github 拖管的包需要自己替换源
+修改国内镜像之后，大部分包能够快速下载，但不在 github 拖管的包需要自己替换源
 # CMake 基本内容教程
 参考：[CMake 教程 — CMake 4.2.0 文档 - CMake 构建系统](https://cmake.com.cn/cmake/help/latest/guide/tutorial/index.html)
 ## 杂项内容
@@ -562,7 +562,7 @@ View Help
 | 添加子目录映射 | `add_subdirectory(src build_subdir)`<br>`add_subdirectory(src ${CMAKE_BINARY_DIR}/third_party/libpng)` | 控制子模块的构建位置                 |
 ## 第 0 步：开始之前
 ### cmake 生成器
-**CMake 的工作是根据 CMakeLists 配置文件生成构建系统文件** 
+**CMake 的工作是根据 CMakeLists 配置文件生成构建系统文件**
 - 这些文件能被其他构建工具理解和使用，而生成器负责生成这些文件
 - 不同的生成器会生成不同类型的构建系统文件
 - CMake 生成器是平台特定的，因此每个生成器可能只在特定平台上可用
@@ -584,7 +584,7 @@ cd build && ninja
 ```
 注意不能在生成器间**重用构建目录**，-B 选项应该为不同生成器制定不同路径
 ### 单配置和多配置生成器
-教程中的完整说明：[[#练习 3 - CMakePresets.json]]
+教程中完整说明：[[#练习 3 - CMakePresets.json]]
 底层构建系统是细节，编写 cmakelist 时不需要管
 配置构建即编译程序使用的方式，debug，release，relwithdebinfo 等，`CMAKE_BUILD_TYPE`**缓存变量**会在第一个 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 或 [`enable_language()`](https://cmake.com.cn/cmake/help/latest/command/enable_language.html#command:enable_language "enable_language") 命令初始化，否则使用默认（一般是 debug 模式）。这个环境变量取自*进程环境*，可以通过 `-D` 和 CMakePresets 设置
 所谓单配置和多配置就是每次编译仅仅生成一/多个模式的编译文件，可以使用 `cmake --build --config <name>` 指定
@@ -607,32 +607,32 @@ cd build && ninja
 #### cmake 部署项目逻辑
 总体使用 cmake 流程为：
 ```md
-[源代码] 
-    ↓ cmake -S -B 
+[源代码]
+    ↓ cmake -S -B
 [构建系统生成] → [构建配置文件]
-    ↓ cmake --build 
+    ↓ cmake --build
 [编译链接阶段] → [可执行文件/库]
-    ↓ ctest 
-[测试验证] 
-    ↓ cmake --install 
+    ↓ ctest
+[测试验证]
+    ↓ cmake --install
 [安装部署]
 ```
-部署过程中的选项有优先级：
+部署过程中选项有优先级：
 
 | 配置优先级    | 来源                  | 说明           |
 | -------- | ------------------- | ------------ |
 | 1. 命令行参数 | `-DVAR=VAL`         | 优先级最高，覆盖所有预设 |
 | 2. 预设配置  | `CMakePresets.json` | 包含完整的配置参数    |
 | 3. 环境变量  | `CXX=clang++`       | 仅影响未显式配置的参数  |
-但是如果某个变量（无论是用户自定义变量还是 cmake 内置粘性变量）如果在 set 中添加了 FORCE 参数 `set(var_name value FORCE)` 则**配置文件中的这个变量优先级会为最高**
+但如果某个变量（无论是用户自定义变量还是 cmake 内置粘性变量）如果在 set 中添加了 FORCE 参数 `set(var_name value FORCE)` 则**配置文件中这个变量优先级会为最高**
 #### 文件集特性简要介绍
 CMake 3.23 新增功能，用于组织特定类型的文件（如头文件、C++ 模块）
 ```cmake
 target_sources(<target>
   [INTERFACE|PUBLIC|PRIVATE]
-    FILE_SET <set_name> 
-      [TYPE <HEADERS|CXX_MODULES>] 
-      [BASE_DIRS <dirs>...] 
+    FILE_SET <set_name>
+      [TYPE <HEADERS|CXX_MODULES>]
+      [BASE_DIRS <dirs>...]
       [FILES <files>...]
 )
 ```
@@ -643,15 +643,15 @@ add_library(MyLib lib.cpp)
 target_sources(MyLib
   PUBLIC
 	src/mylib.cpp
-  FILE_SET HEADERS 
-    BASE_DIRS include 
+  FILE_SET HEADERS
+    BASE_DIRS include
     FILES include/mylib.h
 )
 
 # 定义 C++ 模块文件集
 target_sources(MyLib PRIVATE
-  FILE_SET MODULES 
-    TYPE CXX_MODULES 
+  FILE_SET MODULES
+    TYPE CXX_MODULES
     FILES src/module.cppm
 )
 ```
@@ -661,7 +661,7 @@ target_sources(MyLib PRIVATE
 | ----------- | ----------------------------------------------------------- |
 | `FILE_SET`  | 定义一个文件集，名称需*以小写字母或下划线开头*（预定义集名称如 `HEADERS` 除外）。             |
 | `TYPE`      | 文件集类型，支持 `HEADERS`（头文件）和 `CXX_MODULES`（C++ 模块）。             |
-| `BASE_DIRS` | 基目录列表，用于定位文件集中的文件。相对路径相对于当前源码目录（`CMAKE_CURRENT_SOURCE_DIR`） |
+| `BASE_DIRS` | 基目录列表，用于定位文件集中文件。相对路径相对于当前源码目录（`CMAKE_CURRENT_SOURCE_DIR`） |
 | `FILES`     | 要包含的文件列表，必须位于 `BASE_DIRS` 之一或其子目录中。                         |
 |             |                                                             |
 文件集类型
@@ -674,7 +674,7 @@ target_sources(MyLib PRIVATE
 ##### 基本内容
 CMake采用"声明式+过程式"混合设计，`add_executable` / `add_library` 定义目标基本结构，`target_sources` 实现动态扩展。
 本质上是将文件集添加到目标，或将文件添加到现有文件集。
-目标具有零个或多个命名[[#文件集]]。每个文件集都有一个名称、一个类型、一个 `INTERFACE`、`PUBLIC` 或 `PRIVATE` 范围、一个或多个基目录以及这些目录中的文件
+目标具有零个或多个命名[[#文件集]]。每个文件集都有一个名称、一个类型、一个 `INTERFACE`、`PUBLIC` 或 `PRIVATE` 范围、一个或多个基目录以及这些目录中文件
 语法：
 ```cmake
 target_sources(<target>
@@ -740,8 +740,8 @@ target_sources(DebugTool PRIVATE
 本质是：在一种架构的机器上生成另一种架构的可执行代码
 交叉编译通常需要引入工具链文件（toolchain file），用于指定目标平台的编译器、SDK 路径等信息。由于 vcpkg 支持下载不同架构的预编译库，因此在交叉编译时也需通过工具链文件告知 vcpkg 当前目标平台的架构，以便选择合适的库进行链接。
 #### CMakePresets 配置
-教程中的完整内容：[[#练习 3 - CMakePresets.json]]
-`CMakePresets.json` 的作用是避免构建/编译/安装过程中的重复命令输入，统一配置，方便使用者直接使用 `--preset` 跳过这些步骤的配置文件
+教程中完整内容：[[#练习 3 - CMakePresets.json]]
+`CMakePresets.json` 的作用是避免构建/编译/安装过程中重复命令输入，统一配置，方便使用者直接使用 `--preset` 跳过这些步骤的配置文件
 ```md
 # 标准化构建流程
 1. 配置阶段: cmake --preset linux-debug
@@ -761,7 +761,7 @@ target_sources(DebugTool PRIVATE
 - 可执行文件或库的输出名称
 - 依赖项
 - 编译器和链接器标志
-所有目标中的路径字符**都是绝对路径或者相对于 `CMAKE_CURRENT_SOURCE_DIR` 的路径**，相对于当前 CMakeLists 的路径
+所有目标中路径字符**都是绝对路径或者相对于 `CMAKE_CURRENT_SOURCE_DIR` 的路径**，相对于当前 CMakeLists 的路径
 ```cmake
 # TODO1: Set the minimum required version of CMake to be 3.23
 cmake_minimum_required(VERSION 3.15)
@@ -776,7 +776,7 @@ target_sources(Tutorial PRIVATE
 ```
 注意如果使用 `add_executable` **只声明目标而不添加任何文件**不需要写访问修饰符
 ### 练习 2 - 构建库
-描述一组头文件**最好使用 `FILE_SET`**，头文件是不必要的，就算在 `add_libraries` 或者 `add_executable` 中不添加头文件也不会影响程序编译，但是对于库的安装却需要头文件来**让 `install` 命令知道去哪里找到头文件**
+描述一组头文件**最好使用 `FILE_SET`**，头文件是不必要的，就算在 `add_libraries` 或者 `add_executable` 中不添加头文件也不会影响程序编译，但对于库的安装却需要头文件来**让 `install` 命令知道去哪里找到头文件**
 ```cmake
 target_sources(MyLibrary
   PRIVATE
@@ -795,7 +795,7 @@ target_sources(MyLibrary
 - `TYPE <type>` 是我们正在描述的文件类型。最常见的是头文件，但较新版本的 CMake 支持其他类型，如 C++20 模块。
 - `BASE_DIRS` 是文件的“基”位置。这可以最容易地理解为通过 `g++ -I` 标志向编译器描述的用于头文件发现的位置。
 > [!note]
-> 当编译器的头文件中需要使用其他文件夹中的头文件时，如果仅仅将头文件和源文件都通过 `g++ /path/to/head.h source.cpp -o main.exe` 就需要在 `source.cpp` 中的 include 中使用相对源文件的**相对路径**，而如果添加了 `-I` 选项，就相当于设置了 `includePath`，只用 include 头文件名即可
+> 当编译器的头文件中需要使用其他文件夹中头文件时，如果仅仅将头文件和源文件都通过 `g++ /path/to/head.h source.cpp -o main.exe` 就需要在 `source.cpp` 中 include 中使用相对源文件的**相对路径**，而如果添加了 `-I` 选项，就相当于设置了 `includePath`，只用 include 头文件名即可
 > cmake 中在一个目标的 source 文件中，使用 base_dir 或者 `include_directories()` 标记一个文件夹作为头文件目录，就相当于告诉编译器，当编译这个目标时，使用 ` -I ` 选项将 base_dir 目录作为 includepath，只不过 `include_directories` 是全局范围
 > ```bash
 > g++ -I/include_dir1 -I/include_dir2 source.cpp
@@ -835,10 +835,10 @@ target_sources(MathFunctions PRIVATE
 链接之后 cmake 就可以读取库头文件内容，可以使用 `#include` 命令引入。整个过程用术语表述为：*将 `MathFunctions` 添加到 `Tutorial` 的链接库中，将 `Tutorial` 可执行文件描述为 `MathFunctions` 目标的消费者*
 
 ### 练习 4 - 子目录
-需要注意的是子 cmake 目录中的 `cmakelists.txt` 中的字符串/路径变量相对位置会改变。添加当前文件目录中的文件作为 includePath 时，base_dir 属性可以留空
+需要注意的是子 cmake 目录中 `cmakelists.txt` 中字符串/路径变量相对位置会改变。添加当前文件目录中文件作为 includePath 时，base_dir 属性可以留空
 ### cmake 访问修饰符
 - `PRIVATE` 属性（也称为“非接口”属性）仅可供拥有它的目标使用，例如 `PRIVATE` 头文件将仅对附加到它们的目标可见。
-- `INTERFACE` 属性仅对*链接*拥有目标的那些目标可用。拥有目标本身无法访问这些属性。一个仅限头文件的库是 `INTERFACE` 属性集合的一个例子，因为仅限头文件的库本身不构建任何内容，也不需要访问自己的文件。
+- `INTERFACE` 属性仅对*链接*拥有目标的那些目标可用。拥有目标本身无法访问这些属性。一个仅限头文件的库是 `INTERFACE` 属性集合的一个例子，因仅限头文件的库本身不构建任何内容，也不需要访问自己的文件。
 - `PUBLIC` 不是一种独立的属性类型，而是 `PRIVATE` 和 `INTERFACE` 属性的并集。因此，使用 `PUBLIC` 描述的需求对于拥有目标和消费目标都可用。
 根据声明/作用域最小化原则，如果语言特性仅在实现文件中使用，则相应的编译特性应为 `PRIVATE`。如果目标的头文件使用这些特性，则应使用 `PUBLIC` 或 `INTERFACE`，*优先 private/interface，然后是 public*
 
@@ -892,7 +892,7 @@ target_sources(MathFunctions PRIVATE
 只会定义**连接器搜索库文件路径**，类似编译器的 `-L` 参数，定义的只是文件夹，而 `target_link_libraries` 定义的是具体链接的库文件名称
 ## 第 2 步：CMake 语言基础
 ### 背景
-CMake 中的每个对象都是字符串，而列表本身也是**包含分号作为分隔符**的字符串。任何看起来操作非字符串（如布尔值、数字、JSON 对象等）的命令，实际上都是在解析一个字符串
+CMake 中每个对象都是字符串，而列表本身也是**包含分号作为分隔符**的字符串。任何看起来操作非字符串（如布尔值、数字、JSON 对象等）的命令，实际上都是在解析一个字符串
 由于 CMakeLang 只有字符串，条件判断完全依赖于约定，即哪些字符串被认为是 true，哪些被认为是 false。这些值“应该”是直观的，“True”、“On”、“Yes”以及（代表）非零数字的字符串是 truthy（真值），而“False”、“Off”、“No”、“0”、“Ignore”、“NotFound”以及空字符串都被认为是 false（假值）。
 `cmakelists.txt` 也可以不作为构建配置，而仅仅作为脚本文件，使用 `-P` 选项，告诉 CMake 该文件不包含 [`project()`](https://cmake.com.cn/cmake/help/latest/command/project.html#command:project "project") 命令。我们不构建任何软件，而是仅将 CMake 用作命令解释器。
 
@@ -937,9 +937,9 @@ function(FuncAppend ListVar Value)
 endfunction()
 ```
 ### 练习 2 - 条件判断和循环
-CMake 中的所有对象都是字符串，因此双引号 `"` 常常是不必要的。但包含空格的字符串需要双引号，否则它们会被视为列表；CMake 会用分号将元素连接起来。
+CMake 中所有对象都是字符串，因此双引号 `"` 常常是不必要的。但包含空格的字符串需要双引号，否则它们会被视为列表；CMake 会用分号将元素连接起来。
 ### 练习 3 - 使用 include 进行组织
-构建过程中 cmake 需要用到的一些工具或者变量分开放置而不是只放在项目相关中的 `CMakeLists.txt` 中，就像组织代码一样讲这些内容放在其他 `.cmake` 文件中，*关注点分离*
+构建过程中 cmake 需要用到的一些工具或者变量分开放置而不是只放在项目相关中 `CMakeLists.txt` 中，就像组织代码一样讲这些内容放在其他 `.cmake` 文件中，*关注点分离*
 使用 `include` 命令讲这些文件引入即可
 ## 第 3 步：配置和缓存变量
 ### 背景
@@ -998,7 +998,7 @@ option 也会添加粘性变量，这样设置可以让最终生成内容中没�
 - 在构建阶段添加粘性变量指令后编译
 
 > [!note]
-> 需要注意的是，step 3 中的目录结构发生了变化，分成了三个 cmakelists. txt 构建，每一个都会在 build 中生成对应名称的文件夹，然后在其中分别放入 cmakefiles 文件夹（存储 cmake 版本等信息）和生成器/编译器等平台相关信息，所以 step 1 中 `mathfunctions.lib` 在 `build/Debug` 中，而 step 3 中在 `build/mathfunctions/Debug` 中
+> 需要注意的是，step 3 中目录结构发生了变化，分成了三个 cmakelists. txt 构建，每一个都会在 build 中生成对应名称的文件夹，然后在其中分别放入 cmakefiles 文件夹（存储 cmake 版本等信息）和生成器/编译器等平台相关信息，所以 step 1 中 `mathfunctions.lib` 在 `build/Debug` 中，而 step 3 中在 `build/mathfunctions/Debug` 中
 
 ### 练习 2 - CMAKE 变量
 CMake 提供了几个重要的普通变量和缓存变量，供打包者控制构建。编译器、默认标志、软件包搜索位置等决策都由 CMake 自有的配置变量控制。
@@ -1006,7 +1006,7 @@ CMake 提供了几个重要的普通变量和缓存变量，供打包者控制�
 这些变量大多可通过配置文件和命令行 `-D` 选项配置
 ### 练习 3 - CMakePresets.json
 Presets 能够表达完整的 CMake 工作流程，从配置到构建，再到安装软件软件包，这次练习仅仅用于配置
-命令行标志可以与 presets 混合。命令行标志优先于 preset 中的值。
+命令行标志可以与 presets 混合。命令行标志优先于 preset 中值。
 最常用的方法是用来设置粘性变量
 ```json
 {
@@ -1040,7 +1040,7 @@ set_target_properties(Example
 get_target_property(KeyVar Example Key)
 get_target_property(HelloVar Example Hello)
 ```
-CMake 语义上有意义的目标属性的完整列表已记录在 [`cmake-properties(7)`](https://cmake.com.cn/cmake/help/latest/manual/cmake-properties.7.html#manual:cmake-properties\(7\) "cmake-properties(7)") 中，但是其中大多数应该使用其专用命令进行修改而不是这样的语意不明函数
+CMake 语义上有意义的目标属性的完整列表已记录在 [`cmake-properties(7)`](https://cmake.com.cn/cmake/help/latest/manual/cmake-properties.7.html#manual:cmake-properties\(7\) "cmake-properties(7)") 中，但其中大多数应该使用其专用命令进行修改而不是这样的语意不明函数
 [`target_precompile_headers()`](https://cmake.com.cn/cmake/help/latest/command/target_precompile_headers.html#command:target_precompile_headers "target_precompile_headers") 命令接受一个头文件列表，类似于 [`target_sources()`](https://cmake.com.cn/cmake/help/latest/command/target_sources.html#command:target_sources "target_sources")，并从中创建一个预编译头。然后，此预编译头将被强制包含到目标的所有翻译单元中。这对于构建性能可能很有用。
 ### 练习 1 - 特性和定义
 许多库为了兼容多种编译环境，在构建时需要一组最少的必需特性，比如空出 C++标准设置和一些特定编译器的设置
@@ -1111,7 +1111,7 @@ cmake 不允许类似
 add_library(MyLib STATIC)
 add_library(MyLib SHARED)
 ```
-因为目标名称是唯一的，这样并不会同时编译出两个库类型的文件，正确的方法是通过[[#文件集特性简要介绍|文件集]] /或者其他变量将两种情况下的文件收集起来，分别构建两个目标
+因目标名称是唯一的，这样并不会同时编译出两个库类型的文件，正确的方法是通过[[#文件集特性简要介绍|文件集]] /或者其他变量将两种情况下的文件收集起来，分别构建两个目标
 所用到的命令：
 ```bash
 cmake --preset tutorial -DBUILD_SHARED_LIBS=ON  # 构建动态库
@@ -1200,7 +1200,7 @@ target_link_libraries(MathFunctions
 )
 ```
 ##### 减少重复编译
-每个目标文件中的源文件改动，都需要在编译时**重新编译**，而如果有多个目标使用了同一套工具函数，那么现在有两种方法来让代码复用：
+每个目标文件中源文件改动，都需要在编译时**重新编译**，而如果有多个目标使用了同一套工具函数，那么现在有两种方法来让代码复用：
 1. 静态库
 ```cmake
 add_library(Utils STATIC utils.cpp)  # 编译 utils.cpp -> utils.obj -> Utils.lib
@@ -1209,7 +1209,7 @@ add_library(Utils STATIC utils.cpp)  # 编译 utils.cpp -> utils.obj -> Utils.li
 add_executable(exe_a main_a.cpp)
 target_link_libraries(exe_a PRIVATE Utils)
 
-add_executable(exe_b main_b.cpp) 
+add_executable(exe_b main_b.cpp)
 target_link_libraries(exe_b PRIVATE Utils)
 
 # 不要这样写，这样会导致每一个可执行对象编译时都编译出一个utils.o，浪费CPU
@@ -1228,11 +1228,11 @@ add_executable(exe_b main_b.cpp $<TARGET_OBJECTS:Utils>)
 静态库：
 - 链接器从 `Utils.lib` 中提取需要的符号
 - 每个可执行文件都链接到完整的 `Utils.lib`
-- 如果 `Utils.lib` 很大并且由单个源文件编译而成，但可执行文件只使用其中一小部分，仍然会链接整个库，**主要成本在提取符号和链接过程中**
+- 如果 `Utils.lib` 很大并且由单个源文件编译而成，但可执行文件只使用其中一小部分，仍会链接整个库，**主要成本在提取符号和链接过程中**
 - 这个问题可以通过编译选项/连接选项/编译器剪裁优化避免（参考：[AI回答](https://chat.qwen.ai/s/t_76de4fa8-8c9f-450a-a83c-29ad172a3d79?fev=0.1.32)）
 
 对象库：
-- 直接将 `utils.obj` 中的符号合并到最终可执行文件中
+- 直接将 `utils.obj` 中符号合并到最终可执行文件中
 - 没有中间的库文件，直接操作对象文件
 资源管理和利用层面对比：
 静态库：
@@ -1313,7 +1313,7 @@ set_target_properties(MyApp
 ## 第 7 步：自定义命令和生成文件
 #未完成 感觉没什么用，暂时跳过
 ### 背景
-构建过程中的任何步骤通常都可以用其输入和输出来描述。CMake 假定代码生成器和其他自定义过程遵循相同的原则。这样，代码生成器就与编译器、链接器和其他工具链元素一样运行；当输入比输出新（或输出不存在）时，将运行用户指定的命令来更新输出。
+构建过程中任何步骤通常都可以用其输入和输出来描述。CMake 假定代码生成器和其他自定义过程遵循相同的原则。这样，代码生成器就与编译器、链接器和其他工具链元素一样运行；当输入比输出新（或输出不存在）时，将运行用户指定的命令来更新输出。
 核心是 **通过 `add_custom_command()` 和 `add_custom_target()` 实现代码生成**，并将其集成到项目构建流程中
 
 ## 第 8 步：测试与 CTest
@@ -1340,7 +1340,7 @@ add_test(
 3. 编写测试程序
 4. 在 `add_executable` 目标位置创建带入口函数的源文件，一般根据入口函数返回值是否为 0 判断测试是否通过
 ## 第 9 步：安装命令与概念
-工程文件中构建/代码结构树通常比较复杂，这种将构建树中的构件移动到适合使用者使用的最终布局的操作称为安装
+工程文件中构建/代码结构树通常比较复杂，这种将构建树中构件移动到适合使用者使用的最终布局的操作称为安装
 ### 背景
 所有 CMake 安装都通过一个单一命令 [`install()`](https://cmake.com.cn/cmake/help/latest/command/install.html#command:install "install") 来完成，该命令又细分为负责安装过程各个方面的多个子命令。**对于基于目标的 CMake 工作流程**，通常足以依赖安装目标本身，使用 [`install(TARGETS)`](https://cmake.com.cn/cmake/help/latest/command/install.html#targets "install(targets)")，而不是通过 [`install(FILES)`](https://cmake.com.cn/cmake/help/latest/command/install.html#files "install(files)") or [`install(DIRECTORY)`](https://cmake.com.cn/cmake/help/latest/command/install.html#directory "install(directory)")手动移动文件
 install 命令会自动寻找 cmake 中配置的头文件，库文件所在的位置信息，这就是为什么需要向将要安装的头文件集合（[[#练习 2 - 构建库]]，[[#练习 2 - 接口库]]）添加 `FILES`
@@ -1367,16 +1367,16 @@ install(
 ```
 - file_set 指定头文件导出目录，cmake 通过目标的 `target_include_directories()` 中，通过 `INSTALL_INTERFACE` 指定（public 或者 interface 访问修饰符修饰的）的头文件路径，并将其包含在安装流程中声明目标提供的头文件。
 - 不使用 file_set 则只会安装二进制文件
-根据[[#第 9 步：安装命令与概念#背景]]中的构建默认安装位置变量，可以知道通过
-`cmake --install ./build/ --prefix ./install/ --config=Debug` 会将库中的二进制文件安装在 `./install/lib` ，头文件安装在 `./install/include` 中，安装位置只能通过：
+根据[[#第 9 步：安装命令与概念#背景]]中构建默认安装位置变量，可以知道通过
+`cmake --install ./build/ --prefix ./install/ --config=Debug` 会将库中二进制文件安装在 `./install/lib` ，头文件安装在 `./install/include` 中，安装位置只能通过：
 - 配置中定义 `CMAKE_INTALL_PREFIX`
 - 构建阶段定义 `-DCMAKE_INTALL_PREFIX=/path/to/install`
 - 安装阶段使用 `--prefix` 参数定义
 ![[PixPin_2026-01-10_11-15-36.png]]
 配置完成后用户就能通过 `cmake --install` 命令将项目安装到对应的位置并使用了
 ### 练习 2 - 导出目标
-但是对于库，使用[[#练习 1 - 安装构件]]的配置并不能实现要求，有些库在安装之后文件结构比较复杂，如果需要使用这些库需要在导入项目中使用很多 `target_link/include_XXX` 来指定文件路径，非常麻烦
-导出目标用来**将 CMake 项目中的目标（如库或可执行文件）导出为可重用的配置文件**，以便其他项目可以通过 `find_package()` 直接使用这些目标，由于 `find_package` 实际上会查找对应库的 `Config.cmake` 配置文件并引入，所以导出目标就需要设置这些内容
+但对于库，使用[[#练习 1 - 安装构件]]的配置并不能实现要求，有些库在安装之后文件结构比较复杂，如果需要使用这些库需要在导入项目中使用很多 `target_link/include_XXX` 来指定文件路径，非常麻烦
+导出目标用来**将 CMake 项目中目标（如库或可执行文件）导出为可重用的配置文件**，以便其他项目可以通过 `find_package()` 直接使用这些目标，由于 `find_package` 实际上会查找对应库的 `Config.cmake` 配置文件并引入，所以导出目标就需要设置这些内容
 install 命令本质上只是在做定义工作，真正的导出文件行为会在使用 `install` 命令时执行
 #### install (TARGETS ...) 定义目标
 本质上是在**对目标定义安装规则**，这时候并没有安装，只用使用 `install(files)` 命令才会安装
@@ -1392,7 +1392,7 @@ install(
 - 如果添加了 EXPORT 参数或者再写一个 [[ #install (EXPORT ...) 生成目标导出文件|install(export)]] 就会在定义的同时导出。在安装时，这些信息会被写入 `MyProjectTargets.cmake` 文件。
 - 如果添加了 FILES，则**本质上只是在自定义导出文件名称**
 #### install (EXPORT ...) 生成目标导出文件
-本质是将目标的 cmake 配置信息**导出到对应的 target.cmake**文件中，最终在这个库被 find_package 找到时被因为 `include(XXXtarget.cmake)` 而读取这个库的配置
+本质是将目标的 cmake 配置信息**导出到对应的 target.cmake**文件中，最终在这个库被 find_package 找到时被因 `include(XXXtarget.cmake)` 而读取这个库的配置
 ```cmake
 include(GNUInstallDirs)
 
@@ -1415,9 +1415,9 @@ set_target_properties(MyProject::MyLib PROPERTIES
 )
 ```
 #### install(FILES src_file ... ) 安装
-由于教程中的 Config.cmake 文件是手写的，才会有这一步，这一步本质上用于**手动将手写的 Config.cmake**添加到安装过程中，实际工程中常用[[#安装 Config.cmake 文件的其他方法|自动编写Config.cmake的方法]]
+由于教程中 Config.cmake 文件是手写的，才会有这一步，这一步本质上用于**手动将手写的 Config.cmake**添加到安装过程中，实际工程中常用[[#安装 Config.cmake 文件的其他方法|自动编写Config.cmake的方法]]
 ```cmake
-# 工作目录中的cmake/MyProjectConfig.cmake，其中include target.cmake文件
+# 工作目录中cmake/MyProjectConfig.cmake，其中include target.cmake文件
 include(${CMAKE_CURRENT_LIST_DIR}/MyProjectTargets.cmake)
 # 主配置文件中说明这个Config.cmake配置文件将会被安装在什么位置
 install(
@@ -1515,7 +1515,7 @@ configure_package_config_file(
 )
 ```
 #### 构建可导出的目标总体方法
-总体目的是：将 CMake 项目中的库文件、头文件和构建配置信息导出为可重用的模块，使其他项目通过 `find_package()` 即可直接使用这些库
+总体目的是：将 CMake 项目中库文件、头文件和构建配置信息导出为可重用的模块，使其他项目通过 `find_package()` 即可直接使用这些库
 1. 项目配置阶段
 - 定义项目和版本：
 ```cmake
@@ -1581,7 +1581,7 @@ install(
 	DESTINATION include  # 头文件安装到 /usr/local/include/
 )
 ```
-这条命令会将所有 cmake 在 include 路径中扫描到的头文件放在这个 destination 位置，如果 DIRECTORY 中的有头文件在其他位置使用了 `target_include_directories()` 添加到指定位置则会被忽略，之后通常就能通过：
+这条命令会将所有 cmake 在 include 路径中扫描到的头文件放在这个 destination 位置，如果 DIRECTORY 中有头文件在其他位置使用了 `target_include_directories()` 添加到指定位置则会被忽略，之后通常就能通过：
 ```cmake
 # 其他项目的 CMakeLists.txt
 find_package(MyProject 1.2.0 REQUIRED)  # 自动加载 MyProjectConfig.cmake
@@ -1589,7 +1589,7 @@ target_link_libraries(MyApp PRIVATE MyProject::MyLib)  # 使用导出的目标
 ```
 引入库，前提是 find_package 可以下面的路径找到对应的 Config.cmake 文件
 1. 环境变量
-2. cmake 内定义的 `cmake_prefix_path` **路径列表中的一条**指向位置
+2. cmake 内定义的 `cmake_prefix_path` **路径列表中一条**指向位置
 ## 第 10 步：查找依赖项
 对于正确打包的项目，无需使用管理依赖的高级工具。如今，许多流行的库和实用程序项目都会生成正确的安装树，在[[#第 9 步：安装命令与概念|这种理想环境]]下，我们只需要[`find_package()`](https://cmake.com.cn/cmake/help/latest/command/find_package.html#command:find_package "find_package") 将依赖项导入到我们的项目中，除此之外，还有：
 - [`find_file()`](https://cmake.com.cn/cmake/help/latest/command/find_file.html#command:find_file "find_file")查找并报告指定文件的完整路径，这是`find`命令中最灵活的。
@@ -1601,7 +1601,7 @@ target_link_libraries(MyApp PRIVATE MyProject::MyLib)  # 使用导出的目标
 
 ### 练习 1 - 使用 find_package()
 [`find_package()`](https://cmake.com.cn/cmake/help/latest/command/find_package.html#command:find_package "find_package") 通过 `<PackageName>_FOUND` 变量报告其结果，对于找到和未找到的包，该变量将分别设置为真或假值。
-这一练习在练习前使用构建/编译命令可以通过编译，而更改代码后不能通过，因为 install/lib/cmake 中没有 SimpleTestConfig.cmake
+这一练习在练习前使用构建/编译命令可以通过编译，而更改代码后不能通过，因 install/lib/cmake 中没有 SimpleTestConfig.cmake
 #### find_package 详解
 参考：[find_package — CMake 4.2.0 文档 - CMake 构建系统](https://cmake.com.cn/cmake/help/latest/command/find_package.html#command:find_package)
 核心参数：
@@ -1647,11 +1647,11 @@ find_package(Boost 1.70.0 REQUIRED)
 		4. 系统标准路径 `/usr/local/lib/cmake/MyProject/` ，`/usr/lib/cmake/MyProject/`，`C:/Program Files/MyProject/lib/cmake/MyProject/`（Windows）
 		5. 更为细致的搜索路径参考 [find_package#Config模式搜索过程](https://cmake.com.cn/cmake/help/latest/command/find_package.html#config-mode-search-procedure)
 > [!note]
-> 在 find_package 中的模块前添加 `CONFIG` / `MODULE` 可以显示指定查找方式
+> 在 find_package 中模块前添加 `CONFIG` / `MODULE` 可以显示指定查找方式
 ### 练习 2 - 传递性依赖
 库经常相互构建，链式依赖，为表达这种传递性依赖需求，通过[`CMakeFindDependencyMacro`](https://cmake.com.cn/cmake/help/latest/module/CMakeFindDependencyMacro.html#module:CMakeFindDependencyMacro "CMakeFindDependencyMacro")模块来实现这一点，该模块提供了一种安全机制，供已安装的包递归地发现彼此。
 主要的目的是：A 依赖了 B，C，但 B 也依赖 C（A->B->C，A->C），为避免重复编译依赖文件，让 BC 相互可见
-1. A，B，C 模块的配置文件中都正常写 find_package 找到对应的依赖文件，但是这样会导致 A->C，A->B 依赖项被正确找到，而 B->C 找不到
+1. A，B，C 模块的配置文件中都正常写 find_package 找到对应的依赖文件，但这样会导致 A->C，A->B 依赖项被正确找到，而 B->C 找不到
 2. 在 B **构建生成的 config 文件 `B/cmake/BConfig.cmake` 中**添加：
 ```cmake
 include(CMakeFindDependencyMacro)
@@ -1867,7 +1867,7 @@ source_group(private FILES ${PRIVATE})
 source_group(DeveloperComponents FILES ${DEVELOPER})
 ```
 - `FILE(GLOB <name> <path/regex>)` 将路径中文件分组
-- `source_group` 用于在 vs 中显示文件分组（include 分组是空的，因为没有 `${INCLUDE}`）变量
+- `source_group` 用于在 vs 中显示文件分组（include 分组是空的，因没有 `${INCLUDE}`）变量
 ![[PixPin_2026-01-11_15-20-37.png]]
 构建和安装过程配置
 ```cmake
@@ -1892,7 +1892,7 @@ install(TARGETS ${PROJECT_NAME}
 ![[PixPin_2026-01-11_13-28-42.png|install命令同理]]
 - 第一次 install 定义并导出目标信息到 ElaWidgetToolsTargets.cmake，在其中记录这个目标的二进制文件安装位置
 - 第二次 install 将标记当安装时，同时将这个库文件放到演示程序的对应位置中，延时程序也使用了这个库，需要库文件
-- 两者本质上是将相同文件安装到不同位置**的信息记录到 target.cmake 中**，真正执行 `--install` 命令时会读取 target.cmake 中的信息按照要求安装文件
+- 两者本质上是将相同文件安装到不同位置**的信息记录到 target.cmake 中**，真正执行 `--install` 命令时会读取 target.cmake 中信息按照要求安装文件
 ```cmake
 set(INCLUDE_DIRS include)			# std::string INCLUDE = "include"
 set(LIBRARIES ${PROJECT_NAME})
@@ -2017,4 +2017,4 @@ add_executable(${PROJECT_NAME}
 
 source_group("UI Generated Files" FILES ${UI_HEADERS})
 ```
-当使用 AUTOUIC 自动处理时，CMake 会为每个.ui 文件自动生成对应的头文件，可能导致*非必要文件修改之后*总是重新编译（但是这里不是，仅仅是为了在 vs ide 中显示他们，更好地了解细节）
+当使用 AUTOUIC 自动处理时，CMake 会为每个.ui 文件自动生成对应的头文件，可能导致*非必要文件修改之后*总是重新编译（但这里不是，仅仅是为了在 vs ide 中显示他们，更好地了解细节）

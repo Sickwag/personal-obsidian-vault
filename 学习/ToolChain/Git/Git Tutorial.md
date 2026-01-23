@@ -17,7 +17,7 @@
 7. git reset 的[三种回退模式](Geekhour%20one%20hour%20Git.md#回退版本)中回退都以文件头 `HEAD` 也就是十六进制哈希代码, 在 hard 后输入^表示回退版本，上一个版本就是 `HEAD^`，上上一个版本就是 `HEAD^^`，当然往上100个版本写100个 `^` 比较容易数不过来，所以写成 `HEAD~100`。
 	![Pasted image 20240812155607.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240812155607.png)
 8. 被删掉的提交记录可以通过 git reset  --module  版本对应哈希值，版本号没必要写全，能够在日志中找到即可
-   
+
 9. git reflog 可以找到所有执行的命令日志，
    每一次操作文件动作和文件对象都有唯一编号
    ![Pasted image 20240812160635.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240812160635.png)
@@ -30,7 +30,7 @@
 12. 同样，git reset HEAD \<file name>   同样可以将暂存区的修改回退到工作区
 13. echo "this is a file will be deleted.">>test. txt 创建新文件并过会删除
 14. 操作系统提供的删除文件命令是rm \<file name>未 git add 添加之前这个操作**不会被 git 记录**
-    但是 git rm \<file name>**只会删除已受到管理的文件**，即被添加 add 之后的文件，这个操作会被 git 记录，删除对应的文件：之后：
+    但 git rm \<file name>**只会删除已受到管理的文件**，即被添加 add 之后的文件，这个操作会被 git 记录，删除对应的文件：之后：
 	- git rm 确认从版本中删除文件，git commit 使工作区和版本库同统一
 	- git checkout -- \<file name>可以找回文件
 	![450](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240812164550.png)
@@ -50,12 +50,12 @@ $ ssh-keygen -t rsa -C "Sickwag@outlook.com"
 关于 git 的分支只会单纯只想某个**提交记录**
 #### 提交，合并，切换分支
 使用 `git merge <branch_name>` 作用是将参数分支合并到当前分支上
-- PS：如果 branch_name 继承与当前分支，git 将会直接跳转到 branch_name 分支中，因为 merge 命令本质是将两个分支中的内容合并为一个，又由于*并没有要求回溯*，所以会跳转到继承者的位置而不是当前位置（即 bugFix）
+- PS：如果 branch_name 继承与当前分支，git 将会直接跳转到 branch_name 分支中，因 merge 命令本质是将两个分支中内容合并为一个，又由于*并没有要求回溯*，所以会跳转到继承者的位置而不是当前位置（即 bugFix）
 ![[PixPin_2024-12-06_19-55-02.gif]]
 #### git branch 和 checkout 的切换分支
 ![[Pasted image 20241206202310.png]]
 ![[Pasted image 20241206202319.png]]
-#### git rebase 
+#### git rebase
 ##### 示例
 取出一系列提交记录，在另一个地方放下去，如果使用 `git rebase node1 node2` 表示将 node 2 结点选中从*向上回溯*直到找到达 node 1 兄弟节点位置的节点，全部复制到 node 1 下面
 ![[Pasted image 20241207100226.png]]
@@ -71,7 +71,7 @@ $ ssh-keygen -t rsa -C "Sickwag@outlook.com"
 ![[Pasted image 20241206203404.png]]
 
 #### head
-- head 便是上面图中的 `*`，他表示当前工作的**分支位置**，所以他一般指向的是**分支名**，可以通过 head 调整指向节点（单独的一次提交记录而不是分支名）
+- head 便是上面图中 `*`，他表示当前工作的**分支位置**，所以他一般指向的是**分支名**，可以通过 head 调整指向节点（单独的一次提交记录而不是分支名）
 - 可以使用 `cat .git/HEAD` 查看 head 指向，如果他是一个引用，还可以用 `git symbolic-ref HEAD` 查看
 - 可以理解为：
 	- branch_name 是指向提交记录的指针
@@ -121,7 +121,7 @@ $ ssh-keygen -t rsa -C "Sickwag@outlook.com"
 `git rebase -i <control>`
 交互式 rebase，i 表示 `interactive` 使用这个命令时，git 会创建一个图形化文本页面来显示 `control` 所控制的内容，可以通过命令操作，包括：
 - 修改他们的排序
-- 删除、忽略他们之中的一个
+- 删除、忽略他们之中一个
 做完所有操作后 git 会
 - 在 control 的终止位置创建一个新的提交，并应用你的修改
 - 将 head **连同分支名**指向新的提交记录的最后一个节点（也就是尾端）
@@ -169,5 +169,5 @@ HEAD~4，也就是 C 1 位置是终止位置，执行后可以操作 C 2~C 5 所
 - 如果在远程仓库中使用 git commit，main 分支不会和 head 一起跳转到下一次提交，而是实型 HEAD 分离状态，如：
 ![[Pasted image 20241207104207.png|在远程仓库中commit分离head|375]]
 注意提交之前 HEAD 指向 `o/main` 而不是本地仓库的 main，
-因为只有当本地仓库中有相应的更新之后才会才在远程仓库中更新 main 分支
+因只有当本地仓库中有相应的更新之后才会才在远程仓库中更新 main 分支
 ![[Pasted image 20241207104724.png|300]]

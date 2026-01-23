@@ -2,7 +2,7 @@
 [HTML 标签列表(字母排序) | 菜鸟教程](https://www.runoob.com/tags/html-reference.html)
 ## HTML 基础
 ### 初识 HTML
-HTML 是一种超文本标记语言，可是使用下面两种后缀，没有区别，都可以使用
+HTML 是一种超文本标记语言，可使用下面两种后缀，没有区别，都可以使用
 - .html
 - .htm
 #### html 标签和元素
@@ -14,7 +14,7 @@ HTML 是一种超文本标记语言，可是使用下面两种后缀，没有区
 网络上有很多不同的文件，如果能够正确声明HTML的版本，浏览器就能正确显示网页内容。
 doctype 声明是不区分大小写的
 如果使用中文编码，需要在头部将字符声明为 `utf-8`，如果使用 `<meta charset="utf-8" />`
-出现乱码原因是编译器在保存编码时与 meta 标签中的方式不一致，写 `<!doctype html>`，就是为了防止浏览器的怪异模式，强制浏览器按照标准模式渲染网页！*
+出现乱码原因是编译器在保存编码时与 meta 标签中方式不一致，写 `<!doctype html>`，就是为了防止浏览器的怪异模式，强制浏览器按照标准模式渲染网页！*
 大多数标签都支持下面的 html 属性
 
 |属性|描述|
@@ -30,10 +30,10 @@ doctype 声明是不区分大小写的
 HTML5
 <!DOCTYPE html>
 HTML 4.01
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"  
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 XHTML 1.0
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"  
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 ```
 #### 常见 html 标签和属性
@@ -77,7 +77,7 @@ XHTML 1.0
 <script src="script.js" type="text/javascript"></script>
 ```
 8. `<div>`
-- **作用**: 定义文档中的一个块级元素，用于分组内容。
+- **作用**: 定义文档中一个块级元素，用于分组内容。
 - **常用属性**:
     - `id`: 元素的唯一标识符。
     - `class`: 元素的类名，用于样式和脚本。
@@ -85,7 +85,7 @@ XHTML 1.0
 <div id="main" class="container">
 ```
 9. `<span>`
-- **作用**: 定义文档中的一个内联元素，用于分组文本。
+- **作用**: 定义文档中一个内联元素，用于分组文本。
 - **常用属性**:
     - `id`: 元素的唯一标识符。
     - `class`: 元素的类名。
@@ -112,11 +112,11 @@ XHTML 1.0
 		- `noopener noreferrer`: 同时使用`noopener`和`noreferrer`。例子: `<a href="https://www.example.com" rel="noopener noreferrer">安全链接</a>`
 		- download：提示浏览器下载链接目标而不是导航到该目标。如果指定了文件名，浏览器会提示下载并保存为指定文件名。
 ```html
-<a href="file.pdf" download="example.pdf">下载文件</a> 
+<a href="file.pdf" download="example.pdf">下载文件</a>
 ```
 - title：定义链接的额外信息，当鼠标悬停在链接上时显示的工具提示。
 ```html
-<a href="https://www.example.com" title="访问 Example 网站">访问 Example</a>  
+<a href="https://www.example.com" title="访问 Example 网站">访问 Example</a>
 ```
 - id：用于链接锚点，通常在同一页面中跳转到某个特定位置。
 ```html
@@ -254,18 +254,18 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 ```
 #### HTML 为无障碍阅读做出的努力
 ##### 关于 `<b> `和 `<strong>`
-在显示上，这两个标签都可是加粗文本，呢么为什么会有两个功能"相同"的标签呢？而且好像 strong 并非个例。
+在显示上，这两个标签都可加粗文本，呢么为什么会有两个功能"相同"的标签呢？而且好像 strong 并非个例。
 -  首先，这两个并非完全相同。比如，如果使用网页阅读器阅读网页（盲人使用），strong 会重读，b 则不会。
 -  其次，从起源上来说，strong 是为了在未来建设语义网而诞生的。应该知道的是，html 是负责显示的标记，不能表示语义。也就是说，浏览器知道这个标签如何显示，而不知道标签所标记的内容应该是什么含义。而 strong 在语义上走出了第一步。
 
 ##### `<em>` 把文本定义为强调的内容
-`<em>` 标签告诉浏览器把其中的文本表示为强调的内容。对于所有浏览器来说，这意味着要把这段文字用斜体来显示。
+`<em>` 标签告诉浏览器把其中文本表示为强调的内容。对于所有浏览器来说，这意味着要把这段文字用斜体来显示。
 尽管现在 `<em>` 标签修饰的内容都是用斜体字来显示，但这些内容也具有更广泛的含义，将来的某一天，浏览器也可能会使用其他的特殊效果来显示强调的文本。如果你只想使用斜体字来显示文本的话，请使用 `<i>` 标签。除此之外，文档中还可以包括用来改变文本显示的级联样式定义。
 ##### `<i>` 显示斜体文本效果果
-`<i>` 标签和基于内容的样式标签 `<em>` 类似。它告诉浏览器将包含其中的文本以斜体字（italic）或者倾斜（oblique）字体显示。如果这种斜体字对该浏览器不可用的话，可以使用高亮、反白或加下划线等样式。
+`<i>` 标签和基于内容的样式标签 `<em>` 类似。它告诉浏览器将包含其中文本以斜体字（italic）或者倾斜（oblique）字体显示。如果这种斜体字对该浏览器不可用的话，可以使用高亮、反白或加下划线等样式。
 ##### `<dfn>` 定义一个定义项目目
 `<dfn>` 标签可标记那些对特殊术语或短语的定义。
-现在流行的浏览器通常用斜体来显示 `<dfn> `中的文本。将来，`<dfn>` 还可能有助于创建文档的索引或术语表。
+现在流行的浏览器通常用斜体来显示 `<dfn> `中文本。将来，`<dfn>` 还可能有助于创建文档的索引或术语表。
 与其他许多基于内容的样式和物理样式标签一样，`<dfn>`标签尽量少用为妙。
 也就是说它们要实现的目的不同，但都用同样的表现方式，就是斜体。
 
@@ -283,7 +283,7 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 **锚点链接：** 除了链接到其他网页外，您还可以在同一页面内创建内部链接，这称为锚点链接。要创建锚点链接，需要在目标位置使用 `<a>` 元素定义一个标记，并使用符号引用该标记 。例如：
 ```html
 <a href="#section2">跳转到第二部分</a>
-<!-- 在页面中的某个位置 -->
+<!-- 在页面中某个位置 -->
 <a name="section2"></a>
 ```
 
@@ -351,9 +351,9 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 - 差别 3：
 兼容性的差别: @import 是 CSS 2.1 提出的，所以老的浏览器不支持，@import 只有在 IE 5 以上的才能识别，而 link 标签无此问题。
 - 差别 4：
-使用 dom (document object model 文档对象模型 ) 控制样式时的差别：当使用 javascript 控制 dom 去改变样式的时候，只能使用 link 标签，因为@import 不是 dom 可以控制的。
+使用 dom (document object model 文档对象模型 ) 控制样式时的差别：当使用 javascript 控制 dom 去改变样式的时候，只能使用 link 标签，因@import 不是 dom 可以控制的。
 #### HTML 图片
-使用 `img` 标签中的属性设置图片，也可以用 CSS 层级样式
+使用 `img` 标签中属性设置图片，也可以用 CSS 层级样式
 - `src `设置图片来源
 - `width`，`height` 设置长宽高，如果只设置一个浏览器自动*保留纵横比*调整大小，也可以设置为 `auto`，单位为像素 px（可省略）或图片百分比
 - `alt` 设置图片说明
@@ -398,7 +398,7 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 ##### 调整图片位置的方法
 ####### 1.  `text-align` 属性
 - **适用场景**: 当图像作为文本的一部分时，可以使用 `text-align` 属性来控制图像的对齐方式。
-- 
+-
 ```html
 <style>
 	.center-image {
@@ -415,7 +415,7 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 
 ####### 2.  `float` 属性
 - **适用场景**: 当需要图像浮动在文本的一侧，并允许文本环绕图像时，可以使用 `float` 属性。
-- 
+-
 ```html
 <style>
 	.float-left {
@@ -432,7 +432,7 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 
 ####### 3.  `margin` 属性
 - **适用场景**: 当需要调整图像与其他元素之间的间距时，可以使用 `margin` 属性。
-- 
+-
 ```html
 <style>
 	.center-image {
@@ -477,7 +477,7 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 ```
 - **说明**:
     - `display: flex;` 启用Flexbox布局。
-    - `justify-content: center;` 和 `align-items: center;` 可以实现图像在父容器中的水平和垂直居中。
+    - `justify-content: center;` 和 `align-items: center;` 可以实现图像在父容器中水平和垂直居中。
 ####### 6. rid布局
 - **适用场景**: 当需要更复杂的网格布局时，可以使用CSS Grid。
 ```html
@@ -493,7 +493,7 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 ```
 - **说明**:
     - `display: grid;` 启用Grid布局。
-    - `place-items: center;` 可以实现图像在父容器中的水平和垂直居中。
+    - `place-items: center;` 可以实现图像在父容器中水平和垂直居中。
 
 ##### 调整图片位置注意事项
 - `float` 属性会将 img 上下来*两行内容放在图片周围*作为环绕元素
@@ -616,7 +616,7 @@ CSS 由一个**选择器**（分为类选择器， ID 选择器，`:nth-of-type`
 - 添加 `class` 并在 CSS 中定义相应的样式会应用到该 `div` 本身，**而不是其内部的子元素**，但可以在 CSS 中显式指定。
 - 对元素容器使用[[#^6zhmk0|顺序选择器]]
 	- `tag_name:nth-of-type(number)` 应用在容器中会匹配容器中第 `number` 个 `tag` 元素并应用样式，同样只会影响元素本身，不对字样式影响
-	- **`:nth-child`**：与 `:nth-of-type` 类似，但它基于元素在所有子元素中的位置进行计数，而不是基于类型。就是将容器中所有元素不论层级排列，选中第 `number` 个应用样式
+	- **`:nth-child`**：与 `:nth-of-type` 类似，但它基于元素在所有子元素中位置进行计数，而不是基于类型。就是将容器中所有元素不论层级排列，选中第 `number` 个应用样式
 - 这种方法适用于表格数量较少且顺序固定的情况。
 - 块级元素默认**垂直排列**，内联元素默认**水平排列** ，但可以通过 `flex` 布局调整元素排列方向
 ```html
@@ -681,7 +681,7 @@ table,th,td{
 一次性对 table ，th 和 td 添加黑色，1 px宽度的边框
 ### HTML 列表
 注意无论是哪一种列表都符合*子元素标签 `<li>` 外面用 `ul/ol/dl` 包裹
-外列表标签中 `type` 属性用来标记编号类型，**无序列表使用 style**中的 list-style-type 设定
+外列表标签中 `type` 属性用来标记编号类型，**无序列表使用 style**中 list-style-type 设定
 ```html
 <body>
     <ol type="I">
@@ -801,11 +801,11 @@ table 布局和 div&span 布局
 ##### 控件和 lable 联系
 - 表单用于收集输入信息，将用户收集到的信息发送到 Web 服务器。HTML 表单通常包含各种输入字段、复选框、单选按钮、下拉列表等元素。
 - label 标签一般与 input 等**标签控件**关联，关联方式是
-	- input 标签中 `name` 来关联 label 中的 `id` 属性，
-	- label 标签中 `for` 属性关联 input 控件的 `name` 属性，label 不需要 `name`（因为这是控件属性）
+	- input 标签中 `name` 来关联 label 中 `id` 属性，
+	- label 标签中 `for` 属性关联 input 控件的 `name` 属性，label 不需要 `name`（因这是控件属性）
 - 当用户点击“用户名：”或“电子邮件：”的文本时，相应的输入框会**自动获得焦点**。
 ![[PixPin_2025-01-14_12-15-53.mp4]]
-label 也可以通过 `form` 指定关联表单的的 id，`accesskey` 关联快捷键，一般通过 ALT+accesskey 中的关联按键
+label 也可以通过 `form` 指定关联表单的的 id，`accesskey` 关联快捷键，一般通过 ALT+accesskey 中关联按键
 一般通过 label 标签和相对应的控件**分开写而不是嵌套写**，这样有助于代码复用，嵌套的代码难以维护和更改
 ```html
 <!-- 分开写 -->
@@ -817,7 +817,7 @@ label 也可以通过 `form` 指定关联表单的的 id，`accesskey` 关联快
     I agree to the <a href="terms-and-conditions.html">Terms and Conditions</a>
 </label>
 ```
-嵌套写的好处是如果嵌套的元素**有强对应关系**，其中的 `for` ，`id` 和 `name` 等原来需要唯一对应的字段可以不写，默认指向父元素
+嵌套写的好处是如果嵌套的元素**有强对应关系**，其中 `for` ，`id` 和 `name` 等原来需要唯一对应的字段可以不写，默认指向父元素
 
 ---
 ##### 常用控件
@@ -826,7 +826,7 @@ label 也可以通过 `form` 指定关联表单的的 id，`accesskey` 关联快
 ![[Pasted image 20250114134138.png]]
 个人信息就是 fieldset 的标题，属性 form（value 为 form 标签的 id），规定 fieldset 所属的**一个或多个表单**
 ###### input
-input 中的 type 值有：
+input 中 type 值有：
 - 单选按钮：radio
 - 复选框：checkbox
 - 提交按钮：submit
@@ -869,7 +869,7 @@ output 中 for 用来描述 output 和哪个组件的关系，通过空格分开
 |autocomplete|一个字符串，代表如果`<input>`元素的 type 允许，则会具有自动填充的功能|
 |autofocus|一个布尔值，如果`<input>`元素的标签里存在此属性，当表单被呈现在网页上时，焦点会自动落在此`<input>`元素上|
 |disabled|如果你想禁用某`<input>`元素时，将此属性放在元素的标签里，此时元素不能被用户手动输入、点选或拖动等。|
-|form|如果`<input>`存在 form 属性，它表示此元素属于一个[`<form>`](https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/form "HTML <form> 元素表示了文档中的一个区域，此区域包含有交互控制元件，用来向 Web 服务器提交信息。") 表单，此`<form>`表单的 [`id`](https://developer.mozilla.org/zh-CN/docs/Web/API/Element/id "Element 接口的 id 属性表示元素的标识符，与全局属性 id 对应。") 就是属性的值，如果不存在 form 属性，在页面上有`<form>`表单的情况下，`<input>`元素会属于最近的一个`<form>`表单|
+|form|如果`<input>`存在 form 属性，它表示此元素属于一个[`<form>`](https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/form "HTML <form> 元素表示了文档中一个区域，此区域包含有交互控制元件，用来向 Web 服务器提交信息。") 表单，此`<form>`表单的 [`id`](https://developer.mozilla.org/zh-CN/docs/Web/API/Element/id "Element 接口的 id 属性表示元素的标识符，与全局属性 id 对应。") 就是属性的值，如果不存在 form 属性，在页面上有`<form>`表单的情况下，`<input>`元素会属于最近的一个`<form>`表单|
 |list|指向一个 id 为 list 属性值的 [`<datalist>`](https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/datalist "HTML <datalist>元素包含了一组<option>元素，这些元素表示其它表单控件可选值.") 元素， `<datalist>`为这个`<input>`元素提供建议值|
 |name|`<input>`的名字，在提交整个表单数据时，可以用于区分属于不同`<input>`的值|
 |readonly|布尔值，如果为真，表示此`<input>`元素不能被编辑（比如输入、点选等）|
@@ -883,7 +883,7 @@ output 中 for 用来描述 output 和哪个组件的关系，通过空格分开
 - post：指的是 HTTP POST 方法，表单数据会包含在表单体内然后发送给服务器，用于提交敏感数据，如用户名与密码等。
 - get：默认值，指的是 HTTP GET 方法，表单数据会附加在 action 属性的 URL 中，并以 ?作为分隔符，一般用于不敏感信息，如分页等。例如：https://www.runoob.com/?page=1，这里的 page=1 就是 get 方法提交的数据。
 ---
-input 控件中的 autocomplete 属性可以填入多种值，作用是告诉浏览器这个值是什么内容，方便从已保存的内容中**筛选字段填充**
+input 控件中 autocomplete 属性可以填入多种值，作用是告诉浏览器这个值是什么内容，方便从已保存的内容中**筛选字段填充**
 - **`name`**：全名。
 - **`given-name`**：名字。
 - **`family-name`**：姓氏。
@@ -936,7 +936,7 @@ option 还有拓展 optgroup
 ![[Pasted image 20250114140952.png|375]]
 ###### 详细信息域
 其中 details 一般和 summary 一起使用，summary 表示详细信息的摘要内容，`open` 属性描述细节是否可见
-只要放在 `details` 中的内容都是详细信息**而不管顺序**
+只要放在 `details` 中内容都是详细信息**而不管顺序**
 ```html
 <details>
     <summary>click here to show details</summary>
@@ -1004,7 +1004,7 @@ option 还有拓展 optgroup
         <legend>个人信息</legend>
         <label for="name">姓名：</label>
         <input id="name" type="text" name="name"><br><br>
-        
+
         <label for="email">电子邮件：</label>
         <input id="email" type="email" name="email">
     </fieldset>
@@ -1023,14 +1023,14 @@ option 还有拓展 optgroup
 HTML 颜色由一个十六进制符号来定义，这个符号由红色、绿色和蓝色的值组成（RGB）。
 HEX 和 RGB 两种表示方法无非是**进制不同**
 ![[Pasted image 20250114145349.png|400]]
-最多用在 style 中的 background-color 属性上，使用颜色首先声明进制规则，再声明颜色代码，常用进制规则有 RGB HEX RGB（在 RGB 上扩展包括了 **“alpha”** 通道，运行对颜色值设置透明度。）3 位十六进制（不常用）
+最多用在 style 中 background-color 属性上，使用颜色首先声明进制规则，再声明颜色代码，常用进制规则有 RGB HEX RGB（在 RGB 上扩展包括了 **“alpha”** 通道，运行对颜色值设置透明度。）3 位十六进制（不常用）
 `background:rgba(255,0,0,0.5);` 透明度在 0~1，所以可以省略开头 0
 html 内置了常用颜色并使用了别名代表他们，具体参考 [HTML 颜色名 | 菜鸟教程](https://www.runoob.com/html/html-colornames.html)
 
 ### HTML 脚本
 JavaScript 使 HTML 页面具有更强的动态和交互性。即定义交互逻辑
 `<script>` 标签用于定义客户端脚本，比如 JavaScript，既可包含脚本语句，也可通过 src 属性指向外部脚本文件，**最常用于图片操作、表单验证以及内容动态更新。最常用于图片操作、表单验证以及内容动态更新。**
-如果浏览器关闭 JavaScript 或者不支持，就会显示 `<noscript>` 中的内容，在可用时无任何意义
+如果浏览器关闭 JavaScript 或者不支持，就会显示 `<noscript>` 中内容，在可用时无任何意义
 ```html
 <script>
 function myFunction(){
@@ -1050,13 +1050,13 @@ function start_run(n)
     cur_task=100-n
     progress1.value=cur_task
     setTimeout("start_run("+n+")",100)
-    
+
 }
 </script>
 ```
 点击下载显示下载进度（利用  process 控件），下载完成弹出窗口
 ### HTML 字符实体
-HTML 中的预留字符（如`<>`符号，`</`符号，连续空格）必须被替换为字符实体。
+HTML 中预留字符（如`<>`符号，`</`符号，连续空格）必须被替换为字符实体。
 一些在键盘上找不到的字符也可以使用字符实体来替换。
 希望正确地显示预留字符，必须在 HTML 源代码中使用字符实体（character entities）。 字符实体类似这样：
 ```html
@@ -1082,12 +1082,12 @@ url 编码特性
 <code>计算机代码</code>
 <em>强调文本</em>
 <i>斜体文本</i>
-<kbd>键盘输入</kbd> 
+<kbd>键盘输入</kbd>
 <pre>预格式化文本</pre>
 <small>更小的文本</small>
 <strong>重要的文本</strong>
 <del>显示删除线文本</del>
- 
+
 <abbr> （缩写）
 <address> （联系信息）
 <bdo> （文字方向）
@@ -1108,7 +1108,7 @@ url 编码特性
 ---
 书写 XHTML 规范：
 - XHTML DOCTYPE 是_强制性的_
-- `<html>` 中的 XML namespace 属性是_强制性的_
+- `<html>` 中 XML namespace 属性是_强制性的_
 - `<html>`、`<head>`、`<title>` 以及 `<body>` 也是_强制性的_
 - XHTML 元素必须正确嵌套
 - XHTML 元素必须始终关闭
@@ -1170,12 +1170,12 @@ html 标签中 `manifest` 标签定义一个 URL，在这个 URL 上描述了文
 | `<ruby>`       | 定义 ruby 注释（中文注音或字符）。                  |
 | `<rt>`         | 定义字符（中文注音或字符）的解释或发音。                  |
 | `<rp>`         | 在 ruby 注释中使用，定义不支持 ruby 元素的浏览器所显示的内容。 |
-| `<section>`    | 定义文档中的节（section、区段）。                  |
+| `<section>`    | 定义文档中节（section、区段）。                  |
 | `<time>`       | 定义日期或时间。                              |
-| `<wbr>`        | 规定在文本中的何处适合添加换行符。                     |
+| `<wbr>`        | 规定在文本中何处适合添加换行符。                     |
 
 ---
-移除 HTML 4 中的内容
+移除 HTML 4 中内容
 - `<acronym>`
 - `<applet>`
 - `<basefont>`
@@ -1204,7 +1204,7 @@ html 标签中 `manifest` 标签定义一个 URL，在这个 URL 上描述了文
 ```
 canvas 中 height 和 width 属性可以限制画布尺寸
 #### colgroup
-`<colgroup>` 标签用于对表格中的列进行组合，以便对其进行格式化。
+`<colgroup>` 标签用于对表格中列进行组合，以便对其进行格式化。
 通过使用 `<colgroup>` 标签，可以向整个列应用样式，而不需要重复为每个单元格或每一行设置样式。
 **注释：**只能在 `<table>` 元素之内，在任何一个 `<caption>` 元素之后，在任何一个 `<thead>`、`<tbody>`、`<tfoot>`、`<tr>` 元素之前使用 `<colgroup>` 标签。**
 colgroup 定义在一个 table 中，按顺序从左至右为每一个 col 设置格式
@@ -1260,16 +1260,16 @@ colgroup 定义在一个 table 中，按顺序从左至右为每一个 col 设�
     });
 </script>
 ```
-脚本中的三个 const 变量命名不是随便的，只有叫 openButton 才能相应按钮
+脚本中三个 const 变量命名不是随便的，只有叫 openButton 才能相应按钮
 #### pre
-用于显示预定义格式文本。在该元素中的文本通常按照原文件中的编排，以等宽字体的形式展现出来，文本中的空白符（比如空格和换行符）都会显示出来。
+用于显示预定义格式文本。在该元素中文本通常按照原文件中编排，以等宽字体的形式展现出来，文本中空白符（比如空格和换行符）都会显示出来。
 不过在 `<pre>` 标签后**紧跟着的**的换行符会被忽略们可以用来**输入 html 预留关键字和特殊符号而不是用实体字符**
 ```html
 <pre>
     ___________________________
     < I'm an expert in my field. >
       ---------------------------
-             \   ^__^ 
+             \   ^__^
               \  (oo)\_______
                  (__)\       )\/\
                      ||----w |
@@ -1297,11 +1297,11 @@ colgroup 定义在一个 table 中，按顺序从左至右为每一个 col 设�
 - 一个语义化标签，用于表示自包含的内容单元，通常与可选的 `<figcaption>` 标签一起使用，以提供内容的标题或说明。
 - 旨在将相关内容（如图像、图表、代码片段、插图等）**组织在一起**，使其**在语义上与主内容分离**，同时保持与主内容的关联性。
 - figure 一般用于展示多种组合在一起的内容并未他们提供**描述性内容**，保持他们独立性的同时方便维护和调整样式。
-- 每一个 figure 中的 figcaption 会作为描述性文本显示在所对应的 figure 外
+- 每一个 figure 中 figcaption 会作为描述性文本显示在所对应的 figure 外
 figure 中有几个常用的 ARIA **描述性属性**
 ##### role
 `role 和 a` ria-l `abelledby 都是为了增` 强语义从而出现的属性，用于描述所对应的 figure 或其他元素的内容，提高网页访问性
-用于明确指示元素的角色（role），即元素在用户界面中的**功能或行为**。例如，`role="figure"` 明确指示该元素是一个“图”。尽管可以对这个属性写入**自定义值**，但在规范中需尽量写入和描述内容有关的字符，如 figure，img，audio 等
+用于明确指示元素的角色（role），即元素在用户界面中**功能或行为**。例如，`role="figure"` 明确指示该元素是一个“图”。尽管可以对这个属性写入**自定义值**，但在规范中需尽量写入和描述内容有关的字符，如 figure，img，audio 等
 ##### aria-labelledby
 - **`aria-labelledby` 属性**：用于将一个或多个元素指定为当前元素的标签（label），从而提供更具体的描述或说明。
 - `aria-labelledby` 支持使用多个元素的 id 作为其值，而 ` aria-label` 直接为所对应的 figure 对象提供了标签文本（自定义内容），而无需引用其他元素。
@@ -1312,7 +1312,7 @@ figure 中有几个常用的 ARIA **描述性属性**
         ___________________________
         < I'm an expert in my field. >
           ---------------------------
-                 \   ^__^ 
+                 \   ^__^
                   \  (oo)\_______
                      (__)\       )\/\
                          ||----w |
@@ -1340,7 +1340,7 @@ figure 中有几个常用的 ARIA **描述性属性**
 name （定义参数名称），value（定义参数的值）必不可少，type 描述插件的 MIME 类型，valuetype 表示数值类型
 #### picture
 - 不同于 img 标签，`picture` 根据屏幕匹配的不同尺寸显示不同图片，如果没有匹配到或浏览器不支持 picture 属性则使用 img 元素（并不是替换关系，不支持 picture 则不会显示所有 picture 中**所有除 img 标签的元素**）
-- 由于 picture 要加载的图片参数由其中的标签（如 `source`）提供，而不再只由 img 中属性提供，有更高灵活性
+- 由于 picture 要加载的图片参数由其中标签（如 `source`）提供，而不再只由 img 中属性提供，有更高灵活性
 - 其中零或多个 [`<source>`](https://developer.mozilla.org/zh-CN/docs/Web/HTML/Element/source "HTML <source> 元素为 <picture>, <audio> 或者 <video> 元素指定多个媒体资源。这是一个空元素。它通常用于以不同浏览器支持的多种格式提供相同的媒体内容。") 元素，以及紧随其后的一个 [`<img>`](1ab7cc35dfaee68959ff5d876aaeda02.html) 元素，可以混合一些脚本支持的元素。
 - **`<picture>` 标签**：用于根据不同条件提供不同的图像源，增强响应式设计和图像格式兼容性。
 - **`<source>` 标签**：
@@ -1353,15 +1353,15 @@ name （定义参数名称），value（定义参数的值）必不可少，type
 - **浏览器处理顺序**：
 1. **类型匹配 (`type`)**：浏览器首先根据 `type` 属性检查是否支持该 `<source>` 元素指定的 MIME 类型（例如 `image/webp` 或 `image/jpeg`）。
 	- 如果浏览器不支持该类型，则跳过该 `<source>` 元素。
-2. **媒体查询匹配 (`media`)**：如果 `type` 匹配成功，浏览器会检查 `media` 属性中的媒体查询条件。
+2. **媒体查询匹配 (`media`)**：如果 `type` 匹配成功，浏览器会检查 `media` 属性中媒体查询条件。
 	- 如果媒体查询条件不满足，则跳过该 `<source>` 元素。
 3. **选择合适的 `srcset`**：如果 `type` 和 `media` 都匹配成功，浏览器会根据 `srcset` 从中找出图像资源，根据 `sizes` 属性提供的尺寸信息和当前视口大小，计算出所需的图像显示宽度
-4. srcset 中的图像描述符用来描述图像大小，以便后面的 sizes 属性计算出最适合当前视口显示的图片， `300w` 表示图像宽度为 300 像素
+4. srcset 中图像描述符用来描述图像大小，以便后面的 sizes 属性计算出最适合当前视口显示的图片， `300w` 表示图像宽度为 300 像素
 ---
 sizes 标签定义图像在不同视口宽度下的预期显示宽度。它告诉浏览器图像在不同的布局断点下应该占据多少视口宽度。语法为：一个或多个由逗号分隔的**“媒体查询-宽度”**对。例如，`"(max-width: 600px) 100vw, 50vw"` 表示：
 - 当视口宽度小于或等于 600 像素时，图像宽度为 100% 视口宽度。
 - 否则，图像宽度为 50% 视口宽度。
-sizes 和 srcset 中的描述内容用来帮助浏览器*做出最好的决策*，但真正决定的是 CSS
+sizes 和 srcset 中描述内容用来帮助浏览器*做出最好的决策*，但真正决定的是 CSS
 ```html
 <picture>
     <source srcset="image-small.webp 300w, image-large.webp 600w" type="image/webp" media="(max-width: 600px)" sizes="100vw">
@@ -1379,7 +1379,7 @@ sizes 和 srcset 中的描述内容用来帮助浏览器*做出最好的决策*�
     - **选择图像**：根据 `srcset` 和 `sizes="100vw"`，选择 `image-small.webp`（300w）。
 省略中间 `<source>` 匹配过程，如果都不支持则回退到 img
 2.**选择图像后**：
-- 浏览器根据 `srcset` 中的描述符选择最合适的图像资源。
+- 浏览器根据 `srcset` 中描述符选择最合适的图像资源。
 - 实际的图像显示大小由 CSS 控制，`sizes` 属性仅用于帮助浏览器选择图像资源。
 #### Ruby
 用于与 rp、rt 搭配显示东亚文字的注音，注解等内容
@@ -1397,7 +1397,7 @@ sizes 和 srcset 中的描述内容用来帮助浏览器*做出最好的决策*�
 支持情况下
 ![[Pasted image 20250115124917.png]]
 #### section
-用于定义文档中的一个独立部分或章节。它用于将相关内容组织在一起，使其在语义上与主内容分离，类似于 field， div 和 span 等，将不同内容组合在一起，但 `div` 是一个**通用容器标签**，没有明确的语义
+用于定义文档中一个独立部分或章节。它用于将相关内容组织在一起，使其在语义上与主内容分离，类似于 field， div 和 span 等，将不同内容组合在一起，但 `div` 是一个**通用容器标签**，没有明确的语义
 主要作用是让 html 文档和网页更有可读性，更强组织性
 ```html
 <main>
@@ -1421,7 +1421,7 @@ sizes 和 srcset 中的描述内容用来帮助浏览器*做出最好的决策*�
 ```
 ![[Pasted image 20250115133600.png|299]]
 #### nav
-用于定义文档中的**导航部分**（创建一个导航栏时用到，如主菜单、侧边栏导航、页脚导航等）。它用于包含一组导航链接，帮助用户在不同页面或同一页面的不同部分之间导航
+用于定义文档中**导航部分**（创建一个导航栏时用到，如主菜单、侧边栏导航、页脚导航等）。它用于包含一组导航链接，帮助用户在不同页面或同一页面的不同部分之间导航
 用这个标签更好展示网站的结构（也有一些**辅助技术**可以识别 nav 标签，提供更好的网站设计），其中一般放入导航目录
 ```html
 <nav>
@@ -1576,7 +1576,7 @@ sizes 和 srcset 中的描述内容用来帮助浏览器*做出最好的决策*�
 
 ### HTML5 重要元素
 #### canvas
-canvas 元素本身是没有绘图能力的。所有的绘制工作必须在 JavaScript 内部完成，样式由 CSS 决定，但是 js 决定画什么样的图
+canvas 元素本身是没有绘图能力的。所有的绘制工作必须在 JavaScript 内部完成，样式由 CSS 决定，但 js 决定画什么样的图
 同大部分绘图图形库，左上角为原点
 ```html
 <body>
@@ -1667,11 +1667,11 @@ Canvas 是逐像素进行渲染的。在 canvas 中，一旦图形被绘制完�
 	function allowDrop(ev){
 	    ev.preventDefault();
 	}
-	 
+
 	function drag(ev){
 	    ev.dataTransfer.setData("Text",ev.target.id);
 	}
-	 
+
 	function drop(ev){
 	    ev.preventDefault();
 	    var data=ev.dataTransfer.getData("Text");
@@ -1680,10 +1680,10 @@ Canvas 是逐像素进行渲染的。在 canvas 中，一旦图形被绘制完�
 </script>
 <body>
 	<p>拖动 RUNOOB.COM 图片到矩形框中:</p>
-	 
+
 	<div id="div1" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
 	<br>
-	<img id="drag1" src="/images/logo.png" draggable="true" ondragstart="drag(event)" width="336" height="69"> 
+	<img id="drag1" src="/images/logo.png" draggable="true" ondragstart="drag(event)" width="336" height="69">
 </body>
 ```
 ---

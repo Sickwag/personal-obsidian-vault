@@ -2,33 +2,33 @@
     - 约定俗成命名规则
         - 根据约定,python首字母大写的名称指的是类, 并且使用大小驼峰命名法
     - 显示调用和隐式调用
-        
+
         ### **显示调用（Explicit Call）**
-        
+
         显示调用是指在代码中明确指定要调用的方法或函数，并且提供所有必要的参数。这种方式下，调用者清楚地知道正在调用哪个方法，以及传递了哪些参数。在Python中，显示调用通常使用方法名后跟括号来实现，例如：
-        
+
         ```Python
         class MyClass:
             def my_method(self):
                 print("Method called")
-        
+
         obj = MyClass()
         obj.my_method()  # 显示调用
         ```
-        
+
         ### **隐式调用（Implicit Call）**
-        
+
         隐式调用是指方法或函数的调用不是直接在代码中明确指定的，而是由某些操作或机制自动触发的。在面向对象编程中，一个常见的隐式调用是当创建一个对象时，构造函数（`__init__`方法）被自动调用。在Python中，隐式调用通常是由语言的内部机制或框架自动处理的，例如：
-        
+
         ```Python
         class MyClass:
             def __init__(self):
                 print("Constructor called")
-        
+
         obj = MyClass()  # 隐式调用构造函数, 即使用这个类的对象时自动
         								# 执行__init__ ,不用obj.__init__()
         ```
-        
+
 # 第九章 类
 ## 9.1 类
 对于每个类中 方法的self参数
@@ -48,10 +48,10 @@ class Dog:
           """模拟小狗收到命令时打滚。"""
           print(f"{self.name} rolled over!")
 ```
-- 为何必须在方法定义中包含形参self 呢？因为Python调用这个方法来创建Dog 实例时，将自动传入**实参self** 。每个与实例相关联的方法调用都自动传递实参self ，它是一个指向实例本身的引用，**让实例能够访问类中的属性和方法**。即虚线部分成员变量和方法
-- self参数的意思是指向实例本身,实例本身是一个类传入参数得到的,所以引用本身意在调用这个类.使实例可以使用其中的成员
-- 这也是为什么类名称不写(self)而类中方法必须写self原因,不然实例没办法调用自己所对应类中的功能
-- **在方法内****[Form Scratch to Practice](Form%20Scratch%20to%20Practice.md)****都可以被所有类中的方法使用**
+- 为何必须在方法定义中包含形参self 呢？因Python调用这个方法来创建Dog 实例时，将自动传入**实参self** 。每个与实例相关联的方法调用都自动传递实参self ，它是一个指向实例本身的引用，**让实例能够访问类中属性和方法**。即虚线部分成员变量和方法
+- self参数的意思是指向实例本身,实例本身是一个类传入参数得到的,所以引用本身意在调用这个类.使实例可以使用其中成员
+- 这也是为什么类名称不写(self)而类中方法必须写self原因,不然实例没办法调用自己所对应类中功能
+- **在方法内****[Form Scratch to Practice](Form%20Scratch%20to%20Practice.md)****都可以被所有类中方法使用**
 - 对任何一类,初始化类的是所有的魔术方法设置这个类应有的属性\变量
 餐馆实例练习
 ```Python
@@ -59,10 +59,10 @@ class Restaurant :
     def __init__(self) -> None:
         self.restaurant_name = "Wag res"
         self.cuisine_type = "Chinese"
-    
+
     def describe_restaurant(self):
         print("it belongs to Sickwag")
-    
+
     def open_restaurant(self):
         print("opening now ")
 ```
@@ -96,7 +96,7 @@ class Car:
         """返回整洁的描述性信息。"""
         long_name = f"{self.year} {self.make} {self.model}"
         return long_name.title()
-    
+
     def read_odometer(self):
         print(f"This car has {self.odometer_reading} miles on it ")
     def updata_odometer(self, mileage_addition):
@@ -178,7 +178,7 @@ class ElectricCar(Car):
 my_tesla = ElectricCar('tesla', 'model s', 2019)
 print(my_tesla.get_descriptive_name())
 ```
-  
+
 ```Python
 class ElectricCar(Car):
       """电动汽车的独特之处。"""
@@ -186,24 +186,24 @@ class ElectricCar(Car):
         """初始化父类的属性。"""
         super().__init__(make, model, year)
 """其中子类创建与父类同名的方法,不写super表示复写全部,写了表示继承父类
-中括号里有的,复写没有的,参数先传入子类中的__init__再因为继承传给父类""
+中括号里有的,复写没有的,参数先传入子类中__init__再因继承传给父类""
 ```
 
 # 第十章 文件和异常
 ## 10.1 从文件中读取数据
 - 调用read方法对文件对象处理时会在最后返回一个空字符串(回车)
-- rstrip()处理文件对象中字符串**末尾**固定符号, 不传入参数时去除回车行,**允许使用正则表达式** . 但是只会去除字符串开头和结尾的符号,需要去除中间的使用strip方法[python基础学习提到](Python%20Basics.md#^384b85)
+- rstrip()处理文件对象中字符串**末尾**固定符号, 不传入参数时去除回车行,**允许使用正则表达式** . 但只会去除字符串开头和结尾的符号,需要去除中间的使用strip方法[python基础学习提到](Python%20Basics.md#^384b85)
 - 使用关键字with 时，open() 返回的文件对象只在with 代码块内可用,代码运行完销毁
 - 编辑器中写文件路径时,使用双反斜杠,  explorer中用斜杠
 - 在文件中写入内容常犯的错误是open函数中定义`"w"`打开,想用append方法( append方法在文件中对象中不存在, 只在数据容器中有 )追加内容.
-- `"w"`写法表示下面的函数体是覆盖写入文件的操作,删除全部内容添加.  
+- `"w"`写法表示下面的函数体是覆盖写入文件的操作,删除全部内容添加.
   **正确的做法**是`"a"`参数表示追加写入, 调用write方法
 - try-exception-else-finnal语法结构
   [每一个部分详细解释](Python%20Basics.md#^92bbce)
 - split方法分割字符串返回值是一个包含分割后字符的列表[返回结果](Python%20Basics.md#^cc9dfe)
 - 10.3.8 异常静默处理, 在exception关键字中写pass.表示什么也不做,同时作为占位符方便代码维护
 ### 10-6 \10-7练习
-- input()语句返回的是一个字符串数值, 赋值给变量时变量的类型为str, 使用算数符号实际上进行的是字符串拼接而不是其中的值计算
+- input()语句返回的是一个字符串数值, 赋值给变量时变量的类型为str, 使用算数符号实际上进行的是字符串拼接而不是其中值计算
 ```python
 def add_nums():
 
@@ -217,7 +217,7 @@ def add_nums():
 add_nums()
 ```
 ### 10-8
-一定要注意代码中的路径使用\\分开
+一定要注意代码中路径使用\\分开
 ```Python
 try :
     with open("D:\\数据保存位置\\VScode\\Learning Python\\Python Programming - From Entry to Practice\\dogs.txt",encoding="UTF-8") as file:
@@ -275,7 +275,7 @@ greet_user()
 ```
 最后一个函数几乎全是调用功能, 通过前面层级函数**返回实际值或none的代码编写方式控制这些方式实际是否执行**
 ### 10-11 (代码存在问题)
-- json模块中的json方法函数第一个参数是**传入内容**,传入之后自动添加\n  第二个是**内容传入对象**
+- json模块中json方法函数第一个参数是**传入内容**,传入之后自动添加\n  第二个是**内容传入对象**
 	` with open(filename, 'w') as f:
     `json.dump(username, f)`
 
@@ -289,7 +289,7 @@ greet_user()
 而测试导致断言失败时则打印一个F。
 这就是你运行测试用例时，在输出的第一行中看到的句点和字符数量各不相同的原因。如果测试用例包含很多单元测试，需要运行很长时间，就可通过观察这些结果来获悉有多少个测试通过了。
 ## 单元测试实例unittest
-unittest是python中内置的一个模块,用于检测单元块运行情况. 其中常用TestCase中的测试方法和工具,使用方法是在定义测试类时继承unittest.TestCase类
+unittest是python中内置的一个模块,用于检测单元块运行情况. 其中常用TestCase中测试方法和工具,使用方法是在定义测试类时继承unittest.TestCase类
 ```python
 import unittest
 
@@ -355,7 +355,7 @@ if __name__ == '__main__':
 
 ```
 ## 测试方法命名规范
-当一个类\函数\方法继承\调用了unittest之后,其中包含的所有以`test_`开头的方法被unittest识别并从main()入口进入开始全部执行, 没被识别就只会是一个普通的在类中的方法,等待被对象使用`.方法名`调用
+当一个类\函数\方法继承\调用了unittest之后,其中包含的所有以`test_`开头的方法被unittest识别并从main()入口进入开始全部执行, 没被识别就只会是一个普通的在类中方法,等待被对象使用`.方法名`调用
 
 当使用不以`test_`开头的方法但仍需要测试时,可以使用`unittest.TestLoader`类的`loadTestsFromTestCase`方法来手动加载测试用例。这样，你可以指定哪些方法应该被当作测试方法来执行
 ```python
@@ -376,7 +376,7 @@ if __name__ == '__main__':
     loader = unittest.TestLoader()
     # 使用loadTestsFromTestCase方法加载测试用例
     test_suite = loader.loadTestsFromTestCase(MyTestCase)
-    """将整个MyTestCase中的所有方法都作为测试"""
+    """将整个MyTestCase中所有方法都作为测试"""
     # 运行测试用例
     unittest.TextTestRunner().run(test_suite)
 ```
@@ -387,9 +387,9 @@ if __name__ == '__main__':
 [with语句执行步骤和结构](../../Files%20&%20LongText/Docs/Python%20Official%20Docs.md#^1998e6)
 ### 字符串检查\调试方法
 1. `capitalize()` - 将字符串的第一个字符转换为大写，其余字符转换为小写。
-2. `upper()` - 将字符串中的所有小写字母转换为大写字母。
-3. `lower()` - 将字符串中的所有大写字母转换为小写字母。
-4. `swapcase()` - 将字符串中的大写字母转换为小写，小写字母转换为大写。
+2. `upper()` - 将字符串中所有小写字母转换为大写字母。
+3. `lower()` - 将字符串中所有大写字母转换为小写字母。
+4. `swapcase()` - 将字符串中大写字母转换为小写，小写字母转换为大写。
 5. `title()` - 将字符串中每个单词的首字母转换为大写，其余字母转换为小写。
 6. `strip()` - 移除字符串首尾的空白字符（默认情况下，包括空格、换行符、制表符等）。
 7. `rstrip()` - 移除字符串尾部的空白字符。
@@ -398,18 +398,18 @@ if __name__ == '__main__':
 10. `index(sub[, start[, end]])` - 类似于`find()`，但如果子字符串不在字符串中，则会引发一个`ValueError`。
 11. `rfind(sub[, start[, end]])` - 返回子字符串`sub`在字符串中最后一次出现的索引。
 12. `rindex(sub[, start[, end]])` - 类似于`rfind()`，但如果子字符串不在字符串中，则会引发一个`ValueError`。
-13. `replace(old, new[, count])` - 将字符串中的`old`子字符串替换为`new`子字符串，可选参数`count`指定替换的最大次数。
+13. `replace(old, new[, count])` - 将字符串中`old`子字符串替换为`new`子字符串，可选参数`count`指定替换的最大次数。
 14. `split(sep=None, maxsplit=-1)` - 以`sep`为分隔符将字符串分割成一个列表，`maxsplit`指定最大分割次数。
 15. `rsplit(sep=None, maxsplit=-1)` - 类似于`split()`，但从字符串的右侧开始分割。
-16. `join(iterable)` - 将可迭代对象中的元素连接成一个字符串，元素之间插入调用`join()`方法的字符串。
+16. `join(iterable)` - 将可迭代对象中元素连接成一个字符串，元素之间插入调用`join()`方法的字符串。
 17. `startswith(prefix[, start[, end]])` - 检查字符串是否以`prefix`开始，可选参数`start`和`end`指定检查范围。
 18. `endswith(suffix[, start[, end]])` - 检查字符串是否以`suffix`结束，可选参数`start`和`end`指定检查范围。
 19. `isalpha()` - 如果字符串至少有一个字符并且所有字符都是字母则返回`True`。
 20. `isdigit()` - 如果字符串只包含数字并且至少有一个字符则返回`True`。
 21. `isnumeric()` - 类似于`isdigit()`，但支持更多的字符，如Unicode数字字符。
 22. `isspace()` - 如果字符串只包含空白字符则返回`True`。
-23. `islower()` - 如果字符串中的所有字母字符都是小写则返回`True`。
-24. `isupper()` - 如果字符串中的所有字母字符都是大写则返回`True`。
+23. `islower()` - 如果字符串中所有字母字符都是小写则返回`True`。
+24. `isupper()` - 如果字符串中所有字母字符都是大写则返回`True`。
 25. `istitle()` - 如果字符串是标题化的（每个单词的首字母大写）则返回`True`。
 
 这些方法使得字符串操作变得非常方便和强大。需要注意的是，**字符串是不可变的，所以这些方法不会改变原始字符串，而是返回一个新的字符串。**
@@ -466,7 +466,7 @@ def __init__(self) -> None:
     self.screen.height = 800
     self.bg_color = (230,230,230)
 ```
-- 通过重构代码将设置类中的设置连接到主程序
+- 通过重构代码将设置类中设置连接到主程序
 - from + .py 文件名 + import 类名
 ```python
 from settings import Settings
@@ -483,7 +483,7 @@ screen.fill(game_settings.bg_color)
 ### 创建飞船类
 - pygame 中窗口坐标轴左上角是 (0,0) ，向右下角移动两坐标增大
 - bilt 方法：`self.blit` 方法用于在 `Surface` 对象上绘制另一个 `Surface` 对象。
-	- 将一个精灵（代表游戏中的对象，如角色、敌人、背景等）绘制到屏幕上。
+	- 将一个精灵（代表游戏中对象，如角色、敌人、背景等）绘制到屏幕上。
 	- 接受以下参数
 		- 1.**source**: 要绘制的 `Surface` 对象。这是你想要在目标 `Surface` 上显示的图像或图形。
 		- 2.**position**: 一个包含两个元素的序列（通常是元组），指定 `source` 在目标 `Surface` 上的位置 `(x, y)`。`x` 和 `y` 分别代表目标 `Surface` 上的水平和垂直坐标。
@@ -610,7 +610,7 @@ def update(self):
 	if self.rect.left <= 0:
 	    self.rect.left = 0
 ```
-这样设置导致飞船外接矩形在贴边时锁定在屏幕边缘（因为 if 条件满足时下面用等于号赋值），但飞船的中心 centerx 值能够移动，飞船在边缘时再按方向会超出屏幕，但飞船贴边，正确做法是给移动设置条件，达到边缘时不移动，**而不是一直允许移动，到边缘时锁定贴图**
+这样设置导致飞船外接矩形在贴边时锁定在屏幕边缘（因 if 条件满足时下面用等于号赋值），但飞船的中心 centerx 值能够移动，飞船在边缘时再按方向会超出屏幕，但飞船贴边，正确做法是给移动设置条件，达到边缘时不移动，**而不是一直允许移动，到边缘时锁定贴图**
 ```python
 def update(self):
 	#如果向右动作正在执行，并且ship的外接矩形右边缘位置小于屏幕右边缘时允许移动，左边缘同理
@@ -742,10 +742,10 @@ class bullet(sprite):
 ### 子弹存储到编组中
 - `pygame.sprite.group` 类似集成各种游戏开发方法的列表，一般作为管理多个 Sprite 对象的容器。
 - Group 对象的 update 方法用于更新组内所有 Sprite 对象的状态。同步所有精灵位置、速度等属性。
-- update 方法作用是遍历 Group 中的所有 Sprite 对象，并对**每个对象**调用其 update 方法。这允许你一次性更新所有精灵的状态，而无需单独处理每一个。
-- update 方法不接受任何位置参数，但会传递任何你提供给它的额外参数**给组内每个 Sprite 的 update 方法**。这使得你可以根据需要向所有精灵传递更新逻辑，例如时间增量、事件等。通过修改 group 中的 update 方法而改变所有的 sprite 的 update 逻辑
+- update 方法作用是遍历 Group 中所有 Sprite 对象，并对**每个对象**调用其 update 方法。这允许你一次性更新所有精灵的状态，而无需单独处理每一个。
+- update 方法不接受任何位置参数，但会传递任何你提供给它的额外参数**给组内每个 Sprite 的 update 方法**。这使得你可以根据需要向所有精灵传递更新逻辑，例如时间增量、事件等。通过修改 group 中 update 方法而改变所有的 sprite 的 update 逻辑
 - update 方法没有返回值。它直接修改了组内 Sprite 对象的状态。
-- 这时无法启动游戏，因为 check_events （需要监控按下空格键）和 update_screen（按下空格键之后显示出子弹） 多加了一位参数而定义没有改变，
+- 这时无法启动游戏，因 check_events （需要监控按下空格键）和 update_screen（按下空格键之后显示出子弹） 多加了一位参数而定义没有改变，
 ```python
 while True: # when the game start , keep monitor the movement for keyboard and mouse ,which called "event"
 gf.check_events(game_ship,bullets) #监控行为，KEYDOWN和KEYUP
@@ -754,10 +754,10 @@ bullets.update()# 每次循环更新一次所有子弹的状态
 gf.update_screen(game_settings,screen,game_ship,bullets)
 ```
 ### 开火
-- 注意 python 导入模组的方式 [Python Basics \> python模块导入](Python%20Basics.md#python模块导入) `from pygame.sprite import Sprite` 就是将 pygame 包中 sprite 模块中的 Sprite 类导入，写成 `from pygame import sprite`
+- 注意 python 导入模组的方式 [Python Basics \> python模块导入](Python%20Basics.md#python模块导入) `from pygame.sprite import Sprite` 就是将 pygame 包中 sprite 模块中 Sprite 类导入，写成 `from pygame import sprite`
 - 错误修正：
-	- 创建能够操作的元素（pygame 中的 surface 也是）都是对象，它封装了属性和方法，需要通过**类而不是函数**创建
-	- 放置子弹初始位置（`__init__` 函数中）设定子弹初识在船 rect 的中间，所以使用 `self.rect.centerx = game_ship.rect.centerx`，在船 rect 顶端，所以使用 `self.rect.top = game_ship.rect.top`，之前并没有创建一个叫做 center_x 的变量放入 **ship 类中的 rect方法中**作为全局变量，使用矩形方法只能调用 centerx 方法获得坐标，我们自己自定义了 center_x 在 ship 类中
+	- 创建能够操作的元素（pygame 中 surface 也是）都是对象，它封装了属性和方法，需要通过**类而不是函数**创建
+	- 放置子弹初始位置（`__init__` 函数中）设定子弹初识在船 rect 的中间，所以使用 `self.rect.centerx = game_ship.rect.centerx`，在船 rect 顶端，所以使用 `self.rect.top = game_ship.rect.top`，之前并没有创建一个叫做 center_x 的变量放入 **ship 类中 rect方法中**作为全局变量，使用矩形方法只能调用 centerx 方法获得坐标，我们自己自定义了 center_x 在 ship 类中
 	- 正确做法是将 `self.rect.centerx = game_ship.rect.centerx` 改 `self.rect.centerx = game_ship.center_x` 不通过 ship surface 对象的矩形方法获取，当然通过 ship 自带的 rect. centerx 方法也可以
 ```python
 class Bullet(Sprite):
@@ -846,7 +846,7 @@ def update_screen(game_settings,screen,game_ship,aliens,bullets):
 - 作用：在 `Surface` 上绘制基本的几何图形。
 - **两者都没有返回值**，在本项目中放在 `update_screen` 函数，主程序的 while 循环中每循环一次重绘循环中所有图像
 ### 创建一群外星人
-- 使用函数创建外星人对象，使用 aliens = Group () ，管理所有外星人对象，Group () 是类，aliens 是 Group 类的示例（管理 alien 实例的实例），代码逻辑类似于 [C++ Basics \> 基础入门通讯录管理系统](../C%20C++/C++%20Basics.md#基础入门通讯录管理系统)中的电话本实例管理联系人实例
+- 使用函数创建外星人对象，使用 aliens = Group () ，管理所有外星人对象，Group () 是类，aliens 是 Group 类的示例（管理 alien 实例的实例），代码逻辑类似于 [C++ Basics \> 基础入门通讯录管理系统](../C%20C++/C++%20Basics.md#基础入门通讯录管理系统)中电话本实例管理联系人实例
 - 代码中 for 循环将 number_aliens_x 这个**计算结果**range 化为 [range数组](Python%20Basics.md#^0b87d1)，是 alien_number从零数到 number_aliens_x 结果值-1 ，第一个 alien_number 值为 0 同时将 `alien.x = alien_width + 2 * alien_width * alien_number` 刚好等于一个 `alien_width`
 - `alien. x = alien_width + 2 * alien_width * alien_number` 循环设置每个 alien 贴图的位置
 - pygame 中为普通类新增了 blit，draw 等方法，在 game_functions 中可以使用，draw 是 pygame 中 Group 类才有的方法
@@ -854,7 +854,7 @@ def update_screen(game_settings,screen,game_ship,aliens,bullets):
 --------------game_functions.py--------------
 def create_fleet(game_settings,screen, aliens):
 	# make an instance and necessary attributes
-	alien = Alien(game_settings,screen) 
+	alien = Alien(game_settings,screen)
 	alien_width = alien.rect.width
 	available_space_x = game_settings.screen_width - (2 * alien_width)
 	number_aliens_x = int(available_space_x /(2 * alien_width))
@@ -916,9 +916,9 @@ def create_fleet(game_settings,screen,ship,aliens):
     for row_number in range(number_rows):
         for alien_number in range(number_aliens_x):
             create_alien(game_settings,screen,aliens,alien_number,row_number)
-        
 
-# calculate the rows in screen 
+
+# calculate the rows in screen
 
 def get_number_rows(game_settings,ship_height,alien_height):
     available_y_space_y = ((game_settings.screen_height - 3 * alien_height)-ship_height)
@@ -935,7 +935,7 @@ gf.create_fleet(game_settings,screen,ship,aliens)
 self.alien_speed_factor = 1
 -----------------alien.py------------------------
 def update(self):
-	# once update ,change the x of alien in speed factor and move it 
+	# once update ,change the x of alien in speed factor and move it
 	self.x += self.alien_settings.alien_speed_factor
 	self.rect.x = self.x
 --------------game_functions.py----------------------
@@ -950,7 +950,7 @@ while True:
 # 第十五章数据可视化
 matplotlib 画廊 [Gallery | Matplotlib](https://www.matplotlib.org.cn/gallery/#lines-bars-and-markers)
 用样的，pyechars 也有对应画廊 [pyechats画廊](Python%20Basics.md#^e09073)
-这里使用 matplotlib 中文网中的教程
+这里使用 matplotlib 中文网中教程
 
 ## 简单折线图
 ### 简单设置

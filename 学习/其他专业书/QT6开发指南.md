@@ -15,9 +15,9 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 ```
-其中的“`$${TARGET}`”就是替换函数，表示用变量 TARGET 的值替换。将“`$${TARGET}`”写成“`$$TARGET`”也可以
+其中“`$${TARGET}`”就是替换函数，表示用变量 TARGET 的值替换。将“`$${TARGET}`”写成“`$$TARGET`”也可以
 以 `ui_` 开头的. h 文件是 uic 系统生成的类文件，Ui_Widget 类没有父类，不是从 QWidget 继承而来的，所以 Ui_Widget 不是一个窗口类。
-`setUpUi()` 函数有一个传入参数，在. h 文件中见到的更多是传入 this，表示将这个 ui 中的内容渲染在当前类中
+`setUpUi()` 函数有一个传入参数，在. h 文件中见到的更多是传入 this，表示将这个 ui 中内容渲染在当前类中
 
 ### 伙伴（buddy）
 “伙伴”是一个**语义关联机制**，用于实现：点击某个标签（QLabel），自动聚焦到它所“伙伴”的输入控件上（如 QLineEdit、QComboBox 等）
@@ -67,7 +67,7 @@ widget->setMaximumSize(200, 60);
 // 设置伸缩因子（Stretch Factor）
 layout->addWidget(widget1, 1);  // 权重为1
 layout->addWidget(widget2, 2);  // 权重为2 → 占用更多空间
-// → 决定控件在可用空间中的“分配比例”
+// → 决定控件在可用空间中“分配比例”
 layout->invalidate();  // 标记布局需要重新计算
 layout->update();      // 立即执行重算
 // → 当窗口大小变化、控件数量增减、尺寸策略改变时，布局会自动触发重算
@@ -81,7 +81,7 @@ layout->update();      // 立即执行重算
 ```cpp
 void on_<object name>_<signal name>(<signal parameters>);
 ```
-`setUpUi` 函数中会默认使用来**遍历**一个 ui（通常是 QWidget 组件）控件中的所有组件名称和他们所拥有的信号名称，**将所有匹配的结果连接起来**
+`setUpUi` 函数中会默认使用来**遍历**一个 ui（通常是 QWidget 组件）控件中所有组件名称和他们所拥有的信号名称，**将所有匹配的结果连接起来**
 ```cpp
 QMetaObject::connectSlotsByName(Dialog);
 ```
@@ -154,7 +154,7 @@ qrc_res.cpp
 qrc_res.o
 samp2_2.exe
 samp2_2_resource_res.0
-// 如果使用 debug 模式编译，还会得到 
+// 如果使用 debug 模式编译，还会得到
 samp2_2.pdb ← Windows 平台调试信息文件
 samp2_2.dSYM ← macOS 平台调试信息目录（可选）
 ```
@@ -180,7 +180,7 @@ CONFIG += release # Release 模式
 需要注意的有：
 - qt 的自动通过命名连接机制（即给槽函数命名为 `on_someObject_someSignalHappened()` 会将控件和的信号和对应的槽函数连接起来）**只作用于在 UI 文件中***可视化编辑控件并且在代码中编写逻辑***的情况**，如果 ui 文件（准确的说是通过 uic 生成的 cpp 文件）中没有对应的控件，没有自动连接效果。
 - 这种机制同时只对**下划线命名法有效果**
-- qt **不建议使用指针或者引用**来修改对象的属性，更建议使用 setter 和 getter，因为大部分情况下，使用 getter 函数返回的是对象属性的副本，而不是指向对象的指针。如获取 QPlainText 中的文本字体，使用 `QFont& font = plainText.font()` 获取的是副本，修改不会生效并且可能会报错：
+- qt **不建议使用指针或者引用**来修改对象的属性，更建议使用 setter 和 getter，因大部分情况下，使用 getter 函数返回的是对象属性的副本，而不是指向对象的指针。如获取 QPlainText 中文本字体，使用 `QFont& font = plainText.font()` 获取的是副本，修改不会生效并且可能会报错：
 ```bash
 error: C2440: “初始化”: 无法从“const QFont”转换为“QFont &”
 error C2440: “初始化”: 无法从“const QFont”转换为“QFont &”
@@ -235,20 +235,20 @@ endif()
 	- 包含`Q_OBJECT`宏的类不会被处理
 	- signals/slots机制无法工作
 	- 运行时类型信息（RTTI）失效
-	- **编译会失败**，因为MOC生成的代码缺失
+	- **编译会失败**，因MOC生成的代码缺失
 - UIC（UI编译器）失效：
 	- `.ui`文件不会被编译成对应的头文件
 	- 界面设计无法在代码中使用
-	- **链接会失败**，因为UI相关的类定义缺失
+	- **链接会失败**，因UI相关的类定义缺失
 - RCC（资源编译器）失效：
 	- `.qrc`资源文件不会被编译进可执行文件
 	- 图片、翻译文件等资源无法访问
 	- 程序运行时资源加载失败
-项目中选择手动指定目标的生成和结束阶段，可以保证 `qt_finalize_executable` 之间可以任意设置想要的变量，cmake 设置等内容。因为**自动结束发生在当前作用域的末尾**，这可能包括（当前 CMakeLists. txt 末尾，函数或者宏的末尾，子目录处理完成时）
+项目中选择手动指定目标的生成和结束阶段，可以保证 `qt_finalize_executable` 之间可以任意设置想要的变量，cmake 设置等内容。因**自动结束发生在当前作用域的末尾**，这可能包括（当前 CMakeLists. txt 末尾，函数或者宏的末尾，子目录处理完成时）
 
 # Qt 框架功能概述
 ## Qt 全局定义
-在 QGlobal 头文件中，包含 Qt 框架中的一些全局定义，包括基本数据类型、函数和宏。一般的**Qt 类的头文件都会包含这个头文件**
+在 QGlobal 头文件中，包含 Qt 框架中一些全局定义，包括基本数据类型、函数和宏。一般的**Qt 类的头文件都会包含这个头文件**
 ## Qt 元对象系统
 ### QObject 元对象
 **元对象系统**是 Qt 的**反射机制**实现，它让 C++具备了类似 Java/C\# 的运行时类型检查和动态操作能力。`metaObject()` 函数返回的指针就是这个系统的入口点。
@@ -280,23 +280,23 @@ if (meta->inherits(&QPushButton::staticMetaObject)) {
 // 函数名和属性名反射
 void inspectObject(QObject* obj) {
     const QMetaObject* meta = obj->metaObject();
-    
+
     // 遍历所有方法
     for (int i = 0; i < meta->methodCount(); ++i) {
         QMetaMethod method = meta->method(i);
         qDebug() << "方法:" << method.methodSignature();
-        
+
         if (method.methodType() == QMetaMethod::Signal) {
             qDebug() << "  - 这是一个信号";
         } else if (method.methodType() == QMetaMethod::Slot) {
             qDebug() << "  - 这是一个槽";
         }
     }
-    
+
     // 遍历所有属性
     for (int i = 0; i < meta->propertyCount(); ++i) {
         QMetaProperty prop = meta->property(i);
-        qDebug() << "属性:" << prop.name() 
+        qDebug() << "属性:" << prop.name()
                  << "值:" << prop.read(obj).toString();
     }
 }
@@ -305,10 +305,10 @@ void inspectObject(QObject* obj) {
 // 根据对象的属性动态创建UI控件
 void createPropertyEditors(QObject* obj, QWidget* parent) {
     const QMetaObject* meta = obj->metaObject();
-    
+
     for (int i = 0; i < meta->propertyCount(); ++i) {
         QMetaProperty prop = meta->property(i);
-        
+
         if (prop.type() == QVariant::String) {
             auto* edit = new QLineEdit(parent);
             edit->setText(prop.read(obj).toString());
@@ -362,7 +362,7 @@ const QMetaObject *metaPtr= btn->metaObject(); //获取元对象指针
 const QMetaObject metaObj= btn->staticMetaObject; //获取元对象
 ```
 注意：
-`QObject::inherits()`。这个函数可以判断一个对象是不是继承自某个类的实例，顶层的父类是 QObject，但是如果要返回该对象**所描述的父类元对象**，需要使用 `QMetaObject::superClass()` 才可以
+`QObject::inherits()`。这个函数可以判断一个对象是不是继承自某个类的实例，顶层的父类是 QObject，但如果要返回该对象**所描述的父类元对象**，需要使用 `QMetaObject::superClass()` 才可以
 
 ### 属性系统
 可以参考 [[QTExamples#元对象属性]]，分静态和动态属性
@@ -378,12 +378,12 @@ template <typename T> T QObject::findChild(const QString &name = QString(), Qt::
 ```
 最后一个参数选择寻找方法，默认**递归查找**
 ## 容器类
-- Qt 的容器类比STL中的容器类更轻巧、使用更安全且更易于使用
+- Qt 的容器类比STL中容器类更轻巧、使用更安全且更易于使用
 - 这些容器类是隐式共享和可重入的，而且它们进行了速度和存储上的优化，可以减小可执行文件大小
 - 它们是线程安全的，它们可以作为只读容器时可被多个线程访问。
 
 ### 顺序容器
-Qt 6 中的 QVector 是 QList 的别名，两者完全等价
+Qt 6 中 QVector 是 QList 的别名，两者完全等价
 list 重载了 `<<` 运算符，更方便传入数据
 ```cpp
 QList<QString> list;
@@ -395,14 +395,14 @@ QString str2= list.at(1); // str2="Tuesday"
 其中以 take 开头的函数作用是从容器中移除一个元素，并**返回移除后的列表**，这可比 `vec.erase(std::remove(vec.begin(), vec.end(), 3), vec.end());` 要方便
 ### 关联容器
 Qt 中很多函数的返回值为 QList 或 QStringList 类型，要遍历这些返回的容器类，必须先复制（给左值），由于 Qt 使用了隐式共享，这样的复制并不会产生太大开销。
-qt 的 foreach 宏由于不是关键字，没办法做到用**引用**（C++11 中的 foreach 语法可以控制是否使用引用）返回容器中的内容，只会**创建容器副本然后操作**，所以**使用 foreach 宏修改容器中的数据不奏效**，Qt 在 5.7 后不建议使用 foreach 宏
+qt 的 foreach 宏由于不是关键字，没办法做到用**引用**（C++11 中 foreach 语法可以控制是否使用引用）返回容器中内容，只会**创建容器副本然后操作**，所以**使用 foreach 宏修改容器中数据不奏效**，Qt 在 5.7 后不建议使用 foreach 宏
 ## 其他常用类
 ### QVariant 类
 一种万能数据类型，它可以存储任何类型的数据，定义 QVariant 变量时，通过其构造函数为其赋初值。QVariant 有很多参数形式的构造函数，基本覆盖 toT 函数涉及的类型，还可以使用函数 ` setValue()`。
-QVariant 只支持一些基本的类型，没有 `toColor()`、`toFont()` 这样的函数，但是这些类型的值可以赋值给 QVariant 变量，之后通过 `QVariant::value()` 函数来得到指定类型的值
+QVariant 只支持一些基本的类型，没有 `toColor()`、`toFont()` 这样的函数，但这些类型的值可以赋值给 QVariant 变量，之后通过 `QVariant::value()` 函数来得到指定类型的值
 
 ### QFlags 类
-`QFlags<Enum>` 是一个模板类，其中 Enum 是枚举类型，QFlags 用于定义枚举值的或运算组合，用于解决传统 C++中的[[CodeLineCounter#位掩码设计开关|位掩码技术]]
+`QFlags<Enum>` 是一个模板类，其中 Enum 是枚举类型，QFlags 用于定义枚举值的或运算组合，用于解决传统 C++中[[CodeLineCounter#位掩码设计开关|位掩码技术]]
 ```cpp
 // 传统枚举 - 只能表示单一状态
 enum Alignment {
@@ -425,24 +425,24 @@ qt 对 flags 标志的实现代码（对 alignment ，对齐方式这一部分�
 template<typename Enum>
 class QFlags {
     int m_value;  // 存储组合后的整数值
-    
+
 public:
     QFlags(Enum flag) : m_value(static_cast<int>(flag)) {}
-    
+
     // 重载按位或运算符
     QFlags operator|(Enum flag) const {
         return QFlags(m_value | static_cast<int>(flag));
     }
-    
+
     QFlags operator|(QFlags other) const {
         return QFlags(m_value | other.m_value);
     }
-    
+
     // 测试是否包含某个标志
     bool testFlag(Enum flag) const {
         return (m_value & static_cast<int>(flag)) == static_cast<int>(flag);
     }
-    
+
     // 转换为bool（判断是否有任何标志被设置）
     operator bool() const { return m_value != 0; }
 };
@@ -506,8 +506,8 @@ qDebug()<<z ;
 | QTimeEdit        | 时间编辑框   | 用于编辑时间数据的编辑框                                                                                                                                                                                 |
 | QDateTimeEdit    | 日期时间编辑框 | 用于编辑日期时间数据的编辑框                                                                                                                                                                               |
 | QDial            | 表盘      | 一种模仿表盘的输入组件，用于在设定的范围内输入和显示数值                                                                                                                                                                 |
-| QScrollBar       | 卷滚条     | 卷滚条通常用于实现在大的显示区域内滑动，以显示部分区域的内容。图 4-3 中的 Horizontal Scroll Bar 和 Vertical Scroll Bar 对应的类均是 QScrollBar。滚动条具有设定的数值范围，拖动滑块就可以设置输入的值。图 4-3 中的 Horizontal Slider 和 Vertical Slider 对应的类均是 QSlider |
-| QSlider          | 滑动条     | 滑动条具有设定的数值范围，拖动滑块就可以设置输入的值。图 4-3 中的 Horizontal Slider 和 Vertical Slider 对应的类均是 QSlider                                                                                                       |
+| QScrollBar       | 卷滚条     | 卷滚条通常用于实现在大的显示区域内滑动，以显示部分区域的内容。图 4-3 中 Horizontal Scroll Bar 和 Vertical Scroll Bar 对应的类均是 QScrollBar。滚动条具有设定的数值范围，拖动滑块就可以设置输入的值。图 4-3 中 Horizontal Slider 和 Vertical Slider 对应的类均是 QSlider |
+| QSlider          | 滑动条     | 滑动条具有设定的数值范围，拖动滑块就可以设置输入的值。图 4-3 中 Horizontal Slider 和 Vertical Slider 对应的类均是 QSlider                                                                                                       |
 | QKeySequenceEdit | 按键序列编辑器 | 当这个编辑器获得输入焦点后，可记录用户设置的按键序列，一般用这个编辑器获取用户设置的快捷键序列                                                                                                                                              |
 
 ### 显示类组件
@@ -515,7 +515,7 @@ qDebug()<<z ;
 | --------------- | ----------- | --------------------------------------------------------- |
 | QLabel          | 标签          | 用于显示文字、图片等内容                                              |
 | QTextBrowser    | 文本浏览器       | 用于显示富文本格式的内容，具有只读属性，可以根据文本内的超链接进行跳转                       |
-| QGraphicsView   | 图形视图组件      | Graphics View 结构中的视图组件，10.3 节会详细介绍这个组件的用法                 |
+| QGraphicsView   | 图形视图组件      | Graphics View 结构中视图组件，10.3 节会详细介绍这个组件的用法                 |
 | QCalendarWidget | 日历组件        | 用于显示日历，并显示所设置的日期。可以在日历上选择一个日期，所以 QCalendarWidget 可以作为输入组件 |
 | QLCDNumber      | LCD 数值显示组件  | 模仿 LCD 显示效果的数值显示组件，可显示整数和浮点数                              |
 | QProgressBar    | 进度条         | 用于表示某个操作的进度，进度一般用百分数表示，有水平和垂直两种方向                         |
@@ -528,7 +528,7 @@ qDebug()<<z ;
 | QScrollArea    | 卷滚区域         | 具有水平和垂直卷滚条的容器组件，可以容纳大面积的显示内容，通过卷滚条可实现在显示范围内移动                       |
 | QToolBox       | 工具箱          | 垂直方向的多页容器组件，每个页面有标签栏，每个页面就是一个 QWidget 组件，在其上可以放置任何界面组件              |
 | QTabWidget     | 带标签栏的多页组件    | QTabWidget 有一个标签栏，每个页标签对应一个页面，每个页面就是一个 QWidget 组件，可以在页面上放置任何界面组件    |
-| QStackedWidget | 堆叠多页组件       | QStackedWidget 是类似于 QTabWidget 的多页组件，但是没有标签栏，只有两个按钮，用于在页面之间切换       |
+| QStackedWidget | 堆叠多页组件       | QStackedWidget 是类似于 QTabWidget 的多页组件，但没有标签栏，只有两个按钮，用于在页面之间切换       |
 | QFrame         | 框架组件         | QFrame 是所有具有边框的界面组件的父类，它定义了边框形状、边框阴影、边框线宽等属性。QFrame 可以直接作为容器组件      |
 | QWidget        | 界面组件         | QWidget 可以作为容器组件，QWidget 组件没有父组件时就是独立的窗口                            |
 | QMdiArea       | MDI 工作区组件    | QMdiArea 是 MDI 显示区域，在 MDI 应用程序中，QMdiArea 用于管理多文档窗口，7.4 节会详细介绍这个类的用法 |
@@ -572,26 +572,26 @@ sizePolicy 属性是 QSizePolicy 类型，它定义了组件在水平和垂直�
 void demonstrateStretch() {
     QWidget window;
     QHBoxLayout* layout = new QHBoxLayout(&window);
-    
+
     QTextEdit* editor1 = new QTextEdit;
     QTextEdit* editor2 = new QTextEdit;
     QTextEdit* editor3 = new QTextEdit;
-    
+
     // 设置不同的水平延展因子
     editor1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     editor1->sizePolicy().setHorizontalStretch(1);  // 占1份
-    
+
     editor2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     editor2->sizePolicy().setHorizontalStretch(2);  // 占2份
-    
+
     editor3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     editor3->sizePolicy().setHorizontalStretch(1);  // 占1份
-    
+
     // 结果：editor2的宽度是editor1和editor3的两倍
     layout->addWidget(editor1);
     layout->addWidget(editor2);
     layout->addWidget(editor3);
-    
+
     window.show();
 }
 // 假设有3个widget，延展因子分别为1, 2, 1
@@ -602,7 +602,7 @@ void demonstrateStretch() {
 总延展因子 = 1 + 2 + 1 = 4
 可用额外空间 = 400像素
 widget1额外空间 = (1/4) × 400 = 100像素
-widget2额外空间 = (2/4) × 400 = 200像素  
+widget2额外空间 = (2/4) × 400 = 200像素
 widget3额外空间 = (1/4) × 400 = 100像素
 ```
 可以对一个组件单独设置 stretch，然后加入 layout 中，也可以对一个 layout 设置 `layoutStretch(int index, int stretch)`，这个函数有点特殊，如果 Hlayout 中有三个组件在 ui 编辑界面的属性管理器中可以设置 layout 对象的 layoutStretch 属性为 `0,0,0`，而代码中只能一个个设置
@@ -614,7 +614,7 @@ widget3额外空间 = (1/4) × 400 = 100像素
 | windowIcon     | QIcon              | 窗口标题栏上的图标                                                                      |
 | windowOpacity  | qreal              | 窗口的不透明度，取值范围是 0.0～1.0。0.0 表示完全透明，1.0 表示完全不透明。默认值是 1.0                          |
 | windowFilePath | QString            | 窗口相关的含路径的文件名，这个属性只在 Windows 平台上有意义，如果没有设置 windowTitle 属性，程序将自动获取不含路径的文件名作为窗口标题 |
-| windowModified | bool               | 表示窗口里的文档是否被修改，若该属性值为 true，窗口标题中的占位符 “[*]” 会显示为 “*”                             |
+| windowModified | bool               | 表示窗口里的文档是否被修改，若该属性值为 true，窗口标题中占位符 “[*]” 会显示为 “*”                             |
 | windowModality | Qt::WindowModality | 窗口的模态，这个属性只在 Windows 平台上有意义，表示窗口是否处于上层窗口的标志                                    |
 | windowFlags    | Qt::WindowFlags    | 窗口的标志，是枚举类型 Qt::WindowFlag 的一些值的组合                                             |
 
@@ -643,12 +643,12 @@ QStackedLayout：堆叠布局，用于管理多个 QWidget 类对象，也就是
 
 ## QString 字符串操作
 具体内部编码参考 [[Qt Official Tutorial#字符串数据类]]
-QString 使用了隐式共享，**只有在修改操作时**才会复制其中包含的字符数据，并且由于其每一个字符都是 UTF-16 编码，所以使用 `[]` 的时候不会因为中文占用 2~4 个字节而读入半个字节的数据
-QString 中的字符都使用 QChar 存储，可以通过 `from__` 获得其 unicode 码，后面的 2/4 表示字符的字节长度，2 字节接受 `char16_t` 类型数据，反之 `char32_t`
+QString 使用了隐式共享，**只有在修改操作时**才会复制其中包含的字符数据，并且由于其每一个字符都是 UTF-16 编码，所以使用 `[]` 的时候不会因中文占用 2~4 个字节而读入半个字节的数据
+QString 中字符都使用 QChar 存储，可以通过 `from__` 获得其 unicode 码，后面的 2/4 表示字符的字节长度，2 字节接受 `char16_t` 类型数据，反之 `char32_t`
 ![[PixPin_2025-10-31_21-35-05.png]]
 
 注意这是一个静态函数，并且如果源码中有**使用中文字符修改字符串时**，需要特别注意：
-qt creator 编写的源代码文件使用 utf-8 编码，在其中使用中文（2~4 字节）中如果有 2~3 字节的文本用来赋值 QChar，不会出现编译错误，而会在运行时显示错误字符串，因为**超过 2 字节的部分会被截断**，导致显示错误的内容
+qt creator 编写的源代码文件使用 utf-8 编码，在其中使用中文（2~4 字节）中如果有 2~3 字节的文本用来赋值 QChar，不会出现编译错误，而会在运行时显示错误字符串，因**超过 2 字节的部分会被截断**，导致显示错误的内容
 ```cpp
 QString str= "Hello,北京";
 str[6]= QChar(0x9752); //'青'，使用构造函数
@@ -681,16 +681,16 @@ str.setNum(num,'E',5); //基数的小数点后 5 位，str= "1.24528E+03"
 str.setNum(num,'g',5); //整数和小数总共 5 位，str= "1245.3"
 str.setNum(num,'g',3); //整数和小数总共 3 位，str= "1.25e+03"
 ```
-静态函数 asprintf 类似于标准 C 中的 prinf，可以使用 cformat 参数设置任意字符串输出，但是其中的占位符 `%s` 是一个仅仅能支持 UTF 16 的字符，如果使用中文填充占位符（utf-8）会导致乱码，qt 文档中已经说明了这点：
+静态函数 asprintf 类似于标准 C 中 prinf，可以使用 cformat 参数设置任意字符串输出，但其中占位符 `%s` 是一个仅仅能支持 UTF 16 的字符，如果使用中文填充占位符（utf-8）会导致乱码，qt 文档中已经说明了这点：
 
 > [!note]
 > Safely builds a formatted string from the format string cformat and an arbitrary list of arguments.
 > The format string supports the conversion specifiers, length modifiers, and flags provided by printf () in the standard C++ library. The cformat string and %s arguments must be UTF-8 encoded.
-> 
+>
 > Note: The %lc escape sequence expects a unicode character of type char 16_t, or ushort (as returned by QChar:: unicode ()). The %ls escape sequence expects a pointer to a zero-terminated array of unicode characters of type char 16_t, or ushort (as returned by QString:: utf 16 ()). This is at odds with the printf () in the standard C++ library, which defines %lc to print a wchar_t and %ls to print a wchar_t*, and might also produce compiler warnings on platforms where the size of wchar_t is not 16 bits
 
 ## QSpinBox 和 QDoubleSpinBox
-比较有用的是：`QAbstractSpinBox::AdaptiveDecimalStepType` 自适应步进，在一个范围较大并且较为精细（范围从 1-10000，但是精度为 0.001）的范围调整 spinbox 中，通过点击上下箭头来调整数字大小效率很低，自适应步长可以表示将自动连续调整步长值为 $10^n$，其中 n 为大于或等于 0 的整数。value 属性值为 10 以下时，singleStep 属性值为 1；value 属性值为 100～999 时，singleStep 属性值为 10
+比较有用的是：`QAbstractSpinBox::AdaptiveDecimalStepType` 自适应步进，在一个范围较大并且较为精细（范围从 1-10000，但精度为 0.001）的范围调整 spinbox 中，通过点击上下箭头来调整数字大小效率很低，自适应步长可以表示将自动连续调整步长值为 $10^n$，其中 n 为大于或等于 0 的整数。value 属性值为 10 以下时，singleStep 属性值为 1；value 属性值为 100～999 时，singleStep 属性值为 10
 ## 其他常用按钮组件
 ### 按钮类
 比较重要的接口是 autoExclusive 和 autoRepeat
@@ -755,9 +755,9 @@ QComboBox 使用模型/视图结构存储和显示下拉列表的数据，下拉
 | insertPolicy      | InsertPolicy | 用户编辑的新文字插入列表的方式，是枚举类型 QComboBox::InsertPolicy，默认值是 InsertAtBottom，也就是插入列表的末尾。如果值是 NoInsert，就表示不允许插入占位文字。当 currentIndex 属性值为 -1 时下拉列表框显示的文字。这个文字不会出现在下拉列表里 |
 | placeholderText   | QString      | 当 currentIndex 属性值为 -1 时下拉列表框显示的文字（占位提示文本）                                                                                                                |
 | duplicatesEnabled | bool         | 是否允许列表中出现重复的项                                                                                                                                             |
-| modelColumn       | int          | 下拉列表中的数据在数据模型中的列编号，默认值为 0                                                                                                                                 |
+| modelColumn       | int          | 下拉列表中数据在数据模型中列编号，默认值为 0                                                                                                                                 |
 - 下拉列表是用 QListView 的子类组件显示的
-- modelColumn 属性表示下拉列表显示的数据在模型中的列编号，默认值为 0。
+- modelColumn 属性表示下拉列表显示的数据在模型中列编号，默认值为 0。
 - 这些属性大部分在 QComboBox 中有对应的读写接口
 
 ## QMainWindow 和 QAction
@@ -791,8 +791,8 @@ QMainWindow 类窗口上有**菜单栏、工具栏和状态栏**，这 3 种界�
 - 其中 Menu role 只有 macos 上才有效
 - 可以通过拖动 Action 编辑器里的 QAction 对象放到工具栏上
 - 常用的信号和槽函数需要知道
-- 右键**对象查看器中的 MainWindow 类**，选择添加工具栏后就会出现工具栏，可以拖动 QAction 对象进去
-可以用 Action 可视化地创建工具栏上的按钮，但是**不能可视化地**在工具栏上放置其他组件。QToolBar 提供了接口函数，可以**通过代码在工具栏上添加组件**
+- 右键**对象查看器中 MainWindow 类**，选择添加工具栏后就会出现工具栏，可以拖动 QAction 对象进去
+可以用 Action 可视化地创建工具栏上的按钮，但**不能可视化地**在工具栏上放置其他组件。QToolBar 提供了接口函数，可以**通过代码在工具栏上添加组件**
 ```cpp
 void addAction(QAction *action) //添加一个 Action，并根据 Action 的设置自动创建工具按钮
 QAction *addWidget(QWidget *widget) //添加一个界面组件
@@ -814,7 +814,7 @@ void addPermanentWidget(QWidget *widget, int stretch = 0) //添加永久组件
 void TextEditorMainWindow::do_fontsize_changed(int fontsize)
 {
     QTextCursor cursor = ui->plainTextEdit->textCursor();
-    
+
     QTextCharFormat format;
     format.setFontPointSize(fontsize);
     if (cursor.hasSelection()) {
@@ -825,7 +825,7 @@ void TextEditorMainWindow::do_fontsize_changed(int fontsize)
         currentFont.setPointSize(fontsize);
         ui->plainTextEdit->setFont(currentFont);
     }
-    
+
     progressbarOfFontSize->setValue(fontsize);
 }
 
@@ -833,7 +833,7 @@ void TextEditorMainWindow::do_font_selected(const QFont &font)
 {
     this->labelOfFontInfo->setText(QString("current font family: %1").arg(font.family()));
     QTextCursor cursor = ui->plainTextEdit->textCursor();
-    
+
     QTextCharFormat format;
     format.setFontFamily(font.family());
     if (cursor.hasSelection()) {
@@ -849,7 +849,7 @@ void TextEditorMainWindow::do_font_selected(const QFont &font)
 其中需要注意：
 - 对选中文本格式化：需要通过 QTextCursor 获取选中区域，然后调用**cursor 对象的 mergeCharFormat 函数**对选中文本字体应用格式
 - 对未来输入应用格式：通过 `QPlainTextEdit::mergeCurrentCharFormat()`
-- 对文本输入框中的所有问题使用效果则调用 `setFont` 函数
+- 对文本输入框中所有问题使用效果则调用 `setFont` 函数
 对于**开关类型按钮**（即点击之后按钮保持被按下，再次点击又弹起的效果），单纯地设置槽函数是没有效果的
 ```cpp
 void TextEditorMainWindow::on_actionbold_triggered(bool checked)
@@ -906,7 +906,7 @@ void TextEditorMainWindow::buildUI()
 - 在 QListWidget 中使用 `currentIndex()` 会调用底层的**数据模型**来获取当前行在数据模型中所对应的 index，没有选中行返回的 `QModelIndex` 对象的 `isValid()` 方法返回 false。而 ` currentRow() ` 只返回 int 类型，从 0 开始的行号下标，如果没有选中行返回 `-1`
 ### 代码逻辑
 #### 创建插入 item 逻辑
-注意创建**指针可视化对象**在设置 parent 时有些 QWidget parent 对象会将其中的子对象自动**并入其中管理**，也就是相当于调用了一次 `addWidget()` 或者 `addItem()`
+注意创建**指针可视化对象**在设置 parent 时有些 QWidget parent 对象会将其中子对象自动**并入其中管理**，也就是相当于调用了一次 `addWidget()` 或者 `addItem()`
 ```cpp
 void ListWidgetMainWindow::on_action_insert_item_triggered()
 {
@@ -944,7 +944,7 @@ void ListWidgetMainWindow::on_action_delete_item_triggered()
             delete taked_item;
         }
     }
-    
+
     // 方法2
 	auto selectedItems = ui->listWidget->selectedItems();  // selectedItems类型为QListWidgetItem*
     for(auto& item : selectedItems){
@@ -955,7 +955,7 @@ void ListWidgetMainWindow::on_action_delete_item_triggered()
     }
 }
 ```
-这样的代码看似没问题，其实在**删除时索引错乱**，每次多选 item 删除会导致删不干净，方法二甚至会导致指针悬空，因为 selectedItems 中指针指向的内容已经被 `takeitem()` 删除。
+这样的代码看似没问题，其实在**删除时索引错乱**，每次多选 item 删除会导致删不干净，方法二甚至会导致指针悬空，因 selectedItems 中指针指向的内容已经被 `takeitem()` 删除。
 #### 设置多选逻辑
 通过 `QListWidget::setSelectionMode` 函数解决，并且通过查看文档发现这些 Flag 是**互斥的**，功能上是递进的
 - NoSelection (0)
@@ -998,7 +998,7 @@ void itemDoubleClicked(QListWidgetItem *item) //双击
 - 击一个项时，不管是否发生了当前项的切换，都会发射 `itemPressed()` 和 `itemClicked()` 信号。1在一个项上点击鼠标右键时只会发射 `itemPressed()` 信号，而不会发射 `itemClicked()` 信号
 #### 创建右键菜单
 每个继承自 QWidget 的类都有 `customContextMenuRequested()` 信号，在一个组件上点击鼠标右键时，组件发射这个信号，
-首先我们如果要创建菜单，**必须**允许 QListWidget 获取上下文菜单，因为默认 `contextMenuPolicy` 属性是 `NoContextMenu` 不显示菜单
+首先我们如果要创建菜单，**必须**允许 QListWidget 获取上下文菜单，因默认 `contextMenuPolicy` 属性是 `NoContextMenu` 不显示菜单
 用于**自定义请求创建**快捷菜单。需要创建菜单只需要编写对应信号的槽函数即可，也可以使用默认英文菜单。以下是文档
 
 ---
@@ -1019,8 +1019,8 @@ void itemDoubleClicked(QListWidgetItem *item) //双击
 
 ---
 
-对于 `on_listWidget_customContextMenuRequested(const QPoint& point)` 中的 point 参数需要知道：
-1. pos 参数是视口（viewport）坐标系中的位置，不是全局坐标
+对于 `on_listWidget_customContextMenuRequested(const QPoint& point)` 中 point 参数需要知道：
+1. pos 参数是视口（viewport）坐标系中位置，不是全局坐标
 2. 坐标系：pos 是**鼠标点击位置**相对于 QListWidget 的视口（viewport）的相对坐标坐标，相对坐标轴的原点在部件视口的左上角
 3. 视口是什么：QListWidget 内部的可滚动区域，包含所有列表项
 4. 不是全局坐标：也不是相对于整个 QListWidget 控件（包括滚动条、边框等）的坐标
@@ -1182,7 +1182,7 @@ int main(int argc, char** argv) {
 - `QTimer` 对象在调用 `start()` 后会***立刻返回，函数不会在这条语句位置阻塞***，计时操作会转到后台**异步进行**。
 - `QTimer::singleShot` **是 static**的，初始化之后就**立刻返回**，计时操作同样后台异步运行
 这段代码有一个很不容易发现的错误
-在 mark 位置 singleShot 的 lambda 函数**使用引用捕获了两个局部变量**，但是由于 `timer->start()` 不阻塞，所以开始计时之后设置好 singleShot 定时结束之后，`make_many_windows` 函数返回，其中**所有局部变量被销毁**，导致**已经完成初始化的 singleShot 后台计时对象捕获的指针所指向的内存已经被销毁**，程序读取到释放的内存块会导致程序崩溃。
+在 mark 位置 singleShot 的 lambda 函数**使用引用捕获了两个局部变量**，但由于 `timer->start()` 不阻塞，所以开始计时之后设置好 singleShot 定时结束之后，`make_many_windows` 函数返回，其中**所有局部变量被销毁**，导致**已经完成初始化的 singleShot 后台计时对象捕获的指针所指向的内存已经被销毁**，程序读取到释放的内存块会导致程序崩溃。
 日志中会显式说明程序崩溃
 ## QTreeWidge
 ### 准备工作
@@ -1207,8 +1207,8 @@ DEFINES += QT_NO_DEBUG_OUTPUT
 禁用所有调试信息输出
 cmake 中通过：
 ```cmake
-target_compile_definitions(your_target_name 
-    PRIVATE 
+target_compile_definitions(your_target_name
+    PRIVATE
         QT_NO_DEBUG_OUTPUT
         QT_NO_INFO_OUTPUT  # 如果需要也禁用qInfo()
         QT_NO_WARNING_OUTPUT  # 如果需要也禁用qWarning()
@@ -1221,7 +1221,7 @@ add_definitions(-DQT_NO_DEBUG_OUTPUT)
 target_compile_definitions(your_target_name PRIVATE QT_NO_DEBUG_OUTPUT)
 target_link_libraries(your_target_name Qt6::Core)
 ```
-代码中的 `qDebug()` 语句仍然存在，只是不会在运行时输出到控制台。
+代码中 `qDebug()` 语句仍存在，只是不会在运行时输出到控制台。
 ### 为控件设置用户数据
 很多Qt组件都有一个 `setData()` 函数，data 属性类型为QVariant，用来存储“用户数据”
 `QVariant` 就像一个"万能容器"，可以存储任意类型的数据（整数、字符串、对象指针等），有很多应用场景：
@@ -1250,14 +1250,14 @@ void updateProgress() {
 2. **避免全局变量**：数据直接关联到相关组件
 3. **简化事件处理**：在事件回调中直接获取关联数据
 通过 `setData(Qt::role, QVariant var)` 插入键值对
-查看 ` enum Qt::ItemDataRole ` 文档可以看到有很多已经内置的 role，可以看到他们是[[#QToolButton 和 QListWidget#代码逻辑#设置多选逻辑|互斥的]]，但是如果这些还是不够用，则可以插入自定义 role（QUserRole），它的值为 `0x100`，通过 `QUserRole+1` 来扩充 data 的键
+查看 ` enum Qt::ItemDataRole ` 文档可以看到有很多已经内置的 role，可以看到他们是[[#QToolButton 和 QListWidget#代码逻辑#设置多选逻辑|互斥的]]，但如果这些还是不够用，则可以插入自定义 role（QUserRole），它的值为 `0x100`，通过 `QUserRole+1` 来扩充 data 的键
 ### Qt 信号发射 emit 关键字
 `emit` 实际上是一个**空宏**，在预处理阶段会被替换为空：
 ```cpp
 #define emit
 ```
 由于各种 Qt 控件的信号函数可以直接使用函数调用来发起，**技术上不需要使用 emit**关键字，emit 关键字的存在**仅仅是为了可读性**，避免这种信号发射语法和函数调用混淆
-虽然技术上不是必须，但是**强烈建议保留**
+虽然技术上不是必须，但**强烈建议保留**
 ### QTreeWidget类
 对于列，可以设置 `QTreeWidgetItem` 作为表头，这样能够设置表头的各种样式，如果只是使用 QLabel 就不行，两者对应 api 为：
 ```cpp
@@ -1266,10 +1266,10 @@ void QTreeWidget::setHeaderItem(QTreeWidgetItem *item) //设置表头节点
 QTreeWidgetItem *QTreeWidget::headerItem() //返回表头节点
 ```
 允许存在任意个顶层节点，一个根节点，使用 `QTreeWidgetItem *QTreeWidget::invisibleRootItem()` 返回
-`QTreeWidgetItem` 在构造函数中有一个 type 变量，是一个和 [[#为控件设置用户数据|QWidget的data属性]]相似的一个特性，可以为其设置 type（**只能是一个 int 类型**）来标记这个 item 的类别。但是设置后不能更改，没有 `setType` 接口
+`QTreeWidgetItem` 在构造函数中有一个 type 变量，是一个和 [[#为控件设置用户数据|QWidget的data属性]]相似的一个特性，可以为其设置 type（**只能是一个 int 类型**）来标记这个 item 的类别。但设置后不能更改，没有 `setType` 接口
 由于这一章和 [[#QToolButton 和 QListWidget]] 非常像，很多代码较为重复，这里只实现重要部分：[[C++ practice case#Qt 项目代码#4.12 QTreeWidget]]
 ## QTableWidget
-和 [[#QToolButton 和 QListWidget|QListWidget]] & [[#QTreeWidge]] 大同小异，只不过 table 中的 item 变为了单元格，最小设置单元也成为了一个单元格，对行列的修改本质上都是在**按照单元格坐标**每次修改一个单元格
+和 [[#QToolButton 和 QListWidget|QListWidget]] & [[#QTreeWidge]] 大同小异，只不过 table 中 item 变为了单元格，最小设置单元也成为了一个单元格，对行列的修改本质上都是在**按照单元格坐标**每次修改一个单元格
 每一个 item 同样可以设置 type 和 [[#QTreeWidge#为控件设置用户数据|data]]
 ### 信号处理
 同 [[#QTreeWidge]]，当前单元格发生切换时，会同时发射 `currentCellChanged()` 信号和 `currentItemChanged()` 信号。`currentCellChanged()` 信号传递 4个参数，即当前单元格的行号和列号以及之前单元格的行号和列号，`currentItemChanged()` 信号传递两个参数，即当前项和之前的项。
@@ -1284,9 +1284,9 @@ void  resizeRowsToContents()                      //自动调整所有行的高�
 # 模型/视图结构
 ## 概述说明
 
-> 模型/视图（model/view）结构是进行数据存储和界面展示的一种编程结构。在这种结构里，**模型存储数据，界面上的视图组件显示模型中的数据**，在视图组件里修改的数据会被自动保存到模型里。
+> 模型/视图（model/view）结构是进行数据存储和界面展示的一种编程结构。在这种结构里，**模型存储数据，界面上的视图组件显示模型中数据**，在视图组件里修改的数据会被自动保存到模型里。
 
-重点在于模型**只负责存储数据**，**视图只负责展示模型中的数据**，模型的数据来源可以是**内存中**的字符串列表或二维表格型数据，也可以是**数据库中**的数据表，一种模型可以用不同的视图组件来显示数据
+重点在于模型**只负责存储数据**，**视图只负责展示模型中数据**，模型的数据来源可以是**内存中**的字符串列表或二维表格型数据，也可以是**数据库中**的数据表，一种模型可以用不同的视图组件来显示数据
 ![[PixPin_2025-11-15_17-07-57.png]]
 模型向视图提供数据是**单向的**，代理（delegate）在视图与模型之间交互操作时提供的临时编辑器，当需要在视图上编辑数据时，代理会为编辑数据提供一个编辑器，这个编辑器获取模型的数据、接受用户编辑的数据后又将其提交给模型。例如在QTableView组件上双击一个单元格来编辑数据时，在单元格里就会出现一个QLineEdit组件，这个编辑框就是代理提供的临时编辑器。这一点已经在[[Qt Official Tutorial#Books|官方books示例]]中使用到
 ### 模型
@@ -1302,7 +1302,7 @@ void  resizeRowsToContents()                      //自动调整所有行的高�
 | QSqlQueryModel     | 用于表示数据库 SQL 查询结果的模型类               |
 | QSqlTableModel     | 用于表示数据库的一个数据表的模型类                  |
 ### 视图
-视图就是用于显示模型中的数据的界面组件
+视图就是用于显示模型中数据的界面组件
 
 | 视图类         | 功能                                                                 |
 |----------------|----------------------------------------------------------------------|
@@ -1319,7 +1319,7 @@ QListWidget、QTreeWidget和QTableWidget这3个用于处理项数据的组件。
 代理就是在视图组件上为编辑数据提供的**临时编辑器**，例如在 QTableView 组件上编辑一个单元格的数据时，默认会提供一个 QLineEdit 编辑框。代理负责从模型获取相应的数据，然后将其显示在编辑器里，修改数据后又将编辑器里的数据保存到模型中。
 ### 模型/视图结构的一些概念
 #### 模型基本结构
-在模型/视图结构中，模型为视图组件和代理提供存取数据的标准接口。`QAbstractItemModel` 是所有模型类的基类，不管底层的数据结构是如何组织数据的，`QAbstractItemModel` 的子类都以表格的层次结构展示数据，视图组件按照这种规则来存取模型中的数据，但是展示给用户的形式不一样。
+在模型/视图结构中，模型为视图组件和代理提供存取数据的标准接口。`QAbstractItemModel` 是所有模型类的基类，不管底层的数据结构是如何组织数据的，`QAbstractItemModel` 的子类都以表格的层次结构展示数据，视图组件按照这种规则来存取模型中数据，但展示给用户的形式不一样。
 常用三种模型为：
 ![[PixPin_2025-11-16_09-21-59.png]]
 #### 模型索引
@@ -1344,7 +1344,7 @@ QStringListModel是处理字符串列表的模型类，其实例可以作为QLis
 比较简单
 ### QStandardItemModel和QTableView
 `QStandardItemModel`：基于项的模型类。它维护一个二维的项数组，每个项是一个 QStandardItem 对象，用于存储文字、字体、对齐方式等各种角色的数据。
-`QTableView`：二维表格视图组件类，基本显示单元是单元格。通过函数 `setModel ()` 设置一个 QStandardItemModel 类的数据模型之后，一个单元格显示数据模型中的一个项。
+`QTableView`：二维表格视图组件类，基本显示单元是单元格。通过函数 `setModel ()` 设置一个 QStandardItemModel 类的数据模型之后，一个单元格显示数据模型中一个项。
 `QItemSelectionModel`：项选择模型类。它是用于跟踪视图组件的单元格选择状态的类，需要指定一个 QStandardItemModel 类的数据模型。当在 QTableView 组件上选择一个或多个单元格时，通过项选择模型可以获得选中单元格的模型索引。
 #### 选择模型
 一个视图组件需要设置一个数据模型，还可以设置一个选择模型，使用 `setSelectionModel`，QItemSelectionModel是选择模型类，它的功能是跟踪视图组件上的选择操作，给出选择范围。
@@ -1362,7 +1362,7 @@ void MainWindow::on_actOpen_triggered() {
         QTextStream aStream(&aFile);
         ui->plainTextEdit->clear();
         while (!aStream.atEnd()) {
-            QString str = aStream.readLine();          
+            QString str = aStream.readLine();
             ui->plainTextEdit->appendPlainText(str);
             aFileContent.append(str);
         }
@@ -1411,14 +1411,14 @@ void MainWindow::iniModelData(QStringList& aFileContent) {
 如果需要设置自定义代理类，需要实现这几个函数：
 - createEditor
 	- parent是要创建的组件的父组件，一般就是窗口对象；option是项的一些显示选项，是QStyleOptionViewItem类型的，包含字体、对齐方式、背景色等属性；
-	- index是项在数据模型中的模型索引，
+	- index是项在数据模型中模型索引，
 	- `index->model()` 可以获取项所属数据模型的对象指针。
 	- 设置了代理类的组件**被编辑时**就是调用这个函数来创建被编辑时显示的状态
 ```cpp
-QWidget  *QStyledItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) 
+QWidget  *QStyledItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index)
 ```
 - setEditorData
-	- 定义如何将数据模型中对应 index 位置的数据加载到 `createEditor` 函数创建出的**临时编辑器**中**用来显示**，不至于用户点击编辑之后看到的编辑框中的内容不是空白。
+	- 定义如何将数据模型中对应 index 位置的数据加载到 `createEditor` 函数创建出的**临时编辑器**中**用来显示**，不至于用户点击编辑之后看到的编辑框中内容不是空白。
 	- 这个函数的默认实现（或者说一般实现）是通过 data 函数 `Qt::UserRole` 用户角色对应的数据
 	- 代理组件在被编辑时**代理组件中显示的内容/状态**通过这个函数实现
 ```cpp
@@ -1439,7 +1439,7 @@ public:
 };
 ```
 - setModelData
-	- 是 setEditorData 的反面，用于设置填入代理编辑器中的数据用什么方法填入数据模型
+	- 是 setEditorData 的反面，用于设置填入代理编辑器中数据用什么方法填入数据模型
 ```cpp
 void  QStyledItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index)
 ```
@@ -1447,7 +1447,7 @@ void  QStyledItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *mod
 	- 用于设置 createEditor 设置的编辑器的大小
 ```cpp
 // 根据内容调整大小
-void updateEditorGeometry(QWidget *editor, 
+void updateEditorGeometry(QWidget *editor,
                          const QStyleOptionViewItem &option,
                          const QModelIndex &index) const {
     QLineEdit *lineEdit = qobject_cast<QLineEdit*>(editor);
@@ -1578,10 +1578,10 @@ void MainWindow::on_btnApplyFilters_clicked()
 ![[PixPin_2025-11-19_16-47-34.png]]
 - 留空的地方最好放一个 spacer
 - 选中多个控件，然后右键->布局->使用拆分器水平（垂直）布局，这样这几个控件之间就会出现一个**分隔条**，用户可以通过拖动分隔条来调整不同部分控件的所占用的空间大小。
-- 如果有多个不同的 splitter 组合成不同方向的布局，比如图中的 TreeView 和右边的两个 View 是 splitter 水平布局，而右边两个 ListView 和 TableView 是上下结构体的 Splitter，这就需要给 splitter 设置 sizePolicy 为 expanding，否则调整 splitter_main 也就是 1，右边的 splitter 水平拓展
+- 如果有多个不同的 splitter 组合成不同方向的布局，比如图中 TreeView 和右边的两个 View 是 splitter 水平布局，而右边两个 ListView 和 TableView 是上下结构体的 Splitter，这就需要给 splitter 设置 sizePolicy 为 expanding，否则调整 splitter_main 也就是 1，右边的 splitter 水平拓展
 ![[PixPin_2025-11-19_17-17-44.png]]
 ![[PixPin_2025-11-19_17-21-59.png]]
-- 如果想要 ui 编辑器中拖动画布，所有画布中的控件都随着画布大小变化，那么需要调整**根布局（mainwindow 类中名为 centeralWidget），也就是根对象下的第一个布局**的 layout 属性
+- 如果想要 ui 编辑器中拖动画布，所有画布中控件都随着画布大小变化，那么需要调整**根布局（mainwindow 类中名为 centeralWidget），也就是根对象下的第一个布局**的 layout 属性
 ![[Pasted image 20251119172713.png]]
 ![[PixPin_2025-11-19_17-27-50.png]]
 这样控件就会随着画布大小而调整
@@ -1608,7 +1608,7 @@ bool  QCoreApplication::sendEvent(QObject *receiver, QEvent *event)
 > 应用程序发布的事件**进入 Qt 事件队列**
 > 自生事件和发布事件的处理是**异步**的，也就是事件进入队列后由系统去处理，程序不会在产生事件的地方停止进行等待。
 
-main 函数中的 `return a.exec()` 函数用来**调起时事件循环**，之前做的只是 UI 显示工作，`QApplication::exec()` 的主要功能就是不断地检查系统队列和Qt事件队列里是否有未处理的**自生事件和发布事件（只处理这两种事件）**，应用程序的事件循环还可以对队列中的**相同事件进行合并处理**，例如如果队列中有一个界面组件的多个 QPaintEvent 事件，就只派发一次 QPaintEvent 事件，**因为界面只需要绘制一次**。
+main 函数中 `return a.exec()` 函数用来**调起时事件循环**，之前做的只是 UI 显示工作，`QApplication::exec()` 的主要功能就是不断地检查系统队列和Qt事件队列里是否有未处理的**自生事件和发布事件（只处理这两种事件）**，应用程序的事件循环还可以对队列中**相同事件进行合并处理**，例如如果队列中有一个界面组件的多个 QPaintEvent 事件，就只派发一次 QPaintEvent 事件，**因界面只需要绘制一次**。
 发送事件由应用程序**直接派发**给某个对象，是以**同步模式**运行的
 如果循环事件比较复杂，导致的程序卡顿（CPU 长时间占用）可以使用下面方法解决：
 - 不同线程处理不同逻辑（界面渲染和数据处理）
@@ -1689,7 +1689,7 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 ## 事件与信号
 事件通常是由窗口系统或应用程序产生的，信号则是 Qt 定义或用户自定义的。Qt 为界面组件定义的信号通常是对事件的封装
 ### 窗口属性
-和[[#属性系统]]中的属性不一样:
+和[[#属性系统]]中属性不一样:
 窗口属性使用 `setAttribute()` 设置，作为一种配置属性，用来调整窗口/控件的显示效果，运行逻辑
 控件自定义数据 `setProperty()` 用来存储程序运行的用户自定义数据，方便需要用时查询
 窗口状态 `setWindowFlag`，窗口状态决定了窗口在屏幕上的显示方式，例如最大化、最小化、全屏等
@@ -1710,7 +1710,7 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 | Qt::ForeignWindow           | 表示该窗口对象是一个句柄，表示由其他进程或手动使用本地代码创建的本地平台窗口。                                                              |
 | Qt::CoverWindow             | 表示该窗口表示一个覆盖窗口，在某些平台上显示应用程序最小化时。                                                                      |
 | Qt::WindowModal             | 表示该窗口是模态的，相对于其父窗口模态。用户必须关闭此窗口才能与父窗口交互。                                                               |
-| Qt::ApplicationModal        | 表示该窗口是模态的，相对于整个应用程序模态。用户必须关闭此窗口才能与应用程序中的任何窗口交互。                                                      |
+| Qt::ApplicationModal        | 表示该窗口是模态的，相对于整个应用程序模态。用户必须关闭此窗口才能与应用程序中任何窗口交互。                                                      |
 | Qt::WindowStaysOnTopHint    | 表示该窗口始终位于其他窗口之上。                                                                                     |
 | Qt::FramelessWindowHint     | 表示该窗口没有边框。                                                                                           |
 | Qt::CustomizeWindowHint     | 允许自定义窗口的标题栏和边框。通常与 `Qt::FramelessWindowHint` 结合使用。                                                   |
@@ -1780,7 +1780,7 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 | `setProperty`    | 设置窗口的自定义属性，可以存储任意类型的值。                  | 用于存储和检索自定义数据，不直接影响窗口的行为或外观。 | 否      |
 
 =======
-和[[#属性系统]]中的属性不一样，窗口属性使用 `setAttribute()` 设置，作为一种配置属性，用来调整窗口/控件的显示效果，运行逻辑。而 `setProperty()` 用来存储程序运行的用户自定义数据，方便需要用时查询。
+和[[#属性系统]]中属性不一样，窗口属性使用 `setAttribute()` 设置，作为一种配置属性，用来调整窗口/控件的显示效果，运行逻辑。而 `setProperty()` 用来存储程序运行的用户自定义数据，方便需要用时查询。
 - ✅ **`setAttribute()`** = 告诉 Qt **如何对待**这个控件
 - ✅ **`setProperty()`** = 告诉程序 **这个控件有什么**数据
 
@@ -1796,7 +1796,7 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 可以将一个对象的事件委托给另一个对象来监视并处理，方法为：
 1. 被监视对象使用函数 `installEventFilter()` 将自己注册给监视对象，监视对象就是事件过滤器。
 2. 监视对象重新实现函数 `eventFilter()`（一般在 protect 中），对监视到的事件进行处理
-[[#典型事件处理|上一个例子中]]，如果要管理一个控件中的类事件，就需要**创建一个新类并且继承与这个控件的父类**，然后在这个类中定义各种 event 处理函数（都应该放在 protect 中，因为他们是 qt 回调，不需要被手动调用）。
+[[#典型事件处理|上一个例子中]]，如果要管理一个控件中类事件，就需要**创建一个新类并且继承与这个控件的父类**，然后在这个类中定义各种 event 处理函数（都应该放在 protect 中，因他们是 qt 回调，不需要被手动调用）。
 
 `eventFilter` 是 Qt 框架**回调**你的代码，而不是你**主动调用**的代码。因此它应该被保护（protect 修饰）起来，只对框架和子类可见，子类可以通过通过最后的 return 语句委托父类处理**不是子类特化处理的事件**
 事件过滤器的调用链（**是一条可以拦截的链，不是后者覆盖前者的链**）：
@@ -1806,7 +1806,7 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 目标对象的 event() 方法
     ↓
 遍历所有安装的过滤器 → 调用 filter1->eventFilter()
-    ↓                      调用 filter2->eventFilter()  
+    ↓                      调用 filter2->eventFilter()
     ↓                      ...
 目标对象的事件处理方法（如 mousePressEvent）
 ```
@@ -1911,7 +1911,7 @@ application/x-qt-windows-mime;value="Preferred DropEffect"
 > [!note]
 > - application/x-qt-windows-mime; value="Shell IDList Array"
 > 用途：用于 Windows Shell 的拖放操作，表示拖放的数据是一个文件或文件夹的标识列表。
-> 常见于：Windows 操作系统中的拖放操作，特别是在资源管理器中拖放文件或文件夹。
+> 常见于：Windows 操作系统中拖放操作，特别是在资源管理器中拖放文件或文件夹。
 > - application/x-qt-windows-mime; value="UsingDefaultDragImage"
 > 用途：指示是否使用默认的拖放图像。
 > 常见于：Windows 的拖放操作中，用于确定拖动时显示的图像。
@@ -1920,7 +1920,7 @@ application/x-qt-windows-mime;value="Preferred DropEffect"
 > 常见于：Windows 的拖放操作中，用于显示拖动时的图像。
 > - application/x-qt-windows-mime; value="DragContext"
 > 用途：包含拖动上下文的信息。
-> 常见于：Windows 的拖放操作中，用于管理拖动过程中的上下文数据。
+> 常见于：Windows 的拖放操作中，用于管理拖动过程中上下文数据。
 > - application/x-qt-windows-mime; value="DragSourceHelperFlags"
 > 用途：包含拖动源的帮助标志。
 > 常见于：Windows 的拖放操作中，用于指示拖动源的行为特性。
@@ -2079,8 +2079,8 @@ Widget::Widget(QWidget *parent)
         - `QAbstractItemView::DragDrop`: 同时支持拖动和接收拖放操作。
         - `QAbstractItemView::InternalMove`: 仅支持在控件内部重新排列项目。
 3. **启用拖动操作 (`setDragEnabled(true)`)**:
-    - **效果**: 控件中的项目可以被拖动到其他位置或控件。
-    - **用途**: 允许用户拖动控件中的项目到同一控件或其他控件中。
+    - **效果**: 控件中项目可以被拖动到其他位置或控件。
+    - **用途**: 允许用户拖动控件中项目到同一控件或其他控件中。
 4. **设置默认的放置动作 (`setDefaultDropAction(Qt::CopyAction)`)**:
     - **效果**: 当用户执行拖放操作时，默认使用复制操作。
     - **用途**: 确保拖放操作默认行为是复制数据，而不是移动数据。
@@ -2141,7 +2141,7 @@ bool eventFilter(QObject *watctded, QEvent *event)
 	return QWidget::eventFilter(watched, event);
 }
 ```
-- eventFilter 过于宽泛的问题会在这里暴露，因为所有 ui 控件的更新重绘（paintEvent）都会交给 eventFilter，但是 eventFilter 在这里的本意是在鼠标滚轮在 label 上滚动时触发消息，**并返回 true 表示已经被处理**
+- eventFilter 过于宽泛的问题会在这里暴露，因所有 ui 控件的更新重绘（paintEvent）都会交给 eventFilter，但 eventFilter 在这里的本意是在鼠标滚轮在 label 上滚动时触发消息，**并返回 true 表示已经被处理**
 - 窗口在**每一次绘制时就会调用 `repaint()` 进而触发 paintEvent**，而重绘事件 `type()!=Qt::Wheel`，所以导致重绘事件被忽略（返回 true 并且没有交给父类处理），所以窗口中所有对 label 的绘制都会失效（根本不显示）
 
 > [!note]
@@ -2182,7 +2182,7 @@ bool eventFilter(QObject *watctded, QEvent *event)
 输入窗口
 ![[PixPin_2025-11-20_21-38-57.png]]
 ### Qt 内置对话框翻译
-qt 内置的标准对话框**是可翻译的**，如果需要设置其中的语言，需要加载对应的语言包文件
+qt 内置的标准对话框**是可翻译的**，如果需要设置其中语言，需要加载对应的语言包文件
 ```cpp
 #include <QApplication>
 #include <QTranslator>
@@ -2229,7 +2229,7 @@ int main(int argc, char *argv[])
 ```
 ### Qt 自定义翻译
 1. 在源代码中使用 `tr()` 或者 `QObject::tr()` 标记一个字符串是**可翻译的**
-2. 调用 `lupdate myapp.pro` 让 lupdate 提取源码中的所有可翻译字符串，生成一个 `.ts` 文件
+2. 调用 `lupdate myapp.pro` 让 lupdate 提取源码中所有可翻译字符串，生成一个 `.ts` 文件
 3. 用 Qt Linguist 打开 ts 文件，手动调整翻译内容
 4. 使用 lrelease 工具将 ts 编译为**二进制**`.qm` 文件，`lrelease myapp_en.ts -qm myapp_en.qm`
 5. 在程序启动时加载翻译
@@ -2252,7 +2252,7 @@ class LanguageManager : public QObject
 public:
     static void setLanguage(const QString& languageCode) {
         QApplication::removeTranslator(&translator);
-        
+
         if (languageCode == "zh_CN") {
             translator.load(":/translations/zh_CN.qm");
         } else if (languageCode == "en_US") {
@@ -2260,29 +2260,29 @@ public:
         }
         // 可以加载多个翻译文件
         QApplication::installTranslator(&translator);
-        
+
         // 通知所有窗口更新
         for (QWidget* widget : QApplication::allWidgets()) {
             widget->update();
         }
     }
-    
+
 private:
     static QTranslator translator;
 };
 ```
 ## 设计和使用自定义对话框
 ### 什么是模态对话框
-模态对话框是一种用户界面元素，当它出现时，它会阻止用户与父窗口或其他窗口进行交互，直到该对话框被关闭。换句话说，用户必须首先处理模态对话框中的任务
+模态对话框是一种用户界面元素，当它出现时，它会阻止用户与父窗口或其他窗口进行交互，直到该对话框被关闭。换句话说，用户必须首先处理模态对话框中任务
 一个对话框的模态属性可以通过下面方式访问或者设置
 ```cpp
 Qt::WindowModality windowModality() const;
 void setWindowModality(Qt::WindowModality windowModality)
 ```
-- **`Qt::WindowModal`**：表示对话框是相对于其父窗口模态的。当这个对话框打开时，用户不能与父窗口进行交互，但可以与应用程序中的其他顶级窗口进行交互。
-- **`Qt::ApplicationModal`**：表示对话框是相对于整个应用程序模态的。当这个对话框打开时，用户不能与应用程序中的任何其他窗口进行交互，直到这个对话框被关闭。
+- **`Qt::WindowModal`**：表示对话框是相对于其父窗口模态的。当这个对话框打开时，用户不能与父窗口进行交互，但可以与应用程序中其他顶级窗口进行交互。
+- **`Qt::ApplicationModal`**：表示对话框是相对于整个应用程序模态的。当这个对话框打开时，用户不能与应用程序中任何其他窗口进行交互，直到这个对话框被关闭。
 - **`Qt::NonModal`**（默认值）：表示对话框是非模态的。用户可以与父窗口和其他窗口进行交互，即使对话框是打开的。
-使用函 `QWidget::show()` 数显示一个对话框时，根据modal属性的值，对话框会以模态或非模态方式显示。***函数`show()`没有返回值，但是一些询问对话框，调用其 `exec()` 是模态形式的，并且有返回值表示询问/操作结果***
+使用函 `QWidget::show()` 数显示一个对话框时，根据modal属性的值，对话框会以模态或非模态方式显示。***函数`show()`没有返回值，但一些询问对话框，调用其 `exec()` 是模态形式的，并且有返回值表示询问/操作结果***
 如果子窗口需要读取父窗口的大量数据时，一般会使用 `exec()` 来创建子对话框，这种形式**只会创建一次以模形式行时显示的对话框**，子对话框关闭之后并没有被删除，只是被隐藏了（**会一直占用内存**）
 ### QDialog 类
 一般有**接受，取消**两个按键，分别对应 `accept`，`reject`。对话框询问完毕之后会发送 `QDialog::Accepted` 或者 `QDialog::Rejected` 信号，被 done 槽函数接受
@@ -2306,14 +2306,14 @@ void do_something(){
 ```
 #### 对话框窗口标志
 **默认继承自 QDialog 的窗口右上角只会有关闭按钮，如果想要最小化合最大化窗口，需要 `setWindoeFlags(Qt::Window)`**`
-`QDialog`（以及 `QWidget` 及其子类）中的 `setWindowFlag` 方法用于设置窗口标志（window flags），这些标志定义了窗口的各种属性和行为。窗口标志是 `Qt::WindowType` 枚举类型的一部分，可通过[[CodeLineCounter#位掩码设计开关|位掩码]]组合
+`QDialog`（以及 `QWidget` 及其子类）中 `setWindowFlag` 方法用于设置窗口标志（window flags），这些标志定义了窗口的各种属性和行为。窗口标志是 `Qt::WindowType` 枚举类型的一部分，可通过[[CodeLineCounter#位掩码设计开关|位掩码]]组合
 窗口标志一般使用场景在：[[#什么是模态对话框||模态对话框]]，无边框窗口，窗口置顶行为等场景中
 
 | 常量                  | 值          | 描述                                                                                                                                                                                                                                                                       |
 | ------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `Qt::Widget`        | 0x00000000 | 这是 `QWidget` 的默认类型。如果 `QWidget` 有父窗口，则它是子窗口；如果没有父窗口，则它是独立窗口。请参见 `Qt::Window` 和 `Qt::SubWindow`。                                                                                                                                                                          |
 | `Qt::Window`        | 0x00000001 | 表示该部件是一个窗口，通常带有窗口系统框架和标题栏，无论该部件是否有父窗口。请注意，如果部件没有父窗口，则无法清除此标志。                                                                                                                                                                                                            |
-| `Qt::Dialog`        | 0x00000002 | 表示该部件是一个应该作为对话框装饰的窗口（即标题栏中通常没有最大化或最小化按钮）。这是 `QDialog` 的默认类型。如果希望将其用作模态对话框，则应从另一个窗口启动，或具有父窗口并使用 `QWidget::windowModality` 属性。如果设置为模态，对话框将阻止应用程序中的其他顶级窗口获取输入。在 Qt 中，具有父窗口的顶级窗口称为次级窗口。                                                                                      |
+| `Qt::Dialog`        | 0x00000002 | 表示该部件是一个应该作为对话框装饰的窗口（即标题栏中通常没有最大化或最小化按钮）。这是 `QDialog` 的默认类型。如果希望将其用作模态对话框，则应从另一个窗口启动，或具有父窗口并使用 `QWidget::windowModality` 属性。如果设置为模态，对话框将阻止应用程序中其他顶级窗口获取输入。在 Qt 中，具有父窗口的顶级窗口称为次级窗口。                                                                                      |
 | `Qt::Sheet`         | 0x00000004 | 表示该窗口是 macOS 上的 sheet。由于使用 sheet 意味着窗口模态，推荐使用 `QWidget::setWindowModality()` 或 `QDialog::open()` 代替。                                                                                                                                                                     |
 | `Qt::DrawerSheet`   | Dialog     | 表示该部件是 macOS 上的 drawer。此功能已弃用。设置此标志无效。                                                                                                                                                                                                                                   |
 | `Qt::Popup`         | 0x00000008 | 表示该部件是一个弹出式顶级窗口，即它是模态的，但具有适合弹出菜单的窗口系统框架。                                                                                                                                                                                                                                 |
@@ -2363,7 +2363,7 @@ void MainWindow::on_actWidget_triggered()
 - **`setWindowFlag(Qt::Window, true)`**：
 - 设置窗口标志 `Qt::Window` 为 `true`，表示该部件是一个独立的窗口。
 - 这意味着无论该部件是否有父窗口，它都会作为一个顶级窗口显示，具有窗口系统框架和标题栏，会在任务栏显示独立的图标。
-- 如果希望一个部件成为一个子窗口（例如，`QMdiSubWindow` 中的一个子窗口），**应该指定父窗口**，如果设置了父窗口，就不会作为一个顶层窗口出现，任务栏中不出现
+- 如果希望一个部件成为一个子窗口（例如，`QMdiSubWindow` 中一个子窗口），**应该指定父窗口**，如果设置了父窗口，就不会作为一个顶层窗口出现，任务栏中不出现
 ![[Pasted image 20251128170759.png]]
 ![[Pasted image 20251128170805.png]]
 顶层窗口事件循环
@@ -2429,15 +2429,15 @@ void MainWindow::on_actDoc_Open_triggered()
     QString aFileName=QFileDialog::getOpenFileName(this,tr("打开一个文件"),curPath, "C程序文件(*.h *cpp);;文本文件(*.txt);;所有文件(*.*)");
     if (aFileName.isEmpty())
         return;     //如果未选择文件，退出
-    
+
     if (needNew) {
         formDoc = new TFormDoc(this);
         ui->mdiArea->addSubWindow(formDoc);
     }
-    
+
     formDoc->loadFromFile(aFileName);
     formDoc->show();
-    
+
     ui->actCut->setEnabled(true);
     ui->actCopy->setEnabled(true);
     ui->actPaste->setEnabled(true);
@@ -2466,10 +2466,10 @@ void MainWindow::on_actViewMode_triggered(bool checked)
 }
 ```
 ## Splash 与登录窗口
-splash 窗口简单来说就是启动界面，显示启动界面表示程序已经启动，但是在加载中，可以在这个时候进行一些耗时的操作和用户交互，比如登录，使用 QSplashScreen 实现
+splash 窗口简单来说就是启动界面，显示启动界面表示程序已经启动，但在加载中，可以在这个时候进行一些耗时的操作和用户交互，比如登录，使用 QSplashScreen 实现
 ![[PixPin_2025-11-28_20-56-53.png]]
 
-Splash 窗口通常是无边框的，所以拖动事件发生在窗口中显示的组件上，需要自行设置事件代理，`setWindowFlags(Qt::FramelessWindowHint);` 可以设置无边框，但是在任务显示对话框标题
+Splash 窗口通常是无边框的，所以拖动事件发生在窗口中显示的组件上，需要自行设置事件代理，`setWindowFlags(Qt::FramelessWindowHint);` 可以设置无边框，但在任务显示对话框标题
 ![[PixPin_2025-12-10_22-16-48.png]]
 ### 代码编写
 #### 窗口拖动事件
@@ -2513,9 +2513,9 @@ void TDialogLogin::mouseReleaseEvent(QMouseEvent *event)
 #### 设置保存方面
 QSettings 有多种形式的构造函数，使用 Windows 注册表保存设置时，构造函数定义如下：
 ```cpp
-QSettings(const QString &organization, const QString &application = QString(), QObject *parent = nullptr) 
+QSettings(const QString &organization, const QString &application = QString(), QObject *parent = nullptr)
 ```
-它需要参数 organization 和 application，这两个参数确定了注册表中的一个目录。如果定义 QSettings 变量时没有传递任何参数，它默认使用静态函数 `QApplication::organizationName()` 的值作为 organization，在构造函数中我们已经设置了：
+它需要参数 organization 和 application，这两个参数确定了注册表中一个目录。如果定义 QSettings 变量时没有传递任何参数，它默认使用静态函数 `QApplication::organizationName()` 的值作为 organization，在构造函数中我们已经设置了：
 ```cpp
 QApplication::setOrganizationName("WWB-Qt"); //设置组织名
 QApplication::setApplicationName("samp7_5"); //设置应用程序名
@@ -2523,7 +2523,7 @@ QApplication::setApplicationName("samp7_5"); //设置应用程序名
 QSettings settings("MySoft", "Star Runner");
 ```
 - 那么会将设置保存在**注册表目录**是 HKEY_CURRENT_USER/Software/WWB-Qt/samp 7_5。注册表里的参数是以“键-键值”的形式来保存的，键就是参数的名称，键值就是参数的值。
-- QSettings 是一个基于键值对存储的数据结构，但是因为 QVariant 是 Qt 核心模块的一部分，所以它不能提供对数据类型的转换功能，在 [QVariant](https://doc.qt.io/qt-6/zh/qvariant.html) 中没有 `toColor()`, `toImage()`, 或 `toPixmap()` 函数，但是可以使用模板函数转换读取配置，将 QVariant 类型存储到设置中无限制
+- QSettings 是一个基于键值对存储的数据结构，但因 QVariant 是 Qt 核心模块的一部分，所以它不能提供对数据类型的转换功能，在 [QVariant](https://doc.qt.io/qt-6/zh/qvariant.html) 中没有 `toColor()`, `toImage()`, 或 `toPixmap()` 函数，但可以使用模板函数转换读取配置，将 QVariant 类型存储到设置中无限制
 ```cpp
 // 读取不支持类型的设置
 QSettings settings("MySoft", "Star Runner");
@@ -2557,7 +2557,7 @@ settings.beginGroup("outputpanel");
 settings.setValue("visible", panel->isVisible());
 settings.endGroup();
 ```
-有时，你确实希望访问存储在特定文件或注册表路径中的设置。在所有平台上，如果要直接读取 INI 文件，可以使用 QSettings 构造函数，该函数将文件名作为第一个参数，并将 [QSettings::IniFormat](https://doc.qt.io/qt-6/zh/qsettings.html#Format-enum) 作为第二个参数。
+有时，你确实希望访问存储在特定文件或注册表路径中设置。在所有平台上，如果要直接读取 INI 文件，可以使用 QSettings 构造函数，该函数将文件名作为第一个参数，并将 [QSettings::IniFormat](https://doc.qt.io/qt-6/zh/qsettings.html#Format-enum) 作为第二个参数。
 ```cpp
 QSettings settings("/home/petra/misc/myapp.ini", QSettings::IniFormat);
 ```
@@ -2574,7 +2574,7 @@ QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Office", QSettings::
 Qt 中进行文件读写的基本的类是 QFile，QFile 的父类是 QFileDevice，QFileDevice 提供了文件交互操作的底层功能。QFileDevice 的父类是 QIODevice，它有两个父类：QObject 和 QIODeviceBase
 QFile 只有一些基本的文件数据读写函数，使用起来不够方便。QTextStream 能以流方式读写文本文件，QDataStream 能以流方式读写二进制文件，这两个类需要与 QFile 搭配使用。它们的父类是 QIODevice，**QIODevice 还有一个子类 QDebug**，使用函数 qDebug () 输出调试信息时，实际上是创建了一个默认的 QDebug 对象，通过该对象将调试信息输出到 Qt Creator 的 Application Output 窗口
 ### 特定格式文件读写
-- xml 文件用 QDomDocument 对象表示，文档树状结构中的节点用 QDomNode 及其子类表示，qt 读取 xml 文件原理是将文件根据 DOM 格式**解析成树状结构**，这和 pugi 库类似。
+- xml 文件用 QDomDocument 对象表示，文档树状结构中节点用 QDomNode 及其子类表示，qt 读取 xml 文件原理是将文件根据 DOM 格式**解析成树状结构**，这和 pugi 库类似。
 - json 文件使用 QJsonDocument 读写 JSON 文件的类，
 	- QJsonArray 是封装了 JSON 数组的类，
 	- QJsonObject 是封装了 JSON 对象的类，
@@ -2611,7 +2611,7 @@ ui->plainTextEdit->appendPlainText("指定目录= " + specDir);
 QTemporaryDir dir(specDir + "/TempDir_XXXXXX");     // 文件夹名称模板，绝对路径
 // 最终文件名 类似 TempDir_cjkxHgb
 ```
-- 如果在创建QTemporaryFile对象时不设置文件名模板，就会在静态函数 `QDir::tempPath()` 表示的系统临时目录下创建一个临时文件，文件名自动以“applicationName.××××××”的形式命名。其中的applicationName是静态函数 `QCoreApplication::applicationName()` 返回的应用程序名称，“××××××”表示6个随机字母（大小写敏感）
+- 如果在创建QTemporaryFile对象时不设置文件名模板，就会在静态函数 `QDir::tempPath()` 表示的系统临时目录下创建一个临时文件，文件名自动以“applicationName.××××××”的形式命名。其中applicationName是静态函数 `QCoreApplication::applicationName()` 返回的应用程序名称，“××××××”表示6个随机字母（大小写敏感）
 ### 文件过滤器
 本质上是一个 QString 对象，在使用 `QFileDialog` 时，过滤器字符串（filter string）用于指定用户可以选择的文件类型。
 基本语法为：
@@ -2647,7 +2647,7 @@ void Dialog::on_pushButton_47_clicked()
 ## 读写文本文件
 Qt 有两种读写文本文件的方法，一种是用 QFile 类直接读写文本文件，另一种是将 QFile 和 QTextStream 结合起来，用流（stream）方法进行文本文件读写
 如果在创建QFile对象时没有指定文件名，可以用函数 `setFileName()` 设置文件名。注意，在调用函数 `open()` 打开文件后，就不能再调用 `setFileName()` 设置文件名。
-open 函数中的参数时枚举值，可以组合传递
+open 函数中参数时枚举值，可以组合传递
 ### 用 QFile 读写文本文件
 #### 读取文本文件
 ```cpp
@@ -2672,7 +2672,7 @@ bool MainWindow::openByIO_Lines(const QString& aFileName) {  // 逐行读取
     if (!aFile.open(QIODevice::ReadOnly | QIODevice::Text))
         return false;
     ui->textEditDevice->clear();
-    
+
     while (!aFile.atEnd()) {
         QByteArray line = aFile.readLine();    // 读取一行文字，自动添加“\0”
         QString str = QString::fromUtf8(line); // 从字节数组转换为字符串，文件必须采用UTF-8编码
@@ -2684,7 +2684,7 @@ bool MainWindow::openByIO_Lines(const QString& aFileName) {  // 逐行读取
     return true;
 }
 ```
-分为一次性读取和按行读取，`QFile::readLine()` 读入的每一行文本在末尾的 `\n` **之后** 都会自动添加一个空终止符（` \0 `），因为 QByteArray 需要以空终止符结尾来表示字符串的结束，每一行字符的结尾为
+分为一次性读取和按行读取，`QFile::readLine()` 读入的每一行文本在末尾的 `\n` **之后** 都会自动添加一个空终止符（` \0 `），因 QByteArray 需要以空终止符结尾来表示字符串的结束，每一行字符的结尾为
 每一行的内容包括换行符 \n，`line.size()` 返回的是实际字节数，不包括 ` \0`，`\0` 是为了确保 QByteArray 可以被视为一个 C 风格的字符串，但在实际数据中并不包含在返回的字节数组中。
 如果将读取到的字符串显示到文本框中，需要通过以下方法去除最后一个换行符，否则会打印出多余空行：
 ```cpp
@@ -2777,7 +2777,7 @@ bool MainWindow::openByStream_Lines(const QString& aFileName) {
 ```
 `QTextStream` 的 `setAutoDetectUnicode(true)` 通过检查文件的前几个字节（通常是前 4 到 8 字节）来检测文件的编码格式。具体来说：
 1. **BOM（Byte Order Mark）**：
-    - **UTF-8 BOM**：通常不存在 BOM，因为 UTF-8 不需要字节序标记。
+    - **UTF-8 BOM**：通常不存在 BOM，因 UTF-8 不需要字节序标记。
     - **UTF-16 BOM**：前两个字节可能是 `FF FE` 或 `FE FF`。
     - **UTF-32 BOM**：前四个字节可能是 `FF FE 00 00` 或 `00 00 FE FF`。
 2. **其他检测**：
@@ -2793,7 +2793,7 @@ bool MainWindow::saveByStream_Whole(const QString& aFileName) {
     QTextStream aStream(&aFile);
     aStream.setAutoDetectUnicode(true);
     QString str = ui->textEditStream->toPlainText();
-    
+
     aStream << str;
     aFile.close();
     return true;
@@ -2831,10 +2831,10 @@ bool MainWindow::saveByStream_Safe(const QString& aFileName) {
 ## 读写二进制文件
 ### 基础知识
 以二进制形式保存同样的数据会比其他形式保存节省大量空间
-**字节序**：字节序是指一个多字节数据的各个字节码在内存或文件中的存储顺序，分为大端（big-endian）字节序和小端（little-endian）字节序。大端字节序是高位字节在前（低地址），低位字节在后（高地址）；小端字节序是低位字节在前（低地址），高位字节在后（高地址）。
+**字节序**：字节序是指一个多字节数据的各个字节码在内存或文件中存储顺序，分为大端（big-endian）字节序和小端（little-endian）字节序。大端字节序是高位字节在前（低地址），低位字节在后（高地址）；小端字节序是低位字节在前（低地址），高位字节在后（高地址）。
 Intel x86、AMD 64、ARM 处理器全采用小端字节序，MIPS 采用大端字节序。在将数据写入文件时可以根据需要设定字节序，一般使用与操作系统一致的字节序，但也可以不一致。例如 Windows 系统采用的是小端字节序，而保存数据到文件时也可以保存为大端字节序形式
 ### 二进制读写类
-- QFile 也可以读写二进制文件，但是 `read()` 和 `write()` 函数处理二进制数据不是很方便，一般可将 QFile 和 QDataStream 类结合使用
+- QFile 也可以读写二进制文件，但 `read()` 和 `write()` 函数处理二进制数据不是很方便，一般可将 QFile 和 QDataStream 类结合使用
 - QDataStream 是对 I/O 设备进行二进制流数据读写操作的类，其**流数据格式与 CPU 类型、操作系统无关，是完全独立的**。QDataStream 不仅可以用于二进制文件的读写操作，还可以用于网络通信、串口通信等 I/O 设备的数据读写操作。
 在构造函数中传入一个 QIODevice（可以是 QFile 文件）对象与文件实现关联，以数据流的方式读写文件，数据流编码有两种方式：**使用 Qt 的预定义编码方式，使用原始二进制数据方式**。
 - 预定义序列化
@@ -2869,7 +2869,7 @@ void MainWindow::writeByStream(T value)
     }else{
         fileStream.setByteOrder(QDataStream::LittleEndian);
     }
-    
+
     fileStream << value;
     fileDevice.close();
 }
@@ -2890,7 +2890,7 @@ void MainWindow::readByStream(T& value)
     }else{
         fileStream.setByteOrder(QDataStream::LittleEndian);
     }
-    
+
     if(ui->radio_Single->isChecked()){
         fileStream.setFloatingPointPrecision(QDataStream::SinglePrecision);
     }else{
@@ -2919,7 +2919,7 @@ void MainWindow::on_btnColor_Read_clicked() {  // QColor类型数据，读出
 - **`char*`**:
     - **类型**：指针类型，指向一个字符数组。
     - **内存表示**：通常是一个以空字符 `\0` 结尾的字符数组（C 风格字符串）。
-    - **长度**：需要手动管理长度，因为没有内置的长度信息。
+    - **长度**：需要手动管理长度，因没有内置的长度信息。
     - **用途**：适用于 C 风格的字符串操作，或者需要精确控制内存布局的情况。
 - **`QString`**:
     - **类型**：Qt 提供的字符串类，用于处理 Unicode 字符串。
@@ -2952,7 +2952,7 @@ QDataStream 的流写入操作符支持 `char*` 字符串，它会根据结束�
 - 写入与读取的顺序和数据格式需要一致
 - 写入与读取所使用的字节序和浮点数精度也要一致
 - 确保序列化格式版本兼容。
-如果是简单的基本类型数据，做到上述几点已经可以了，但是如果是 Qt 的内置类型，如 QFont、QColor 等数据。其他用户要编写一个程序按照此文件格式读取文件内容，就只能用 Qt 编写，用其他语言编程（不按照 qt 的方式解码二进制数据）很难解析这些复杂类型数据。
+如果是简单的基本类型数据，做到上述几点已经可以了，但如果是 Qt 的内置类型，如 QFont、QColor 等数据。其他用户要编写一个程序按照此文件格式读取文件内容，就只能用 Qt 编写，用其他语言编程（不按照 qt 的方式解码二进制数据）很难解析这些复杂类型数据。
 ### 使用原始二进制方式
 使用纯二进制编码，只需要公开二进制文件格式定义，那么任何语言都可以解析这种格式
 ```cpp
@@ -2960,7 +2960,7 @@ int  writeRawData(const char *s, int len)
 int  readRawData(char *s, int len)
 ```
 - s是char类型的缓冲区指针，表示待写入流的原始数据；len需要小于或等于s的长度值。函数的返回值是实际写入的字节数，如果返回值为-1表示写入过程出现错误。
-- 写和读数据时，不会将数据中的“\0”作为结束符，数据的存储顺序也不受函数 `QDataStream::setByteOrder()` 字节序的影响，只是连续写入或读取相应字节数的数据。在将一些基本类型的数据转换为字节数据数组时，其存储顺序自动由操作系统的字节序决定
+- 写和读数据时，不会将数据中“\0”作为结束符，数据的存储顺序也不受函数 `QDataStream::setByteOrder()` 字节序的影响，只是连续写入或读取相应字节数的数据。在将一些基本类型的数据转换为字节数据数组时，其存储顺序自动由操作系统的字节序决定
 - `writeRawData` 只会将数据写入，不做任何额外工作
 ```cpp
 QDataStream  &writeBytes(const char *s, uint len)
@@ -2969,8 +2969,8 @@ QDataStream  &readBytes(char *&s, uint &len)
 - `writeBytes()` 函数则会将 len **序列化为 4 字节数据**写在前面，然后再写入 s 的数据，`QDataStream::setByteOrder()` 设置的字节序会影响 `writeBytes()` 写入的4字节整数的存储方式，即这个整数会根据字节序的设置相应按大端字节序或小端字节序存储。
 
 > [!note]
-> `writeRawData()` 适合写入各种整数、浮点数等基本类型数据，因为这些类型数据的字节数是固定的，而 `函数writeBytes()` 适合写入字符串数据，因为字符串数据的长度是不固定的，前面存储的uint类型整数正好表示字符串数据的字节数，便于用函数 `readBytes()` 读出。
-> 
+> `writeRawData()` 适合写入各种整数、浮点数等基本类型数据，因这些类型数据的字节数是固定的，而 `函数writeBytes()` 适合写入字符串数据，因字符串数据的长度是不固定的，前面存储的uint类型整数正好表示字符串数据的字节数，便于用函数 `readBytes()` 读出。
+>
 > ***这两种方式读写不能混用***
 
 #### 基本类型读取方法
@@ -2982,7 +2982,7 @@ void MainWindow::on_btnDouble_Read_clicked()
         float value = ui->spin_Float->value();
         fileStream->writeRawData((char*)&value, sizeof(float));
         ui->edit_Float->setText(QString::asprintf("%.4f", value));
-        delFileStream();        
+        delFileStream();
     }
 }
 
@@ -3018,7 +3018,7 @@ void MainWindow::on_btnStr_Read_clicked() {  // 读取字符串，UTF-8编码
     }
 }
 ```
-对于预定义方法中使用流操作符方法这种方法稍微麻烦一点，**因为原生字符数组需要记录长度**，需要通过 `QFileStream::readBytes(char* s, uint len)` 分配文件流中所有的文本字符串长度大小的空间
+对于预定义方法中使用流操作符方法这种方法稍微麻烦一点，**因原生字符数组需要记录长度**，需要通过 `QFileStream::readBytes(char* s, uint len)` 分配文件流中所有的文本字符串长度大小的空间
 实际执行步骤为：
 ```cpp
 // 步骤1：从流中读取4字节 → 转换为uint → len = 4
@@ -3026,7 +3026,7 @@ void MainWindow::on_btnStr_Read_clicked() {  // 读取字符串，UTF-8编码
 // 步骤3：从流中读取len字节内容 → buf = "Test"
 // 步骤4：在末尾添加'\0' → buf[4] = '\0'
 ```
-这种方法能够高度自定义数据的二进制存储/读取方式，但是不能读写较为复杂的类型（QColor，QFont 等）
+这种方法能够高度自定义数据的二进制存储/读取方式，但不能读写较为复杂的类型（QColor，QFont 等）
 
 # 数据库
 ## Qt 数据库编程概述
@@ -3037,9 +3037,9 @@ QSqlDatabase  DB= QSqlDatabase::addDatabase("QSQLITE");
 ```
 这段代码只会添加数据库驱动，而只有调用 `open()` 函数才会进行数据库连接
 `QSqlDatabase::tables()` 用于返回数据库对象的表，填入不同的枚举值参数会返回不同的表或者视图，数据集
-- QSqlTableModel是一个模型类，它与数据库中的一个数据表关联后就作为该数据表的模型，**需要在构造函数中绑定数据库并 `setTable()` 设置表**
+- QSqlTableModel是一个模型类，它与数据库中一个数据表关联后就作为该数据表的模型，**需要在构造函数中绑定数据库并 `setTable()` 设置表**
 - 形成数据模型之后，就可以用对应的[[#视图]]来实现数据的显示和操作
-- **QDataWidgetMapper** 用于在图形用户界面（GUI）中的小部件（widgets）和数据模型（models）之间建立映射关系。主要目的是简化数据绑定和同步的过程，使得数据可以从模型自动加载到小部件中，反之亦然。显著减少代码量。***当模型中的数据发生变化时，关联的小部件会自动更新；反之亦然***
+- **QDataWidgetMapper** 用于在图形用户界面（GUI）中小部件（widgets）和数据模型（models）之间建立映射关系。主要目的是简化数据绑定和同步的过程，使得数据可以从模型自动加载到小部件中，反之亦然。显著减少代码量。***当模型中数据发生变化时，关联的小部件会自动更新；反之亦然***
 ### 代码编写
 #### 基本表格属性设置
 ```cpp
@@ -3067,7 +3067,7 @@ MainWindow::MainWindow(QWidget *parent)
     - **`QAbstractItemView::ExtendedSelection`**: 用户可以通过拖动鼠标或使用 Shift 键和 Ctrl 键进行扩展选择。
     - **`QAbstractItemView::ContiguousSelection`**: 用户可以选择连续的行或列。
     - **`QAbstractItemView::MultiSelection`**: 用户可以选择多个不连续的行或列
-可以通过 `setSort()` 设置数据模型中的数据排序方法，`sort()` 立刻执行排序，`setFilter()` 函数**在数据模型中执行过滤**。以上操作都**不会影响数据库和数据模型中的元数据**，只是进行调整。
+可以通过 `setSort()` 设置数据模型中数据排序方法，`sort()` 立刻执行排序，`setFilter()` 函数**在数据模型中执行过滤**。以上操作都**不会影响数据库和数据模型中元数据**，只是进行调整。
 #### 设置 GUI 控件和数据模型数据映射
 ```cpp
 void MainWindow::openTable()
@@ -3081,7 +3081,7 @@ void MainWindow::openTable()
         return;
     }
     showRecordCount();
-    
+
     tabModel->setHeaderData(tabModel->fieldIndex("empNo"),  Qt::Horizontal, "工号");
     tabModel->setHeaderData(tabModel->fieldIndex("Name"),   Qt::Horizontal, "姓名");
     // ...
@@ -3089,8 +3089,8 @@ void MainWindow::openTable()
 ```
 - 函数 `select()`根据当前设置的排序和过滤规则从数据表查询数据并将其刷新到数据模型。
 - 由于设置了 `setEditStrategy(QSqlTableModel::OnManualSubmit);`，所以通过对模型的更改（通过 GUI 控件更改）不会立刻同步到数据库中，**需要手动调用 `submitAll()` 方法**
-- tableModel 本质上是一个**数据模型**，模型中的数据是从 DB 中的 employee（`setTable()` 函数）表中**选择性地提取一些数据组成的**
-- `tableModel->setHeaderData(tableModel->fieldIndex("empNo"), Qt::Horizontal, "工号");` 设置数据模型的水平表头，虽然 model-view 架构中，model 不管新数据如何展示，设置表头的工作本应该由 view 控件实现，但是设置表头也可以理解为是一种模型的数据属性而不是显示效果。实际业务中一份数据通常会在多个控件中用到，如果在 view 中设置表头这种属性信息会导致代码冗余。
+- tableModel 本质上是一个**数据模型**，模型中数据是从 DB 中 employee（`setTable()` 函数）表中**选择性地提取一些数据组成的**
+- `tableModel->setHeaderData(tableModel->fieldIndex("empNo"), Qt::Horizontal, "工号");` 设置数据模型的水平表头，虽然 model-view 架构中，model 不管新数据如何展示，设置表头的工作本应该由 view 控件实现，但设置表头也可以理解为是一种模型的数据属性而不是显示效果。实际业务中一份数据通常会在多个控件中用到，如果在 view 中设置表头这种属性信息会导致代码冗余。
 - 如果不进行表头设置，在 QTableView 组件里显示表格数据时，会将字段名作为表头。
 ```cpp
 this->dataMapper = new QDataWidgetMapper(this);
@@ -3102,7 +3102,7 @@ this->dataMapper->addMapping(ui->dbEditName,tabModel->fieldIndex("Name"));
 this->dataMapper->toFirst();
 ```
 - 为**映射包装器**设置模型，就相当于设置了数据源，然后设置每一段数据分别要映射到哪个控件中
-- 设置 `AutoSubmit` 会让**编辑控件**中的内容自动同步导**数据模型**中（注意不是数据库），同理也可以设置 `ManualSubmit`
+- 设置 `AutoSubmit` 会让**编辑控件**中内容自动同步导**数据模型**中（注意不是数据库），同理也可以设置 `ManualSubmit`
 - 设置 `toFirst()` 表示让控件默认显示映射器所映射的**数据模型**第一条记录，等价于 `setCurrentIndex(0)`
 #### 行切换引起控件更新
 ```cpp
@@ -3120,7 +3120,7 @@ void MainWindow::do_currentRowChanged(const QModelIndex &current, const QModelIn
     ui->actRecDelete->setEnabled(current.isValid());
     ui->actPhoto->setEnabled(current.isValid());
     ui->actPhotoClear->setEnabled(current.isValid());
-    
+
     if(!current.isValid()){
         ui->dbLabPhoto->clear();
         return;
@@ -3139,7 +3139,7 @@ void MainWindow::do_currentRowChanged(const QModelIndex &current, const QModelIn
 }
 ```
 - `isDirty()` 表示数据是否是脏数据（未同步仅数据模型中）
-- 每一行是一个人的各项数据，所以行切换的时候需要更新，基本信息中的所有 combox 和 Lineedit 都已经通过 dataMapper 映射，所以徐亚更新信息时只需要 `this->dataMapper->setCurrentIndex(curent.row());` 就能够让所有组件映射 `current.row()` 的内容，初始状态被设置为 `toFirst()` 显示 dataModel 中的第一条记录，等价于 `setCurrentIndex(0)`
+- 每一行是一个人的各项数据，所以行切换的时候需要更新，基本信息中所有 combox 和 Lineedit 都已经通过 dataMapper 映射，所以徐亚更新信息时只需要 `this->dataMapper->setCurrentIndex(curent.row());` 就能够让所有组件映射 `current.row()` 的内容，初始状态被设置为 `toFirst()` 显示 dataModel 中第一条记录，等价于 `setCurrentIndex(0)`
 - 由于图片信息是二进制信息，QDataWidgetMapper 用于在简单数据类型（如字符串、整数、浮点数、布尔值等）和 UI控件之间进行映射，对于 BLOB 类型不可以被映射
 - QSqlRecord 是一个用来存储**一条 sql 记录的类**，封装了各个字段的内容和字段的属性信息
 ```cpp
@@ -3217,7 +3217,7 @@ void MainWindow::on_actPhoto_triggered()
 ```
 - 更改 model 的结构（增删行列记录时）最好对选择模型使用 `clearSelect()` 一下刷新选择。
 - 本质就是通过构建一条数据（QSqlRecord 对象），然后添加到模型中，由模型管理数据提交
-- 更新照片由两个部分组成：更新数据模型中的照片和更新显示在屏幕上的照片，数据库中的 BLOB 类型只能转化为 QByteArray 存储，这里使用 QFile 直接读取方式将图片数据转为字节数组，然后将字节数组构建为 QSqlRecord 存储。GUI QLabel 直接使用 load 和 `setPixmap()` 即可实现更新
+- 更新照片由两个部分组成：更新数据模型中照片和更新显示在屏幕上的照片，数据库中 BLOB 类型只能转化为 QByteArray 存储，这里使用 QFile 直接读取方式将图片数据转为字节数组，然后将字节数组构建为 QSqlRecord 存储。GUI QLabel 直接使用 load 和 `setPixmap()` 即可实现更新
 ## QSqlQueryModel 的使用
 ### 实现数据查询
 #### 获取数据并记录
@@ -3231,7 +3231,7 @@ void MainWindow::selectData()
         return;
     }
     ui->statusBar->showMessage(QString("记录条数：%1").arg(qryModel->rowCount()));
-    
+
     QSqlRecord rec = qryModel->record();
     qryModel->setHeaderData(rec.indexOf("empNo"), Qt::Horizontal, "工号");
     qryModel->setHeaderData(rec.indexOf("Name"), Qt::Horizontal, "姓名");
@@ -3255,11 +3255,11 @@ void MainWindow::selectData()
 - qt 中，如果在没有绑定数据库的情况下直接执行 sql 语句，会调用 ` QSqlDatabase::database()` 获取到的第一个默认数据库作为执行对象
 - QSqlQueryModel 可以使用默认的列名作为表头数据，设置表头**只是为了提高可读性，支持多语言和数据导出中有作用**，并不会直接影响默认的表头显示
 - QSqlQueryModel没有类似于 `QSqlTableModel::fieldIndex()` 的函数，为了便于根据字段名获取字段序号，如果需要知道某一个字段的 index，需要先调用 `record()` 获取空记录（其中包含了字段名信息），然后调用 `indexOf()` 获取
-- 同理，无论是 `QSqlQueryModel` 还是 `QStandardItemModel`（或其他 `QAbstractTableModel` 的子类），设置表头的主要目的是为了让最终显示在 `QTableView` 中的表格具有更具可读性和描述性的列标题
+- 同理，无论是 `QSqlQueryModel` 还是 `QStandardItemModel`（或其他 `QAbstractTableModel` 的子类），设置表头的主要目的是为了让最终显示在 `QTableView` 中表格具有更具可读性和描述性的列标题
 #### 通过数据库查询数据并更新
 ```cpp
 void MainWindow::do_currentRowChanged(const QModelIndex &current, const QModelIndex &previous)
-{// 功能仍然是根据行变化之后的行得到对应人记录，更新身份信息和照片
+{// 功能仍是根据行变化之后的行得到对应人记录，更新身份信息和照片
     Q_UNUSED(previous);
     if(!current.isValid()){
         ui->dbLabPhoto->clear();
@@ -3269,13 +3269,13 @@ void MainWindow::do_currentRowChanged(const QModelIndex &current, const QModelIn
     this->dataWapper->setCurrentModelIndex(current); // 根据current更新基本文本信息
     bool first= (current.row() == 0);                        //是否为首记录
     bool last= (current.row() == qryModel->rowCount()-1);    //是否为尾记录
-    
+
     // 更新UI控件状态
     ui->actRecFirst->setEnabled(!first);
     ui->actRecPrevious->setEnabled(!first);
     ui->actRecNext->setEnabled(!last);
     ui->actRecLast->setEnabled(!last);
-    
+
     // 更新照片信息
     int curRecNo = selModel->currentIndex();
     QSqlRecord curRec = this->qryModel->record(curRecNo);
@@ -3346,8 +3346,8 @@ void  QSqlQuery::addBindValue(const QVariant &val, QSql::ParamType paramType = Q
 ```cpp
 void MainWindow::updateRecord(int recNo)
 {// 主窗口点击更新记录按钮时，跳出编辑框
-    
-    // 跳出编辑框之前，需要记下我应该修改谁的信息，先记录下当前选中的是谁
+
+    // 跳出编辑框之前，需要记下我应该修改谁的信息，先记录下当前选中是谁
     QSqlRecord curRec = this->qryModel->record(recNo);
     int empNo = curRec.value("EmpNo").toInt();
     // 查找需要修改的人的empNo，用于在数据库中依据empNo找到对应记录
@@ -3357,7 +3357,7 @@ void MainWindow::updateRecord(int recNo)
     query.exec();
     query.first();
     if(!query.isValid()) return;
-    
+
     // 跳出编辑框
     TDialogData *dataDialog = new TDialogData(this);
     dataDialog->setWindowFlags(dataDialog->windowFlags() | Qt::MSWindowsFixedSizeDialogHint);
@@ -3366,13 +3366,13 @@ void MainWindow::updateRecord(int recNo)
     if(ret == QDialog::Accepted){
         // 将tabView中当前行已经修改过的QSqlRecord数据填入数据库中
         QSqlRecord  recData = dataDialog->getRecordData();
-        
+
         query.prepare("update employee set Name=:Name, Gender=:Gender,"
                       " Birthday=:Birthday,  Province=:Province,"
                       " Department=:Department, Salary=:Salary,"
                       " Memo=:Memo, Photo=:Photo "
                       " where EmpNo = :ID");
-        
+
         query.bindValue(":Name",    recData.value("Name"));
         query.bindValue(":Gender",  recData.value("Gender"));
         query.bindValue(":Birthday",recData.value("Birthday"));
@@ -3381,9 +3381,9 @@ void MainWindow::updateRecord(int recNo)
         query.bindValue(":Salary",  recData.value("Salary"));
         query.bindValue(":Memo",    recData.value("Memo"));
         query.bindValue(":Photo",   recData.value("Photo"));
-        
+
         query.bindValue(":ID",      empNo);
-        
+
         if (!query.exec())
             QMessageBox::critical(this, "错误", "记录更新错误\n"+query.lastError().text());
         else
@@ -3406,7 +3406,7 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
     updateRecord(curRecNo);
 }
 ```
-这个函数用于所有对 tabView 中的行记录的修改操作，流程为：
+这个函数用于所有对 tabView 中行记录的修改操作，流程为：
 1. 记录现在哪一行需要修改，保存这行的数据并通过 `setUpdataRecord()` 填入 TDialogData 对话框中。
 2. 根据将这一行对应的人的 empNo 记下来
 3. 对话框修改数据之后将修改的数据**在数据库中查找 empNo 值**写回数据库（updata 语句）
@@ -3421,12 +3421,12 @@ void MainWindow::on_actRecInsert_triggered()
     QSqlRecord curRec = this->DB.record("employee");
     // curRec.clear();
     curRec.setValue("EmpNo", this->qryModel->rowCount() + 3000);
-    
+
     TDialogData* dataDialog = new TDialogData(this);
     Qt::WindowFlags    flags=dataDialog->windowFlags();
     dataDialog->setWindowFlags(flags | Qt::MSWindowsFixedSizeDialogHint); //对话框固定大小
     dataDialog->setInsertRecord(curRec); //插入记录
-    
+
     int ret=dataDialog->exec();
     if (ret==QDialog::Accepted) {
         QSqlRecord  recData=dataDialog->getRecordData();
@@ -3434,7 +3434,7 @@ void MainWindow::on_actRecInsert_triggered()
                       " Department,Salary,Memo,Photo) "
                       " VALUES(:EmpNo,:Name, :Gender,:Birthday,:Province,"
                       " :Department,:Salary,:Memo,:Photo)");
-        
+
         query.bindValue(":EmpNo",recData.value("EmpNo"));
 		// ...
     }
@@ -3442,7 +3442,7 @@ void MainWindow::on_actRecInsert_triggered()
 }
 ```
 - 由于插入数据需要一个 QSqlRecord 对象，并且**对象必须拥有表格的字段信息**，不然 `setInsertRecord()` 函数无法插入数据，获取包含字段的 record 对象书中使用**一段一定没有结果的 sql 语句获得**，这样并不可取
-- 使用 `QSqlRecord curRec = this->DB.record("employee");` 方法**将表中的字段信息记录到 curRec 中**，并不会记录字段值，也不需要调用 `clear()` 否则会**清空字段信息**
+- 使用 `QSqlRecord curRec = this->DB.record("employee");` 方法**将表中字段信息记录到 curRec 中**，并不会记录字段值，也不需要调用 `clear()` 否则会**清空字段信息**
 - 省略部分和[[#QSqlQuery 的使用#修改数据|修改数据]]一致
 #### 删除数据
 ```cpp
@@ -3451,12 +3451,12 @@ void MainWindow::on_actRecDelete_triggered()
     int curRecNo= selModel->currentIndex().row();
     QSqlRecord  curRec= qryModel->record(curRecNo);
     if(curRec.isEmpty()) return;
-    
+
     int empNo = curRec.value("EmpNo").toInt();
     QSqlQuery query;
     query.prepare("delete  from employee where EmpNo = :ID");
     query.bindValue(":ID",empNo);
-    
+
     if (!query.exec())
         QMessageBox::critical(this, "错误", "删除记录出现错误\n"+query.lastError().text());
     else {
@@ -3473,14 +3473,14 @@ qryModel->setQuery(sqlStr);         //重新查询数据
 - qryModel 内部会维护一个 QSqlQuery 对象，如果通过 `setQuery()` 设置了 sql 语句，那么模型会**立刻执行这条语句**并将返回结果作为 qryModel 的内部数据，内部的 QSqlQuery 对象会记录下这条 sql，**每次调用 `query()` 会调用最后一次 `setQuery()` 设置的 sql 语句**
 ## QSqlRelationalTableModel 的使用
 QSqlRelationalTableModel是QSqlTableModel的子类，专门设计用来处理数据库表之间的关联关系（特别是外键关联）
-QSqlRelation 构造函数中第二个参数是**数据库表中的实际字段名，而不是 `setHeadData()` 的 表头名称！**
+QSqlRelation 构造函数中第二个参数是**数据库表中实际字段名，而不是 `setHeadData()` 的 表头名称！**
 ```cpp
 QSqlRelation (const QString &tableName, const QString &indexColumn, const QString &displayColumn)
 // QSqlRelation对象可以调用参数同名函数返回对应值
-// setJoinMode()用于设置SQL语句中的连接模式，也就是设置是否显示外键字段值在编码表中不存在的记录
+// setJoinMode()用于设置SQL语句中连接模式，也就是设置是否显示外键字段值在编码表中不存在的记录
 ```
 ### 下拉框生成
-对于一个已经设置外键关系的 QSqlRelationTableMode，将数据显示到 tabView 组件时，如果支持编辑单元格的值（通过设置代理实现，默认的 QSqlRelationDelegate 默认使用下拉选框模式），弹出的下拉选框会显示对应列在数据表中的所有允许值
+对于一个已经设置外键关系的 QSqlRelationTableMode，将数据显示到 tabView 组件时，如果支持编辑单元格的值（通过设置代理实现，默认的 QSqlRelationDelegate 默认使用下拉选框模式），弹出的下拉选框会显示对应列在数据表中所有允许值
 ```sql
 -- 创建示例数据库表
 -- 学生表（主表）
@@ -3511,7 +3511,7 @@ model->setTable("students");
 // 关键步骤1：设置关联关系
 // 将major_id列关联到majors表，显示major_name字段
 model->setRelation(
-    model->fieldIndex("major_id"),  // 学生表中的外键列
+    model->fieldIndex("major_id"),  // 学生表中外键列
     QSqlRelation("majors", "id", "major_name")  // 关联表、关联键、显示字段
 );
 
@@ -3597,7 +3597,7 @@ model->setTable("employee");
 
 // 关键：设置关系映射
 model->setRelation(
-    2,  // department_id字段在employee表中的索引（第3列）
+    2,  // department_id字段在employee表中索引（第3列）
     QSqlRelation("department", "id", "name")  // 关联表、关联键、显示字段
 );
 
@@ -3608,10 +3608,10 @@ model->select();
 // 1  | Alice| HR         | 5000
 // 2  | Bob  | IT         | 6000
 ```
-- 将 `employee` 表中的第2列（`department_id` 字段）设置为外键
+- 将 `employee` 表中第2列（`department_id` 字段）设置为外键
 - 这个外键指向 `department` 表的 `id` 字段
 - 在界面上显示时，用 `department` 表的 `name` 字段值替代原始的 `id` 值
-- 数据存储时，仍然存储 `department_id`（外键值）
+- 数据存储时，仍存储 `department_id`（外键值）
 实现原理是根据两者共有的 id 列设置映射规则，**并不需要两表拥有同一个名为 id 的字段**，对于不同的字段名称还可以通过这种方式提高可读性
 ```cpp
 -- 员工表
@@ -3621,7 +3621,7 @@ CREATE TABLE employee (
     dept_code INTEGER                -- 外键，不叫department_id
 );
 
--- 部门表  
+-- 部门表
 CREATE TABLE department (
     dept_id INTEGER PRIMARY KEY,     -- 不叫id，叫dept_id
     dept_name TEXT,
@@ -3629,7 +3629,7 @@ CREATE TABLE department (
 );
 
 model->setRelation(
-    model->fieldIndex("dept_code"),  // employee表中的外键字段
+    model->fieldIndex("dept_code"),  // employee表中外键字段
     QSqlRelation("department", "dept_id", "dept_name")  // 关联表、关联键、显示字段
 );
 ```
@@ -3639,7 +3639,7 @@ QSqlTableModel 是通过模型 `setData(index, value)` 直接修改值，然后�
 [[#QSqlQueryModel 的使用|QSqlQueryModel]] 的增删改查的方法有两种：
 - 通过构造 QSqlRecord 对象，将数据写入其中然后将其通过 api 加入到数据模型中，然后数据模型和数据包装器分别将更改同步到数据库和对应组件中。
 - 通过 [[#QSqlQuery 的使用|QSqlQuery]] 是通过直接执行 sql 语句，获取执行结果后通过 `qryModel->query()` 重新查询 `setQuery()` 预设的 sql ，最终重新显示到组件中，也可以使用包装器关联控件
-`QSqlRelationalTableModel` 的出现，是为了让 Qt 的 GUI 控件能够**感知和理解数据库中的表间关联关系**，从而在显示和操作关联数据时，**避免编写复杂的 JOIN 查询和手动处理外键转换**，如果没有这个类，那么在GUI 控件中需要展示/操作多个表中的数据时，只能通过sql语句来实现将多个表中的内容显示在一个表格控件中。有了这个类，就能够在qt中**复现不同表之间的关系，让qt控件了解数据库基本结构关联**，从而减少代码量，让数据通过GUI控件修改更方便
+`QSqlRelationalTableModel` 的出现，是为了让 Qt 的 GUI 控件能够**感知和理解数据库中表间关联关系**，从而在显示和操作关联数据时，**避免编写复杂的 JOIN 查询和手动处理外键转换**，如果没有这个类，那么在GUI 控件中需要展示/操作多个表中数据时，只能通过sql语句来实现将多个表中内容显示在一个表格控件中。有了这个类，就能够在qt中**复现不同表之间的关系，让qt控件了解数据库基本结构关联**，从而减少代码量，让数据通过GUI控件修改更方便
 
 # 绘图
 ## QPainter 绘图
@@ -3687,19 +3687,19 @@ void Widget::paintEvent(QPaintEvent *event)
 ```cpp
 void    setColor(QColor  &color)  	// 设置画笔颜色，即线条颜色
 void    setWidth(int  width)  		// 设置线条宽度，单位是像素
-void    setStyle(Qt::PenStyle  style)  // 设置线条样式，参数为枚举类型Qt::PenStyle    
-void    setCapStyle(Qt::PenCapStyle  style)  // 设置线条端点样式，参数为枚举类型Qt::PenCapStyle    
+void    setStyle(Qt::PenStyle  style)  // 设置线条样式，参数为枚举类型Qt::PenStyle
+void    setCapStyle(Qt::PenCapStyle  style)  // 设置线条端点样式，参数为枚举类型Qt::PenCapStyle
 void    setJoinStyle(Qt::PenJoinStyle  style)  // 设置线条连接样式，参数为枚举类型Qt::PenJoinStyle
 ```
 对于 QBrush 对象同理，只针对填充样式的控制
 ```cpp
 void    setColor(QColor  &color)  设置画刷颜色，实体填充时即填充颜色
 void    setStyle(Qt:: BrushStyle  style)  设置画刷填充样式，参数为枚举类型Qt::BrushStyle
-void    setTexture(QPixmap  &pixmap)  设置一个QPixmap类型的图片作为画刷的图片，画刷样式自动设置为Qt:: TexturePattern  
+void    setTexture(QPixmap  &pixmap)  设置一个QPixmap类型的图片作为画刷的图片，画刷样式自动设置为Qt:: TexturePattern
 void    setTextureImage(QImage &image) 设置一个QImage类型的图片作为画刷的图片，画刷样式自动设置为
 ```
 #### 渐变绘图
-三种渐变类型可以参考[[QT样式表合集#Brush 模型介绍|样式表]]中的 QSS 实现渐变
+三种渐变类型可以参考[[QT样式表合集#Brush 模型介绍|样式表]]中 QSS 实现渐变
 ```cpp
 painter.setPen(Qt::NoPen);
 QLinearGradient linearGrad(rec.left(), rec.top(), rec.right(), rec.bottom());
@@ -3736,7 +3736,7 @@ event.accept();
 | `fillRect()`          | 填充矩形，无边框线<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>painter.fillRect(rect, Qt::green);<br>                                                                                                                                    | `■` （绿色填充矩形）         |
 | `eraseRect()`         | 擦除某个矩形区域，等效于用背景色填充该区域<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>painter.eraseRect(rect);<br>                                                                                                                                  | `⬜` （擦除/透明矩形）        |
 | `drawPath()`          | 绘制由 QPainterPath 对象定义的路径<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>QPainterPath path;<br>path.addEllipse(rect);<br>path.addRect(rect);<br>painter.drawPath(path);<br>                                                         | `○+□` （路径叠加）         |
-| `fillPath()`          | 填充某个 QPainterPath 对象定义的绘图路径，但是不显示轮廓线<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>QPainterPath path;<br>path.addEllipse(rect);<br>path.addRect(rect);<br>painter.fillPath(path, Qt::red);<br>                                    | `🔴` （红色填充路径）        |
+| `fillPath()`          | 填充某个 QPainterPath 对象定义的绘图路径，但不显示轮廓线<br><br>QRect rect(W/4, H/4, W/2, H/2);<br>QPainterPath path;<br>path.addEllipse(rect);<br>path.addRect(rect);<br>painter.fillPath(path, Qt::red);<br>                                    | `🔴` （红色填充路径）        |
 
 QPainterPath 类用于记录绘图操作序列。一个 PainterPath 由许多基本的绘图操作组成，一个闭合的 PainterPath 是起点和终点连接起来的绘图路径。这类出现是为了解决**复杂图形多次绘制问题**，将复杂图形绘制方法记录其中即可复用 `drawPath()`
 
@@ -3747,20 +3747,20 @@ QPainterPath 类用于记录绘图操作序列。一个 PainterPath 由许多基
 void drawClock(QPainter &painter) {
     // 1. 平移原点到时钟中心
     painter.translate(200, 200);
-    
+
     // 2. 画时钟刻度
     for (int i = 0; i < 12; ++i) {
         // 3. 每次旋转30度（360/12 = 30）
         painter.rotate(30);
         painter.drawLine(0, -90, 0, -100);  // 画刻度线
     }
-    
+
     // 4. 画时针（当前时间3:30）
     painter.save();  // 保存当前坐标系状态
     painter.rotate(90);  // 3点 = 90度
     painter.drawLine(0, 0, 0, -40);
     painter.restore();  // 恢复坐标系
-    
+
     // 5. 画分针
     painter.save();
     painter.rotate(180);  // 6点方向 = 180度
@@ -3851,7 +3851,7 @@ void Widget::paintEvent(QPaintEvent *event)
 - `setBrush` 之后给复杂图形填充颜色的规则是**奇偶规则**：从图形内任意一点向外画一条射线，计算射线与路径相交的次数：如果相交次数为**奇数**，点在内部（填充），为**偶数**，点在外部（不填充），所以五角星中心五边形**不会填充**
 ### 视口和窗口
 绘图设备的物理坐标系是基本的坐标系，通过 QPainter 的平移、旋转等坐标变换可以得到更容易操作的逻辑坐标系。物理坐标系也称为视口（viewport）坐标系，逻辑坐标系也称为窗口（window）坐标系
-- 视口是指绘图设备的任意一个矩形区域，它使用物理坐标系。可以只选取物理坐标系中的一个矩形区域来绘图，默认情况下，视口等于绘图设备的整个矩形区域。
+- 视口是指绘图设备的任意一个矩形区域，它使用物理坐标系。可以只选取物理坐标系中一个矩形区域来绘图，默认情况下，视口等于绘图设备的整个矩形区域。
 - 窗口是用逻辑坐标系定义的，窗口可以直接定义矩形区域的逻辑坐标范围。
 ![[PixPin_2025-12-13_19-58-31.png|800]]
 ```cpp
@@ -3885,17 +3885,17 @@ void Widget::paintEvent(QPaintEvent *event)
     }
 }
 ```
-- 默认情况下，`QPainter` 的**逻辑坐标系**与**设备坐标系**重合。画 `(0,0)` 就是左上角，`(width, height)` 是右下角。`drawEllipse(QPoint(50,0), 50, 50)` 中的 `(50,0)` 是**设备像素坐标**。
+- 默认情况下，`QPainter` 的**逻辑坐标系**与**设备坐标系**重合。画 `(0,0)` 就是左上角，`(width, height)` 是右下角。`drawEllipse(QPoint(50,0), 50, 50)` 中 `(50,0)` 是**设备像素坐标**。
 - `setviewport()` 会导致所有后续绘图操作将被限制在这个矩形内（超出部分会被裁剪），不改变逻辑坐标，只是“框定”了绘图范围
-- `setWindow()` 它会建立一个**从逻辑坐标到设备坐标的映射关系**，逻辑坐标 `(-100, -100)` 映射到设备坐标 `(0,0)`，逻辑坐标 `(100, 100)` 映射到设备坐标 `(side, side)`（因为 window 宽高是 200x200）
+- `setWindow()` 它会建立一个**从逻辑坐标到设备坐标的映射关系**，逻辑坐标 `(-100, -100)` 映射到设备坐标 `(0,0)`，逻辑坐标 `(100, 100)` 映射到设备坐标 `(side, side)`（因 window 宽高是 200x200）
 ![[PixPin_2025-12-13_20-38-56.png]]
 - 方框是由于 rec 对象设置了大小，所以绘制出矩形，构造函数中 `setAutoFillBackground(true)` 自动填充白色
 - 1 图不设置窗口和视口导致绘图坐标原点在左上角，并且**可绘制图形的区域**在是整个 Widget 对象，绘制圆形 `painter.drawEllipse(QPoint(50,0),50,50);` 半径 50 像素，所以组合图形圆心在左上角，并且较小**不会随窗口缩放**
 - 2 图设置视口，设置了可绘制区域限定在 rec 矩形中，**逻辑坐标仍是设备坐标**，同样半径 50 像素较小，**不会随窗口缩放**
-- 3 图设置窗口，映射 `(-100,-100)` 替换 GUi 窗口的左上角坐标，逻辑坐标圆心在 GUi 程序中心位置，`painter.drawEllipse(QPoint(50,0),50,50);` 设置的是逻辑坐标，所以一个圆半径是 1/4 个可绘制区域长度，**是 50 逻辑坐标刻度单位而不是 50 像素**，**可以随窗口缩放**，此时可绘制范围仍然是整个 Widge，所以是椭圆不是正圆
+- 3 图设置窗口，映射 `(-100,-100)` 替换 GUi 窗口的左上角坐标，逻辑坐标圆心在 GUi 程序中心位置，`painter.drawEllipse(QPoint(50,0),50,50);` 设置的是逻辑坐标，所以一个圆半径是 1/4 个可绘制区域长度，**是 50 逻辑坐标刻度单位而不是 50 像素**，**可以随窗口缩放**，此时可绘制范围仍是整个 Widge，所以是椭圆不是正圆
 - 4 图绘图原点设置在视口中央，区域限定在视口中，并且半径为 50 逻辑坐标刻度单位，所以是正圆
 - `QPainter` 中，**所有的绘图函数（如 `drawLine`、`drawRect`、`drawEllipse`、`drawText` 等）使用的都是 _逻辑坐标_（logical coordinates）**，而不是物理设备坐标（像素），**默认情况下逻辑坐标等于物理坐标**
-- 绘制的图形是否根据根据窗口大小变化**一般需要通过视口实现**，因为视口大小根据 rect 参数调整，而 rect 在每次 paintEvent 重绘时都会调整大小
+- 绘制的图形是否根据根据窗口大小变化**一般需要通过视口实现**，因视口大小根据 rect 参数调整，而 rect 在每次 paintEvent 重绘时都会调整大小
 
 > [!note]
 > 所以，viewport 限制绘制的位置，window 设置绘图比例尺大小
@@ -3905,7 +3905,7 @@ void Widget::paintEvent(QPaintEvent *event)
 Qt为绘制复杂的可交互的图形提供了图形/视图（graphics/view）架构，这是一种基于图形项的模型/视图结构。使用图形/视图架构可以绘制复杂的由成千上万个基本图形组件组成的图形，并且每个图形组件是可选择、可拖放和可修改的，类似于矢量绘图软件的绘图功能
 图形/视图架构主要由**场景、视图和图形项**组成
 ![[PixPin_2025-12-13_21-22-59.png|800]]
-场景是一个抽象的管理图形项的容器，可以向场景添加图形项，获取场景中的某个图形项。主要具有如功能:
+场景是一个抽象的管理图形项的容器，可以向场景添加图形项，获取场景中某个图形项。主要具有如功能:
 - 提供管理大量图形项的快速接口。
 - 将事件传播给每个图形项。
 - 管理每个图形项的状态，例如选择状态、焦点状态等。
@@ -3917,9 +3917,9 @@ setForegroundBrush()
 drawBackground()
 drawForeground()
 ```
-视图 QGraphicsView 是图形/视图架构中的视图组件。间接父类是 QWidget，所以它是一个界面组件，用于显示场景中的内容。可以为一个场景设置多个视图，用于对同一个场景提供
+视图 QGraphicsView 是图形/视图架构中视图组件。间接父类是 QWidget，所以它是一个界面组件，用于显示场景中内容。可以为一个场景设置多个视图，用于对同一个场景提供
 不同的显示界面。
-默认情况下，当视图大于场景时（[[PixPin_2025-12-13_21-22-59.png|上图中最外部的视图1]]），场景在视图的中央位置显示，也可以通过设置视图的 Alignment 属性来控制场景在视图中的显示位置。**视图 2 只能显示场景的部分内容，但是会自动提供卷滚条实现在整个场景内移动**
+默认情况下，当视图大于场景时（[[PixPin_2025-12-13_21-22-59.png|上图中最外部的视图1]]），场景在视图的中央位置显示，也可以通过设置视图的 Alignment 属性来控制场景在视图中显示位置。**视图 2 只能显示场景的部分内容，但会自动提供卷滚条实现在整个场景内移动**
 图形项就是一些基本图形组件，所有图形项类都是从 QGraphicsItem 继承而来的， QGraphicsItem 没有父类，QGraphicsItem 支持如下一些操作。
 - 鼠标事件响应。
 - 键盘输入，以及按键事件。
@@ -3936,14 +3936,14 @@ drawForeground()
 	- 单位是像素。视图坐标系只与视图组件或视口有关，而与观察的场景无关。QGraphicsView 视口的左上角坐标总是 (0,0)。
 - 图形项坐标系
 	- 是局部逻辑坐标系，一般以图形项的中心为原点, 绘制图形项时只需考虑其局部坐标系，QGraphicsScene 和 QGraphicsView 会自动进行坐标变换
-	- **图形项的位置是指其中心在父对象坐标系中的坐标**。对于没有父图形项的图形项，其父对象就是场景，图形项的位置就是指在场景中的坐标
-	- QGraphicsItem的大多数函数都在其局部坐标系上操作，`QGraphicsItem::pos()` 是仅有的几个例外之一，它返回的是图形项在父图形项坐标系中的坐标，如果是顶层图形项，则返回的是在场景中的坐标。
+	- **图形项的位置是指其中心在父对象坐标系中坐标**。对于没有父图形项的图形项，其父对象就是场景，图形项的位置就是指在场景中坐标
+	- QGraphicsItem的大多数函数都在其局部坐标系上操作，`QGraphicsItem::pos()` 是仅有的几个例外之一，它返回的是图形项在父图形项坐标系中坐标，如果是顶层图形项，则返回的是在场景中坐标。
 ## 图像处理
 一般使用 QPixmap 加载图片文件或图片数据，然后在 QLabel 组件上显示图片。QImage 访问图像中每个像素的颜色数据，用于需要对图像数据进行处理的应用，旋转或翻转图像，改变图像亮度或对比度等**精细化处理**
 ### 图像表示和图形处理概述
 #### 颜色表示
-RGB 32：用 32 位无符号整数表示颜色，数据格式为 `0xffRRGGBB`，其**中最高字节的 ff 是无意义的**，实际是用 24 位有效数据表示颜色。因为 32 位无符号整数（quint 32）是标准的整数格式，所以在**计算机上存储的图片文件一般采用这种格式表示像素的颜色**。
-RGB 888：即红色、绿色、蓝色各用 1 字节表示，数据格式为 `0xRRGGBB`，一样也是用 24 位数据表示颜色，但是少占用 1 字节。**在内存有限的嵌入式系统中可能会使用 RGB 888 格式**少占用存储空间。但是 3 字节数据并不标准，所以如果内存中使用了 RGB 888 格式，在**计算机上保存图片文件时也会使用 RGB 32 格式**。
+RGB 32：用 32 位无符号整数表示颜色，数据格式为 `0xffRRGGBB`，其**中最高字节的 ff 是无意义的**，实际是用 24 位有效数据表示颜色。因 32 位无符号整数（quint 32）是标准的整数格式，所以在**计算机上存储的图片文件一般采用这种格式表示像素的颜色**。
+RGB 888：即红色、绿色、蓝色各用 1 字节表示，数据格式为 `0xRRGGBB`，一样也是用 24 位数据表示颜色，但少占用 1 字节。**在内存有限的嵌入式系统中可能会使用 RGB 888 格式**少占用存储空间。但 3 字节数据并不标准，所以如果内存中使用了 RGB 888 格式，在**计算机上保存图片文件时也会使用 RGB 32 格式**。
 ARGB 32：在 RGB 32 的基础上高位 ff 表示 Alpha 值，但一般只有 0~100 范围而不是 128，数据格式为 `0xAARRGGBB`
 #### 图片文件格式
 - BMP 是位图文件格式，其文件头存储图像的一些信息，如图像宽度、高度、颜色数据格式等，是无损图片文件格式
@@ -3953,9 +3953,9 @@ ARGB 32：在 RGB 32 的基础上高位 ff 表示 Alpha 值，但一般只有 0~
 #### 处理图形 api
 `QImage::load` 和 `QImage::save` 用于读取和保存，load 的 format 参数可以在构造函数中设置，设置读取规则和[[#图像处理#颜色表示|颜色表示格式]]。
 函数 `dotsPerMeterX()` 和 `dotsPerMeterY()` 分别返回图像在水平和垂直方向上的DPM分辨率。常用的另一个分辨率单位是DPI，DPI和DPM的换算关系是：1 DPI = 0.0254 DPM
-因为1英寸等于0.0254米，所以如果要设置图像的水平分辨率为200 DPI，示意代码如下：
+因1英寸等于0.0254米，所以如果要设置图像的水平分辨率为200 DPI，示意代码如下：
 ```cpp
-int DPI= 200; 
+int DPI= 200;
 image.setDotsPerMeterX(DPI/0.0254);    //image是一个QImage类型的变量
 ```
 ### 代码编写
@@ -3971,24 +3971,24 @@ void MainWindow::printImage(QPainter *painter, QPrinter *printer)
     int curY = margin.top();
     painter->drawText(curX, curY, this->m_filename);
     curY += lineInc;
-    
+
     painter->drawText(curX,curY,QString("Page width =%1 像素").arg(pageW));
     painter->drawText(200,curY,QString("Image width =%1 像素").arg(m_image.width()));
     curY += lineInc;
-    
+
     painter->drawText(curX,curY,QString("Page height=%1 像素").arg(pageH));
     painter->drawText(200,curY,QString("Image height=%1 像素").arg(m_image.height()));
     curY += lineInc;
-    
+
     int spaceH= pageH-curY;  //页面剩余的高度
-    
+
     //图像未超过页面范围，居中显示实际大小的图片
     if ((pageW > m_image.width()) && (spaceH > m_image.height())) {
         curX =(pageW - m_image.width())/2;          //使水平居中
         painter->drawImage(curX, curY, m_image);    //打印图像
         return;
     }
-    
+
     //否则图像高度或宽度超过了页面剩余空间，缩放后打印
     QImage newImg;
     if (m_image.height() > m_image.width())
@@ -4022,46 +4022,46 @@ void MainWindow::on_actImg_RotateRight_triggered()
 void TBattery::paintEvent(QPaintEvent *event)
 {
     QPainter painter;
-    
+
     // 设置可绘制区域大小和位置，比例尺
     QRect rect(0,0,this->width(), this->height());
     painter.setViewport(rect);
     painter.setWindow(0,0,120,50); // 设置视口左上角坐标为0,0，视口右下角坐标为120,50，单位是逻辑坐标轴刻度单位，不是像素
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::TextAntialiasing);
-    
+
     // 绘制边框
     QPen pen(colorBorder);
     pen.setWidth(2);
     pen.setStyle(Qt::SolidLine);
     pen.setCapStyle(Qt::FlatCap);
     pen.setJoinStyle(Qt::BevelJoin);
-    
+
     QBrush brush(colorBack);
     brush.setStyle(Qt::SolidPattern);
-    
+
     painter.setPen(pen);
     painter.setBrush(brush);
     rect.setRect(1,1,109,48);
     painter.drawRect(rect);
-    
+
     // 绘制电极头
     brush.setColor(colorBorder);
     painter.setBrush(brush);
     rect.setRect(110,15,10,20);
     painter.drawRect(rect);
-    
+
     if(m_powerLevel > m_warnLevel){
         brush.setColor(colorPower);
         // pen.setColor(colorPower);
     }else{
         brush.setColor(colorPower);
-        // pen.setColor(colorPower);        
+        // pen.setColor(colorPower);
     }
     painter.setBrush(brush);
     painter.setPen(Qt::NoPen);
     // painter.setPen(pen);
-    
+
     // 显示电量文字
     QFontMetrics textSize(this->font());
     QString powStr = QString::asprintf("%d%%", this->m_powerLevel);
@@ -4089,7 +4089,7 @@ void Widget::on_horizontalSlider_valueChanged(int value)
 ## 设计和使用Qt Designer Widget插件
 qt 安装目录下的 `\Qt\Tools\QtCreator\bin\plugins` 用 dll（linux 是 so）文件存储插件，其中包含了**高级 API**用以拓展 Qt 功能，**低级 API 用于自行编写拓展应用程序功能**，其中包含了自定义 Qt Designer Widget 插件
 ### 创建自定义 QWidget 控件
-NewProject 中的 Qt 4 设计师控件项目
+NewProject 中 Qt 4 设计师控件项目
 ![[PixPin_2025-12-14_15-27-39.png]]
 插件若要安装到 Qt Designer 的组件面板里，并且要在设计时**正常显示**（否则会显示空白），**编译插件的编译器必须和编译 Qt Creator 的编译器相同**
 ![[PixPin_2025-12-14_15-21-34.png]]
@@ -4141,7 +4141,7 @@ TEMPLATE    = lib		# 表示项目是一个库，而一般的应用程序模板�
 HEADERS     = tpbatteryplugin.h
 SOURCES     = tpbatteryplugin.cpp
 RESOURCES   = icons.qrc
-LIBS        += -L. 
+LIBS        += -L.
 
 QT += designer
 
@@ -4178,7 +4178,7 @@ qmake 项目右键项目->添加库->外部库
 ![[PixPin_2025-12-14_17-45-04.png]]
 在项目目录中添加一个 include（或者其他名称都行）文件夹，并将 dll 文件和 lib 文件（取决于动静态引入方式）和头文件添加进去即可
 ![[Pasted image 20251214174148.png]]
-效果和[[#prompt to 引入自定义控件|提升法]]一致，但是由于只通过 `.h` 文件暴露了接口，无法新增属性和新的信号
+效果和[[#prompt to 引入自定义控件|提升法]]一致，但由于只通过 `.h` 文件暴露了接口，无法新增属性和新的信号
 
 ## 创建和使用静态库
 ### 创建静态库
@@ -4192,12 +4192,12 @@ add_library(MyStaticLib STATIC
   tpendialog.ui
 )
 ```
-**静态库不需要设置导入导出宏**，静态库中的所有符号（如果未使用 `static` 或匿名命名空间隐藏）会被直接打包到目标文件中，导入导出是[[#动态库（共享库）]]的概念
+**静态库不需要设置导入导出宏**，静态库中所有符号（如果未使用 `static` 或匿名命名空间隐藏）会被直接打包到目标文件中，导入导出是[[#动态库（共享库）]]的概念
 生成的库文件与使用的编译器有关，**只会生成一个 lib 或者 a 文件**，MSVC生成的库文件是 ` MyStaticLib.lib `；MinGW生成的库文件是 ` libMyStaticLib.a `。**同编译器在 Release 和 Debug 模式下编译生成的静态库文件名称是相同的，并不会为 Debug 版本库文件名自动添加一个字母“d”**，如需区分则手动更名，然后通过[[#通过外部库引入自定义控件|添加外部库]]实现引入
 如果使用 msbuild 作为构建工具：
 ![[PixPin_2025-12-21_19-24-40.png]]
 链接器只会将程序实际调用的函数和类从静态库中链接到最终的可执行文件中，而不是整个静态库 ^prqdmq
-- 如果你只使用了库中的 AntButton，只有 AntButton 相关的代码会被链接
+- 如果你只使用了库中 AntButton，只有 AntButton 相关的代码会被链接
 - 其他未使用的组件（如 AntInput、CarouselWidget 等）不会被包含
 ### 使用静态库
 将 lib 和项目中所有头文件放到项目目录中（也可以是其他地方）并配置好 includepath，如果这个库**也是用了第三方库，需要将第三方库的头文件也放到需要用的项目中**。比如 [byralpha/AntDesign](https://github.com/byralpha/AntDesign) 库，其中用到第三方库有两个：qrcodegen 和 FastGuassianBlur
@@ -4208,7 +4208,7 @@ LIBS += -L$$PWD/path/to/your/static/library/ -lQtAntDesign
 INCLUDEPATH += \
 	# 添加本项目includepath
     $$PWD/../QtAntDesignLib/include \
-    
+
     # 添加第三方库includepath
     $$PWD/../QtAntDesignLib/ThirdParty/QR-Code-generator-master
     $$PWD/../QtAntDesignLib/ThirdParty/FastGaussianBlur-main
@@ -4228,7 +4228,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Gui)
 
 # 添加 QtAntDesign 静态库
 set(QtAntDesign_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../QtAntDesignLib")
-set(QtAntDesign_INCLUDE_DIRS 
+set(QtAntDesign_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/../QtAntDesignLib/include"
     # 添加第三方库头文件
     "${CMAKE_CURRENT_SOURCE_DIR}/../QtAntDesignLib/ThirdParty/QR-Code-generator-master"
@@ -4239,9 +4239,9 @@ set(QtAntDesign_INCLUDE_DIRS
 target_include_directories(${PROJECT_NAME} PRIVATE ${QtAntDesign_INCLUDE_DIRS})
 
 # 链接静态库
-target_link_libraries(${PROJECT_NAME} 
-    Qt6::Core 
-    Qt6::Widgets 
+target_link_libraries(${PROJECT_NAME}
+    Qt6::Core
+    Qt6::Widgets
     Qt6::Gui
     "${QtAntDesign_LIB_DIR}/libQtAntDesign.a"  # Linux/macOS
     # "${QtAntDesign_LIB_DIR}/QtAntDesign.lib" # Windows
@@ -4249,9 +4249,9 @@ target_link_libraries(${PROJECT_NAME}
 
 # 如果是 Windows 并且使用 MSVC
 if(WIN32 AND MSVC)
-    target_link_libraries(${PROJECT_NAME} 
-        Qt6::Core 
-        Qt6::Widgets 
+    target_link_libraries(${PROJECT_NAME}
+        Qt6::Core
+        Qt6::Widgets
         Qt6::Gui
         "${QtAntDesign_LIB_DIR}/QtAntDesign.lib"
     )
@@ -4263,23 +4263,23 @@ endif()
 编译共享库会比静态库多出一个 dll/so 文件
 ```cpp
 // MySharedLib_global.h
-#include <QtCore/qglobal.h> 
-#if defined(MYSHAREDLIB_LIBRARY) 
+#include <QtCore/qglobal.h>
+#if defined(MYSHAREDLIB_LIBRARY)
 #  define MYSHAREDLIB_EXPORT Q_DECL_EXPORT      //声明为导出，共享库中有效
-#else 
+#else
 #  define MYSHAREDLIB_EXPORT Q_DECL_IMPORT      //声明为导入，使用库的项目中有效
 #endif
-// 这样动态库项目可以使用这个头文件作为源代码，编译选项中添加预定义宏MYSHAREDLIB_LIBRARY自动设置，这样就会导出动态项目中的符号
+// 这样动态库项目可以使用这个头文件作为源代码，编译选项中添加预定义宏MYSHAREDLIB_LIBRARY自动设置，这样就会导出动态项目中符号
 // 编译完成后给别的项目使用MYSHAREDLIB动态库，可以将同一个头文件和dll放入项目中即可
-// 使用这个动态库的项目没有定义，宏MYSHAREDLIB_LIBRARY所以会导入动态库中的符号
+// 使用这个动态库的项目没有定义，宏MYSHAREDLIB_LIBRARY所以会导入动态库中符号
 ```
 共享库里的符号，包括变量、类和函数等，需要声明为**导出的公共符号**才可以被应用程序使用。共享库要导出的符号前面需要加 `Q_DECL_EXPORT` 宏。而在使用共享库的应用程序中，需要在头文件里将需要用到的符号声明为导入的，也就是在符号前加 `Q_DECL_IMPORT` 宏。
 在需要导出的符号前面添加 `MYSHAREDLIB_EXPORT`，这样可以在导出符号的同时，标明这个导出符号来自哪个动态库
 ```cpp
-#include "MySharedLib_global.h" 
+#include "MySharedLib_global.h"
 class MYSHAREDLIB_EXPORT TPenDialog {
 public:
-     TPenDialog(); 
+     TPenDialog();
 };
 ```
 在 qmake 中设置预定义宏
@@ -4315,23 +4315,23 @@ int main() {
         std::cerr << "无法加载DLL" << std::endl;
         return 1;
     }
-    
+
     // 2. 手动获取函数地址
     // C++函数有名称修饰（name mangling）,"add"在C++中可能被修饰为"?add@@YAHHH@Z"
 	// 需要在动态库项目中对对应的使用extern "C"防止函数名修饰
     typedef int (*AddFunc)(int, int);
     AddFunc add = (AddFunc)GetProcAddress(hDll, "add");
-    
+
     if (!add) {
         std::cerr << "找不到函数" << std::endl;
         FreeLibrary(hDll);
         return 1;
     }
-    
+
     // 3. 使用函数
     int result = add(5, 3);
     std::cout << "结果: " << result << std::endl;
-    
+
     // 4. 手动卸载
     FreeLibrary(hDll);
     return 0;
@@ -4349,14 +4349,14 @@ if (lib.load()) {
 }
 ```
 #### 隐式链接
-隐式链接特点：需要 `.h` ，`.lib`（所有定义和定义实现在 dll 中的地址） 和 `dll`（具体实现）
+隐式链接特点：需要 `.h` ，`.lib`（所有定义和定义实现在 dll 中地址） 和 `dll`（具体实现）
 编译器/链接器的工作：
 1. 编译时：从 `.h` 文件中看到add函数声明，但不知道实现
 2. 链接时：查看`MyLibrary.lib`，发现add函数在`MyLibrary.dll`中
 3. 生成可执行文件时：
    • 不包含add函数的代码
    • 包含一个"导入地址表"（IAT）
-   • IAT中包含："调用add时，跳转到 `MyLibrary.dll` 中的地址"
+   • IAT中包含："调用add时，跳转到 `MyLibrary.dll` 中地址"
 4. 需要 dll 文件和 h 文件，程序在启动时自动加载 dll 文件
 ```cpp
 // 隐式链接示例代码
@@ -4400,7 +4400,7 @@ int main() {
 | **加载时机** | 程序启动时自动加载        | 运行时手动加载                  |
 | **使用方式** | 直接调用函数/类         | 通过函数指针调用                 |
 | **类型检查** | 编译时检查            | 通过程序员仔细检查编码，否则在运行时才能发现错误 |
-| **代码提示** | 有（因为有头文件）        | 无                        |
+| **代码提示** | 有（因有头文件）        | 无                        |
 | **适用场景** | 常规C++库           | 插件、跨语言调用                 |
 ## 动静态库区分
 ### 动静态概念
@@ -4413,7 +4413,7 @@ int main() {
 代码层面：
 编译时：把**库的代码（二进制形式）复制到**程序(exe)中
 你的程序变大了，但运行时不需要额外的文件，想看书的时候书就在家里（已经在 exe 文件内部），不需要到图书馆（加载 dll 文件）
-将项目编译为**静态库时，只会产生 lib 文件**，扩展名：.lib (Windows), .a (Linux/Mac)，需要使用这个库时，只需要 lib 文件和 `.h` 文件（提供接口），没有 `.h` 文件也可以自己通过 dumpin 等工具查看 lib 文件中的符号表然后实现接口，**但这一方法比较困难，通常使用静态库必须使用配套的 `.h` 文件**
+将项目编译为**静态库时，只会产生 lib 文件**，扩展名：.lib (Windows), .a (Linux/Mac)，需要使用这个库时，只需要 lib 文件和 `.h` 文件（提供接口），没有 `.h` 文件也可以自己通过 dumpin 等工具查看 lib 文件中符号表然后实现接口，**但这一方法比较困难，通常使用静态库必须使用配套的 `.h` 文件**
 只使用静态库的项目最终会被编译为一个 exe 文件，不需要打包 dll 或 lib 文件就能发行
 #### 动态库（共享库）
 动态库就像借书：
@@ -4445,14 +4445,14 @@ int main() {
 | **部署难度**  | 简单（单文件）                | 复杂（需要附带DLL）                           |
 | **共享能力**  | 不能共享                   | 可以共享                                  |
 | **适用场景**  | 小型工具、嵌入式               | 大型系统、插件架构                             |
-使用库时需要**提前知道库的动静态**并使用匹配的连接方式，否则可能会引起**编译器未定义行为，或者能通过编译但是运行时崩溃**
+使用库时需要**提前知道库的动静态**并使用匹配的连接方式，否则可能会引起**编译器未定义行为，或者能通过编译但运行时崩溃**
 ### 各种文件记录的内容
 DLL 是共享库的运行时文件，包含：
 - 编译后的机器代码（函数、类的实现）
 - 导出符号表（导出的函数/类名称和虚拟内存地址）
 - 重定位信息（地址重定位表）
 - 资源数据（图标、字符串等）
-可以通过 dumpin（windows）等工具解析 dll，查看其中的函数/变量/类名称和地址位置
+可以通过 dumpin（windows）等工具解析 dll，查看其中函数/变量/类名称和地址位置
 
 LIB 是导入库（动态），包含：
 - 符号名称和序号（函数/类名称）
@@ -4466,7 +4466,7 @@ LIB （静态）文件完全不同，包含：
 静态 LIB 实际上是多个 `.obj/.o` 文件的打包
 链接时，所需代码被复制到最终的可执行文件中
 
-动静态库编译的库文件可能都是 lib 文件，但是大小差异很大
+动静态库编译的库文件可能都是 lib 文件，但大小差异很大
 ### 使用 qt 链接第三方库实战
 #### cmake 链接
 使用的第三方库为 [QtAntDesign](https://github.com/byralpha/AntDesign)，这个第三方库本身编译成库文件时就需要两个第三方库，qrcodegen 和 fastGuassianBlur，库的源码文件结构为：
@@ -4540,8 +4540,8 @@ endif()
 3. 使用**生成器表达式**
 ```cmake
 target_link_libraries(MyApp
-    Qt6::Core 
-    Qt6::Widgets 
+    Qt6::Core
+    Qt6::Widgets
     Qt6::Gui
     $<$<CONFIG:Debug>:${CMAKE_SOURCE_DIR}/lib/QtAntDesignd.lib>
     $<$<CONFIG:Release>:${CMAKE_SOURCE_DIR}/lib/QtAntDesign.lib>
@@ -4550,17 +4550,17 @@ target_link_libraries(MyApp
 4. 使用条件语句
 ```cpp
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_link_libraries(MyApp 
+    target_link_libraries(MyApp
         ${CMAKE_SOURCE_DIR}/lib/QtAntDesignd.lib
-        Qt6::Core 
-        Qt6::Widgets 
+        Qt6::Core
+        Qt6::Widgets
         Qt6::Gui
     )
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_link_libraries(MyApp 
+    target_link_libraries(MyApp
         ${CMAKE_SOURCE_DIR}/lib/QtAntDesign.lib
-        Qt6::Core 
-        Qt6::Widgets 
+        Qt6::Core
+        Qt6::Widgets
         Qt6::Gui
     )
 endif()
@@ -4578,8 +4578,8 @@ find_library(QtAntDesign_LIBRARY_RELEASE
 )
 
 target_link_libraries(MyApp
-    Qt6::Core 
-    Qt6::Widgets 
+    Qt6::Core
+    Qt6::Widgets
     Qt6::Gui
     optimized ${QtAntDesign_LIBRARY_RELEASE}
     debug ${QtAntDesign_LIBRARY_DEBUG}
@@ -4590,7 +4590,7 @@ target_link_libraries(MyApp
 #### 使用 qmake 构建
 通过 qt creator 图形化界面**只能添加一个 includePath 目录和一个 lib 文件**，这就需要手动调整 pro 文件
 ```qmake
-# lib文件目录，不写具体文件名是因为后面要分类
+# lib文件目录，不写具体文件名是因后面要分类
 QtAntDesign_LIB_DIR = $$PWD/'../../../../../Code Files/QT/TimesRest/lib/QtAntDesign'
 
 INCLUDEPATH += $$PWD/'../../../../../Code Files/QT/TimesRest/ThirdParty/QtAntDesign/include' \
@@ -4668,7 +4668,7 @@ QtCharts 模块已在 Qt 6.8.0 中弃用（官方文档中说是 6.10 开始的�
 ## 使用 QThread 创建多线程程序
 ### 代码编写
 #### 线程执行原理
-qt 中的 QThread 线程可以被继承，更方便地处理工作
+qt 中 QThread 线程可以被继承，更方便地处理工作
 ```cpp
 class TDiceThread : public QThread
 {
@@ -4690,7 +4690,7 @@ signals:
     void    newValue(int seq,int diceValue);    //产生新点数的信号
 };
 ```
-这个线程接管随机数**在线程中的产生**，继承的作用就是限制和细化这个线程能做的事，封装在类中，使用 `Q_OBJECT` 启用信号槽更方便，run 函数用来控制县程序要做的事（也可以是别的名称），但是类的线程执行状态由**内部管控**，QThread 能用的他也能用
+这个线程接管随机数**在线程中产生**，继承的作用就是限制和细化这个线程能做的事，封装在类中，使用 `Q_OBJECT` 启用信号槽更方便，run 函数用来控制县程序要做的事（也可以是别的名称），但类的线程执行状态由**内部管控**，QThread 能用的他也能用
 ```cpp
 void TDiceThread::run()
 {//线程的事件循环
@@ -4711,23 +4711,23 @@ void TDiceThread::run()
 ```
 #### 线程终止方法
 在Qt线程编程中，有两种停止线程的方式：
-1. **优雅停止**：使用线程类自己的停止方法（如 `stopThread()`），**使用 `stopThread()` 是安全的**，因为：
+1. **优雅停止**：使用线程类自己的停止方法（如 `stopThread()`），**使用 `stopThread()` 是安全的**，因：
 	- 这是一个**用户主动操作**，应用程序处于正常运行状态
 	- 线程需要时间执行清理操作，`stopThread()`只是设置一个标志，线程需要在`run()`函数中**主动检查**这个标志并退出。这需要时间
 	- 主线程可以等待线程完成清理
 2. **强制停止**：使用 `terminate()` 强制终止线程，然后执行 `wait()`
 	- 立即向操作系统发送"终止线程"的请求，线程会被强制结束（但需要时间），不会执行后续代码
-	- **危险**：可能跳过资源释放、文件关闭等，所以需要使用 `wait()` 等待线程完全被关闭（操作系统执行的动作）后**线程资源被回收之前**操作系统执行其它代码可能因为线程仍在占用资源，或者资源被删除，但是线程对象还占用这部分内存，导致内存泄漏
-	- 这种方法在关闭窗口时是可以接受的，但是程序运行期间最好使用 `stopThread()`
+	- **危险**：可能跳过资源释放、文件关闭等，所以需要使用 `wait()` 等待线程完全被关闭（操作系统执行的动作）后**线程资源被回收之前**操作系统执行其它代码可能因线程仍在占用资源，或者资源被删除，但线程对象还占用这部分内存，导致内存泄漏
+	- 这种方法在关闭窗口时是可以接受的，但程序运行期间最好使用 `stopThread()`
 	- - **Qt官方文档明确警告：此函数很危险，只在绝对必要时使用**
 ### 线程的事件循环
-**如果线程中的对象需要与Qt的事件系统交互，就必须启动事件循环 （`exec()` 启动）。否则，可以不启动**，线程只是简单的循环和sleep，没有使用信号槽、定时器等Qt异步机制
+**如果线程中对象需要与Qt的事件系统交互，就必须启动事件循环 （`exec()` 启动）。否则，可以不启动**，线程只是简单的循环和sleep，没有使用信号槽、定时器等Qt异步机制
 线程是线程，线程类是线程类，**线程类只是一个方便定义和调整线程工作的一种抽象**，本质上是操作系统资源调度的一个单位，把他封装乘类只是为了**利用 qt 框架的功能更好地设置线程工作而已**
 
 需要启用线程类事件循环的场景
 - 线程中需要使用**QTimer**定时器
 ```cpp
-// 示例：线程中的定时任务
+// 示例：线程中定时任务
 class TimerWorker : public QObject {
     Q_OBJECT
 public:
@@ -4736,12 +4736,12 @@ public:
         connect(m_timer, &QTimer::timeout, this, &TimerWorker::onTimeout);
         m_timer->start(1000);  // 每秒触发一次
     }
-    
+
 private slots:
     void onTimeout() {
         qDebug() << "定时任务执行中，线程ID:" << QThread::currentThreadId();
     }
-    
+
 private:
     QTimer* m_timer;
 };
@@ -4760,11 +4760,11 @@ public:
     explicit Worker(QObject *parent = nullptr) : QObject(parent) {
         qDebug() << "Worker created in thread:" << QThread::currentThread();
     }
-    
+
     ~Worker() {
         qDebug() << "Worker destroyed";
     }
-    
+
 public slots:
     void doWork() {
         qDebug() << "Worker::doWork() in thread:" << QThread::currentThread();
@@ -4773,15 +4773,15 @@ public slots:
             qDebug() << "Working..." << i;
             QThread::sleep(1);
         }
-        
+
         emit workFinished();
     }
-    
+
     void stopWork() {
         qDebug() << "Stop work requested";
         // 这里可以设置标志位停止工作
     }
-    
+
 signals:
     void workFinished();
 };
@@ -4798,22 +4798,22 @@ int main(int argc, char *argv[]) {
     // 4. 连接信号槽
     // 线程启动时开始工作
     QObject::connect(workerThread, &QThread::started, worker, &Worker::doWork);
-    
+
     // 工作完成时退出线程
     QObject::connect(worker, &Worker::workFinished, workerThread, &QThread::quit);
-    
+
     // 工作完成时删除worker
     QObject::connect(worker, &Worker::workFinished, worker, &Worker::deleteLater);
-    
+
     // 线程退出时删除线程对象
     QObject::connect(workerThread, &QThread::finished, workerThread, &QThread::deleteLater);
-    
+
     // 5. 启动线程
     workerThread->start();
-    
+
     // 6. 程序运行10秒后退出
     QTimer::singleShot(10000, &app, &QCoreApplication::quit);
-    
+
     return app.exec();
 }
 ```
@@ -4840,7 +4840,7 @@ mainwindow 是主线程，TDiceThread 是工作线程，
 ```cpp
 void MyThread::run() {
     Worker worker;  // worker在这个线程中创建
-    
+
     connect(this, &MyThread::startWork, &worker, &Worker::doWork);
     exec();
 }
@@ -4876,7 +4876,7 @@ void TDiceThread::run()
 // 设置m_diceValue getter
 int TDiceThread::diceValue() { return = m_diceValue;}
 ```
-但是如果**在主线程中调用 `diceValue` 时，有可能工作线程在 for 循环中**，所以可能会得到脏数据，解决方法是将 for 循环和求平均数的操作设置为一个原子操作，**不可被中断**，线程TDiceThread的计算点数是在函数 `run()` 里执行的，获取点数 `diceValue()` 实际上是在主线程里运行的。
+但如果**在主线程中调用 `diceValue` 时，有可能工作线程在 for 循环中**，所以可能会得到脏数据，解决方法是将 for 循环和求平均数的操作设置为一个原子操作，**不可被中断**，线程TDiceThread的计算点数是在函数 `run()` 里执行的，获取点数 `diceValue()` 实际上是在主线程里运行的。
 ### 线程同步 api
 QMutex主要有以下几个函数：
 ```cpp
@@ -4885,7 +4885,7 @@ void  QMutex::unlock()                  //解锁互斥量
 bool  QMutex::tryLock()                 //尝试锁定互斥量，不等待
 bool  QMutex::tryLock(int timeout)      //尝试锁定互斥量，最多等待timeout毫秒
 ```
-互斥量（QMutex 对象）相当于一把钥匙，如果两个线程要访问同一个共享资源，例如本示例中的变量m_diceValue，就需要通过 `lock()` 或 `tryLock()` 拿到这把钥匙，然后才可以访问该共享资源，访问完之后还要通过 `unlock()` 还回钥匙，这样别的线程才有机会拿到钥匙。
+互斥量（QMutex 对象）相当于一把钥匙，如果两个线程要访问同一个共享资源，例如本示例中变量m_diceValue，就需要通过 `lock()` 或 `tryLock()` 拿到这把钥匙，然后才可以访问该共享资源，访问完之后还要通过 `unlock()` 还回钥匙，这样别的线程才有机会拿到钥匙。
 ```cpp
 class TDiceThread : public QThread
 {
@@ -4948,8 +4948,8 @@ void TDiceThread::run()
     this->quit();
 }
 ```
-- Mutex保护在 `lock()` 和 `unlock()` 之间**所有的共享（可以被多个线程/对象读取的）变量读写访问**，所以 mark 1 到 mark 2 为止中使用到的 `m_diceValue`，`m_seq` 会被锁住，但是 i 是 for 循环中的临时变量，语法上**不在 lock 和 unlock 中的作用于**，线程上他也只是一个临时的，单线程变量。对于其中的临时对象 `QRandomGenerator::global()` 则由其自身管理
-- 信号发射代码**最好不要在锁中执行**，因为如果将发射信号占用了资源，槽函数执行的某些操作也需要这些资源，会导致死锁
+- Mutex保护在 `lock()` 和 `unlock()` 之间**所有的共享（可以被多个线程/对象读取的）变量读写访问**，所以 mark 1 到 mark 2 为止中使用到的 `m_diceValue`，`m_seq` 会被锁住，但 i 是 for 循环中临时变量，语法上**不在 lock 和 unlock 中作用于**，线程上他也只是一个临时的，单线程变量。对于其中临时对象 `QRandomGenerator::global()` 则由其自身管理
+- 信号发射代码**最好不要在锁中执行**，因如果将发射信号占用了资源，槽函数执行的某些操作也需要这些资源，会导致死锁
 ```cpp
 // 线程A执行：
 void ThreadA::process() {
@@ -4980,7 +4980,7 @@ connect(threadA, &ThreadA::dataReady,
 ```
 直接连接会导致死锁：
 发射槽函数之后资源没有解锁，槽函数在等待释放锁。
-- 槽函数在**发射信号的线程中立即执行**，`onDataReady()` 会在ThreadA线程中**立刻执行**，调用槽函数的行为会在 `dataReady()` 函数中的 `mutex.unlock()` 代码之前，但是线程 A 执行 ` onDataReady() ` 的同时线程 A 持有锁
+- 槽函数在**发射信号的线程中立即执行**，`onDataReady()` 会在ThreadA线程中**立刻执行**，调用槽函数的行为会在 `dataReady()` 函数中 `mutex.unlock()` 代码之前，但线程 A 执行 ` onDataReady() ` 的同时线程 A 持有锁
 - 在 ThreadA 执行耗时操作时，主线程永远得不到互斥锁（解锁资源的钥匙）使用，卡在 `mutex.lock()` 位置
 队列连接不会导致死锁，但不可靠，还是需要等待线程 A 中耗时操作执行完毕后主线程才能够使用锁
 - 信号被放入**主线程的事件队列**，主线程在自己的事件循环中处理信号
@@ -5004,8 +5004,8 @@ this->quit();
 ```
 创建 `QMutexLocker` 对象会自动调用 `mutex.lock()` 并且在出作用域，对象被销毁时自动解锁
 ### 基于读写锁的线程同步
-如果对所有读写操作都使用互斥锁保护，会因为所有操作都必须排队而降低性能，实际上可以对访问操作中**不太重要的读操作**不使用互斥锁，而对写入操作使用。
-读写锁类 QReadWriteLock，它是基于读或写的方式进行代码片段锁定的，允许多个线程以只读方式同步访问资源，但是只要有一个线程在以写入方式访问资源，其他线程就必须等待，直到写操作结束。
+如果对所有读写操作都使用互斥锁保护，会因所有操作都必须排队而降低性能，实际上可以对访问操作中**不太重要的读操作**不使用互斥锁，而对写入操作使用。
+读写锁类 QReadWriteLock，它是基于读或写的方式进行代码片段锁定的，允许多个线程以只读方式同步访问资源，但只要有一个线程在以写入方式访问资源，其他线程就必须等待，直到写操作结束。
 ```cpp
 void lockForRead()  // 以只读方式锁定资源，如果有其他线程以写入方式锁定资源，这个函数会被阻塞
 void  lockForWrite()   //以写入方式锁定资源，如果其他线程以读或写方式锁定资源，这个函数会被阻塞
@@ -5231,7 +5231,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 ```
-如果不设置，在**没有点击断开连接的情况下**关闭应用会因为 tcp 连接没有关闭导致内存泄漏
+如果不设置，在**没有点击断开连接的情况下**关闭应用会因 tcp 连接没有关闭导致内存泄漏
 ![[PixPin_2025-12-16_22-08-58.png]]
 获取基本信息
 ```cpp
@@ -5355,7 +5355,7 @@ tcpClient->connectToHost(addr, port);  // 连接到指定IP和端口的服务器
 QUdpSocket 类用于实现 UDP 通信，它与 QTcpSocket 具有相同的父类 QAbstractSocket，**共享大部分的接口函数**，QUdpSocket以数据报传输数据，而不是以连续的数据流传输数据。`QUdpSocket::writeDatagram()`函数用于发送数据报，**数据报一般少于512字节每个数据报包含发送者和接收者的IP地址和端口等信息。**，
 **UDP 消息传送有单播、广播、组播 3 种模式**
 ![[PixPin_2025-12-16_22-15-44.png|800]]
-TCP 通信只有单播模式，没有广播和组播模式。UDP 通信虽然不能保证数据传输的准确性，但是它具有灵活性，一般的即时通信软件都是基于 UDP 通信的。
+TCP 通信只有单播模式，没有广播和组播模式。UDP 通信虽然不能保证数据传输的准确性，但它具有灵活性，一般的即时通信软件都是基于 UDP 通信的。
 `QUdpSocket::joinMulticastGroup()` 函数可实现加入多播组的功能，加入多播组后，UDP数据的收发与正常的UDP数据的收发方法一样
 在单播、广播和组播模式下，UDP 程序都是对等的。组播和广播的实现方式基本相同，只是数据报的目标 IP 地址设置不同。组播模式需要加入多播组，实现方式有较大差异。
 ### UDP 单播和广播
@@ -5427,7 +5427,7 @@ void MainWindow::on_btnBroadcast_clicked()
     ui->editMsg->setFocus();
 }
 ```
-使用广播时，更不需要指定 targetHost ，但是需要指定 targetPort
+使用广播时，更不需要指定 targetHost ，但需要指定 targetPort
 - 如果你的IP是`192.168.1.x`，广播地址就是`192.168.1.255`
 - 如果你的IP是 `10.0.0.x`，广播地址就是 `10.0.0.255`
 - 本地子网范围：广播只在本地子网内传播，路由器通常不会转发广播包
@@ -5436,7 +5436,7 @@ void MainWindow::on_btnBroadcast_clicked()
 网段（Subnet）是指由相同子网掩码划分的IP地址范围。判断两个IP是否在同一个网段
 的方法是：
 ```md
-IP地址 AND 子网掩码 = 网络地址 
+IP地址 AND 子网掩码 = 网络地址
 ```
 如果两个IP的网络地址相同，则它们在同一网段。
 #### 单播和广播使用 ip 地址不同细节
@@ -5568,14 +5568,14 @@ struct PacketHeader {
 这种方式只是在修改**应用层的 UDP 数据格式**，真正发送的 UDP 数据包头是由操作系统添加的
 3. **二进制格式**
 ```cpp
-// 方式1：固定头部 + 可变数据，需要自定义精标准UDP协议中的字段转化为方便处理的格式
+// 方式1：固定头部 + 可变数据，需要自定义精标准UDP协议中字段转化为方便处理的格式
 [4字节长度][1字节类型][4字节序列号][实际数据]
 
 // 方式2：类型化数据包
 if (type == 1) {  // START包
     // [4字节总大小]
-} else if (type == 2) {  // CHUNK包  
-    // [4字节块索引][4字节总块数][chunk包中的实际数据]
+} else if (type == 2) {  // CHUNK包
+    // [4字节块索引][4字节总块数][chunk包中实际数据]
 } else if (type == 3){   // END包
 	// [4字节长度][1字节类型(3)][4字节序列号][可选：结束状态码(4字节)]
 }
@@ -5653,8 +5653,8 @@ void MainWindow::sendImageInChunks(const QByteArray &imageData)
     ui->textEdit->appendPlainText(QString("[out] 已发送图片分块: %1 bytes, %2 chunks").arg(imageData.size()).arg(totalChunks));
 }
 ```
-接收数据函数较为复杂，因为需要 UDP 可能是乱序的，需要手动构建 chunk 包的顺序编号和手动排序
-首先需要构建记录器，记录传输过程中的基本信息
+接收数据函数较为复杂，因需要 UDP 可能是乱序的，需要手动构建 chunk 包的顺序编号和手动排序
+首先需要构建记录器，记录传输过程中基本信息
 ```cpp
 // 用于接收分块图片的变量
 QMap<QString, QByteArray> pendingImages;  // 存储正在接收的完整图片数据
@@ -5770,7 +5770,7 @@ void MainWindow::do_socketReadyRead()
                                 ui->textEdit->appendPlainText("[RECV] 等待更多分块，当前: " + QString::number(receivedChunks[sessionKey]) + "/" + QString::number(expectedChunks[sessionKey]));
                             }
                         } else {
-                            // 如果sessionKey不存在，可能是因为START包丢失或顺序异常
+                            // 如果sessionKey不存在，可能是因START包丢失或顺序异常
                             ui->textEdit->appendPlainText(peer + "接收到分块但没有初始化会话信息，可能START包丢失");
                         }
                     } else {
@@ -5825,9 +5825,9 @@ void MainWindow::on_btnDownload_clicked()
     connect(reply, &QNetworkReply::finished, this, &MainWindow::do_finished);
 }
 ```
-这里删除了错误处理代码，因为不重要
+这里删除了错误处理代码，因不重要
 `QUrl` 对象的 `filename()` 方法用于**从连接中获取文件名**，如果链接中没有文件名则返回空字符串，如果在程序中下载 `www.bing.com` 就会导致无法获取文件名
-非必要情况，请求头中的 User-Agent 的通用字符串可以直接用 `QNetworkRequest(newUrl)` 自动生成
+非必要情况，请求头中 User-Agent 的通用字符串可以直接用 `QNetworkRequest(newUrl)` 自动生成
 `QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));` 调用系统默认应用打开 Url 链接，Url 文件有各种类别
 
 | 方法                      | 签名                                                                                                                                                        | 用途                         | 使用场景                          | 示例                                                                                         | 注意事项                                                                            |
@@ -5961,7 +5961,7 @@ MainWindow::MainWindow(QWidget *parent)
     session->setAudioInput(audioInput);
     session->setRecorder(recorder);
     connect(recorder, &QMediaRecorder::recorderStateChanged, this, &MainWindow::do_stateChanged);
-    connect(recorder, &QMediaRecorder::durationChanged, this, 
+    connect(recorder, &QMediaRecorder::durationChanged, this,
     &MainWindow::do_durationChanged);
 }
 ```
@@ -6008,7 +6008,7 @@ void MainWindow::on_actRecord_triggered()
     QMediaFormat::FileFormat fileFormat = fileVar.value<QMediaFormat::FileFormat>();
     Qvariant sampVar=ui->comboSampleRate->itemData(ui->comboSampleRate->currentIndex());
     Qvaraint channelVar=ui->comboChannels->itemData(ui->comboChannels->currentIndex());
-    
+
     QMediaFormat mediaFormat;
     mediaFormat.setAudioCodec(audioCodec);  //设置编码格式
     mediaFormat.setFileFormat(fileFormat);  //设置文件格式
@@ -6027,7 +6027,7 @@ void MainWindow::on_actRecord_triggered()
 }
 ```
 ## 采集和播放原始音频数据
-Qt 多媒体模块提供了两种方法来实现音频录制：高层次方法和低层次方法。使用 QMediaCaptureSession 类和 QMediaRecorder 类录制音频的方法是高层次方法，这种方法能将录制的音频编码压缩后保存为常见的音乐格式文件，但是**无法探测音频采集过程中的原始数据**。使用 QAudioSource 类录制音频是低层次方法。
+Qt 多媒体模块提供了两种方法来实现音频录制：高层次方法和低层次方法。使用 QMediaCaptureSession 类和 QMediaRecorder 类录制音频的方法是高层次方法，这种方法能将录制的音频编码压缩后保存为常见的音乐格式文件，但**无法探测音频采集过程中原始数据**。使用 QAudioSource 类录制音频是低层次方法。
 ### 使用的类和接口
 #### 音频录入 QAudioSource
 ```cpp
@@ -6042,7 +6042,7 @@ void  QAudioFormat::setSampleFormat(QAudioFormat::SampleFormat format)//设置�
 录音时调用 `QAudioSource::start(QIODevice* device)`，需要传入一个类似 QFile 类型的 io 设备，将数据存储进去。播放前需要 `setVolume(0~1)` 设置声音，**停止采集后，需要调用 io 设备的 ` close() ` 停止**。
 #### 音频输出 QAudioSink
 ```cpp
-QAudioSink(const QAudioDevice &audioDevice, const QAudioFormat &format = QAudioFormat(), QObject *parent = nullptr) 
+QAudioSink(const QAudioDevice &audioDevice, const QAudioFormat &format = QAudioFormat(), QObject *parent = nullptr)
 QAudioSink(const QAudioFormat &format = QAudioFormat(), QObject *parent = nullptr)
 
 QFile sourceFile("testfile.raw");               //创建文件I/O设备
@@ -6161,7 +6161,7 @@ void MainWindow::on_btnAdd_clicked()
 {//打开文件
 	// 省略获取文件过程
     QString aFile=QFileDialog::getOpenFileName(this,dlgTitle,curPath,filter);
-    QFileInfo   fileInfo(aFile);    
+    QFileInfo   fileInfo(aFile);
     player->setSource(QUrl::fromLocalFile(aFile));  //设置播放文件
     player->play();
 }
@@ -6189,7 +6189,7 @@ void TMyVideoWidget::mousePressEvent(QMouseEvent *event)
     QVideoWidget::mousePressEvent(event);
 }
 ```
-`player->setVideoOutput(ui->videoWidget)` 
+`player->setVideoOutput(ui->videoWidget)`
 - 将 `QMediaPlayer` 的视频输出定向到指定的 `QVideoWidget`。
 - 这是**必须调用**的操作。如果不调用此方法，视频帧不会发送到 `QVideoWidget`，即视频无法显示
 `ui->videoWidget->setMediaPlayer(player)`
@@ -6202,7 +6202,7 @@ void TMyVideoWidget::mousePressEvent(QMouseEvent *event)
 - **这段代码会隐式调用 `setVideoOutput()`**
 ### 在 QGraphicsVideoItem 上播放视频文件
 使用 QGraphicsVideoItem 组件显示视频时，可以在显示场景中将其和其他图形项组合显示，放大、缩小、拖动、旋转等功能
-简单来说就是将视频控件和其他的 GUi 控件放在一个**画布**中，这个画布允许其中的所有组件拖放，移动，放大缩小
+简单来说就是将视频控件和其他的 GUi 控件放在一个**画布**中，这个画布允许其中所有组件拖放，移动，放大缩小
 ```cpp
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -6236,7 +6236,7 @@ MainWindow::MainWindow(QWidget *parent)
     scene->addItem(item2);
 }
 ```
-所有放在容器中的控件都可以被设置位置，放大缩小，本质上都是等价的。这里由于项目演示是文字和视频同框渲染，所以在构造函数中提前放置了一个**文本 graphicItem 对象和视频 graphicItem 对象**，实际环境中应该会在需要时在 scene 中创建对应对象并添加进去。
+所有放在容器中控件都可以被设置位置，放大缩小，本质上都是等价的。这里由于项目演示是文字和视频同框渲染，所以在构造函数中提前放置了一个**文本 graphicItem 对象和视频 graphicItem 对象**，实际环境中应该会在需要时在 scene 中创建对应对象并添加进去。
 ## 摄像头的使用
 ### 拍摄照片
 QCamera 是摄像头控制接口类，，需要为 QCamera 对象设置一个 QCameraDevice 对象作为具体的摄像头设备，QCameraDevice 和上面提到的 device 类相似，有相似的 api
@@ -6275,27 +6275,27 @@ MainWindow::MainWindow(QWidget *parent)
     QAudioInput *audioInput = new QAudioInput(this);
     audioInput->setDevice(QMediaDevices::defaultAudioInput());
     session->setAudioInput(audioInput);
-    
+
     // 图像输入（控制摄像头）
     this->camera = new QCamera(this);
     camera->setCameraDevice(QMediaDevices::defaultVideoInput());
     session->setCamera(camera);
-    
+
     connect(camera, &QCamera::activeChanged, this, &MainWindow::do_camera_activeChanged);
     connect(ui->comboCam_List, &QComboBox::currentIndexChanged, this, &MainWindow::do_camera_changed);
     do_camera_changed(ui->comboCam_List->currentIndex());
-    
+
     // 图像输入（拍摄照片）
     imageCapture = new QImageCapture(this);
     imageCapture->setQuality(QImageCapture::VeryHighQuality);
     session->setImageCapture(imageCapture);
 	// 各种connect
-    
+
     // 图像输入（录制视频）
     recorder = new QMediaRecorder(this);
     session->setRecorder(recorder);
     // 各种conncet
-    
+
     // 播放音效
     soundEffect = new QSoundEffect(this);
     QString filename = ":/sound/images/shutter.wav";
@@ -6312,9 +6312,9 @@ session->setRecorder(recorder);            //为session设置recorder，可以�
 ```
 总之就是这么几个 api
 ```cpp
-QList<QMediaFormat::AudioCodec>  supportedAudioCodecs(QMediaFormat::ConversionMode m) 
-QList<QMediaFormat::VideoCodec>  supportedVideoCodecs(QMediaFormat::ConversionMode m) 
-QList<QMediaFormat::FileFormat>  supportedFileFormats(QMediaFormat::ConversionMode m) 
+QList<QMediaFormat::AudioCodec>  supportedAudioCodecs(QMediaFormat::ConversionMode m)
+QList<QMediaFormat::VideoCodec>  supportedVideoCodecs(QMediaFormat::ConversionMode m)
+QList<QMediaFormat::FileFormat>  supportedFileFormats(QMediaFormat::ConversionMode m)
 ```
 获取系统支持的视频编码和文件格式列表。QMediaFormat类有3个函数可以获取系统支持的音频编码、视频编码和文件格式列表：
 其中，参数m表示转换方向，取值 `QMediaFormat::Encode` 表示编码，用于录制音频或视频；取值 `QMediaFormat::Decode` 表示解码，用于播放音频或视频。
@@ -6332,12 +6332,12 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 ```
 断开录制时：
-- `QCamera::stop()`的行为： 
+- `QCamera::stop()`的行为：
 	- 关闭摄像头硬件
     - 停止所有已连接的`QMediaRecorder`（录制状态）。
     - 断开`QVideoOutput`的视频流（预览停止）。
     - 清除`QImageCapture`的抓图功能（无法再拍照）。
-- `QMediaRecorder::stop()`的行为：  
+- `QMediaRecorder::stop()`的行为：
     - 结束当前的录制过程（生成最终的视频文件）。
 	- 断开与 `QCamera` 的录制流绑定，但 `QCamera` 本身仍可能处于运行状态（例如预览还在继续）。
 - 设计逻辑是：
@@ -6350,7 +6350,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 ### 基本步骤
 1. 在设计程序时，代码中用户可见的字符串都用函数 `tr()` 封装，以便Qt提取界面字符串用于生成翻译资源文件。在插入了 `Q_OBJECT` 宏的类或 QObject 的子类中，可以直接使用 `tr() ` 函数，自定义类中可以在**类定义最上方插入 `Q_DECLARE_TR_FUNCTIONS`**，否则需要使用静态函数 ` QObject::tr() ` 进行调用。
 2. 在项目配置文件（`.pro`文件）中设置需要导出的翻译文件（`.ts`文件）名称，使用工具软件lupdate扫描项目所有文件中需要翻译的字符串，生成翻译文件
-3. 使用Qt的工具软件Linguist打开生成的翻译文件，将程序中的字符串翻译为需要的语言版本，例如将所有中文字符串翻译为英文字符串
+3. 使用Qt的工具软件Linguist打开生成的翻译文件，将程序中字符串翻译为需要的语言版本，例如将所有中文字符串翻译为英文字符串
 4. 使用工具软件lrelease编译翻译好的翻译文件，生成更为紧凑的`.qm`文件
 5. 在应用程序中用QTranslator加载不同的 `.qm` 文件，实现不同的语言界面。
 ```cpp
@@ -6370,7 +6370,7 @@ QString str2= tr(errorStr);
 const char *cities[4]={QT_TR_NOOP(“北京”),
               QT_TR_NOOP(“上海”),
               QT_TR_NOOP(“青岛”),
-              QT_TR_NOOP(“武汉”)}; 
+              QT_TR_NOOP(“武汉”)};
 for (int i=0; i<4; i++)  comboBox->addItem(tr(cities[i]));
 ```
 - `tr()` 中不能使用拼接的动态字符串（使用+拼接），但可以对整个 `tr()` 返回的 QString 对象使用占位符填充/拼接字符串
@@ -6400,16 +6400,16 @@ add_custom_target(update_translations
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 ```
-第一个翻译文件会使用代码中的字符串语言，时默认语言，其他文件是**需要从**源代码中字符串翻译过来的语言文件
+第一个翻译文件会使用代码中字符串语言，时默认语言，其他文件是**需要从**源代码中字符串翻译过来的语言文件
 然后使用语言家
 ![[Pasted image 20251219111414.png]]
 创建/更新对应的 ts 文件
-在 qt linguist 中打开对应 en_ts 文件，源语言（源代码中的语言）用的是中文，会显示在**字符串窗口中**
+在 qt linguist 中打开对应 en_ts 文件，源语言（源代码中语言）用的是中文，会显示在**字符串窗口中**
 ![[Pasted image 20251219113023.png]]
 
-深绿色问号图标表示还没有翻译过的源文，黄色问号图标表示已经有译文的源文，亮绿色钩形图标表示已完成翻译的源文，灰色图标表示**无效原文**，无效原文是由于**翻译文件未重新同步，但是源代码/ui 文件发生改变**导致的，不影响程序运行，会自动忽略
+深绿色问号图标表示还没有翻译过的源文，黄色问号图标表示已经有译文的源文，亮绿色钩形图标表示已完成翻译的源文，灰色图标表示**无效原文**，无效原文是由于**翻译文件未重新同步，但源代码/ui 文件发生改变**导致的，不影响程序运行，会自动忽略
 ![[PixPin_2025-12-19_11-31-52.png]]
-程序中的**可输入组件**（如 QPlainText）在源代码/ui 文件中应该被清空，否则也会被提取，填入翻译字符串后工具栏更新字符串状态，保存文件后，使用 lrelease 工具生成**紧凑 qm 文件**，在 `main.cpp` 中加载 qm 文件
+程序中**可输入组件**（如 QPlainText）在源代码/ui 文件中应该被清空，否则也会被提取，填入翻译字符串后工具栏更新字符串状态，保存文件后，使用 lrelease 工具生成**紧凑 qm 文件**，在 `main.cpp` 中加载 qm 文件
 ```cpp
 int main(int argc, char *argv[])
 {
@@ -6446,7 +6446,7 @@ qss 语法可以参考 [[QT样式表合集]]
 如果要将使用 Qt 开发的应用程序发布其他计算机上，就需要将 Qt 的运行库随应用程序一起发布给，用户不一定安装了 Qt 且版本和开发用的套件一样，Qt 提供了工具来提取对应的 dll
 ### Windows 平台上的 Qt 应用程序发布
 `windeployqt.exe` 是Qt自带的Windows平台发布工具，它可以为Qt应用程序复制其运行所需要的各种库文件、插件和翻译文件，生成可发布的文件和目录。
-在对应编译器的 bin 文件夹中: `D:\Qt\5.15.2\mingw81_64\bin`，应用程序由哪个开发套件构建、生成的，就应该用哪个版本的 windeployqt.exe 生成发布文件，程序编译目录中的 exe 文件直接运行一般不会成功（缺少 qt dll 文件）
+在对应编译器的 bin 文件夹中: `D:\Qt\5.15.2\mingw81_64\bin`，应用程序由哪个开发套件构建、生成的，就应该用哪个版本的 windeployqt.exe 生成发布文件，程序编译目录中 exe 文件直接运行一般不会成功（缺少 qt dll 文件）
 ```powershell
 D:\OtherProgram\QT\6.8.0\msvc2022_64\bin\windeployqt.exe --release --no-quick-import --no-translations --no-compiler-runtime .\musicPlayer.exe
 ```
@@ -6463,7 +6463,7 @@ endif()
 ```qmake
 QMAKE_CXXFLAGS += -static-libgcc -static-libstdc++
 ```
-- 删除 `D3Dcompiler_47.dll` 和 `opengl32sw.dll` 这两个文件，MusicPlayer.exe仍然可以运行，他们分别负责 `Direct3D` 和 OpenGL 渲染，可使用对应的 `--no` 选项过滤
+- 删除 `D3Dcompiler_47.dll` 和 `opengl32sw.dll` 这两个文件，MusicPlayer.exe仍可以运行，他们分别负责 `Direct3D` 和 OpenGL 渲染，可使用对应的 `--no` 选项过滤
 对于 debug 编译得到的 exe 文件，再使用 windeploy 时必须加 `--debug` 参数，不能和 release 混用。两种方式打包进来的 dll 文件是不同的（debug 版本文件名末尾会添加一个 `“d”`），并且 release 版本一般比较小
 ### 制作安装文件
 Qt Installer Framework是 Qt 提供的一个制作安装文件的工具，在安装 Qt 时可以选择，这些工具软件与 Qt 开发套件版本无关，可以添加到系统的 PATH 环境变量里（`QT/Tools/QtInstallFramwork/<version_number>/bin`），制作的安装项目可以**跨平台上生成安装文件**
@@ -6493,13 +6493,13 @@ QMAKE_EXTRA_COMPILERS += demo
     - `app`：编译应用程序（生成可执行文件）。
     - `lib`：编译库（生成动态或静态库）。
     - `aux`：不编译代码，仅执行自定义命令（如调用 `binarycreator` 生成安装包
-- `demo.commands = binarycreator -c $$PWD/config/config.xml -p $$PWD/packages ${QMAKE_FILE_OUT}`：  
+- `demo.commands = binarycreator -c $$PWD/config/config.xml -p $$PWD/packages ${QMAKE_FILE_OUT}`：
     指定生成安装包的具体命令，调用 `Qt Installer Framework` 的 `binarycreator` 工具，参数：
     - `-c`：使用指定的 `config.xml` 配置文件。
     - `-p`：指定安装包的组件目录（`packages`）[2](http://file/6e2819cf-2405-45fe-982e-6c90b54ec4a0.pdf)[6](http://file/6e2819cf-2405-45fe-982e-6c90b54ec4a0.pdf)。
 - `demo.CONFIG += target_predeps no_link combine`：
     - `target_predeps`：确保依赖项先于目标构建。
-    - `no_link`：禁用链接阶段（因为不编译代码）。
+    - `no_link`：禁用链接阶段（因不编译代码）。
     - `combine`：合并多个构建步骤为单个命令[2](http://file/6e2819cf-2405-45fe-982e-6c90b54ec4a0.pdf)。
 
 cmake 配置
@@ -6531,9 +6531,9 @@ add_custom_target(build_installer
 </Installer>
 ```
 `<Name>` 定义了应用程序的名称
-`<Title>` 定义了安装向导的标题 
-`<StartMenuDir>` 定义了在开始菜单中创建的文件夹名称 
-`<TargetDir>` 定义了初始的安装文件夹，其中 `@HomeDir@` 表示使用QIF中的预定义变量HomeDir，也就是用户主目录。
+`<Title>` 定义了安装向导的标题
+`<StartMenuDir>` 定义了在开始菜单中创建的文件夹名称
+`<TargetDir>` 定义了初始的安装文件夹，其中 `@HomeDir@` 表示使用QIF中预定义变量HomeDir，也就是用户主目录。
 \packages下是需要安装的组件，每个组件是一个文件夹，有data和meta两个**固定名称的文件夹**，data文件夹里是需要安装到用户计算机上的文件，meta文件夹里是对组件进行配置的文件。
 MusicPlayer组件。所有**程序运行的必要文件和文件夹**压缩为一个文件***7z 格式（必须是）将其复制到\packages\MusicPlayer\data目录下***
 #### 设置组件构建文件

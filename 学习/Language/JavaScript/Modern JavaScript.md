@@ -3,7 +3,7 @@
 ### 四十分钟JavaScript入门
 #### js 的运行
 [四十分钟JavaScript快速入门 | 无废话且清晰流畅 | 手敲键盘 | WEB前端必备程序语言~_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV15L4y1a7or/?spm_id_from=333.788.videopod.episodes&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
-浏览器中 F12 中的 console 是一个简单的 JavaScript 控制台
+浏览器中 F12 中 console 是一个简单的 JavaScript 控制台
 ![[Pasted image 20250115203925.png]]
 - alert 函数可以让网页弹出提示，内容即参数内容，在 html 中嵌入代码时，最好将 js 代码放在 body 标签尾部，这样可以提高内容显示速度
 ---
@@ -27,10 +27,10 @@ Java 方式和 js 方式
 通过 `{}` 创建对象，而**不需要关键字**
 ![[Pasted image 20250115210619.png]]
 #### 解构对象
-从对象中抽取对应的数据赋值给**变量**，这时变量会被转换为对象，所以 log 才会像输出对象一样输出变量中的内容
+从对象中抽取对应的数据赋值给**变量**，这时变量会被转换为对象，所以 log 才会像输出对象一样输出变量中内容
 ![[Pasted image 20250115210900.png|350|person成为了一个新的变量]]
 对变量使用 `.var_name` 可以为变量创建一个新的属性并赋值
-根据这样的特性（`{}` 包裹的内容会变成对象中的成员），js 可以和 json 互通有无，使用 `JSON.stringify(obj_name)` 就会将结构后的对象转化为 json 格式数据
+根据这样的特性（`{}` 包裹的内容会变成对象中成员），js 可以和 json 互通有无，使用 `JSON.stringify(obj_name)` 就会将结构后的对象转化为 json 格式数据
 
 ---
 #### 基本语法
@@ -45,8 +45,8 @@ for-i 和 while 语句与 C++一致，for-each 语法中 `:` 改为 `of`
 [现代 JavaScript 教程](https://zh.javascript.info/)
 ## 基础知识
 - JavaScript 的能力很大程度上取决于它运行的环境。例如，[Node.js](https://wikipedia.org/wiki/Node.js) 支持允许 JavaScript 读取/写入任意文件，执行网络请求等的函数。
-- 浏览器中的 JavaScript 可以做与网页操作、用户交互和 Web 服务器相关事情。
-- 网页中的 JavaScript 不能读、写、复制和执行硬盘上的任意文件。它没有直接访问操作系统的功能。
+- 浏览器中 JavaScript 可以做与网页操作、用户交互和 Web 服务器相关事情。
+- 网页中 JavaScript 不能读、写、复制和执行硬盘上的任意文件。它没有直接访问操作系统的功能。
 #### 简单内容编写规则
 ```html
 <script type="text/javascript"><!--
@@ -60,12 +60,12 @@ for-i 和 while 语句与 C++一致，for-each 语法中 `:` 改为 `of`
 - 当存在换行符（line break）时，在大多数情况下可以省略分号（但最好加上）
 - 在脚本文件顶部输入 `"use strict"` 表示整个脚本文件都将以“现代”模式进行工作（老旧有缺陷的和代码将被忽略，只执行符合现代模式的脚本内容）
 - 进入严格模式之后不能回退
-- 数据类型中使用 Number 进行的数学运算是安全的，最坏的结果是得到 NaN 返回，不会因为发生错误而停止脚本
-- NaN 是 Int 对象中的一个成员函数，**是一个值，不是一个错误**
+- 数据类型中使用 Number 进行的数学运算是安全的，最坏的结果是得到 NaN 返回，不会因发生错误而停止脚本
+- NaN 是 Int 对象中一个成员函数，**是一个值，不是一个错误**
 - `BigInt` 可以创建任意长度的整数
 `const bigInt = 1234567890123456789012345678901234567890n`; 数字末尾加 n 表示 `BigInt` 类型
 - js 的字符串可以用双引号，单引号和**反引号**定义，反引号是 **功能扩展** 引号。它们允许我们通过将变量和表达式包装在 `${…}` 中，来将它们嵌入到字符串中。
-- 反引号中的字符串允许**嵌入**，如：
+- 反引号中字符串允许**嵌入**，如：
 ```js
 alert( `the result is ${1 + 2}` ); // 这样是允许的
 alert( "the result is ${1 + 2}" )// 这样不允许
@@ -91,7 +91,7 @@ let oranges = "3";
 // 在二元运算符加号起作用之前，所有的值都被转化为了数字
 alert( +apples + +oranges ); // 5
 ```
-- 如果字符串中的数字不能转换为数字，`-` 首先尝试强制类型转换为数字，不能则返回 `NaN` ， `+` 操作是字符串连接操作
+- 如果字符串中数字不能转换为数字，`-` 首先尝试强制类型转换为数字，不能则返回 `NaN` ， `+` 操作是字符串连接操作
 ```js
 4 + 5 + "px" = "9px"
 "$" + 4 + 5 = "$45"
@@ -119,19 +119,19 @@ a = b = c = 2 + 2;// abc都赋值为2
 - 左移 ( `<<` )
 - 右移 ( `>>` )
 - 无符号右移 ( `>>>` )
-逗号运算符能让我们处理多个表达式，使用 `,` 将它们分开。每个表达式都运行了，但是只有最后一个的结果会被返回。
+逗号运算符能让我们处理多个表达式，使用 `,` 将它们分开。每个表达式都运行了，但只有最后一个的结果会被返回。
 ```js
 let a = (1 + 2, 3 + 4);
 alert( a ); // 7（3 + 4 的结果）
 ```
-字符串中的*比较操作*通过按字母比较的的方式判断大于小于，不同类型间的比较，js 会将他们转化为 number 类型后比较
+字符串中*比较操作*通过按字母比较的的方式判断大于小于，不同类型间的比较，js 会将他们转化为 number 类型后比较
 ```js
 alert( null === undefined ); // false 两者是基本数据类型，不相等
 alert( null == undefined ); // true 值相等，都是未定义的值
 alert( null > 0 );  // (1) false
 alert( null == 0 ); // (2) false
 alert( null >= 0 ); // (3) true
-alert( undefined > 0 ); // false (1) undefined不能与任何值比较，因为undefined转化为number时得到的值是NaN
+alert( undefined > 0 ); // false (1) undefined不能与任何值比较，因undefined转化为number时得到的值是NaN
 alert( undefined < 0 ); // false (2)
 alert( undefined == 0 ); // false (3)
 ```
@@ -162,7 +162,7 @@ function showCount(count) {
 标签：
 **标签** 是在循环之前带有冒号的标识符
 ```js
-outer: 
+outer:
 for (let i = 0; i < 3; i++) {
   for (let j = 0; j < 3; j++) {
     let input = prompt(`Value at coords (${i},${j})`, '');
@@ -172,21 +172,21 @@ for (let i = 0; i < 3; i++) {
 
 alert('Done!');
 ```
-类似 `goto` 跳转至标签位置**并且跳出循环**，也就是这个跳到 `outer` 处会跳出循环，下一步到 `alert`（因为是 break 类型的标签跳转），如果使用 continue 类型的标签跳转就只会跳出当前循环
+类似 `goto` 跳转至标签位置**并且跳出循环**，也就是这个跳到 `outer` 处会跳出循环，下一步到 `alert`（因是 break 类型的标签跳转），如果使用 continue 类型的标签跳转就只会跳出当前循环
 
-`switch-case` 语句中的 case 匹配机制是 `===` **严格相等**
+`switch-case` 语句中 case 匹配机制是 `===` **严格相等**
 
 ---
 #### 函数
 js 的函数可以没有返回值，即 `return;`
-不要在 return 和返回值之间**添加新行**，因为 js 默认在 return 后没有内容时添加 `;`
+不要在 return 和返回值之间**添加新行**，因 js 默认在 return 后没有内容时添加 `;`
 js 中，函数可以作为**一个值**使用，可以被定义成一个变量的值
 - 函数是一个**值**
 - 与 C 语言不同的是，不使用 `()` 的函数名称赋值并不会将**函数的地址**赋值给变量，或者将一个函数的指针赋值给变量
 - 值为一个函数的变量**也是一个函数**
-![[Pasted image 20250118154716.png]] 
+![[Pasted image 20250118154716.png]]
 `func` 变量的类型是一个返回值为 `void` 的函数
-js 允许在函数**参数中定义一个函数**，因为函数的本质是一个**值**
+js 允许在函数**参数中定义一个函数**，因函数的本质是一个**值**
 ```js
 function ask(question, yes, no) {
   if (confirm(question)) yes()
@@ -223,10 +223,10 @@ alert( double(3) ); // 6
 1. **`察看（Watch）` —— 显示任意表达式的当前值。**
     你可以点击加号 `+` 然后输入一个表达式。调试器将显示它的值，并在执行过程中自动重新计算该表达式。
 2. **`调用栈（Call Stack）` —— 显示嵌套的调用链。**
-    此时，调试器正在 `hello()` 的调用链中，被 `index.html` 中的一个脚本调用（这里没有函数，因此显示 “anonymous”）
+    此时，调试器正在 `hello()` 的调用链中，被 `index.html` 中一个脚本调用（这里没有函数，因此显示 “anonymous”）
     如果你点击了一个堆栈项，调试器将跳到对应的代码处，并且还可以查看其所有变量。
 3. **`作用域（Scope）` —— 显示当前的变量。**
-    `Local` 显示当前函数中的变量，你还可以在源代码中看到它们的值高亮显示了出来。
+    `Local` 显示当前函数中变量，你还可以在源代码中看到它们的值高亮显示了出来。
     `Global` 显示全局变量（不在任何函数中）。
 
 ---
@@ -252,9 +252,9 @@ let obj = {
 `in` 的左边必须是 **属性名**。通常是一个带引号的字符串。
 
 ---
-由于对象有**类似哈希表一样的存储逻辑**，创建对象时对象中的“**键值对**”有特别的顺序”：整数属性会被进行排序，其他属性则按照创建的顺序显示。
+由于对象有**类似哈希表一样的存储逻辑**，创建对象时对象中“**键值对**”有特别的顺序”：整数属性会被进行排序，其他属性则按照创建的顺序显示。
 
-- 其中的整数属性由于变量名不能使用整数类型，所以会默认使用**引号包裹起来的纯数字字符**是整数属性，字母字符**或者不是纯数字的字符**是字符串属性
+- 其中整数属性由于变量名不能使用整数类型，所以会默认使用**引号包裹起来的纯数字字符**是整数属性，字母字符**或者不是纯数字的字符**是字符串属性
 ```js
 let user = {
   name: "John",
@@ -267,7 +267,7 @@ for (let prop in user) {
   console.log( prop ); // name, surname, age
 }
 ```
-注意获取的对象时对象中的**键**而不是对应的值，可以改成 `console.log(user[prop]）` 获取值，删除对象中的键方法是 `delete obj.name;`（这种删除方法并**没有删除对象中内容的值**，而是解除 obj 对 name 变量的关联，然后通过[[#内存管理|垃圾回收机制]]使 name 变得不可达之后被**回收内存**
+注意获取的对象时对象中**键**而不是对应的值，可以改成 `console.log(user[prop]）` 获取值，删除对象中键方法是 `delete obj.name;`（这种删除方法并**没有删除对象中内容的值**，而是解除 obj 对 name 变量的关联，然后通过[[#内存管理|垃圾回收机制]]使 name 变得不可达之后被**回收内存**
 #### 对象的引用和复制
 对象与原始类型的根本区别之一是，对象是“通过引用”存储和复制的，而原始类型：字符串、数字、布尔值等 —— 总是“作为一个整体”**复制**。
 将一个对象赋值给一个变量时，变量接收到的是一个**地址值**
@@ -278,20 +278,20 @@ let c = {};
 
 alert( a == b ); // true，都引用同一对象
 alert( a === b ); // true
-alert( a == c );  // false 因为内存地址不一样
-alert( a === c ); // false 同上，但是两者类型是一样的，都是object
+alert( a == c );  // false 因内存地址不一样
+alert( a === c ); // false 同上，但两者类型是一样的，都是object
 ```
 如果想要复制一个对象，可以使用循环遍历复制每一个对象属性给目标对象，也可以使用 `obj.assign(targetObj,[src1,src2......])` 实现，可以方便**合并**多个对象，其中，targetObj 中如果有同名属性就会被覆盖
 ```js
 let user = { name: "John" };
 let permissions1 = { canView: true };
 let permissions2 = { canEdit: true };
-// 将 permissions1 和 permissions2 中的所有属性都拷贝到 user 中
+// 将 permissions1 和 permissions2 中所有属性都拷贝到 user 中
 val combinedObj = Object.assign({},user, permissions1, permissions2);// 先复制到匿名对象{}中，再通过assign的返回值赋值给combinedObj
 ```
 ---
 带来的麻烦：
-- 对结构复杂的对象不会进行深拷贝，对象中的对象通过 `obj.assign` 方法在新对象中还是引用复制，**新老对象公用同一个内部的对象**
+- 对结构复杂的对象不会进行深拷贝，对象中对象通过 `obj.assign` 方法在新对象中还是引用复制，**新老对象公用同一个内部的对象**
 - const 声明的对象，只是**对象名所指向的函数内存地址**不变，并不是其中内容不变，未声明 `const` 的对象成员可以被外部修改
 ```js
 const user = /*这里不能写const*/{
@@ -311,7 +311,7 @@ let user = {
 ```
 还可以外部定义函数后使用 `obj.func(){}` 来插入函数
 对象中使用 `this` 指代当前**对象**，从技术上来讲，不用 `this` 而用当前对象名也可以，但导致对象在复制时会出现访问旧对象的成员的错误（其他语言中也一样）
-箭头函数没有自己的 `this`，因为他没有名字，无法对应一块固定的内存来访问
+箭头函数没有自己的 `this`，因他没有名字，无法对应一块固定的内存来访问
 ##### 内置函数，方法
 构造函数，1. 它们的命名以大写字母开头。2. 它们只能由 `"new"` 操作符来执行。
 当一个函数被使用 `new` 操作符执行时，它按照以下步骤：
@@ -334,7 +334,7 @@ function User(name) {
 }// 然后将这个这个函数**作为函数表达式**返回给变量
 ------------等价于--------------
 function User(name) {
-// 注意User仍然在外部定义，可以被调用，有名字，这里不是函数表达式
+// 注意User仍在外部定义，可以被调用，有名字，这里不是函数表达式
   this.name = name;
   this.isAdmin = false;
 }
@@ -348,9 +348,9 @@ let user = {
 ```js
 function BigUser() {
     this.name = "John";
-    return { nick_name: "Godzilla" };  // <-- 返回这个对象，但nickname不存在，会返回undefined，因为原来的name已被覆盖
+    return { nick_name: "Godzilla" };  // <-- 返回这个对象，但nickname不存在，会返回undefined，因原来的name已被覆盖
 }
-console.log( new BigUser().name ); 
+console.log( new BigUser().name );
 ```
 创建对象和使用构造函数的核心是：
 
@@ -389,21 +389,21 @@ let user = {
 ```
 - symbol 保证是唯一的。即使我们创建了许多具有相同描述的 symbol，它们的值也是不同。描述只是一个标签，不影响任何东西。
 - 如果一个脚本同时存在于两个代码库（可以类比于“命名空间”），两个空间内对对象创建的 symbol 类型的成员**互相不可见且独立**
-- for in 循环会跳过 symbol 类型键，因为他们是“**隐藏的**”
+- for in 循环会跳过 symbol 类型键，因他们是“**隐藏的**”
 - symbol 类型就像普通的数据类型一样，可以被创建在任何位置
 - `Symbol.keyfor(Symbol_val_name)` 可以获取**全局** symbol 对象的 value
 - `Symbol.for (Symbol_val_name)` 创建或者获取全局 symbol 变量
 ```js
 // 从全局注册表中读取
 let id = Symbol.for("id"); // 如果该 symbol 不存在，则创建它
-// 再次读取（可能是在代码中的另一个位置）
+// 再次读取（可能是在代码中另一个位置）
 let idAgain = Symbol.for("id");
 // 相同的 symbol
 alert( id === idAgain ); // true
 ```
 ### 对象—— 原始值转换
 #### 模板字符串 `${}`
-前面说过 js 中有三种字符串字符串定义方式，其中反引号包裹的字符串中可以使用**格式化拼接**方法，`${}` 中的表达式会被自动转换为字符串。如果表达式的结果是**对象**，会调用该对象的 `toString()` 方法。
+前面说过 js 中有三种字符串字符串定义方式，其中反引号包裹的字符串中可以使用**格式化拼接**方法，`${}` 中表达式会被自动转换为字符串。如果表达式的结果是**对象**，会调用该对象的 `toString()` 方法。
 任何一个对象都有默认的 `toString()` 方法
 ```js
 let obj = { name: "张三" };
@@ -413,7 +413,7 @@ let str = `The object is ${obj}`; // 输出: The object is [object Object]
 当`+`运算符的一个操作数是字符串时，另一个操作数会被转换为字符串。如果两个操作数都是非字符串类型，`+`运算符会进行数值加法。
 #### 对象转换逻辑
 JavaScript 不允许自定义运算符对对象的处理方式，实际项目中不存在对对象的数学运算，不支持定义对象之间的计算方式（[[C++ Runoob Tutoral#运算符重载]]）
-但是 js 提供了 `Symbol.toPrimitive()` 方法，允许开发者**自定义对象在类型转换**过程中的行为，这个 symbol 属性**会在对象发生类型转换时**自动调用属性值
+但 js 提供了 `Symbol.toPrimitive()` 方法，允许开发者**自定义对象在类型转换**过程中行为，这个 symbol 属性**会在对象发生类型转换时**自动调用属性值
 ```js
 let user = {
   name: "John",
@@ -430,15 +430,15 @@ alert(+user); // hint: number -> 1000
 alert(user + 500); // hint: default -> 1500
 ```
 其中，mark 位置表示在 user 对象中定义一个**动态符号属性**
-- 并且这个属性的属性名为 symbol 类型（因为使用了 `[]`），user 对象中定义了一个属性值为函数，类型为 symbol 的属性
-- 这个动态属性是一个函数调用（因为使用 `()`），并且接受一个名为 hint 的变量作为参数
+- 并且这个属性的属性名为 symbol 类型（因使用了 `[]`），user 对象中定义了一个属性值为函数，类型为 symbol 的属性
+- 这个动态属性是一个函数调用（因使用 `()`），并且接受一个名为 hint 的变量作为参数
 - 函数体为：
 	- `alert("hint: ${hint}");` **使用插值表达式**：`${hint}` 中 `hint` 的内容会被JavaScript引擎计算其值，然后将计算结果插入到字符串中。
 - 在转换演示中：
 	- 由于 alter 只能接受字符串类型参数，user 不是——发生类型转换，Symbol. toPrimitive 这个**属性的属性值被调用**，相当于 `alter(user[Symbol.toPrimitive])`
-	- 上下文为 alter 括号中的内容，他被 JavaScript 引擎解析，解析结果有三种，分别是 `"string"`，`"number"` 和 `"default"`
+	- 上下文为 alter 括号中内容，他被 JavaScript 引擎解析，解析结果有三种，分别是 `"string"`，`"number"` 和 `"default"`
 	- `alert` 显示字符串类型的 `hint: +解析结果`
-	- 通过函数的 return 值指导转换演示中的 alter 的字符串内容
+	- 通过函数的 return 值指导转换演示中 alter 的字符串内容
 
 ---
 如果没有 `Symbol.toPrimitive`，那么 JavaScript 将根据上下文中解析出的 hint 尝试寻找 `toString` 和 `valueOf` 方法
@@ -457,7 +457,7 @@ let user = {
 	toString() {
 	  return `{name: "${this.name}"}`;
 	},
-	
+
 	// 对于 hint="number" 或 "default"
 	valueOf() {
 	  return this.money;
@@ -505,7 +505,7 @@ let family = marry({
 ![[Pasted image 20250118203100.png|350]]
 图中没有从根指向 father，name 的引用，整个 father 会被回收
 
---- 
+---
 垃圾回收逻辑算法：
 - 垃圾收集器找到所有的根，并“标记”（记住）它们。
 - 然后它遍历并“标记”来自它们的所有引用。
@@ -516,4 +516,4 @@ let family = marry({
 ## 数据类型
 
 # Mozilla MDN web docs
-# 
+#

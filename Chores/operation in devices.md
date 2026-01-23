@@ -2,9 +2,9 @@
 
 1. 禁用计算机管理——软件设备中
 	![Pasted image 20240818085708.png](Pasted%20image%2020240818085708.png)
-2. 关闭服务中的 SSDP ![Pasted image 20240818085817.png](Pasted%20image%2020240818085817.png)
+2. 关闭服务中 SSDP ![Pasted image 20240818085817.png](Pasted%20image%2020240818085817.png)
 3. 更改着色器缓存大小![Pasted image 20240818090008.png](Pasted%20image%2020240818090008.png)
-4. 程序设置中调整 OpenGL 渲染为优先性能，自定义程序使用添加找到游戏 ![Pasted image 20240818090111.png](Pasted%20image%2020240818090111.png) 
+4. 程序设置中调整 OpenGL 渲染为优先性能，自定义程序使用添加找到游戏 ![Pasted image 20240818090111.png](Pasted%20image%2020240818090111.png)
 ## 2024 年 9 月 19 日08:58:41
 ### 解决本地回环地址无法访问
 2024 年 9 月 19 日09:29:48 开启之后发现[使用虚拟机地址而不是外部Windows本机地址](Linux%20Basics.md#^1a483c)，遂关闭
@@ -67,7 +67,7 @@ started 3 plugins.
 ## 解决 vscode cpp tools 占用高问题
 [问题解决：VScode高CPU占有率 cpptools high CPU-CSDN博客](https://blog.csdn.net/qq_43827595/article/details/105613954)
 将 cpptools. exe C/C   Extension for Visual Studio Code 内存占用减少一半以上，CPU 占用降低到 0.1%
-在 settings. json 中将 
+在 settings. json 中将
 ```json
 "C_Cpp.intelliSenseEngine": "default", // 调整为
 "C_Cpp.intelliSenseEngine": "disabled",

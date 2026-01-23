@@ -1,6 +1,6 @@
 ## Block
 ### 零碎知识
-下划线前缀是一种命名约定，用于区分成员变量和局部变量。类的成员变量一般使用 `_` 开头命名，局部变量一般使用全小写+ `_` 连接命名。而且**一般不用于类中的成员方法**命名
+下划线前缀是一种命名约定，用于区分成员变量和局部变量。类的成员变量一般使用 `_` 开头命名，局部变量一般使用全小写+ `_` 连接命名。而且**一般不用于类中成员方法**命名
 
 
 ---
@@ -8,7 +8,7 @@
 
 ### 🧑‍💻 User
 
-你知道github上的Sudoku项目吗？我是一个有C++编程经验的大学生，我熟悉基本的数据结构，能熟练使用C++各种标准库，但是没有实战项目经验，现在我想要从这个项目开始学习，请你帮助我以最快的速度学习，吸收这个项目中有的知识并内化成我自己的经验。请你帮助我学习
+你知道github上的Sudoku项目吗？我是一个有C++编程经验的大学生，我熟悉基本的数据结构，能熟练使用C++各种标准库，但没有实战项目经验，现在我想要从这个项目开始学习，请你帮助我以最快的速度学习，吸收这个项目中有的知识并内化成我自己的经验。请你帮助我学习
 
 ---
 
@@ -97,26 +97,26 @@
 好了，这是这个项目的地址https://github.com/mayerui/sudoku
 我现在需要你帮助我学习这个项目，我将询问这个项目中具体的代码，你负责解释这些代码的含义并回答我的问题
 这是这个项目的结构
-│--.gitignore  
-│--build.bat        // Windows 一键编译脚本  
-│--build.sh         // Linux/macOS 一键编译脚本  
-│--CMakeLists.txt   // CMake 项目文件  
-│--README.md     
-└--src              // 源代码目录  
-   │--block.cpp     // 数独格子组合类，可代表行、列、九宫格  
-   │--block.h  
-   │--color.h       // 颜色类  
-   │--command.cpp   // 命令类，实现了撤销功能  
-   │--command.h     
-   │--common.h      // 公共头文件  
-   │--input.cpp     // 输入类  
-   │--input.h   
-   │--main.cpp      // 入口文件  
-   │--scene.cpp     // 游戏场景类  
-   │--scene.h   
-   │--test.cpp      // 测试文件  
-   │--test.h  
-   └--utility.inl   // 一些实用的全局函数  
+│--.gitignore
+│--build.bat        // Windows 一键编译脚本
+│--build.sh         // Linux/macOS 一键编译脚本
+│--CMakeLists.txt   // CMake 项目文件
+│--README.md
+└--src              // 源代码目录
+   │--block.cpp     // 数独格子组合类，可代表行、列、九宫格
+   │--block.h
+   │--color.h       // 颜色类
+   │--command.cpp   // 命令类，实现了撤销功能
+   │--command.h
+   │--common.h      // 公共头文件
+   │--input.cpp     // 输入类
+   │--input.h
+   │--main.cpp      // 入口文件
+   │--scene.cpp     // 游戏场景类
+   │--scene.h
+   │--test.cpp      // 测试文件
+   │--test.h
+   └--utility.inl   // 一些实用的全局函数
 
 ---
 
@@ -155,10 +155,10 @@
 ### 示例问题引导
 
 你可以问我类似这样的问题：
-- `block.h`中的`BlockType`枚举有什么作用？
+- `block.h`中`BlockType`枚举有什么作用？
 - `Command`类是如何实现撤销功能的？
 - `Scene::render()`方法是如何绘制数独界面的？
-- 项目中的`utility.inl`文件为什么用`.inl`后缀？
+- 项目中`utility.inl`文件为什么用`.inl`后缀？
 - 测试框架是如何实现的？
 
 请提出你具体想了解的代码部分，我会为你详细解释实现原理和设计思路。你可以指定文件、类或函数，或者描述你想实现的功能，我可以指导你如何在这个项目基础上进行修改或扩展。
@@ -167,7 +167,7 @@
 
 ### 🧑‍💻 User
 
-这是block.cpp文件中的代码
+这是block.cpp文件中代码
 ```cpp
 #include "block.h"
 
@@ -263,7 +263,7 @@ void CBlock::push_back(point_value_t *point) {
 
 ```
 我在代码中做了少许注释请你判断是否正确
-- 请你向我详细解释其中的这个文件中代码的组织结构，并且说明为什么这么做
+- 请你向我详细解释其中这个文件中代码的组织结构，并且说明为什么这么做
 - 想我详细说明其中print函数是如何工作的
 
 ---
@@ -377,8 +377,8 @@ enum Code
     BG_CYAN = 46,
     BG_LIGHT_GRAY = 47, // 实际是白色，终端为正常显示会进行调整
     BG_DEFAULT = 49,
-    
-    
+
+
     FG_BLACK = 30,
     FG_RED = 31,
     FG_GREEN = 32,
@@ -396,7 +396,7 @@ enum Code
     FG_LIGHT_MAGENTA = 95,
     FG_LIGHT_CYAN = 96,
     FG_WHITE = 97,
-    
+
 };
 
 class Modifier
@@ -408,7 +408,7 @@ class Modifier
     Modifier(Code Mode, Code BackGround, Code FrontGround) : md(Mode),bg(BackGround),fg(FrontGround) {}
     friend std::ostream &
     operator<<(std::ostream &os, const Modifier &mod)
-    {   
+    {
         return os << "\033[" << mod.md << ";" << mod.bg << ";" << mod.fg << "m";
     }
 };
@@ -416,14 +416,14 @@ class Modifier
 
 #endif
 ```
-- 我发现作者没有将Modifier模块分为.h和.cpp文件，这是否是因为这个模块较为简单，不需要多此一举？
+- 我发现作者没有将Modifier模块分为.h和.cpp文件，这是否是因这个模块较为简单，不需要多此一举？
 - 这种Modifier控制样式的做法是否和Kotiln的jetpack compose框架类似？
 - 为什么代码中需要Code这个枚举类型？
 - Modifier中
 ```cpp
     friend std::ostream &
     operator<<(std::ostream &os, const Modifier &mod)
-    {   
+    {
         return os << "\033[" << mod.md << ";" << mod.bg << ";" << mod.fg << "m";
     }
 ```
@@ -462,7 +462,7 @@ class Modifier
 
 这个枚举是核心设计，它：
 
-1. **封装ANSI码**：将晦涩的数字常量（如\033[31m中的31）转化为有意义的名称
+1. **封装ANSI码**：将晦涩的数字常量（如\033[31m中31）转化为有意义的名称
    - 例如`FG_RED=31`比直接写31可读性强得多
 
 2. **类型安全**：防止传入无效值
@@ -480,7 +480,7 @@ class Modifier
 
 这段代码是C++中非常经典的输出流运算符重载：
 ```cpp
-friend std::ostream& operator<<(std::ostream &os, const Modifier &mod) {   
+friend std::ostream& operator<<(std::ostream &os, const Modifier &mod) {
     return os << "\033[" << mod.md << ";" << mod.bg << ";" << mod.fg << "m";
 }
 ```
@@ -502,7 +502,7 @@ friend std::ostream& operator<<(std::ostream &os, const Modifier &mod) {
 4. **标准兼容**：符合C++ IO流的使用习惯
 
 **技术细节**：
-- 使用`friend`是因为需要访问私有成员
+- 使用`friend`是因需要访问私有成员
 - 返回`ostream&`支持链式调用（如`cout << a << b`）
 - 实际生成的是终端能理解的ANSI转义序列
 
@@ -556,7 +556,7 @@ friend std::ostream& operator<<(std::ostream &os, const Modifier &mod) {
 
 ### 4. 与print()函数的关系
 
-在print函数中的这段代码：
+在print函数中这段代码：
 ```cpp
 std::cout << Color::Modifier(Color::BOLD, Color::BG_DEFAULT, Color::FG_RED)
           << PIPE << Color::Modifier() << " ";
@@ -608,7 +608,7 @@ std::cout << Color::Modifier(Color::BOLD, Color::BG_DEFAULT, Color::FG_RED) << "
 - 不同的终端可能支持不同的颜色/功能集
 - Windows CMD默认不支持，需要特殊配置（这就是为什么项目有build.bat）
 
-这种机制类似于HTML中的`<span style="color:red">`，只不过是用二进制控制序列而非文本标记。
+这种机制类似于HTML中`<span style="color:red">`，只不过是用二进制控制序列而非文本标记。
 
 ---
 
@@ -671,7 +671,7 @@ std::cout << Color::Modifier(Color::BOLD, Color::BG_DEFAULT, Color::FG_RED) << "
 for (int i = 0; i < _count; ++i) {
   auto number = *(_numbers[i]);
 ```
-- 遍历宫格中的所有数字（`_count`通常为9）
+- 遍历宫格中所有数字（`_count`通常为9）
 - `_numbers[i]`是指向`point_value_t`的指针，解引用得到当前数字
 
 #### 2. 每行结束处理（每3个数字换行）
@@ -679,7 +679,7 @@ for (int i = 0; i < _count; ++i) {
 if ((i + 1) % 3 == 0) {
 ```
 - 当处理到第3、6、9个数字时（即每行结尾）
-- `(i+1)%3`比`i%3`更直观，因为i从0开始
+- `(i+1)%3`比`i%3`更直观，因i从0开始
 
 #### 3. 空单元格处理（值为0）
 ```cpp
@@ -730,7 +730,7 @@ else {
 ### 执行流程示例
 假设宫格内容为：
 ```
-[1, 0, 2, 
+[1, 0, 2,
  0, 3(ERASED), 4,
  5, 6, 0]
 ```
@@ -826,7 +826,7 @@ std::cout << "正常文本";  // 实际会显示为红色！
 ```cpp
 std::cout << ' ' << " "
           << Color::Modifier(Color::BOLD, Color::BG_DEFAULT, Color::FG_RED)
-          << PIPE 
+          << PIPE
           << Color::Modifier() << " ";
 ```
 
@@ -881,7 +881,7 @@ std::cout << Color::red << text;  // 危险！
 
 我明白了
  * Modifier类的作用是通过传入不同的参数拉产生一段不同的控制序列控制输出流的输出格式，经过终端解析后会对终端中将要显示的字符产生一定的样式效果
- * 
+ *
  * 由于Modifier有参构造之后会影响后面全部的的输出流 ，所以在实现效果之后要注意使用无参构造重置状态
 对吗？
 
@@ -892,22 +892,22 @@ std::cout << Color::red << text;  // 危险！
 你的理解**完全正确**！让我们再明确总结一下：
 
 ### ✅ 完全正确的核心理解
-1. **`Modifier`类的本质**  
+1. **`Modifier`类的本质**
    - 是一个**ANSI控制序列生成器**，通过构造函数参数组合不同的终端控制码（颜色、样式等）
-   - 示例：  
+   - 示例：
 ```cpp
      Modifier(BOLD, BG_RED, FG_GREEN) → 生成 `\033[1;41;32m`
      Modifier() → 生成 `\033[0;49;39m`（重置指令）
      ```
 
-2. **终端行为特性**  
+2. **终端行为特性**
    - 终端收到控制序列后会**持续保持该状态**（类似"开关打开"）
    - 必须显式发送重置指令才能恢复默认（"关闭开关"）
 
-3. **关键设计原则**  
+3. **关键设计原则**
 ```cpp
    // 标准用法模板（你的理解完全命中）
-   std::cout << Modifier(样式参数) << "目标内容" << Modifier(); 
+   std::cout << Modifier(样式参数) << "目标内容" << Modifier();
    //                     ↑                          ↑
    //                  [开启特效]                [强制重置]
    ```
@@ -921,8 +921,8 @@ std::cout << Color::red << text;  // 危险！
 假设要实现一个带颜色警告日志：
 ```cpp
 void logWarning(const std::string& msg) {
-    std::cout << Modifier(BOLD, BG_DEFAULT, FG_YELLOW) 
-              << "[WARNING] " << msg 
+    std::cout << Modifier(BOLD, BG_DEFAULT, FG_YELLOW)
+              << "[WARNING] " << msg
               << Modifier() << std::endl; // 必须重置！
 }
 // 如果不重置，后续的cout都会是黄色！
@@ -1058,14 +1058,14 @@ CCommand(const CCommand &rhs)
 ```cpp
 bool execute(int nInputValue) {
     if (!_pOwner) return false;
-    
+
     _stPoint = _pOwner->getCurPoint();          // 记录当前焦点位置
     return _pOwner->setCurValue(nInputValue, _nPreValue); // 执行修改
 }
 ```
 **执行流程**：
 1. 安全检查（验证场景指针）
-2. 记录当前选中的格子坐标
+2. 记录当前选中格子坐标
 3. 委托场景对象执行实际修改：
    - `nInputValue`：要设置的新值
    - `_nPreValue`：用于验证的旧值（防止覆盖非法修改）
@@ -1094,7 +1094,7 @@ sequenceDiagram
     participant User
     participant Command
     participant Scene
-    
+
     User->>Scene: 选中格子(2,3)
     User->>Command: execute(5)
     Command->>Scene: getCurPoint() → {2,3}
@@ -1109,7 +1109,7 @@ sequenceDiagram
     participant User
     participant Command
     participant Scene
-    
+
     User->>Command: undo()
     Command->>Scene: setPointValue({2,3}, 0)
     Scene->>Scene: 恢复格子(2,3)为0
@@ -1137,7 +1137,7 @@ sequenceDiagram
    目前只支持单格子修改，可扩展为区域操作
 
 ### 8. 与数独游戏的整合
-该命令类在数独游戏中的典型工作流程：
+该命令类在数独游戏中典型工作流程：
 1. 用户选择格子输入数字
 2. 创建`CCommand`并执行
 3. 将命令存入历史栈
@@ -1146,7 +1146,7 @@ sequenceDiagram
    - 调用其`undo()`方法
    - 刷新界面显示
 
-这种设计使得游戏核心逻辑与操作记录解耦，符合SOLID原则中的单一职责原则。
+这种设计使得游戏核心逻辑与操作记录解耦，符合SOLID原则中单一职责原则。
 
 ---
 
@@ -1194,7 +1194,7 @@ CCommand::CCommand(CScene *pOwner, const point_t &point, int preValue, int curVa
 CCommand::CCommand(...) {
     _pOwner = pOwner;      // 这是赋值操作，不是初始化！
     _stPoint = point;      // 先默认构造再赋值
-    _nPreValue = preValue; 
+    _nPreValue = preValue;
     _nCurValue = curValue;
 }
 ```
@@ -1220,7 +1220,7 @@ class Example {
     int& _refVal;         // 引用成员
     std::string _str;
 public:
-    Example(int x, int& r) 
+    Example(int x, int& r)
         : _constVal(x),   // ✅ const必须初始化
           _refVal(r),    // ✅ 引用必须初始化
           _str("Hello")  // ✅ 避免先默认构造再赋值
@@ -1230,7 +1230,7 @@ public:
 
 ---
 
-### 5. 在数独项目中的实际意义
+### 5. 在数独项目中实际意义
 在你的`CCommand`类中：
 - `_stPoint`是`point_t`结构体类型，使用初始化列表**直接调用拷贝构造**比先默认构造再赋值更高效
 - 虽然没有const/引用成员，但保持了一致的规范写法
@@ -1240,10 +1240,10 @@ public:
 
 ### 6. 特殊语法细节
 - 多个成员用逗号分隔
-- 初始化顺序**由成员声明顺序决定**（与初始化列表中的顺序无关）
+- 初始化顺序**由成员声明顺序决定**（与初始化列表中顺序无关）
 - 可以在列表中使用复杂表达式：
 ```cpp
-  : _val(calculateValue()), 
+  : _val(calculateValue()),
     _arr(new int[10]{1,2,3})
   ```
 
@@ -1380,7 +1380,7 @@ struct KeyMap {
   const char ESC = 0x1B;    // 退出键
   const char U = 0x75;      // 撤销键
   char UP;                  // 上
-  char LEFT;                // 左 
+  char LEFT;                // 左
   char DOWN;                // 下
   char RIGHT;               // 右
   const char ENTER = 0x0D;  // 确认键
@@ -1431,7 +1431,7 @@ using point_value_t = struct point_value_t {
 };
 ```
 - 组合存储数值和状态
-- 用于记录数独矩阵中的单元格
+- 用于记录数独矩阵中单元格
 
 #### 2.5 比较器
 ```cpp
@@ -1446,7 +1446,7 @@ class CPointSort {
 };
 ```
 - 函数对象（仿函数）
-- 用于STL容器中的坐标比较
+- 用于STL容器中坐标比较
 - 当前实现逻辑存在问题（应实现严格弱序）
 
 ### 3. 设计亮点
@@ -1459,7 +1459,7 @@ class CPointSort {
 1. `CPointSort`比较器不符合严格弱序要求，可能导致：
    - STL容器排序异常
    - 无法正确判断坐标相等
-   
+
    建议修改为：
 ```cpp
    bool operator()(const point_t &lhs, const point_t &rhs) const {
@@ -1474,7 +1474,7 @@ class CPointSort {
 ### 5. 典型使用场景
 ```cpp
 // 创建Vim模式键位
-Vim vimKeys; 
+Vim vimKeys;
 
 // 判断单元格状态
 point_value_t cell{5, State::ERASED};
@@ -1502,7 +1502,7 @@ CPointSort为什么要重载()操作符？他比较了什么内容？看他的�
 ### 1. 强枚举类型（enum class）
 **Q: 什么是强枚举类型？为什么需要使用？**
 
-**A:**  
+**A:**
 强枚举（`enum class`）是C++11引入的类型安全枚举，与传统C风格枚举相比：
 
 | 特性                | 传统enum (`enum E`) | 强enum (`enum class E`) |
@@ -1511,26 +1511,26 @@ CPointSort为什么要重载()操作符？他比较了什么内容？看他的�
 | 隐式类型转换        | 允许转int           | 禁止（需显式转换）      |
 | 底层类型指定        | 默认实现定义        | 可显式指定（如`: int`）|
 
-**在数独项目中的应用原因：**
-1. **避免命名冲突**  
+**在数独项目中应用原因：**
+1. **避免命名冲突**
    `Difficulty::EASY`和`KeyMode::NORMAL`可以安全共存，而传统enum可能导致`EASY`和`NORMAL`冲突
 
-2. **类型安全**  
+2. **类型安全**
    禁止以下危险操作：
 ```cpp
    Difficulty d = 1;              // 编译错误（强枚举需显式转换）
    if (d == State::INITED) {...}  // 编译错误（不同类型不能比较）
    ```
 
-3. **代码可读性**  
+3. **代码可读性**
    `KeyMode::VIM`比单纯的`2`更清晰地表达意图
 
 ---
 
-### 2. KeyMap中的键值设计
+### 2. KeyMap中键值设计
 **Q: 为什么用0x1B等数字就能实现功能？这些值的设置逻辑是什么？**
 
-**A:**  
+**A:**
 这些十六进制数是**ASCII码**的数值表示，对应具体按键：
 
 | 键位  | ASCII码 (十六进制) | 对应字符 |
@@ -1548,16 +1548,16 @@ CPointSort为什么要重载()操作符？他比较了什么内容？看他的�
 | L(RIGHT)| 0x6C           | `l`      |
 
 **设计考量：**
-1. **直接映射物理按键**  
+1. **直接映射物理按键**
    终端输入时实际接收的是ASCII码值，例如：
    - 用户按`ESC`键 → 系统发送`0x1B`
    - 程序比较接收值与`KeyMap.ESC`
 
-2. **模式差异化设计**  
+2. **模式差异化设计**
    - **普通模式**：采用游戏常用WASD布局
    - **Vim模式**：复用Vim编辑器的HJKL导航键位
 
-3. **为什么不用0,1,2...**  
+3. **为什么不用0,1,2...**
    - ASCII码是**行业标准**，所有系统通用
    - 直接使用字符值更直观（`0x68`对应'h'比任意数字更易维护）
    - 避免与游戏逻辑数值（如数独数字1-9）冲突
@@ -1567,7 +1567,7 @@ CPointSort为什么要重载()操作符？他比较了什么内容？看他的�
 ### 3. CPointSort比较器
 **Q: 为什么重载`()`？它比较什么？是否是排序比较器？**
 
-**A:**  
+**A:**
 这是一个**函数对象（Functor）**，用于自定义比较逻辑。
 
 **当前实现问题**：
@@ -1588,14 +1588,14 @@ bool operator()(const point_t &lhs, const point_t &rhs) const {
 ```
 
 **设计用途**：
-1. **作为STL容器的比较器**  
+1. **作为STL容器的比较器**
    例如：
 ```cpp
    std::set<point_t, CPointSort> uniquePoints; // 唯一坐标集合
    std::map<point_t, value, CPointSort> grid;  // 数独格子映射
    ```
 
-2. **为什么重载`()`而不是`<`**  
+2. **为什么重载`()`而不是`<`**
    - 更灵活（可定义多种比较方式）
    - 不影响`point_t`原有结构
    - 符合STL对比较器的约定
@@ -1625,7 +1625,7 @@ bool operator()(const point_t &lhs, const point_t &rhs) const {
 
 ### 🧑‍💻 User
 
-tie是什么意思？有什么作用？我看他的用法似乎是将不同的内容组合起来比较，减少代码量对吗？它和python中的zip有关系吗
+tie是什么意思？有什么作用？我看他的用法似乎是将不同的内容组合起来比较，减少代码量对吗？它和python中zip有关系吗
 ```cpp
 // 标准严格弱序实现
 bool operator()(const point_t &lhs, const point_t &rhs) const {
@@ -1649,11 +1649,11 @@ bool operator()(const point_t &lhs, const point_t &rhs) const {
 
 ### 1. `std::tie` 详解
 #### 基本作用
-`std::tie` 是 C++ 标准库中的实用函数，用于：
+`std::tie` 是 C++ 标准库中实用函数，用于：
 - **将多个变量绑定为一个元组的引用组合**
 - **支持结构化比较和赋值**
 
-#### 在比较器中的妙用
+#### 在比较器中妙用
 ```cpp
 return std::tie(lhs.x, lhs.y) < std::tie(rhs.x, rhs.y);
 ```
@@ -1763,7 +1763,7 @@ auto operator<=>(const point_t&) const = default;
 
 ### 🧑‍💻 User
 
-是否Python中的zip是将多个可迭代对象中元素一一比较或者进行某种操作，而tie只能用来比较单个元素而不能比较迭代对象（常用于比较结构体，类），对吗？
+是否Python中zip是将多个可迭代对象中元素一一比较或者进行某种操作，而tie只能用来比较单个元素而不能比较迭代对象（常用于比较结构体，类），对吗？
 什么是C++的三向比较？他如何使用？
 这段代码在做什么？
 ```cpp
@@ -1792,7 +1792,7 @@ auto operator<=>(const point_t&) const = default;
   for name, score in zip(names, scores):  # 并行迭代
       print(f"{name}: {score}")
   ```
-  
+
 - `tie` 是**纵向处理单个对象的多个字段**（单对象解构）：
 ```cpp
   struct Point { int x, y; };
@@ -1813,10 +1813,10 @@ auto operator<=>(const point_t&) const = default;
 ```cpp
 struct Point {
     int x, y;
-    
+
     // 自动生成所有比较操作
     auto operator<=>(const Point&) const = default;
-    
+
     // 等效于手动实现：
     // auto operator<=>(const Point& other) const {
     //     if (x != other.x) return x <=> other.x;
@@ -1863,8 +1863,8 @@ a >= b;  // false
 ```cpp
 struct Point {
     int x, y;
-    
-    bool operator==(const Point& o) const { 
+
+    bool operator==(const Point& o) const {
         return x == o.x && y == o.y;
     }
     bool operator<(const Point& o) const {
@@ -1910,10 +1910,10 @@ set(CMAKE_CXX_STANDARD 20)
    struct CustomCompare {
        std::string str;
        int priority;
-       
+
        // 自定义比较逻辑
        std::strong_ordering operator<=>(const CustomCompare& o) const {
-           if (auto cmp = priority <=> o.priority; cmp != 0) 
+           if (auto cmp = priority <=> o.priority; cmp != 0)
                return cmp;
            return str.size() <=> o.str.size();  // 按字符串长度比较
        }
@@ -1928,7 +1928,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 在一个结构体中定义三向比较符号<=>的代码中可以这样写？auto operator<=>(const Point&) const = default;
 我没有看到函数体，为什么还可以实现？为什么可以使用const=default套用默认实现？
-是否重载operator<=>的返回类型一定是`strong_ordering`，`weak_ordering`，`partial_ordering`中的一个？
+是否重载operator<=>的返回类型一定是`strong_ordering`，`weak_ordering`，`partial_ordering`中一个？
 default是C++关键字吗？他为设么可以请求编译器按成员字段声明顺序生成比较逻辑并且比较规则是先比较第一个字段，相等时比较下一个字段？
 既然C++20已经引入了<=>，可以自动生成==, !=, <, <=, >, >= 所有比较操作，而auto operator<=>(const Point&) const = default;也用来使用默认的比较操作，为什么还需要这一段代码？是否多此一举了？
 
@@ -1940,10 +1940,10 @@ default是C++关键字吗？他为设么可以请求编译器按成员字段声�
 ### 1. 默认实现的原理
 **Q: 为什么没有函数体却能工作？`= default`是什么机制？**
 
-**A:**  
+**A:**
 `= default` 是 C++ 的特殊语法（确实是关键字），它指示编译器自动生成默认实现。对于 `<=>` 运算符：
 
-- **编译器行为**：  
+- **编译器行为**：
   编译器会按结构体/类的成员**声明顺序**生成逐字段比较的代码，等效于：
 ```cpp
   auto operator<=>(const Point& other) const {
@@ -1953,13 +1953,13 @@ default是C++关键字吗？他为设么可以请求编译器按成员字段声�
   }
   ```
 
-- **语言标准规定**：  
+- **语言标准规定**：
   C++20 标准明确要求 `= default` 对 `<=>` 必须按成员声明顺序比较（§10.10.2）。这是语言级别的约定，非编译器自由发挥。
 
 ### 2. 返回类型解析
 **Q: 返回类型是否必须为 `strong_ordering` 等三种之一？**
 
-**A:**  
+**A:**
 是的，但具体类型由成员类型决定：
 
 | 成员类型示例                  | 推导的返回类型          | 说明                     |
@@ -1968,7 +1968,7 @@ default是C++关键字吗？他为设么可以请求编译器按成员字段声�
 | `float a, b;`                 | `std::partial_ordering`| 浮点含 NaN（不可比情况）  |
 | `std::string s;`              | `std::weak_ordering`   | 字符串可能等价不等值      |
 
-**关键点**：  
+**关键点**：
 - 如果成员类型混用（如 `int` + `float`），返回类型取最弱的（本例为 `partial_ordering`）
 - 自定义返回类型需显式声明：
 ```cpp
@@ -1978,39 +1978,39 @@ default是C++关键字吗？他为设么可以请求编译器按成员字段声�
 ### 3. 为什么需要显式声明 `<=>`
 **Q: 既然能自动生成所有比较，为何还要写这行代码？**
 
-**A:**  
+**A:**
 这是 C++ 的**显式意图表达**设计哲学：
 
-1. **控制生成范围**：  
+1. **控制生成范围**：
    - 不声明 `<=>` 时，编译器**不会自动生成任何比较操作**（与 Java 等语言不同）
    - 声明 `= default` 表示："我确认需要按成员默认比较"
 
-2. **避免意外行为**：  
+2. **避免意外行为**：
    如果类包含指针或非平凡类型，盲目生成比较可能导致危险操作。要求显式声明是一种安全措施。
 
-3. **与其它特性的协作**：  
+3. **与其它特性的协作**：
    只有声明 `<=>` 后，相关操作才会被隐式生成：
 ```cpp
    struct Point {
        int x, y;
        // 不声明 <=> 时，下面代码编译失败
-       bool visible = (Point{1,2} < Point{3,4}); 
+       bool visible = (Point{1,2} < Point{3,4});
    };
    ```
 
 ### 4. `= default` 的深层逻辑
 **Q: 为什么 `= default` 能按字段顺序比较？**
 
-**A:**  
+**A:**
 这是语言标准的硬性规定，背后有严谨设计：
 
-1. **确定性**：  
+1. **确定性**：
    固定按声明顺序比较，避免不同编译器实现差异。
 
-2. **可预测性**：  
+2. **可预测性**：
    开发者查看成员声明即可知比较优先级，无需查阅文档。
 
-3. **与初始化顺序一致**：  
+3. **与初始化顺序一致**：
    成员初始化顺序也是声明顺序，保持语言设计一致性。
 
 ### 5. 现代 C++ 比较的完整机制
@@ -2019,10 +2019,10 @@ default是C++关键字吗？他为设么可以请求编译器按成员字段声�
 struct Point {
     int x;  // 比较第一优先级
     int y;  // 比较第二优先级
-    
+
     // 关键声明：启用默认比较
     auto operator<=>(const Point&) const = default;
-    
+
     // 编译器自动生成：
     // 1. operator==(const Point&) const
     // 2. operator!=(const Point&) const
@@ -2039,7 +2039,7 @@ a < b;  // 调用编译器生成的 <
 
 ### 6. 何时需要手动实现 `<=>`
 以下情况需避免 `= default`：
-1. **特殊比较逻辑**：  
+1. **特殊比较逻辑**：
 ```cpp
    struct CaseInsensitiveString {
        std::string str;
@@ -2049,10 +2049,10 @@ a < b;  // 调用编译器生成的 <
    };
    ```
 
-2. **性能优化**：  
+2. **性能优化**：
    某些场景下跳过字段比较可提升性能。
 
-3. **非成员比较**：  
+3. **非成员比较**：
    如需支持 `(obj <=> 42)` 这样的异构比较。
 
 ### 总结：C++ 比较演进的哲学
@@ -2109,11 +2109,11 @@ constexpr char ARROW[] = "^";
 ---
 
 ### 3. 关键设计特点
-1. **`constexpr` 选择**  
+1. **`constexpr` 选择**
    - 编译期确定值（优于`const`）
    - 允许编译器优化，无运行时开销
 
-2. **Unicode编码使用**  
+2. **Unicode编码使用**
    - 采用Box Drawing字符集（U+2500-U+257F）
    - 显示效果对比：
 ```text
@@ -2122,7 +2122,7 @@ constexpr char ARROW[] = "^";
                +-----+             └─────┘
      ```
 
-3. **命名语义化**  
+3. **命名语义化**
    - `PIPE`比直接写`\u2503`更易理解
    - 修改符号只需调整此头文件
 
@@ -2131,18 +2131,18 @@ constexpr char ARROW[] = "^";
 ### 4. 实际应用场景
 ```cpp
 // 绘制数独格子顶边框
-std::cout << CORNER << LINE << LINE << CORNER; 
+std::cout << CORNER << LINE << LINE << CORNER;
 // 输出：╋━━╋
 
 // 标记当前选中位置
-std::cout << "[" << ARROW << "]"; 
+std::cout << "[" << ARROW << "]";
 // 输出：[^]
 ```
 
 ---
 
 ### 5. 注意事项
-1. **终端兼容性**  
+1. **终端兼容性**
    - 需确保终端支持Unicode（现代终端基本都支持）
    - 可添加备用ASCII方案：
 ```cpp
@@ -2151,7 +2151,7 @@ std::cout << "[" << ARROW << "]";
      #endif
      ```
 
-2. **扩展建议**  
+2. **扩展建议**
    可补充更多符号：
 ```cpp
    constexpr char TOP_LEFT[] = "\u250F";  // ┏
@@ -2230,12 +2230,12 @@ class I18n {
 ### 2. 运行逻辑详解
 
 #### 初始化阶段
-1. **首次调用 `Instance()`**  
+1. **首次调用 `Instance()`**
    - 构造 `I18n` 对象（通过私有构造函数）
    - 初始化 `dict_` 指针，加载默认语言（如英文）的字典
    - 后续调用始终返回同一实例
 
-2. **语言数据加载**  
+2. **语言数据加载**
    - 实际实现中（未展示部分）应有类似：
 ```cpp
 // 伪代码示例
@@ -2249,14 +2249,14 @@ I18n::I18n() {
 ```
 
 #### 运行时操作
-1. **切换语言**  
+1. **切换语言**
 ```cpp
 I18n::Instance().SetLanguage(Language::CHINESE);
 ```
    - 内部会释放旧字典
    - 加载新语言的键值映射（如中文翻译）
 
-2. **获取翻译文本**  
+2. **获取翻译文本**
 ```cpp
 std::string msg = I18n::Instance().Get(I18n::Key::ASK_QUIT);
 // 返回当前语言下的"是否退出？"或"Quit?"
@@ -2308,7 +2308,7 @@ std::cout << I18n::Instance().Get(I18n::Key::ASK_DIFFICULTY);
 ### 5. 潜在改进建议
 
 #### 扩展性优化
-1. **外部资源文件**  
+1. **外部资源文件**
    将翻译文本放在JSON/XML中，避免硬编码：
 ```json
 {
@@ -2323,7 +2323,7 @@ std::cout << I18n::Instance().Get(I18n::Key::ASK_DIFFICULTY);
 }
 ```
 
-2. **动态加载**  
+2. **动态加载**
 ```cpp
 void LoadLanguage(Language lang, const std::string& jsonFile);
 ```
@@ -2349,7 +2349,7 @@ static_assert(translations.contains(Key::ASK_QUIT));
 典型调用栈示例：
 ```
 main()
-├─ I18n::Instance() 
+├─ I18n::Instance()
 │  └─ 构造单例（首次调用时）
 └─ SomeClass::ShowUI()
    └─ I18n::Get(Key::ASK_SAVE)
@@ -2360,7 +2360,7 @@ main()
 
 ### 🧑‍💻 User
 
-这是i18n.cpp中的内容：
+这是i18n.cpp中内容：
 ```cpp
 #include "i18n.h"
 
@@ -2422,7 +2422,7 @@ std::string I18n::Get(Key key) const {
 }
 ```
 下面是我对它的理解和提出的问题，你需要对它们做出评价，如果有错误请指出并修改
-- 首先I18n::Dict创建了两个哈希表作为I18n类的成员，他们的作用是根据用户的语言选择映射出游戏中的提示文本
+- 首先I18n::Dict创建了两个哈希表作为I18n类的成员，他们的作用是根据用户的语言选择映射出游戏中提示文本
 - 下面这段代码：
 ```cpp
 I18n::I18n() : dict_(&english) {}
@@ -2456,16 +2456,16 @@ std::string I18n::Get(Key key) const {
 - ✅ **SetLanguage逻辑**：正确识别了`MAX`的断言保护机制
 
 #### 需要修正的部分
-1. **关于`dict_`的声明**  
-   - 原理解：`dict_`是**指针**而非直接成员，指向全局的`english`/`chinese`字典  
-   - 修正表述：  
+1. **关于`dict_`的声明**
+   - 原理解：`dict_`是**指针**而非直接成员，指向全局的`english`/`chinese`字典
+   - 修正表述：
      > "`dict_`是一个指向`Dict`的指针，构造函数中将其初始化为指向`english`字典的地址"
 
-2. **`Get()`函数的作用**  
-   - 原理解缺少关键细节：  
-     - `assert(dict_->count(key))` 确保请求的key存在  
-     - `(*dict_)[key]` 解引用指针后通过operator[]获取字符串  
-   - 应补充：  
+2. **`Get()`函数的作用**
+   - 原理解缺少关键细节：
+     - `assert(dict_->count(key))` 确保请求的key存在
+     - `(*dict_)[key]` 解引用指针后通过operator[]获取字符串
+   - 应补充：
      > "这是一个线程不安全的查找操作，若key不存在会触发断言终止程序"
 
 ---
@@ -2496,7 +2496,7 @@ static I18n& Instance() {
    ```
 
 #### 为什么需要单例？
-您的理解基本正确，但更准确的表述：  
+您的理解基本正确，但更准确的表述：
 > "I18n管理的是**全局语言状态**，必须保证所有代码访问的是同一语言配置，因此需要单例。这与游戏配置的不可变性有相似之处，但核心目的是保证状态一致性而非不可变。"
 
 ---
@@ -2504,16 +2504,16 @@ static I18n& Instance() {
 ### 3. 代码潜在问题与改进建议
 
 #### 现存问题
-1. **内存管理风险**  
-   - `dict_`指向全局变量，但若未来改为动态分配，需补充析构函数  
+1. **内存管理风险**
+   - `dict_`指向全局变量，但若未来改为动态分配，需补充析构函数
    - 建议改用智能指针：
 ```cpp
 private:
 std::shared_ptr<Dict> dict_;  // 自动管理生命周期
 ```
 
-2. **线程安全性**  
-   - `SetLanguage()`和`Get()`并发调用会导致数据竞争  
+2. **线程安全性**
+   - `SetLanguage()`和`Get()`并发调用会导致数据竞争
    - 解决方案：
 ```cpp
 #include <mutex>
@@ -2524,7 +2524,7 @@ void SetLanguage(...) {
 }
 ```
 
-3. **错误处理不足**  
+3. **错误处理不足**
    - `assert`在Release模式会被移除，建议改用异常：
 ```cpp
  std::string Get(Key key) const {
@@ -2534,7 +2534,7 @@ void SetLanguage(...) {
 ```
 
 #### 扩展性优化
-1. **按需加载语言**  
+1. **按需加载语言**
    当前所有语言字典常驻内存，可改为懒加载：
 ```cpp
 void SetLanguage(Language lang) {
@@ -2546,12 +2546,12 @@ void SetLanguage(Language lang) {
 }
 ```
 
-2. **支持热重载**  
+2. **支持热重载**
    添加从文件加载字典的功能：
 ```cpp
 void LoadLanguage(Language lang, const std::string& jsonPath) {
    // 解析JSON到临时Dict
-   dict_ = &cachedDicts_[lang]; 
+   dict_ = &cachedDicts_[lang];
 }
 ```
 ### 4. 架构设计总结
@@ -2563,9 +2563,9 @@ void LoadLanguage(Language lang, const std::string& jsonPath) {
 | 硬编码字典          | 编译期确定，无IO开销          | 修改文本需重新编译            |
 | assert校验          | 开发期快速暴露问题            | 生产环境可能失效              |
 
-**推荐改进路线**：  
-1. 首先增加线程安全保证  
-2. 其次将字典外置为JSON文件  
+**推荐改进路线**：
+1. 首先增加线程安全保证
+2. 其次将字典外置为JSON文件
 3. 最后考虑依赖注入替代单例（如需单元测试）
 
 ---
@@ -2665,11 +2665,11 @@ inline void message(const std::string& msg, bool lf = true) {
             c = getchar();
             if (c == EOF)
             {
-                c = 27; 
+                c = 27;
             }
             else
             {
-                while ( (c = getchar()) != EOF) 
+                while ( (c = getchar()) != EOF)
                 {
                 }
             }
@@ -2719,7 +2719,7 @@ inline void cls(void)
 **示例改进建议**：
 ```cpp
 // 原代码：所有语言字典常驻内存
-I18n::Dict english = {...}; 
+I18n::Dict english = {...};
 
 // 懒加载版：首次使用时构造
 std::map<Language, Dict>& GetDicts() {
@@ -2757,7 +2757,7 @@ inline unsigned int random(int begin, int end) {
 ##### 2. 数独单元操作
 ```cpp
 inline std::vector<int> shuffle_unit() {
-    std::vector<int> unit = {1,2,3,4,5,6,7,8,9}; 
+    std::vector<int> unit = {1,2,3,4,5,6,7,8,9};
     std::shuffle(unit.begin(), unit.end(), std::mt19937{std::random_device{}()});
     return unit;
 }
@@ -2795,18 +2795,18 @@ inline void message(const std::string& msg, bool lf = true) {
 ### 3. 设计亮点与改进建议
 
 #### 优秀设计
-1. **跨平台抽象**  
+1. **跨平台抽象**
    - 用`getch()`隐藏Windows/Linux差异
    - `cls()`自动适配系统命令
 
-2. **现代随机数**  
+2. **现代随机数**
    使用`<random>`替代弃用的`rand()`
 
-3. **头文件保护**  
+3. **头文件保护**
    `#ifndef _SUDOKU_UTILITY_INL_`防止重复包含
 
 #### 待改进点
-1. **`random()`函数缺陷**  
+1. **`random()`函数缺陷**
    - 每次调用重建引擎（性能损耗）
    - 建议改为静态引擎：
 ```cpp
@@ -2816,7 +2816,7 @@ inline void message(const std::string& msg, bool lf = true) {
      }
      ```
 
-2. **`system()`安全隐患**  
+2. **`system()`安全隐患**
    可替换为：
 ```cpp
 inline void cls() {
@@ -2824,7 +2824,7 @@ inline void cls() {
 }
 ```
 
-3. **`AverageRandom()`函数**  
+3. **`AverageRandom()`函数**
    已标记"弃用"但未删除，应使用`[[deprecated]]`属性
 
 ---
@@ -2832,12 +2832,12 @@ inline void cls() {
 ### 4. 关于.inl后缀的深层解析
 
 #### 技术原因
-1. **模板分离编译问题**  
+1. **模板分离编译问题**
    C++模板定义通常需在头文件中，导致代码膨胀。`.inl`文件用于：
    - 存放模板实现
    - 被主头文件`#include`（保持代码分离但编译时合并）
 
-2. **本文件的特殊定位**  
+2. **本文件的特殊定位**
    虽然当前未含模板，但可能：
    - 预留扩展性（未来添加模板工具函数）
    - 项目规范统一（其他工具模块使用模板）
@@ -2850,7 +2850,7 @@ inline void cls() {
 |            |                           | `#include "util.inl"`     |
 | `.cpp`     | 非模板实现                | 独立编译                  |
 
-**建议调整**：  
+**建议调整**：
 若确认无模板需求，可更名为`utility.hpp`（现代C++常用头文件后缀）
 
 ---
@@ -2861,7 +2861,7 @@ inline void cls() {
 原始代码：
 ```cpp
 std::random_device rd;  // 每次调用都初始化（高开销）
-std::mt19937 g(rd()); 
+std::mt19937 g(rd());
 ```
 优化方案：
 ```cpp
@@ -2875,7 +2875,7 @@ inline auto& GetRNG() {
 #### `getch()`的阻塞问题
 Unix版实现存在：
 1. 多次终端属性设置（`tcsetattr`）
-2. 非阻塞模式切换（`fcntl`）  
+2. 非阻塞模式切换（`fcntl`）
 建议改用`libtermios`等专业库
 
 ---
@@ -2930,7 +2930,7 @@ std::mt19937 g(rd());  // 用真随机数种子初始化引擎
 
 #### （3）`g(rd())`的含义
 ```cpp
-std::mt19937 g(rd()); 
+std::mt19937 g(rd());
 ```
 等价于：
 ```cpp
@@ -2945,7 +2945,7 @@ std::mt19937 g(seed);      // 用种子初始化引擎
 - 直接随机取数的问题：
 ```cpp
   // 可能产生重复值（需额外去重逻辑）
-int num = random(1,9); 
+int num = random(1,9);
 ```
 - `shuffle`的优势：
 ```cpp
@@ -2960,7 +2960,7 @@ std::shuffle(unit.begin(), unit.end(), engine);
 | 直接随机+去重      | O(n²)      | O(n)       | 允许重复时           |
 | Fisher-Yates洗牌   | O(n)       | O(1)       | 需要排列时（数独首选）|
 
-**数独中的实际用途**：  
+**数独中实际用途**：
 用于初始化游戏盘面时生成**行/列的有效排列**，确保符合数独规则（无重复数字）。
 ### 3. 关于`.inl`文件和`inline`的正确理解
 
@@ -2980,14 +2980,14 @@ inline int helper() { return 42; }  // 实现
 
 #### （2）`inline`关键字的现代含义
 - **原始作用**：建议编译器内联展开（现代编译器已自主决策）
-- **现代C++中的核心意义**：
+- **现代C++中核心意义**：
   - **允许重复定义**：在多个翻译单元中可重复定义相同函数
   - **头文件函数必备**：避免链接时重复符号错误
 - **典型场景**：
 ```cpp
 // 工具函数（<50行）
-inline void print(const std::string& msg) { 
-  std::cout << msg; 
+inline void print(const std::string& msg) {
+  std::cout << msg;
 }
 
 // 模板函数
@@ -3037,7 +3037,7 @@ inline std::vector<int> shuffle_unit() {
 
 ### 总结：关键知识点关联
 
-| 概念                | 数独项目中的应用          | 通用编程意义                     |
+| 概念                | 数独项目中应用          | 通用编程意义                     |
 |---------------------|---------------------------|----------------------------------|
 | mt19937             | 生成随机盘面              | 高质量伪随机数生成               |
 | shuffle             | 创建无重复数字排列        | 容器元素随机重排                 |
@@ -3146,9 +3146,9 @@ void InputLanguage() {
 ```
 请你详细说明他的运行逻辑，并说明为什么这么设计
 下面是我对它的理解和提出的问题，你需要对它们做出评价，如果有错误请指出并修改
-- 首先通过message(I18n::Instance().Get(I18n::Key::ASK_DIFFICULTY));来设定游戏难度，并且通过游戏配置对象I18n中的Get函数dict_中的ASK_DIFFICULTY来调用哈希表中的询问游戏难度提问词
+- 首先通过message(I18n::Instance().Get(I18n::Key::ASK_DIFFICULTY));来设定游戏难度，并且通过游戏配置对象I18n中Get函数dict_中ASK_DIFFICULTY来调用哈希表中询问游戏难度提问词
 - 通过设置need_erase_grids来调整数组中空白格子的数量，如果输入不合法就返回错误信息
-- 我发现这些函数中都有错误处理，但是catch中都填入...是什么意思？
+- 我发现这些函数中都有错误处理，但catch中都填入...是什么意思？
 
 
 
@@ -3175,13 +3175,13 @@ int inputDifficulty() {
   while (true) {
     // 显示多语言提示（通过I18n系统）
     message(I18n::Instance().Get(I18n::Key::ASK_DIFFICULTY));
-    
+
     std::cin >> cmd;
     try {
       Difficulty difficulty = static_cast<Difficulty>(std::stoi(cmd));
       switch (difficulty) {
         case Difficulty::EASY:   return 20; // 简单模式挖空20格
-        case Difficulty::NORMAL:return 35; // 普通模式挖空35格 
+        case Difficulty::NORMAL:return 35; // 普通模式挖空35格
         case Difficulty::HARD:   return 50; // 困难模式挖空50格
       }
     } catch (...) { // 捕获所有异常（非数字或越界输入）
@@ -3200,7 +3200,7 @@ int inputDifficulty() {
 // 建议使用枚举值而非魔数
 enum class Difficulty {
   EASY = 20,
-  NORMAL = 35, 
+  NORMAL = 35,
   HARD = 50
 };
 ```
@@ -3259,10 +3259,10 @@ void InputLanguage() {
 ```cpp
 try {
   // ...
-} 
+}
 catch (const std::invalid_argument&) {
   // 非数字输入
-} 
+}
 catch (const std::out_of_range&) {
   // 数字超出范围
 }
@@ -3277,34 +3277,34 @@ catch (const std::out_of_range&) {
 ### 4. 架构设计评价
 
 #### 优秀设计
-1. **单一职责原则**  
+1. **单一职责原则**
    每个函数只处理一种输入类型
 
-2. **国际化支持**  
+2. **国际化支持**
    通过`I18n`系统实现多语言
 
-3. **防御式编程**  
+3. **防御式编程**
    - 循环直到合法输入
    - 异常处理保障健壮性
 
-4. **明确的输入映射**  
+4. **明确的输入映射**
    数字→枚举→业务逻辑的清晰转换
 
 #### 待改进点
-1. **魔法数字**  
+1. **魔法数字**
    `20/35/50`应定义为枚举常量
 
-2. **语言选择硬编码**  
+2. **语言选择硬编码**
    应改用`I18n`系统管理提示文本
 
-3. **输入验证不足**  
+3. **输入验证不足**
 ```cpp
    // 当前：仅检查是否能转换为数字
    // 建议增加范围检查：
    if (input >= 1 && input <= 3) { ... }
    ```
 
-4. **跨平台问题**  
+4. **跨平台问题**
    `std::cin`在Linux下可能需要额外处理（如终端行缓冲）
 
 ---
@@ -3315,7 +3315,7 @@ sequenceDiagram
     participant UI
     participant input.cpp
     participant I18n
-    
+
     UI->>input.cpp: inputDifficulty()
     input.cpp->>I18n: Get(ASK_DIFFICULTY)
     I18n-->>input.cpp: "Select difficulty..."
@@ -3335,7 +3335,7 @@ sequenceDiagram
 | 正则表达式        | 灵活性高              | 可读性差              | ❌                |
 | 第三方库(如fmt)   | 功能强大              | 增加依赖              | ❌                |
 
-**推荐改进方向**：  
+**推荐改进方向**：
 对于高频调用的输入（如游戏操作输入），可改用更轻量的验证方式。
 
 ---
@@ -3365,9 +3365,9 @@ int num = static_cast<int>(Difficulty::NORMAL); // 合法，输出2
 - **内置支持**：C++语言层面直接支持枚举↔整型的转换
 - **类型安全**：`enum class`（强枚举）比传统`enum`更安全，但依然保持整型本质
 
-#### （3）项目中的实际应用
+#### （3）项目中实际应用
 ```cpp
-// input.cpp中的转换
+// input.cpp中转换
 Difficulty difficulty = static_cast<Difficulty>(std::stoi(cmd));
 ```
 等效于：
@@ -3393,7 +3393,7 @@ unsigned long stoul(const string& str, size_t* pos=0, int base=10);
 | 支持进制            | 可处理二进制/八进制/十六进制字符串（通过`base`参数）                  |
 | 比atoi更安全        | 提供明确的错误检测机制                                               |
 
-#### （3）在项目中的使用
+#### （3）在项目中使用
 ```cpp
 auto l = static_cast<Language>(std::stoul(language) - 1);
 ```
@@ -3451,10 +3451,10 @@ catch (...) { // 捕获所有异常
 ```cpp
 try {
     // ...
-} 
+}
 catch (const std::invalid_argument&) {
     // 非数字输入
-} 
+}
 catch (const std::out_of_range&) {
     // 数字超出范围
 }
@@ -3484,7 +3484,7 @@ enum class Language : uint8_t { // 明确底层类型
 
 ---
 
-### 总结：类型转换在游戏开发中的意义
+### 总结：类型转换在游戏开发中意义
 
 1. **用户输入处理**：`stoi/stoul`将字符串转为程序可处理的数字
 2. **配置映射**：通过`static_cast`将数字映射到枚举配置项
@@ -4066,9 +4066,9 @@ point_value_t _map[81]; // 一维数组
 bool isComplete() {
   // 检查所有行/列/宫格
   for(int i=0; i<9; i++) {
-    if(!_row_block[i].isValid() || 
+    if(!_row_block[i].isValid() ||
        !_column_block[i].isValid() ||
-       !_xy_block[i/3][i%3].isValid()) 
+       !_xy_block[i/3][i%3].isValid())
       return false;
   }
   return true;
@@ -4099,7 +4099,7 @@ void show() {
   cls(); // 清屏开销较大
   for(int row=0; row<9; row++) {
     printUnderline();
-    _row_block[row].print(); 
+    _row_block[row].print();
   }
 }
 ```
@@ -4164,18 +4164,18 @@ classDiagram
         -play() void
         +generate() void
     }
-    
+
     class CBlock {
         -_cells : vector<point_value_t*>
         +isValid() bool
     }
-    
+
     class CCommand {
         -_scene : CScene*
         +execute() bool
         +undo() void
     }
-    
+
     CScene "1" *-- "9" CBlock
     CScene "1" *-- "*" CCommand
     CCommand --> CScene
@@ -4195,7 +4195,7 @@ sequenceDiagram
     participant User
     participant CScene
     participant CCommand
-    
+
     User->>CScene: 输入数字5
     CScene->>CCommand: 创建命令(5)
     CCommand->>CScene: 执行setValue(5)
@@ -4272,7 +4272,7 @@ _xy_block[0][0]: [0][0] [0][1] [0][2] [1][0] [1][1] [1][2] [2][0] [2][1] [2][2] 
 当前命名可能造成误解，建议改为：
 ```cpp
 CBlock _rows[9];    // 行视图
-CBlock _columns[9]; // 列视图 
+CBlock _columns[9]; // 列视图
 CBlock _boxes[3][3];// 宫格视图
 ```
 
@@ -4322,7 +4322,7 @@ class MyClass {...};
 - **文件系统要求**：
   - 要求文件的物理路径唯一（符号链接可能导致问题）
 
-#### （5）在该项目中的应用建议
+#### （5）在该项目中应用建议
 当前代码使用宏守卫：
 ```cpp
 #ifndef _SUDOKU_SCENE_H_
@@ -4392,7 +4392,7 @@ bool CScene::isComplete() {
 
 ### 🧑‍💻 User
 
-我们来看main.cpp中的代码
+我们来看main.cpp中代码
 ```cpp
 #include <cstring>
 #include <iostream>
@@ -4445,7 +4445,7 @@ int main(int argc, char **argv) {
   return 0;
 }
 ```
-为什么main函数中的参数是这两个？我并没有发现代码中哪里向main函数输入了参数，这些参数是否在Cmake文件中有提到？
+为什么main函数中参数是这两个？我并没有发现代码中哪里向main函数输入了参数，这些参数是否在Cmake文件中有提到？
 为什么需要这些参数？
 我发现Sudoku这个项目似乎支持在命令行中使用suduku+减号来输入各种参数选项让程序执行不同的功能，这是如何做到的？
 
@@ -4481,7 +4481,7 @@ int main(int argc, char** argv)
 
 #### （1）当前代码的参数处理
 ```cpp
-if (argc == 1) { 
+if (argc == 1) {
     // 全新游戏流程
 } else if (argc == 3 && !strcmp(argv[1], "-l")) {
     // 加载存档
@@ -4564,7 +4564,7 @@ sequenceDiagram
 - **调试支持**：快速测试特定功能
 - **用户友好**：提供多种启动方式
 
-#### （2）游戏开发中的典型应用
+#### （2）游戏开发中典型应用
 | 参数          | 用途                      | 类似项目参考            |
 |---------------|--------------------------|-----------------------|
 | `-fullscreen` | 全屏模式                  | Minecraft            |
@@ -4583,17 +4583,17 @@ sequenceDiagram
 
 ### 6. 常见问题解答
 
-**Q：为什么调试时看不到参数？**  
+**Q：为什么调试时看不到参数？**
 A：需在IDE中配置运行参数，例如：
 - VS Code: 修改`launch.json`的`args`字段
 - CLion: 运行配置的`Program arguments`
 
-**Q：Windows和Linux参数处理差异？**  
+**Q：Windows和Linux参数处理差异？**
 A：本项目使用的`strcmp`是跨平台的，注意：
 - Windows路径用`\`，Linux用`/`
 - Windows参数大小写不敏感
 
-**Q：如何防止参数注入攻击？**  
+**Q：如何防止参数注入攻击？**
 A：对用户输入的参数进行校验：
 ```cpp
 if(!isValidPath(argv[2])) {
@@ -4605,13 +4605,13 @@ if(!isValidPath(argv[2])) {
 
 ### 总结：命令行参数的设计哲学
 
-1. **最小化接口**  
+1. **最小化接口**
    当前仅实现`-l`这一个必要参数，符合Unix"做一件事并做好"原则
 
-2. **渐进式复杂度**  
+2. **渐进式复杂度**
    基础功能用手动解析，复杂需求可引入库处理
 
-3. **用户习惯遵循**  
+3. **用户习惯遵循**
    `-l`是传统存档参数（源自"load"），符合用户预期
 
 建议后续改进方向：
@@ -4683,20 +4683,20 @@ int main(int argc, char** argv)
 
 int main(int argc, char** argv) {
     CLI::App app{"Sudoku Game"};
-    
+
     std::string loadPath;
     app.add_option("-l,--load", loadPath, "Load game progress");
-    
+
     bool showHelp = false;
     app.add_flag("-h,--help", showHelp, "Show help");
-    
+
     CLI11_PARSE(app, argc, argv);
-    
+
     if(showHelp) {
         std::cout << app.help() << std::endl;
         return 0;
     }
-    
+
     if(!loadPath.empty()) {
         // 加载存档逻辑
     }
@@ -4762,7 +4762,7 @@ std::cout << "中文"; // Windows输出乱码：涓枃
 #### （3）最佳实践建议
 ```cpp
 // 在main函数最开始调用
-SetSystemEnv(); 
+SetSystemEnv();
 // 后续所有cout都会自动正确处理UTF-8
 std::cout << u8"中文"; // 注意u8前缀
 ```
@@ -4780,7 +4780,7 @@ std::cout << u8"中文"; // 注意u8前缀
 #if defined(_WIN32)
 #define SET_UTF8_ENV() SetConsoleOutputCP(CP_UTF8)
 #else
-#define SET_UTF8_ENV() 
+#define SET_UTF8_ENV()
 #endif
 ```
 
@@ -4794,15 +4794,15 @@ std::cout << "Current CP: " << GetConsoleOutputCP() << std::endl;
 
 ### 总结：工程化实践要点
 
-1. **参数解析**  
-   - 小型项目可用手动解析  
+1. **参数解析**
+   - 小型项目可用手动解析
    - 复杂参数建议使用CLI11等库
 
-2. **编码问题**  
-   - Windows必须显式设置UTF-8  
+2. **编码问题**
+   - Windows必须显式设置UTF-8
    - 跨平台项目需统一本地化策略
 
-3. **防御式编程**  
+3. **防御式编程**
 ```cpp
    if(argc > MAX_ARGS) {
        throw std::runtime_error("Too many arguments");
@@ -4825,7 +4825,7 @@ std::cout << "Current CP: " << GetConsoleOutputCP() << std::endl;
 
 ### 🤖 Assistant
 
-### C++中的大括号初始化（Uniform Initialization）
+### C++中大括号初始化（Uniform Initialization）
 
 #### 1. 基本语法形式
 ```cpp
@@ -4888,7 +4888,7 @@ std::vector<int> makeVec() {
 
 #### 5. 特殊注意事项
 
-1. **`initializer_list`优先级**  
+1. **`initializer_list`优先级**
    如果类同时存在接受`initializer_list`和普通参数的构造函数，大括号初始化会**优先匹配**`initializer_list`版本：
 ```cpp
    class Widget {
@@ -4896,11 +4896,11 @@ std::vector<int> makeVec() {
        Widget(int i, double d);  // (1)
        Widget(std::initializer_list<int> il); // (2)
    };
-   
+
    Widget w{1, 2.0}; // 调用(2)而非(1)！
    ```
 
-2. **空大括号的含义**  
+2. **空大括号的含义**
    - 对基本类型：值初始化（设为0）
 ```cpp
      int x{}; // x == 0
@@ -4910,7 +4910,7 @@ std::vector<int> makeVec() {
      std::string s{}; // 调用默认构造函数
      ```
 
-3. **嵌套初始化**  
+3. **嵌套初始化**
 ```cpp
    std::vector<std::string> vs{
        {"hello"}, {"world"} // 每个元素都是initializer_list
@@ -4925,15 +4925,15 @@ std::vector<int> makeVec() {
 ```cpp
    template<typename T>
    void f(T param);
-   
+
    f({1, 2, 3}); // 错误！无法推导T的类型
    f(std::vector<int>{1, 2, 3}); // 正确
    ```
 
 #### 7. 代码示例分析
 ```cpp
-// 项目中的实际应用
-point_value_t p = {UNSELECTED, State::ERASED}; 
+// 项目中实际应用
+point_value_t p = {UNSELECTED, State::ERASED};
 // 等效于：
 point_value_t p{UNSELECTED, State::ERASED};
 ```
@@ -4952,10 +4952,10 @@ auto x = {42}; // 同上
 auto x(42);    // int
 ```
 
-##### 在STL中的应用
+##### 在STL中应用
 ```cpp
 std::array<int, 3> arr{1, 2, 3}; // 聚合初始化
-std::pair<int, string> p{1, "one"}; 
+std::pair<int, string> p{1, "one"};
 ```
 
 #### 9. 各版本标准演进

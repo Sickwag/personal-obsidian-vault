@@ -6,7 +6,7 @@ self.screen.blit(self.image,self.rect)
 这个操作将 image 图像按照 rect 所表示的位置**绘制到 screen**Suface 对象上
 
 ### 12.6.4　调整飞船的速度
-`rect` 的 `centerx` 等属性只能存储整数值，但是在 settings 中将速度调整为小数可以精细控制飞船速度，所以
+`rect` 的 `centerx` 等属性只能存储整数值，但在 settings 中将速度调整为小数可以精细控制飞船速度，所以
 需要稍微调整一下
 ```python
 class Ship():
@@ -27,10 +27,10 @@ class Ship():
 ```
 - 关键定在于创建一个新的 center 变量接受浮点数速度值，用变量改变 center 值，之后传入rect.centerx，不然**用+=操作self.centerx 会导致小数点被截断**
 - 并且后面还需要写便捷检查代码，在逻辑上应该先判断是否超出边界，然后再更新 `self.rect.centerx`
-- 
+-
 ### 13.5.1　检测子弹与外星人的碰撞
 `rect.colliderect(otherRect)` 可以检测两个矩形是否相撞
-`sprite.groupcollide()` 可以检测一个 Group 中的所有元素**是否出现相互碰撞**，后返回一个字典，每个键值对都是相撞的对象
+`sprite.groupcollide()` 可以检测一个 Group 中所有元素**是否出现相互碰撞**，后返回一个字典，每个键值对都是相撞的对象
 在更新子弹时，需要**删除子弹和飞船**，这些操作都封装在函数中：
 ```python
 def update_bullets(bullets):
@@ -44,7 +44,7 @@ def update_bullets(bullets):
 
 
 ### 13.6.1　检测外星人和飞船碰撞
-`pygame.sprite.spritecollideany` 是 Pygame 精灵模块中一个非常实用的方法，用于检测一个精灵是否与精灵组中的任意精灵发生碰撞。
+`pygame.sprite.spritecollideany` 是 Pygame 精灵模块中一个非常实用的方法，用于检测一个精灵是否与精灵组中任意精灵发生碰撞。
 
 |方法|返回类型|特点|
 |---|---|---|
@@ -73,19 +73,19 @@ def update(self):
 def blitme(self):
     """draw ship image in the certain position"""
     self.screen.blit(self.image, self.rect)
-    
+
 def center_ship(self):
     self.rect.centerx = self.screen_rect.centerx
     self.rect.bottom = self.screen_rect.bottom - 10
 ```
-原因是**每次调用 update**时都会充值self.rect，这就相当重置了飞船位置，但是相撞之后（调用**ship_hit**之后）进入下一个循环 `ship.update` 就会将飞船拉回原地，
+原因是**每次调用 update**时都会充值self.rect，这就相当重置了飞船位置，但相撞之后（调用**ship_hit**之后）进入下一个循环 `ship.update` 就会将飞船拉回原地，
 
 ### 14.1.1　创建  `Button 类
 `pygame.display.flip() ` 的作用是将**最近通过 `blit` 和 `draw ` 绘制的图形显示出来**，是一次性统一的绘制
 
 #### 1. 关于 `@classmethod` 装饰器
 
-`@classmethod` 是 Python 中的一个装饰器，用于定义类方法。它的主要特点和使用方法如下：
+`@classmethod` 是 Python 中一个装饰器，用于定义类方法。它的主要特点和使用方法如下：
 ##### 作用：
 1. 将方法绑定到类而不是实例
 2. 第一个参数是类本身（通常命名为 `cls`）
@@ -96,7 +96,7 @@ def center_ship(self):
 ```python
 class MyClass:
     class_var = "class variable"
-    
+
     @classmethod
     def class_method(cls, arg):
         print(f"Class method called with {arg}")
@@ -114,7 +114,7 @@ class MyClass:
 ---
 ### 🤖 Assistant
 
-# Python中的参数传递机制
+# Python中参数传递机制
 
 Python的参数传递机制既不是纯粹的"值传递"，也不是纯粹的"引用传递"，而是一种称为**"对象引用传递"**(或"共享对象传递"，"call by object reference")的独特机制。
 

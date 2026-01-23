@@ -1,13 +1,13 @@
 # Qt 核心
 ## 信号与插槽
-### 槽函数重载在 connect 函数中的表示方法
+### 槽函数重载在 connect 函数中表示方法
 [Signals & Slots | Qt Core | Qt 6.10.0](https://doc.qt.io/qt-6/zh/signalsandslots.html)
 Qt 信号槽机制是 Qt 框架的核心特性之一，它提供了一种类型安全的对象间通信方式。当某个事件发生时（如按钮被点击、文本被修改等），对象会发出信号（signal）；其他对象可以通过连接信号到槽函数（slot，注意本质是一个函数）来响应这些事件。
 信号槽机制依赖于 Qt 的元对象系统，会在编译时分析 qt 代码，然后生成额外的元信息代码插入其中
 - 信号发射和槽接收能够成功的原理是：
 - 一旦使用了 `connect(sender, signal, receiver, slot);` 编译器会在编译期：
 	1. 获取 sender 和 receiver 的元对象信息
-	2. 查找 signal 和 slot 在各自类中的索引
+	2. 查找 signal 和 slot 在各自类中索引
 	3. 在内部表中记录这个连接关系
 - 则当某个行为触发了某个信号（比如 `QToolButton` 支持一个 `clicked` 点击行为，他会触发 `QMetaObject::active()`），元对象系统就会在运行时：
 	1. 通过元对象系统查找所有连接到此信号的槽
@@ -86,7 +86,7 @@ connect(slider, &QSlider::valueChanged,
 ```cpp
 void destroyed(QObject* = nullptr);
 ```
-当[QObject](https://doc.qt.io/qt-6/zh/qobject.html) 被删除时，它会发出[QObject::destroyed](https://doc.qt.io/qt-6/zh/qobject.html#destroyed)() 信号。我们要捕获这个信号，因为我们可能有一个指向已删除[QObject](https://doc.qt.io/qt-6/zh/qobject.html) 的悬空引用，这样我们就可以清理它。合适的槽签名可能是
+当[QObject](https://doc.qt.io/qt-6/zh/qobject.html) 被删除时，它会发出[QObject::destroyed](https://doc.qt.io/qt-6/zh/qobject.html#destroyed)() 信号。我们要捕获这个信号，因我们可能有一个指向已删除[QObject](https://doc.qt.io/qt-6/zh/qobject.html) 的悬空引用，这样我们就可以清理它。合适的槽签名可能是
 ```cpp
 void objectDestroyed(QObject* obj = nullptr);
 ```
@@ -102,7 +102,7 @@ connect(sender, SIGNAL(destroyed()), this, SLOT(objectDestroyed()));
 connect(sender, SIGNAL(destroyed()), this, SLOT(objectDestroyed(QObject*))); // no way
 ```
 如果需要细致调节 connect 函数执行的线程，则可以通过 connect 函数的第一个和第三个参数来调整，
-因为插槽期待的是 [QObject](https://doc.qt.io/qt-6/zh/qobject.html) ，而信号不会发送。该连接将报告运行时错误。在使用 [QObject::connect](https://doc.qt.io/qt-6/zh/qobject.html#connect) () 重载时，编译器不会检查信号和槽参数（使用 lambda 或者 dynamic_static 可以避免）。
+因插槽期待的是 [QObject](https://doc.qt.io/qt-6/zh/qobject.html) ，而信号不会发送。该连接将报告运行时错误。在使用 [QObject::connect](https://doc.qt.io/qt-6/zh/qobject.html#connect) () 重载时，编译器不会检查信号和槽参数（使用 lambda 或者 dynamic_static 可以避免）。
 ### 信号和槽的连接方式
 不管是哪种参数形式的 connect()函数，最后都有一个参数 type，它是枚举类型 Qt::ConnectionType，
 默认值为 `Qt::AutoConnection`。枚举类型 `Qt::ConnectionType` 表示信号与槽的关联方式，有以下几种取值。
@@ -112,13 +112,13 @@ connect(sender, SIGNAL(destroyed()), this, SLOT(objectDestroyed(QObject*))); // 
 -  `Qt::BlockingQueuedConnection`：与 `Qt::QueuedConnection` 相似，区别是信号线程会阻塞，，
 直到槽函数运行完毕。当信号与槽函数在同一个线程中时绝对不能使用这种方式，否则会造成死锁。
 
-在类定义中定义信号函数，标明参数类型和参数的意义在参数名称中，然后在需要触发信号的位置使用 `emit sigal_name(arg1, arg2....)` 这样就能保证对应类型的槽函数能够读取到发送的信号和信号函数中的参数，槽函数可以接受信号函数中的参数并处理
+在类定义中定义信号函数，标明参数类型和参数的意义在参数名称中，然后在需要触发信号的位置使用 `emit sigal_name(arg1, arg2....)` 这样就能保证对应类型的槽函数能够读取到发送的信号和信号函数中参数，槽函数可以接受信号函数中参数并处理
 比如下面这个自定义槽函数和信号的例子：
 ```cpp
 // 在类定义中
 class FileProcessor : public QObject {
     Q_OBJECT
-    
+
 signals:
     // 参数类型 + 有意义的参数名
     void fileProcessed(const QString &fileName, int fileSize, bool success);
@@ -127,7 +127,7 @@ signals:
 
 void FileProcessor::processFile(const QString &filePath) {
     QFileInfo info(filePath);
-    
+
     // 触发信号，传递具体参数值
     emit fileProcessed(info.fileName(), info.size(), true);
     emit progressUpdated(5, 10, 50.0);  // 处理到第5个，总共10个
@@ -137,11 +137,11 @@ class MainWindow : public QMainWindow {
 public slots:
     // 槽函数参数与信号参数完全匹配
     void onFileProcessed(const QString &fileName, int fileSize, bool success) {
-        qDebug() << "文件:" << fileName 
-                 << "大小:" << fileSize 
+        qDebug() << "文件:" << fileName
+                 << "大小:" << fileSize
                  << "处理结果:" << (success ? "成功" : "失败");
     }
-    
+
     void onProgressUpdated(int current, int total, double percent) {
         progressBar->setValue(percent);
         statusLabel->setText(QString("处理中: %1/%2").arg(current).arg(total));
@@ -173,7 +173,7 @@ disconnect(lineEdit, &QLineEdit::textChanged, label, &QLabel::setText); //静态
 ```
 #### 自定义信号实现
 - 信号就是在类定义里声明的一个函数
-- 信号函数必须是无返回值的函数，但是可以有输入参数
+- 信号函数必须是无返回值的函数，但可以有输入参数
 - 信号函数无须实现，而只需在某些条件下被发射。
 emit 关键字可以发射信号，这个关键字可以在任何函数中使用，用来发射一个信号
 ```cpp
@@ -265,7 +265,7 @@ lambda 函数编写**最好需要**遵循下面的要求
 ```cpp
 QBindable<T> bindable = QBindable<T>(&MyObject::age, this, &MyObject::ageChanged);
 ```
-这段代码将this这个对象中的age属性和ageChanged函数绑定在一起，表示一旦age变量发生变化，就会执行ageChanged函数的逻辑。他必须和 `Q_PROPERTY` 一起才能发挥功能，且：
+这段代码将this这个对象中age属性和ageChanged函数绑定在一起，表示一旦age变量发生变化，就会执行ageChanged函数的逻辑。他必须和 `Q_PROPERTY` 一起才能发挥功能，且：
 1. **`Q_PROPERTY` 必须存在**：你必须在类中使用 `Q_PROPERTY` 宏声明该属性。
 2. **该属性必须有对应的信号**：即 `Q_PROPERTY` 声明时需要有 `NOTIFY` 标记的信号。
 #### 两者对比
@@ -331,11 +331,11 @@ button.installEventFilter(&filter);
 ### 字符串使用规则
 一般来说，[QString](https://doc.qt.io/qt-6/zh/qstring.html) 可以随处使用而且性能良好。提供处理多种编码的 API（ [QString::fromLatin1](https://doc.qt.io/qt-6/zh/qstring.html#fromLatin1) () ）。
 以下规则可在**不增加太多复杂性情况下大幅改进字符串处理**。这些规则可在大多数情况下获得接近最佳性能：
-- 所有只包含 ASCII 字符的字符串（例如日志信息）都可以使用 Latin-1 编码。使用 [string literal](https://doc.qt.io/qt-6/zh/qlatin1char.html#operator-22-22_L1)（[[Modern C++#自定义字符串字面量|自定义字符串字面量]]） `"foo"_L1` 。如果没有这个后缀，源代码中的字符串字面量会被假定为 UTF-8 编码，**处理速度会变慢**。一般来说，尽量使用最严格的编码，在很多情况下都是 Latin-1。
+- 所有只包含 ASCII 字符的字符串（例如日志信息）都可以使用 Latin-1 编码。使用 [string literal](https://doc.qt.io/qt-6/zh/qlatin1char.html#operator-22-22_L1)（[[Modern C++#自定义字符串字面量|自定义字符串字面量]]） `"foo"_L1` 。如果没有这个后缀，源代码中字符串字面量会被假定为 UTF-8 编码，**处理速度会变慢**。一般来说，尽量使用最严格的编码，在很多情况下都是 Latin-1。
 - 用户可见字符串通常会被翻译，并通过 [QObject::tr](https://doc.qt.io/qt-6/zh/qobject.html#tr) () 函数传递。该函数接收字符串字面量（const char 数组），并按照所有用户界面元素的要求返回带有 **UTF-16 编码的 [QString](https://doc.qt.io/qt-6/zh/qstring.html)** 。如果不使用翻译基础结构，则应在整个应用程序中使用 UTF-16 编码。字符串字面量 `u"foo"` 创建 UTF-16 字符串字面量，或使用 Qt XML 特有的字面量 `u"foo"_s` 直接创建 [QString](https://doc.qt.io/qt-6/zh/qstring.html)，和使用 `QString` 构造函数创建的对象一致，都使用 UTF-16
 - 在处理 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 的部分内容时，不要将每部分内容复制到自己的 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 对象中，而是创建 [QStringView](https://doc.qt.io/qt-6/zh/qstringview.html) 对象。这些对象可以使用 [QStringView::toString](https://doc.qt.io/qt-6/zh/qstringview.html#toString) () 转换回 [QString](https://doc.qt.io/qt-6/zh/qstring.html) ，但应尽量避免这样做。如果函数返回 [QStringView](https://doc.qt.io/qt-6/zh/qstringview.html) ，那么尽可能继续使用该类是最有效的做法。API 类似于常量 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 。
-### QT 中的字符串编码
-参阅[Qt 中的 Unicode 支持信息](https://doc.qt.io/qt-6/zh/unicode.html)。
+### QT 中字符串编码
+参阅[Qt 中 Unicode 支持信息](https://doc.qt.io/qt-6/zh/unicode.html)。
 编码方面，Qt 以某种形式支持 UTF-16、UTF-8、Latin-1（ISO 8859-1）和 US-ASCII（即 Latin-1 和 UTF-8 的通用子集）。
 - Latin-1 是一种字符编码，每个字符使用一个字节，这使它成为最有效但也是最有限的编码。
 - UTF-8 是一种可变长度字符编码，使用一至四个字节对所有字符进行编码。它向后兼容 US-ASCII，是源代码和类似文件的常用编码。Qt 假定源代码使用 UTF-8 编码。
@@ -346,7 +346,7 @@ button.installEventFilter(&filter);
 不同编码之间的转换成本很高，因此应尽量避免。另一方面，**更紧凑的编码**（尤其是字符串字面量而不是字符串对象）可以减少二进制文件的大小，从而提高性能。
 ### 字符串视图和字符串对象区别
 字符串类可根据其支持的功能进一步区分。其中一个主要区别是：**字符串类是拥有并控制其数据，还是仅仅引用其他地方的数据**，这就为了对象和视图两个概念
-- 前者称为**拥有器**，后者称为**非拥有容器**或视图。非自有容器类型通常只记录一个指向数据起始位置及其大小的指针，因此轻便而廉价，但只要数据仍然可用，它就一直有效。
+- 前者称为**拥有器**，后者称为**非拥有容器**或视图。非自有容器类型通常只记录一个指向数据起始位置及其大小的指针，因此轻便而廉价，但只要数据仍可用，它就一直有效。
 - 视图通常支持所有者字符串功能的子集，但无法修改底层数据。
 ### 字符串字面量
 C++标准中定义的字符串字面量在**编译期实现**，由语言定义，或者由 qt 告诉。
@@ -374,7 +374,7 @@ https://doc.qt.io/qt-6/zh/qtsql-index.html
 参考[[软件使用错误#Qt 缺少 mysql 驱动导致无法连接 mysql]]
 #### SQL 编程
 #### 连接数据库 + 执行 sql 语句
-参考 [[MySQL#C++数据库编程（qt qmysql）]] 中的[[MySQL#代码编写#代码实例|代码实例：编写一个简单的登录注册页面]]
+参考 [[MySQL#C++数据库编程（qt qmysql）]] 中[[MySQL#代码编写#代码实例|代码实例：编写一个简单的登录注册页面]]
 #### 使用 SQL 模型类
 除了[QSqlQuery](https://doc.qt.io/qt-6/zh/qsqlquery.html) 之外，Qt 还提供了三个用于访问数据库的高级类。这些类是[QSqlQueryModel](https://doc.qt.io/qt-6/zh/qsqlquerymodel.html) 、[QSqlTableModel](https://doc.qt.io/qt-6/zh/qsqltablemodel.html) 和[QSqlRelationalTableModel](https://doc.qt.io/qt-6/zh/qsqlrelationaltablemodel.html) 。
 
@@ -399,10 +399,10 @@ for(int i= 0; i<model.rowCount();++i) {
 > ***void QSqlQueryModel:: setQuery (QSqlQuery &&query)***
 > - Resets the model and sets the data provider to be the given query. Note that the query must be active and must not be isForwardOnly ().
 > - lastError () can be used to retrieve verbose information if there was an error setting the query.
-> 
+>
 > ***QSqlRecord QSqlQueryModel:: record (int row) const***
 > - Returns the record containing information about the fields of the current query. If row is the index of a valid row, the record will be populated with values from that row
-> - If the model is not initialized, an empty record will be returned.    
+> - If the model is not initialized, an empty record will be returned.
 
 ##### SQL 表模型（可修改）
 ```cpp
@@ -434,7 +434,7 @@ model.submitAll();
 文档中写：
 
 > 1. QSqlTableModel:: OnFieldChange 在这种情况下，SubmitAll()似乎可以实现永远不需要显式 调用 submitAll()的承诺。但这有两个隐患：
-> 
+>
 
 | 编号  | 类型                   | 修改提交行为                   | 内部原理     |
 | --- | -------------------- | ------------------------ | -------- |
@@ -457,7 +457,7 @@ model->setEditStrategy(QSqlTableModel::OnFieldChange);
 
 ##### SQL 关系表模型（表间关系展示，只读）
 [QSqlRelationalTableModel](https://doc.qt.io/qt-6/zh/qsqlrelationaltablemodel.html) 扩展了 [QSqlTableModel](https://doc.qt.io/qt-6/zh/qsqltablemodel.html) ，为外键提供了支持。
-因为 qt 不支持多结果集，所以如果需要多表之间的数据互通，可以使用关系表模型类来实现
+因 qt 不支持多结果集，所以如果需要多表之间的数据互通，可以使用关系表模型类来实现
 ```cpp
 model->setTable("employee");
 
@@ -468,8 +468,8 @@ model->setRelation(3, QSqlRelation("country", "id", "name"));
 > [!note]
 > The setRelation () function calls establish a relationship between two tables. The first call specifies that column 2 in table employee is a foreign key that maps with field id of table city, and that the view should present the city's name field to the user. The second call does something similar with column 3.
 > The setRelation () call specifies that column 2 in table employee is a foreign key that maps with field id of table city, and that the view should present the city's name field to the user.
-> 
-> 第一个 setRelation 表示将 employee 表的第 2 列设置一个外键，链接到 city 表中的 id 列，最终将 city 表中 id 列与 employee 表中的第 2 列相等的记录的 city 表中的 name 属性显示在 id 表中的 city 列
+>
+> 第一个 setRelation 表示将 employee 表的第 2 列设置一个外键，链接到 city 表中 id 列，最终将 city 表中 id 列与 employee 表中第 2 列相等的记录的 city 表中 name 属性显示在 id 表中 city 列
 
 # Qt 杂项
 ## 编码规范
@@ -492,7 +492,7 @@ https://gitcode.com/Open-source-documentation-tutorial/97151
 - 变量和函数命名使用**小驼峰**命名法，全局变量使用 `g_` 前缀，成员变量使用 `_` 后缀，结构体成员必须要 `_` 后缀
 - 常量命名**不含前缀且全大写**，允许下划线，包括 const 全局常量和宏定义
 - 枚举值使用**大驼峰**命名，结构体名称大写，成员**小驼峰**
-- **不应该让变量类型成为其名字的一部分**，比如 int 类型变量命名为 `i_value`，因为类型转换时，变量的名字不会随之转换。  
+- **不应该让变量类型成为其名字的一部分**，比如 int 类型变量命名为 `i_value`，因类型转换时，变量的名字不会随之转换。
 - ui 控件尽可能用缩写，QPushButton 缩写为 `btn_标记名称`
 ### 类和结构体
 - 类名是名词，每个单词以大写字母开头，不包含下划线
@@ -520,7 +520,7 @@ private:
 //TODO(Zeke): change this to use relations.
 ```
 ### 风格之外
-- 数据库命名：采用全小写字母，单词中间加下划线的方式； 表，字段命名：采用全小写字母，单词中间加下划线的方式； C++代码中的sql：全小写字母。
+- 数据库命名：采用全小写字母，单词中间加下划线的方式； 表，字段命名：采用全小写字母，单词中间加下划线的方式； C++代码中sql：全小写字母。
  - VS 使用Visual Assist X（VAX）插件提供快速的代码补全以及格式化的代码注释
 ## 构建项目理念
 ### 影子构建
@@ -684,7 +684,7 @@ const QColor secondsColor(palette().color(QPalette::Accent)); // 使用**当前�
 ```
 1. 遵循系统主题：通过使用 `palette().color()`，时钟的颜色会自动适应系统的主题设置，确保与应用程序的整体外观一致。
 2. 时针和分针使用相同颜色：`QPalette::Text` 通常用于文本颜色，时针和分针都使用这种颜色，使它们在视觉上统一。
-3. 秒针使用强调色：`QPalette::Accent` 是一种强调色，通常用于突出显示重要元素。将秒针设置为强调色使其更容易区分，因为秒针移动最频繁。
+3. 秒针使用强调色：`QPalette::Accent` 是一种强调色，通常用于突出显示重要元素。将秒针设置为强调色使其更容易区分，因秒针移动最频繁。
 
 ### 总结
 一个 QWidget 组件类一般要实现下面几个内容
@@ -695,7 +695,7 @@ const QColor secondsColor(palette().color(QPalette::Accent)); // 使用**当前�
 - 根据需要重写 `paintEvent` 函数，在其中实现每一次 update 要更新的内容
 ## Calculator Example
 地址 [Calculator Example | Qt Widgets | Qt 6.9.1](https://doc.qt.io/qt-6/zh/qtwidgets-widgets-calculator-example.html)
-### QT 框架中的 qobject_cast
+### QT 框架中 qobject_cast
 什么是 qobject_cast
 `qobject_cast` 是 Qt 提供的一个模板函数，专门用于在 QObject 类层次结构中进行安全的类型转换。它是 **Qt 版本的 `dynamic_cast`**，专门为 QObject及其派生类设计。
 #### qobject_cast 与标准 C++ 转换的比较
@@ -724,7 +724,7 @@ static_cast 是一种**编译时**类型转换：
 - 不会在运行时进行类型检查
 - 如果转换不安全，会导致未定义行为
 - 未定义行为并不会抛出异常，如果语法正确，编译会成功通过
-- static_cast检查继承关系传入其中的内容和转换对象是否合法（即判断他们是否有继承关系）	而无法检查运行时对象的实际类型，即只检查**语法上是否通过**而 qobject_cast 会**在运行时**检查转换对象和传入对象是否相同
+- static_cast检查继承关系传入其中内容和转换对象是否合法（即判断他们是否有继承关系）	而无法检查运行时对象的实际类型，即只检查**语法上是否通过**而 qobject_cast 会**在运行时**检查转换对象和传入对象是否相同
 dynamic_cast 是一种**运行时**类型转换：
 - 在运行时进行类型检查
 - 只能用于具有虚函数的类（多态类型）
@@ -733,7 +733,7 @@ dynamic_cast 是一种**运行时**类型转换：
 ## QCalendarWidget
 [Calendar Widget Example | Qt Widgets | Qt 6.9.1](https://doc.qt.io/qt-6/zh/qtwidgets-widgets-calendarwidget-example.html)
 主要学习嵌套布局
-### 嵌套布局中的组件排布
+### 嵌套布局中组件排布
 本项目有有这几个 GUI 显示区域
 ![[Pasted image 20250924105442.png|../../../../Files & LongText/Attachments/Pasted image 20250924105442.png]]
 左上角的可显示区域由于实时渲染，调整右侧的一些选项（如 `Grid`）是否勾选，会导致左侧布局大小改变带动整个窗口改变，所以在构造函数中需要**根据需要限制**，确保更新时不调整大小。
@@ -808,7 +808,7 @@ connect(comboBox, &QComboBox::currentIndexChanged, this, &Window::languageChange
 
 `currentIndexChange` 函数具体 change 到了哪一个 index ？
 
-> 我们为一个 QComobox addItem 之后，相当于添加了一个**具有自定义标签数值**的选项，如果选中了这个选项，QComboBox 组件会自动将自身状态中的 `currentIndex`（可以通过调用同名函数返回其副本）更新为组件的自定义标签数值，并将其作为参数传给 connect 连接的槽函数中
+> 我们为一个 QComobox addItem 之后，相当于添加了一个**具有自定义标签数值**的选项，如果选中了这个选项，QComboBox 组件会自动将自身状态中 `currentIndex`（可以通过调用同名函数返回其副本）更新为组件的自定义标签数值，并将其作为参数传给 connect 连接的槽函数中
 > 第二个参数的作用：
 > - 它不是让"第一个参数具有值"
 > - 而是让当前索引位置关联一个额外的数据
@@ -898,8 +898,8 @@ private slots:
 > 有两种方法：
 > 1. 编译器进行类型匹配，从 QT 元对象的链接表中自动遍历所有名为 `languageChanged` 的槽函数，信号函数会将这个索引广播出去 `languageChanged(itemData(currentIndex).toInt())`，由于 `itemDate()` 返回值为 `auserData`，是一个 `QVariant` 类型需要转换为 int，编译器找到类型匹配（接受 int 参数）的那一个重载（使用 SFINAE 机制在编译期查找）。
 > 2. 如果有多个接受相同参数的重载函数，比如 `QVariant` 是 int 类型，槽函数有 `int\long` 类型重载，**则会报错**
-> 
-> 可以通过多种方式指定需要使用哪一个重载函数处理发送过来的信号  
+>
+> 可以通过多种方式指定需要使用哪一个重载函数处理发送过来的信号
 1. 旧式字符串语法：
 ```cpp
 connect (comboBox, SIGNAL (currentIndexChanged (int)),
@@ -947,13 +947,13 @@ void Window::createGeneralOptionsGroupBox() {
 	checkBoxLayout->addWidget(gridCheckBox);
 	checkBoxLayout->addStretch();
 	checkBoxLayout->addWidget(navigationCheckBox);
-	
+
 	// 将所有组件放入布局中
 	QGridLayout* outerLayout = new QGridLayout;
 	outerLayout->addWidget(localeLabel, 0, 0);
 	generalOptionsGroupBox->setLayout(outerLayout);
 
-	// 手动初始化空间中的默认值，即程序打开后行为
+	// 手动初始化空间中默认值，即程序打开后行为
 	firstDayChanged(firstDayCombo->currentIndex());
 	selectionModeChanged(selectionModeCombo->currentIndex());
 	horizontalHeaderChanged(horizontalHeaderCombo->currentIndex());
@@ -975,7 +975,7 @@ void Window::createGeneralOptionsGroupBox() {
 [Tutorial: Qt Widgets application | Qt Creator Documentation](https://doc.qt.io/qtcreator/zh/creator-writing-program.html)
 ### QT 自动连接信号和槽
 
-Qt 中的自动信号和槽连接机制：
+Qt 中自动信号和槽连接机制：
 在 Qt 中，如果你的槽函数遵循特定的命名约定`on_<object_name>_<signal_name>()`，Qt会自动将信号和槽连接
 - UI 文件中有一个名为 `findButton` 的按钮（在 `TextFinder.ui` 中定义）
 - 头文件中有一个名为 `on_findButton_clicked()` 的槽函数
@@ -1001,7 +1001,7 @@ set(PROJECT_SOURCES
 )
 ```
 才能够将文件引入项目，打包到二进制文件中
-在 MSBuild 中，在 qrc 和 ui 文件中编辑之后，**一定要按 Ctrl+s**保存，之后 vxproj 文件中会自动将这两个文件中的内容引入。不需要写 CMakeLists. txt，并且写了 MSBuild 也无法读取
+在 MSBuild 中，在 qrc 和 ui 文件中编辑之后，**一定要按 Ctrl+s**保存，之后 vxproj 文件中会自动将这两个文件中内容引入。不需要写 CMakeLists. txt，并且写了 MSBuild 也无法读取
 
 
 ## Books
@@ -1029,16 +1029,16 @@ set(PROJECT_SOURCES
 	- `:memory:` 是SQLite的一个特殊标识符
 	- 它告诉SQLite在内存中创建一个临时数据库
 	- 这个数据库只存在于当前应用程序运行期间
-	- 不需要用户名/密码因为它是应用程序内部的
+	- 不需要用户名/密码因它是应用程序内部的
 	-  使用 `:memory:` 表示数据存储在内存中
-	- 每次程序重启，内存中的数据会完全消失，`initDb()` 函数会在程序启动时重新创建表结构并插入示例数据
+	- 每次程序重启，内存中数据会完全消失，`initDb()` 函数会在程序启动时重新创建表结构并插入示例数据
 - 如果你想让数据永久保存：
 	- 将` db.setDatabaseName (":memory: "); `改为文件路径
 	- 例如：`db.setDatabaseName ("books. db");`
 	- 这样数据会保存在名为 "books. db" 的文件中
 	- 重启程序后数据依然存在
 #### sql 预处理优化可读性
-对于简单的 sql 功能，只有 ascill 字符情况下可以**使用 `constexpre QLatin1String` 预编译字符串**，再将字符串的 sql 预编译，参数绑定，sql 执行封装一个函数中，比如代码中的 addAuthor，addGene 等
+对于简单的 sql 功能，只有 ascill 字符情况下可以**使用 `constexpre QLatin1String` 预编译字符串**，再将字符串的 sql 预编译，参数绑定，sql 执行封装一个函数中，比如代码中 addAuthor，addGene 等
 #### QSqlQuery 复用陷阱
 1. 每次调用 `exec()` 时，会清空之前的 SQL 语句和绑定内容
 2. 绑定值：每次调用 `addBindValue()` 时，会累积绑定值，不会自动清空
@@ -1052,11 +1052,11 @@ if (!q.prepare(INSERT_BOOK_SQL))
 ### 构建窗口部分（bookwindow. h）
 #### 最终显示视图和数据模型视图
 要查阅并允许修改数据库数据，所以项目中使用了 `QSqLRelationTableMode* model` 将最终需要显示出的数据都存放在 model 指针中，然后通过：
-- 表与表之间的链接关系（`setRelation()` 将不同表中的数据关联起来）
-- 表的列名字符串不再显示为数据库中的名称（`setHeaderData()` 设置 model 的“显示值”，并不会改动数据库中的元信息）
-- model 设置的是由数据库中各张表**根据 `setRelation()` 设置的规则**组合出来的“混合数据表”，别的 TableView 组件可以通过 `setModel()` 来获取这张“表"中的信息（qt 中讲这种行为称为***获取数据模型***）并显示在 gui 界面上。
+- 表与表之间的链接关系（`setRelation()` 将不同表中数据关联起来）
+- 表的列名字符串不再显示为数据库中名称（`setHeaderData()` 设置 model 的“显示值”，并不会改动数据库中元信息）
+- model 设置的是由数据库中各张表**根据 `setRelation()` 设置的规则**组合出来的“混合数据表”，别的 TableView 组件可以通过 `setModel()` 来获取这张“表"中信息（qt 中讲这种行为称为***获取数据模型***）并显示在 gui 界面上。
 
-最终显示在 gui 程序中的图标是通过 `QTableView* tableView` 组件实现的，数据库中的数据经过 model 加工设置之后，显示在 tableView gui中
+最终显示在 gui 程序中图标是通过 `QTableView* tableView` 组件实现的，数据库中数据经过 model 加工设置之后，显示在 tableView gui中
 
 - configureWidgets 函数中设置的是 tableView 组件的样式
 - createModel 函数中设置的是显示数据的内容。
@@ -1073,15 +1073,15 @@ if (!model->select()) {
 
 > ***bool QSqlTableModel::select()***
 > Populates the model with data from the table that was set via `setTable()`, using the specified filter and sort condition, and returns true if successful; otherwise returns false.
-> 
+>
 > Note: Calling `select()` will revert any unsubmitted changes and remove any inserted columns.
-> 
+>
 >  ***void QSqlTableModel::setTable(const QString &tableName)***
 >  Sets the database table on which the model operates to tableName. Does not select data from the table, but fetches its field information.
 >  To populate the model with the table's data, call `select()`.
 >  Error information can be retrieved with `lastError()`.
 
-可以知道，在调用 `model->select()` 函数前，model 不会存储任何数据库中的数据，有的只是一堆规则，`setTable`，`setRelation` 都只是告诉 model**应该怎样将数据***组织成数据模型***的规则**
+可以知道，在调用 `model->select()` 函数前，model 不会存储任何数据库中数据，有的只是一堆规则，`setTable`，`setRelation` 都只是告诉 model**应该怎样将数据***组织成数据模型***的规则**
 并且调用 `select()` 函数之前必须要使用 `setTable(table_name_str)` 告诉需要调用哪一个表
 
 `select()` 如何知道 sql 语句的数据库执行对象？
@@ -1103,20 +1103,20 @@ model->setRelation(genreIdx, QSqlRelation("genres", "id", "name"));    // 关系
 ```
 QSqlRelation 的文档说：
 
->  ***void QSqlRelationalTableModel:: setRelation (int column, const QSqlRelation &relation)*** 
+>  ***void QSqlRelationalTableModel:: setRelation (int column, const QSqlRelation &relation)***
 >  Lets the specified column be a foreign index specified by relation.
 >  Example:
-> 
+>
 >  model->setTable ("employee");
 >  model->setRelation(2, QSqlRelation("city", "id", "name"));
-> 
+>
 > The `setRelation()` call specifies that column 2 in table employee is a foreign key that maps with field id of table city, and that the view should present the city's name field to the user.
 > Note: The table's primary key may not contain a relation to another table.
 
 也就是说，代码 `model->setRelation(authorIdx, QSqlRelation("authors", "id", "name"));` ：
-- 将 books（`setTable` 设置的参考表）中的第 `authorIdx` 列**标记为为外键**（能够与别的表中列数据对应的列）
-- 用外键链接到 `authors` 表，链接依据是 `books.author == author.id` 
-- 连接之后将数据表中的 authorIdx 列数据显示为 `author.name` 中的数据
+- 将 books（`setTable` 设置的参考表）中第 `authorIdx` 列**标记为为外键**（能够与别的表中列数据对应的列）
+- 用外键链接到 `authors` 表，链接依据是 `books.author == author.id`
+- 连接之后将数据表中 authorIdx 列数据显示为 `author.name` 中数据
 
 ```sql
 -- books 表实际存储：
@@ -1155,7 +1155,7 @@ LEFT JOIN genres g ON b.genre = g.id
 #### 通过关系数据模型获取混合数据
 对于 `QSqlRelationTableMode` 对象，通过各种 set 函数[[#最终显示视图和数据模型视图|设置其中规则]]并[[#数据模型获取数据库数据|调用`select`函数]]之后，由于这个模型**只保存 setTable设置的参照表引用和各项施加于参照表的规则**，所以有两种获取“混合数据表”中数据的方法：
 - 获取参照表的数据
-	- `model.fieldIndex(Qstring str)`，通过列`名返回这列数据在表中的 index
+	- `model.fieldIndex(Qstring str)`，通过列`名返回这列数据在表中 index
 	- `model.record().fieldName(int index)`，通过 index 返回列名
 	- `model.data(index)` 通过 index 获取列信息
 data 还可以填入角色内容这一参数，不同的内容会**看**到不同的数据内容，：查阅文档可知，
@@ -1168,22 +1168,22 @@ data 还可以填入角色内容这一参数，不同的内容会**看**到不�
 
 - 获取参照表中**外键链接的表数据**
 	- `model->relationModel(authorIdx)` 会返回外键**指向的表的完整数据**（QSqlTableModel）
-	- 
-同时由于 `authorComboBox` 和 `genrComboBox` 中的内容是根据数据库中对应列的内容来的，所以必须要设置
+	-
+同时由于 `authorComboBox` 和 `genrComboBox` 中内容是根据数据库中对应列的内容来的，所以必须要设置
 ```cpp
 authorComboBox->setModel (model->relationModel (authorIdx));
 authorComboBox->setModelColumn (model->relationModel (authorIdx)->fieldIndex ("name"));
 genreComboBox->setModel (model->relationModel (genreIdx));
 genreComboBox->setModelColumn (model->relationModel (genreIdx)->fieldIndex ("name"));
 ```
-先 setModel 告诉 combobox 的数据从哪一个数据模型中来，再使用 setModelColumn 告诉 combobox 数据来源于数据模型中的哪一列
+先 setModel 告诉 combobox 的数据从哪一个数据模型中来，再使用 setModelColumn 告诉 combobox 数据来源于数据模型中哪一列
 
 #### 数据模型和 UI 控件同步
-QDataWidgetMapper 是Qt中实现UI控件与数据模型双向绑定的关键类，它实现了MVVM（Model-View-ViewModel）设计模式中的数据映射功能。
+QDataWidgetMapper 是Qt中实现UI控件与数据模型双向绑定的关键类，它实现了MVVM（Model-View-ViewModel）设计模式中数据映射功能。
 
 核心功能
 1. 双向数据同步
-	- 模型→UI：当模型中的当前行改变时，自动将数据填充到对应的UI控件
+	- 模型→UI：当模型中当前行改变时，自动将数据填充到对应的UI控件
 	- UI→模型：当用户编辑UI控件时，自动将更改保存回模型
 2. 数据映射机制
 ```cpp
@@ -1207,7 +1207,7 @@ model->setEditStrategy(QSqlTableModel::OnManualSubmit);
 void BookWindow::createMappings() {
     QDataWidgetMapper *mapper = new QDataWidgetMapper(this);
     mapper->setModel(model);
-    
+
     // 设置自定义委托，用于特殊显示（如星级评分）
     mapper->setItemDelegate(new BookDelegate(this));
     mapper->addMapping(titleLineEdit, model->fieldIndex("title"));
@@ -1215,8 +1215,8 @@ void BookWindow::createMappings() {
     mapper->addMapping(authorComboBox, authorIdx);
     mapper->addMapping(genreComboBox, genreIdx);
     mapper->addMapping(ratingComboBox, model->fieldIndex("rating"), "currentIndex");
-    
-    // 表格中选择的行改变 → 更新mapper的当前索引 → 在修改ui或者数据库中的内容是更新表单控件或者数据库数据
+
+    // 表格中选择的行改变 → 更新mapper的当前索引 → 在修改ui或者数据库中内容是更新表单控件或者数据库数据
     connect(tableView->selectionModel(),
             &QItemSelectionModel::currentRowChanged,
             mapper,
@@ -1228,7 +1228,7 @@ void BookWindow::createMappings() {
 #### 委托机制 www？
 委托就像是一个"UI 设计师"，它告诉 Qt 表格"**这个数据该怎么画出来**"和"**如果要编辑这个数据该用什么工具**"。
 自定义一个委托类，继承自 qt 的内置委托类型，可以通过查阅文档来知道**必须要重写什么函数**，委托类可以应用于**任何基于项(item)的视图组件**
-项目中的视图主要是 sql 数据视图，所以这里委托类继承 QSqlRelatioalDelegate
+项目中视图主要是 sql 数据视图，所以这里委托类继承 QSqlRelatioalDelegate
 ```cpp
 class BookDelegate : public QSqlRelationalDelegate
 ```
@@ -1247,7 +1247,7 @@ class BookDelegate : public QSqlRelationalDelegate
 可以看到代码中对于不是想要实现渲染的列（如 rating 列需要由数字渲染成星星图案），会调用父类默认方法进行渲染
 ```cpp
 if (index.column() != 5) {
-	// 如果不是数据库中的第5列，使用父类的标准渲染方法（一般是渲染文字内容，rating栏只会显示星星数量)
+	// 如果不是数据库中第5列，使用父类的标准渲染方法（一般是渲染文字内容，rating栏只会显示星星数量)
 	QSqlRelationalDelegate::paint(painter, option, index);
 } else { /* code */ }
 ```
@@ -1269,7 +1269,7 @@ public:
 ```
 ```cpp
 QTableView::paintEvent() →
-    扫描可视区域中的所有单元格 →
+    扫描可视区域中所有单元格 →
     对于每个单元格：
         创建 QStyleOptionViewItem
         option.rect = 单元格的实际矩形区域
@@ -1279,9 +1279,9 @@ QTableView::paintEvent() →
 ```
 绘制时需要的大小提示信息通过 `sizeHint` 函数获取，editorEvent 发生在控件值发生改变时，这里 bookdelegate 类将除了评分行的点击事件全部交给父类默认 editorEvent 执行。
 
-- mapper 和 tableView 对象都设置 `setItemDelegate()`，这就导致了 mapper 和 tableView 控件中的任何一个 item 只要发生了**用户对控件的编辑事件**，就会触发调用 `editorEvent()` 调用，同理，如果两者之中的任何一个 item 发生了**用户想要创建对没有编辑框组件的编辑操作事件**（比如对 tableView 中的只读单元格使用双击操作） `createEditor()` 就会被调用
-- 由于 mapper 中存在将控件映射到数据模型中数据的关系，那么这些控件中的数据更改一半由数据模型通知 ui 和数据库同事更改。如果后面 mapper 映射的控件中如果有**不可编辑**但**能够被创建编辑**的功能的**可点击区域**就会触发 `editorEvent()` 或者 `createEditor()`
-- tableView 中的单元格在双击时会触发数据 createEditor 创建编辑框操作，因为这些组件**在视觉上和逻辑上**是不支持编辑的，用户想要编辑，就会触发对应的操作，在**用户想要编辑一个不可编辑的组件时**发生的行为被 bookDelegate 代理。
+- mapper 和 tableView 对象都设置 `setItemDelegate()`，这就导致了 mapper 和 tableView 控件中任何一个 item 只要发生了**用户对控件的编辑事件**，就会触发调用 `editorEvent()` 调用，同理，如果两者之中任何一个 item 发生了**用户想要创建对没有编辑框组件的编辑操作事件**（比如对 tableView 中只读单元格使用双击操作） `createEditor()` 就会被调用
+- 由于 mapper 中存在将控件映射到数据模型中数据的关系，那么这些控件中数据更改一半由数据模型通知 ui 和数据库同事更改。如果后面 mapper 映射的控件中如果有**不可编辑**但**能够被创建编辑**的功能的**可点击区域**就会触发 `editorEvent()` 或者 `createEditor()`
+- tableView 中单元格在双击时会触发数据 createEditor 创建编辑框操作，因这些组件**在视觉上和逻辑上**是不支持编辑的，用户想要编辑，就会触发对应的操作，在**用户想要编辑一个不可编辑的组件时**发生的行为被 bookDelegate 代理。
 - 想要编辑首先要能够编辑，所以要创建可编辑组件，年份单元格我们想要他被编辑时弹出的可编辑框是一个 spinbox 而不是一个简单的文本编辑框，就使用 if 分支特化处理
 ```cpp
 QWidget *BookDelegate::createEditor(QWidget *parent,
@@ -1299,7 +1299,7 @@ QWidget *BookDelegate::createEditor(QWidget *parent,
     return sb;
 }
 ```
-其他列会被 `QSqlRelationalDelegate::createEditor` 中的默认行为接管，查阅文档可可知 `QSqlRelationalDelagate` 会将外键列的创建编辑框行为默认创建为下拉列表，而其他列则创建默认文本编辑框可以通过注释代码，将所有列的行为交给 `QSqlRelationalDelagate::createEditor` 处理
+其他列会被 `QSqlRelationalDelegate::createEditor` 中默认行为接管，查阅文档可可知 `QSqlRelationalDelagate` 会将外键列的创建编辑框行为默认创建为下拉列表，而其他列则创建默认文本编辑框可以通过注释代码，将所有列的行为交给 `QSqlRelationalDelagate::createEditor` 处理
 ```cpp
 QWidget *BookDelegate::createEditor(QWidget *parent,
                                     const QStyleOptionViewItem &option,
@@ -1333,7 +1333,7 @@ QWidget *BookDelegate::createEditor(QWidget *parent,
 - 临时部件是更复杂的类的实例，并且它们的头文件包含了一些你不想暴露给 `screenshot.h` 的使用方的依赖
 - 不需要被其他控件使用（比如其他类需要这个组件的字体信息，大小设置，**不需要使用 setter 和 getter 来让其他类获取**）
 那么这些（控件）对象就没必要出现在头文件中（即使是 private 修饰）。不必担心这些控件的依赖关系混乱或者生命周期问题导致的悬空引用
-Qt 的对象树模型: Qt 使用对象树来管理内存。当 new 一个 QObject时，如果指定了父对象（例如 `new QGroupBox(tr("Options"), this)` 中的 this），那么当父对象被销毁时，所有子对象也会被自动销毁。对于布局管理器来说，它们通常被设置为父部件的布局，因此它们的生命周期由父部件管理，不需要（有时也不建议）额外的成员变量指针来管理。
+Qt 的对象树模型: Qt 使用对象树来管理内存。当 new 一个 QObject时，如果指定了父对象（例如 `new QGroupBox(tr("Options"), this)` 中 this），那么当父对象被销毁时，所有子对象也会被自动销毁。对于布局管理器来说，它们通常被设置为父部件的布局，因此它们的生命周期由父部件管理，不需要（有时也不建议）额外的成员变量指针来管理。
 
 通常，UI 对象只会初始化一次显示在屏幕上，ui 控件的状态通过函数修改。如果小对象频繁被创建和销毁会导致性能问题，但如果调用次数不多（或者仅仅初始化一次）就可以忽略。
 代码中
@@ -1349,8 +1349,8 @@ QPushButton *newScreenshotButton;
 - newScreenshotButton 的状态在 `newScreenshot` 和 `shootScreen` 函数中被修改（禁用/启用）
 ### 布局和控件关系
 布局是不可见的**管理器**，控制其中对象的排列规则，管理部件几何形状和位置，不关心**其父对象**中有多少子对象，子对象是什么。
-控件**大多是可见的**，能够 `addxxx()` 的控件可以看做是一个 container，他只关心其中有什么，不关心其中的东西如何排列。
-如果一个控件是 layout，那么它支持**在构造函数中使用 parent 参数指向父对象**，前提是父对象是一个 container，设置好父对象之后，对这个 layout 中的操作（如 addWidget）都会自动纳入父对象中作为子对象
+控件**大多是可见的**，能够 `addxxx()` 的控件可以看做是一个 container，他只关心其中有什么，不关心其中东西如何排列。
+如果一个控件是 layout，那么它支持**在构造函数中使用 parent 参数指向父对象**，前提是父对象是一个 container，设置好父对象之后，对这个 layout 中操作（如 addWidget）都会自动纳入父对象中作为子对象
 ```cpp
 QGridLayout *optionsGroupBoxLayout = new QGridLayout(optionsGroupBox);
 optionsGroupBoxLayout->addWidget(new QLabel(tr("Screenshot Delay:"), this), 0, 0);
@@ -1369,9 +1369,9 @@ mainLayout->addWidget(optionsGroupBox);  // addWidget
 
 > [!note]
 > 自动删除: 当一个父 QObject 被 delete 时，Qt 会自动删除该父对象的所有子对象。这个过程会**递归进行**，即父对象的子对象被删除时，子对象的子对象也会被删除，以此类推，***形成一个完整的树状结构***
-> 
+>
 > 这种***子对象不能比父对象活得更久***的约束机制，当父对象被销毁时，其所有子对象也必须被销毁，极大地简化了内存管理，开发者只需要关心父对象的生命周期，而不需要记住去手动删除每一个子对象，避免内存泄漏。
-> 
+>
 > 如果想要子对象脱离父对象管控，可以调用 `setParent(nullptr)` 或 `setParent(newParent)`）。子对象就**脱离了原来的对象树**，不再由原来的父对象管理，需要手动 delete
 
 其次：
@@ -1424,12 +1424,12 @@ AcceptMode：定义了文件对话框的意图：是用于选择文件来打开�
 `fileMode`: 定义了用户在文件对话框中选择文件的方式。
 * 主要选项:
    * `QFileDialog::AnyFile`:
-	 允许用户选择任意文件，包括不存在的文件名。这常用于 "Save As" 对话框，因为用户可能要创建一个新文件。
+	 允许用户选择任意文件，包括不存在的文件名。这常用于 "Save As" 对话框，因用户可能要创建一个新文件。
    * `QFileDialog::ExistingFile`: 允许用户选择一个已存在的文件。这常用于"Open File" 对话框。
    * `QFileDialog::Directory`: 允许用户选择一个目录 (文件夹)。
    * `QFileDialog::ExistingFiles`: 允许用户选择一个或多个已存在的文件。
 
-#### 获取路径中的文件（filter）
+#### 获取路径中文件（filter）
 - 获取系统默认图片存储位置（windows 一般是 C:/Users/username/picture）
 ```cpp
 QString initialPath = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
@@ -1440,7 +1440,7 @@ QCoreApplication::applicationDirPath(); // 当前可执行程序的文件路径
 QCoreApplication::applicationFilePath(); // 另一种写法
 QDir::currentPath(); // 获取pwd
 ```
-- 最终显示对话框的代码是 `fileDialog.exec()`，会返回用户在窗口中的选择结果
+- 最终显示对话框的代码是 `fileDialog.exec()`，会返回用户在窗口中选择结果
 	* 如果用户点击 "Cancel"返回 `QDialog::Rejected`），函数返回，不执行保存。
 	* 如果用户点击 "Save"返回 `QDialog::Accepted`），获取用户输入或选择的完整文件路径 (fileName)。
 
@@ -1453,12 +1453,12 @@ fileDialog.setDefaultSuffix(format);
 
 > [!question]
 > qt 中表示字符串可以通过 Qstrong，也可以通过 QByteArray 保存，代码中还要先创建 ` QStringList`（是 `QList<QString>` 的封装），然后创建 ` QList<QByteArray>`，再通过 `QImageWriter:: supportedMimeTypes (); ` 将所有支持的格式的字符串一个个放入 mimeTypes 中
-> 
+>
 >> [!anwser] 这一操作通常出于性能和底层实现的考虑，QByteArray 直接对应 C 风格的字节流。`QFileDialog::setMimeTypeFilters(const QStringList &filters)` 期望接收 `QStringList`。所以必须进行类型转换，将 QByteArray 列表转换为 QStringLIst。`QLatin1String(bf)` 对于 MIME 类型使用 Latin-1 编码，是一种高效和安全的做法
 
-一个 QFileDialog 对象不可多次调用 `selectMimeTypeFilter (const QString &filter)`，但可以设置一个过滤器列表，。也就是说填入其中的可以是一个字符串，这个参数必须是 `setMimeTypeFilters` 设置的列表中的一个具体过滤器字符串（通常是 MIME 类型）。**它不是用逗号分隔的列表**
-`selectMimeTypeFilter (const QString &filter)` 只能选择一个已经通过 `setMimeTypeFilters` 设置好的过滤器作为当前默认选中项。它不能添加新过滤器。参数必须是 setMimeTypeFilters 列表中的一个具体的过滤器字符串（如 "image/png"）。
-`fileDialog.selectMimeTypeFilter("image/" + format); ` 中的"image/"是一种标准 MIME 文件类型写法：
+一个 QFileDialog 对象不可多次调用 `selectMimeTypeFilter (const QString &filter)`，但可以设置一个过滤器列表，。也就是说填入其中可以是一个字符串，这个参数必须是 `setMimeTypeFilters` 设置的列表中一个具体过滤器字符串（通常是 MIME 类型）。**它不是用逗号分隔的列表**
+`selectMimeTypeFilter (const QString &filter)` 只能选择一个已经通过 `setMimeTypeFilters` 设置好的过滤器作为当前默认选中项。它不能添加新过滤器。参数必须是 setMimeTypeFilters 列表中一个具体的过滤器字符串（如 "image/png"）。
+`fileDialog.selectMimeTypeFilter("image/" + format); ` 中"image/"是一种标准 MIME 文件类型写法：
   "image/“ 是 MIME 类型标准的一部分。
 
 * MIME 类型通常由两部分组成：主类型/子类型 (major-type/sub-type)。
@@ -1466,7 +1466,7 @@ fileDialog.setDefaultSuffix(format);
 * `QImageWriter::supportedMimeTypes()` 返回的就是这种标准的 MIME 类型字符串列表
 这三条语句可以看做是 `QFileDialog filedialog(this,tr("Save As"),initialPath /*, "" */);` 第四个参数的**细化\拓展表示**
 
-QDir 中提供了 toNativeSeparators 函数，可以返回操作系统中路径字符串的对应显示方法，windows 中用 `\`，unix 类系统使用 `/` ，但是内部处理路径时这两种表示方法都会统一处理
+QDir 中提供了 toNativeSeparators 函数，可以返回操作系统中路径字符串的对应显示方法，windows 中用 `\`，unix 类系统使用 `/` ，但内部处理路径时这两种表示方法都会统一处理
 
 ### 截屏操作
 ```cpp
@@ -1499,7 +1499,7 @@ int main(int argc, char* argv[]){
 
 ## DocumentViewer
 ### 从项目的 cmake 构建开始
-#### 根目录的 CMakeLists. txt 
+#### 根目录的 CMakeLists. txt
 ```cmake
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets
              OPTIONAL_COMPONENTS PrintSupport Pdf PdfWidgets Quick3D)
@@ -1529,7 +1529,7 @@ add_compile_definitions(QT_NO_CAST_FROM_ASCII)
 `QT_NO_CAST_FROM_ASCII` 的宏定义作用是：
  - 禁止 `const char*`到 QString 的隐式转换
 - 仍可以使用字符串字面量，但应该使用现代 Qt 的字符串字面量后缀
--  `"text"_L1` 使用`_L1`后缀（Qt 6.0+中的`Qt::Literals:: operator""_L1`）
+-  `"text"_L1` 使用`_L1`后缀（Qt 6.0+中`Qt::Literals:: operator""_L1`）
 - `QLatin1String("text")` - 显式使用QLatin1String
 - `QStringLiteral("text")` - 使用QStringLiteral
 
@@ -1580,7 +1580,7 @@ Qt 可以以两种方式构建：
 - 这会影响你的应用程序如何与 Qt 交互
 不同的编译方法会触发不同的程序逻辑：
 ```cpp
-// abstractviewer中的代码
+// abstractviewer中代码
 #if defined(QT_SHARED) || !defined(QT_STATIC) // 如果是动态连接方式
   if defined(BUILD_ABSTRACTVIEWER_LIB)
     define ABSTRACTVIEWER_EXPORT Q_DECL_EXPORT
@@ -1604,8 +1604,8 @@ Qt 可以以两种方式构建：
 ```
 - `Q_DECL_EXPORT` =` __declspec(dllexport)` (Windows) 或其他导出标识
 - `Q_DECL_IMPORT` = `__declspec(dllimport)` (Windows) 或其他导入标识
-- linux/macos 默认导出库文件中的所有可见符号，如果需要控制需要在链接阶段通过调整**链接选项**实现。
-- windows 如果要导出库中的符号，需要使用 `__deslspec(dllexport/dllimport)`，然后编译器会根据这些内容来决定那些符号可见
+- linux/macos 默认导出库文件中所有可见符号，如果需要控制需要在链接阶段通过调整**链接选项**实现。
+- windows 如果要导出库中符号，需要使用 `__deslspec(dllexport/dllimport)`，然后编译器会根据这些内容来决定那些符号可见
 - `target_compile_definitions (abstractviewer PRIVATE BUILD_ABSTRACTVIEWER_LIB)` 只影响 abstractviewer 这个目标（库）的编译。
 - 然后 abstractviewer 这个**库**执行 `#ifdefined（BUILD_ABSTRACTVIEWER_LIB）#defineABSTRACTVIEWER_EXPORT Q_DECL_EXPORT` 命令，将 abstractviewer 类中所有带有 `ABSTRACTVIEWER_EXPORT` 宏（**被定义为导出符号**）修饰的符号导出。而其他库代码由于看不见 `BUILD_ABSTRACTVIEWER_LIB` 宏，所以看会执行 else 逻辑，将所有带有 ABSTRACTVIEWER_EXPORT 修饰的符号在动静态库中查找（导入符号）
 #### 链接可见性选项
@@ -1685,7 +1685,7 @@ if(TARGET Q3Dviewer)
     list(APPEND plugin_targets Q3Dviewer)
 endif()
 ```
-- 因为之前 `set(plugin_targets jsonviewer txtviewer)`，plugin_targets 变量变成了一个列表，`list(append ...)` 相当于在列表后面添加内容
+- 因之前 `set(plugin_targets jsonviewer txtviewer)`，plugin_targets 变量变成了一个列表，`list(append ...)` 相当于在列表后面添加内容
 - 它用于动态管理插件列表
 
 qt 6.8.0 版本中，QtPDFWidget 库是商业版本 qt 才有的，开源版本 qt 无此功能，可以再 maintenance tools 中看到：

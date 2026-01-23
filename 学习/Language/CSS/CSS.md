@@ -17,17 +17,17 @@
 - `text-decoration` 设置 underline 下划线样式
 - `font-weight` 设置字体粗细
 #### 盒子模型
-浏览器中可以**选中元素之后**可以在*元素窗口中*检视各种标签的元素构成和 CSS 样式在**盒子模型中的构成**
+浏览器中可以**选中元素之后**可以在*元素窗口中*检视各种标签的元素构成和 CSS 样式在**盒子模型中构成**
 ![[Pasted image 20250115214337.png]]
 盒子模型在网页开发中较为常用
-![[Pasted image 20250115214456.png]] 
+![[Pasted image 20250115214456.png]]
 ![[Pasted image 20250115214705.png|鼠标可视化查看]]
 margin 和 padding 都有上下左右之分，`margin-direction` 设置对应属性，也可以 `margin: top right down left` 上右下左顺序
 边框声明需要三个参数，粗细 px，边框类型，边框颜色
 
 ---
 内联和块级：
-- 可以手动在 css 中设置 display 声明值为 `block` 、`inline`、`inline-block` 或 `none` 讲一个元素设置为块级或内联元素，**内联元素不能设置宽和高**，但是内联块级元素可以，display 中设置 `inline-block` 即可实现，`none` 元素说明这个标签**不可见**
+- 可以手动在 css 中设置 display 声明值为 `block` 、`inline`、`inline-block` 或 `none` 讲一个元素设置为块级或内联元素，**内联元素不能设置宽和高**，但内联块级元素可以，display 中设置 `inline-block` 即可实现，`none` 元素说明这个标签**不可见**
 
 #### 布局模型
 ---
@@ -46,13 +46,13 @@ margin 和 padding 都有上下左右之分，`margin-direction` 设置对应属
 	- `center` 表示主轴中间
 	- `flex-end` 表示主轴末尾
 	- `space-around` 表示：![[Pasted image 20250115221244.png|粉色为弹性容器范围]]
-	- `space-between` 表示：![[Pasted image 20250115221345.png]]	
+	- `space-between` 表示：![[Pasted image 20250115221345.png]]
 - `item-align` 同理，连**上面提到的声明值**都一样
 
 ---
 ##### 网格布局
 网格布局需要一个**父元素并将其 `display` 声明值设置为 `grid`**，注意不是将 class 设置为 grid 就可以，类名是可以随便定义的，而 display 值**暂时只能从预设里选**
-在一个 display 为 grid 的容器中，每一个字容器的排列都**按照样式表中的安排排列**
+在一个 display 为 grid 的容器中，每一个字容器的排列都**按照样式表中安排排列**
 ```html
 <body>
     <link rel="stylesheet" href="./src/css/temp.css">
@@ -64,7 +64,7 @@ margin 和 padding 都有上下左右之分，`margin-direction` 设置对应属
     </div>
 </body>
 ```
-css 中 `grid-template-columns` 的计算方法同[[CSS#^rdb1pp|弹性容器中的flex声明值]]
+css 中 `grid-template-columns` 的计算方法同[[CSS#^rdb1pp|弹性容器中flex声明值]]
 ```css
 .grid{
     display: grid;
@@ -116,7 +116,7 @@ template 表示手动设置模板，也可以换成 auto 自动调节**一行或
     bottom: 0;;
 }
 ```
-- 这样写时在 outside 容器中使用绝对位置（因为需要定义位置的 inside 容器 position 类型是 absolute）定义 inside 容器，inside 容器应为外部是 relative （就像一个普通的 html 标签，位置该怎么排怎么排）的容器
+- 这样写时在 outside 容器中使用绝对位置（因需要定义位置的 inside 容器 position 类型是 absolute）定义 inside 容器，inside 容器应为外部是 relative （就像一个普通的 html 标签，位置该怎么排怎么排）的容器
 - absolute 作为 position 声明值的选择器，是**按照声明方向确定原点**
 - 声明值还可以为**百分数**
 - fixed 可以让元素在相对于浏览器窗口位置**固定**，常用于导航栏、侧边栏

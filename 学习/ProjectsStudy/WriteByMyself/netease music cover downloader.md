@@ -5,7 +5,7 @@ created: 2025年10月4日16:49:16
 # cover_downloader. cpp
 ## 网络请求发送部分
 ### http 和 htttps 分流
-首先解析 http 或者 https 链接中的主机地址和文件路径
+首先解析 http 或者 https 链接中主机地址和文件路径
 ```cpp
 std::string host, path;
 bool is_https = false;
@@ -59,19 +59,19 @@ ctx.set_verify_mode(ssl::verify_none); // In a real application, set appropriate
 > 参数 `ssl::context::tlsv12_client` 的含义：
 > - tlsv12：指定使用 TLS 1.2 协议（Transport Layer Security，传输层安全协议）
 > - client：表明这是客户端模式（与服务器模式相对）
-> 
+>
 > **为什么要创建 SSL Context？**
 > - SSL 连接不是简单的"开/关"操作，需要很多配置参数
 > - 不同的应用可能需要不同的安全级别和配置
 > - Context 集中管理所有这些配置，便于复用和管理
 > **设置验证模式**
 > 当程序连接到服务器时，服务器会提供一个"数字证书"，**证明它确实是它声称的那个网站。证书验证就是检查这个证书是否真实有效**。
-> 项目中使用了 `verify_none` 是由于这个功能比较简单，没有那么多复杂的功能，省去验证证书带来的各种网络，验证是否过期的问题 
+> 项目中使用了 `verify_none` 是由于这个功能比较简单，没有那么多复杂的功能，省去验证证书带来的各种网络，验证是否过期的问题
 > **`ssl::verify_none` 的含义：**
 > - 不验证服务器的证书
 > - 任何证书都被接受
 > - 可以使用 `ssl::verify_peer` 设置验证服务器证书
-> - 使用 `ctx.set_verify_callback(ssl::rfc2818_verification("music.163.com"));` 验证证书颁发机构，但是一般没有必要
+> - 使用 `ctx.set_verify_callback(ssl::rfc2818_verification("music.163.com"));` 验证证书颁发机构，但一般没有必要
 
 ### SSL 验证步骤
 1. 获取 IP 地址和端口 `tcp::resolover resolver{ioc};`
@@ -84,7 +84,7 @@ auto const results = resolver.resolve(host, "443");
 beast::tcp_stream stream{ioc};
 beast::get_lowest_layer(stream).connect(results);
 ```
-创建完 tcp 流对象用来处理 tcp 通信，然后就需要告知 tcp 需要和哪一个对象通信，即使用 `get_lowest_layer` 获得最底层的 tcp 连接句柄（因为选择了 https 连接协议，ssl 协议建立在 tcp 协议之上，所以会被 ssl 包装，如果不使用 `get_lowest_layer` 则会将 ssl 协议连接到 IP 地址服务器上），将他连接到 result 所指向的 ip 地址的服务器中
+创建完 tcp 流对象用来处理 tcp 通信，然后就需要告知 tcp 需要和哪一个对象通信，即使用 `get_lowest_layer` 获得最底层的 tcp 连接句柄（因选择了 https 连接协议，ssl 协议建立在 tcp 协议之上，所以会被 ssl 包装，如果不使用 `get_lowest_layer` 则会将 ssl 协议连接到 IP 地址服务器上），将他连接到 result 所指向的 ip 地址的服务器中
 ```cpp
 beast::ssl_stream<beast::tcp_stream&> ssl_stream{stream, ctx};
 

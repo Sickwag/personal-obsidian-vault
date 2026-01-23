@@ -45,14 +45,14 @@ Docker 中
 - 安装之后在系统设置中启动 Docker，设置中开启 *hyper-v*功能之后可以在命令行中使用 Docker 代码
 ## Docker 运行逻辑
 ![Pasted image 20240913212559.png](Pasted%20image%2020240913212559.png)
-- docker daemon 是服务端守护进程，用来管理服务端资源，client 中的操作（终端输入 docker 指令）由 client 发送给 docker daemon 处理之后将返回结果发送回 client（执行结果）
+- docker daemon 是服务端守护进程，用来管理服务端资源，client 中操作（终端输入 docker 指令）由 client 发送给 docker daemon 处理之后将返回结果发送回 client（执行结果）
 - docker daemon 是一个后台服务进程，类似 mysql 80
 - client 和 docker host 之间通过 socket 或 restful API 通信
 ## 容器化和 dockerfile
 ![Pasted image 20240913213157.png](Pasted%20image%2020240913213157.png)
 dockerfile 是镜像创建指导文件，告诉 docker 如何创建这个程序的操作系统环境（一般是精简的）、第三方库、依赖文件、编译器、环境变量等
 ## 实战
-vscode 中安装 Docker 插件，在工作目录中创建一个 `Dockerfile` 文件（没有拓展名） 
+vscode 中安装 Docker 插件，在工作目录中创建一个 `Dockerfile` 文件（没有拓展名）
 
 # Linux 下 Docker
 ## Docker 安装和部署
@@ -72,7 +72,7 @@ Linux 下 Docker 安装命令
 
 ## 部署镜像
 使用阿里云提供镜像[容器镜像服务 (aliyun.com)](https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors)
-用提供的代码部署镜像加速器	
+用提供的代码部署镜像加速器
 ```bash
 sudo mkdir -p /etc/docker
 sudo tee /etc/docker/daemon.json <<-'EOF'
@@ -114,7 +114,7 @@ sudo systemctl restart docker
 ### 3. 名词解释
 
 - 镜像（image）
-    - Docker镜像就好比是一个模板，可以通过这个模板来创建容器服务，tomcat镜像 ===> run ===> tomcat01容器， 通过这个镜像可以创建多个容器（最终服务运行或者项目运行就是在容器中的）
+    - Docker镜像就好比是一个模板，可以通过这个模板来创建容器服务，tomcat镜像 ===> run ===> tomcat01容器， 通过这个镜像可以创建多个容器（最终服务运行或者项目运行就是在容器中）
 - 容器（container）
     - Docker利用容器技术，独立运行一个或者一组应用， 通过镜像来创建的
     - 启动，停止，删除，基本命令！

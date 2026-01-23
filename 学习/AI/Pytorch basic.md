@@ -2,8 +2,8 @@
 ## PyTorch 官方文档
 ### 张量
 [Tensors — PyTorch Tutorials 2.6.0+cu124 documentation](https://pytorch.org/tutorials/beginner/basics/tensorqs_tutorial.html)
-默认情况下，张量是在 CPU 上创建的。我们需要使用 `.to` 方法实现，但是在不同 device 中复制张量数据非常消耗时间和算力
-省略号 `...` 是Python中的一种特殊语法，用于在多维数组中表示“所有未被显式指定的维度”。它的作用类似于在切片中省略某些维度的写法，但其意义更明确，特别是在处理高维数组时非常有用。
+默认情况下，张量是在 CPU 上创建的。我们需要使用 `.to` 方法实现，但在不同 device 中复制张量数据非常消耗时间和算力
+省略号 `...` 是Python中一种特殊语法，用于在多维数组中表示“所有未被显式指定的维度”。它的作用类似于在切片中省略某些维度的写法，但其意义更明确，特别是在处理高维数组时非常有用。
 - `tensor[:, :, -1]` 表示对第3维（最后一个维度）取最后一个元素。
 - `tensor[..., -1]` 也表示对最后一个维度取最后一个元素，但它更简洁，尤其在高维情况下。
 `tensor = torch.arange(24).reshape(2, 3, 4)` 创建了一个形状为 `(2, 3, 4)` 的张量，内容为
@@ -16,7 +16,7 @@
 [[12, 13, 14, 15],
  [16, 17, 18, 19],
  [20, 21, 22, 23]]
- 
+
 第一个2维切片的第3维最后一个元素：
 [ 3,  7, 11],
 第二个2维切片的第3维最后一个元素：
@@ -159,11 +159,11 @@ for i in range(cols * rows + 1):  # 循环10次，i从0到9
 plt.show()  # 显示所有图像
 ```
 Matplotlib 的 `pyplot` 模块（即 `plt`）维护了一个**全局状态机**，它会自动跟踪当前活跃的 `figure` 和 `axes`（子图）。当你在代码中通过 `figure.add_subplot()` 添加子图时，这些子图会被自动关联到当前的 `figure` 对象，而 `plt.show()` 会渲染所有已创建的 `figure` 对象。
-- **`figure = plt.figure(figsize=(8, 8))`**  
+- **`figure = plt.figure(figsize=(8, 8))`**
     显式创建一个新的 `figure` 对象，并将其设置为当前活跃的 `figure`。
-- **`figure.add_subplot(rows, cols, i)`**  
+- **`figure.add_subplot(rows, cols, i)`**
     向该 `figure` 中添加子图，每次添加的子图会被存储在 `figure` 的 `axes` 列表中。
-- **`plt.show()`**  
+- **`plt.show()`**
     显示所有已创建的 `figure` 对象（包括当前 `figure` 及其子图）。
 每次调用 `plt.figure()` 都会生成一个新的独立窗口，所以不用担心 plt 的名称是唯一的而导致混乱，真正存储图表数据的还是使用 `plt.figure` 创建的变量，`plt.show ()` 只是一个方法，自动扫描所有 figure 对象并显示出来
 ```python
@@ -195,7 +195,7 @@ class CustomImageDataset(Dataset):
     def __init__(
         self, annotations_file, img_dir, transform=None, target_transform=None
     ) -> None:
-        self.img_labels = pd.read_csv(annotations_file) # 读取文件中的标签
+        self.img_labels = pd.read_csv(annotations_file) # 读取文件中标签
         self.img_dir = img_dir
         self.transform = transform  # 使用transform函数对图像预处理
         self.target_transform = transform  # 对标签进行预处理
@@ -254,12 +254,12 @@ ds = datasets.FashionMNIST(
     root="data",
     train=True,
     download=True,
-    transform=ToTensor(), # 定义对训练集中的图片的转化方式，这里将图片转化为tensor
+    transform=ToTensor(), # 定义对训练集中图片的转化方式，这里将图片转化为tensor
     target_transform = Lambda(lambda y: torch.zeros(10,dtype=torch.float).scatter_(0,torch.tensor(y),value=1))
     # 这里定义对标签进行转换，使用匿名函数定义转换规则
 )
 ```
-转换规则为：生成一个长度为 10 的全 0 浮点数张量，并将传入的参数对应的张量中的列改为 1
+转换规则为：生成一个长度为 10 的全 0 浮点数张量，并将传入的参数对应的张量中列改为 1
 [ToTensor](https://pytorch.org/vision/stable/transforms.html#torchvision.transforms.ToTensor) 将 PIL 图像或 NumPy `ndarray` 转换为 `FloatTensor`。并在 [0.， 1] 范围内缩放图像的像素强度值。
 
 ### Build the Neural Network
