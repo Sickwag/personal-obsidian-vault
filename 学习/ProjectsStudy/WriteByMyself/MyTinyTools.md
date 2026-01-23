@@ -750,3 +750,68 @@ else          /* <- else 缺乏对应 if */
 # 施磊手写线程池
 参考：[IO密集型和CPU密集型程序_ev_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Fb421H7ep?spm_id_from=333.788.player.switch&vd_source=876be08bc9c030f4a9ea1fb97e0d0342&p=3)
 资料：https://pan.baidu.com/s/1Q_fM-jpTIizA5WnWyj_h4A 提取码: kw9j
+## 前置知识
+### IO 密集型和 CPU 密集型
+多线程程序一定好吗？
+不一定，需要根据当前程序的类型来做判断：
+- 多核 CPU
+	- IO 密集型，程序里面指令的执行，涉及一些 IO 操作，比如设备、文件、网络操作，IO 操作是可以把程序阻塞住的比如等待客户端的连接，等待日志写入。这些操作**更适合**设计为多线程程序，因为大部分 IO 密集型操作*准备好接受调度的时间是不确定的*，不会放在操作系统就绪队列中，而是在阻塞队列中
+	- CPU 密集型程序里面的指令都是做计算用的，不会被阻塞。CPU 密集型也可以设计为多线程程序，每一个线程执行一个计算任务，发现任务执行完之后继续安排
+- 单核 CPU
+	- IO 密集型，适合设计为多线程，因为单核一旦被阻塞程序卡死了
+	- CPU 密集型**不适合设计为多线程**，线程越多上下文切换开销越大
+
+### 线程池的设计
+#### 性能开销
+为了完成任务，创建很多的线程可以吗？线程真的是越多越好？
+- 线程的创建和销毁都由非常大的开销
+- 线程的上下文切换要占用大量时间
+![[PixPin_2026-01-23_09-55-09.png|task之间的切换需要开销]]
+- 大量线程同时唤醒会使系统经常出现锯齿状负载或者瞬间负载量很大导致宕机
+- 创建线程最终需要**移交到操作系统内核来实现&调度**，用户态不能创建和调度
+![[PixPin_2026-01-23_10-06-49.png]]
+#### 内存开销
+线程栈本身占用大量内存
+用户空间：
+```bash
+root@VM-20-9-ubuntu:~# ulimit -a
+real-time non-blocking time  (microseconds, -R) unlimited
+core file size              (blocks, -c) 0
+data seg size               (kbytes, -d) unlimited
+scheduling priority                 (-e) 0
+file size                   (blocks, -f) unlimited
+pending signals                     (-i) 14416
+max locked memory           (kbytes, -l) 476076
+max memory size             (kbytes, -m) unlimited
+open files                          (-n) 1024
+pipe size                (512 bytes, -p) 8
+POSIX message queues         (bytes, -q) 819200
+real-time priority                  (-r) 0
+stack size                  (kbytes, -s) 8192
+cpu time                   (seconds, -t) unlimited
+max user processes                  (-u) 14416
+virtual memory              (kbytes, -v) unlimited
+file locks                          (-x) unlimited
+```
+一个 stack size 栈空间在 8MB 大小，32 位系统一个进程最多占用 4G，用户空间 3G，内核 1G，用户空间最多 384 个（这还是不算栈内存，代码片段的大小）
+线程数量多了之后会占用大量内存
+
+#### 线程的数量
+大部分网络库中，会根据系统 CPU 数量决定线程数量
+线程池一般有两种模式：
+fixed 模式：线程池中线程数量固定，在启动程序时指定
+cache 模式：根据任务数量动态增减线程
+
+#### 线程的状态
+1. **就绪态** (Ready) - 线程已创建，等待 CPU 调度。在代码中体现为创建 `std::thread` 对象并关联了可执行函数
+2. **运行态** (Running) - 线程正在执行
+3. **阻塞态** (Blocked) - 线程因等待资源或事件而暂停，可以是因为互斥锁/条件变量而阻塞/挂起，也可是线程中的关联函数调用 `std::thread::sleep` 系列函数。**这个状态不会被操作系统内核分配时间片**
+4. **终止态** (Terminated) - 线程执行完毕或被终止。线程可执行函数 return 或者线程中抛出异常但是外部没有接受，或者调用了 `std::terminate()`
+### 线程同步
+#### 线程互斥方式
+互斥锁，参考 [[C++ Runoob Tutoral#互斥量，互斥锁和包装器]]
+原子类型的原子操作，参考 [[Modern C++#atomic 原子对象]]
+
+#### 线程通信方式
+条件变量，参考 [[C++ Runoob Tutoral#条件变量]]，和线程互斥的本质区别：
+![[C++ Runoob Tutoral#^sw324y]]

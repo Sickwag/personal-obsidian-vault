@@ -2238,31 +2238,29 @@ class I18n {
 2. **语言数据加载**  
    - 实际实现中（未展示部分）应有类似：
 ```cpp
-     // 伪代码示例
-     I18n::I18n() {
-         dict_ = new Dict{
-             {Key::ASK_KEY_MAP, "Select input mode"},
-             {Key::INPUT_ERROR, "Invalid input"}
-             // 其他键值对...
-         };
-     }
-     ```
+// 伪代码示例
+I18n::I18n() {
+ dict_ = new Dict{
+	 {Key::ASK_KEY_MAP, "Select input mode"},
+	 {Key::INPUT_ERROR, "Invalid input"}
+	 // 其他键值对...
+ };
+}
+```
 
 #### 运行时操作
 1. **切换语言**  
 ```cpp
-   I18n::Instance().SetLanguage(Language::CHINESE);
-   ```
+I18n::Instance().SetLanguage(Language::CHINESE);
+```
    - 内部会释放旧字典
    - 加载新语言的键值映射（如中文翻译）
 
 2. **获取翻译文本**  
 ```cpp
-   std::string msg = I18n::Instance().Get(I18n::Key::ASK_QUIT);
-   // 返回当前语言下的"是否退出？"或"Quit?"
-   ```
-
----
+std::string msg = I18n::Instance().Get(I18n::Key::ASK_QUIT);
+// 返回当前语言下的"是否退出？"或"Quit?"
+```
 
 ### 3. 关键设计亮点
 
@@ -2313,22 +2311,22 @@ std::cout << I18n::Instance().Get(I18n::Key::ASK_DIFFICULTY);
 1. **外部资源文件**  
    将翻译文本放在JSON/XML中，避免硬编码：
 ```json
-   {
-     "ENGLISH": {
-       "ASK_QUIT": "Quit?",
-       "INPUT_ERROR": "Invalid input"
-     },
-     "CHINESE": {
-       "ASK_QUIT": "是否退出？",
-       "INPUT_ERROR": "输入无效"
-     }
-   }
-   ```
+{
+ "ENGLISH": {
+   "ASK_QUIT": "Quit?",
+   "INPUT_ERROR": "Invalid input"
+ },
+ "CHINESE": {
+   "ASK_QUIT": "是否退出？",
+   "INPUT_ERROR": "输入无效"
+ }
+}
+```
 
 2. **动态加载**  
 ```cpp
-   void LoadLanguage(Language lang, const std::string& jsonFile);
-   ```
+void LoadLanguage(Language lang, const std::string& jsonFile);
+```
 
 #### 线程安全增强
 - 对 `dict_` 的访问加锁（如果多线程使用）
@@ -2342,9 +2340,6 @@ std::string_view Get(Key) const;
 // 编译期字典检查（C++20）
 static_assert(translations.contains(Key::ASK_QUIT));
 ```
-
----
-
 ### 6. 架构意义
 这种设计实现了：
 - **界面与文本分离**：方便后期新增语言
@@ -2513,55 +2508,52 @@ static I18n& Instance() {
    - `dict_`指向全局变量，但若未来改为动态分配，需补充析构函数  
    - 建议改用智能指针：
 ```cpp
-     private:
-         std::shared_ptr<Dict> dict_;  // 自动管理生命周期
-     ```
+private:
+std::shared_ptr<Dict> dict_;  // 自动管理生命周期
+```
 
 2. **线程安全性**  
    - `SetLanguage()`和`Get()`并发调用会导致数据竞争  
    - 解决方案：
 ```cpp
-     #include <mutex>
-     std::mutex mtx_;
-     void SetLanguage(...) {
-         std::lock_guard<std::mutex> lock(mtx_);
-         // ...原有逻辑...
-     }
-     ```
+#include <mutex>
+std::mutex mtx_;
+void SetLanguage(...) {
+ std::lock_guard<std::mutex> lock(mtx_);
+ // ...原有逻辑...
+}
+```
 
 3. **错误处理不足**  
    - `assert`在Release模式会被移除，建议改用异常：
 ```cpp
-     std::string Get(Key key) const {
-         if (!dict_->count(key)) throw std::out_of_range("Invalid I18n key");
-         return (*dict_)[key];
-     }
-     ```
+ std::string Get(Key key) const {
+	 if (!dict_->count(key)) throw std::out_of_range("Invalid I18n key");
+	 return (*dict_)[key];
+}
+```
 
 #### 扩展性优化
 1. **按需加载语言**  
    当前所有语言字典常驻内存，可改为懒加载：
 ```cpp
-   void SetLanguage(Language lang) {
-       static std::unordered_map<Language, Dict> langs {
-           {Language::ENGLISH, english},
-           {Language::CHINESE, chinese}
-       };
-       dict_ = &langs[lang];  // 自动按需选择
-   }
-   ```
+void SetLanguage(Language lang) {
+   static std::unordered_map<Language, Dict> langs {
+	   {Language::ENGLISH, english},
+	   {Language::CHINESE, chinese}
+   };
+   dict_ = &langs[lang];  // 自动按需选择
+}
+```
 
 2. **支持热重载**  
    添加从文件加载字典的功能：
 ```cpp
-   void LoadLanguage(Language lang, const std::string& jsonPath) {
-       // 解析JSON到临时Dict
-       dict_ = &cachedDicts_[lang]; 
-   }
-   ```
-
----
-
+void LoadLanguage(Language lang, const std::string& jsonPath) {
+   // 解析JSON到临时Dict
+   dict_ = &cachedDicts_[lang]; 
+}
+```
 ### 4. 架构设计总结
 
 | 设计选择            | 优点                          | 缺点                          |
@@ -2827,10 +2819,10 @@ inline void message(const std::string& msg, bool lf = true) {
 2. **`system()`安全隐患**  
    可替换为：
 ```cpp
-   inline void cls() {
-       std::cout << "\033[2J\033[1;1H"; // ANSI清屏序列
-   }
-   ```
+inline void cls() {
+   std::cout << "\033[2J\033[1;1H"; // ANSI清屏序列
+}
+```
 
 3. **`AverageRandom()`函数**  
    已标记"弃用"但未删除，应使用`[[deprecated]]`属性
@@ -2919,22 +2911,22 @@ mt19917是什么？random_devices{}()，g(rd())又是什么？
   - 比传统`rand()`更高质量随机数
 - **典型用法**：
 ```cpp
-  std::mt19937 engine(seed);  // 用种子初始化引擎
-  int num = engine();         // 生成随机数
-  ```
+std::mt19937 engine(seed);  // 用种子初始化引擎
+int num = engine();         // 生成随机数
+```
 
 #### （2）`random_device`：真随机数设备
 - **作用**：提供硬件熵源（如CPU热噪声）
 - `random_device{}()`的分解：
 ```cpp
-  random_device{}  // 构造临时设备对象
-  ()              // 调用operator()获取随机种子
-  ```
+random_device{}  // 构造临时设备对象
+()              // 调用operator()获取随机种子
+```
 - **典型用途**：
 ```cpp
-  std::random_device rd;
-  std::mt19937 g(rd());  // 用真随机数种子初始化引擎
-  ```
+std::random_device rd;
+std::mt19937 g(rd());  // 用真随机数种子初始化引擎
+```
 
 #### （3）`g(rd())`的含义
 ```cpp
@@ -2946,9 +2938,6 @@ std::random_device rd;
 unsigned int seed = rd();  // 获取真随机种子
 std::mt19937 g(seed);      // 用种子初始化引擎
 ```
-
----
-
 ### 2. 为什么使用`shuffle()`而非直接取随机数？
 
 #### 数独场景的特殊需求
@@ -2956,14 +2945,14 @@ std::mt19937 g(seed);      // 用种子初始化引擎
 - 直接随机取数的问题：
 ```cpp
   // 可能产生重复值（需额外去重逻辑）
-  int num = random(1,9); 
-  ```
+int num = random(1,9); 
+```
 - `shuffle`的优势：
 ```cpp
-  std::vector<int> unit = {1,2,3,4,5,6,7,8,9};
-  std::shuffle(unit.begin(), unit.end(), engine);
-  // 结果示例：{3,7,2,9,1,5,4,8,6}（必定不重复）
-  ```
+std::vector<int> unit = {1,2,3,4,5,6,7,8,9};
+std::shuffle(unit.begin(), unit.end(), engine);
+// 结果示例：{3,7,2,9,1,5,4,8,6}（必定不重复）
+```
 
 #### 复杂度分析
 | 方法               | 时间复杂度 | 空间复杂度 | 适用场景             |
@@ -2973,9 +2962,6 @@ std::mt19937 g(seed);      // 用种子初始化引擎
 
 **数独中的实际用途**：  
 用于初始化游戏盘面时生成**行/列的有效排列**，确保符合数独规则（无重复数字）。
-
----
-
 ### 3. 关于`.inl`文件和`inline`的正确理解
 
 #### （1）`.inl`文件的定位
@@ -2985,12 +2971,12 @@ std::mt19937 g(seed);      // 用种子初始化引擎
   - 集中管理短小工具函数
 - **与头文件关系**：
 ```cpp
-  // utility.h
-  inline int helper();  // 声明
-  
-  // utility.inl
-  inline int helper() { return 42; }  // 实现
-  ```
+// utility.h
+inline int helper();  // 声明
+
+// utility.inl
+inline int helper() { return 42; }  // 实现
+```
 
 #### （2）`inline`关键字的现代含义
 - **原始作用**：建议编译器内联展开（现代编译器已自主决策）
@@ -2999,15 +2985,15 @@ std::mt19937 g(seed);      // 用种子初始化引擎
   - **头文件函数必备**：避免链接时重复符号错误
 - **典型场景**：
 ```cpp
-  // 工具函数（<50行）
-  inline void print(const std::string& msg) { 
-      std::cout << msg; 
-  }
-  
-  // 模板函数
-  template<typename T>
-  inline T clamp(T val, T min, T max) { ... }
-  ```
+// 工具函数（<50行）
+inline void print(const std::string& msg) { 
+  std::cout << msg; 
+}
+
+// 模板函数
+template<typename T>
+inline T clamp(T val, T min, T max) { ... }
+```
 
 #### （3）项目实践建议
 - 简单工具函数：放`.inl`并标记`inline`
@@ -4149,23 +4135,23 @@ if(available_num[key].size() <= 0) {
 #### （2）待改进点
 1. **资源管理**
 ```cpp
-   if(keyMap) delete keyMap; // 建议改用unique_ptr
-   ```
+if(keyMap) delete keyMap; // 建议改用unique_ptr
+```
 
 2. **异常安全**
 ```cpp
-   fs.open(...); // 无打开失败检查
-   ```
+fs.open(...); // 无打开失败检查
+```
 
 3. **移动语义**
 ```cpp
-   _vCommand.push_back(std::move(oCommand)); // 缺少移动构造函数
-   ```
+_vCommand.push_back(std::move(oCommand)); // 缺少移动构造函数
+```
 
 4. **硬编码**
 ```cpp
-   for(int i=0; i<81; i++) // 应使用常量
-   ```
+for(int i=0; i<81; i++) // 应使用常量
+```
 
 ---
 
@@ -4301,8 +4287,8 @@ CBlock _boxes[3][3];// 宫格视图
   #ifndef _UNIQUE_NAME_
   #define _UNIQUE_NAME_
   /* 头文件内容 */
-  #endif
-  ```
+#endif
+```
 
 #### （2）为什么使用它
 | 对比项              | `#pragma once`                     | `#ifndef`宏守卫                |
@@ -4317,17 +4303,17 @@ CBlock _boxes[3][3];// 宫格视图
 ```cpp
    // mylib.h
    #pragma once
-   class MyClass {...};
-   ```
+class MyClass {...};
+```
 
 2. **与宏守卫配合使用**（高可靠性要求）：
 ```cpp
-   #ifndef MYLIB_H
-   #define MYLIB_H
-   #pragma once
-   // ...
-   #endif
-   ```
+#ifndef MYLIB_H
+#define MYLIB_H
+#pragma once
+// ...
+#endif
+```
 
 #### （4）注意事项
 - **编译器兼容性**：
@@ -4370,6 +4356,7 @@ bool CScene::isComplete() {
 }
 ```
 **性能对比**：
+
 | 实现方式       | 时间复杂度 | 空间复杂度 | 特点                     |
 |---------------|------------|------------|--------------------------|
 | 实时计算行列宫 | O(n³)      | O(1)       | 每次校验重新计算关系      |

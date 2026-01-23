@@ -1545,7 +1545,7 @@ foo(arr.data(), arr.size());	// 合法
 2. `std::get`: 获得元组某个位置的值
 3. `std::tie`: 元组拆包
 4. `std::tuple_cat` / `merge`: 合并两个元组
-   ```cpp
+```cpp
 auto t1 = std::make_tuple(1, "hello", 3.14);
 auto t2 = std::make_tuple(42, std::string("tuple2"), Matrix(), 7);
 auto t3 = merge(t1, t2); // 合并
@@ -1859,7 +1859,7 @@ int main() {
 ```
 
 ^7wqxo5
-普通的变量改变值需要进入三个步骤：读取，计算，写入
+普通的变量一般创建在堆（如 vector，array 这些容器的数据）或者程序的数据段上（基本类型数据 int，double），参考 [[C++ Runoob Tutoral#]]，这些部分的数据是线程之间共享的，**只有线程栈中的函数，线程信息是每个线程独有的**，改变值需要进入三个步骤：读取，计算，写入
 ```assembly
 mov eax, [non_atomic_count]  # 读取当前值
 add eax, 1                     # 加 1
@@ -2046,6 +2046,7 @@ cv.wait(lock, foo/(*func_ptr)()/&P_and_C::producer/lambda/f)
 **C++并发模型以并发为主（抽象为多个任务），并行则是实现效果的一个可能方式（由编译器/平台决定）**
 #### 4. 竞态条件
 **竞态条件**是指多个线程或进程在访问共享资源时，由于执行顺序的不确定性，导致程序的行为出现不可预测的结果。在并发编程中，当多个线程同时访问共享数据且至少有一个线程修改数据时，如果没有适当的同步机制，就可能出现竞态条件。
+会产生竞态条件的代码片段称为*临界区代码片段*，多线程下存在竞态条件->可重入代码，反之不可重入
 [[Modern C++#^7wqxo5|原子变量]]中 `non_atomic_count` 的累加操作就是竞态条件
 
 # 第 8 章 文件系统
