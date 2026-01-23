@@ -36,6 +36,21 @@
               "icon": "lucide-file",
               "title": "详解设计模式（视频教程）"
             }
+          },
+          {
+            "id": "048ec90cd23b5e47",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chores/学习摘录.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "学习摘录"
+            }
           }
         ]
       }
@@ -203,13 +218,14 @@
   },
   "active": "d4d849b642bcc49a",
   "lastOpenFiles": [
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/其他专业书/Modern C++.md",
+    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
+    "Chores/学习摘录.md",
     "学习/Bases/设计模式/详解设计模式（视频教程）.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Files & LongText/Attachments/PixPin_2026-01-23_13-22-25.png",
     "Files & LongText/Attachments/PixPin_2026-01-23_13-22-15.png",
     "Files & LongText/Attachments/PixPin_2026-01-23_12-52-58.png",
-    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
-    "学习/其他专业书/Modern C++.md",
     "学习/ProjectsStudy/FromProjects/Sudoku.md",
     "学习/其他专业书/C++ prime plus.md",
     "Files & LongText/Attachments/PixPin_2026-01-23_10-06-49.png",
@@ -218,7 +234,6 @@
     "学习/ProjectsStudy/FromProjects/线程池.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinySTL.md",
     "学习/ToolChain/Cmake.md",
-    "Chores/学习摘录.md",
     "学习/Bases/开发范式/C++开发范式.md",
     "Files & LongText/Attachments/PixPin_2026-01-22_17-06-37.png",
     "学习/ProjectsStudy/FromProjects/FastLog.md",

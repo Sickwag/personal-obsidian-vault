@@ -4880,6 +4880,55 @@ void mainThread() {
 - 使用 `notify_all` 方法，这并不意味着所有线程都会同时开始执行，因它们需要竞争获取互斥锁（如果使用 `unique_lock` 或 `lock_guard`）并由操作系统决定顺序
 - condition_variable 变量时传入的 unique_lock 包装器会在线程调入 wait 对象时将这个对象解锁，线程自己挂起，共享资源锁允许别的线程获取操作，当线程被通知时，则会**尝试获取互斥锁来工作**。
 - 如果通知了线程但一直无法获取到互斥锁，线程还是会被阻塞，直到成功获取，**避免这种情况是开发者需要承担的责任**
+### 信号量 semaphore
+用于做简单的资源计数，没办法细致控制多线程访问共享资源的具体条件，只能简单做到避免竞态条件和资源的有无（甚至无法获取具体计数大小）
+简单的[[详解设计模式（视频教程）#生产者-消费者模式|生产者-消费者模式]]
+```cpp
+std::queue<int>		  buffer;
+std::binary_semaphore empty(10);  // 缓冲区空槽位
+std::binary_semaphore full(0);	  // 缓冲区满槽位
+std::mutex			  mtx;
+
+void producer(int id) {
+	for(int i = 0; i < 5; ++i) {
+		empty.acquire();			// 阻塞到emtpy大于0 && 内部计数能够被-1
+		mtx.lock();
+		buffer.push(i);
+		std::cout << "Producer " << id << " produced " << i << std::endl;
+		mtx.unlock();
+		full.release();				// full内部计数增加1 && 如果full被acquire阻塞则解开阻塞
+	}
+}
+
+void consumer(int id) {
+	for(int i = 0; i < 5; ++i) {
+		full.acquire();	 			// 阻塞到full大于0 && 内部计数能够被-1
+		mtx.lock();
+		int item = buffer.front();
+		buffer.pop();
+		std::cout << "Consumer " << id << " consumed " << item << std::endl;
+		mtx.unlock();
+		empty.release();  			// empty内部计数增加1 && 如果empty被acquire阻塞则解开阻塞
+	}
+}
+
+int main() {
+	std::thread producers[2];
+	std::thread consumers[2];
+
+	for(int i = 0; i < 2; ++i) {
+		producers[i] = std::thread(producer, i + 1);
+		consumers[i] = std::thread(consumer, i + 1);
+	}
+
+	for(int i = 0; i < 2; ++i) {
+		producers[i].join();
+		consumers[i].join();
+	}
+
+	return 0;
+}
+```
 ### 原子操作
 用于定义某些操作不会中断，原子操作确保对共享数据的访问是不可分割的，即在多线程环境下，原子操作要么完全执行，要么完全不执行，不会出现中间状态。
 #### 各种函数
