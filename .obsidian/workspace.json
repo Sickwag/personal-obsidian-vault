@@ -51,8 +51,19 @@
               "icon": "lucide-file",
               "title": "学习摘录"
             }
+          },
+          {
+            "id": "c435585ea5ecd9f0",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -216,12 +227,12 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "d4d849b642bcc49a",
+  "active": "c435585ea5ecd9f0",
   "lastOpenFiles": [
-    "学习/其他专业书/Modern C++.md",
-    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
-    "Chores/学习摘录.md",
     "学习/Bases/设计模式/详解设计模式（视频教程）.md",
+    "Chores/学习摘录.md",
+    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
+    "学习/其他专业书/Modern C++.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Files & LongText/Attachments/PixPin_2026-01-23_13-22-25.png",
     "Files & LongText/Attachments/PixPin_2026-01-23_13-22-15.png",
