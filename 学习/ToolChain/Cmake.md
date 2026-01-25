@@ -493,6 +493,105 @@ msbuild 中对 vcpkg 有很好的支持（使用 `vcpkg integrate install` 后�
 ### 下载速度问题
 参考：[vcpkg国内镜像源替换-CSDN博客](https://blog.csdn.net/weixin_41364246/article/details/140123907)
 修改国内镜像之后，大部分包能够快速下载，但不在 github 拖管的包需要自己替换源
+### 老库在新 cmake 不兼容导致无法编译
+#### 日志内容
+```bash
+PS D:\Program\vcpkg> vcpkg install hiredis:x64-windows
+Computing installation plan...
+The following packages will be built and installed:
+    hiredis:x64-windows@1.2.0
+Detecting compiler hash for triplet x64-windows...
+-- Automatically setting %HTTP(S)_PROXY% environment variables to "127.0.0.1:7890".
+Compiler found: D:/Program/VisualStudio/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe
+Restored 0 package(s) from C:\Users\Sickwag\AppData\Local\vcpkg\archives in 367 us. Use --debug to see more details.
+Installing 1/1 hiredis:x64-windows@1.2.0...
+Building hiredis:x64-windows@1.2.0...
+-- Using cached redis-hiredis-v1.2.0.tar.gz.
+-- Extracting source D:/Program/vcpkg/downloads/redis-hiredis-v1.2.0.tar.gz
+-- Applying patch fix-timeval.patch
+-- Applying patch fix-ssize_t.patch
+-- Applying patch support-static.patch
+-- Applying patch fix-cmake-conf-install-dir.patch
+-- Using source at D:/Program/vcpkg/buildtrees/hiredis/src/v1.2.0-a20e3254a8.clean
+
+# 到此为止一切正常
+# 这里时由于cmake不在当前安装的库要求的cmake版本范围内出现的警告
+CMake Warning (dev) at scripts/cmake/vcpkg_find_acquire_program.cmake:70 (cmake_parse_arguments):
+  The INTERPRETER keyword was followed by an empty string or no value at all.
+  Policy CMP0174 is not set, so cmake_parse_arguments() will unset the
+  arg_INTERPRETER variable rather than setting it to an empty string.
+Call Stack (most recent call first):
+  scripts/cmake/vcpkg_find_acquire_program.cmake:143 (z_vcpkg_find_acquire_program_find_internal)
+  installed/x64-windows/share/vcpkg-cmake/vcpkg_cmake_configure.cmake:116 (vcpkg_find_acquire_program)
+  ports/hiredis/portfile.cmake:19 (vcpkg_cmake_configure)
+  scripts/ports.cmake:192 (include)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at scripts/cmake/vcpkg_find_acquire_program.cmake:30 (cmake_parse_arguments):
+  The INTERPRETER keyword was followed by an empty string or no value at all.
+  Policy CMP0174 is not set, so cmake_parse_arguments() will unset the
+  arg_INTERPRETER variable rather than setting it to an empty string.
+Call Stack (most recent call first):
+  scripts/cmake/vcpkg_find_acquire_program.cmake:149 (z_vcpkg_find_acquire_program_find_external)
+  installed/x64-windows/share/vcpkg-cmake/vcpkg_cmake_configure.cmake:116 (vcpkg_find_acquire_program)
+  ports/hiredis/portfile.cmake:19 (vcpkg_cmake_configure)
+  scripts/ports.cmake:192 (include)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Found external ninja('1.12.1').
+-- Configuring x64-windows
+
+# cmake版本过低出发保护机制，cmake4.0.3引入的不对cmake3.5以下的项目做兼容性保证
+CMake Error at scripts/cmake/vcpkg_execute_required_process.cmake:127 (message):
+# 日志位置
+    Command failed: D:/Program/VisualStudio/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe -v
+    Working Directory: D:/Program/vcpkg/buildtrees/hiredis/x64-windows-rel/vcpkg-parallel-configure
+    Error code: 1
+    See logs for more information:
+      D:\Program\vcpkg\buildtrees\hiredis\config-x64-windows-dbg-CMakeCache.txt.log
+      D:\Program\vcpkg\buildtrees\hiredis\config-x64-windows-rel-CMakeCache.txt.log
+      D:\Program\vcpkg\buildtrees\hiredis\config-x64-windows-out.log
+
+Call Stack (most recent call first):
+  installed/x64-windows/share/vcpkg-cmake/vcpkg_cmake_configure.cmake:269 (vcpkg_execute_required_process)
+  ports/hiredis/portfile.cmake:19 (vcpkg_cmake_configure)
+  scripts/ports.cmake:192 (include)
+
+
+error: building hiredis:x64-windows failed with: BUILD_FAILEDSee https://learn.microsoft.com/vcpkg/troubleshoot/build-failures?WT.mc_id=vcpkg_inproduct_cli for more information.
+Elapsed time to handle hiredis:x64-windows: 719 ms
+Please ensure you're using the latest port files with `git pull` and `vcpkg update`.
+Then check for known issues at:
+  https://github.com/microsoft/vcpkg/issues?q=is%3Aissue+is%3Aopen+in%3Atitle+hiredis
+You can submit a new issue at:
+  https://github.com/microsoft/vcpkg/issues/new?title=[hiredis]+Build+error+on+x64-windows&body=Copy+issue+body+from+D%3A%2FProgram%2Fvcpkg%2Finstalled%2Fvcpkg%2Fissue_body.md
+```
+#### CMP0174 报错
+参考：[【CMake 3.25+】CMP0174 策略：target_link_libraries 的严格化与兼容性指南](https://runebook.dev/zh/docs/cmake/policy/cmp0174)
+编译报错日志中的第一个警告来自于当前 cmake 版本为 4.0.3，hiredis cmake 库的设置为 3.0
+可以通过在库构建/使用这个库的项目 cmake 配置中设置
+```cmake
+cmake_policy(SET CMP0174 OLD)
+```
+
+|策略值|行为（`target_link_libraries(T P "lib")`）|推荐使用场景|
+|---|---|---|
+|`OLD`|宽松。如果 lib 不是目标名，则直接将 lib 作为链接器标志传递。|仅用于维护旧项目时的临时兼容。|
+|`NEW`|严格。如果 lib 不是目标名也不是绝对路径，则报错/警告。|推荐。有助于代码更健壮、意图更清晰。|
+#### 解决方法
+方法 1：修改 portfile.cmake（推荐）
+vcpkg 安装的库，在 `vcpkg/ports/库名称/portfile.cmake` 中的 vcpkg_cmake_config 函数中添加一行 options
+在 portfile.cmake 的 vcpkg_cmake_configure 部分添加 CMake 策略参数：
+```cmake
+vcpkg_cmake_configure(
+    SOURCE_PATH "${SOURCE_PATH}"
+    OPTIONS 
+        # 其他选项...
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5  # 添加此行
+)
+```
+方法 2：创建补丁文件
+为源码的CMakeLists.txt创建补丁，将 `cmake_minimum_required(VERSION X.X)` 改为 `cmake_minimum_required(VERSION 3.5)` 或更高版本。
 # CMake 基本内容教程
 参考：[CMake 教程 — CMake 4.2.0 文档 - CMake 构建系统](https://cmake.com.cn/cmake/help/latest/guide/tutorial/index.html)
 ## 杂项内容
