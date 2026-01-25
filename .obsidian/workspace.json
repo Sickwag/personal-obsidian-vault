@@ -85,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "vcpkg install",
+                "query": "wait_for",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
