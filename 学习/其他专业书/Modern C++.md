@@ -1268,7 +1268,10 @@ int main() {
 ### 移动语义
 #### 移动语义原理
 
+> [!note]
 > 移动语义（Move Semantics）是指：**将资源从一个对象“移动”到另一个对象，而非复制它**。它通过**右值引用（rvalue reference）** 和 `std::move()` 机制实现。
+> 
+> 本质是通过[[C++ Runoob Tutoral#移动构造函数|移动构造/赋值函数]]，来让**右值传入时**触发**类自身移动语义**，实现 0 开销资源转移
 
 ![[Pasted image 20250806163633.png]]
 ```cpp
@@ -1289,7 +1292,7 @@ std::vector<int> v = heavy_computation(); // heavy_computation 返回一个局�
 | std::shared_ptr    | ✅ 可以 move，也可以 copy                                                             | 拷贝时增加引用计数                |
 | 内置类型（int，double 等） | ❌ 不用 move（无资源）                                                                 | 拷贝即可                     |
 | std::function      | ✅ 复杂封装内 std::bind std::function 是 type-erasure 模版，支持 std::move(v1) 情况转移lambda` |                          |
-常见注意事项是：
+#### 注意事项
 - 函数中（包括参数列表）左值引用作为返回值不会自动变成右值
 ```cpp
 std::string return_str(std::string& str) {
@@ -1301,13 +1304,13 @@ std::string return_str(std::string& str) {
 ```
 原因：虽然 str 是一个左值引用，但他在函数中已经具有名字了，不是一个临时值，所以编译器认为他是右值，不触发移动而是拷贝
 下面这种情况
-A. 使用 `std::move` 显式转换
+A. 使用 `std::move` 显式转换，这种情况有一些特殊，参考[[C++ Runoob Tutoral#移动构造函数|移动构造/赋值]]
 ```cpp
 std::string return_str(std::string& str) {
     return std::move(str);  // 显式转换为右值，触发移动
 }
 ```
-  B. 返回临时对象（右值）
+B. 返回临时对象（右值）
 ```cpp
 // 这是编译期的 NRVO 优化
 std::string return_str() {

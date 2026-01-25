@@ -853,28 +853,18 @@ std::queue<std::unique_ptr<mysql::any_connection>> connection_queue_;
 // 返回给客户端使用 shared_ptr，支持自动回收
 std::shared_ptr<mysql::any_connection> get_connection();
 ```
-- `unique_ptr`：池中连接的独占管理，每一个数据库都有独立的资源，所有权唯一，被一个指针指向，不能被通过这个指针以外的方式访问[^1]
-- 由于
-
-**设计意图**：
-- `shared_ptr`：客户端使用期间的生命周期管理
-- 自定义删除器：连接使用完毕后自动归还池中
-
-### 3.2 RAII 与自动回收机制
+- `unique_ptr`：池中连接的独占管理，每一个数据库都有独立的资源，被单独管理。连接池中的连接要么在池中等待被使用，要么正在被某个客户端使用，所有权唯一，被一个指针指向，不能被通过这个指针以外的方式访问[^1]
+- 由于当客户端获取连接时，连接池和客户端都参与了对该连接生命周期的管理：
+	- 客户（**可能不止一个**）需要使用这个连接进行数据库操作
+	- 服务端需要监控这个数据库连接是否超时/是否空闲/是否能够被回收
+	- 同时被多方使用，当没有人使用这个连接时，即*shared_ptr 内部引用计数为 0*，则表明这个连接暂时没有人使用，需要被[[#3.2 RAII 与自动归还连接|归还到连接池中]]。***引用计数&&不需要解决[[Modern C++#5.4 `std weak_ptr`|循环引用问题]]，只能通过 `std::shard_ptr` 做到***
+### 3.2 RAII 与自动归还连接
+[[#3.1 智能指针设计]]中提到的归还连接需要通过**自定义 `shared_ptr` 的删除函数**实现
 ```cpp
 std::shared_ptr<mysql::any_connection> MysqlConnectionPool::get_connection() {
 	std::unique_lock<std::mutex> lock(mutex_);
 	while(connection_queue_.empty()) {
-		if(!cv_connections_available_.wait_for(
-			   lock, std::chrono::milliseconds(pool_config_.timeout_), [this] { return !connection_queue_.empty(); })) {
-			// after pool_config_.timeout seconds and connection_queue still empty, throw timeout exception
-			throw std::runtime_error("connection pool timeout and no valid connection");
-		}
-		if(connection_queue_.empty()) {
-			// be notified before timeout but still have no valid connection
-			//return std::shared_ptr<mysql::any_connection>(nullptr);
-			 throw std::runtime_error("connection pool timeout");
-		}
+		// 等待新链接被创建
 	}
 	auto conn_ptr = std::move(connection_queue_.front());
 	connection_queue_.pop();
@@ -891,11 +881,11 @@ std::shared_ptr<mysql::any_connection> MysqlConnectionPool::get_connection() {
 	return ptr;
 }
 ```
-
-**关键特性**：
-- 当 `shared_ptr` 超出作用域时自动执行删除器
-- 无需手动归还连接，防止连接泄漏
-- 异常安全，即使出现异常也能正确归还
+- `std::unique_ptr` 是一个**所有权唯一的指针对象**，但是不代表移动构造函数不能使用。移动构造的过程
+- 删除函数如何执行归还连接
+	- 当 `shared_ptr` 超出作用域时自动执行删除器
+	- **所有用户都使用连接执行完 sql 语句暂时没有使用这个连接时**，`shared_ptr` 引用计数为 0，**调用删除函数自动归还连接**，防止连接泄漏
+	- 异常安全，即使出现异常也能正确归还
 
 ### 3.3 多线程同步机制
 ```cpp
