@@ -824,3 +824,164 @@ cache 模式：根据任务数量动态增减线程
 > - 原子类型是防止脏数据，写入失败等问题
 > - 条件变量时让临界代码按照根据某些条件是否成立来**按照一定顺序执行**
 
+# MySQL 连接池
+参考：[基于C++11的数据库连接池【C++/数据库/多线程/MySQL】哔哩哔哩bilibili](https://www.bilibili.com/video/BV1Fr4y1s7w4/?spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
+资源：https://pan.baidu.com/s/1KJqmmbMVg32qyWjPlRZSeg&pwd=subw
+备注：没看视频，只通过看代码，转化为使用 boost.mysql 实现
+## 连接池的本质
+MySQL 连接池本质上是一种**资源管理模式**，其核心思想是：
+- 预创建连接：预先创建一定数量的数据库连接并维护
+- **复用连接（关键）**：客户端获取连接使用后归还到池中，而非销毁
+- 统一管理：集中管理连接的生命周期、状态和数量
+## 2. 连接池的工作机制
+### 2.1 基本流程
+```
+连接池初始化 → 预创建连接 → 客户端获取连接 → 使用连接 → 归还连接（关键） → 循环复用
+```
+### 2.2 详细工作流程
+1. 初始化阶段：根据各种参数配置连接池和数据库连接参数
+2. 获取连接：客户端请求时从池中取出连接
+3. **归还连接**：客户端完成操作后自动归还连接（关键）
+4. 动态调节：**后台线程**根据负载动态调整连接数量
+## 3. 代码中的关键设计
+
+### 3.1 智能指针设计
+```cpp
+// 池中使用 unique_ptr 独占管理空闲连接
+std::queue<std::unique_ptr<mysql::any_connection>> connection_queue_;
+
+// 返回给客户端使用 shared_ptr，支持自动回收
+std::shared_ptr<mysql::any_connection> get_connection();
+```
+- `unique_ptr`：池中连接的独占管理，每一个数据库都有独立的资源，所有权唯一，被一个指针指向，不能被通过这个指针以外的方式访问[^1]
+- 由于
+
+**设计意图**：
+- `shared_ptr`：客户端使用期间的生命周期管理
+- 自定义删除器：连接使用完毕后自动归还池中
+
+### 3.2 RAII 与自动回收机制
+```cpp
+std::shared_ptr<mysql::any_connection> MysqlConnectionPool::get_connection() {
+	std::unique_lock<std::mutex> lock(mutex_);
+	while(connection_queue_.empty()) {
+		if(!cv_connections_available_.wait_for(
+			   lock, std::chrono::milliseconds(pool_config_.timeout_), [this] { return !connection_queue_.empty(); })) {
+			// after pool_config_.timeout seconds and connection_queue still empty, throw timeout exception
+			throw std::runtime_error("connection pool timeout and no valid connection");
+		}
+		if(connection_queue_.empty()) {
+			// be notified before timeout but still have no valid connection
+			//return std::shared_ptr<mysql::any_connection>(nullptr);
+			 throw std::runtime_error("connection pool timeout");
+		}
+	}
+	auto conn_ptr = std::move(connection_queue_.front());
+	connection_queue_.pop();
+	std::shared_ptr<mysql::any_connection> ptr(conn_ptr.release(), [this](mysql::any_connection* conn) {
+		std::lock_guard<std::mutex> locker(mutex_);
+		auto						unique_conn = std::unique_ptr<mysql::any_connection>(conn);
+		connection_queue_.push(std::move(unique_conn));
+		connected_time_point_.push(std::chrono::steady_clock::now());
+		cv_connections_available_.notify_one();  // notify those threads waiting in `get_connection()`
+	});
+	if(connection_queue_.size() < pool_config_.min_size_) {
+		cv_pool_needs_filling_.notify_one();
+	}
+	return ptr;
+}
+```
+
+**关键特性**：
+- 当 `shared_ptr` 超出作用域时自动执行删除器
+- 无需手动归还连接，防止连接泄漏
+- 异常安全，即使出现异常也能正确归还
+
+### 3.3 多线程同步机制
+```cpp
+// 使用条件变量实现线程间通信
+std::condition_variable cv_connections_available_;  // 连接可用通知
+std::condition_variable cv_pool_needs_filling_;     // 池需要填充通知
+```
+
+**同步策略**：
+- 生产者线程：监控池中连接数量，不足时创建新连接
+- 消费者线程：等待可用连接，超时处理
+- 回收线程：清理超时连接，维护池的健康状态
+
+### 3.4 单例模式管理
+```cpp
+static MysqlConnectionPool* init_pool(...);  // 初始化
+static MysqlConnectionPool* get_instance();  // 获取实例
+```
+
+**设计优势**：
+- 全局唯一实例，避免重复创建
+- 统一管理所有连接资源
+- 线程安全的访问控制
+
+## 4. 连接池运行的关键要素
+
+### 4.1 资源管理
+- **内存安全**：使用智能指针避免内存泄漏
+- **连接有效性**：定期检查连接状态，清理无效连接
+- **数量控制**：维持连接数在最小值和最大值之间
+
+### 4.2 线程安全
+- **互斥锁保护**：所有共享数据访问都使用互斥锁
+- **条件变量同步**：避免忙等待，提高效率
+- **原子操作**：使用 `std::atomic` 控制线程生命周期
+
+### 4.3 生命周期管理
+- **优雅关闭**：使用 `shutdown_` 标志安全终止后台线程
+- **资源清理**：析构函数确保所有资源正确释放
+- **异常处理**：完善的异常捕获和处理机制
+
+### 4.4 性能优化
+- **延迟创建**：按需创建连接，避免资源浪费
+- **连接复用**：最大化连接利用率
+- **批量操作**：减少系统调用次数
+
+## 5. 核心设计模式
+
+### 5.1 对象池模式
+- 预分配对象，避免频繁创建销毁
+- 统一管理对象生命周期
+
+### 5.2 生产者-消费者模式
+- 生产者线程：负责创建连接
+- 消费者线程：使用连接执行业务
+- 缓冲区：连接池作为缓冲
+
+### 5.3 观察者模式
+- 连接状态变化通知相关组件
+- 动态调整池大小
+
+## 6. 关键技术要点
+
+### 6.1 移动语义应用
+- `std::move()` 实现资源转移
+- 避免不必要的拷贝操作
+- 提升性能和内存效率
+
+### 6.2 条件变量使用
+- 防止虚假唤醒：使用谓词等待
+- 精确通知：区分不同类型的通知
+- 避免死锁：正确的锁管理
+
+### 6.3 RAII 原则
+- 资源获取即初始化
+- 析构函数自动清理
+- 异常安全保证
+
+## 7. 总结
+
+MySQL 连接池的成功运行依赖于：
+1. **正确的资源管理**：智能指针确保内存安全
+2. **完善的线程同步**：条件变量和互斥锁保证线程安全
+3. **合理的生命周期控制**：自动回收和优雅关闭
+4. **高效的并发处理**：生产者-消费者模型优化性能
+
+这种设计模式不仅适用于数据库连接，也可以扩展到其他需要昂贵资源复用的场景，如线程池、内存池等。
+
+[^1]: 原则上 `std::unique_ptr` 对象指向的资源不应该被其他指针指向，但是 C++没有限制这点。如果使用 `get()/release()` 获取裸指针还是能够将指针资源地址赋予其他指针/智能指针。但这样会导致重复释放资源地址等未定义行为

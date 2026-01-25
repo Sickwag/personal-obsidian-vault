@@ -290,5 +290,14 @@
       ],
       "key": "F"
     }
+  ],
+  "editor:insert-footnote": [
+    {
+      "modifiers": [
+        "Mod",
+        "Shift"
+      ],
+      "key": "P"
+    }
   ]
 }

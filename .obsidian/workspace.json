@@ -52,8 +52,7 @@
               "title": "C++ Runoob Tutoral"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -73,7 +72,7 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical",
-                "autoReveal": false
+                "autoReveal": true
               },
               "icon": "lucide-folder-closed",
               "title": "文件列表"
@@ -85,7 +84,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "wait_for",
+                "query": "",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -106,12 +105,12 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -216,10 +215,11 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "b9e7ab62a437e798",
+  "active": "d4d849b642bcc49a",
   "lastOpenFiles": [
-    "学习/ToolChain/Cmake.md",
     "Chores/学习摘录.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/ToolChain/Cmake.md",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "Files & LongText/Long code/C++ practice case.md",
     "学习/Language/SQL/MySQL.md",
@@ -227,7 +227,6 @@
     "Files & LongText/Long code/MySQL Long Code Practice.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/其他专业书/Modern C++.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Files & LongText/Attachments/PixPin_2026-01-23_13-22-25.png",
     "Files & LongText/Attachments/PixPin_2026-01-23_13-22-15.png",
     "Files & LongText/Attachments/PixPin_2026-01-23_12-52-58.png",
