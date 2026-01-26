@@ -1678,7 +1678,7 @@ struct A {
 - 适合缓存、监听、观察者等场景
 
 表示有多少个`weak_ptr`在观察这个资源。不影响资源的释放。
-要访问 `weak_ptr` 所指向的对象，必须先调用 `.lock()` 获取一个临时的 `shared_ptr`：
+要访问 `weak_ptr` 所指向的对象，必须先调用 `.lock()` 获取一个临时的 `shared_ptr`
 ```cpp
 std::weak_ptr<T> wp = sp;
 if (auto sp_temp = wp.lock()) {
@@ -1807,7 +1807,7 @@ int* raw = up.release(); // 放弃所有权
 // 忘记 delete raw; —— 资源泄漏
 ```
 `release()` 会解除智能指针对资源的管理，但不会释放资源，需要手动处理。这回到了 C 语言的内存处理
-正确做法：仅在必要时使用 `release()`，并确保后续资源被正确释放。
+正确做法：仅在必要时使用 `release()`，并确保后续资源被正确释放。**而如果要重新创建一个资源管理指针，应该使用 `make_shared/unique` 函数**
 ### 多线程中不加保护地共享 `shared_ptr` 的拷贝
 在多线程中不加锁地共享 `shared_ptr` 的拷贝可能导致引用计数不一致，从而引发崩溃。
 ```cpp
@@ -1850,7 +1850,6 @@ int x = 42;
 std::shared_ptr<int> sp(&x); // 错误：x 是栈上变量，不能用 shared_ptr 管理
 ```
 智能指针默认会在析构时 `delete` 所管理的指针，但栈变量不能 `delete`。
-
 正确做法：除非你提供自定义 deleter，否则不要将栈变量交给智能指针。
 ### 使用 `shared_ptr` 管理非动态分配资源
 和[[#将栈上对象绑定到智能指针上]] 类似，例如将 `malloc` 分配的内存交给 `shared_ptr`，但没有指定合适的 deleter。
@@ -1873,7 +1872,7 @@ std::shared_ptr<void> sp(malloc(100), free);
 | 滥用数组版本                   | ❌ 不会      | 明确区分 `T[]` 和 `T` |
 | 绑定栈变量                    | ❌ 不会      | 避免使用             |
 | 管理非 new/delete 资源        | ❌ 不会      | 自定义 deleter      |
-### 推荐工具帮助检测错误
+
 - **静态分析工具**：Clang-Tidy、Cppcheck
 - **运行时检测工具**：AddressSanitizer、Valgrind
 - **编码规范**：避免原始指针，优先使用 `make_shared` / `make_unique`

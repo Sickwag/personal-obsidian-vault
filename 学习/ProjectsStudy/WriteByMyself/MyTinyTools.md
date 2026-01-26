@@ -828,7 +828,7 @@ cache 模式：根据任务数量动态增减线程
 参考：[基于C++11的数据库连接池【C++/数据库/多线程/MySQL】哔哩哔哩bilibili](https://www.bilibili.com/video/BV1Fr4y1s7w4/?spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
 资源：https://pan.baidu.com/s/1KJqmmbMVg32qyWjPlRZSeg&pwd=subw
 备注：没看视频，只通过看代码，转化为使用 boost.mysql 实现
-## 连接池的本质
+## 1. 连接池的本质
 MySQL 连接池本质上是一种**资源管理模式**，其核心思想是：
 - 预创建连接：预先创建一定数量的数据库连接并维护
 - **复用连接（关键）**：客户端获取连接使用后归还到池中，而非销毁
@@ -843,6 +843,9 @@ MySQL 连接池本质上是一种**资源管理模式**，其核心思想是：
 2. 获取连接：客户端请求时从池中取出连接
 3. **归还连接**：客户端完成操作后自动归还连接（关键）
 4. 动态调节：**后台线程**根据负载动态调整连接数量
+### 2.3 设计细节
+- 连接池不应该返回连接空指针，因为这会让使用者在获取连接时多一个验证连接是否有效的操作。所以如果 `get_connection` 超时/某些原因无法获取连接应该直接抛出异常，而不应该返回空指针
+- 如果返回智能指针对象的函数返回 nullptr 可能会引起某些编译器警告 or 报错， `std::shared_ptr` 有特殊的 `nullptr` 构造函数，但不能隐式转换，应该返回默认构造的 `shared_ptr` 或使用 `std::shared_ptr<T>(nullptr)`
 ## 3. 代码中的关键设计
 
 ### 3.1 智能指针设计
@@ -882,6 +885,8 @@ std::shared_ptr<mysql::any_connection> MysqlConnectionPool::get_connection() {
 }
 ```
 - `std::unique_ptr` 是一个**所有权唯一的指针对象**，但是不代表移动构造函数不能使用。移动构造的过程是**所有权转接的过程**（参考[[C++ Runoob Tutoral#移动构造函数|移动构造]]）
+- 从队列中 `pop()` 会销毁队列前端的指针对象，调用其析构函数，安全销毁，所以不需要像 C 指针一样先释放资源然后删除指针（`ptr.reset(); queue.pop()`）
+- 交接所有权使用的是 `shared_ptr` 构造函数而不是 `make_shared`，因为我们不需要释放指针所拥有的资源（连接资源），只是将他们拿出去使用。`make_shared` 会开辟一块新的内存然后将指针指向这个位置
 - 删除器如何执行归还连接
 	- 当 `shared_ptr` 超出作用域时自动执行删除器
 	- **所有用户都使用连接执行完 sql 语句暂时没有使用这个连接时**，`shared_ptr` 引用计数为 0，**调用删除器自动归还连接**，防止连接泄漏
@@ -893,8 +898,21 @@ template< class Y, class Deleter >
 shared_ptr( Y* ptr, Deleter d );
 ```
 - **第一个参数是裸指针类型**，可以通过智能指针的 `release()` 或者 `get()` 获取
-	- `get()` 不释放所有权，仅仅返回指针，如果源指针对象是 `unique_ptr` 使用其他智能指针封装这个指针（或者其他危险操作）
+	- `get()` 不释放所有权，仅仅返回指针，如果源指针对象是 `unique_ptr` 使用其他智能指针封装这个指针（或者[[Modern C++#Note 智能指针的局限性|其他危险操作]]）
 - 第二个参数删除器是一个**指向函数对象的指针**，用于代替 shared_ptr 内部自动删除指针的操作（默认使用 delete 删除指针），删除器会和指针对象一起存储确保正确释放。
+- 我们转交 conn_ptr 连接池中的最老的一个连接的所有权，但是我们这里不需要释放指针资源，删除指针，**所以将他的存活时间更新**，在不使用时放回连接池
+```cpp
+// 客户端代码
+auto conn = pool->get_connection();  // 返回 shared_ptr，连接从池中移出
+
+// 客户端可以在多个地方使用这个连接
+some_function(conn);  // conn 被复制，引用计数增加
+another_function(conn);  // conn 再次被使用
+
+// 当所有对连接的引用都超出作用域时
+// shared_ptr 的引用计数变为0
+// 自定义删除器被调用，连接被放回池中
+```
 ### 3.3 多线程同步机制
 ```cpp
 // 使用条件变量实现线程间通信
@@ -904,35 +922,56 @@ std::condition_variable cv_pool_needs_filling_;     // 池需要填充通知
 **同步策略**：
 - 生产者线程：监控池中连接数量，不足时创建新连接，在 `get_connection()`，`recycle_connection()` **这些消耗连接的工作中**都添加检测连接池数量的逻辑，不足时通过 `cv_pool_needs_filling.notify_one()` 通知生产者补充
 - 消费者线程（是 get_connection 主线程和 recycle_connection 回收线程）：等待可用连接，超时处理。同理在**所有产生连接的工作线程中**使用 `cv_connection_available` 通知有新的连接加入可以被获取或者总数超限需回收
-
+如果不区分条件变量只有一个，那么如果 get_connection 获取连接时，池中少了一个 idle 连接，可能会低于 min_size_需要补充，但条件变量不能指定唤醒某一个线程。
+`cv_.notify_one()` 的通知由内核算法调度，可能被回收线程/生产者线程获得，如果唤醒回收者，但没有达到最低连接数回收者继续因为 `cv_.wait` 等待，而生产者仍然是挂起状态，这次唤醒**相当于什么事都没有做**。所以需要使用不同条件变量承担不同的职责，专一控制不同功能的线程的挂起和唤醒
+所有挂起线程的代码添加谓词是为了防止 [[C++ Runoob Tutoral#虚假唤醒]]
 ### 3.4 单例模式管理
 ```cpp
-static MysqlConnectionPool* init_pool(...);  // 初始化
-static MysqlConnectionPool* get_instance();  // 获取实例
+
+MysqlConnectionPool*
+MysqlConnectionPool::init_pool(asio::io_context& ctx, const db_config& db_cfg, const pool_config& pool_cfg) {
+	if(instance_ == nullptr) {
+		instance_ = new MysqlConnectionPool(ctx, db_cfg, pool_cfg);
+	}
+	return instance_;
+}
+
+MysqlConnectionPool* MysqlConnectionPool::get_instance() {
+	return instance_;
+}
+
+MysqlConnectionPool::MysqlConnectionPool(asio::io_context& ctx, const db_config& db_cfg, const pool_config& pool_cfg)
+	: ctx_(ctx)
+	, db_config_(db_cfg)
+	, pool_config_(pool_cfg)
+	, shutdown_(false) {
+	for(int i = 0; i < pool_config_.min_size_; i++) {
+		add_connection();
+	}
+	producer_ = std::thread(&MysqlConnectionPool::produce_connection, this);
+	recycler_ = std::thread(&MysqlConnectionPool::recycle_connection, this);
+}
 ```
+构造函数中直接存储所有配置，第一次调用 `init` 时需要传入 `asio::io_context`，各种配置获取实例以外，其他时候只需要调用 `get_instance` 不需要传入任何参数。
 - 全局唯一实例，避免重复创建
 - 统一管理所有连接资源
 - 线程安全的访问控制
-## 4. 连接池运行的关键要素
-### 4.1 资源管理
-- **内存安全**：使用智能指针避免内存泄漏
-- **连接有效性**：定期检查连接状态，清理无效连接
-- **数量控制**：维持连接数在最小值和最大值之间
 
-### 4.2 线程安全
-- **互斥锁保护**：所有共享数据访问都使用互斥锁
-- **条件变量同步**：避免忙等待，提高效率
-- **原子操作**：使用 `std::atomic` 控制线程生命周期
+### 3.5 优雅退出
+程序关闭时，后台有其他线程在运行，突然中断可能导致数据丢失或程序崩溃，使用一个[[C++ Runoob Tutoral#原子操作|原子变量]] shutdown_控制程序是否关闭。
+```cpp
+~MysqlConnectionPool() {
+    shutdown_.store(true);     // 设置关闭标志
+    cv_.notify_all();          // 唤醒所有等待的线程
+    if (producer_thread_.joinable()) {
+        producer_thread_.join();  // 等待线程结束
+    }
+    if (recycle_thread_.joinable()) {
+        recycle_thread_.join();  // 等待线程结束
+    }
+}
+```
+这时候线程不能被设计为 detach 运行，否则无法再次访问，控制其行为。而是作为成员变量，在需要关闭程序时等待所有线程结束
 
-### 4.3 生命周期管理
-- **优雅关闭**：使用 `shutdown_` 标志安全终止后台线程
-- **资源清理**：析构函数确保所有资源正确释放
-- **异常处理**：完善的异常捕获和处理机制
-
-### 4.4 性能优化
-- **延迟创建**：按需创建连接，避免资源浪费
-- **连接复用**：最大化连接利用率
-- **批量操作**：减少系统调用次数
-
-
+---
 [^1]: 原则上 `std::unique_ptr` 对象指向的资源不应该被其他指针指向，但是 C++没有限制这点。如果使用 `get()/release()` 获取裸指针还是能够将指针资源地址赋予其他指针/智能指针。但这样会导致重复释放资源地址等未定义行为
