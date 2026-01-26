@@ -85,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "移动语义",
+                "query": "",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
