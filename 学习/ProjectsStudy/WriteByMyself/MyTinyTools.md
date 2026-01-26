@@ -823,7 +823,48 @@ cache 模式：根据任务数量动态增减线程
 > - 互斥锁的作用是防止[[Modern C++#4. 竞态条件|竞态条件]]出现
 > - 原子类型是防止脏数据，写入失败等问题
 > - 条件变量时让临界代码按照根据某些条件是否成立来**按照一定顺序执行**
+## 代码编写
+### 初始代码结构
+```cpp
+enum class PoolMode { ModeFixed, ModeCached };
 
+class Task {
+	virtual void run() = 0;
+};
+
+class Thread {
+  public:
+  private:
+};
+
+class ThreadPool {
+  public:
+	ThreadPool();
+	~ThreadPool();
+
+	void start();
+	void set_mode(PoolMode mode);
+
+  private:
+	std::vector<std::unique_ptr<Thread>> threads_;
+	unsigned int						 init_thread_size_;
+	std::queue<std::shared_ptr<Task>>	 tasks_que_;
+	std::atomic_uint					 task_size_;
+	std::mutex							 task_que_mutex_;  // for tasks_que_
+	std::condition_variable				 cv_not_full_;
+	std::condition_variable				 cv_not_empty_;
+};
+```
+对于设计中 thread 和 task 的指针封装：
+- `threads_` 中使用 `std::unique_ptr` ：
+	- 线程池创建线程，并拥有它们的生命周期；
+	- 线程池负责启动、管理、销毁这些线程；
+	- 线程在物理和逻辑上都不允许线程被复制或转移给其他对象
+- `tasks_que_` 中使用 `std::shared_ptr`：
+	- 提交任务这一行为是**先由使用者构建一个任务对象然后被提交到任务队列中**，线程池需要从队列中取出这一个任务并执行，任务执行完毕后由线程池管理/销毁。*每个任务对象拥有者有多个*，并且生命周期必须长于用户构建->任务执行完毕。
+	- 用户提交任务到池中**需要通过继承 Task 类并重写 run**，如果使用 `std::queue<Task>` ，那么会在编译时写死类型/内存信息，[[C++ Runoob Tutoral#多态#多态分类和触发|语法上可行但不会触发多态，而会触发对象切片]]，造成未定义行为。
+	- 如果使用 `std::queue<Task*>` 可以触发多态，但是无法保证用户调用 `ThreadPool::sumbit_task()` 是没有直接**在入参中构造一个临时值（将亡值/右值）**，这样任务对象会在提交任务函数结束后被销毁，但任务列表中指针变量仍存在，销毁后指针悬空。
+	- 所以使用 `std::queue<std::unique_ptr<Task>>` 这样无论传入什么都能被接管内存并且触发多态
 # MySQL 连接池
 参考：[基于C++11的数据库连接池【C++/数据库/多线程/MySQL】哔哩哔哩bilibili](https://www.bilibili.com/video/BV1Fr4y1s7w4/?spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
 资源：https://pan.baidu.com/s/1KJqmmbMVg32qyWjPlRZSeg&pwd=subw

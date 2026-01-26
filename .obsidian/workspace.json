@@ -67,8 +67,7 @@
               "title": "学习摘录"
             }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "vertical"
@@ -232,11 +231,11 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "26dd99ee1a9f10b7",
+  "active": "d4d849b642bcc49a",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
-    "Chores/学习摘录.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "Chores/学习摘录.md",
+    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/其他专业书/Modern C++.md",
     "Files & LongText/Attachments/PixPin_2026-01-26_13-20-40.png",
     "Files & LongText/Attachments/PixPin_2026-01-26_13-20-28.png",
