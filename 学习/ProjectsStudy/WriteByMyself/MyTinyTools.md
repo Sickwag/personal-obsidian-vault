@@ -860,6 +860,7 @@ class ThreadPool {
 	- 线程池创建线程，并拥有它们的生命周期；
 	- 线程池负责启动、管理、销毁这些线程；
 	- 线程在物理和逻辑上都不允许线程被复制或转移给其他对象
+	- 如果在 threads_中存储裸指针，那么在析构函数中需要 delete，否则泄露
 - `tasks_que_` 中使用 `std::shared_ptr`：
 	- 提交任务这一行为是**先由使用者构建一个任务对象然后被提交到任务队列中**，线程池需要从队列中取出这一个任务并执行，任务执行完毕后由线程池管理/销毁。*每个任务对象拥有者有多个*，并且生命周期必须长于用户构建->任务执行完毕。
 	- 用户提交任务到池中**需要通过继承 Task 类并重写 run**，如果使用 `std::queue<Task>` ，那么会在编译时写死类型/内存信息，[[C++ Runoob Tutoral#多态#多态分类和触发|语法上可行但不会触发多态，而会触发对象切片]]，造成未定义行为。
@@ -877,15 +878,32 @@ class Thread {
   private:
 	  ThreadFunc func_;
 };
+
+void ThreadPool::start(int init_thread_size) {
+	init_thread_size_ = init_thread_size;
+	for(int i = 0; i < init_thread_size; i++) {
+		threads_.emplace_back(std::make_unique<Thread>(std::bind(&ThreadPool::thread_func, this)));
+	}
+	for(int i = 0; i < init_thread_size; i++) {
+		threads_.at(i)->start();
+	}
+}
+
+void ThreadPool::thread_func() {
+	auto					   id = std::this_thread::get_id();
+	std::hash<std::thread::id> hasher;
+	std::cout << "thread func " << hasher(id) << '\n';
+}
 ```
 - 线程池执行逻辑为：
 	- 创建线程池，初始创建 init_thread_size_ 个 Thread 对象，Thread 被存储在线程队列 `std::vector<std::unique_ptr<Thread>> threads_` ，每个 Thread 对象绑定线程函数对象，存放在 `func_` 中，将来被 Thread 对象通过 `start()` 创建 `std::thread t(func_)` **真正创建线程并执行任务**
 	- 用户通过 `submit_task()` 提交任务。任务被存储在线程池中的任务队列
 	- 线程队列中的线程抢占任务队列中的任务，通过 `threads` 任务结束后将线程归还池中
-- 为什么线程需要分离执行？
+- 为什么这里设计线程需要分离执行？
 	- **线程生命周期管理**：当 `std::thread` 对象超出作用域时，如果它仍然关联着一个正在执行的线程，程序会调用 `std::terminate()` 终止整个程序。为了避免这种情况，必须在 `std::thread` 对象销毁前要么调用 `join()` 等待线程结束，要么调用 `detach()` 分离线程。
 	- __线程池的工作模式__：在线程池中，工作线程通常会持续运行，等待任务队列中的任务。它们不会立即结束，所以不能使用`join()`，因为那会使主线程阻塞等待。
-	- __分离线程的含义__：`detach()`使线程在后台独立运行，不再受原始`std::thread`对象的控制。线程会在其关联的函数完成后自动清理资源。
+	- __分离线程的含义__：`detach()` 使线程在后台独立运行，不再受原始 `std::thread` 对象的控制。线程会在其关联的函数完成后自动清理资源。参考 [[C++ Runoob Tutoral#多线程#线程控制函数、方法]]
+- 测试 thread_func 函数内容为输出线程 id，每个 Thread 对象的 `start()` 最终会在通过 `std::thread` 执行 `std::bind(&ThreadPool::thread_func, this)` 任务 
 
 # MySQL 连接池
 参考：[基于C++11的数据库连接池【C++/数据库/多线程/MySQL】哔哩哔哩bilibili](https://www.bilibili.com/video/BV1Fr4y1s7w4/?spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
