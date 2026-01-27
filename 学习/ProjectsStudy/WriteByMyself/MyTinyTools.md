@@ -867,6 +867,7 @@ class ThreadPool {
 	- 如果使用 `std::queue<Task*>` 可以触发多态，但是无法保证用户调用 `ThreadPool::sumbit_task()` 是没有直接**在入参中构造一个临时值（将亡值/右值）**，这样任务对象会在提交任务函数结束后被销毁，但任务列表中指针变量仍存在，销毁后指针悬空。
 	- 所以使用 `std::queue<std::unique_ptr<Task>>` 这样无论传入什么都能被接管内存并且触发多态
 ### 基本线程池任务架构
+#### 分离线程设计
 ```cpp
 class Thread {
 	using ThreadFunc = std::function<void()>;
@@ -903,8 +904,108 @@ void ThreadPool::thread_func() {
 	- **线程生命周期管理**：当 `std::thread` 对象超出作用域时，如果它仍然关联着一个正在执行的线程，程序会调用 `std::terminate()` 终止整个程序。为了避免这种情况，必须在 `std::thread` 对象销毁前要么调用 `join()` 等待线程结束，要么调用 `detach()` 分离线程。
 	- __线程池的工作模式__：在线程池中，工作线程通常会持续运行，等待任务队列中的任务。它们不会立即结束，所以不能使用`join()`，因为那会使主线程阻塞等待。
 	- __分离线程的含义__：`detach()` 使线程在后台独立运行，不再受原始 `std::thread` 对象的控制。线程会在其关联的函数完成后自动清理资源。参考 [[C++ Runoob Tutoral#多线程#线程控制函数、方法]]
-- 测试 thread_func 函数内容为输出线程 id，每个 Thread 对象的 `start()` 最终会在通过 `std::thread` 执行 `std::bind(&ThreadPool::thread_func, this)` 任务 
+	- 如果让 thread_func 函数中只执行一个任务，那么线程分离其实违背了线程池的设计初衷，线程池应该让线程持续运行，从任务队列中获取任务并执行。执行完成后有两种选择
+		- 不让线程结束，thread_func 中实现一个无限循环，让线程一直"工作"，在结束上一个任务/空闲时**被条件变量挂起**。本质上是控制线程一直工作/挂起，资源不被释放（当前使用的方案）
+		- 线程分离方式无对线程掌控能力，如要管理线程则需要创建容器将线程分类为：“工作中线程”/“空闲线程”这样的缓冲模式，并将容器设置为 ThreadPool 成员变量，类似于 [[FastLog#三重缓冲区设计]]。
 
+- 测试 thread_func 函数内容为输出线程 id，每个 Thread 对象的 `start()` 最终会在通过 `std::thread` 执行 `std::bind(&ThreadPool::thread_func, this)` 任务 
+#### 提交任务实现
+```cpp
+void ThreadPool::thread_func() {
+	for(;;) {
+		std::shared_ptr<Task> task;
+		{
+			std::unique_lock<std::mutex> lock(task_que_mutex_);
+			auto						 id = std::this_thread::get_id();
+			std::hash<std::thread::id>	 hasher;
+			std::cout << "tid " << hasher(id) << " trying to gain a task...\n";
+			cv_not_empty_.wait(lock, [&]() -> bool { return tasks_que_.size() > 0; });
+			std::cout << "tid " << hasher(id) << " gained a task, start process\n";
+			task = tasks_que_.front();
+			tasks_que_.pop();
+			task_size_--;
+			cv_not_full_.notify_all();
+			if(tasks_que_.size() > 0) {
+				cv_not_empty_.notify_all();
+			}
+		}
+		if(task != nullptr) {
+			task->run();
+		}
+	}
+}
+
+void ThreadPool::submit_task(std::shared_ptr<Task> task) {
+	std::unique_lock<std::mutex> lock(task_que_mutex_);
+	// cv_not_full_.wait(lock, [&]() -> bool { return tasks_que_.size() < task_que_max_threshold; });
+	if(!cv_not_full_.wait_for(lock, std::chrono::seconds(1), [&]() -> bool {
+		   return tasks_que_.size() < (size_t)task_que_max_threshold;
+	   })) {
+		std::cerr << "waited 1s and task queue still full";
+		return;
+	}
+	tasks_que_.emplace(task);
+	task_size_++;
+	cv_not_empty_.notify_all();
+}
+```
+创建以下任务：
+```cpp
+class MyTask : public Task {
+	void run() override {
+		// under windows + mingw env, std::this_thread::get_id() is incomplete support, cannot print directly
+		// std::cout << "thread func " << std::this_thread::get_id() << '\n';
+
+		auto					   id = std::this_thread::get_id();
+		std::hash<std::thread::id> hasher;
+		std::cout << "tid " << hasher(id) << " begin\n";
+		std::this_thread::sleep_for(std::chrono::seconds(2));
+		std::cout << "tid " << hasher(id) << " end\n";
+	}
+};
+
+int main() {
+	ThreadPool pool;
+	pool.start(4);
+
+	pool.submit_task(std::make_shared<MyTask>());
+	pool.submit_task(std::make_shared<MyTask>());
+	pool.submit_task(std::make_shared<MyTask>());
+
+	// std::this_thread::sleep_for(std::chrono::seconds(5));
+	std::cin.get();
+}
+```
+日志内容
+```bash
+tid 1230235464250880600 trying to gain a task...
+tid 1230235464250880600 gained a task, start process
+tid 1230235464250880600 begin
+tid 8670141377090704656 trying to gain a task...
+tid 8670141377090704656 gained a task, start process
+tid tid 18137369640724998020 trying to gain a task...
+tid 18137369640724998020 gained a task, start process
+8670141377090704656 begin
+tid 4249528327736205830 trying to gain a task...
+tid 18137369640724998020 begin
+tid 1230235464250880600 end
+tid 1230235464250880600 trying to gain a task...
+tid 18137369640724998020 end
+tid 8670141377090704656 end
+tid 18137369640724998020 trying to gain a task...
+tid 8670141377090704656 trying to gain a task...
+```
+- 可以看到有 6 次 trying to gain a task，三次 gained 并且 end 了，三次还在 trying ，原因便是线程池中三个线程已经执行完了任务，尝试获取但卡在 `cv_not_empty_.wait(lock, [&]() -> bool { return tasks_que_.size() > 0; });`
+- 添加任务数量超过 task_max_threshold 则会正常进行等待
+>[!note]
+> ```bash
+> commit 34259e9ded3a52a982650a0e742d3d602c3873d7 (HEAD -> master)
+> Author: sickwag <sickwag@outlook.com>
+> Date:   Tue Jan 27 16:46:26 2026 +0800
+>     basic structure
+> ```
+#### 获取任务执行结果
+比如计算任务，执行完返回计算结果，需要自定义任务内容
 # MySQL 连接池
 参考：[基于C++11的数据库连接池【C++/数据库/多线程/MySQL】哔哩哔哩bilibili](https://www.bilibili.com/video/BV1Fr4y1s7w4/?spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
 资源：https://pan.baidu.com/s/1KJqmmbMVg32qyWjPlRZSeg&pwd=subw
