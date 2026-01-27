@@ -1005,7 +1005,10 @@ tid 8670141377090704656 trying to gain a task...
 >     basic structure
 > ```
 #### 获取任务执行结果
-比如计算任务，执行完返回计算结果，需要自定义任务内容
+比如计算任务，执行完返回计算结果，需要自定义任务执行结果，一般通过修改 `Thread::run()` 的返回值来做到，但是不同任务返回值类型不一样，所以需要：
+- 泛型，但是 Task 中 run 是虚函数，不能使用模板。实例化对象时创建的[[C++ Runoob Tutoral#虚函数表|虚函数表]]需要指向一个函数签名&&内存布局确定的函数，***模板的静态实例化和多态虚函数的运行期动态绑定有根本的冲突***
+- [[C++开发范式#CRTP（Curiously Recurring Template Pattern）|CRTP]]，但这还是需要模板，在有纯虚函数的类中无法做到，需要重构通过继承 Task 重写 run 方法的提交任务逻辑。并且如果一个任务有多个不同类型的可能返回值就子类中需要写多个函数，或者子类函数使用模板。***总体流程过于复杂***
+- `std::any` 最简单，C++17 支持
 # MySQL 连接池
 参考：[基于C++11的数据库连接池【C++/数据库/多线程/MySQL】哔哩哔哩bilibili](https://www.bilibili.com/video/BV1Fr4y1s7w4/?spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
 资源：https://pan.baidu.com/s/1KJqmmbMVg32qyWjPlRZSeg&pwd=subw
