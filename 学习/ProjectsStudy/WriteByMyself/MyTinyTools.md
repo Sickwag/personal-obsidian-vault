@@ -1009,6 +1009,61 @@ tid 8670141377090704656 trying to gain a task...
 - 泛型，但是 Task 中 run 是虚函数，不能使用模板。实例化对象时创建的[[C++ Runoob Tutoral#虚函数表|虚函数表]]需要指向一个函数签名&&内存布局确定的函数，***模板的静态实例化和多态虚函数的运行期动态绑定有根本的冲突***
 - [[C++开发范式#CRTP（Curiously Recurring Template Pattern）|CRTP]]，但这还是需要模板，在有纯虚函数的类中无法做到，需要重构通过继承 Task 重写 run 方法的提交任务逻辑。并且如果一个任务有多个不同类型的可能返回值就子类中需要写多个函数，或者子类函数使用模板。***总体流程过于复杂***
 - `std::any` 最简单，C++17 支持
+这里使用自实现的 `Any` 类型封装不同任务的结果
+
+
+获取 task 对象执行任务结果的返回值有两种方法
+- task 对象 `get_result<T>()` 方法获取
+- Result 对象通过接受 any 对象 `Result<T>(any)` 获取
+第一种方法不能使用，原因
+```cpp
+
+```
+在 `ThreadPool::submit_task` 中，task 传入任务后返回只是一个 Result 外壳，真正执行任务的 `thread_func()` 中：
+```cpp
+task = tasks_que_.front();
+tasks_que_.pop();
+```
+task 对象会在 pop 后销毁，这时候任务执行完需要任务执行结果的时候 task 对象已经被释放，悬空指针访问会出现未定义行为
+
+还有一个问题，使用 
+```cpp
+Result res = pool.submit_task(std::make_shared<MyTask>());
+res.get<T>();
+```
+得到结果需要等待线程执行完毕，但是代码调用是可能没有执行完，这时候需要线程间通信了解执行情况，未执行完则阻塞调用 get 的线程。通过自定义信号量 `Semaphore` 实现
+![[PixPin_2026-01-27_20-48-49.png]]
+```cpp
+class Semaphore{
+	public:
+		Semaphore(int init_limit);
+		~Semaphore() = default;
+
+		void post();
+		void wait();
+
+	private:
+		int resource_limit_;
+		std::condition_variable cv_;
+		std::mutex mutex_; // for `resource_limit_`
+};
+
+Semaphore::Semaphore(int init_limit)
+	: resource_limit_(init_limit) {}
+
+void Semaphore::post() {
+	std::unique_lock<std::mutex> lock(mutex_);
+	resource_limit_++;
+	cv_.notify_all();
+}
+
+void Semaphore::wait() {
+	std::unique_lock<std::mutex> lock(mutex_);
+	cv_.wait(lock, [this]() -> bool { return resource_limit_ > 0; });
+	resource_limit_--;
+}
+```
+
 # MySQL 连接池
 参考：[基于C++11的数据库连接池【C++/数据库/多线程/MySQL】哔哩哔哩bilibili](https://www.bilibili.com/video/BV1Fr4y1s7w4/?spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
 资源：https://pan.baidu.com/s/1KJqmmbMVg32qyWjPlRZSeg&pwd=subw
