@@ -879,9 +879,14 @@ class Thread {
 };
 ```
 - 线程池执行逻辑为：
-	- 创建线程池，初始化创建 init_thread_size_ 个 Thread 对象，Thread 被存储在池中的线程队列 `std::vector<std::unique_ptr<Thread>> threads_` 中，每个 Thread 对象绑定一个线程函数对象，这个线程函数对象被存放在 `func_` 中，
+	- 创建线程池，初始创建 init_thread_size_ 个 Thread 对象，Thread 被存储在线程队列 `std::vector<std::unique_ptr<Thread>> threads_` ，每个 Thread 对象绑定线程函数对象，存放在 `func_` 中，将来被 Thread 对象通过 `start()` 创建 `std::thread t(func_)` **真正创建线程并执行任务**
 	- 用户通过 `submit_task()` 提交任务。任务被存储在线程池中的任务队列
 	- 线程队列中的线程抢占任务队列中的任务，通过 `threads` 任务结束后将线程归还池中
+- 为什么线程需要分离执行？
+	- **线程生命周期管理**：当 `std::thread` 对象超出作用域时，如果它仍然关联着一个正在执行的线程，程序会调用 `std::terminate()` 终止整个程序。为了避免这种情况，必须在 `std::thread` 对象销毁前要么调用 `join()` 等待线程结束，要么调用 `detach()` 分离线程。
+	- __线程池的工作模式__：在线程池中，工作线程通常会持续运行，等待任务队列中的任务。它们不会立即结束，所以不能使用`join()`，因为那会使主线程阻塞等待。
+	- __分离线程的含义__：`detach()`使线程在后台独立运行，不再受原始`std::thread`对象的控制。线程会在其关联的函数完成后自动清理资源。
+
 # MySQL 连接池
 参考：[基于C++11的数据库连接池【C++/数据库/多线程/MySQL】哔哩哔哩bilibili](https://www.bilibili.com/video/BV1Fr4y1s7w4/?spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
 资源：https://pan.baidu.com/s/1KJqmmbMVg32qyWjPlRZSeg&pwd=subw

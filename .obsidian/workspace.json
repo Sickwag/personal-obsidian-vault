@@ -214,8 +214,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 219.5,
-    "collapsed": true
+    "width": 219.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -233,9 +232,9 @@
   },
   "active": "d4d849b642bcc49a",
   "lastOpenFiles": [
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Chores/学习摘录.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/其他专业书/Modern C++.md",
     "Files & LongText/Attachments/PixPin_2026-01-26_13-20-40.png",
     "Files & LongText/Attachments/PixPin_2026-01-26_13-20-28.png",
