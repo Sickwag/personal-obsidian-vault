@@ -1340,6 +1340,52 @@ add_executable(exe_b main_b.cpp $<TARGET_OBJECTS:Utils>)
 对象库：
 - 在通用模块函数能够被逻辑分类或由多个团队并行开发时，使用对象库能够减少编译/开发时间，降低沟通成本
 - 高度模块化，拆分/变更方便
+### 注意事项
+#### 库和工程编译器不一致
+- **Windows 下的静态库(.lib)具有编译器特定性**，MSVC 编译的库只能由 MSVC 链接，MinGW 编译的库只能由 MinGW 链接
+- 不同编译器的 ABI（应用二进制接口）不兼容，会导致符号链接失败
+工程编译完成之后的**链接这一步需要编译器对应的链接器**，否则会在链接阶段大量找不到符号
+```bash
+D:/Program/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: CMakeFiles\thread_pool_myself.dir/objects.a(main.cpp.obj): in function `main':
+D:/Code Files/temp_projects/MyTinyTools/thread_pool_myself/main.cpp:6:(.text+0x33): undefined reference to `fastlog::set_console_log_level(fastlog::LogLevel)'
+D:/Program/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: CMakeFiles\thread_pool_myself.dir/objects.a(main.cpp.obj): in function `void fastlog::detail::BaseLogger<fastlog::detail::ConsoleLogger>::format<(fastlog::LogLevel)1>(fastlog::detail::basic_format_string_wrapper<>)':
+.....
+collect2.exe: error: ld returned 1 exit status
+mingw32-make[2]: *** [CMakeFiles\thread_pool_myself.dir\build.make:103: thread_pool_myself.exe] Error 1
+mingw32-make[1]: *** [CMakeFiles\Makefile2:86: CMakeFiles/thread_pool_myself.dir/all] Error 2
+mingw32-make: *** [Makefile:90: all] Error 2
+```
+CMake 生成器决定了使用哪个编译器工具链，但是
+
+- Windows: `dumpbin /headers library.lib`
+- Linux: `objdump -h library.a` 或 `readelf -h library.so`
+
+```bash
+dumpbin.exe .\thirdparty\fastlog-debug\lib\fastlog.lib     
+Microsoft (R) COFF/PE Dumper Version 14.44.35215.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+....
+```
+- __COFF/PE 格式__：输出显示"Microsoft (R) COFF/PE Dumper"，说明这是 Windows PE 格式的文件，这是 MSVC 的标准输出格式
+- __版本信息__：Version 14.44.35215.0 对应 Visual Studio 2022 的编译器版本
+- __g++和 Clang 的兼容性__：在 Linux 下，g++和 Clang 在大多数情况下可以混用：
+	- 都遵循相同的 System V ABI 标准
+	- 使用相同的 C++标准库实现（通常是 libstdc++）
+	- 相同的名称修饰规则
+下面是库文件的内存信息，把这些信息发 ai 也可以知道编译器信息
+#### 编译器和生成器必须配套
+cmake 配置中可以设置编译器和生成器，工程使用 mingw，库文件使用 cl 编译的情况下，在 CMakePresets.json 中工程编译器设置为 g++，然后将生成器设置为 visual studio 17 2022 这样并不能正常链接
+- __不同的构建系统__：
+	- Visual Studio 生成器生成.sln/.vcxproj 文件，使用 MSBuild
+	- MinGW 生成器生成 Makefiles，使用 make 工具
+- __不同的工具链__：
+	- MSVC 使用 link.exe 链接器
+	- MinGW 使用 ld 链接器
+- __不同的 ABI 和运行时__：
+	- MSVC 和 MinGW 有不同的名称修饰规则
+	- 不同的异常处理机制
+	- 不同的 C 运行时库
+
 ## 第 6 步：深入系统自省
 ### 背景
 CMake 的**系统自省**是指通过编译和运行小型测试程序，**自动检测目标系统和工具链的特性**，大部分名称前缀为 `Check` 并需要使用 `include()` 引入。这确保项目在不同平台和编译器环境下能够正确配置和构建实现跨平台兼容性
