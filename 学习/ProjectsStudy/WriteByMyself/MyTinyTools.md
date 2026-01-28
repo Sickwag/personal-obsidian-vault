@@ -1010,16 +1010,49 @@ tid 8670141377090704656 trying to gain a task...
 - [[C++开发范式#CRTP（Curiously Recurring Template Pattern）|CRTP]]，但这还是需要模板，在有纯虚函数的类中无法做到，需要重构通过继承 Task 重写 run 方法的提交任务逻辑。并且如果一个任务有多个不同类型的可能返回值就子类中需要写多个函数，或者子类函数使用模板。***总体流程过于复杂***
 - `std::any` 最简单，C++17 支持
 这里使用自实现的 `Any` 类型封装不同任务的结果
+```cpp
+class Any {
+  public:
+	Any()						= default;
+	~Any()						= default;
+	Any(const Any&&)			= delete;
+	Any& operator=(const Any&&) = delete;
+	template <typename T>
+	Any(T data)
+		: base_(std::make_unique<Derive<T>>(data)) {}
+	template <typename T>
+	T cast() {
+		Derive<T>* pd = dynamic_cast<Derive<T>*>(base_.get());
+		if(pd = nullptr) {
+			// When the type of user cast is inconsistent with the storage type
+			throw std::runtime_error("target type is incompatible with storage type");
+		}
+	}
+	class Base {
+	  public:
+		virtual ~Base() = default;
 
+	  private:
+	};
+  template <typename T>
+  class Derive : public : Base {
+	  public:
+		Derive(T data)
+			: data_(data) {}
 
+	  private:
+		T data_;
+	};
+
+  private:
+	std::unique_ptr<Base> base_;
+};
+```
+核心在于类型擦除器，参考
 获取 task 对象执行任务结果的返回值有两种方法
 - task 对象 `get_result<T>()` 方法获取
 - Result 对象通过接受 any 对象 `Result<T>(any)` 获取
-第一种方法不能使用，原因
-```cpp
-
-```
-在 `ThreadPool::submit_task` 中，task 传入任务后返回只是一个 Result 外壳，真正执行任务的 `thread_func()` 中：
+第一种方法不能使用，原因在 `ThreadPool::submit_task` 中，task 传入任务后返回只是一个 Result 外壳，真正执行任务的 `thread_func()` 中：
 ```cpp
 task = tasks_que_.front();
 tasks_que_.pop();
@@ -1063,7 +1096,15 @@ void Semaphore::wait() {
 	resource_limit_--;
 }
 ```
+Result 类型用来存储每个任务执行结果，配合 Task 和 Any，最终实现这样的效果
+```cpp
+Result res = pool.submit_task(std::make_shared<MyTask>(1, 1000000));
+res.get().cast<unsigned long long>();
 
+// 我感觉不如get<T>()方便，这样还不需要设计一个Result类型
+```
+### Master-Slave 任务分配
+参考 [[C++开发范式#Master-Slave 任务分配机制]]
 # MySQL 连接池
 参考：[基于C++11的数据库连接池【C++/数据库/多线程/MySQL】哔哩哔哩bilibili](https://www.bilibili.com/video/BV1Fr4y1s7w4/?spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
 资源：https://pan.baidu.com/s/1KJqmmbMVg32qyWjPlRZSeg&pwd=subw
