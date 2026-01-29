@@ -68,7 +68,7 @@
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -100,7 +100,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "future",
+                "query": "dumpbin",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -233,11 +233,11 @@
   },
   "active": "129968db299d0d8b",
   "lastOpenFiles": [
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Chores/学习摘录.md",
     "学习/ToolChain/Cmake.md",
     "学习/Bases/开发范式/C++开发范式.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/其他专业书/Modern C++.md",
     "Files & LongText/Attachments/PixPin_2026-01-27_20-48-49.png",
     "Files & LongText/Attachments/PixPin_2026-01-26_13-20-40.png",
