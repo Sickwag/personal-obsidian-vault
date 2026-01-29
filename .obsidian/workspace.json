@@ -68,7 +68,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -100,7 +100,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "类型擦除",
+                "query": "future",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -126,8 +126,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -232,10 +231,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "26dd99ee1a9f10b7",
+  "active": "129968db299d0d8b",
   "lastOpenFiles": [
-    "学习/ToolChain/Cmake.md",
     "Chores/学习摘录.md",
+    "学习/ToolChain/Cmake.md",
     "学习/Bases/开发范式/C++开发范式.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
