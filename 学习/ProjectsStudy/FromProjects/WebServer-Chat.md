@@ -1087,12 +1087,24 @@ void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffe
 方法：
 ```cpp
 // public.hpp
-template<typename T>
-auto getEnumValue(T enumValue) {
-    if constexpr (std::is_enum_v<T>) {
-        return static_cast<int>(enumValue);
-    }
-    return 0;
+// 概念约束：必须是枚举类型
+template <typename T>
+concept is_enum = std::is_enum_v<T>;
+
+// 概念约束：必须是算术类型
+template <typename T>
+concept is_arithmetic = std::is_arithmetic_v<T>;
+
+// 枚举转数字
+template <is_enum T>
+constexpr auto getEnumValue(T value) noexcept {
+	return static_cast<std::underlying_type_t<T>>(value);
+}
+
+// 数字转枚举
+template <is_enum T, is_arithmetic U>
+constexpr T getValueEnum(U value) noexcept {
+	return static_cast<T>(value);
 }
 
 enum MsgType {
