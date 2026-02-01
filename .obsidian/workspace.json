@@ -83,7 +83,7 @@
             }
           }
         ],
-        "currentTab": 4
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -246,8 +246,9 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "f7b65600b326bb4e",
+  "active": "e0fb46ab99e5e91c",
   "lastOpenFiles": [
+    "学习/其他专业书/QT6开发指南.md",
     "Chores/学习摘录.md",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
@@ -279,7 +280,6 @@
     "test.exe",
     "test.cpp",
     "学习/ProjectsStudy/WriteByMyself/BookManageSystem+mysql.md",
-    "学习/其他专业书/QT6开发指南.md",
     "Files & LongText/ChatLogWithAi/C++学习对话.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
     "学习/Language/C C++/模板元编程.md",
