@@ -53,7 +53,7 @@
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -175,8 +175,8 @@
             "state": {
               "type": "quiet-outline",
               "state": {},
-              "icon": "lines-of-text",
-              "title": "Quiet Outline"
+              "icon": "lucide-ghost",
+              "title": "quiet-outline"
             }
           },
           {
@@ -204,23 +204,23 @@
   },
   "left-ribbon": {
     "hiddenItems": {
-      "bases:新建数据库": false,
-      "switcher:打开快速切换": false,
-      "graph:查看关系图谱": false,
-      "daily-notes:打开/创建今天的日记": false,
-      "templates:插入模板": false,
-      "command-palette:打开命令面板": false,
-      "markdown-importer:打开 Markdown 格式转换器": false,
-      "workspaces:管理工作区布局": false,
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "markdown-importer:Open format converter": false,
+      "workspaces:Manage workspace layouts": false,
+      "bases:Create new base": false,
       "table-editor-obsidian:Advanced Tables Toolbar": false,
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "021ce9eba51858f3",
+  "active": "26dd99ee1a9f10b7",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/FromDocs/Boost库学习.md",
     "Files & LongText/Attachments/Pasted image 20260203121417.jpg",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/ProjectsStudy/FromDocs/Boost库学习.md",
     "Chores/学习摘录.md",
     "学习/其他专业书/QT6开发指南.md",
     "学习/Language/SQL/MySQL.md",
@@ -246,7 +246,6 @@
     "Files & LongText/Attachments/PixPin_2026-01-23_09-55-09.png",
     "学习/ProjectsStudy/FromProjects/线程池.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinySTL.md",
-    "Files & LongText/Attachments/PixPin_2026-01-22_17-06-37.png",
     "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/ProjectsStudy/FromDocs/Boost库文档学习.md",
     "test.exe",
