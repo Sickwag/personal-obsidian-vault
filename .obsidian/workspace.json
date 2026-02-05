@@ -36,9 +36,19 @@
               "icon": "lucide-file",
               "title": "Boost库学习"
             }
+          },
+          {
+            "id": "996ab316eb810655",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -61,7 +71,7 @@
                 "autoReveal": true
               },
               "icon": "lucide-folder-closed",
-              "title": "文件列表"
+              "title": "Files"
             }
           },
           {
@@ -95,8 +105,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -201,10 +210,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "021ce9eba51858f3",
+  "active": "996ab316eb810655",
   "lastOpenFiles": [
-    "Chores/学习摘录.md",
     "学习/ProjectsStudy/FromDocs/Boost库学习.md",
+    "Chores/学习摘录.md",
     "Files & LongText/Attachments/Pasted image 20260203121417.jpg",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/其他专业书/QT6开发指南.md",
