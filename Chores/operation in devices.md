@@ -1,3 +1,4 @@
+# windows
 ## 2023-08-18  08:56解决艾尔登法环掉帧
 
 1. 禁用计算机管理——软件设备中
@@ -77,3 +78,60 @@ started 3 plugins.
 2025 年 10 月 9 日13:20:38
 参考： [VisualStudio 产生的.sdf和.ipch文件删除、不生成 - 悟透 - 博客园](https://www.cnblogs.com/wutou/p/18367491)
 据说删除之后会影响 intellisense 的速度
+# Linux
+## 解决 linux mint 外屏问题
+### 外屏无法连接
+参考：https://zhuanlan.zhihu.com/p/259620618
+主要是通过
+```bash
+# 另一种可能就是没有安装lightdm，安装方法[3]为
+sudo apt install lightdm
+# 然后用以下命令切换到lightdm模式中。
+sudo dpkg-reconfigure lightdm
+```
+### 外屏亮度调节
+先使用 xrandr 命令检测所有连接的屏幕
+```bash
+ ~  xrandr                                                                                           INT х  11:32:30 
+Screen 0: minimum 320 x 200, current 3840 x 1080, maximum 16384 x 16384
+eDP-1 connected primary 1920x1080+1920+0 (normal left inverted right x axis y axis) 355mm x 199mm
+   1920x1080     60.00*+  60.00    40.00  
+   1680x1050     60.00  
+   1400x1050     60.00  
+   # 各种支持的分辨率&帧率
+DP-1 disconnected (normal left inverted right x axis y axis)
+DP-2 disconnected (normal left inverted right x axis y axis)
+HDMI-1-0 connected 1920x1080+0+0 (normal left inverted right x axis y axis) 0mm x 0mm
+   1920x1080     60.00*+  59.94    50.00    23.98  
+   3840x2160     23.98  
+   1680x1050     59.95  
+   1600x900      60.00  
+   1440x900      59.89   
+   1280x720      60.00    59.94    50.00  
+   1024x768      60.00  
+   800x600       60.32    56.25  
+   # 同上
+DP-1-0 disconnected (normal left inverted right x axis y axis)
+DP-1-1 disconnected (normal left inverted right x axis y axis)
+```
+可以看到两个屏幕，eDP-1->primary screen，HTMI-1-0 副屏
+通过下面的命令调整亮度
+```bash
+xrandr --output HDMI-1-0 --brightness 0.5 
+# 亮度在0~1比较适合，超过1技术上可以做到，但是会非常刺眼
+```
+## 调整桌面启动器
+下载 xfce4
+```bash
+apt install xfce4 xfce4-goodies lightdm xfce4-session
+```
+默认的 `/etc/lightdm/ligthdm.conf.d/70-linuxmint.conf` 文件内容是：
+```bash
+[SeatDefaults]
+user-session=cinnamon
+```
+修改为
+```bash
+[SeatDefaults]
+user-session=xfce4
+```
