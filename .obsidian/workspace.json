@@ -43,13 +43,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Chores/operation in devices.md",
+                "file": "学习/ProjectsStudy/FromProjects/FastLog.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "operation in devices"
+              "title": "FastLog"
             }
           }
         ],
@@ -85,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "fastlog",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -106,7 +106,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -218,8 +219,8 @@
   },
   "active": "92c3f9f78398653a",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/FromDocs/Boost库学习.md",
     "Chores/operation in devices.md",
+    "学习/ProjectsStudy/FromDocs/Boost库学习.md",
     "Chores/学习摘录.md",
     "Files & LongText/Attachments/Pasted image 20260203121417.jpg",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
