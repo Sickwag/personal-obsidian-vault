@@ -1241,6 +1241,7 @@ auto task = std::make_shared<std::packaged_task<return_type()>>([
 });
 ```
 - 使用智能指针统一管理可调用对象和参数包参数，保证两者生命周期一致
+- 使用 tuple 存储参数列表，这就需要配套使用 `std::apply` 而不能使用 `std::invoke`，参考 [[C++ Runoob Tutoral#std invoke 和 std apply 使用]]
 ```cpp
 template <class F, class... Args>
 inline auto ThreadPool::enqueue(F&& f, Args&&... args)
