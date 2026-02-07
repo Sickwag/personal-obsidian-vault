@@ -488,6 +488,57 @@ $1
 查阅这些符号来自什么库，通过 find_package 和 target_link_libraries 链接接口
 
 msbuild 中对 vcpkg 有很好的支持（使用 `vcpkg integrate install` 后），会自动在 vcpkg 中寻找，而 cmake 构建中，如果没有指定 tool_chain_file 就不会自动寻找，所以可能会导致问题（有的时候指定了也会这样，原因未知 #未知错误 ）
+## qt-creator linux 版诡异问题
+### 没有添加 qt 目录到 CMAKE_PREFIX_PATH 也能构建
+如题，这时候 qt-creator 可以正常工作但手动使用 `cmake -B && cmake --build` 在终端构建会报错找不到 qt 库（没有设置环境变量）
+如果手动在 CMakeLists.txt 中添加 `list(append CMAKE_PREFIX_PAT "....")` 后，在终端使用构建编译命令会正常运行，但 qt-creator 中会导致报错：
+```bash
+:-1: error: No "Debug" CMake configuration found. Available configuration: "".
+Make sure that CMAKE_BUILD_TYPE variable matches the "Build type" field.
+```
+原因是这行配置会让 qt-creator 忽略 `CMAKE_BUILD_TYPE` 设置为 Debug 的，而报错没有设置 `CMAKE_BUILD_TYPE`，只需要将其设置为 `Debug` 或其他即可
+### 找不到 wordsize.h
+这是 qt 库中的 qt 标准头文件，如果找不到，可能需要检查 `CMAKE_SYSROOT` 环境变量是否设置正确，需要引导到 qt 对应编译器的文件夹中
+```bash
+CMAKE_SYSROOT:PATH=/home/azzato/Programs/Qt/6.10.2/gcc_64
+```
+但由于 CMAKE_SYSROOT 参数主要用于交叉编译，例如为嵌入式设备或不同架构编译代码。对于普通的桌面 Qt 应用程序，设置 sysroot 会导致编译器无法找到系统的标准头文件，所以最好留空
+并且如果留空了还有问题，那么最使用 qt-creator 的 qt 库寻找语句来找到 qt 包
+```cmake
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SvgWidgets)
+# 而不要使用
+list(append CMAKE_PREFIX_PATH "...")
+```
+### 明明定义&实现类语法正确却找不到虚表
+类定义&实现没有问题，但是出现大量类似
+```bash
+/usr/bin/ld: CMakeFiles/qt-IM-chat-client.dir/src/UtilWidgets.cpp.o: in function `ClickableText::ClickableText(QString, int, QWidget*)':
+/home/azzato/CodeFiles/qt/qt-IM-chat-client/src/UtilWidgets.cpp:23:(.text+0x5b): undefined reference to `vtable for ClickableText'
+/usr/bin/ld: /home/azzato/CodeFiles/qt/qt-IM-chat-client/src/UtilWidgets.cpp:23:(.text+0x6d): undefined reference to `vtable for ClickableText'
+/usr/bin/ld: CMakeFiles/qt-IM-chat-client.dir/src/UtilWidgets.cpp.o: in function `ClickableText::mousePressEvent(QMouseEvent*)':
+/home/azzato/CodeFiles/qt/qt-IM-chat-client/src/UtilWidgets.cpp:48:(.text+0x2d2): undefined reference to `ClickableText::clicked()'
+```
+链接错误，这是由于 qt 生成 moc 文件方式比较特殊，cmake 配置为：
+```cmake
+file(GLOB source_list "./src/*.cpp")
+file(GLOB header_list "./include/*.h" "./include/*.hpp")
+file(GLOB resource_list "./resource/*.qrc")
+
+set(PROJECT_SOURCES
+    ${source_list}
+    # ${header_list}
+    ${resource_list}
+)
+
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    qt_add_executable(qt-IM-chat-client
+        MANUAL_FINALIZATION
+        ${PROJECT_SOURCES}
+    )
+# ...
+```
+正常的 cpp 项目不需要包含头文件就能构建编译，但是 qt 的 moc 会**将带有 `Q_OBJECT` 宏的头文件**预编译为 moc.h 头文件，但由于宏声明在头文件中，所以如果不包含近项目就会导致 moc 文件不被包含，无法生成
 # 包管理有关
 ## vcpkg
 ### 下载速度问题
