@@ -7628,6 +7628,8 @@ struct FNVHash {
 };
 ```
 ## 常见问题及其技术细节
+### std::invoke 和 std::apply 使用
+
 ###  `vector<bool>` 的特殊性
 
 > [!note]

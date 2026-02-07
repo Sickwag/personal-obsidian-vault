@@ -1105,6 +1105,185 @@ res.get().cast<unsigned long long>();
 ```
 ### Master-Slave 任务分配
 参考 [[C++开发范式#Master-Slave 任务分配机制]]
+## 更简单的版本
+### 实现 Fixed 模式
+```cpp
+// hpp file
+class ThreadPool {
+  public:
+	ThreadPool(size_t size);
+	template <class F, class... Args>
+	auto enqueue(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>;
+	~ThreadPool();
+
+  private:
+	std::vector<std::thread>		  workers_;
+	std::queue<std::function<void()>> tasks_;
+	std::mutex						  mutex_queue_;	 // for `task_`
+	std::condition_variable			  cv_;
+	bool							  stop_;
+};
+
+template <class F, class... Args>
+inline auto ThreadPool::enqueue(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type> {
+	using return_type = typename std::result_of<F<Args...>::type>;
+	auto task =
+		std::make_shared<std::packaged_task<return_type()>>(std::bind(std::format<F>(f), std::forward<Args>(args)...));
+	std::future<return_type> res = res->get_future();
+	{
+		std::unique_lock<std::mutex> lock(mutex_queue_);
+		if(stop_) {
+			throw std::runtime_error("enqueue on stopped ThreadPool");
+		}
+		tasks_.emplace([task]() { (*task)(); });
+	}
+	cv_.notify_one();
+	return res;
+}
+
+// source file
+#include "thread_pool_simpler.hpp"
+
+inline ThreadPool::ThreadPool(size_t thread_size)
+	: stop_(false) {
+	for(size_t i = 0; i < thread_size; i++) {
+        workers_.emplace_back([this]() {for (;;) {
+            std::function<void()> task;
+            {
+                std::unique_lock<std::mutex> lock(this->mutex_queue_);
+                this->cv_.wait(lock, [this]()->bool {return this->stop_ || !this->tasks_.empty();});
+                if (this->stop_ && this->tasks_.empty()) {
+                    return;
+                }
+                
+            }
+            task = std::move(this->tasks_.front());
+            this->tasks_.pop();
+        }});
+    }
+}
+
+inline ThreadPool::~ThreadPool() {
+    {
+        std::unique_lock<std::mutex> lock(mutex_queue_);
+        stop_ = true;
+    }
+    cv_.notify_one();
+    for (auto& worker : workers_) {
+        worker.join();
+    }
+}
+```
+### 代码改进
+#### std::packaged_task 与 std::function 区别
+
+| 特性                     | `std::packaged_task`            | `std::function`      |
+| ---------------------- | ------------------------------- | -------------------- |
+| **用途**                 | 异步任务包装器，用于配合 `std::future` 获取结果 | 通用函数对象封装器，用于回调、延迟调用等 |
+| **是否绑定 `std::future`** | ✅ 是，提供 `get_future()` 获取异步结果    | ❌ 否，不提供异步结果机制        |
+| **是否可移动（move-only）**   | ✅ 是（不可复制）                       | ✅ 是（可复制）             |
+| **调用后行为**              | 执行任务，并将结果存储到绑定的 `future`        | 执行任务，返回结果（调用者直接获取）   |
+| **是否为异步编程设计**          | ✅ 是，专为异步任务设计                    | ❌ 否，通用函数对象封装工具       |
+- `std::packaged_task` 是为异步编程而设计的类型，它将一个可调用对象封装为异步任务，并通过 `std::future` 提供异步结果访问机制。可以将 `std::function` 理解为加了 `std::future` 支持的函数包装器
+- `std::future<R> get_future()` **本身不会阻塞任务执行**，它只是获取一个用于获取结果的 `future` 对象。如果调用 `get` 就会阻塞当前线程直到任务完成
+#### std::result_of 在 C++17 被弃用
+设计缺陷
+
+| 问题                   | 描述                                     |
+| -------------------- | -------------------------------------- |
+| **语法不自然**            | 必须写成 `F(Args...)` 的伪函数类型形式，而不是直接传参     |
+| **无法支持重载函数**         | 如果函数是重载版本，无法正确推导（因为 `F(Args...)` 不够精确） |
+| **不支持调用表达式**         | 无法从实际的调用表达式（如 `f(x, y)`）推导返回类型         |
+| **与 `decltype` 不兼容** | 缺乏对 `decltype` 表达式风格的集成支持              |
+`invoke_result_t` （**注意是 `_t` 类型**）可以写为：
+```cpp
+#include <type_traits>
+using return_type = std::invoke_result_t<decltype(add), int, int>;  // add是表达式时使用
+```
+如果已经知道 add 是一个类型（比如模板中的 typename/class 参数类型）就不用使用 decltype 推到表达式类型（参考：[[C++ Runoob Tutoral#decltype 关键字]]）
+
+| 对比项              | `std::result_of`                   | `std::invoke_result`               |
+| ---------------- | ---------------------------------- | ---------------------------------- |
+| 引入时间             | C++11                              | C++17                              |
+| 是否弃用             | ✅ 是（C++17 起）                       | ❌ 否                                |
+| 推导方式             | 伪函数类型 `F(Args...)`                 | 实际调用表达式 `F, Args...`               |
+| 支持重载函数           | ❌ 不支持                              | ✅ 支持（需结合 `std::declval`）           |
+| 与 `decltype` 兼容性 | ❌ 差                                | ✅ 更好                               |
+| 语法示例             | `std::result_of<F(Args...)>::type` | `std::invoke_result_t<F, Args...>` |
+#### std::bind 的悬空引用问题
+std::bind 默认以**引用的形式**捕获参数并将其绑定在可调用对象上，这种*可调用对象和参数生命周期不一致*的问题会导致如果捕获参数在线程 A 中运行，而可调用对象的执行在 B 线程中，**且 A 在 B 之前被销毁**，会导致 B 中捕获到的**引用变量悬空**
+```cpp
+template <typename F>
+void run_async(F&& f) {
+    std::thread t(std::forward<F>(f));
+    t.detach();
+}
+
+int main() {
+    std::string s = "hello";
+    auto f = std::bind([](const std::string& str) {
+        std::cout << str << std::endl;
+    }, s);
+
+    run_async(f);
+    // s 离开作用域，被销毁
+}
+```
+解决方式：
+- 值传递：将函数调用对象和参数都是用值传递传入到 lambda 中，让参数生命周期和可调用对象
+- 完美转发&移动语义：为避免性能开销用移动语义或者 `std::move` 显式移动资源
+```cpp
+auto task = std::make_shared<std::packaged_task<return_type()>>([
+    f = std::forward<F>(f), 
+    ...args = std::forward<Args>(args)
+]() mutable {
+    return std::invoke(f, std::move(args)...);
+});
+```
+- 使用智能指针统一管理可调用对象和参数包参数，保证两者生命周期一致
+```cpp
+template <class F, class... Args>
+inline auto ThreadPool::enqueue(F&& f, Args&&... args)
+    -> std::future<std::invoke_result_t<F, Args...>> {
+    
+    using return_type = std::invoke_result_t<F, Args...>;
+
+    // 将函数和参数打包进 shared_ptr 中
+    struct TaskData {
+        F func;
+        std::tuple<Args...> args;
+
+        TaskData(F&& f_, Args&&... args_)
+            : func(std::forward<F>(f_)), args(std::forward<Args>(args_)...) {}
+
+        return_type operator()() {
+            return std::apply(func, std::move(args));
+        }
+    };
+
+    auto task_data = std::make_shared<TaskData>(std::forward<F>(f), std::forward<Args>(args)...);
+    auto task = std::make_shared<std::packaged_task<return_type()>>([task_data]() {
+        return (*task_data)();
+    });
+
+    std::future<return_type> res = task->get_future();
+
+    {
+        std::unique_lock<std::mutex> lock(mutex_queue_);
+        if (stop_) {
+            throw std::runtime_error("enqueue on stopped ThreadPool");
+        }
+        tasks_.emplace([task]() { (*task)(); });
+    }
+
+    cv_.notify_one();
+    return res;
+}
+```
+
+> [!warning]
+> 不能使用 `=` 来捕获所有变量，他不能处理模板参数包
+
 # MySQL 连接池
 参考：[基于C++11的数据库连接池【C++/数据库/多线程/MySQL】哔哩哔哩bilibili](https://www.bilibili.com/video/BV1Fr4y1s7w4/?spm_id_from=333.1007.top_right_bar_window_history.content.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
 资源：https://pan.baidu.com/s/1KJqmmbMVg32qyWjPlRZSeg&pwd=subw
