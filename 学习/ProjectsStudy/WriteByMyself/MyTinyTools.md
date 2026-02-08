@@ -1436,3 +1436,25 @@ MysqlConnectionPool::MysqlConnectionPool(asio::io_context& ctx, const db_config&
 
 ---
 [^1]: 原则上 `std::unique_ptr` 对象指向的资源不应该被其他指针指向，但是 C++没有限制这点。如果使用 `get()/release()` 获取裸指针还是能够将指针资源地址赋予其他指针/智能指针。但这样会导致重复释放资源地址等未定义行为
+# kama 内存池
+## 基本内存池结构
+### 高效释放内存
+#### 基本 delete 操作
+对一个指针对象使用 delete 之后会进行：
+1. **调用析构函数** - 执行对象的析构函数代码
+2. **释放内存** - 将对象占用的内存归还给系统
+3. **执行清理工作** - 处理对象内部资源的释放
+删除后的指针为悬空指针
+```cpp
+int* p = new int(10);
+delete p;
+// 此时p成为"悬空指针"(dangling pointer)
+// 指向已被释放的内存地址
+// 值仍然保持原来的地址值，但该地址已无效
+```
+#### 调用 delete 函数
+delete 有两种使用方法：
+```cpp
+delete ptr;
+operator delete(ptr);
+```

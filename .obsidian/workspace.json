@@ -23,6 +23,18 @@
             }
           },
           {
+            "id": "1d02995713f2090e",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.11.7"
+              },
+              "icon": "lucide-book-up",
+              "title": "版本说明 1.11.7"
+            }
+          },
+          {
             "id": "09a7c7fe5f90b034",
             "type": "leaf",
             "state": {
@@ -201,10 +213,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "09a7c7fe5f90b034",
+  "active": "1d02995713f2090e",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/其他专业书/Modern C++.md",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
     "学习/ProjectsStudy/FromDocs/Boost库学习.md",
