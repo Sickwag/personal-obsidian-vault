@@ -1647,6 +1647,28 @@ void MemoryPool::allocateNewBlock() {
 	// 超过该标记位置，则说明该内存块已无内存槽可用，需向系统申请新的内存块
 	lastSlot_ = reinterpret_cast<Slot*>(reinterpret_cast<size_t>(newBlock) + BlockSize_ - SlotSize_ + 1);
 }
+
+void* MemoryPool::allocate() {
+	// 优先使用空闲链表中的内存槽
+	Slot* slot = popFreeList();
+	if(slot != nullptr)
+		return slot;
+
+	Slot* temp;
+	{
+		std::lock_guard<std::mutex> lock(mutexForBlock_);
+		if(curSlot_ >= lastSlot_) {
+			// 当前内存块已无内存槽可用，开辟一块新的内存
+			allocateNewBlock();
+		}
+
+		temp = curSlot_;
+		// 这里不能直接 curSlot_ += SlotSize_ 因为curSlot_是Slot*类型
+		curSlot_ += SlotSize_ / sizeof(Slot);
+	}
+
+	return temp;
+}
 ```
 分配内存时的*头插法*
 ```md
@@ -1669,7 +1691,7 @@ void MemoryPool::allocateNewBlock() {
 
 ```
 - body 是所有槽能用的空间的开始，之所以使用 `char*` 是因为 char 是 1 字节的，比较方便统计大小而已
-- 分配完成后
+- 分配完成后当前槽已经被一个对象占用（无论是否占满）跳转到下一个槽
 #### 多级内存池
 MemoryPool 设计内存池，HashBucket 管理内存池，提供入口
 ```md
