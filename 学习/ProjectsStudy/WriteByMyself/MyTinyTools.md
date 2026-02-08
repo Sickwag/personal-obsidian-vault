@@ -1442,9 +1442,9 @@ MysqlConnectionPool::MysqlConnectionPool(asio::io_context& ctx, const db_config&
 #### 基本 delete 操作
 对一个指针对象使用 delete 之后会进行：
 1. **调用析构函数** - 执行对象的析构函数代码
-2. **释放内存** - 将对象占用的内存归还给系统
+2. **释放内存** - 将对象占用的内存归还给系统，调用 `operator delete()` 函数
 3. **执行清理工作** - 处理对象内部资源的释放
-删除后的指针为悬空指针
+删除后的指针为悬空指针，最好立即使用 `ptr = nullptr`
 ```cpp
 int* p = new int(10);
 delete p;
@@ -1453,8 +1453,97 @@ delete p;
 // 值仍然保持原来的地址值，但该地址已无效
 ```
 #### 调用 delete 函数
-delete 有两种使用方法：
 ```cpp
-delete ptr;
 operator delete(ptr);
 ```
+提供更高的自由度，如果直接调用**只会释放指针的内存块内存，不会调用析构函数**,但可以在括号中对指针进行操作，调用分配器来释放内存。**对应 `new` 分配的内存**，同理，调用后指针悬空
+```cpp
+class Test {
+  public:
+	~Test() {
+		std::cout << "Test destructor called!" << std::endl;
+	}
+};
+
+int main() {
+	Test* p1 = new Test;
+	delete p1;	// 会输出："Test destructor called!"
+
+	Test* p2 = new Test;
+	::operator delete(p2);	// 不会输出任何内容
+	return 0;
+}
+// 常用的操作有：
+operator delete(reinterpret_cast<void*>(ptr)); // 1
+```
+1. 提前将指针所指向的内存转化为 `void*` 类型，这是因为*历史遗留和编译器优化问题*[^2]，调用全局内存释放函数
+
+推荐使用 `operator delete()` 的情况：
+```cpp
+// 情况1：POD类型（Plain Old Data）
+struct Point { int x, y; };  // 没有构造函数/析构函数
+
+// 情况2：内存管理元数据
+struct MemoryHeader {
+    size_t size;
+    void* next;
+};
+
+// 情况3：纯数据传输结构
+struct NetworkPacket {
+    char buffer[1024];
+    uint32_t length;
+};
+```
+
+不推荐使用 `operator delete()` 的情况：
+```cpp
+// 情况1：有资源需要清理，有析构函数
+class FileHandler {
+    FILE* file_;
+public:
+    ~FileHandler() { fclose(file_); }  // 需要释放文件句柄
+    // 必须用 delete 调用析构函数
+};
+
+// 情况2：有虚析构函数
+class Base {
+public:
+    virtual ~Base() {}  // 虚析构函数
+};
+
+// 情况3：包含非POD成员
+class Container {
+    std::vector<int> data;  // vector有自己的析构函数
+public:
+    ~Container() = default;  // 看似"什么都不做"，但data需要清理
+};
+```
+简单来说如果类满足以下所有条件，可以使用 `operator delete`
+1. 析构函数是平凡的（trivial）
+2. 所有成员都是POD类型
+3. 没有虚函数
+4. 没有需要手动释放的资源
+可以通过下面代码判断
+```cpp
+static_assert(std::is_trivially_destructible<Slot>::value, 
+              "Can use operator delete safely");
+```
+
+[^2]: C++允许重载 `operator delete()` 这就导致了调用这个函数时会先在类中查找这个函数的实现，如果没有找到再调用全局operator delete，而全局类型的重载jin 转换为 `void*` 的版本。
+	跳过在类中查找，按照全局模式释放内存，防止使用错误版本，现代 C++推荐使用 `::operator delete(cur)` 显式指定
+
+#### free 函数
+C 标准库函数，用于将 `malloc` / `calloc` / `realloc` 分配的内存归还，是 C 风格的函数，所以不知道有 C++对象模型，不会调用析构函数
+#### 对比
+
+| 特性        | `delete`                 | `operator delete`   | `free()` |
+| --------- | ------------------------ | ------------------- | -------- |
+| **语言**    | C++ 关键字                  | C++ 全局函数            | C 标准库函数  |
+| **析构函数**  | 会调用                      | 不会调用                | 不会调用     |
+| **类型安全**  | 类型安全                     | 类型不安全               | 类型不安全    |
+| **底层调用**  | 调用 `operator delete`     | 通常调用 `free()`       | 调用系统分配器  |
+| **重载支持**  | 支持（通过 `operator delete`） | 支持多个版本              | 不支持      |
+| **数组版本**  | `delete[]`               | `operator delete[]` | 不支持      |
+| **空指针处理** | 安全（C++14+）               | 通常安全                | 安全       |
+| **内存来源**  | `new` / `new[]`          | `operator new`      | `malloc` |
