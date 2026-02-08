@@ -1623,9 +1623,9 @@ if(freeList_.compare_exchange_weak(oldHead, newHead,
 内存块布局：
 每个槽只能存放一个对象，即使他没有占满整个槽
 [0-7字节]    : Slot.next (指向下一个块)
-[8-31字节]   : 第一个可用槽 (32字节对齐)
-[32-63字节]  : 第二个可用槽 (32字节对齐)
-[64-95字节]  : 第三个可用槽 (32字节对齐)
+[8-31字节]   : 内存对齐padding位置
+[32-63字节]  : 第1个可用槽 (32字节对齐)
+[64-95字节]  : 第2个可用槽 (32字节对齐)
 ...
 [4088-4095]  : 最后一个可用槽
 
@@ -1642,7 +1642,7 @@ void MemoryPool::allocateNewBlock() {
 
 	char*  body								= reinterpret_cast<char*>(newBlock) + sizeof(Slot*);
 	size_t paddingSize						= padPointer(body, SlotSize_);	// 计算对齐需要填充内存的大小
-	curSlot_								= reinterpret_cast<Slot*>(body + paddingSize);
+	curSlot_								= reinterpret_cast<Slot*>(body + paddingSize); // 跳转到当前lock中的next指针8字节 + paddingSize字节长度的位置
 
 	// 超过该标记位置，则说明该内存块已无内存槽可用，需向系统申请新的内存块
 	lastSlot_ = reinterpret_cast<Slot*>(reinterpret_cast<size_t>(newBlock) + BlockSize_ - SlotSize_ + 1);
@@ -1692,6 +1692,9 @@ void* MemoryPool::allocate() {
 ```
 - body 是所有槽能用的空间的开始，之所以使用 `char*` 是因为 char 是 1 字节的，比较方便统计大小而已
 - 分配完成后当前槽已经被一个对象占用（无论是否占满）跳转到下一个槽
+- `lastSlot_ = reinterpret_cast<Slot*>(reinterpret_cast<size_t>(newBlock) + BlockSize_ - SlotSize_ + 1);`:
+	- `reinterpret_cast<size_t>(newBlock)` newBlock 是**新分配的内存块的开始位置**，转换为内存地址
+	- 加上 BlockSize_，跳转到**新分配块的末尾**
 #### 多级内存池
 MemoryPool 设计内存池，HashBucket 管理内存池，提供入口
 ```md
@@ -1719,7 +1722,7 @@ MemoryPool[3].allocate() 返回32字节槽
 	- __内存浪费__：为大对象预分配大块内存会造成浪费
 	- __管理复杂度__：大对象管理更复杂，容易产生外部碎片
 	- __收益递减__：小对象分配占多数，优化小对象收益更大
-### 整体设计
+#### 整体设计
 ```md
 ┌─────────────────────────────────────────────────────────────┐
 │                    HashBucket (管理层)                       │
