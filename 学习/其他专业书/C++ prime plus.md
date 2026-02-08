@@ -468,7 +468,7 @@ int asciiValue = static_cast<int>(character); // 获取 'A' 的ASCII编码
 
 特别地,使用\b退格转义可以实现文本输入效果( 输入数字时去掉下划线 )
 ![recording 3.gif](recording%203.gif)
-同样的, C++允许输入变量时混合输入键盘上可以输入的字符和不能啊输入的符号的编码, 同python [Files & LongText/Long code/Python \> 使用非ascii字符](Python.md#使用非ascii字符)
+同样的, C++允许输入变量时混合输入键盘上可以输入的字符和不能啊输入的符号的编码, 同python [Files & LongText/Long code/Python \> 使用非ascii字符](Python编程三剑客.md#使用非ascii字符)
 ![\\u00E2是西里尔字母中a的编码|400](Pasted%20image%2020240804103644.png)
 将 `\u00E2` 解释为“Unicode码点为 `U-00E2` 的字符”。支持Unicode的编译器知道，这表示字符ö，但无需使用内部编码00E2。
 
@@ -1262,7 +1262,7 @@ if (cin.fail()){
 - `cin.ignore(numeric_limits<streamsize>::max(), '\n');` 中，`cin. igore` 是[忽略输入输出流中直到遇到特定字符的函数](C++%20Runoob%20Tutoral.md#cin.%20ignore%20()%20函数)，接受两个参数。
 - 当用户输入的数据类型与程序期望的类型不匹配时，`std::cin` 会进入一个错误状态。`std::cin` 会设置一个错误标志，表示这段流有问题，中断传输。`clear` 解除这个标志，流可以被继续接受或修改
 - `cin.clear()` 一般后面跟 `cin.ignore()` 用来清除输入队列中从错误字符后的内容，保证继续输入
-完整代码：[C++ practice case \> 第五章编程练习题](C++%20practice%20case.md#第五章编程练习题)
+完整代码：[C++ Code Snippets \> 第五章编程练习题](C++%20Code%20Snippets.md#第五章编程练习题)
 
 # 第六章分支语句和逻辑运算符
 ## if 语句
@@ -1352,7 +1352,7 @@ void get_data(){
 ```
 ## 简单文件输入输出
 ### 将结构体内容以二进制形式存储在文件中
-源代码： [C++ practice case \> 读写二进制文件](C++%20practice%20case.md#读写二进制文件)
+源代码： [C++ Code Snippets \> 读写二进制文件](C++%20Code%20Snippets.md#读写二进制文件)
 函数部分详解：
 #### 写入部分
 ```cpp

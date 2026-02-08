@@ -53,9 +53,9 @@ GPG检查失败
 ## 配置静态 IP 地址和 ifconfig 不同
 ### 问题
 通过编辑 `vim /etc/sysconfig/network-scripts/ifcfg-ens160` 文件时，修改 BOOTPROTO 为 static 静态 IP 地址分配，也添加了四行新内容，但使用 ifconfig 得到的 IP 地址和配置文件中不同
-![Pasted image 20240927215913.png](../Attachments/Pasted%20image%2020240927215913.png)
+![Pasted image 20240927215913.png](Pasted%20image%2020240927215913.png)
 ### 原因
-centos 8 以上系统自动忽略了配置属性 HWADDR，需要手动添加，不然只会在虚拟机中设置的子网 IP 字段中随机选择一个，属于是“半静态”
+centos 8 以上系统自动忽略配置属性 HWADDR，需要手动添加，不然只会在虚拟机中设置的子网 IP 字段中随机选择一个，属于是“半静态”
 
 ### 解决方法
 VM 中获取虚拟机 MAC 地址，然后在配置文件中添加一行 `HWADDR=MAC`，重启寻觅几即可
@@ -64,7 +64,7 @@ VM 中获取虚拟机 MAC 地址，然后在配置文件中添加一行 `HWADDR=
 
 ## Dbeaver 远程连接 linux mysql
 ### 问题
-Dbeaver 新建连接，在 linux 端使用 ifconfig 查看 IP 地址，在新建连接中填入 IP 地址，点击链接即可，第一次链接需要下载驱动
+Dbeaver 新建连接，在 linux 端使用 ifconfig 查看 IP 地址，在新建连接中填 IP 地址，点击链接即可，第一次链接需要下载驱动
 如果出现报错
 ```shell
 null, message from server: “Host ‘192.168.170.1‘ is not allowed to connect to this MySQL server“

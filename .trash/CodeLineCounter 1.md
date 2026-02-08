@@ -293,7 +293,7 @@ struct EnumMapping<Display_column> {
           {"BLANK", Display_column::BLANK}}};
 };
 ```
-- 无论是字符串还是 `const char*`（也可以再 array 的模板参数中填入 `const std::string`）让整个模板特化都常量化，从而使用 `constexpr` 关键字加快运行速度。将这些常量计算提前至编译期。
+- 无论是字符串还是 `const char*`（也可以再 array 的模板参数中填 `const std::string`）让整个模板特化都常量化，从而使用 `constexpr` 关键字加快运行速度。将这些常量计算提前至编译期。
 - 如果有开关对应的函数，还可以将函数放入，完成**枚举值->枚举字符串->开关回调函数**映射
 ```cpp
 template <typename EnumT>

@@ -1746,7 +1746,7 @@ dir
 
 ---
 
-需要我帮你生成完整的 `csv_parser/CMakeLists.txt` 和 `json_parser/CMakeLists.txt` 吗？这样你可以直接填入源码即可开始编译。欢迎继续提问！
+需要我帮你生成完整的 `csv_parser/CMakeLists.txt` 和 `json_parser/CMakeLists.txt` 吗？这样你可以直接填源码即可开始编译。欢迎继续提问！
 
 ### USER
  通过你的设置，我已经配置好了我的项目，但是启动项由两个
@@ -3076,7 +3076,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 出现这种问题（cmake在当前源文件目录或生成系统路径中找到标准库文件，编辑器没有代码补全提示）的原始是否是因为我没有在主CMakeLists.txt中设置target_include_directory导致的？但是我已经设置了两个解析器
 set(CMAKE_C_COMPILER   "D:\\Program\\mingw64\\bin\\gcc.exe")
 set(CMAKE_CXX_COMPILER "D:\\Program\\mingw64\\bin\\g++.exe")
-难道不应该自动填入吗？
+难道不应该自动填吗？
 如果是这个原因，我该怎么修复？
 
 ### ASSISTANT

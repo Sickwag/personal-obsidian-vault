@@ -1,5 +1,6 @@
 ---
 description: 一级标题名就是项目名称，大部分项目放在/Code Files/temporal_project/MyTinyTools中
+参考1: kama内存池https://github.com/youngyangyang04/memory-pool.git
 ---
 # CSVReader
 ## 写项目时出现的问题
@@ -389,7 +390,7 @@ struct EnumMapping<Display_column> {
           {"BLANK", Display_column::BLANK}}};
 };
 ```
-- 无论是字符串还是 `const char*`（也可以再 array 的模板参数中填入 `const std::string`）让整个模板特化都常量化，从而使用 `constexpr` 关键字加快运行速度。将这些常量计算提前至编译期。
+- 无论是字符串还是 `const char*`（也可以再 array 的模板参数中填 `const std::string`）让整个模板特化都常量化，从而使用 `constexpr` 关键字加快运行速度。将这些常量计算提前至编译期。
 - 如果有开关对应的函数，还可以将函数放入，完成**枚举值->枚举字符串->开关回调函数**映射
 ```cpp
 template <typename EnumT>
@@ -552,7 +553,7 @@ struct CodeStats {
 # MdTitleAdjust
 ## 杂项
 ### QSpacerItem 的添加和修改
-QSpacerItem 在创建时根据构造函数中参数的不同填写方法决定 spacer 的延展方向和拓展策略，如果在拓展策略中没有填入 `QSizePolicy::Fixed`，那么前两个参数初始值无意义。
+QSpacerItem 在创建时根据构造函数中参数的不同填写方法决定 spacer 的延展方向和拓展策略，如果在拓展策略中没有填 `QSizePolicy::Fixed`，那么前两个参数初始值无意义。
 QT 设置 spacer 一旦创建不得修改其大小和拓展策略，这导致**需要调整则要删除对象重新创建**
 ```cpp
 void TitleBlock::do_button_right_clicked()
@@ -1437,11 +1438,12 @@ MysqlConnectionPool::MysqlConnectionPool(asio::io_context& ctx, const db_config&
 ---
 [^1]: 原则上 `std::unique_ptr` 对象指向的资源不应该被其他指针指向，但是 C++没有限制这点。如果使用 `get()/release()` 获取裸指针还是能够将指针资源地址赋予其他指针/智能指针。但这样会导致重复释放资源地址等未定义行为
 # kama 内存池
+参考：https://github.com/youngyangyang04/memory-pool.git
 ## 杂项
 ### placement new 语法
 ```cpp
 // 普通new：分配内存 + 构造对象，具体问配内存在什么位置由操作系统决定
-T* ptr = new T(args);  
+T* ptr = new T(args);
 
 // Placement new：只构造对象（内存已存在）
 T* ptr;
@@ -1470,7 +1472,7 @@ delete p;
 // 指向已被释放的内存地址
 // 值仍然保持原来的地址值，但该地址已无效
 ```
-#### 调用 delete 函数
+#### operator delete(ptr)
 ```cpp
 operator delete(ptr);
 ```
@@ -1550,7 +1552,13 @@ static_assert(std::is_trivially_destructible<Slot>::value,
 
 [^2]: C++允许重载 `operator delete()` 这就导致了调用这个函数时会先在类中查找这个函数的实现，如果没有找到再调用全局operator delete，而全局类型的重载jin 转换为 `void*` 的版本。
 	跳过在类中查找，按照全局模式释放内存，防止使用错误版本，现代 C++推荐使用 `::operator delete(cur)` 显式指定
-
+#### operator delete(ptr, size)
+- 系统分配优先使用元数据，而非传入的大小
+- 传入的大小主要用于优化和验证，比如
+	- 将释放之后的内存存放入**不同大小的空闲链表**（不只有内存池有不同大小）
+	- debug 过程中打印内存占用信息
+	- 告知编译器内存大小，编译时和元数据比较，如果一致会有更好的优化
+- 但在自定义分配器中，大小参数才可能有用
 #### free 函数
 C 标准库函数，用于将 `malloc` / `calloc` / `realloc` 分配的内存归还，是 C 风格的函数，所以不知道有 C++对象模型，不会调用析构函数
 #### 对比
@@ -1734,7 +1742,8 @@ MemoryPool[3].allocate() 返回32字节槽
 	- __内存浪费__：为大对象预分配大块内存会造成浪费
 	- __管理复杂度__：大对象管理更复杂，容易产生外部碎片
 	- __收益递减__：小对象分配占多数，优化小对象收益更大
-#### 整体设计
+### 内存释放&归还操作系统
+#### 本项目内存管理逻辑
 ```md
 ┌─────────────────────────────────────────────────────────────┐
 │                    HashBucket (管理层)                       │
@@ -1749,18 +1758,86 @@ MemoryPool[3].allocate() 返回32字节槽
     │(8字节槽)     │(16字节槽)    │(24字节槽)    │             │
     │[块1][块2]    │[块1][块2]   │[块1][块2]    │             │
     └─────────────┴─────────────┴─────────────┴────────────
-
-请求分配size字节
-↓
-HashBucket根据size选择对应MemoryPool
-↓
-MemoryPool::allocate()
-├── 优先从freeList_取 (已释放的槽)
-└── 若freeList_空，从curSlot_分配
-    ├── 若当前块不足，调用allocateNewBlock()
-    └── 返回curSlot_并移动指针
-
 ```
+#### 操作系统管理内存块逻辑
+```md
+实际分配的内存块：
+┌───────────────────────────────┐
+│ 元数据区（隐藏）                │ ← 用户看不到，由malloc记录大小等信息
+│ - 块大小 size_t               │
+│ - 标记位 flags                │
+│ - 指向前后块的指针              │
+│ - 校验和 checksum             │
+├──────────────────────────────┤
+│ 用户数据区（返回给用户的指针）    │ ← 这就是void* ptr
+│ - 实际分配的数据               │
+└──────────────────────────────┘
+`new` / `operator new` 在分配时会记录元数据到数据区中
+调用operator delete(ptr)系统通过ptr向前查找元数据，知道大小是1000字节
+```
+**"释放内存"不等于"归还内存给操作系统"**，释放内存只是将*暂时不用的内存标记为空闲*，放入 OS 空闲块链表（放入操作可能触发空闲内存合并操作）
+```cpp
+// 程序启动时
+// 进程地址空间：[未分配区域]
+
+// 第一次分配
+void* p1 = malloc(4096);  // 4KB
+// 向OS申请4KB页面
+// 进程地址空间：[已分配4KB][未分配区域]
+
+// 释放
+free(p1);
+// 大多数分配器：标记这4KB为可用，但保留在进程空间中
+// 进程地址空间：[可用4KB][未分配区域]  ← 仍然占用虚拟地址
+
+// 第二次分配
+void* p2 = malloc(2048);  // 2KB
+// 直接从刚才"释放"的4KB中分配2KB
+// 不需要向OS申请
+// 进程地址空间：[已分配2KB][空闲2KB][未分配区域]
+
+// 释放
+free(p2);
+// 进程地址空间：[空闲2KB][空闲2KB][未分配区域]
+// 触发空闲内存合并
+// 进程地址空间：[空闲4KB][未分配区域]
+
+// 真正归还OS（当满足条件时会在**free**函数中被触发）
+// 比如：连续128KB空闲内存，长时间未使用
+// 调用：munmap(start_address, 128*1024)
+// 进程地址空间缩小
+
+// free() 的实现（概念上）
+void free(void* ptr) {
+    if (!ptr) return;
+
+    // 1. 获取内存块信息
+    MemoryBlock* block = (MemoryBlock*)((char*)ptr - sizeof(MemoryBlock));
+    size_t block_size = block->size;
+
+    // 2. 不是归还OS，而是放入空闲链表
+    block->next = free_list;
+    free_list = block;
+
+    // 3. 可能触发合并相邻空闲块
+    coalesce_free_blocks();
+
+    // 4. 只有在特定条件下才归还OS
+    if (should_return_to_os(free_list)) {
+        munmap(large_block, large_size);  // 真正归还OS
+    }
+}
+```
+
+| 特性        | **释放内存**       | **归还操作系统** |
+| --------- | -------------- | ---------- |
+| **操作对象**  | 应用程序内存池        | 操作系统虚拟内存   |
+| **速度**    | 快速（O(1)）       | 慢（系统调用）    |
+| **频率**    | 频繁发生           | 相对较少       |
+| **触发条件**  | 每次 delete/free | 内存池收缩策略    |
+| **实际效果**  | 标记为可用，可重用      | 释放物理/虚拟内存页 |
+| **对系统影响** | 进程 RSS 不变      | 进程 RSS 减少  |
+
 #### 释放内存流程
 1. 调用 `deleteElement(T* p)`
 2. 调用T类型析构函数释放资源对内存占用
@@ -1814,12 +1891,7 @@ bool MemoryPool::pushFreeList(Slot* slot) {
 - 大于 512 字节对象由操作系统分配
 	对于大对象单从代码上来看并没有指明这个对象占用了多大内存， `operator delete(ptr)` 确实不知道大小，但统级别的内存管理器知道，会指导 delete 函数或关键字来释放内存
 	C++对象模型的内存布局为：
-```md
-[元数据区] [实际返回给用户的内存(1000字节)]
- ↑由malloc记录大小等信息
- 
-`new` / `operator new` 在分配时会记录元数据到数据区中
-调用operator delete(ptr)系统通过ptr向前查找元数据，知道大小是1000字节
-```
 - 小于由内存池管理
-	`freeMemory` 函数中调用 delete 函数，会让系统级别内存管理器通过访问元数据位置部分的内容清楚对象的内存占用，如果调用 `operator delete(ptr, size)` (C++14)，显式清理整个内存槽中内存，反而会降低效率。内存槽
+	`freeMemory` 函数中调用 delete 函数，会让系统级别内存管理器通过访问元数据位置部分的内容清楚对象的内存占用，如果调用 `operator delete(ptr, size)` (C++14)，显式指明块大小让编译器清理（**注意这并不会让编译器只清理 size 大小的内存**，参考[[#操作系统管理内存块逻辑]]），反而会降低效率。
+### 理解测试
+v1 阶段：[[C++ Code Snippets#AI 测试题#内存池测试题]]

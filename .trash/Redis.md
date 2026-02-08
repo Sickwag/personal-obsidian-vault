@@ -144,10 +144,10 @@ QUEUED
 
 ## C++ Redis 连接示例
 ### 临时 tcp 连接
-代码参考 [[C++ practice case#tcp 连接 redis]]
+代码参考 [[C++ Code Snippets#tcp 连接 redis]]
 这种方式直接通过 tcp 连接到主机，进入 6379 端口后就会直接到达 redis-client 交互界面，通过 `make_resp` 函数将 `vector<string>` 包裹的命令转化为命令行输入。
 `net::write` 将命令输入到终端，`socket.readsome` 将命令输出读取
 ### boost. redis 连接
 连接上出现的问题参考
-代码参考：[[C++ practice case#boost. redis 和 boost. asio 连接]]
-常用 api 使用代码参考：[[C++ practice case#boost. redis 常用 api 参考]]
+代码参考：[[C++ Code Snippets#boost. redis 和 boost. asio 连接]]
+常用 api 使用代码参考：[[C++ Code Snippets#boost. redis 常用 api 参考]]

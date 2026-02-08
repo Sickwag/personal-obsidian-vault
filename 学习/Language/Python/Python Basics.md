@@ -1,6 +1,6 @@
 [https://www.bilibili.com/video/BV1qW4y1a7fU/?p=123&spm_id_from=333.880.my_history.page.click](https://www.bilibili.com/video/BV1qW4y1a7fU/?p=123&spm_id_from=333.880.my_history.page.click)
 ## 编程中遇到的问题
-[Files & LongText/Long code/Python](../../../Files%20&%20LongText/Long%20code/Python.md)
+[Files & LongText/Long code/Python](Python编程三剑客.md)
 ## 基础认识
 ### 标识符
 **标识符命名**
@@ -2906,7 +2906,7 @@ phone.call_by_5g() #调用新类方法,新类方法中使用了旧类的数据
 
     ![Untitled 137 8.png](../../../Files%20&%20LongText/Attachments/Untitled%20137%208.png)
 
-    详细注解表明了变量类型和变量内部填入变量的类型
+    详细注解表明了变量类型和变量内部填变量的类型
 
     也可以使用注释正经写,编译器也能识别
 

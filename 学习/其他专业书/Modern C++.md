@@ -683,7 +683,7 @@ auto func(Args&&... args) {
     return res;
 }
 ```
-这段代码的实际作用是将变长参数列表中参数**逆序填入容器中并返回**
+这段代码的实际作用是将变长参数列表中参数**逆序填容器中并返回**
 - 由于 `=` 需要赋值，所以每一个[[模板元编程#包展开和模式|模式]] 必须要有一个值, 这里使用 `,` 运算符表达一个 false 作为返回值，副作用是 `push_back(args)` 没有返回值，所以需要手动定义一个
 - 由于我们不关心值，只关心副作用，所以这里使用[[模板元编程#弃值表达式]] `(void)` 忽略计算值
 - 可以看到展开后是左折叠形式，按道理应该括号改变了结合顺序，**结合顺序**为先左边后右边，确实左边的括号层级比右边的深，但 `=` 的**计算顺序**是先右边后左边
@@ -2118,7 +2118,7 @@ int main() {
 
 ### Note：谓词
 **谓词**（Predicate）是指一个 **返回 `bool` 值的可调用对象**，常见于标准库算法（如 `std::find_if`）或同步原语（如 `condition_variable::wait`）。它是一个广义概念，包含以下形式（任何能通过 `()` 调用的东西，包括：函数指针，**成员函数指针**，lambda 和仿函数）
-所以，`conditional_variable` 的谓词部分只能填入：
+所以，`conditional_variable` 的谓词部分只能填：
 ```cpp
 void foo() {}
 void (*func_ptr)() = foo; // 函数指针
@@ -2761,7 +2761,7 @@ foo(42u);  // 调用第二个版本
    ```
 6. **concept 并不是继承逻辑**：`MyConcept<T>` 成立 ≠ `T` 是从某个类派生的；
 7. **写 requires 表达式要小心返回类型**：要用 `{ expr } -> constraint;` 的形式，否则无法检查语义是否正确
-8. sfinae 转化到 C++20 concept 的具体对照表可以参考 [[C++ practice case#C++11 SFINAE 与 C++20 Concept 对照表]]
+8. sfinae 转化到 C++20 concept 的具体对照表可以参考 [[C++ Code Snippets#C++11 SFINAE 与 C++20 Concept 对照表]]
 ## 模块——避免重新编译模板库
 ### 问题背景
 - 随着 STL 多年的发展，这些头文件的体积也在不断增长。目前这种情况已经难以处理，并且可扩展性越来越差。
@@ -3392,7 +3392,7 @@ ForwardIterator min_element(ForwardIterator first, ForwardIterator last);
        ```
 ![[Pasted image 20250806171459.png]]
     3. `operator==` / `!=`
-代码实现参考 [[C++ practice case#支持 for-range 的自定义 vector 数据结构]]
+代码实现参考 [[C++ Code Snippets#支持 for-range 的自定义 vector 数据结构]]
 
 | 缺失操作                  | 导致什么失败？                             | 具体例子                     |
 | --------------------- | ----------------------------------- | ------------------------ |

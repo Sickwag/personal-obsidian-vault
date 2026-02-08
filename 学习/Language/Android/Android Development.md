@@ -425,7 +425,7 @@ Text(
 	- `TextOverflow.Ellipsis` 以省略号显示
 	- `TextOverflow.Clip` 裁剪
 	- `TextOverflow.Visible` 尽可能显示
-- 上面讲到的大部分文字修饰，都可以直接通过 TextStyle 对象（填入 style 参数中） 进行修饰，除此之外还多出几个样式
+- 上面讲到的大部分文字修饰，都可以直接通过 TextStyle 对象（填 style 参数中） 进行修饰，除此之外还多出几个样式
 	- `fontFeatureSettings` 字体的高级设置，类似 CSS 的 `font-feature-settings`，[参考](https://www.w3.org/TR/css-fonts-3/#font-feature-settings-prop](https://www.w3.org/TR/css-fonts-3/#font-feature-settings-prop)
 	- `background` 设置背景颜色
 	- `shadow` 设置阴影

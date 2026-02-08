@@ -1253,7 +1253,7 @@ SELECT
 FROM
 	employees e
 WHERE
-	salary > ( -- 本来这里需要填11000，这里填入查询结果只是为了动态变化
+	salary > ( -- 本来这里需要填11000，这里填查询结果只是为了动态变化
 	SELECT
 		salary
 	FROM
@@ -1448,7 +1448,7 @@ WHERE
 	FROM
 		employees e);
 ```
-[课后练习（长篇幅）](Files%20&%20LongText/Long%20code/MySQL%20Long%20Code%20Practice.md)
+[课后练习（长篇幅）](Mysql%20Snippets.md)
 ##### 总结
 `in (array)`  equals to `= any (array)`
 `< any (array`) equals to `< ... max`
@@ -1489,7 +1489,7 @@ LIMIT 10;
 使用公式 `limit (page-1)*size,size;` 可以达到网页中按页数显示内容
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240824164459.png)
 **LIMIT 的执行顺序和书写顺序都在最后**—— [DQL 语句执行和书写顺序](#DQL%20语句执行和书写顺序)
------------------------- [大量练习](Files%20&%20LongText/Long%20code/MySQL%20Long%20Code%20Practice.md#DQL%20除联合查询外联系) --------------
+------------------------ [大量练习](Mysql%20Snippets.md#DQL%20除联合查询外联系) --------------
 #### Union 联合查询
 `UNION` 是 SQL 中用于合并两个或多个 `SELECT` 语句结果集的运算符。它会将多个**查询的**结果集合并成一个结果集，并默认**去除重复的行**。`UNION` 通常用于从不同的表中检索数据，或者从同一个表中检索不重复的数据。**将毫不相关但需要查询相同字段内容的两个表连接成一个表**
 ```sql
@@ -1727,8 +1727,8 @@ CREATE TABLE tab_float(
 	f3 DECIMAL
 );
 SELECT * FROM tab_float;
--- 向f1中填入123.456，总长度为5超了，小数超了一位所以去掉，四舍五入为123.46
--- 向f1中填入1234.5，总长度5满足，整数位5-2=3超了，所以整体取临界值999.99
+-- 向f1中填123.456，总长度为5超了，小数超了一位所以去掉，四舍五入为123.46
+-- 向f1中填1234.5，总长度5满足，整数位5-2=3超了，所以整体取临界值999.99
 -- decimal在不设置长度时默认为(10,0),float与double无长度设置时自动决定长度与精度
 -- 所选择的类型越简单越好，能保存数值的类型越小越好。能提高速度
 ```
@@ -1765,8 +1765,8 @@ Timestamp	4	    1970-2038	                    受
 | DEFAULT        | 默认   | 用于保证该字段不填值不报错使用默认值                                                                | 如性别                           |
 | PRIMARY KEY    | 主键   | 用于保证该字段的值具有唯一性，**并且非空**           | 比如学号、员工编号等                    |
 | UNIQUE         | 唯一   | 用于保证该字段的值具有唯一性，**可以为空**                                                           | 比如座位号，身份证号，不会有人重复             |
-| CHECK          | 检查约束 | 即只能填写 check 约束中允许的字段值【mysql 中不支持】                                                  | 比如年龄（只支持填入 1~18 岁）、性别（只支持男、女） |
-| FOREIGN KEY    | 外键   | 用于限制两个表的关系，维护表与表之间的参照完整性。外键列的值必须在被引用表的**主键**或**唯一键**中存在，并且外键连接的两个列**数据类型必须完全一样**。 | 类似于 check ，只是允许填入的值来自外部表      |
+| CHECK          | 检查约束 | 即只能填写 check 约束中允许的字段值【mysql 中不支持】                                                  | 比如年龄（只支持填 1~18 岁）、性别（只支持男、女） |
+| FOREIGN KEY    | 外键   | 用于限制两个表的关系，维护表与表之间的参照完整性。外键列的值必须在被引用表的**主键**或**唯一键**中存在，并且外键连接的两个列**数据类型必须完全一样**。 | 类似于 check ，只是允许填的值来自外部表      |
 | INDEX          | 索引   | 索引可以提高查询性能，但会降低插入和更新数据的性能。                                                        | 再大量样本中经常查询的内容设置索引             |
 | AUTO_INCREMENT | 自增长  | 自动为新插入的行生成**唯一**的整数，通常用于主键（MySQL 专属），可通过设置 variable auto_increment 调整步长           | 经常需要插入新内容的位置                  |
 Key 可以是主键、外键、唯一键和 [[drafts]] ^a 77 b 27
@@ -1785,7 +1785,7 @@ CREATE TABLE Orders (
 ###### 添加约束的时机：
 1. 创建表时
 2. 修改表时
-前提是表中还**未填入任何数据**
+前提是表中还**未填任何数据**
 ```sql
 USE students;
 DROP TABLE stuinfo;
@@ -1814,7 +1814,7 @@ CREATE TABLE stuinfo (
 ###### 两种约束区别
 - 列级约束是直接在列定义中指定的约束。它们只影响单个列
 - 表级约束是在表定义的末尾声明的，可以涉及多个列。
-- 两种约束都可以对填入列的数据进行约束，一般单列内容的（多种）约束用列级约束写明，多列内容的单个约束使用表级约束写明，外键约束一般写在表级约束中。
+- 两种约束都可以对填列的数据进行约束，一般单列内容的（多种）约束用列级约束写明，多列内容的单个约束使用表级约束写明，外键约束一般写在表级约束中。
 
 ###### 主键与唯一对比
 **允许列数：** 只允许一个主键列（为多列整体设置为一个主键列），多个唯一列（每列唯一属性各自独立）
@@ -1953,7 +1953,7 @@ ON 某个操作[update\delete] 处理方式[cascade\restrict\set (not) null];
 使用 `ON DELETE CASCADE` 后缀表示外键链接的两列在一个表中有一个被删除，另一个表中相同数据执行相同操作
 `ON DELETE SET (NOT) NULL` 表示再删除时级联设置外键连接对象为 `NULL`
 ##### Check 条件约束
-`check()` 括号中可以使用不同条件语句限制填入内容，用 `,` 分隔
+`check()` 括号中可以使用不同条件语句限制填内容，用 `,` 分隔
 - 定义 check 约束，要求学生学号学号必须为 9 位数字，不能以 0 开头，第二三位皆为 0；
 ```sql
 ALTER TABLE xs
@@ -2036,7 +2036,7 @@ AS
 EXEC sp_bindefault 'rule_course_number', 'kc.课程号';
 EXEC sp_bindefault 'rule_course_number', 'kc.年龄;
 ```
-- `@value BETWEEN 16 AND 25`; 表示使用这个规则的列中每行单元格内容中 value 部分（作用于一个表中一列）要满足 `BETWEEN 16 AND 25`, 类似于 [[C++ practice case#读写二进制文件||提取fstream对象读取到文件内容的字符部分]] `file.write(iteration_record.name.data(), nameLength);` 中读取结构体中 `string name` 成员变量中用二进制表示的*数据部分*
+- `@value BETWEEN 16 AND 25`; 表示使用这个规则的列中每行单元格内容中 value 部分（作用于一个表中一列）要满足 `BETWEEN 16 AND 25`, 类似于 [[C++ Code Snippets#读写二进制文件||提取fstream对象读取到文件内容的字符部分]] `file.write(iteration_record.name.data(), nameLength);` 中读取结构体中 `string name` 成员变量中用二进制表示的*数据部分*
 - `@年龄` 表示规则仅仅作用于年龄一列，`@NEW.年龄` 表示之作用于新插入年龄列的数据需要满足
 - 如果要将规则应用于多行，需要**重复调用**`EXEC sp_bindefault` 语句
 
@@ -2270,7 +2270,7 @@ WHERE
 ```
 - 虽然 v 1 是虚拟表，但 from v 1 操作不是简单将封装的代码粘贴进来，而是创建虚拟表后放入注意最后 `WHERE last_name LIKE '%a%';` 时不要加 `e.last_name`，因虚拟表是**新表**！
 - 由于 `employees` 表和 `departments` 表都包含名为 `department_id` 的列，因此在使用 `SELECT *` 选择所有列时，这两个列名发生了冲突。**在创建视图或执行联合查询**时，必须明确指定列名，或者为冲突的列名提供别名，以确保每个列名都是唯一的。
-![MySQL Long Code Practice \> 视图](Files%20&%20LongText/Long%20code/MySQL%20Long%20Code%20Practice.md#视图)
+![Mysql Snippets \> 视图](Mysql%20Snippets.md#视图)
 ##### 视图修改
 `create or replace view  视图名`，如果存在 replace，不存在 create
 `alter view 视图名 as 查询语句; ` 仅仅修改
@@ -2641,8 +2641,8 @@ SELECT @myValue; -- 输出修改后的值
 语法：`show create procedure procedure_name;`
 存储过程一般不修改，只允许增删改 in 、out 属性，begin  and 之间的内容**不能修改**
 ##### 实例
-![[MySQL Long Code Practice#创建存储过程实现传入用户名和密码，插入到admin表中]]
-![[MySQL Long Code Practice#设定考试及格线，并将未及格人信息显示]]
+![[Mysql Snippets#创建存储过程实现传入用户名和密码，插入到admin表中]]
+![[Mysql Snippets#设定考试及格线，并将未及格人信息显示]]
 #### 函数
 ##### 基本函数使用
 **存储过程：** 可以有 0 个返回，也可以有多个返回，适合做批量插入、批量更新
@@ -2670,7 +2670,7 @@ Return 值; 函数体中仅有一句话，则可以省略 begin end
 在 MySQL 5.7 版本中，mysql 数据库中有 proc 表（8.0 中没有）记录了所有函数和存储过程
 ![](Files%20&%20LongText/Attachments/Pasted%20image%2020240831203949.png)
 - 实例：
-![MySQL Long Code Practice \> 函数](Files%20&%20LongText/Long%20code/MySQL%20Long%20Code%20Practice.md#函数)
+![Mysql Snippets \> 函数](Mysql%20Snippets.md#函数)
 ##### 分支
 ###### If
 实现双分支
@@ -2788,7 +2788,7 @@ end while【 标签】;
 ```
 标签表示函数的名称，有名称可以搭配循环控制语句使用
 - 实例
-![MySQL Long Code Practice \> 循环结构](Files%20&%20LongText/Long%20code/MySQL%20Long%20Code%20Practice.md#循环结构)
+![Mysql Snippets \> 循环结构](Mysql%20Snippets.md#循环结构)
 ###### Loop
 ```sql
 【标签:】loop
@@ -3270,7 +3270,7 @@ mysql-connector-cpp 安装步骤 [2025最新版VS2022配置C++ connector连接my
 > 记下这里时（2025 年 6 月 20 日14:45:29）已经升级到了 `mysqlcppconnx.dll`（10）所以需要在图片中位置相应改动
 
 ### 链接模板
-完整代码实现见[[MySQL Long Code Practice#C++数据库编程#mysql-connector-cpp 链接模板|基本功能实现代码]]
+完整代码实现见[[Mysql Snippets#C++数据库编程#mysql-connector-cpp 链接模板|基本功能实现代码]]
 示例代码中必须要能够登录 root 账户才能 `create database` 操作，如果没有权限可以参考下面代码**操作数据库**
 ```cpp
 #include <cppconn/statement.h>
@@ -3670,7 +3670,7 @@ sql description: You have an error in your SQL syntax; check the manual that cor
 乍看之下还看不出哪里有问题，语法错误，通过调试会发现，statement 字符串值显示为 `<字符串中字符无效。>`，打开其中内容发现其中有大量 `\0` 无意义字符，判定为文件编码问题，修改为 utf-8 即可解决
 
 ## 解析数据库返回内容
-由于[[MySQL Long Code Practice#mysql-connector-cpp 链接模板|链接模板]]预输入代码将所有插入内容视为字符串插入
+由于[[Mysql Snippets#mysql-connector-cpp 链接模板|链接模板]]预输入代码将所有插入内容视为字符串插入
 ```cpp
 int MySQLDB::prepare_execute(const std::string& sql, const std::vector<std::string>& params) {
 	std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement(sql));
@@ -3831,7 +3831,7 @@ private slots:
 };
 #endif // MYSQL_LOGIN_PAGE_H
 ```
-具体实现代码可以参考：[[MySQL Long Code Practice#C++数据库编程#qt QSQL 编程|QSql编程]]
+具体实现代码可以参考：[[Mysql Snippets#C++数据库编程#qt QSQL 编程|QSql编程]]
 其中还是用了加密技术，关键代码：
 ```cpp
 QString password_hash = QString::fromUtf8(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256).toHex());
@@ -4375,7 +4375,7 @@ mysql::pooled_connection conn = co_await pool.async_get_connection(
 );
 ```
 ### 异步连接数据库
-代码实现参考 [[C++ practice case#MySQL 数据库程序#boost.mysql 异步连接版本]]
+代码实现参考 [[C++ Code Snippets#MySQL 数据库程序#boost.mysql 异步连接版本]]
 # MySQL 情景设计题
 ### 185. 部门工资前三高的所有员工
 (https://leetcode.cn/problems/department-top-three-salaries/)

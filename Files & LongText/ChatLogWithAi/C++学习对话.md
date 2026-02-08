@@ -1673,7 +1673,7 @@ dir
 
 ---
 
-需要我帮你生成完整的 `csv_parser/CMakeLists.txt` 和 `json_parser/CMakeLists.txt` 吗？这样你可以直接填入源码即可开始编译。欢迎继续提问！
+需要我帮你生成完整的 `csv_parser/CMakeLists.txt` 和 `json_parser/CMakeLists.txt` 吗？这样你可以直接填源码即可开始编译。欢迎继续提问！
 
 ### USER
  通过你的设置，我已经配置好了我的项目，但启动项由两个
@@ -3003,7 +3003,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 出现这种问题（cmake 在当前源文件目录或生成系统路径中找到标准库文件，编辑器没有代码补全提示）的原始是否是因我没有在主 CMakeLists. txt 中设置 target_include_directory 导致的？但我已经设置了两个解析器
 set (CMAKE_C_COMPILER   "D:\\Program\\mingw 64\\bin\\gcc. exe")
 set (CMAKE_CXX_COMPILER "D:\\Program\\mingw 64\\bin\\g++. exe")
-难道不应该自动填入吗？
+难道不应该自动填吗？
 如果是这个原因，我该怎么修复？
 
 ### ASSISTANT
@@ -4052,7 +4052,7 @@ CMake: Show Debug Configuration
 如果你还想了解 `cmake. buildDirectory`、`cmake. defaultBuildType` 等配置项的作用，或者想自定义构建流程，我也可以帮你进一步优化配置 😊
 
 ### USER
-那么我编写 cpp 文件时，. vscode 中还有一些文件，我想请你分别解释他们的作用和其中填入的参数都是什么意思？
+那么我编写 cpp 文件时，. vscode 中还有一些文件，我想请你分别解释他们的作用和其中填的参数都是什么意思？
 这几个文件是如何影响我使用 vscode 编写 cpp 文件并运行的，请你详细说明
 ```json
 // c_cpp_properties. json

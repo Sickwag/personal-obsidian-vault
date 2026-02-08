@@ -934,7 +934,7 @@ Nginx同样需要配置额外的yum仓库，才可以使用yum安装
    # root执行
    # 创建文件使用vim编辑
    vim /etc/yum.repos.d/nginx.repo
-   # 填入如下内容并保存退出
+   # 填如下内容并保存退出
    [nginx-stable]
    name=nginx stable repo
    baseurl=http://nginx.org/packages/centos/$releasever/$basearch/
@@ -1036,7 +1036,7 @@ RabbitMQ在企业开发中十分常见，课程为大家演示快速搭建Rabbit
 
    # 2. 准备仓库文件
    vim /etc/yum.repos.d/rabbitmq.repo
-   # 填入如下内容
+   # 填如下内容
    ##
    ## Zero dependency Erlang
    ##
@@ -1411,7 +1411,7 @@ Elasticsearch简称es，在企业内同样是一款应用非常广泛的搜索�
 
 ### 准备主机名映射
 
-1. 在Windows系统中修改hosts文件，填入如下内容：
+1. 在Windows系统中修改hosts文件，填如下内容：
 
    > 如果同学们使用MacOS系统，请：
    >
@@ -1424,7 +1424,7 @@ Elasticsearch简称es，在企业内同样是一款应用非常广泛的搜索�
    192.168.88.133 node3
    ```
 
-2. 在3台Linux的/etc/hosts文件中，填入如下内容（==3台都要添加==）
+2. 在3台Linux的/etc/hosts文件中，填如下内容（==3台都要添加==）
 
    ```shell
    192.168.88.131 node1
@@ -1641,9 +1641,9 @@ Zookeeper是一款分布式的集群化软件，可以在多台服务器上部�
    # 1. 创建Zookeeper的数据目录
    mkdir /export/server/zookeeper/data
 
-   # 2. 创建文件，并填入1
+   # 2. 创建文件，并填1
    vim /export/server/zookeeper/data/myid
-   # 在文件内填入1即可
+   # 在文件内填1即可
    ```
 
 6. 【在node2和node3上操作】，创建文件夹
@@ -2007,7 +2007,7 @@ Hadoop生态体系中总共会出现如下进程角色：
 
 3. 修改配置文件：`core-site.xml`
 
-   如下，清空文件，填入如下内容
+   如下，清空文件，填如下内容
 
    ```xml
    <?xml version="1.0" encoding="UTF-8"?>
@@ -2400,7 +2400,7 @@ Hadoop生态体系中总共会出现如下进程角色：
 
 2. 验证HDFS，浏览器打开：http://node1:9870
 
-   创建文件test.txt，随意填入内容，并执行：
+   创建文件test.txt，随意填内容，并执行：
 
    ```shell
    hadoop fs -put test.txt /test.txt
@@ -2413,7 +2413,7 @@ Hadoop生态体系中总共会出现如下进程角色：
    执行：
 
    ```shell
-   # 创建文件words.txt，填入如下内容
+   # 创建文件words.txt，填如下内容
    itheima itcast hadoop
    itheima hadoop hadoop
    itheima itcast
@@ -2518,7 +2518,7 @@ HBase在大数据领域应用十分广泛，现在我们来在node1、node2、no
 5. 【node1执行】，修改配置文件，修改`conf/regionservers`文件
 
    ```shell
-   # 填入如下内容
+   # 填如下内容
    node1
    node2
    node3

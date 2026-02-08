@@ -253,10 +253,10 @@ void utils::register_user() {
 - **允许链式调用**：每个验证方法返回当前对象引用
 - **支持多规则组合**：内部维护一个验证器链表，链表每一个节点存储一个链式调用中规定的输入验证规则，最后实现一个 render 函数遍历链表中所有逻辑
 - **支持类型泛化**：适用于 `int`, `std::string`, `double` 等
-[[C++ practice case#输入验证器#定义]]
+[[C++ Code Snippets#输入验证器#定义]]
 #### 验证器实现
 如果每一个输入项都使用 while 循环会导致繁琐切工作量大，可以通过实现一个类进行验证
-[[C++ practice case#输入验证器#实现]]
+[[C++ Code Snippets#输入验证器#实现]]
 ### format 使用限制
 参考具体说明 [[FastLog#C++20 format 引入的几种字符串处理]]
 从 [P2216R3](https://wg21.link/P2216R3) 起，`std::format` 会对格式字符串进行编译时检查（通过辅助类型 std:: format_string 或 std::wformat_string）。如果发现格式字符串与要格式化的实参类型不匹配，则会发出编译错误。如果格式字符串不能作为编译时常量，或者需要避免编译时检查，请使用 `std::vformat` 或 fmt 上的 [`std::runtime_format`](mk:@MSITStore:E:\file_storage\Files\各种配置和工具\cppreference-zh-20240915手册.chm::/chmhelp/cpp-utility-format-runtime_format.html) (C++26 起)代替。
@@ -443,7 +443,7 @@ int main() {
 ### mysql 数据库异步链接（boost. mysql）
 关于协程可以参考[[WebServer-Chat#前置要求#协程|协程基本知识点]]和 [[MySQL#协程和异步编程|mysql使用协程实现异步编程]]
 需要注意，如果链接通过协程实现，则需要 `io_context` 链接句柄生命周期长于 mysql 服务模块，可以参考[[#服务注册管理|服务注册管理]]，一个统一的协程管理对象管理所有的**需要用到协程的服务**，所以这个管理者的生命周期必须长于所有服务，这个对象在 main.cpp 中创建。
-代码参考： [[C++ practice case#boost.mysql 异步连接版本]]
+代码参考： [[C++ Code Snippets#boost.mysql 异步连接版本]]
 如果运行连接数据库功能时，提示 ssl plugin 缺失，需要传入 `mysql::ssl_mode ssl = mysql::ssl_mode::disable;` 打开 ssl 开关
 其中 query 支持预处理传参，其实现依赖的是[[Modern C++#Note：完美转发|完美转发]]
 ```cpp
@@ -462,7 +462,7 @@ awaitable<mysql::results> query(std::string_view sql, Args&&... args) {
 - 解析简单结构体
 - 事务处理
 - 自定义异常类型
-示例函数实现：[[C++ practice case#]]
+示例函数实现：[[C++ Code Snippets#]]
 示例使用：
 ```cpp
 awaitable<void> Reader::login_with_pwd(const std::string& name, const std::string& password) {
@@ -555,12 +555,12 @@ public:
 需要实现验证码功能，这里使用邮箱实现
 ### 实现方法
 #### 使用 C++ libcurl 库实现
-定义：[[C++ practice case#C++ curl 库版本#定义]]
-实现：[[C++ practice case#C++ curl 库版本#实现]]
+定义：[[C++ Code Snippets#C++ curl 库版本#定义]]
+实现：[[C++ Code Snippets#C++ curl 库版本#实现]]
 
 ### 使用 python 脚本实现
 #### 脚本实现
-[[Python#发送邮件脚本#简易硬编码参数版本]]硬编码参数
+[[Python编程三剑客#发送邮件脚本#简易硬编码参数版本]]硬编码参数
 
 #### C++调用 python 方法
 命令行调用

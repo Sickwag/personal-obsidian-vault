@@ -694,7 +694,7 @@ PriorityCustomer& Priori tyCustomer: : operator=(const PriorityCustomer& rhs) {
 	return *this;
 }
 ```
-PriortyCustomer 的 copying 函数看起来好像复制了 PriorityCustomer 内的每一样东西，但事实上只复制了子类 PriorityCustomer 类的所有成员而忽略了父类。
+PriortyCustomer 的 copying 函数看起来好像复制了 PriorityCustomer 内的每一样东西，但事实上只复制了子类 PriorityCustomer 类的所有成员而忽略父类。
 PriorityCustomer 的 copy 构造函数并没有指定实参传给其 base class 构造函数，因此只会执行父类的 default 构造函数。
 
 所以，任何时候只要你承担起“为 derived class 撰写 copying 函数”的重责大任，必须很小心地也复制其 base class 成分。那些成分往往是 private （见[[#条款 22：将成员变置声明为 private|条款 22]])

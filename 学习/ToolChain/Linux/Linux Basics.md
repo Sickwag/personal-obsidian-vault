@@ -766,7 +766,7 @@ lastlog -b 90
 - Ctrl+D 可以退出特定程序的专属页面（不能退出 vim），python 解释器、退出当前用户也可以用
 - exit 退出当前登录的用户，（如果在 finnalshell 中使用将断开主机连接）
 - history 查看最近输入的 1000 条命令，存储在 `~/.bash_history` 文件中，可以通过 vim 修改
-[关于history命令详细内容](Linux%20long%20text%20explanation.md#history%20命令)
+[关于history命令详细内容](Linux%20Concepts.md#history%20命令)
 - 使用 `!string` 表示在 history 记录中从下到上搜索以 string 开头的命令并执行（一次）
  - ctrl + R 可以输入内容匹配历史命令，回车执行，左右键移动光标（不需要事先使用 history）
 - ctrl+a，跳到命令开头
@@ -854,7 +854,7 @@ Linux 中时区文件存储在 `/usr/share/zoneinfo/` 文件夹中即其子目�
 2024年 09月 17日 星期二 15:35:08 CST
 ```
 ##### 使用 ntp 自动更新时间
-[CSDN Linux \> 无法安装 ntp 服务](CSDN%20Linux.md#无法安装%20ntp%20服务)
+[CSDN Linux \> 无法安装 ntp 服务](computer%20learning%20puzzles.md#无法安装%20ntp%20服务)
 使用新的安装方法并设置为自启动，定时自动联网校准时间
 ```bash
 yum install chrony -y&& \
@@ -1300,7 +1300,7 @@ Setting tags for user "admin" to [administrator] ...
 ### elasticsearch
 按照文档走，但还未解决无法连接上[主机 IP 地址:9200](连接主机控制台) 问题
 ### 集群化环境前置准备
-创建多台虚拟机后 [Linux long text explanation \> centos 修改 linuxIP 地址](Linux%20long%20text%20explanation.md#centos%20修改%20linuxIP%20地址)
+创建多台虚拟机后 [Linux Concepts \> centos 修改 linuxIP 地址](Linux%20Concepts.md#centos%20修改%20linuxIP%20地址)
 在修改 IP 地址时，由于没有实现设置静态 IP，所以 ifcfg 文件中内容与视频中不一样，并且 centos 8 以上版本中**重启网络服务旧命令已被弃用**
 `systemctl restart network` 已被弃用，改用 `nmcli c reload`
 使用前面的命令会出现错误提示

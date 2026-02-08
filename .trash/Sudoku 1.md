@@ -3164,7 +3164,7 @@ void InputLanguage() {
 下面是我对它的理解和提出的问题，你需要对它们做出评价，如果有错误请指出并修改
 - 首先通过message(I18n::Instance().Get(I18n::Key::ASK_DIFFICULTY));来设定游戏难度，并且通过游戏配置对象I18n中的Get函数dict_中的ASK_DIFFICULTY来调用哈希表中的询问游戏难度提问词
 - 通过设置need_erase_grids来调整数组中空白格子的数量，如果输入不合法就返回错误信息
-- 我发现这些函数中都有错误处理，但是catch中都填入...是什么意思？
+- 我发现这些函数中都有错误处理，但是catch中都填...是什么意思？
 
 
 
@@ -3896,7 +3896,7 @@ void CScene::generate() {
     }
   }
 
-  // 填入场景
+  // 填场景
   for (int row = 0; row < 9; ++row) {
     for (int col = 0; col < 9; ++col) {
       point_t point = {row, col};
@@ -4839,7 +4839,7 @@ std::cout << "Current CP: " << GetConsoleOutputCP() << std::endl;
 
 ### 🧑‍💻 User
 
-在一个变量名后使用{}大括号，其中填入一些变量或者常量，这是什么语法？有什么作用？在什么情况下会使用？
+在一个变量名后使用{}大括号，其中填一些变量或者常量，这是什么语法？有什么作用？在什么情况下会使用？
 
 
 ---

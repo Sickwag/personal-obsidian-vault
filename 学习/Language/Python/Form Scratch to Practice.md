@@ -892,7 +892,7 @@ def create_fleet(game_settings,screen,aliens):
         create_alien(game_settings,screen,aliens,alien_number)
 ```
 ### 添加行
-- 同计算列数一致，再用两个循环类似 [C++ practice case \> 九九乘法表](../../Files%20&%20LongText/Long%20code/C++%20practice%20case.md#九九乘法表)循环打印行和列
+- 同计算列数一致，再用两个循环类似 [C++ Code Snippets \> 九九乘法表](../../Files%20&%20LongText/Long%20code/C++%20practice%20case.md#九九乘法表)循环打印行和列
 ```python
 ---------------game_function--------------
 def get_number_aliens_x(game_settings,alien,alien_width):

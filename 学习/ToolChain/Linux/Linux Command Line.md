@@ -33,7 +33,7 @@ shell 就是一个程序，它接受从键盘输入的命令，然后
 - linux 中文本是简单的字符与数字之间的一对一映射。它非常紧凑。五十个字符的文本翻译成五十个字节的数据。文本只是包含简单的字符到数字的映射，。
 - inux 采用 utf 8 编辑纯文本文件，纯文本文件不包含格式化信息，如字体、颜色、大小等。这意味着文本文件是跨平台的，可以在不同的操作系统和文本编辑器中无损地打开和编辑。
 - **less&more 命令**：less 属于 “页面调度器” 类程序，这些程序允许以逐页方式轻松浏览长文本文档。more 程序只能向前翻页，而 less 程序允许前后翻页，提供了更好的交互和性能。
-- [Linux long text explanation \> linux 中各种目录作用](Linux%20long%20text%20explanation.md#linux%20中各种目录作用)
+- [Linux Concepts \> linux 中各种目录作用](Linux%20Concepts.md#linux%20中各种目录作用)
 - [参考链接：中文FHS文件目录分类](https://blog.csdn.net/yup1212/article/details/82152106)
 - [FHS文件目录分类规定：英文pdf](http://www.pathname.com/fhs/)
 - 图片表示

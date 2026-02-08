@@ -176,7 +176,7 @@ CONFIG += release # Release 模式
 ![[PixPin_2025-12-21_19-28-51.png]]
 ## 代码化 UI 设计
 编撰完成：
-[[C++ practice case#Qt 项目代码#quick_example qt 6高级开发书籍#2.3 代码化 UI 设计]]
+[[C++ Code Snippets#Qt 项目代码#quick_example qt 6高级开发书籍#2.3 代码化 UI 设计]]
 需要注意的有：
 - qt 的自动通过命名连接机制（即给槽函数命名为 `on_someObject_someSignalHappened()` 会将控件和的信号和对应的槽函数连接起来）**只作用于在 UI 文件中***可视化编辑控件并且在代码中编写逻辑***的情况**，如果 ui 文件（准确的说是通过 uic 生成的 cpp 文件）中没有对应的控件，没有自动连接效果。
 - 这种机制同时只对**下划线命名法有效果**
@@ -886,13 +886,13 @@ void TextEditorMainWindow::buildUI()
 	ui->actionunderline->setCheckable(true);
 }
 ```
-完整代码参考：[[C++ practice case#Qt 项目代码#4.10 QMainWindow 和 QAction]]
+完整代码参考：[[C++ Code Snippets#Qt 项目代码#4.10 QMainWindow 和 QAction]]
 ## QToolButton 和 QListWidget
 ### 基本使用方法
 ![[PixPin_2025-11-12_15-36-15.png]]
 这样的内容在 [[QTExamples#列表控件QListWidget和工具按钮QToolButton的和用法]]中已经写过，这里跳过实现部分
 只讲注意事项
-- 左边的是 QToolBox，每一个QToolBox 中展开后是一个 QWidget 组件，可以填入若干个 QToolButton**或者任何元素**，每一个 QToolButton 可通过 `setDefaultAction()` 将按钮和 QAction 连接。这一个操作无法在 UI 设计中实现，只能通过代码。按钮的文字、图标、toolTip 等属性都将自动从关联的 Action复制而来
+- 左边的是 QToolBox，每一个QToolBox 中展开后是一个 QWidget 组件，可以填若干个 QToolButton**或者任何元素**，每一个 QToolButton 可通过 `setDefaultAction()` 将按钮和 QAction 连接。这一个操作无法在 UI 设计中实现，只能通过代码。按钮的文字、图标、toolTip 等属性都将自动从关联的 Action复制而来
 - 在右侧添加一个 QListWidget，可以通过双击它来进行直观的调整
 ![[PixPin_2025-11-12_15-48-11.png]]
 需要注意 QToolButton 的几个属性
@@ -1044,7 +1044,7 @@ void ListWidgetMainWindow::on_listWidget_customContextMenuRequested(const QPoint
 }
 ```
 ### 代码实现
-仅仅是实现较为重要的部分，一些逻辑上重复的 QAction 槽函数没有实现，参考 [[C++ practice case#Qt 项目代码#4.11 QLIstWidget]]
+仅仅是实现较为重要的部分，一些逻辑上重复的 QAction 槽函数没有实现，参考 [[C++ Code Snippets#Qt 项目代码#4.11 QLIstWidget]]
 
 ## \[DIY\]自己实现网红表白程序
 ### 功能设计
@@ -1267,7 +1267,7 @@ QTreeWidgetItem *QTreeWidget::headerItem() //返回表头节点
 ```
 允许存在任意个顶层节点，一个根节点，使用 `QTreeWidgetItem *QTreeWidget::invisibleRootItem()` 返回
 `QTreeWidgetItem` 在构造函数中有一个 type 变量，是一个和 [[#为控件设置用户数据|QWidget的data属性]]相似的一个特性，可以为其设置 type（**只能是一个 int 类型**）来标记这个 item 的类别。但设置后不能更改，没有 `setType` 接口
-由于这一章和 [[#QToolButton 和 QListWidget]] 非常像，很多代码较为重复，这里只实现重要部分：[[C++ practice case#Qt 项目代码#4.12 QTreeWidget]]
+由于这一章和 [[#QToolButton 和 QListWidget]] 非常像，很多代码较为重复，这里只实现重要部分：[[C++ Code Snippets#Qt 项目代码#4.12 QTreeWidget]]
 ## QTableWidget
 和 [[#QToolButton 和 QListWidget|QListWidget]] & [[#QTreeWidge]] 大同小异，只不过 table 中 item 变为了单元格，最小设置单元也成为了一个单元格，对行列的修改本质上都是在**按照单元格坐标**每次修改一个单元格
 每一个 item 同样可以设置 type 和 [[#QTreeWidge#为控件设置用户数据|data]]
@@ -1439,7 +1439,7 @@ public:
 };
 ```
 - setModelData
-	- 是 setEditorData 的反面，用于设置填入代理编辑器中数据用什么方法填入数据模型
+	- 是 setEditorData 的反面，用于设置填代理编辑器中数据用什么方法填数据模型
 ```cpp
 void  QStyledItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index)
 ```
@@ -2561,7 +2561,7 @@ settings.endGroup();
 ```cpp
 QSettings settings("/home/petra/misc/myapp.ini", QSettings::IniFormat);
 ```
-在 macOS 和 iOS 上，通过传递 [QSettings::NativeFormat](https://doc.qt.io/qt-6/zh/qsettings.html#Format-enum) 作为第二个参数，可以访问属性列表 `.plist` 文件。如果在 windows 上，第一个参数应该填入注册表路径，这样设置保存在注册表中
+在 macOS 和 iOS 上，通过传递 [QSettings::NativeFormat](https://doc.qt.io/qt-6/zh/qsettings.html#Format-enum) 作为第二个参数，可以访问属性列表 `.plist` 文件。如果在 windows 上，第一个参数应该填注册表路径，这样设置保存在注册表中
 ```cpp
 QSettings settings("/Users/petra/misc/myapp.plist", QSettings::NativeFormat);
 QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Office", QSettings::NativeFormat);
@@ -3036,7 +3036,7 @@ Qt 6 只支持 SQLite 3，不支持 SQLite 2。QSqlDatabase 类用于建立与�
 QSqlDatabase  DB= QSqlDatabase::addDatabase("QSQLITE");
 ```
 这段代码只会添加数据库驱动，而只有调用 `open()` 函数才会进行数据库连接
-`QSqlDatabase::tables()` 用于返回数据库对象的表，填入不同的枚举值参数会返回不同的表或者视图，数据集
+`QSqlDatabase::tables()` 用于返回数据库对象的表，填不同的枚举值参数会返回不同的表或者视图，数据集
 - QSqlTableModel是一个模型类，它与数据库中一个数据表关联后就作为该数据表的模型，**需要在构造函数中绑定数据库并 `setTable()` 设置表**
 - 形成数据模型后，就可以用对应的[[#视图]]来实现数据的显示和操作
 - **QDataWidgetMapper** 用于在图形用户界面（GUI）中小部件（widgets）和数据模型（models）之间建立映射关系。主要目的是简化数据绑定和同步的过程，使得数据可以从模型自动加载到小部件中，反之亦然。显著减少代码量。***当模型中数据发生变化时，关联的小部件会自动更新；反之亦然***
@@ -3361,10 +3361,10 @@ void MainWindow::updateRecord(int recNo)
     // 跳出编辑框
     TDialogData *dataDialog = new TDialogData(this);
     dataDialog->setWindowFlags(dataDialog->windowFlags() | Qt::MSWindowsFixedSizeDialogHint);
-    dataDialog->setUpdateRecord(curRec); // 将当前行记录的信息填入对话框中
+    dataDialog->setUpdateRecord(curRec); // 将当前行记录的信息填对话框中
     int ret = dataDialog->exec();
     if(ret == QDialog::Accepted){
-        // 将tabView中当前行已经修改过的QSqlRecord数据填入数据库中
+        // 将tabView中当前行已经修改过的QSqlRecord数据填数据库中
         QSqlRecord  recData = dataDialog->getRecordData();
 
         query.prepare("update employee set Name=:Name, Gender=:Gender,"
@@ -3407,7 +3407,7 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 }
 ```
 这个函数用于所有对 tabView 中行记录的修改操作，流程为：
-1. 记录现在哪一行需要修改，保存这行的数据并通过 `setUpdataRecord()` 填入 TDialogData 对话框中。
+1. 记录现在哪一行需要修改，保存这行的数据并通过 `setUpdataRecord()` 填 TDialogData 对话框中。
 2. 根据将这一行对应的人的 empNo 记下来
 3. 对话框修改数据后将修改的数据**在数据库中查找 empNo 值**写回数据库（updata 语句）
 
@@ -6409,7 +6409,7 @@ add_custom_target(update_translations
 
 深绿色问号图标表示还没有翻译过的源文，黄色问号图标表示已经有译文的源文，亮绿色钩形图标表示已完成翻译的源文，灰色图标表示**无效原文**，无效原文是由于**翻译文件未重新同步，但源代码/ui 文件发生改变**导致的，不影响程序运行，会自动忽略
 ![[PixPin_2025-12-19_11-31-52.png]]
-程序中**可输入组件**（如 QPlainText）在源代码/ui 文件中应该被清空，否则也会被提取，填入翻译字符串后工具栏更新字符串状态，保存文件后，使用 lrelease 工具生成**紧凑 qm 文件**，在 `main.cpp` 中加载 qm 文件
+程序中**可输入组件**（如 QPlainText）在源代码/ui 文件中应该被清空，否则也会被提取，填翻译字符串后工具栏更新字符串状态，保存文件后，使用 lrelease 工具生成**紧凑 qm 文件**，在 `main.cpp` 中加载 qm 文件
 ```cpp
 int main(int argc, char *argv[])
 {

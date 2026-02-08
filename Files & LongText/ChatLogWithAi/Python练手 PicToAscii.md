@@ -396,7 +396,7 @@ complex_function(True)
 
 我将对你的评价和修正按顺序做出我修改后的理解和问题，请你检查是否有错误：
 1. Action 参数可以接受一个自定义或者内置的 action 对象，这个对象定义了如何解析 argpaser 对象接受的参数，而 type 关键字在函数签名中表示他会在 action 位置传入参数不是 str 类型时将**action 参数位置传入的参数**转化为 python 对象
-2. type: _ActionType = ... 中，type 是参数名，_ActionType 表示类型说明符，表示 type 参数应该填入一个 ActionType 类型的变量对吗？但前面使用 `_` 表示的意思我没有明白，这是一种规范吗？
+2. type: _ActionType = ... 中，type 是参数名，_ActionType 表示类型说明符，表示 type 参数应该填一个 ActionType 类型的变量对吗？但前面使用 `_` 表示的意思我没有明白，这是一种规范吗？
 3. `add_argument(option_string, option_string, ..., name=value, ...)` 这段话写在函数的签名文档中，所以是一种说明意思，表示 option_string 的内容会被传入到 name 中作为参数值，对吗？name=value 前后的 `..。` 表示什么？
 4. 为什么这段代码可以将 rgb 颜色转为灰度值？`gray = int(0.2126 * r + 0.7152 * g + 0.0722 * b)`？
 
@@ -432,7 +432,7 @@ complex_function(True)
 
 **2. 关于 `type: _ActionType = ...` 和 `_` 前缀的理解:**
 
-> 2.  type: _ActionType = ... 中，type 是参数名，_ActionType 表示类型说明符，表示 type 参数应该填入一个 ActionType 类型的变量对吗？但前面使用 `_` 表示的意思我没有明白，这是一种规范吗？
+> 2.  type: _ActionType = ... 中，type 是参数名，_ActionType 表示类型说明符，表示 type 参数应该填一个 ActionType 类型的变量对吗？但前面使用 `_` 表示的意思我没有明白，这是一种规范吗？
 
 **评价与修正:**
 

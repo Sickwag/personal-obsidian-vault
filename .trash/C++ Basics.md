@@ -176,7 +176,7 @@ cout<<value<<endl;
 ## 跳转语句
 break出现在
 - **多条件选择** Switch 语句中
-	[C++ practice case \> 电影打分机制](../../../Files%20&%20LongText/Long%20code/C++%20practice%20case.md#电影打分机制)
+	[C++ Code Snippets \> 电影打分机制](../../../Files%20&%20LongText/Long%20code/C++%20practice%20case.md#电影打分机制)
 - 循环语句跳出，跳出嵌套的内层循环
 continue 循环语句中跳过本次循环进行下次
 goto 语句，无条件跳转代码到执行为止，语法为 `goto <mark>;` mark 标记一般书写为纯大写，在需要跳转的位置输入 `mark :` 即可

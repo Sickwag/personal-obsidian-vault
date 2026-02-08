@@ -394,7 +394,7 @@ for(int i= 0; i<model.rowCount();++i) {
 }
 ```
 注意 QSqlQueryModelmodel 的文档说明
-![[Pasted image 20251013172953.png]] 从签名可以看出使用之前是需要设置 QSqlQuery 对象的，如果直接填入 sql 语句字符串，也是可以转换的。`query()` 返回已经设置的 query 对象。`setQuery()` 要注意:
+![[Pasted image 20251013172953.png]] 从签名可以看出使用之前是需要设置 QSqlQuery 对象的，如果直接填 sql 语句字符串，也是可以转换的。`query()` 返回已经设置的 query 对象。`setQuery()` 要注意:
 
 > ***void QSqlQueryModel:: setQuery (QSqlQuery &&query)***
 > - Resets the model and sets the data provider to be the given query. Note that the query must be active and must not be isForwardOnly ().
@@ -800,7 +800,7 @@ connect(comboBox, &QComboBox::currentIndexChanged, this, &Window::languageChange
 ```
 第一个参数，也就是下拉选项，只需要显示一个名称
 
-> 所以只填入一个 QString 对象即可
+> 所以只填一个 QString 对象即可
 
 然后程序，或者说界面组件如何知道 Combo 组件状态发生改变这一信息？
 
@@ -1158,7 +1158,7 @@ LEFT JOIN genres g ON b.genre = g.id
 	- `model.fieldIndex(Qstring str)`，通过列`名返回这列数据在表中 index
 	- `model.record().fieldName(int index)`，通过 index 返回列名
 	- `model.data(index)` 通过 index 获取列信息
-data 还可以填入角色内容这一参数，不同的内容会**看**到不同的数据内容，：查阅文档可知，
+data 还可以填角色内容这一参数，不同的内容会**看**到不同的数据内容，：查阅文档可知，
 ```cpp
 / Qt::DisplayRole - 显示给用户看的文本
 // Qt::EditRole - 用于编辑的值
@@ -1456,7 +1456,7 @@ fileDialog.setDefaultSuffix(format);
 >
 >> [!anwser] 这一操作通常出于性能和底层实现的考虑，QByteArray 直接对应 C 风格的字节流。`QFileDialog::setMimeTypeFilters(const QStringList &filters)` 期望接收 `QStringList`。所以必须进行类型转换，将 QByteArray 列表转换为 QStringLIst。`QLatin1String(bf)` 对于 MIME 类型使用 Latin-1 编码，是一种高效和安全的做法
 
-一个 QFileDialog 对象不可多次调用 `selectMimeTypeFilter (const QString &filter)`，但可以设置一个过滤器列表，。也就是说填入其中可以是一个字符串，这个参数必须是 `setMimeTypeFilters` 设置的列表中一个具体过滤器字符串（通常是 MIME 类型）。**它不是用逗号分隔的列表**
+一个 QFileDialog 对象不可多次调用 `selectMimeTypeFilter (const QString &filter)`，但可以设置一个过滤器列表，。也就是说填其中可以是一个字符串，这个参数必须是 `setMimeTypeFilters` 设置的列表中一个具体过滤器字符串（通常是 MIME 类型）。**它不是用逗号分隔的列表**
 `selectMimeTypeFilter (const QString &filter)` 只能选择一个已经通过 `setMimeTypeFilters` 设置好的过滤器作为当前默认选中项。它不能添加新过滤器。参数必须是 setMimeTypeFilters 列表中一个具体的过滤器字符串（如 "image/png"）。
 `fileDialog.selectMimeTypeFilter("image/" + format); ` 中"image/"是一种标准 MIME 文件类型写法：
   "image/“ 是 MIME 类型标准的一部分。

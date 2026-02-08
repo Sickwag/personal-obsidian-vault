@@ -144,7 +144,7 @@ if (ec != CURLE_OK) {
 ```
 #### html 源码解析
 需要用到另一个库 pugixml，这个库**只能解析 xml，如果手动将 html 中单标签，特殊语法使其成为一个符合 xml 格式的文档并在 pugi 解析选项中使用宽松解析**，也可以用来解析 xml
-具体代码参考：[[C++ practice case#html/xml 解析#pugixml 解析]]
+具体代码参考：[[C++ Code Snippets#html/xml 解析#pugixml 解析]]
 
 ### Qt 实现版本
 使用 qt 网络模块可以参考 [[QT6开发指南#网络#基于 HTTP 的网络应用程序]]
@@ -555,7 +555,7 @@ return beast::buffers_to_string(res.body().data());
 ## 网络 api 接口使用
 ### 文本转二维码 base 64 编码图
 #### httplib 实现
-完整代码参考：[[C++ practice case#网络请求#基本网络请求#GET 请求将文本转二维码 base 64 编码信息]]
+完整代码参考：[[C++ Code Snippets#网络请求#基本网络请求#GET 请求将文本转二维码 base 64 编码信息]]
 ```cpp
 json API::send_request(const std::string& user_message) {
 	httplib::Headers headers = {

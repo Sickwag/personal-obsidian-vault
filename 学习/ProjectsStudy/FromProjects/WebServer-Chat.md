@@ -511,7 +511,7 @@ GET /api/login?user=john HTTP/1.1
 Host: example.com
 Content-Type: application/json
 ```
-这样一个请求头中，除第一行外的**键值对**都可以使用**同名方法**获取其值，GET 是请求动作 `http::field::verb`， url 及其参数是 target，可以使用 `target()` 获取，http 版本可以使用 `version` 获取，这也是如果要构造这个对象需要使用初始化列表语法填入这三个内容，他们是必须的
+这样一个请求头中，除第一行外的**键值对**都可以使用**同名方法**获取其值，GET 是请求动作 `http::field::verb`， url 及其参数是 target，可以使用 `target()` 获取，http 版本可以使用 `version` 获取，这也是如果要构造这个对象需要使用初始化列表语法填这三个内容，他们是必须的
 
 
 
@@ -650,7 +650,7 @@ XREVRANGE key end start [COUNT count]
 其中 end 和 start 都是消息 ID **但支持特殊语法**
 
 + 最大 ID
-1 stream_ref = "+";  // 表示时间戳最大的 ID（start 位置填入+表示 id 最大的）
+1 stream_ref = "+";  // 表示时间戳最大的 ID（start 位置填+表示 id 最大的）
 ```bash
 XREVRANGE "beast" "+" "-" COUNT 20
 // 获取从最新消息开始的 20 条消息

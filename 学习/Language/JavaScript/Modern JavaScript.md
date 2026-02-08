@@ -76,7 +76,7 @@ prompt 函数，语法为：`prompt(title, [default])`，title 表示弹出窗�
 let age = prompt('How old are you?', 100);
 alert(`You are ${age} years old!`); // You are 100 years old!
 ```
-浏览器会弹出窗口询问并填入默认值 100，然后 alert
+浏览器会弹出窗口询问并填默认值 100，然后 alert
 confirm 一个带有 question 以及**确定和取消两个按钮**的模态窗口。返回值为 `Boolean`
 
 ---

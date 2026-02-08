@@ -1,3 +1,6 @@
+---
+参考: 书籍《Python编程三剑客：Python编程从入门到实践+快速上手+极客编程 》(埃里克·马瑟斯 (Eric Matthes), Al Sweigart etc.) (Z-Library)_2.epub
+---
 # 第四章
 ## 循环外else循环确认循环是否跑完
 
@@ -610,7 +613,7 @@ for number in combined:
 
 ### 原理
 在子类中定义写父类中已有的成员,无论写了什么,都默认覆盖父类的定义, 定义没有的成员被认为是继承,
-使用`super().`后面加父类成员明可以在需要重写父类成员的子类成员中调用父类成员, 对于方法`self`会自动传入, 只需在方法中填入父类成员需要传入的参数
+使用`super().`后面加父类成员明可以在需要重写父类成员的子类成员中调用父类成员, 对于方法`self`会自动传入, 只需在方法中填父类成员需要传入的参数
 ```python
 >>> class Person():
 ...     def __init__(self, name):
@@ -1008,8 +1011,8 @@ b'&#9731;'
 
 参考[通过实例理解js正则表达]([hyy1115/RegExp-Learning: 学习正则表达式 (github.com)](https://github.com/hyy1115/RegExp-Learning?tab=readme-ov-file))
 [工作常用正则表达式](../Attachments/工作常用正则表达式.md)
-[开发常用正则表达式](../Attachments/开发常用正则表达式.md)
-![learn\_regex-master.zip](../Attachments/learn_regex-master.zip)
+[开发常用正则表达式](开发常用正则表达式.md)
+![learn\_regex-master.zip](learn_regex-master.zip)
 ### 二进制数据
 
 `bytes()`&`bytearray`关键字创建字节型数据类型(**只能创建列表型)**

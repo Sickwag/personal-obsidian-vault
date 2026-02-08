@@ -190,7 +190,7 @@ App 类提供了许多用于自定义行为的方法。大多数方法返回 `t
 
 | Method  方法                     | Description  描述                                                                                            |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `allow_extras()`               | Removes error for extra arguments  <br>移除额外参数的错误（多填入的不存在的参数忽略而不报错）                                         |
+| `allow_extras()`               | Removes error for extra arguments  <br>移除额外参数的错误（多填的不存在的参数忽略而不报错）                                         |
 | `prefix_command()`             | Treats unrecognized options as positionals  <br>将未识别的选项视为位置参数，在遇到第一个无法识别的选项时停止解析，所有后续参数都放入remaining_args列表 |
 | `ignore_case()`                | Makes option matching case-insensitive  <br>使选项匹配不区分大小写                                                    |
 | `fallthrough()`                | Allows options to be passed to parent command  <br>允许将选项传递给父命令                                             |
