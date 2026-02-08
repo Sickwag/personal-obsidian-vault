@@ -1547,3 +1547,116 @@ C 标准库函数，用于将 `malloc` / `calloc` / `realloc` 分配的内
 | **数组版本**  | `delete[]`               | `operator delete[]` | 不支持      |
 | **空指针处理** | 安全（C++14+）               | 通常安全                | 安全       |
 | **内存来源**  | `new` / `new[]`          | `operator new`      | `malloc` |
+
+### 原子操作中的内存序
+#### 基本知识
+现代计算机不是简单的顺序执行模型，在多线程任务中的执行顺序非常复杂，即使统一线程中按顺序编写的代码操作也有可能会因为：
+- **编译器优化重排**：编译器为了优化可能调整指令顺序
+- **CPU 乱序执行**：CPU 为了性能可能乱序执行指令
+- **缓存一致性延迟**：多核 CPU 的缓存更新可能有延迟
+**和代码不相同的顺序执行**。内存序常用定义有：
+1. `std::memory_order_relaxed`
+	- __最弱约束__：只保证原子性，不保证内存顺序
+	- __无同步__：不影响其他线程的内存访问顺序
+	- __适用场景__：只需要原子操作，不要求顺序一致性
+2. `std::memory_order_acquire`
+	- __获取语义__：防止当前操作之后的内存访问被重排序到此操作之前
+	- __同步作用__：与 release 操作形成同步点，保证之后的所有读操作在获取点之后开始
+	- __适用场景__：读取共享数据，确保读取的数据是最新的
+3. `std::memory_order_release`
+	- __释放语义__：防止当前操作之前的内存访问被重排序到此操作之后
+	- __同步作用__：与 acquire 操作形成同步点，保证之前的所有写操作在释放点之前完成
+	- __适用场景__：写入共享数据，确保修改对其他线程可见
+4. `std::memory_order_acq_rel`
+	- __双向语义__：同时具有 acquire 和 release 语义，有最强的顺序保证，保证所有线程看到相同的操作顺序
+	- __适用场景__：原子读-改-写操作
+性能上
+```md
+最快 → 最慢
+relaxed → acquire/release → seq_cst
+```
+内存序的作用为主要为：
+1. **控制指令重排序**：防止编译器/CPU过度优化破坏多线程正确性
+2. **保证内存可见性**：确保一个线程的写操作对其他线程可见
+3. **建立 happens-before 关系**：确定操作之间的先后顺序
+#### 项目代码实现
+v1 的 MemoryPool 实现中，有很多尝试更新原子类型的地方，使用：
+```cpp
+// pushFreeList函数
+if(freeList_.compare_exchange_weak(oldHead, slot, 
+                                  std::memory_order_release,    // 成功时
+                                  std::memory_order_relaxed)) { // 失败时
+    return true;
+}
+// - __成功时用release__：确保在更新freeList_之前，slot->next的赋值操作已完成
+// - __失败时用relaxed__：失败时不需要同步保证
+// popFreeList函数：
+if(freeList_.compare_exchange_weak(oldHead, newHead, 
+                                  std::memory_order_acquire,    // 成功时
+                                  std::memory_order_relaxed)) { // 失败时
+    return oldHead;
+}
+// - __成功时用acquire__：确保能正确读取到其他线程通过release操作写入的数据
+// - __失败时用relaxed__：失败时不需要同步保证
+```
+比较替换有严格和宽松检查模式，weak 可能会虚假失败，但是性能更好。这里弹出和入队都在 while 中进行，失败了会自动重试所以 weak 即可。
+> [!note]
+> 文档中对从 compare_exchange_weak/strong 解释为：
+> 
+> 原子地比较 `*this` 和 expected 的对象表示(C++20 前)值表示(C++20 起)。如果它们逐位相等，那么以 desired 替换前者（进行读修改写操作）。否则，将 `*this` 中的实际值加载进 expected（进行加载操作）。
+### 内存分配
+整个内存池设计为：
+```md
+[newBlock内存块]
+├── 前8字节(64位系统) ──→ 存储Slot结构(包含next指针)
+├── body开始位置      ──→ 实际可用于分配槽的空间
+└── ...               ──→ 可用空间的剩余部分
+
+内存块布局：
+[0-7字节]    : Slot.next (指向下一个块)
+[8-31字节]   : 第一个可用槽 (32字节对齐)
+[32-63字节]  : 第二个可用槽 (32字节对齐)
+[64-95字节]  : 第三个可用槽 (32字节对齐)
+...
+[4088-4095]  : 最后一个可用槽
+
+**内存槽大小并一致等于是SlotSize_，但是每个块中第一个槽的起始位置会随着块大小&指针类型的大小而改变**，
+```
+- __头部信息__：每个内存块的开头存储一个 `Slot` 结构，用于维护块链表
+- __数据区域__：剩余空间用于实际的内存槽分配，快的大小
+- __链表维护__：通过头部的 `next` 指针将所有分配的大块内存链接起来
+```cpp
+void MemoryPool::allocateNewBlock() {
+	void* newBlock							= operator new(BlockSize_);
+	reinterpret_cast<Slot*>(newBlock)->next = firstBlock_;
+	firstBlock_								= reinterpret_cast<Slot*>(newBlock);
+
+	char*  body								= reinterpret_cast<char*>(newBlock) + sizeof(Slot*);
+	size_t paddingSize						= padPointer(body, SlotSize_);	// 计算对齐需要填充内存的大小
+	curSlot_								= reinterpret_cast<Slot*>(body + paddingSize);
+
+	// 超过该标记位置，则说明该内存块已无内存槽可用，需向系统申请新的内存块
+	lastSlot_ = reinterpret_cast<Slot*>(reinterpret_cast<size_t>(newBlock) + BlockSize_ - SlotSize_ + 1);
+}
+```
+分配内存时的*头插法*
+```md
+初始状态：[Block1] → [Block2] → [Block3] → null
+         ↑
+    firstBlock_
+
+执行①：[newBlock] → [Block1] → [Block2] → [Block3] → null
+        (next指向旧链表)
+
+执行②：[Block1] → [Block2] → [Block3] → null
+         ↑
+    [newBlock] 
+         ↑
+    firstBlock_
+
+最终：[newBlock] → [Block1] → [Block2] → [Block3] → null
+         ↑
+    firstBlock_
+
+```
+body 是所有槽能用的空间的开始，之所以使用 `char*` 是因为 char 是 1 字节的，比较方便统计大小而已

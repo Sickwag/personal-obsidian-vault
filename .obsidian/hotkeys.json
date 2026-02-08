@@ -250,6 +250,13 @@
         "Shift"
       ],
       "key": "`"
+    },
+    {
+      "modifiers": [
+        "Alt",
+        "Shift"
+      ],
+      "key": "F1"
     }
   ],
   "editor:toggle-blockquote": [
