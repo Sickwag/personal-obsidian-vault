@@ -135,7 +135,7 @@ void QMetaObject::connectSlotsByName(QObject *obj) {
 - 由于 QT 有自定义宏，关键字和特殊文件但使用 C++进行描述，构建应用程序，所以这些**非标准 C++** 内容都会经过特殊处理后，变为**标准 C++** 代码，通过**标准 C++编译器**构建可执行程序。
 - `moc_dialog.cpp` 是 MOC 读取文件 `dialog.h` 的内容后生成的一个元对象代码文件，文件 `moc_predefs.h` 里是一些宏定义，资源文件 `res.qrc` 会被编译为 `qrc_res.cpp`
 - 只要**头文件类**中包含 `Q_OBJECT` 宏，那么 MOC 就会为他生成对应的 `moc_classname.cpp` 文件
-- 使用 MOC、UIC 和 RCC 编译各原始文件的过程称为预编译过程，预编译之后生成的是标准
+- 使用 MOC、UIC 和 RCC 编译各原始文件的过程称为预编译过程，预编译后生成的是标准
 - C++语言的程序文件
 
 ### Debug 模式和 Release 模式区别
@@ -337,7 +337,7 @@ void createPropertyEditors(QObject* obj, QWidget* parent) {
 |         | `int  classInfoOffset()`                        | 返回这个类的第一条类信息的序号                                                                         |
 | 构造函数元数据 | `int  constructorCount()`                       | 返回这个类的构造函数的个数                                                                           |
 |         | `QMetaMethod  constructor(int index)`           | 返回这个类的序号为 index 的构造函数的元数据                                                               |
-|         | `int  indexOfConstructor(char *constructor)`    | 返回一个构造函数的序号，constructor 包括正则化之后的函数名和参数名                                                 |
+|         | `int  indexOfConstructor(char *constructor)`    | 返回一个构造函数的序号，constructor 包括正则化后的函数名和参数名                                                 |
 | 方法元数据   | `QMetaMethod  method(int index)`                | 返回序号为 index 的方法的元数据                                                                     |
 |         | `int  methodCount()`                            | 返回这个类的方法的个数，包括基类中定义的方法，方法包括一般的成员函数，还包括信号和槽                                              |
 |         | `int  methodOffset()`                           | 返回这个类的第一个方法的序号                                                                          |
@@ -399,7 +399,7 @@ qt 的 foreach 宏由于不是关键字，没办法做到用**引用**（C++11 �
 ## 其他常用类
 ### QVariant 类
 一种万能数据类型，它可以存储任何类型的数据，定义 QVariant 变量时，通过其构造函数为其赋初值。QVariant 有很多参数形式的构造函数，基本覆盖 toT 函数涉及的类型，还可以使用函数 ` setValue()`。
-QVariant 只支持一些基本的类型，没有 `toColor()`、`toFont()` 这样的函数，但这些类型的值可以赋值给 QVariant 变量，之后通过 `QVariant::value()` 函数来得到指定类型的值
+QVariant 只支持一些基本的类型，没有 `toColor()`、`toFont()` 这样的函数，但这些类型的值可以赋值给 QVariant 变量，后通过 `QVariant::value()` 函数来得到指定类型的值
 
 ### QFlags 类
 `QFlags<Enum>` 是一个模板类，其中 Enum 是枚举类型，QFlags 用于定义枚举值的或运算组合，用于解决传统 C++中[[CodeLineCounter#位掩码设计开关|位掩码技术]]
@@ -627,7 +627,7 @@ void show () //显示窗口
 void showFullScreen () //以全屏方式显示窗口
 void showMaximized () //窗口最大化
 void showMinimized () //窗口最小化
-void showNormal () //全屏、最大化或最小化操作之后，恢复正常大小显示
+void showNormal () //全屏、最大化或最小化操作后，恢复正常大小显示
 // QWidget 中定义的信号只有 3 个，定义如下：
 void customContextMenuRequested (const QPoint &pos) // 在组件上右键
 void windowIconChanged (const QIcon &icon)
@@ -643,7 +643,7 @@ QStackedLayout：堆叠布局，用于管理多个 QWidget 类对象，也就是
 
 ## QString 字符串操作
 具体内部编码参考 [[Qt Official Tutorial#字符串数据类]]
-QString 使用了隐式共享，**只有在修改操作时**才会复制其中包含的字符数据，并且由于其每一个字符都是 UTF-16 编码，所以使用 `[]` 的时候不会因中文占用 2~4 个字节而读入半个字节的数据
+QString 使用了隐式共享，**只有在修改操作时**才会复制其中包含的字符数据，并且由于其每一个字符都是 UTF-16 编码，所以使用 `[]` 时不会因中文占用 2~4 个字节而读入半个字节的数据
 QString 中字符都使用 QChar 存储，可以通过 `from__` 获得其 unicode 码，后面的 2/4 表示字符的字节长度，2 字节接受 `char16_t` 类型数据，反之 `char32_t`
 ![[PixPin_2025-10-31_21-35-05.png]]
 
@@ -739,8 +739,8 @@ void QTimer::stop() //停止定时器
 ### QElapsedTimer
 QElapsedTimer 用于快速计算两个事件的间隔时间，是软件计时器。**QElapsedTimer 没有父类，不支持元系统**，，其计时精度可以达到纳秒级。QElapsedTimer 的主要用途是比较精确地确定一段程序运行的时长。
 
-- 函数 elapsed()的返回值是自上次运行 start()之后计时器的运行时间，单位是毫秒。
-- 函数 nsecsElapsed()的返回值也是自上次运行 start()之后计时器的运行时间，单位是纳秒。
+- 函数 elapsed()的返回值是自上次运行 start()后计时器的运行时间，单位是毫秒。
+- 函数 nsecsElapsed()的返回值也是自上次运行 start()后计时器的运行时间，单位是纳秒。
 - 函数 restart()返回从上次启动计时器到现在的时间，单位是毫秒，然后重启计时器。相当于先后运行了 elapsed()和 start()。
 ## QComboBox 类
 QComboBox 使用模型/视图结构存储和显示下拉列表的数据，下拉列表的数据实际上存储在QStandardItemModel 模型里
@@ -850,7 +850,7 @@ void TextEditorMainWindow::do_font_selected(const QFont &font)
 - 对选中文本格式化：需要通过 QTextCursor 获取选中区域，然后调用**cursor 对象的 mergeCharFormat 函数**对选中文本字体应用格式
 - 对未来输入应用格式：通过 `QPlainTextEdit::mergeCurrentCharFormat()`
 - 对文本输入框中所有问题使用效果则调用 `setFont` 函数
-对于**开关类型按钮**（即点击之后按钮保持被按下，再次点击又弹起的效果），单纯地设置槽函数是没有效果的
+对于**开关类型按钮**（即点击后按钮保持被按下，再次点击又弹起的效果），单纯地设置槽函数是没有效果的
 ```cpp
 void TextEditorMainWindow::on_actionbold_triggered(bool checked)
 {
@@ -1176,13 +1176,13 @@ int main(int argc, char** argv) {
 	return a.exec();
 }
 ```
-- 一般来说，定时执行某个动作只需要设置 `QTimer` 并 `setInterval()` 即可，如果需要设置一段时间之后结束计时，则还需要使用一个辅助计时器。
+- 一般来说，定时执行某个动作只需要设置 `QTimer` 并 `setInterval()` 即可，如果需要设置一段时间后结束计时，则还需要使用一个辅助计时器。
 - 如果这个停止计时的操作是单次的（只停止一个/次计时器），可以使用 `QTimer::singleShot(ms, operation)`
 - 一般执行的流程是先初始化 `QTimer` 对象的设置，然后通过 connect 连接 timeout 信号执行的操作。注意 connect 可以没有 receiver，把接收信号的动作交给一个**生命周期长于 timer 对象的函数执行**
 - `QTimer` 对象在调用 `start()` 后会***立刻返回，函数不会在这条语句位置阻塞***，计时操作会转到后台**异步进行**。
-- `QTimer::singleShot` **是 static**的，初始化之后就**立刻返回**，计时操作同样后台异步运行
+- `QTimer::singleShot` **是 static**的，初始化后就**立刻返回**，计时操作同样后台异步运行
 这段代码有一个很不容易发现的错误
-在 mark 位置 singleShot 的 lambda 函数**使用引用捕获了两个局部变量**，但由于 `timer->start()` 不阻塞，所以开始计时之后设置好 singleShot 定时结束之后，`make_many_windows` 函数返回，其中**所有局部变量被销毁**，导致**已经完成初始化的 singleShot 后台计时对象捕获的指针所指向的内存已经被销毁**，程序读取到释放的内存块会导致程序崩溃。
+在 mark 位置 singleShot 的 lambda 函数**使用引用捕获了两个局部变量**，但由于 `timer->start()` 不阻塞，所以开始计时后设置好 singleShot 定时结束后，`make_many_windows` 函数返回，其中**所有局部变量被销毁**，导致**已经完成初始化的 singleShot 后台计时对象捕获的指针所指向的内存已经被销毁**，程序读取到释放的内存块会导致程序崩溃。
 日志中会显式说明程序崩溃
 ## QTreeWidge
 ### 准备工作
@@ -1190,7 +1190,7 @@ int main(int argc, char** argv) {
 ![[PixPin_2025-11-14_17-37-17.png]]
 ![[Pasted image 20251114173750.png]]
 代码中使用 `setLayoutDirection` 即可
-设置中心组件（`setCentralWidget`）是 QMainWindow 的专属方法，一个 MainWindow 类只能有一个中心组件，后设置的会覆盖前设置的。设置一个子空间为中心组件之后：
+设置中心组件（`setCentralWidget`）是 QMainWindow 的专属方法，一个 MainWindow 类只能有一个中心组件，后设置的会覆盖前设置的。设置一个子空间为中心组件后：
 1. **布局管理**：该子组件会自动占据主窗口的中心区域
 2. **自动调整**：当主窗口大小改变时，中心组件会自动调整大小以适应可用空间
 3. **移除默认**：替换掉`QMainWindow`默认的空中心部件
@@ -1198,7 +1198,7 @@ int main(int argc, char** argv) {
 ![[PixPin_2025-11-14_17-44-50.png|400]]
 这里由于 scrollArea 不是中心，所以不会自动填充（当然也可以设置 `sizePolicy` 来实现）
 ![[PixPin_2025-11-14_17-47-48.png|400]]
-设置之后自动填充
+设置后自动填充
 ### 关闭所有调试信息输出
 有些信号槽配合比较复杂的类，需要通过输出调试信息来观察信号触发情况时，就会用到很多 `qDebug` 调试信息，在 qmake 中可以通过
 ```qmake
@@ -1344,7 +1344,7 @@ QStringListModel是处理字符串列表的模型类，其实例可以作为QLis
 比较简单
 ### QStandardItemModel和QTableView
 `QStandardItemModel`：基于项的模型类。它维护一个二维的项数组，每个项是一个 QStandardItem 对象，用于存储文字、字体、对齐方式等各种角色的数据。
-`QTableView`：二维表格视图组件类，基本显示单元是单元格。通过函数 `setModel ()` 设置一个 QStandardItemModel 类的数据模型之后，一个单元格显示数据模型中一个项。
+`QTableView`：二维表格视图组件类，基本显示单元是单元格。通过函数 `setModel ()` 设置一个 QStandardItemModel 类的数据模型后，一个单元格显示数据模型中一个项。
 `QItemSelectionModel`：项选择模型类。它是用于跟踪视图组件的单元格选择状态的类，需要指定一个 QStandardItemModel 类的数据模型。当在 QTableView 组件上选择一个或多个单元格时，通过项选择模型可以获得选中单元格的模型索引。
 #### 选择模型
 一个视图组件需要设置一个数据模型，还可以设置一个选择模型，使用 `setSelectionModel`，QItemSelectionModel是选择模型类，它的功能是跟踪视图组件上的选择操作，给出选择范围。
@@ -1418,7 +1418,7 @@ void MainWindow::iniModelData(QStringList& aFileContent) {
 QWidget  *QStyledItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index)
 ```
 - setEditorData
-	- 定义如何将数据模型中对应 index 位置的数据加载到 `createEditor` 函数创建出的**临时编辑器**中**用来显示**，不至于用户点击编辑之后看到的编辑框中内容不是空白。
+	- 定义如何将数据模型中对应 index 位置的数据加载到 `createEditor` 函数创建出的**临时编辑器**中**用来显示**，不至于用户点击编辑后看到的编辑框中内容不是空白。
 	- 这个函数的默认实现（或者说一般实现）是通过 data 函数 `Qt::UserRole` 用户角色对应的数据
 	- 代理组件在被编辑时**代理组件中显示的内容/状态**通过这个函数实现
 ```cpp
@@ -1646,7 +1646,7 @@ void Widget::paintEvent(QPaintEvent *event)
     // QWidget::paintEvent(event);
 }
 ```
-由于绘制窗口的**逻辑定义**是在**显示 UI 之后**，事件循环之前，事件循环开始之后就是开始处理事件了，根据**单一职责和资源最小化原则**，只在需要用到资源的位置加载和使用资源。由于 painEvent 比构造函数更加具体（更小），初始化资源应该在这个函数中完成
+由于绘制窗口的**逻辑定义**是在**显示 UI 后**，事件循环之前，事件循环开始后就是开始处理事件了，根据**单一职责和资源最小化原则**，只在需要用到资源的位置加载和使用资源。由于 painEvent 比构造函数更加具体（更小），初始化资源应该在这个函数中完成
 注释部分会运行父类的 `paintEvent()` 函数，以便父类执行其内建标准信号处理（比如 paintEvent 事件，如果不需要父类渲染成**[[QT样式表合集#基本语法特性|尽量原生]]** 的样子，就不需要调用）的一些操作。
 ```cpp
 void Widget::closeEvent(QCloseEvent *event)
@@ -1770,7 +1770,7 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 -  **`setProperty()`** = 告诉程序 **这个控件有什么**数据，用于提高维护，可读性
 - `setWindowOpacity()` 窗口透明度
 
-在一些对象中，设置了窗口属性之后才会有对应的事件发生，比如 `this->setAttribute(Qt::WA_Hover,true)` 设置之后，鼠标移入一个控件之后会触发 `QEvent::HoverEnter` 的事件
+在一些对象中，设置了窗口属性后才会有对应的事件发生，比如 `this->setAttribute(Qt::WA_Hover,true)` 设置后，鼠标移入一个控件后会触发 `QEvent::HoverEnter` 的事件
 
 | 函数名              | 作用                                      | 特性                          | 是否可以组合 |
 | ---------------- | --------------------------------------- | --------------------------- | ------ |
@@ -1790,7 +1790,7 @@ if ((event->buttons() & Qt::LeftButton)  && (event->buttons() & Qt::RightButton)
 | **属性类型** | 预定义的窗口属性         | 自定义的动态属性        |
 | **用途**   | 控制窗口行为/外观        | 存储任意自定义数据       |
 | **性能**   | 直接影响窗口系统         | 轻量级数据存储         |
-在一些对象中，设置了窗口属性之后才会有对应的事件发生，比如 `this->setAttribute(Qt::WA_Hover,true)` 设置之后，鼠标移入一个控件之后会触发 `QEvent::HoverEnter` 的事件
+在一些对象中，设置了窗口属性后才会有对应的事件发生，比如 `this->setAttribute(Qt::WA_Hover,true)` 设置后，鼠标移入一个控件后会触发 `QEvent::HoverEnter` 的事件
 ## 事件过滤器
 ### 事件过滤器工作原理
 可以将一个对象的事件委托给另一个对象来监视并处理，方法为：
@@ -1968,7 +1968,7 @@ application/x-qt-windows-mime;value="Preferred DropEffect"
 > 常见于：Windows 的拖放操作中，用于控制拖动图像的显示方式。
 
 `mimeData()->formats()` 返回的是所有可用的 MIME 类型格式的列表，而不是具体的文件内容信息（如文件位置、像素大小、文件格式等）。这些格式描述了数据的类型和结构，而不是实际的数据内容。
-`format()` 返回的行都是对象名，而不是真实的 MIME 数据，只有使用对应的解包之后才能获取文件的信息
+`format()` 返回的行都是对象名，而不是真实的 MIME 数据，只有使用对应的解包后才能获取文件的信息
 ### 外部文件拖放操作示例
 ```cpp
 // widget.h
@@ -2283,9 +2283,9 @@ void setWindowModality(Qt::WindowModality windowModality)
 - **`Qt::ApplicationModal`**：表示对话框是相对于整个应用程序模态的。当这个对话框打开时，用户不能与应用程序中任何其他窗口进行交互，直到这个对话框被关闭。
 - **`Qt::NonModal`**（默认值）：表示对话框是非模态的。用户可以与父窗口和其他窗口进行交互，即使对话框是打开的。
 使用函 `QWidget::show()` 数显示一个对话框时，根据modal属性的值，对话框会以模态或非模态方式显示。***函数`show()`没有返回值，但一些询问对话框，调用其 `exec()` 是模态形式的，并且有返回值表示询问/操作结果***
-如果子窗口需要读取父窗口的大量数据时，一般会使用 `exec()` 来创建子对话框，这种形式**只会创建一次以模形式行时显示的对话框**，子对话框关闭之后并没有被删除，只是被隐藏了（**会一直占用内存**）
+如果子窗口需要读取父窗口的大量数据时，一般会使用 `exec()` 来创建子对话框，这种形式**只会创建一次以模形式行时显示的对话框**，子对话框关闭后并没有被删除，只是被隐藏了（**会一直占用内存**）
 ### QDialog 类
-一般有**接受，取消**两个按键，分别对应 `accept`，`reject`。对话框询问完毕之后会发送 `QDialog::Accepted` 或者 `QDialog::Rejected` 信号，被 done 槽函数接受
+一般有**接受，取消**两个按键，分别对应 `accept`，`reject`。对话框询问完毕后会发送 `QDialog::Accepted` 或者 `QDialog::Rejected` 信号，被 done 槽函数接受
 
 > [!note]
 >  `void QDialog::done(int r)`
@@ -2684,7 +2684,7 @@ bool MainWindow::openByIO_Lines(const QString& aFileName) {  // 逐行读取
     return true;
 }
 ```
-分为一次性读取和按行读取，`QFile::readLine()` 读入的每一行文本在末尾的 `\n` **之后** 都会自动添加一个空终止符（` \0 `），因 QByteArray 需要以空终止符结尾来表示字符串的结束，每一行字符的结尾为
+分为一次性读取和按行读取，`QFile::readLine()` 读入的每一行文本在末尾的 `\n` **后** 都会自动添加一个空终止符（` \0 `），因 QByteArray 需要以空终止符结尾来表示字符串的结束，每一行字符的结尾为
 每一行的内容包括换行符 \n，`line.size()` 返回的是实际字节数，不包括 ` \0`，`\0` 是为了确保 QByteArray 可以被视为一个 C 风格的字符串，但在实际数据中并不包含在返回的字节数组中。
 如果将读取到的字符串显示到文本框中，需要通过以下方法去除最后一个换行符，否则会打印出多余空行：
 ```cpp
@@ -3038,7 +3038,7 @@ QSqlDatabase  DB= QSqlDatabase::addDatabase("QSQLITE");
 这段代码只会添加数据库驱动，而只有调用 `open()` 函数才会进行数据库连接
 `QSqlDatabase::tables()` 用于返回数据库对象的表，填入不同的枚举值参数会返回不同的表或者视图，数据集
 - QSqlTableModel是一个模型类，它与数据库中一个数据表关联后就作为该数据表的模型，**需要在构造函数中绑定数据库并 `setTable()` 设置表**
-- 形成数据模型之后，就可以用对应的[[#视图]]来实现数据的显示和操作
+- 形成数据模型后，就可以用对应的[[#视图]]来实现数据的显示和操作
 - **QDataWidgetMapper** 用于在图形用户界面（GUI）中小部件（widgets）和数据模型（models）之间建立映射关系。主要目的是简化数据绑定和同步的过程，使得数据可以从模型自动加载到小部件中，反之亦然。显著减少代码量。***当模型中数据发生变化时，关联的小部件会自动更新；反之亦然***
 ### 代码编写
 #### 基本表格属性设置
@@ -3139,7 +3139,7 @@ void MainWindow::do_currentRowChanged(const QModelIndex &current, const QModelIn
 }
 ```
 - `isDirty()` 表示数据是否是脏数据（未同步仅数据模型中）
-- 每一行是一个人的各项数据，所以行切换的时候需要更新，基本信息中所有 combox 和 Lineedit 都已经通过 dataMapper 映射，所以徐亚更新信息时只需要 `this->dataMapper->setCurrentIndex(curent.row());` 就能够让所有组件映射 `current.row()` 的内容，初始状态被设置为 `toFirst()` 显示 dataModel 中第一条记录，等价于 `setCurrentIndex(0)`
+- 每一行是一个人的各项数据，所以行切换时需要更新，基本信息中所有 combox 和 Lineedit 都已经通过 dataMapper 映射，所以徐亚更新信息时只需要 `this->dataMapper->setCurrentIndex(curent.row());` 就能够让所有组件映射 `current.row()` 的内容，初始状态被设置为 `toFirst()` 显示 dataModel 中第一条记录，等价于 `setCurrentIndex(0)`
 - 由于图片信息是二进制信息，QDataWidgetMapper 用于在简单数据类型（如字符串、整数、浮点数、布尔值等）和 UI控件之间进行映射，对于 BLOB 类型不可以被映射
 - QSqlRecord 是一个用来存储**一条 sql 记录的类**，封装了各个字段的内容和字段的属性信息
 ```cpp
@@ -3259,7 +3259,7 @@ void MainWindow::selectData()
 #### 通过数据库查询数据并更新
 ```cpp
 void MainWindow::do_currentRowChanged(const QModelIndex &current, const QModelIndex &previous)
-{// 功能仍是根据行变化之后的行得到对应人记录，更新身份信息和照片
+{// 功能仍是根据行变化后的行得到对应人记录，更新身份信息和照片
     Q_UNUSED(previous);
     if(!current.isValid()){
         ui->dbLabPhoto->clear();
@@ -3409,7 +3409,7 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 这个函数用于所有对 tabView 中行记录的修改操作，流程为：
 1. 记录现在哪一行需要修改，保存这行的数据并通过 `setUpdataRecord()` 填入 TDialogData 对话框中。
 2. 根据将这一行对应的人的 empNo 记下来
-3. 对话框修改数据之后将修改的数据**在数据库中查找 empNo 值**写回数据库（updata 语句）
+3. 对话框修改数据后将修改的数据**在数据库中查找 empNo 值**写回数据库（updata 语句）
 
 #### 插入数据
 ```cpp
@@ -3465,7 +3465,7 @@ void MainWindow::on_actRecDelete_triggered()
     }
 }
 ```
-- [[#QSqlQuery 的使用#删除数据|删除]] 和[[#QSqlQuery 的使用#插入数据|插入]]数据执行完毕之后，调用已经执行过的查询语句并不可靠，应为如果上一次执行的查询不是 `select * from employee` 会导致 qryModel 得到不完整的数据
+- [[#QSqlQuery 的使用#删除数据|删除]] 和[[#QSqlQuery 的使用#插入数据|插入]]数据执行完毕后，调用已经执行过的查询语句并不可靠，应为如果上一次执行的查询不是 `select * from employee` 会导致 qryModel 得到不完整的数据
 ```cpp
 QString sqlStr=qryModel->query().executedQuery();   //执行过的SELECT语句
 qryModel->setQuery(sqlStr);         //重新查询数据
@@ -3842,13 +3842,13 @@ void Widget::paintEvent(QPaintEvent *event)
     event->accept();
 }
 ```
-- QPainterPath 记录图形之后，**不需要保证路径闭合**
+- QPainterPath 记录图形后，**不需要保证路径闭合**
 - `closeSubPath()` **总是**会连接当前位置到当前子路径的起点，无论当前位置在哪里。
 - 直接在 path 上使用 `addText()` 添加文字会使用这些点的局部坐标系如果父路径有旋转或倾斜变换，文字会继承这些变换。使用 `addText()` 实际上做了两件事
 	1. 将字体轮廓转换为路径
 	2. 将这个路径添加到 starPath 中，应用当前的变换矩阵
 - 解决方法是对文字内容重新使用一个 `QPainterPath` 对象初始化并通过 `addPath()` 添加到 starPath 中，直接将 a `ddText()` 用于已经包含几何图形的路径**文字会继承父路径的变换状态，导致倾斜/旋转**
-- `setBrush` 之后给复杂图形填充颜色的规则是**奇偶规则**：从图形内任意一点向外画一条射线，计算射线与路径相交的次数：如果相交次数为**奇数**，点在内部（填充），为**偶数**，点在外部（不填充），所以五角星中心五边形**不会填充**
+- `setBrush` 后给复杂图形填充颜色的规则是**奇偶规则**：从图形内任意一点向外画一条射线，计算射线与路径相交的次数：如果相交次数为**奇数**，点在内部（填充），为**偶数**，点在外部（不填充），所以五角星中心五边形**不会填充**
 ### 视口和窗口
 绘图设备的物理坐标系是基本的坐标系，通过 QPainter 的平移、旋转等坐标变换可以得到更容易操作的逻辑坐标系。物理坐标系也称为视口（viewport）坐标系，逻辑坐标系也称为窗口（window）坐标系
 - 视口是指绘图设备的任意一个矩形区域，它使用物理坐标系。可以只选取物理坐标系中一个矩形区域来绘图，默认情况下，视口等于绘图设备的整个矩形区域。
@@ -4077,7 +4077,7 @@ void TBattery::paintEvent(QPaintEvent *event)
 1. **精确布局**：文本对齐、居中、换行需要知道文本的实际尺寸
 2. **设备适配**：不同设备（屏幕、打印机）上同一字体的实际尺寸不同
 3. **国际化**：不同语言字符宽度不同，需要动态计算
-注意，要想滑动条滑动时改变电池样式，则需要将滑动条 valueChange 的时候调用对应的 set 函数，set 函数中使用 `repaint()`，则会重新调用 `paintEvent()` 重绘图形
+注意，要想滑动条滑动时改变电池样式，则需要将滑动条 valueChange 时调用对应的 set 函数，set 函数中使用 `repaint()`，则会重新调用 `paintEvent()` 重绘图形
 ```cpp
 void Widget::on_horizontalSlider_valueChanged(int value)
 {
@@ -4182,7 +4182,7 @@ qmake 项目右键项目->添加库->外部库
 
 ## 创建和使用静态库
 ### 创建静态库
-创建项目的时候选择 C++ Library，type 选择 static library
+创建项目时选择 C++ Library，type 选择 static library
 qmake 中设置 `TEMPLATE = lib` 即可，cmake 设置
 ```cmake
 #add_library用于生成静态库或动态库，STATIC表示静态库
@@ -4259,7 +4259,7 @@ endif()
 ```
 ## 创建和使用共享库
 ### 创建共享库
-创建项目的时候选择 C++ Library，type 选择 shared library，向导结束后**会生成 4 个文件**，`MySharedLib.pro`、`MySharedLib_global.h`、`tpendialog.h`和`tpendialog.cpp`
+创建项目时选择 C++ Library，type 选择 shared library，向导结束后**会生成 4 个文件**，`MySharedLib.pro`、`MySharedLib_global.h`、`tpendialog.h`和`tpendialog.cpp`
 编译共享库会比静态库多出一个 dll/so 文件
 ```cpp
 // MySharedLib_global.h
@@ -4293,7 +4293,7 @@ target_compile_definitions(MySharedLib PRIVATE MYSHAREDLIB_LIBRARY)
 - MSVC 编译，编译后会生成文件 `MySharedLib.dll` 和 `MySharedLib.lib`。
 - MinGW 编译，编译后会生成文件 `MySharedLib.dll` 和 `libMySharedLib.a`。
 ### 使用共享库
-**只有使用共享库（动态库）的时候才有两种方式**：隐式链接（implicit linking）调用和显式链接（explicit linking）调用
+**只有使用共享库（动态库）时才有两种方式**：隐式链接（implicit linking）调用和显式链接（explicit linking）调用
 使用静态库只有一种[[#动静态概念#静态库|静态链接]] 的方法
 #### 显式链接
 显式链接调用时只有 `.dll` 文件，没有 `.h` 文件和 `.lib` 文件，这个 `.dll` 文件可能是用其他编程语言生成的。虽然没有 `.h` 文件，但可以使用QLibrary类在应用程序里动态加载 `.dll` 文件，**在提前知道 dll 文件中已经定义好的函数原型情况下**手动在代码中说明 dll 中函数的签名
@@ -4412,7 +4412,7 @@ int main() {
 - 这本书永远属于你
 代码层面：
 编译时：把**库的代码（二进制形式）复制到**程序(exe)中
-你的程序变大了，但运行时不需要额外的文件，想看书的时候书就在家里（已经在 exe 文件内部），不需要到图书馆（加载 dll 文件）
+你的程序变大了，但运行时不需要额外的文件，想看书时书就在家里（已经在 exe 文件内部），不需要到图书馆（加载 dll 文件）
 将项目编译为**静态库时，只会产生 lib 文件**，扩展名：.lib (Windows), .a (Linux/Mac)，需要使用这个库时，只需要 lib 文件和 `.h` 文件（提供接口），没有 `.h` 文件也可以自己通过 dumpin 等工具查看 lib 文件中符号表然后实现接口，**但这一方法比较困难，通常使用静态库必须使用配套的 `.h` 文件**
 只使用静态库的项目最终会被编译为一个 exe 文件，不需要打包 dll 或 lib 文件就能发行
 #### 动态库（共享库）
@@ -4885,7 +4885,7 @@ void  QMutex::unlock()                  //解锁互斥量
 bool  QMutex::tryLock()                 //尝试锁定互斥量，不等待
 bool  QMutex::tryLock(int timeout)      //尝试锁定互斥量，最多等待timeout毫秒
 ```
-互斥量（QMutex 对象）相当于一把钥匙，如果两个线程要访问同一个共享资源，例如本示例中变量m_diceValue，就需要通过 `lock()` 或 `tryLock()` 拿到这把钥匙，然后才可以访问该共享资源，访问完之后还要通过 `unlock()` 还回钥匙，这样别的线程才有机会拿到钥匙。
+互斥量（QMutex 对象）相当于一把钥匙，如果两个线程要访问同一个共享资源，例如本示例中变量m_diceValue，就需要通过 `lock()` 或 `tryLock()` 拿到这把钥匙，然后才可以访问该共享资源，访问完后还要通过 `unlock()` 还回钥匙，这样别的线程才有机会拿到钥匙。
 ```cpp
 class TDiceThread : public QThread
 {
@@ -4979,7 +4979,7 @@ connect(threadA, &ThreadA::dataReady,
         Qt::QueuedConnection);
 ```
 直接连接会导致死锁：
-发射槽函数之后资源没有解锁，槽函数在等待释放锁。
+发射槽函数后资源没有解锁，槽函数在等待释放锁。
 - 槽函数在**发射信号的线程中立即执行**，`onDataReady()` 会在ThreadA线程中**立刻执行**，调用槽函数的行为会在 `dataReady()` 函数中 `mutex.unlock()` 代码之前，但线程 A 执行 ` onDataReady() ` 的同时线程 A 持有锁
 - 在 ThreadA 执行耗时操作时，主线程永远得不到互斥锁（解锁资源的钥匙）使用，卡在 `mutex.lock()` 位置
 队列连接不会导致死锁，但不可靠，还是需要等待线程 A 中耗时操作执行完毕后主线程才能够使用锁
@@ -5323,7 +5323,7 @@ void MainWindow::do_newConnection()
 ```
 步骤5：发送和接收数据
 - 发送：`tcpSocket->write(data)`
-- 接收：不能一直 `canReadLine()` 检测，而一旦 tcp 传输完毕，需要传输的数据准备好了之后才能使用 `while(tcpSocket->canReadLine())` 读取数据
+- 接收：不能一直 `canReadLine()` 检测，而一旦 tcp 传输完毕，需要传输的数据准备好了后才能使用 `while(tcpSocket->canReadLine())` 读取数据
 断开连接时需要将 tcpSocket 置空，少一个链接，就少一个 socket，没必要再存在了
 ```cpp
 void MainWindow::do_clientDisconnected()
@@ -5361,7 +5361,7 @@ TCP 通信只有单播模式，没有广播和组播模式。UDP 通信虽然不
 ### UDP 单播和广播
 #### 单播和广播
 在同一台计算机上运行时，两个运行实例需要绑定不同的端口，例如实例A绑定端口1200，实例B绑定端口3600。实例A向实例B发送数据报时，需要指定实例B所在主机的IP地址和绑定端口作为目标地址和目标端口
-单播，和 tcp 链接不同的是 udp **是无协议链接**，，不像 TCP 那样建立持续连接。因此**只会在需要发送数据包的时候发送或接受，没有真正的"UDP 连接"状态**
+单播，和 tcp 链接不同的是 udp **是无协议链接**，，不像 TCP 那样建立持续连接。因此**只会在需要发送数据包时发送或接受，没有真正的"UDP 连接"状态**
 ```cpp
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -5458,7 +5458,7 @@ B 程序端显示
 单播会使用 `127.0.0.1`，而广播会使用 `172.26.192.1`，原因是**单播且目标地址为 localhost 时不会通过网络适配器发送，而只会通过操作系统内核**，所以使用本地回环地址。如果 targetHost 设置为其他 ip 地址，也会通过网络适配器发送
 广播会通过，**由操作系统选择一个合适的网络适配器发送**，所以使用某个网络接口发送，这个地址可以通过 `ipconfig` 查询到具体是哪一个设备发送
 ### UDP 组播
-组播报文的目标地址使用 D 类 IP 地址，D 类地址不能出现在 IP 报文的源 IP 地址字段中。所有的信息接收者都加入一个组，并且加入之后，流向组播地址的数据报立即开始向接收者传输，组内的所有成员都能接收到数据报。组内的成员是动态变化的，主机可以在任何时刻加入和离开组。
+组播报文的目标地址使用 D 类 IP 地址，D 类地址不能出现在 IP 报文的源 IP 地址字段中。所有的信息接收者都加入一个组，并且加入后，流向组播地址的数据报立即开始向接收者传输，组内的所有成员都能接收到数据报。组内的成员是动态变化的，主机可以在任何时刻加入和离开组。
 #### 组播地址
 使用 UDP 组播必须使用一个组播地址，有特定的地址段。多播组可以是永久的也可以是临时的。`joinMulticastGroup()`函数使主机加入多播组，`leaveMulticastGroup()`函数使主机离开多播组
 关于组播IP地址，有如下一些约定。
@@ -5895,7 +5895,7 @@ QCameraDevice QMediaDevices::defaultVideoInput()  //返回默认的视频输入�
 | `void sourceChanged(const QUrl &media)`                        | 媒体源变化时，重新设置媒体源或者 QUrl 时                  | 跟踪当前播放的媒体      |
 ### 代码编写
 播放列表中**的项**如果要设置拖动模式，需要对整个 `listWidget` 设置 `setDragDropMode(QAbstractItemView::InternalMove)`，所有歌曲 item 只能在 listWidget 空间中拖动放下
-示例代码中每次点击 play 按钮都会重新设置源，导致暂停之后播放会从头开始
+示例代码中每次点击 play 按钮都会重新设置源，导致暂停后播放会从头开始
 ```cpp
 void MainWindow::on_btnPlay_clicked()
 {//开始播放
@@ -6054,7 +6054,7 @@ format.setSampleFormat(QAudioFormat::UInt8);    //设置采样点格式
 audio= new QAudioSink(format, this);            //使用默认的音频输出设备
 audio->start(&sourceFile);                      //开始播放音频
 ```
-同理[[#使用的类和接口#音频录入 QAudioSource|音频录入]]一致，一个 QAudioSink 对象设置了 format 之后**不可修改**，并且 `QAudioSink` 的设计原则是直接将原始音频数据推送到硬件设备，**不进行格式转换**。它要求开发者必须提供与音频文件完全匹配的格式参数。如果设置的 `QAudioFormat` 与文件实际不符，会**导致音频解析失败或者声音失真**
+同理[[#使用的类和接口#音频录入 QAudioSource|音频录入]]一致，一个 QAudioSink 对象设置了 format 后**不可修改**，并且 `QAudioSink` 的设计原则是直接将原始音频数据推送到硬件设备，**不进行格式转换**。它要求开发者必须提供与音频文件完全匹配的格式参数。如果设置的 `QAudioFormat` 与文件实际不符，会**导致音频解析失败或者声音失真**
 解决方式是使用 QAudioSink 之前对文件进行**参数解析或格式转换**
 ```cpp
 #include <QFile>
@@ -6378,7 +6378,7 @@ for (int i=0; i<4; i++)  comboBox->addItem(tr(cities[i]));
 labCellPos->setText(tr("第 %1 行").arg(current.row()));
 ```
 ### 使用方法
-在对代码（**包含 ui 文件**）中所有字符串使用 `tr()` 标记之后
+在对代码（**包含 ui 文件**）中所有字符串使用 `tr()` 标记后
 ```qmake
 TRANSLATIONS = samp18_1_cn.ts \
                 samp18_1_en.ts
@@ -6458,7 +6458,7 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 ```
 - 书中提到的 `--no-virtualkeyboard` 现已弃用
-- 运行之后会自动在当前目录生成 qt 运行库文件，exe 文件即可运行
+- 运行后会自动在当前目录生成 qt 运行库文件，exe 文件即可运行
 - 如果还是缺少，根据对应 dll 文件名在 qt 目录中查找复制即可，如果是 mingw 编译会缺少 `libgcc_s_seh-1.dll`、`libstdc++-6.dll` 和 `libwinpthread-1.dll`，这些功能用于 c++标准库和线程功能，会被 `--no-compiler-runtime` 跳过，还可以在 qmake 中静态链接这些组件
 ```qmake
 QMAKE_CXXFLAGS += -static-libgcc -static-libstdc++

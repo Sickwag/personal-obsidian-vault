@@ -254,7 +254,7 @@ void test_read_json() {
 递归逻辑：
 需要向下递归的情况有两种：
 1. 访问到对象为 array
-如果是 array，则需要遍历打印其中的内容，由于 array 中元素并没有键，所以得到 arraysize 之后就可以直接 for 循环输出内容，数组 cjson 对象没有 `string` 成员
+如果是 array，则需要遍历打印其中的内容，由于 array 中元素并没有键，所以得到 arraysize 后就可以直接 for 循环输出内容，数组 cjson 对象没有 `string` 成员
 2. 访问对象为 object
 递归调用读取数据函数，将输入的 cjson 对象用 `->child` 指向内部对象
 3. 对于其他类型对象，直接输出即可

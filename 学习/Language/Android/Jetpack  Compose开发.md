@@ -284,7 +284,7 @@ fun WeComposeTheme(
 将需要显示的控件（这里使用 WebottomBar）中颜色，动效等所有资源不再使用[[#资源对象管理|资源对象管理]]的方法从文件中调用相应变量控制
 如一套 UI 中，需要跟随主题变化颜色的有
 - 导航栏背景底色
-- 选中一个选项之后图标的颜色
+- 选中一个选项后图标的颜色
 - 不选中时图标的颜色
 ```kotlin
 @Composable
@@ -325,7 +325,7 @@ fun WeBottomBarDark(){
 }
 ```
 ![[Pasted image 20250110221537.png]]
-之后为保证代码整洁，将底部栏部分抽出放入 `con.example.wecompose.ui` 单独的 WeBottomBar.kt 文件中，在 AS 中复制粘贴会自动添加原来代码在 MainActivity 中用到的 import 语句
+后为保证代码整洁，将底部栏部分抽出放入 `con.example.wecompose.ui` 单独的 WeBottomBar.kt 文件中，在 AS 中复制粘贴会自动添加原来代码在 MainActivity 中用到的 import 语句
 ![[Pasted image 20250110222156.png]]
 
 ### 底部导航栏逻辑
@@ -345,7 +345,7 @@ class WeViewModel: ViewModel() {
 在 MainActivity 中导入并使用这个逻辑
 ```kotlin
 class MainActivity : ComponentActivity() {
-//    var selectedTable by mutableStateOf(0)// 表示selectedTable变化之后才刷新（通过mutableStateOf监听）
+//    var selectedTable by mutableStateOf(0)// 表示selectedTable变化后才刷新（通过mutableStateOf监听）
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -455,7 +455,7 @@ fun ChatList(chats: List<Chat>) {
       itemsIndexed(chats) { index, chat ->// 遍历聊天列表
         ChatListItem(chat)// 遍历规则，每一个ChatListItem中chat组件，也就是头像+名称+最新一条消息的组合先显示
         if (index < chats.lastIndex) {// 然后显示分割线
-          Divider(// 当一个chat组件不是最后一个的时候显示分割线
+          Divider(// 当一个chat组件不是最后一个时显示分割线
             startIndent = 68.dp,
             color = WeComposeTheme.colors.chatListDivider,
             thickness = 0.8f.dp
@@ -484,7 +484,7 @@ fun WeTopBar(title: String, onBack: (() -> Unit)? = null) {
       Modifier
         .height(48.dp)// 设计顶栏高度，与下面的ChatListItem衔接
     ) {
-      if (onBack != null) {// 点开消息列表的时候，最左边是一个返回键
+      if (onBack != null) {// 点开消息列表时，最左边是一个返回键
         Icon(
           painterResource(R.drawable.ic_back),
           null,
@@ -560,14 +560,14 @@ class MainActivity : ComponentActivity() {
     setContent {
       WeComposeTheme(viewModel.theme) {
         Box {
-          Home(viewModel)// 点开消息列表页面之后，Home函数结束
+          Home(viewModel)// 点开消息列表页面后，Home函数结束
           ChatPage()// 进入消息列表
         }
       }
     }
   }
 ```
-由于两者同属于一个领域内（只有在消息列表页面才能进入 ChatPage，也只能通过 ChatPage 返回 Home），所以通过一个 Box 将两者联系，ChatPage 放在 Home 下面如果没有逻辑控制，含义为**在 Home 显示完之后显示 ChatPage 页面**，ChatPage 会直接盖住 Home 的内容
+由于两者同属于一个领域内（只有在消息列表页面才能进入 ChatPage，也只能通过 ChatPage 返回 Home），所以通过一个 Box 将两者联系，ChatPage 放在 Home 下面如果没有逻辑控制，含义为**在 Home 显示完后显示 ChatPage 页面**，ChatPage 会直接盖住 Home 的内容
 所以需要设置动画效果（由于这个动画效果每一个消息列表都需要用到，**所以调整为拓展函数**）
 ```kotlin
 fun Modifier.offsetPercent(

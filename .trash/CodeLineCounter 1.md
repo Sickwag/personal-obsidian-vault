@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     }
 #endif
 ```
-就会自动处理错误，并且必须包含 `(app).exit(e)`，打印错误信息的代码被封装在 exit 函数中，不使用会导致程序只抛出异常，而没有信息提示，CallForHelp 异常在 CLI 11 库中被设计为抛出异常之后打印 help 手册，而这个手册通过
+就会自动处理错误，并且必须包含 `(app).exit(e)`，打印错误信息的代码被封装在 exit 函数中，不使用会导致程序只抛出异常，而没有信息提示，CallForHelp 异常在 CLI 11 库中被设计为抛出异常后打印 help 手册，而这个手册通过
 ```cpp
 CLI11_INLINE int App::exit(const Error &e, std::ostream &out, std::ostream &err) const {
 
@@ -324,7 +324,7 @@ int generate_bitmask(const json::object& section_obj) {
     return bitmask;
 }
 ```
-- 创建开关组初始值 `int bitmask = 0;` 
+- 创建开关组初始值 `int bitmask = 0;`
 - 新增开关状态使用 ` bitmask |= static_cast<int>(枚举值)`
 - 验证开关组中某个开关是否打开 `bool flag = bitmask & static_cast<int>(枚举值)`
 ## 踩坑
@@ -353,7 +353,7 @@ git 提交是不可删除的，除非将整个 git 存储目录重置（删除 .
 - 使用专业工具解析 git 本地记录文件，删除记录中的所有密钥字符串然后提交，这样比较复杂，而且只能全字匹配密钥字符串。
 ### api 使用
 #### boost. json 不支持格式化文件
-boost. json 对象在使用 `file << boost::json::serialize(json_object)` 写入文件之后是未格式化的版本。不能在代码层面中使用锁紧格式化，也不支持在文件中插入注释。
+boost. json 对象在使用 `file << boost::json::serialize(json_object)` 写入文件后是未格式化的版本。不能在代码层面中使用锁紧格式化，也不支持在文件中插入注释。
 #### tabulate 库各种限制
 tabulate 库创建表格不支持跨行/列居中合并单元格的操作。创建一行数据时不支持使用
 ```cpp

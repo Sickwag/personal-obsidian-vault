@@ -42,20 +42,20 @@ int main(){
 变量内容可变,方法是重新写一遍赋值语句(声明语句不用写),重新写声明语句变量类型会被覆盖
 - 声明和赋值一起写
     ![Untitled 6 23.png](../../../Files%20&%20LongText/Attachments/Untitled%206%2023.png)
-    
+
 - 声明用逗号隔开不同变量的声明和赋值
     ![Untitled 7 23.png](../../../Files%20&%20LongText/Attachments/Untitled%207%2023.png)
 ## 标识符的命名规范
-**符号常量**：满足标识符的硬性要求下，如若使用英文字母，应全部大写。  
-**变量:** 满足标识符的硬性要求下，如果使用英文字母，不应全部大写（可大小写组合或纯小写）  
-大小写的规范要求，是为了能够在复杂代码内，通过英文字母大小写快速区分：常量和变量  
+**符号常量**：满足标识符的硬性要求下，如若使用英文字母，应全部大写。
+**变量:** 满足标识符的硬性要求下，如果使用英文字母，不应全部大写（可大小写组合或纯小写）
+大小写的规范要求，是为了能够在复杂代码内，通过英文字母大小写快速区分：常量和变量
 大小驼峰法: 通过不同单词首字母大写分割单词, 简短单词使用全大写( 一般用于类命名 )
 内容限定, 大小写敏感, 不可使用关键字, 一般不使用计算符号命名变量
 # 数据类型
 ## C++常量确定
 在未定义字面量类型时, 编译器会根据最小原则确定类型
 ![Untitled 10 18.png](../../../Files%20&%20LongText/Attachments/Untitled%2010%2018.png)
-在数之后使用后缀标记告诉编译器是什么类型
+在数后使用后缀标记告诉编译器是什么类型
 ![Untitled 11 18.png](../../../Files%20&%20LongText/Attachments/Untitled%2011%2018.png)
 ```cpp
 \#include "iostream"
@@ -106,11 +106,11 @@ int main(){
 ## 字符型和字符串型
 `char`类型在内存中本质上是数字
 ```cpp
-char ch = 65;  
-cout << ch << endl;  
-char ch2 = 'a';  
-cout << ch2 + 1 << endl; //字符串使用运算符默认使用数字格式化  
-char ch3 = 'a' + 1;  //字符串运算,但是前面定义char使用字符串格式  
+char ch = 65;
+cout << ch << endl;
+char ch2 = 'a';
+cout << ch2 + 1 << endl; //字符串使用运算符默认使用数字格式化
+char ch3 = 'a' + 1;  //字符串运算,但是前面定义char使用字符串格式
 cout << ch3  << endl;
 ```
 ![Pasted image 20240802120443.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240802120443.png)
@@ -131,7 +131,7 @@ cout << "my name is : " << name << "and my age is : " << to_string(age) << endl;
 使用`cout/cin`程序识别和输入输出都使用0/1表示
 cin输入中文乱码问题
 ![Pasted image 20240804220008.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240804220008.png)
-进行操作之后不再需要使用`SetConsoleOutputCP(CP_UTF8)`放在main函数中
+进行操作后不再需要使用`SetConsoleOutputCP(CP_UTF8)`放在main函数中
 Vscode中修改方法
 [vscode配置C/C++并用两种方式解决中文乱码问题_vscode c++中文乱码-CSDN博客](https://blog.csdn.net/qq_46018418/article/details/119091935)
 1. coderunner插件拓展选项中选定 run in terminal
@@ -143,7 +143,7 @@ Vscode中修改方法
 # 流程控制
 ## 运算符
  **比较运算符**不能直接用在[老式C语言风格定义的字符串](#字符型和字符串型)中,使用运算符比较则对比内存地址，而非比较内容
-所以需要使用c语言函数`strcmp`进行比较, 
+所以需要使用c语言函数`strcmp`进行比较,
 `strcmp` 函数比较两个字符串，并根据比较结果返回一个整数。比较是基于字符串中字符的ASCII值进行的。
 ```cpp
 #include "cstring"
@@ -311,7 +311,7 @@ switch (someCondition) {
 #### 建立动态数组方法
 ```cpp
 // 建立
-#define MAX 
+#define MAX
 int array[MAX];
 string name ;
 cin >> name ;
@@ -322,7 +322,7 @@ if (res != 1){
 	for (int i = res; i < abs->m_Size;i++){
 		abs->personArray[i] = abs->personArray[i + 1];
 		//attension ! assign the lastest var to the forehead var
-		abs->m_Size--; // overwriter forward 1 seat 
+		abs->m_Size--; // overwriter forward 1 seat
 	}
 }
 ```
@@ -333,7 +333,7 @@ addperson 和 modifyperson 有同样的功能，所以使用新的函数将重�
 ```cpp
 void AddorModifyInfo(Addressbooks *abs,int sequence){
 //add an argument to decide add(m_Size) or modify(the return of isExist --- ret)
-    /* 
+    /*
     add--- check the wherther the content == MAX and add 'abs->m_Size ++;' update the m_size
     */
     // name
@@ -382,7 +382,7 @@ void AddorModifyInfo(Addressbooks *abs,int sequence){
 
 void addPerson(Addressbooks *abs)
 {
-	// omit wherther the book is full 
+	// omit wherther the book is full
     else
     {
         AddorModifyInfo(abs, abs->m_Size);// m_Size means to add in newpositon
@@ -418,12 +418,12 @@ void modifyPerson(Addressbooks *abs){
 	- 该区域的数据在程序结束后由操作系统释放
 	- 只要**写在所有函数体内**的变量都是局部变量（无论什么函数）
 	- 静态、字符串、全局变量和静态变量在内存中分开的比较近，和局部变量相差很远
-==代码区和全局区在运行前创建，栈区和堆区在程序运行之后创建==
+==代码区和全局区在运行前创建，栈区和堆区在程序运行后创建==
 - **栈区**：
 	- 存储函数的局部变量（放在函数中的指针也是局部变量）、函数参数、形参、返回地址等。
 	- 用于实现函数调用的机制，如调用栈。
 	- 栈的大小通常是固定的，但可以通过操作系统设置，采用后进先出（LIFO）的方式管理内存，每次函数调用时，都会在栈顶分配空间，函数返回时释放空间。
-	- 由编译器自动分配释放, 存放函数的参数值, 局部变量 
+	- 由编译器自动分配释放, 存放函数的参数值, 局部变量
 	- 局部变量占用的空间过大，可能会导致栈溢出。
 	- **不要返回局部变量的地址**，栈区开辟的数据由编译器自动释放
 （内存已经被释放）
@@ -444,7 +444,7 @@ void modifyPerson(Addressbooks *abs){
 上面部分代码逻辑没有问题但由于栈的特性，编译器返回
 
 ```bash
-learing. cpp:62:9: warning: address of local variable 'a' returned [-Wreturn-local-addr] 
+learing. cpp:62:9: warning: address of local variable 'a' returned [-Wreturn-local-addr]
      int a = 10;
          ^
 ```
@@ -491,7 +491,7 @@ int main(){
 }
 ```
 - 堆的大小是可变的，随着程序运行时的内存分配和释放而变化。
-==栈和堆程序运行之后创建==
+==栈和堆程序运行后创建==
 ### 除此之外需要注意
 - 还分有*常量段*，*线程局部存储*，*环境变量和程序计数器*，*动态链接库*等区域
 - 不同区域存放的数据，赋予**不同的**生命周期, 放在相同区中的内容会放在相近的内存地址
@@ -530,7 +530,7 @@ int main(){
 - 别名允许和原名相同
 ![Pasted image 20240903114920.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240903114920.png)
 - 引用的使用规范
-	1. **引用必须初始化**：在 C++ 中，引用一旦被初始化，就不能被重新绑定到另一个对象。引用的初始化必须在声明的时候进行，而且一旦初始化完成，引用就永远指向那个初始化的对象。
+	1. **引用必须初始化**：在 C++ 中，引用一旦被初始化，就不能被重新绑定到另一个对象。引用的初始化必须在声明时进行，而且一旦初始化完成，引用就永远指向那个初始化的对象。
 	2. **引用绑定到对象**：引用实际上是一种别名，它必须绑定到一个已经存在的对象。换句话说，引用需要一个实际的变量来作为它的绑定目标。
 	3. **字面量不是对象**：`10` 是一个整数字面量，它不是一个对象，没有名字，也没有内存地址。因此，你不能创建一个引用来直接绑定到一个字面量。
 
@@ -540,7 +540,7 @@ int main(){
 ### 三种传参方式
 [C++ Runoob Tutoral \> 三种传参方式](C++%20Runoob%20Tutoral.md#三种传参方式)
 - **值传递**：函数接收参数的副本，对参数的修改不会影响到原始变量。
-- **指针传递**：函数接收参数**地址的副本**，通过解引用可以直接修改原始变量的值。传递 
+- **指针传递**：函数接收参数**地址的副本**，通过解引用可以直接修改原始变量的值。传递
 - **引用传递**：函数接收**参数的引用**，即原始变量的别名，可以直接修改原始变量的值。
 ```cpp
 #include <iostream>
@@ -668,10 +668,10 @@ class Person {
 public:
 	void setName(string name) //write only
 	string getName()//read only
-	
+
 	int getAge() //read only
 	//void setAge(int age) is unavailible becaue you wanna it read only
-	
+
 	void setLover(string lover)//read only
 
 private:
@@ -738,7 +738,7 @@ void set_info():int a = 1,int b(2),string c = "hello"{body}//初始化的属性�
 
 - 虚函数
 1. 虚函数在父类中提供一个“接口”，父类中只要有虚函数则无法实例化，**允许**程序员在它的子类中实现这个虚函数的功能，子类可以选择重写这个虚函数，也可以不重写。如果子类没有重写某个虚函数，那么它**将继承父类**中的实现。
-2. 虚析构函数在父类中定义，可以使通过子类实例化的对象在销毁时调用子类的析构函数销毁而不用父类的，从而正确释放资源 
+2. 虚析构函数在父类中定义，可以使通过子类实例化的对象在销毁时调用子类的析构函数销毁而不用父类的，从而正确释放资源
 3. 父类中定义虚函数是为了子类实例化的对象使用方法来自子类而不是父类
 ----------
 - 纯虚函数

@@ -242,7 +242,7 @@ N=str2.isEmpty()；    //N=true
 
 需要注意的是信号槽机制，不同的信号哈数可以发送参数，具体发送参数的含义可以通过查询文档了解
 ![[Pasted image 20251011193421.png]]
-QSlider 的 valueChange 信号会将更改之后的值作为 value 参数发送出去，根据valueChange 的签名可知，它的槽函数必须要接受一个**兼容** int 类型的参数，如果有多个参数，那么顺序也必须要保持一致。
+QSlider 的 valueChange 信号会将更改后的值作为 value 参数发送出去，根据valueChange 的签名可知，它的槽函数必须要接受一个**兼容** int 类型的参数，如果有多个参数，那么顺序也必须要保持一致。
 
 qt 还有循环信号保全机制：当组件的值已经等于要设置的值时不会发出 valueChanged 信号
 例如：
@@ -358,7 +358,7 @@ submodules 分模块下载，single 是所有模块文件打包下载，压缩�
 ### 添加 qrc 资源管理
 #### 引入工程中
 ![[Pasted image 20251012153023.png]]
-添加完之后如果显示添加失败，需要到 cmake 中查看是否将 qrc 文件引入到项目中
+添加完后如果显示添加失败，需要到 cmake 中查看是否将 qrc 文件引入到项目中
 需要在 `target_link_libraries` 之前引入
 想在项目视图下看见这个文件（cmake 构建的项目中认为项目有关的文件只会在 `add_executable` 和 `add_library` 中出现），所以还要添加
 ```cmake
@@ -429,7 +429,7 @@ qt 对 qrc 路径解析规则为：
 ```
 Qt会忽略 `<file>` 标签中前面的路径部分（`icons/`），只使用文件名，因 prefix 标签已经实行过分类的作用了（prefix 标签可以不止一级），file 标签记录**文件相对当前 qrc 文件的相对位置**
 ### 添加组件和类
-qt creater 不像 vs，能够在添加继承自 widget 的类的同时选择是否添加 ui 文件，而是需要自己添加完 h\cpp 文件之后自己再添加一次 ui 文件
+qt creater 不像 vs，能够在添加继承自 widget 的类的同时选择是否添加 ui 文件，而是需要自己添加完 h\cpp 文件后自己再添加一次 ui 文件
 ![[Pasted image 20251012120655.png]]
 ![[Pasted image 20251012120715.png]] 然后还需要： ^6zk649
 - 将 ui 文件名修改成类名同名

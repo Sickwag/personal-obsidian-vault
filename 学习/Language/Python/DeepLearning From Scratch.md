@@ -117,7 +117,7 @@ plt.show()
 
 ### show 方法
 
-`show` 方法用于显示通过 `matplotlib` 创建的图形。它通常在所有的绘图命令之后调用，以确保所有的图形元素都被正确渲染并显示出来。`show` 方法的语法非常简单：
+`show` 方法用于显示通过 `matplotlib` 创建的图形。它通常在所有的绘图命令后调用，以确保所有的图形元素都被正确渲染并显示出来。`show` 方法的语法非常简单：
 
 ```python
 matplotlib.pyplot.show(block=None)
@@ -125,7 +125,7 @@ matplotlib.pyplot.show(block=None)
 
 - `block`：布尔值，控制 `show` 方法的行为。如果为 `True`，则 `show` 方法会阻塞，直到图形窗口被关闭。如果为 `False`，则 `show` 方法会立即返回，允许程序继续执行其他任务。
 
-`show` 方法通常不需要任何参数，只需要在绘图命令之后调用即可：
+`show` 方法通常不需要任何参数，只需要在绘图命令后调用即可：
 
 ```python
 import matplotlib.pyplot as plt

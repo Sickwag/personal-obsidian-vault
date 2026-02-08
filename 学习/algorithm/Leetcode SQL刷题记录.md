@@ -57,7 +57,7 @@ WHERE
 	p1.Email = p2.Email
 	AND p1.Id != p2.Id;
 
--- having作为列**聚合之后**筛选条件
+-- having作为列**聚合后**筛选条件
 SELECT
 	Email
 FROM
@@ -72,7 +72,7 @@ HAVING
 - 第三种方法**不能使用 where 替换 having**，原因：where字句无法与聚合函数一起使用。因where子句的运行**顺序排在第**二（参考：[[MySQL#DQL 语句执行和书写顺序]]），运行到where时，表还没有被分组。
 - `HAVING` 子句的主要作用是对分组后的数据进行筛选，通常用于对聚合函数的结果进行过滤。它与 `WHERE` 子句的区别在于：
 	- **`WHERE`**：在分组和聚合之前对原始数据进行筛选。
-	- **`HAVING`**：在分组和聚合之后对分组结果进行筛选。
+	- **`HAVING`**：在分组和聚合后对分组结果进行筛选。
 ##### 183. 从不订购的客户
 (https://leetcode.cn/problems/customers-who-never-order/)
 外连接方法

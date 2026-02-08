@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
     }
 #endif
 ```
-就会自动处理错误，并且必须包含 `(app).exit(e)`，打印错误信息的代码被封装在 exit 函数中，不使用会导致程序只抛出异常，而没有信息提示，CallForHelp 异常在 CLI 11 库中被设计为抛出异常之后打印 help 手册，而这个手册通过
+就会自动处理错误，并且必须包含 `(app).exit(e)`，打印错误信息的代码被封装在 exit 函数中，不使用会导致程序只抛出异常，而没有信息提示，CallForHelp 异常在 CLI 11 库中被设计为抛出异常后打印 help 手册，而这个手册通过
 ```cpp
 CLI11_INLINE int App::exit(const Error &e, std::ostream &out, std::ostream &err) const {
 
@@ -449,7 +449,7 @@ git 提交是不可删除的，除非将整个 git 存储目录重置（删除 .
 - 使用专业工具解析 git 本地记录文件，删除记录中所有密钥字符串然后提交，这样比较复杂，而且只能全字匹配密钥字符串。
 #### api 使用
 ##### boost. json 不支持格式化文件
-boost. json 对象在使用 `file << boost::json::serialize(json_object)` 写入文件之后是未格式化的版本。不能在代码层面中使用锁紧格式化，也不支持在文件中插入注释。
+boost. json 对象在使用 `file << boost::json::serialize(json_object)` 写入文件后是未格式化的版本。不能在代码层面中使用锁紧格式化，也不支持在文件中插入注释。
 ##### tabulate 库各种限制
 tabulate 库创建表格不支持跨行/列居中合并单元格的操作。创建一行数据时不支持使用
 ```cpp
@@ -608,7 +608,7 @@ qt 添加两个 find_package 命令来查找
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 ```
-- 第一个 find_package 用于*查找拥有 Widgets 模块的库*，并且 qt 由于有多个版本，所以这里在 qt 6，qt 5 中查找，并且优先 qt 6，查找到之后就会定义 `$QT_VERSION_MAJOR` 变量。
+- 第一个 find_package 用于*查找拥有 Widgets 模块的库*，并且 qt 由于有多个版本，所以这里在 qt 6，qt 5 中查找，并且优先 qt 6，查找到后就会定义 `$QT_VERSION_MAJOR` 变量。
 - 使用 `NAMES` 是为了指定 `config.cmake` 文件的名称，依次尝试查找 `Qt6Config.cmake` 或 `Qt5Config.cmake` 文件，如果找到了 `Qt6`，那么 `QT_VERSION_MAJOR` 变量会被设置为 `6`。
 - 使用 `REQUIRED COMPONENTS` 用于确保这个库中拥有 widgets 这个模块
 - 第二个根据 Qt 大版本号添加模块
@@ -644,7 +644,7 @@ void IntervalPage::showIntervalPage(quint16 intervalMinutes) {
 	kwin.call("activateWindow", (quint32)this->winId());
 #endif
 ```
-创建好全屏界面样式之后，构造函数中先表明这是一个全屏无边框窗口，展示窗后后 `raise()` 让窗口出现在最前端，`activateWindow()` 用于将焦点移动到窗口
+创建好全屏界面样式后，构造函数中先表明这是一个全屏无边框窗口，展示窗后后 `raise()` 让窗口出现在最前端，`activateWindow()` 用于将焦点移动到窗口
 由于不同平台的设置焦点方法不一，需要使用宏定义
 ```cpp
 #ifdef Q_OS_WIN
@@ -754,7 +754,7 @@ else          /* <- else 缺乏对应 if */
 不一定，需要根据当前程序的类型来做判断：
 - 多核 CPU
 	- IO 密集型，程序里面指令的执行，涉及一些 IO 操作，比如设备、文件、网络操作，IO 操作是可以把程序阻塞住的比如等待客户端的连接，等待日志写入。这些操作**更适合**设计为多线程程序，因大部分 IO 密集型操作*准备好接受调度的时间是不确定的*，不会放在操作系统就绪队列中，而是在阻塞队列中
-	- CPU 密集型程序里面的指令都是做计算用的，不会被阻塞。CPU 密集型也可以设计为多线程程序，每一个线程执行一个计算任务，发现任务执行完之后继续安排
+	- CPU 密集型程序里面的指令都是做计算用的，不会被阻塞。CPU 密集型也可以设计为多线程程序，每一个线程执行一个计算任务，发现任务执行完后继续安排
 - 单核 CPU
 	- IO 密集型，适合设计为多线程，因单核一旦被阻塞程序卡死了
 	- CPU 密集型**不适合设计为多线程**，线程越多上下文切换开销越大
@@ -792,7 +792,7 @@ virtual memory              (kbytes, -v) unlimited
 file locks                          (-x) unlimited
 ```
 一个 stack size 栈空间在 8MB 大小，32 位系统一个进程最多占用 4G，用户空间 3G，内核 1G，用户空间最多 384 个（这还是不算栈内存，代码片段的大小）
-线程数量多了之后会占用大量内存
+线程数量多了后会占用大量内存
 
 #### 线程的数量
 大部分网络库中，会根据系统 CPU 数量决定线程数量
@@ -908,7 +908,7 @@ void ThreadPool::thread_func() {
 		- 不让线程结束，thread_func 中实现一个无限循环，让线程一直"工作"，在结束上一个任务/空闲时**被条件变量挂起**。本质上是控制线程一直工作/挂起，资源不被释放（当前使用的方案）
 		- 线程分离方式无对线程掌控能力，如要管理线程则需要创建容器将线程分类为：“工作中线程”/“空闲线程”这样的缓冲模式，并将容器设置为 ThreadPool 成员变量，类似于 [[FastLog#三重缓冲区设计]]。
 
-- 测试 thread_func 函数内容为输出线程 id，每个 Thread 对象的 `start()` 最终会在通过 `std::thread` 执行 `std::bind(&ThreadPool::thread_func, this)` 任务 
+- 测试 thread_func 函数内容为输出线程 id，每个 Thread 对象的 `start()` 最终会在通过 `std::thread` 执行 `std::bind(&ThreadPool::thread_func, this)` 任务
 #### 提交任务实现
 ```cpp
 void ThreadPool::thread_func() {
@@ -1057,9 +1057,9 @@ class Any {
 task = tasks_que_.front();
 tasks_que_.pop();
 ```
-task 对象会在 pop 后销毁，这时候任务执行完需要任务执行结果的时候 task 对象已经被释放，悬空指针访问会出现未定义行为
+task 对象会在 pop 后销毁，这时候任务执行完需要任务执行结果时 task 对象已经被释放，悬空指针访问会出现未定义行为
 
-还有一个问题，使用 
+还有一个问题，使用
 ```cpp
 Result res = pool.submit_task(std::make_shared<MyTask>());
 res.get<T>();
@@ -1155,7 +1155,7 @@ inline ThreadPool::ThreadPool(size_t thread_size)
                 if (this->stop_ && this->tasks_.empty()) {
                     return;
                 }
-                
+
             }
             task = std::move(this->tasks_.front());
             this->tasks_.pop();
@@ -1234,7 +1234,7 @@ int main() {
 - 完美转发&移动语义：为避免性能开销用移动语义或者 `std::move` 显式移动资源
 ```cpp
 auto task = std::make_shared<std::packaged_task<return_type()>>([
-    f = std::forward<F>(f), 
+    f = std::forward<F>(f),
     ...args = std::forward<Args>(args)
 ]() mutable {
     return std::invoke(f, std::move(args)...);
@@ -1246,7 +1246,7 @@ auto task = std::make_shared<std::packaged_task<return_type()>>([
 template <class F, class... Args>
 inline auto ThreadPool::enqueue(F&& f, Args&&... args)
     -> std::future<std::invoke_result_t<F, Args...>> {
-    
+
     using return_type = std::invoke_result_t<F, Args...>;
 
     // 将函数和参数打包进 shared_ptr 中
@@ -1351,7 +1351,7 @@ std::shared_ptr<mysql::any_connection> MysqlConnectionPool::get_connection() {
 - 删除器如何执行归还连接
 	- 当 `shared_ptr` 超出作用域时自动执行删除器
 	- **所有用户都使用连接执行完 sql 语句暂时没有使用这个连接时**，`shared_ptr` 引用计数为 0，**调用删除器自动归还连接**，防止连接泄漏
-	- 归还链接的方法是当所有人的 `get_connection()` 获得的连接使用完毕之后，将这个连接压入 connection_queue，并更新这个连接的生存时长（防止一个经常被获取使用的连接在归还后立刻被清理）
+	- 归还链接的方法是当所有人的 `get_connection()` 获得的连接使用完毕后，将这个连接压入 connection_queue，并更新这个连接的生存时长（防止一个经常被获取使用的连接在归还后立刻被清理）
 	- 异常安全，即使出现异常也能正确归还
 - 设计 `shared_ptr` 的删除器需要注意，shared_ptr 的一个支持删除器构造函数签名为：
 ```cpp
@@ -1437,10 +1437,18 @@ MysqlConnectionPool::MysqlConnectionPool(asio::io_context& ctx, const db_config&
 ---
 [^1]: 原则上 `std::unique_ptr` 对象指向的资源不应该被其他指针指向，但是 C++没有限制这点。如果使用 `get()/release()` 获取裸指针还是能够将指针资源地址赋予其他指针/智能指针。但这样会导致重复释放资源地址等未定义行为
 # kama 内存池
-## 基本内存池结构
+## 杂项
+### pthread 库链接问题
+linux 环境中如果使用了 `std::thread`，就需要链接 pthread 库
+```cmake
+arget_compile_options(${PROJECT_NAME} PRIVATE -g -pthread) # -g显示调试信息
+target_link_libraries(${PROJECT_NAME} pthread)
+```
+windows，尤其是 msvc 中，已经内置了 POSIX 线程标准，不需要链接
+## 基本内存池结构 v1
 ### 高效释放内存
 #### 基本 delete 操作
-对一个指针对象使用 delete 之后会进行：
+对一个指针对象使用 delete 后会进行：
 1. **调用析构函数** - 执行对象的析构函数代码
 2. **释放内存** - 将对象占用的内存归还给系统，调用 `operator delete()` 函数
 3. **执行清理工作** - 处理对象内部资源的释放
@@ -1526,7 +1534,7 @@ public:
 4. 没有需要手动释放的资源
 可以通过下面代码判断
 ```cpp
-static_assert(std::is_trivially_destructible<Slot>::value, 
+static_assert(std::is_trivially_destructible<Slot>::value,
               "Can use operator delete safely");
 ```
 
@@ -1560,11 +1568,11 @@ C 标准库函数，用于将 `malloc` / `calloc` / `realloc` 分配的内
 	- __无同步__：不影响其他线程的内存访问顺序
 	- __适用场景__：只需要原子操作，不要求顺序一致性
 2. `std::memory_order_acquire`
-	- __获取语义__：防止当前操作之后的内存访问被重排序到此操作之前
-	- __同步作用__：与 release 操作形成同步点，保证之后的所有读操作在获取点之后开始
+	- __获取语义__：防止当前操作后的内存访问被重排序到此操作之前
+	- __同步作用__：与 release 操作形成同步点，保证后的所有读操作在获取点后开始
 	- __适用场景__：读取共享数据，确保读取的数据是最新的
 3. `std::memory_order_release`
-	- __释放语义__：防止当前操作之前的内存访问被重排序到此操作之后
+	- __释放语义__：防止当前操作之前的内存访问被重排序到此操作后
 	- __同步作用__：与 acquire 操作形成同步点，保证之前的所有写操作在释放点之前完成
 	- __适用场景__：写入共享数据，确保修改对其他线程可见
 4. `std::memory_order_acq_rel`
@@ -1583,7 +1591,7 @@ relaxed → acquire/release → seq_cst
 v1 的 MemoryPool 实现中，有很多尝试更新原子类型的地方，使用：
 ```cpp
 // pushFreeList函数
-if(freeList_.compare_exchange_weak(oldHead, slot, 
+if(freeList_.compare_exchange_weak(oldHead, slot,
                                   std::memory_order_release,    // 成功时
                                   std::memory_order_relaxed)) { // 失败时
     return true;
@@ -1591,7 +1599,7 @@ if(freeList_.compare_exchange_weak(oldHead, slot,
 // - __成功时用release__：确保在更新freeList_之前，slot->next的赋值操作已完成
 // - __失败时用relaxed__：失败时不需要同步保证
 // popFreeList函数：
-if(freeList_.compare_exchange_weak(oldHead, newHead, 
+if(freeList_.compare_exchange_weak(oldHead, newHead,
                                   std::memory_order_acquire,    // 成功时
                                   std::memory_order_relaxed)) { // 失败时
     return oldHead;
@@ -1602,10 +1610,10 @@ if(freeList_.compare_exchange_weak(oldHead, newHead,
 比较替换有严格和宽松检查模式，weak 可能会虚假失败，但是性能更好。这里弹出和入队都在 while 中进行，失败了会自动重试所以 weak 即可。
 > [!note]
 > 文档中对从 compare_exchange_weak/strong 解释为：
-> 
+>
 > 原子地比较 `*this` 和 expected 的对象表示(C++20 前)值表示(C++20 起)。如果它们逐位相等，那么以 desired 替换前者（进行读修改写操作）。否则，将 `*this` 中的实际值加载进 expected（进行加载操作）。
-### 内存分配
-整个内存池设计为：
+### 内存池设计
+#### 内存分配
 ```md
 [newBlock内存块]
 ├── 前8字节(64位系统) ──→ 存储Slot结构(包含next指针)
@@ -1613,6 +1621,7 @@ if(freeList_.compare_exchange_weak(oldHead, newHead,
 └── ...               ──→ 可用空间的剩余部分
 
 内存块布局：
+每个槽只能存放一个对象，即使他没有占满整个槽
 [0-7字节]    : Slot.next (指向下一个块)
 [8-31字节]   : 第一个可用槽 (32字节对齐)
 [32-63字节]  : 第二个可用槽 (32字节对齐)
@@ -1650,7 +1659,7 @@ void MemoryPool::allocateNewBlock() {
 
 执行②：[Block1] → [Block2] → [Block3] → null
          ↑
-    [newBlock] 
+    [newBlock]
          ↑
     firstBlock_
 
@@ -1659,4 +1668,68 @@ void MemoryPool::allocateNewBlock() {
     firstBlock_
 
 ```
-body 是所有槽能用的空间的开始，之所以使用 `char*` 是因为 char 是 1 字节的，比较方便统计大小而已
+- body 是所有槽能用的空间的开始，之所以使用 `char*` 是因为 char 是 1 字节的，比较方便统计大小而已
+- 分配完成后
+#### 多级内存池
+MemoryPool 设计内存池，HashBucket 管理内存池，提供入口
+```md
+HashBucket (管理器)
+├── MemoryPool[0] -> 管理 8 字节对象
+├── MemoryPool[1] -> 管理 16 字节对象
+├── MemoryPool[2] -> 管理 24 字节对象
+├── MemoryPool[3] -> 管理 32 字节对象
+├── ...
+└── MemoryPool[63] -> 管理 512 字节对象
+
+用户请求分配30字节
+↓
+HashBucket::useMemory(30)
+↓
+计算索引：((30+7)/8)-1 = 3
+↓
+获取MemoryPool[3] (管理32字节槽)
+↓
+MemoryPool[3].allocate() 返回32字节槽
+```
+- 哈希桶创建时初始化不同大小的内存池，不同大小的对象会被放到对应的内存池，8 字节对象不会占用 16 字节池的空间，并由于内存池设计为每个槽只能存放一个对象，即使他没有占满整个槽，这样充分利用了空间（内存对齐尽量小的单位）
+- 超过 512 字节的对象
+	- **分配频率低**，内存池优势不明显
+	- __内存浪费__：为大对象预分配大块内存会造成浪费
+	- __管理复杂度__：大对象管理更复杂，容易产生外部碎片
+	- __收益递减__：小对象分配占多数，优化小对象收益更大
+### 整体设计
+```md
+┌─────────────────────────────────────────────────────────────┐
+│                    HashBucket (管理层)                       │
+├─────────────────────────────────────────────────────────────┤
+│  大小分类 → 索引映射 → 内存池选择                               │
+│  [1-8]→[0] [9-16]→[1] [17-24]→[2] ... [505-512]→[63]        │
+└─────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+    ┌─────────────┬─────────────┬─────────────┬─────────────
+    │MemPool[0]   │MemPool[1]   │MemPool[2]   │...          │
+    │(8字节槽)     │(16字节槽)    │(24字节槽)    │             │
+    │[块1][块2]    │[块1][块2]   │[块1][块2]    │             │
+    └─────────────┴─────────────┴─────────────┴────────────
+
+请求分配size字节
+↓
+HashBucket根据size选择对应MemoryPool
+↓
+MemoryPool::allocate()
+├── 优先从freeList_取 (已释放的槽)
+└── 若freeList_空，从curSlot_分配
+    ├── 若当前块不足，调用allocateNewBlock()
+    └── 返回curSlot_并移动指针
+
+释放内存流程
+释放ptr指针
+↓
+HashBucket确定对应MemoryPool
+↓
+MemoryPool::deallocate(ptr)
+↓
+pushFreeList(ptr) → 加入freeList_链表头部
+
+```

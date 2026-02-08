@@ -1814,7 +1814,7 @@ All tests passed!
 ### USER
 是文件中什么内容导致出现了这两个启动项的出现？
 我在什么地方可以修改，添加，自定义启动项？
-如果我现在在某一个文件中添加了一个 main 函数，是否就会多出一个启动项来启动这个文件编译之后得到的 exe 文件？
+如果我现在在某一个文件中添加了一个 main 函数，是否就会多出一个启动项来启动这个文件编译后得到的 exe 文件？
 现在所有头文件和源文件的内容都是空的，我没有写入任何内容，整个项目中没有任何一个文件中有 main 函数，为什么还会出现这两个启动项？
 
 ### ASSISTANT
@@ -2458,7 +2458,7 @@ split_cpp_to_h_cpp('MyClass.cpp')
 是否需要我为你生成对应文件？欢迎继续提问！
 
 ### USER
-我安装了 Visual assist 之后，在使用 include 语句包含内容时，出现无法打开源文件报错，但安装之前可以使用这些源文件（标准库中源文件），这是什么原因导致的？该如何解决？
+我安装了 Visual assist 后，在使用 include 语句包含内容时，出现无法打开源文件报错，但安装之前可以使用这些源文件（标准库中源文件），这是什么原因导致的？该如何解决？
 
 ### ASSISTANT
 你遇到的问题是：
@@ -3184,7 +3184,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 ```cmake
 CMAKE_TOOLCHAIN_FILE:STRING=D:/Code Files/PackageManage/vcpkg/scripts/buildsystems/vcpkg. cmake
 ```
-这项是根据什么生成的？由于我已经将 vcpkg 安装位置移动，所以这一项一定会出现错误，但我发现我无法修改这个文件，重新修改这个文件之后在使用 cmake 构建应用时这一项的值还是会被修改为 D:/Code Files/PackageManage/vcpkg/scripts/buildsystems/vcpkg. cmake 这个错误的值，这是什么原因导致的？该如何解决？
+这项是根据什么生成的？由于我已经将 vcpkg 安装位置移动，所以这一项一定会出现错误，但我发现我无法修改这个文件，重新修改这个文件后在使用 cmake 构建应用时这一项的值还是会被修改为 D:/Code Files/PackageManage/vcpkg/scripts/buildsystems/vcpkg. cmake 这个错误的值，这是什么原因导致的？该如何解决？
 
 ### ASSISTANT
 你遇到的问题是由于 CMake 在生成 `CMakeCache. txt` 文件时自动设置了 `CMAKE_TOOLCHAIN_FILE` 变量为旧的 vcpkg 路径。这个变量通常用于指定工具链文件（toolchain file），在使用 vcpkg 时，它指向了 `vcpkg. cmake` 文件。

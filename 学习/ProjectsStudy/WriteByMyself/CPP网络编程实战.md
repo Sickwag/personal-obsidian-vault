@@ -92,7 +92,7 @@ int main(int, char**) {
 ```cpp
 curl_easy_setopt(curl, CURLOPT_CAINFO, "path/to/pem/file");
 ```
-如果有些网站需要验证客户端身份，可以用浏览器先访问一下，然后使用浏览器默认身份（当然也可以自定义）, 所有的 http 请求头都需要**合并为一个字符串之后传入**
+如果有些网站需要验证客户端身份，可以用浏览器先访问一下，然后使用浏览器默认身份（当然也可以自定义）, 所有的 http 请求头都需要**合并为一个字符串后传入**
 ![[PixPin_2025-11-06_14-37-12.png]]
 ```cpp
 std::string user_agent = "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0"
@@ -107,7 +107,7 @@ headers = curl_slist_append(headers, "User - Agent : Mozilla / 5.0(Windows NT 10
 curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 curl_slist_free_all(headers);  // 不是必要，但最好记得
 ```
-添加 user_agent 请求头之后服务器的 html 返回结果也会包含请求头
+添加 user_agent 请求头后服务器的 html 返回结果也会包含请求头
 ![[PixPin_2025-11-06_14-48-13.png]]
 可以通过 curl 内置内容来分开获取
 ```cpp
@@ -378,7 +378,7 @@ connect(&manager, &QNetworkAccessManager::sslErrors,
         });
 ```
 QNetworkReply - 网络响应处理器
-用于读取从网络中获得的回复，解析信息，QNetworkAccessManager 调度器发出获取资源请求之后，资源管理由 QNetworkReply 接管
+用于读取从网络中获得的回复，解析信息，QNetworkAccessManager 调度器发出获取资源请求后，资源管理由 QNetworkReply 接管
 ```cpp
 QNetworkReply *reply = manager.get(request);
 

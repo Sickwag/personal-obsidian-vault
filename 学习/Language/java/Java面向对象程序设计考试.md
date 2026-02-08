@@ -957,7 +957,7 @@ BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 ---
 - import 语句是否一定要放在 java 文件的开头？
 
-`import` 语句必须放在 **包声明之后、类定义之前**，不能放在类内部或文件顶部之前。
+`import` 语句必须放在 **包声明后、类定义之前**，不能放在类内部或文件顶部之前。
 例如：
 ```java
 package mypackage;
@@ -1336,7 +1336,7 @@ G、位置 7
 - 子类可以用自己的方式实现父类的方法；
 
 子类实例化时的行为：
-> 子类对象在实例化时会默认先去调用父类中无参构造方法，之后再调用本类中相应构造方法
+> 子类对象在实例化时会默认先去调用父类中无参构造方法，后再调用本类中相应构造方法
 
 ```java
 class Student extends Person{

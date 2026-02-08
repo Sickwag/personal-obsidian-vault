@@ -275,7 +275,7 @@ greet_user()
 ```
 最后一个函数几乎全是调用功能, 通过前面层级函数**返回实际值或none的代码编写方式控制这些方式实际是否执行**
 ### 10-11 (代码存在问题)
-- json模块中json方法函数第一个参数是**传入内容**,传入之后自动添加\n  第二个是**内容传入对象**
+- json模块中json方法函数第一个参数是**传入内容**,传入后自动添加\n  第二个是**内容传入对象**
 	` with open(filename, 'w') as f:
     `json.dump(username, f)`
 
@@ -296,7 +296,7 @@ import unittest
 class TestStringMethods(unittest.TestCase):
 
     def test_upper(self):
-        self.assertEqual('foo'.upper(), 'FOO') # 检查foo字符串使用.upper方法之后是否和FOO字符串相等  ----后面关于测试方法会讲
+        self.assertEqual('foo'.upper(), 'FOO') # 检查foo字符串使用.upper方法后是否和FOO字符串相等  ----后面关于测试方法会讲
 
     def test_isupper(self):
         self.assertTrue('FOO'.isupper())
@@ -355,7 +355,7 @@ if __name__ == '__main__':
 
 ```
 ## 测试方法命名规范
-当一个类\函数\方法继承\调用了unittest之后,其中包含的所有以`test_`开头的方法被unittest识别并从main()入口进入开始全部执行, 没被识别就只会是一个普通的在类中方法,等待被对象使用`.方法名`调用
+当一个类\函数\方法继承\调用了unittest后,其中包含的所有以`test_`开头的方法被unittest识别并从main()入口进入开始全部执行, 没被识别就只会是一个普通的在类中方法,等待被对象使用`.方法名`调用
 
 当使用不以`test_`开头的方法但仍需要测试时,可以使用`unittest.TestLoader`类的`loadTestsFromTestCase`方法来手动加载测试用例。这样，你可以指定哪些方法应该被当作测试方法来执行
 ```python
@@ -508,7 +508,7 @@ class ship:
 bilt 方法让飞船 surface 在屏幕 surface 上绘制图，它直接在调用它的 `Surface` 对象上进行绘制操作。
 ### 重构模块 game_functions
 - 当导入的模块文件中 import 了主程序中需要的库，主程序可以不再使用
-- python 自定义函数中传入形参时，不需要写明参数类型，等传入参数之后没有对应的方法自然报错
+- python 自定义函数中传入形参时，不需要写明参数类型，等传入参数后没有对应的方法自然报错
 	![Pasted image 20240912093236.png](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240912093236.png)
 ```python
 import sys
@@ -727,14 +727,14 @@ class bullet(sprite):
         # 放置子弹位制
         self.rect.centerx = game_ship.rect.center_x
         self.rect.top = game_ship.rect.top
-        self.y = float(self.rect.y) # y变量存储初始化之后子弹的y轴位置
+        self.y = float(self.rect.y) # y变量存储初始化后子弹的y轴位置
 
         # 设置子弹属性
         self.color = game_settings.bullet_color
         self.speed_factor = game_settings.bullet_speed_factor
 
     def update(self):
-        self.y -= self.speed_factor # 刷新之后更新一次子弹矩形的位置记录
+        self.y -= self.speed_factor # 刷新后更新一次子弹矩形的位置记录
         self.rect.y = self.y# 将记录应用，改变子弹显示位置
     def draw_bullet(self):
         pg.draw.rect(self.screen,self.color,self.rect)
@@ -745,7 +745,7 @@ class bullet(sprite):
 - update 方法作用是遍历 Group 中所有 Sprite 对象，并对**每个对象**调用其 update 方法。这允许你一次性更新所有精灵的状态，而无需单独处理每一个。
 - update 方法不接受任何位置参数，但会传递任何你提供给它的额外参数**给组内每个 Sprite 的 update 方法**。这使得你可以根据需要向所有精灵传递更新逻辑，例如时间增量、事件等。通过修改 group 中 update 方法而改变所有的 sprite 的 update 逻辑
 - update 方法没有返回值。它直接修改了组内 Sprite 对象的状态。
-- 这时无法启动游戏，因 check_events （需要监控按下空格键）和 update_screen（按下空格键之后显示出子弹） 多加了一位参数而定义没有改变，
+- 这时无法启动游戏，因 check_events （需要监控按下空格键）和 update_screen（按下空格键后显示出子弹） 多加了一位参数而定义没有改变，
 ```python
 while True: # when the game start , keep monitor the movement for keyboard and mouse ,which called "event"
 gf.check_events(game_ship,bullets) #监控行为，KEYDOWN和KEYUP
@@ -770,7 +770,7 @@ class Bullet(Sprite):
 ```
 
 ### 删除屏幕外子弹
-- 由于 print 函数将子弹数量发送到终端，频率和游戏刷新速度有关（即循环 while 的速度）会极大降低游戏速度，所以测试之后将这行代码注释
+- 由于 print 函数将子弹数量发送到终端，频率和游戏刷新速度有关（即循环 while 的速度）会极大降低游戏速度，所以测试后将这行代码注释
 - bullets 是一个精灵数组，for 循环根据其中元素数量决定循环次数
 - 使用 bullet.copy () 原因是循环中如果需要修改子弹精灵数组时修改的是副本而不是原本的元素
 ```python

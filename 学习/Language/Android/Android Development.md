@@ -61,7 +61,7 @@ fun GreetingPreview() {
 ```
 ![[Pasted image 20250108114808.png|400]]
 - `Greeting`函数显示出text中文本内容，由于使用了`@Composable`注解表示这个函数将被解析为一个UI
-- `GreetingPreview`由于使用了`@Preview`注解，这个函数将会只在代码编辑页面需要显示页面预览的时候调用并将预览页面的背景设置为显示状态（`showBackground = true`），并因`@Composalble`注解将他解释为一个UI，函数将会调用其中Follow_ofiicial函数，进而调用`Greeting`函数来在预览页面显示文本内容
+- `GreetingPreview`由于使用了`@Preview`注解，这个函数将会只在代码编辑页面需要显示页面预览时调用并将预览页面的背景设置为显示状态（`showBackground = true`），并因`@Composalble`注解将他解释为一个UI，函数将会调用其中Follow_ofiicial函数，进而调用`Greeting`函数来在预览页面显示文本内容
 - 使用`@Preview` 注解的函数只在`Preview`页面中被调用不会打包进 apk
 - **最终**，`onCreate` 函数中 `setContent` 函数将其中 `Follow_official` 函数作为一个 UI 解释并显示在最终将 `Greeting `而不是 `GreetingPreview `打包进 apk 中
 - 但**如果预览函数中参数和实际参数不一样而两者未分离**会导致预览代码中参数覆盖原始代码的参数而最呈现预览代码在 App 中
@@ -116,7 +116,7 @@ fun DiceWithButtonAndImage(modifier: Modifier = Modifier) {
     Column (modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally){}
 }
 ```
-在调用的时候创建一个 `Column` 保证内容子项相对于宽度在设备屏幕上居中
+在调用时创建一个 `Column` 保证内容子项相对于宽度在设备屏幕上居中
 ### 添加按钮和图片
 - 按钮：
 在 UI 元素函数中设置
@@ -320,7 +320,7 @@ fun ArtistCardArrangement(artist: Artist) {
 首先，系统会要求每个节点对自身进行测量，然后以递归方式完成所有子节点的测量，并将尺寸约束条件沿着树向下传递给子节点。
 再后，确定叶节点的尺寸和放置位置，并将经过解析的尺寸和放置指令沿着树向上回传。
 
-> 所有 UI 元素中父节点会在其子节点之前进行测量，但会在其子节点的尺寸和放置位置确定之后再对自身进行调整。
+> 所有 UI 元素中父节点会在其子节点之前进行测量，但会在其子节点的尺寸和放置位置确定后再对自身进行调整。
 
 ```kotlin
 @Composable
@@ -346,7 +346,7 @@ SearchResult
 ```
 流程简而言之就是：
 1. 自树上而下，首先对出现的节点测量，如果有子节点则继续测量子节点的尺寸，没有则**报告并返回放置指令**
-2. 确定完所有尺寸和节点位置之后开始摆放元素
+2. 确定完所有尺寸和节点位置后开始摆放元素
 #### 修饰符
 Kotlin Jetpack Composer 中，Modifier 对象被称为*修饰符*，主要作用是**调整和修饰 UI 组件的布局和交互行为**。它们通过组合的方式提供一种声明式的方式来定义组件的外观和响应逻辑。
 支持链式调用，返回值都是 Modifier 对象，常用的设置有：
@@ -626,9 +626,9 @@ fun ImageSample() {
 ```
 ![[Pasted image 20250206231021.png]]
 ## 状态
-> 应用中状态是指可以随时间变化的任何值。这个定义很广泛包括数据库或类中变量的所有内容。由于Compose 是**声明式的**，所以当需要改变其任何内容的时候，通过设置新的参数调用**同一组声明**，这些参数就是 UI 的表现形式。每State 更新时，都会发生重组——UI 发生变化
+> 应用中状态是指可以随时间变化的任何值。这个定义很广泛包括数据库或类中变量的所有内容。由于Compose 是**声明式的**，所以当需要改变其任何内容时，通过设置新的参数调用**同一组声明**，这些参数就是 UI 的表现形式。每State 更新时，都会发生重组——UI 发生变化
 
-Composable中可以使用 `remember` 来记住单个对象。系统会在初始化由 `remember` 计算的值存储在Composable中，并在重组的时候返回存储的值。`remember` 既可以存储可变对象，也可以存储不可变对象。
+Composable中可以使用 `remember` 来记住单个对象。系统会在初始化由 `remember` 计算的值存储在Composable中，并在重组时返回存储的值。`remember` 既可以存储可变对象，也可以存储不可变对象。
 
 ```kotlin
 interface MutableState<T> : State<T> {

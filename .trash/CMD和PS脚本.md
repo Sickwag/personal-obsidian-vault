@@ -6,7 +6,7 @@ cipher命令本质是通过写入一个超大体量的文件占满磁盘空间�
 ### 2.文件加密
 cipher加密命令：
 同理，语法为cipher /e:加上需要加密文件的路径
-加密使用的是证书加密方式，加密之后的文件只能在本台电脑上特定用户才能使用秘钥解密，秘钥是Windows本用户的密码
+加密使用的是证书加密方式，加密后的文件只能在本台电脑上特定用户才能使用秘钥解密，秘钥是Windows本用户的密码
 **在搜索中进入管理文件加密证书**功能后可以导出加密证书到龄一台电脑上使用
 ***解密命令：将上述的/e改为/d就可进行文件的解密，不需要输入密码***
 加密命令可以加密文件夹，这样的操作会加密文件夹中所有文件
@@ -67,7 +67,7 @@ if (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]:
 }
 
 <# powershell 用管理员权限运行程序
- 	Start-Process cmd.exe -Verb RunAs 
+ 	Start-Process cmd.exe -Verb RunAs
  #>
 ```
 # Batch

@@ -53,7 +53,7 @@ $ git mv [file-original] [file-renamed]
 $ git commit -m [message]
 # 提交暂存区的指定文件到仓库区
 $ git commit [file1] [file2] ... -m [message]
-# 提交工作区自上次commit之后的变化，直接到仓库区
+# 提交工作区自上次commit后的变化，直接到仓库区
 $ git commit -a
 # 提交时显示所有diff信息
 $ git commit -v
@@ -132,9 +132,9 @@ $ git status
 $ git log# 显示commit历史，以及每次commit发生变更的文件
 $ git log --stat# 搜索提交历史，根据关键词
 $ git log -S [keyword]
-# 显示某个commit之后的所有变动，每个commit占据一行
+# 显示某个commit后的所有变动，每个commit占据一行
 $ git log [tag] HEAD --pretty=format:%s
-# 显示某个commit之后的所有变动，其"提交说明"必须符合搜索条件
+# 显示某个commit后的所有变动，其"提交说明"必须符合搜索条件
 $ git log [tag] HEAD --grep feature
 # 显示某个文件的版本历史，包括文件改名
 $ git log --follow [file]

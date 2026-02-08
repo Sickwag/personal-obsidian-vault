@@ -8,7 +8,7 @@
 4. 程序设置中调整 OpenGL 渲染为优先性能，自定义程序使用添加找到游戏 ![Pasted image 20240818090111.png](Pasted%20image%2020240818090111.png)
 ## 2024 年 9 月 19 日08:58:41
 ### 解决本地回环地址无法访问
-2024 年 9 月 19 日09:29:48 开启之后发现[使用虚拟机地址而不是外部Windows本机地址](Linux%20Basics.md#^1a483c)，遂关闭
+2024 年 9 月 19 日09:29:48 开启后发现[使用虚拟机地址而不是外部Windows本机地址](Linux%20Basics.md#^1a483c)，遂关闭
 ####  问题
 1. 127.0.0.1 及其端口无法访问
 
@@ -77,7 +77,7 @@ started 3 plugins.
 ## 关闭 ipch 文件生成
 2025 年 10 月 9 日13:20:38
 参考： [VisualStudio 产生的.sdf和.ipch文件删除、不生成 - 悟透 - 博客园](https://www.cnblogs.com/wutou/p/18367491)
-据说删除之后会影响 intellisense 的速度
+据说删除后会影响 intellisense 的速度
 # Linux
 ## 解决 linux mint 外屏问题
 ### 外屏无法连接
@@ -92,24 +92,24 @@ sudo dpkg-reconfigure lightdm
 ### 外屏亮度调节
 先使用 xrandr 命令检测所有连接的屏幕
 ```bash
- ~  xrandr                                                                                           INT х  11:32:30 
+ ~  xrandr                                                                                           INT х  11:32:30
 Screen 0: minimum 320 x 200, current 3840 x 1080, maximum 16384 x 16384
 eDP-1 connected primary 1920x1080+1920+0 (normal left inverted right x axis y axis) 355mm x 199mm
-   1920x1080     60.00*+  60.00    40.00  
-   1680x1050     60.00  
-   1400x1050     60.00  
+   1920x1080     60.00*+  60.00    40.00
+   1680x1050     60.00
+   1400x1050     60.00
    # 各种支持的分辨率&帧率
 DP-1 disconnected (normal left inverted right x axis y axis)
 DP-2 disconnected (normal left inverted right x axis y axis)
 HDMI-1-0 connected 1920x1080+0+0 (normal left inverted right x axis y axis) 0mm x 0mm
-   1920x1080     60.00*+  59.94    50.00    23.98  
-   3840x2160     23.98  
-   1680x1050     59.95  
-   1600x900      60.00  
-   1440x900      59.89   
-   1280x720      60.00    59.94    50.00  
-   1024x768      60.00  
-   800x600       60.32    56.25  
+   1920x1080     60.00*+  59.94    50.00    23.98
+   3840x2160     23.98
+   1680x1050     59.95
+   1600x900      60.00
+   1440x900      59.89
+   1280x720      60.00    59.94    50.00
+   1024x768      60.00
+   800x600       60.32    56.25
    # 同上
 DP-1-0 disconnected (normal left inverted right x axis y axis)
 DP-1-1 disconnected (normal left inverted right x axis y axis)
@@ -117,7 +117,7 @@ DP-1-1 disconnected (normal left inverted right x axis y axis)
 可以看到两个屏幕，eDP-1->primary screen，HTMI-1-0 副屏
 通过下面的命令调整亮度
 ```bash
-xrandr --output HDMI-1-0 --brightness 0.5 
+xrandr --output HDMI-1-0 --brightness 0.5
 # 亮度在0~1比较适合，超过1技术上可以做到，但是会非常刺眼
 ```
 ## 调整桌面启动器

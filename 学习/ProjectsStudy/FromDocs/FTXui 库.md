@@ -1,6 +1,6 @@
 # FTXui 架构分层设计
 ## api 设计逻辑
-### 动态组件和静态展示效果 api 
+### 动态组件和静态展示效果 api
 
 | 类型          | 作用              | 是否需要 `Render()` |
 | ----------- | --------------- | --------------- |
@@ -9,13 +9,13 @@
 - `Component`（如 `Button`、`Slider`）是**活的对象**，内部有状态（例如 `slider_value_1=12`）
 - 调用 `Render()` 会**动态生成当前状态对应的 `Element`**（比如用 `█` 画出 12/256 的进度条）
 - 如果不调用 `Render()`，系统不知道如何把 `Component` 转换成可视的 `Element`
-`Render()` 函数用来渲染有状态的组件，静态的 Element 是直接构建的，所以不需要渲染，同理，如果一个 screen 仅仅由 Element 构成，那么只需要使用 `screen.Print()` 就能一次性渲染所有元素，而如果静态组件（如 `container`） 中包含多个 `componet`，那么需要对 componet 对象使用 `Render()` 之后加入容器中。参考[[#交互式表格]]中设计
+`Render()` 函数用来渲染有状态的组件，静态的 Element 是直接构建的，所以不需要渲染，同理，如果一个 screen 仅仅由 Element 构成，那么只需要使用 `screen.Print()` 就能一次性渲染所有元素，而如果静态组件（如 `container`） 中包含多个 `componet`，那么需要对 componet 对象使用 `Render()` 后加入容器中。参考[[#交互式表格]]中设计
 
 | 函数                       | 适用场景      | 原理                                                                                              |
 | ------------------------ | --------- | ----------------------------------------------------------------------------------------------- |
 | `screen.Loop(component)` | **交互式应用** | 持续循环：<br>1. 调用 `component->Render()`<br>2. 等待用户输入<br>3. 调用 `component->OnEvent()` 更新状态<br>4. 重复 |
 | `screen.Print()`         | **静态内容**  | 只渲染一次，无事件处理                                                                                     |
-`Print` 是没有事件循环的，打印之后点击按钮（button）没有反应。
+`Print` 是没有事件循环的，打印后点击按钮（button）没有反应。
 1. **Render() 必要性** → 只要涉及 `Component`（带状态的交互元素），就必须调用 `Render()` 转成 `Element`
 2. **Loop vs Print** → 有按钮/输入框等交互元素 → 无脑用 `Loop()`；纯展示内容 → 用 `Print()`
 # 示例演示
@@ -148,7 +148,7 @@ int main() {
         button,
         lorel_ipsum,
     });
-    
+
     auto component = Renderer(layout, [&] {
         return vbox({
                    menu->Render(),

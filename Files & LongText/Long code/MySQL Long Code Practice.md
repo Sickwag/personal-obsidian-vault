@@ -740,7 +740,7 @@ WHERE
 	g.id = gnumber;
 END $
 
-CALL mp2(10,@gname ,@gphone)$ -- 查询之后将查询结果放入两个变量中
+CALL mp2(10,@gname ,@gphone)$ -- 查询后将查询结果放入两个变量中
 SELECT @gname,@gphone ;-- 查看查询结果
 
 -- 三、创建存储存储过程或函数实现传入两个女神生日，返回大小

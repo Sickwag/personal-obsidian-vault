@@ -196,7 +196,7 @@ App 类提供了许多用于自定义行为的方法。大多数方法返回 `t
 | `fallthrough()`                | Allows options to be passed to parent command  <br>允许将选项传递给父命令                                             |
 | `require_subcommand(min, max)` | Sets subcommand requirements  <br>设置子命令要求                                                                  |
 | `positionals_at_end()`         | Forces positional arguments to end  <br>强制位置参数结束                                                           |
-| `option_defaults()`            | 设置子命令的默认属性，使用之后集成主命令的所有参数                                                                                  |
+| `option_defaults()`            | 设置子命令的默认属性，使用后集成主命令的所有参数                                                                                  |
 
 
 | 函数                              | 作用          | 继承性 |

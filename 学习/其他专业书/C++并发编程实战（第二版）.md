@@ -84,7 +84,7 @@ C++更青睐线程间通信
 C++标准库还是有可能无法达到性能要求，无法提供所需的功能，但这种情况非常少，一旦出现这种情况，就似乎有必要使用平台专属的工具了。
 ## 线程的基本管控
 ### 发起线程
-每个线程中任务在 return 之后被终结，每个程序只有在 main 函数运行后，C++runtime 运行之后才能**发起更多线程**
+每个线程中任务在 return 后被终结，每个程序只有在 main 函数运行后，C++runtime 运行后才能**发起更多线程**
 任何可调用类型（callable type）都适用于 `std::thread`，最常使用的是重载 `()` 符的类/结构体或者使用 lambda 作为线程的启动方式
 ```cpp
 class background_task {
@@ -128,7 +128,7 @@ void oops() {
     my_thread.detach();// 分离运行
 }
 ```
-`some_local_state` 是临时变量，my_thread 可能在 oops 函数结束之后还在运行，这时候 some_local_state 变量已经被销毁，导致 i 悬空引用
+`some_local_state` 是临时变量，my_thread 可能在 oops 函数结束后还在运行，这时候 some_local_state 变量已经被销毁，导致 i 悬空引用
 解决方式有：
 方案1：等待线程完成（推荐）
 ```cpp
@@ -165,7 +165,7 @@ void smart_pointer_version() {
 ```
 ### 等待线程完成
 C++20 中引入了 `std::jthread` 对象，在析构时自动调用 `join()` 函数
-调用 join 会导致**调用 join 的线程**被阻塞，然后这个调用的线程就会清空调用 join() 对象执行完毕所有内容之后清空他的资源（这保证了每个 `std::thread` 对象只能 join 一次，joinable 返回 false）
+调用 join 会导致**调用 join 的线程**被阻塞，然后这个调用的线程就会清空调用 join() 对象执行完毕所有内容后清空他的资源（这保证了每个 `std::thread` 对象只能 join 一次，joinable 返回 false）
 `std::thread` 对象有三种状态：
 1. **可汇合（joinable）** - 关联着正在运行或可连接的线程
 2. **已汇合（joined）** - 线程已结束，资源已清理

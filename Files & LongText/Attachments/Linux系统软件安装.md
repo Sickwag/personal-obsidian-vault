@@ -111,7 +111,7 @@ MySQL的安装过程中，除了会使用Linux命令外，还会使用到少量�
 
 如对MySQL感兴趣，可以学习BiliBili黑马程序员视频：[2022新版黑马程序员MySQL知识精讲+mysql实战案例_零基础mysql数据库入门到高级全套教程](https://www.bilibili.com/video/BV1iF411z7Pu)
 
-> 如有时间，建议可以在学习完Linux系统之后，学习一下MySQL数据库
+> 如有时间，建议可以在学习完Linux系统后，学习一下MySQL数据库
 >
 > 无论从事什么方面的开发，Java后端、大数据、AI、前端、Linux运维等，都会要求掌握MySQL数据库的
 >
@@ -1180,7 +1180,7 @@ redis的特点就是：`快`，可以基于内存存储数据并提供超低延�
 
 1. 配置`EPEL`仓库
 
-   > EPEL 的全称叫 Extra Packages for Enterprise Linux 。EPEL是由 Fedora 社区打造，为 RHEL 及衍生发行版如 CentOS、Scientific Linux 等提供高质量软件包的项目。装上了 EPEL之后，就相当于添加了一个第三方源。EPEL则为服务器版本提供大量的rpm包(yum程序所使用的程序安装包，类似Windows的exe)，而且大多数rpm包在官方 repository 中是找不到的。
+   > EPEL 的全称叫 Extra Packages for Enterprise Linux 。EPEL是由 Fedora 社区打造，为 RHEL 及衍生发行版如 CentOS、Scientific Linux 等提供高质量软件包的项目。装上了 EPEL后，就相当于添加了一个第三方源。EPEL则为服务器版本提供大量的rpm包(yum程序所使用的程序安装包，类似Windows的exe)，而且大多数rpm包在官方 repository 中是找不到的。
 
    ```shell
    # root执行
@@ -2978,7 +2978,7 @@ Now your Zabbix server is up and running!
 
 **打开:`http://192.168.88.131/zabbix`**
 
-即可进入Zabbix页面，在首次打开的时候，会进入设置页面，如图：
+即可进入Zabbix页面，在首次打开时，会进入设置页面，如图：
 
 ![1571993951841](https://image-set.oss-cn-zhangjiakou.aliyuncs.com/img-out/2022/10/26/20221026175338.png)
 

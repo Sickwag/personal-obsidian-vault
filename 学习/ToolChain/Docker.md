@@ -42,10 +42,10 @@ Docker 中
 - 使用下面代码可以更改安装位置
 `start /w "" "Docker Desktop Installer.exe" install --installation-dir=D:\Program\Docker
 `
-- 安装之后在系统设置中启动 Docker，设置中开启 *hyper-v*功能之后可以在命令行中使用 Docker 代码
+- 安装后在系统设置中启动 Docker，设置中开启 *hyper-v*功能后可以在命令行中使用 Docker 代码
 ## Docker 运行逻辑
 ![Pasted image 20240913212559.png](Pasted%20image%2020240913212559.png)
-- docker daemon 是服务端守护进程，用来管理服务端资源，client 中操作（终端输入 docker 指令）由 client 发送给 docker daemon 处理之后将返回结果发送回 client（执行结果）
+- docker daemon 是服务端守护进程，用来管理服务端资源，client 中操作（终端输入 docker 指令）由 client 发送给 docker daemon 处理后将返回结果发送回 client（执行结果）
 - docker daemon 是一个后台服务进程，类似 mysql 80
 - client 和 docker host 之间通过 socket 或 restful API 通信
 ## 容器化和 dockerfile

@@ -531,7 +531,7 @@ endif()
 
   Tell CMake where to find the compiler by setting either the environment
   variable "CXX" or the CMake cache entry CMAKE_CXX_COMPILER to the full path
-  to the compiler, or to the compiler name if it is in the PATH.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	9		
+  to the compiler, or to the compiler name if it is in the PATH.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	9
 
 这是什么原因导致的？该如何解决？
 
@@ -1126,7 +1126,7 @@ The CXX compiler identification is GNU ...
 
   Tell CMake where to find the compiler by setting either the environment
   variable "CXX" or the CMake cache entry CMAKE_CXX_COMPILER to the full path
-  to the compiler, or to the compiler name if it is in the PATH.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	9		
+  to the compiler, or to the compiler name if it is in the PATH.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	9
 问题仍然存在，这是什么原因导致的？该如何解决？
 
 ### ASSISTANT
@@ -1320,12 +1320,12 @@ mingw32-make
 严重性	代码	说明	项目	文件	行	抑制状态	详细信息
 错误		CMake Error at D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt:20 (add_subdirectory):
   add_subdirectory given source "csv_parser" which is not an existing
-  directory.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	20		
+  directory.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	20
 
 严重性	代码	说明	项目	文件	行	抑制状态	详细信息
 错误		CMake Error at D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt:21 (add_subdirectory):
   add_subdirectory given source "json_parser" which is not an existing
-  directory.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	21		
+  directory.	MyTinyTools	D:\Code Files\vsstudio\MyTinyTools\CMakeLists.txt	21
 
 ```
 这是主CMakeLists.txt内容
@@ -1853,7 +1853,7 @@ All tests passed!
 
 - 在 Visual Studio 中点击“本地 Windows 调试器”（Local Windows Debugger）按钮；
 - 或者在构建完成后，手动打开终端进入构建目录并运行：
-  
+
   ```bash
   out/build/mingw-release/csv_parser/csv_parser_test.exe
   out/build/mingw-release/json_parser/json_parser_test.exe
@@ -1887,7 +1887,7 @@ All tests passed!
 ### USER
 是文件中的什么内容导致出现了这两个启动项的出现？
 我在什么地方可以修改，添加，自定义启动项？
-如果我现在在某一个文件中添加了一个main函数，是否就会多出一个启动项来启动这个文件编译之后得到的exe文件？
+如果我现在在某一个文件中添加了一个main函数，是否就会多出一个启动项来启动这个文件编译后得到的exe文件？
 现在所有头文件和源文件的内容都是空的，我没有写入任何内容，整个项目中没有任何一个文件中有main函数，为什么还会出现这两个启动项？
 
 ### ASSISTANT
@@ -2228,7 +2228,7 @@ json_parser_test.exe (json_parser\json_parser_test.exe)
 
 ## ✅ 一、启动项名称是否就是生成的 `.exe` 文件名？
 
-### 是的！  
+### 是的！
 **Visual Studio 中显示的启动项名称默认就是 `.exe` 文件的名字（不带扩展名）**。
 
 例如：
@@ -2531,7 +2531,7 @@ split_cpp_to_h_cpp('MyClass.cpp')
 是否需要我为你生成对应文件？欢迎继续提问！
 
 ### USER
-我安装了Visual assist之后，在使用include语句包含内容时，出现无法打开源文件报错，但是安装之前可以使用这些源文件（标准库中的源文件），这是什么原因导致的？该如何解决？
+我安装了Visual assist后，在使用include语句包含内容时，出现无法打开源文件报错，但是安装之前可以使用这些源文件（标准库中的源文件），这是什么原因导致的？该如何解决？
 
 ### ASSISTANT
 你遇到的问题是：

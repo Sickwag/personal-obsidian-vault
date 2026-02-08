@@ -111,7 +111,7 @@ MySQL的安装过程中，除了会使用Linux命令外，还会使用到少量�
 
 如对MySQL感兴趣，可以学习BiliBili黑马程序员视频：[2022新版黑马程序员MySQL知识精讲+mysql实战案例_零基础mysql数据库入门到高级全套教程](https://www.bilibili.com/video/BV1iF411z7Pu)
 
-> 如有时间，建议可以在学习完Linux系统之后，学习一下MySQL数据库
+> 如有时间，建议可以在学习完Linux系统后，学习一下MySQL数据库
 >
 > 无论从事什么方面的开发，Java后端、大数据、AI、前端、Linux运维等，都会要求掌握MySQL数据库的
 >
@@ -136,7 +136,7 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
    ```shell
    # 更新密钥
    rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
-   
+
    # 安装Mysql yum库
    rpm -Uvh http://repo.mysql.com//mysql57-community-release-el7-7.noarch.rpm
    ```
@@ -199,7 +199,7 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
    # 解释
    # -u，登陆的用户，MySQL数据库的管理员用户同Linux一样，是root
    # -p，表示使用密码登陆
-   
+
    # 执行完毕后输入刚刚得到的初始密码，即可进入MySQL数据库
    ```
 
@@ -222,7 +222,7 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
    # 如果你想设置简单密码，需要降低Mysql的密码安全级别
    set global validate_password_policy=LOW; # 密码安全级别低
    set global validate_password_length=4;	 # 密码长度最低4位即可
-   
+
    # 然后就可以用简单密码了（课程中使用简单密码，为了方便，生产中不要这样）
    ALTER USER 'root'@'localhost' IDENTIFIED BY '简单密码';
    ```
@@ -235,10 +235,10 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
 
    ```sql
    # 授权root远程登录
-   grant all privileges on *.* to root@"IP地址" identified by '密码' with grant option;  
+   grant all privileges on *.* to root@"IP地址" identified by '密码' with grant option;
    # IP地址即允许登陆的IP地址，也可以填写%，表示允许任何地址
    # 密码表示给远程登录独立设置密码，和本地登陆的密码可以不同
-   
+
    # 刷新权限，生效
    flush privileges;
    ```
@@ -248,7 +248,7 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
    ```sql
    # 退出命令
    exit
-   
+
    # 或者通过快捷键退出：ctrl + d
    ```
 
@@ -285,7 +285,7 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
    ```shell
    # 更新密钥
    rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
-   
+
    # 安装Mysql8.x版本 yum库
    rpm -Uvh https://dev.mysql.com/get/mysql80-community-release-el7-2.noarch.rpm
    ```
@@ -335,7 +335,7 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
    # 解释
    # -u，登陆的用户，MySQL数据库的管理员用户同Linux一样，是root
    # -p，表示使用密码登陆
-   
+
    # 执行完毕后输入刚刚得到的初始密码，即可进入MySQL数据库
    ```
 
@@ -356,7 +356,7 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
    set global validate_password.length=4;		# 密码长度最低4位即可
    ```
 
-   
+
 
 5. 允许root远程登录，并设置远程登录密码
 
@@ -367,7 +367,7 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
    ```sql
    # 第一次设置root远程登录，并配置远程密码使用如下SQL命令
    create user 'root'@'%' IDENTIFIED WITH mysql_native_password BY '密码!';	-- 密码需要符合：大于8位，有大写字母，有特殊符号，不能是连续的简单语句如123，abc
-   
+
    # 后续修改密码使用如下SQL命令
    ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '密码';
    ```
@@ -377,7 +377,7 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
    ```sql
    # 退出命令
    exit
-   
+
    # 或者通过快捷键退出：ctrl + d
    ```
 
@@ -583,7 +583,7 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
    ```shell
    # 卸载MySQL5.7版本
    apt remove -y mysql-client=5.7* mysql-community-server=5.7*
-   
+
    # 卸载5.7的仓库信息
    dpkg -l | grep mysql | awk '{print $2}' | xargs dpkg -P
    ```
@@ -673,7 +673,7 @@ MySQL的安装我们可以通过前面学习的yum命令进行。
 
    ![image-20221016110414182](https://image-set.oss-cn-zhangjiakou.aliyuncs.com/img-out/2022/10/16/20221016110414.png)
 
-   
+
 
 
 
@@ -808,7 +808,7 @@ Tomcat的安装非常简单，主要分为2部分：
    # 方式1：关闭防火墙
    systemctl stop firewalld		# 关闭防火墙
    systemctl disable firewalld		# 停止防火墙开机自启
-   
+
    # 方式2：放行8080端口的外部访问
    firewall-cmd --add-port=8080/tcp --permanent		# --add-port=8080/tcp表示放行8080端口的tcp访问，--permanent表示永久生效
    firewall-cmd --reload								# 重新载入防火墙规则使其生效
@@ -942,7 +942,7 @@ Nginx同样需要配置额外的yum仓库，才可以使用yum安装
    enabled=1
    gpgkey=https://nginx.org/keys/nginx_signing.key
    module_hotfixes=true
-   
+
    [nginx-mainline]
    name=nginx mainline repo
    baseurl=http://nginx.org/packages/mainline/centos/$releasever/$basearch/
@@ -980,7 +980,7 @@ Nginx同样需要配置额外的yum仓库，才可以使用yum安装
    # 方式1（推荐），关闭防火墙
    systemctl stop firewalld		# 关闭
    systemctl disable firewalld		# 关闭开机自启
-   
+
    # 方式2，放行80端口
    firewall-cmd --add-port=80/tcp --permanent		# 放行tcp规则下的80端口，永久生效
    firewall-cmd --reload							# 重新加载防火墙规则
@@ -1033,14 +1033,14 @@ RabbitMQ在企业开发中十分常见，课程为大家演示快速搭建Rabbit
    rpm --import https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc
    rpm --import https://packagecloud.io/rabbitmq/erlang/gpgkey
    rpm --import https://packagecloud.io/rabbitmq/rabbitmq-server/gpgkey
-   
+
    # 2. 准备仓库文件
    vim /etc/yum.repos.d/rabbitmq.repo
    # 填入如下内容
    ##
    ## Zero dependency Erlang
    ##
-   
+
    [rabbitmq_erlang]
    name=rabbitmq_erlang
    baseurl=https://packagecloud.io/rabbitmq/erlang/el/7/$basearch
@@ -1053,7 +1053,7 @@ RabbitMQ在企业开发中十分常见，课程为大家演示快速搭建Rabbit
    sslverify=1
    sslcacert=/etc/pki/tls/certs/ca-bundle.crt
    metadata_expire=300
-   
+
    [rabbitmq_erlang-source]
    name=rabbitmq_erlang-source
    baseurl=https://packagecloud.io/rabbitmq/erlang/el/7/SRPMS
@@ -1066,11 +1066,11 @@ RabbitMQ在企业开发中十分常见，课程为大家演示快速搭建Rabbit
    sslverify=1
    sslcacert=/etc/pki/tls/certs/ca-bundle.crt
    metadata_expire=300
-   
+
    ##
    ## RabbitMQ server
    ##
-   
+
    [rabbitmq_server]
    name=rabbitmq_server
    baseurl=https://packagecloud.io/rabbitmq/rabbitmq-server/el/7/$basearch
@@ -1083,7 +1083,7 @@ RabbitMQ在企业开发中十分常见，课程为大家演示快速搭建Rabbit
    sslverify=1
    sslcacert=/etc/pki/tls/certs/ca-bundle.crt
    metadata_expire=300
-   
+
    [rabbitmq_server-source]
    name=rabbitmq_server-source
    baseurl=https://packagecloud.io/rabbitmq/rabbitmq-server/el/7/SRPMS
@@ -1102,12 +1102,12 @@ RabbitMQ在企业开发中十分常见，课程为大家演示快速搭建Rabbit
    # root执行
    yum install erlang rabbitmq-server -y
    ```
-   
+
    ```shell
    Installed:
      erlang.x86_64 0:23.3.4.11-1.el7           rabbitmq-server.noarch 0:3.10.0-1.el7
    ```
-   
+
 4. 启动
 
    ```shell
@@ -1126,7 +1126,7 @@ RabbitMQ在企业开发中十分常见，课程为大家演示快速搭建Rabbit
    # 方式1（推荐），关闭防火墙
    systemctl stop firewalld		# 关闭
    systemctl disable firewalld		# 关闭开机自启
-   
+
    # 方式2，放行5672 25672端口
    firewall-cmd --add-port=5672/tcp --permanent		# 放行tcp规则下的5672端口，永久生效
    firewall-cmd --add-port=15672/tcp --permanent		# 放行tcp规则下的15672端口，永久生效
@@ -1148,7 +1148,7 @@ RabbitMQ在企业开发中十分常见，课程为大家演示快速搭建Rabbit
    rabbitmqctl set_user_tags admin administrator
    ```
 
-   
+
 
 8. 浏览器打开管理控制台
 
@@ -1180,7 +1180,7 @@ redis的特点就是：`快`，可以基于内存存储数据并提供超低延�
 
 1. 配置`EPEL`仓库
 
-   > EPEL 的全称叫 Extra Packages for Enterprise Linux 。EPEL是由 Fedora 社区打造，为 RHEL 及衍生发行版如 CentOS、Scientific Linux 等提供高质量软件包的项目。装上了 EPEL之后，就相当于添加了一个第三方源。EPEL则为服务器版本提供大量的rpm包(yum程序所使用的程序安装包，类似Windows的exe)，而且大多数rpm包在官方 repository 中是找不到的。
+   > EPEL 的全称叫 Extra Packages for Enterprise Linux 。EPEL是由 Fedora 社区打造，为 RHEL 及衍生发行版如 CentOS、Scientific Linux 等提供高质量软件包的项目。装上了 EPEL后，就相当于添加了一个第三方源。EPEL则为服务器版本提供大量的rpm包(yum程序所使用的程序安装包，类似Windows的exe)，而且大多数rpm包在官方 repository 中是找不到的。
 
    ```shell
    # root执行
@@ -1212,10 +1212,10 @@ redis的特点就是：`快`，可以基于内存存储数据并提供超低延�
    # 方式1（推荐），关闭防火墙
    systemctl stop firewalld		# 关闭
    systemctl disable firewalld		# 关闭开机自启
-   
+
    # 方式2，放行6379端口
    firewall-cmd --add-port=6379/tcp --permanent		# 放行tcp规则下的6379端口，永久生效
-   firewall-cmd --reload	
+   firewall-cmd --reload
    ```
 
 5. 进入redis服务
@@ -1227,7 +1227,7 @@ redis的特点就是：`快`，可以基于内存存储数据并提供超低延�
    OK
    127.0.0.1:6379> get mykey
    "hello"
-   127.0.0.1:6379> 
+   127.0.0.1:6379>
    ```
 
 
@@ -1260,11 +1260,11 @@ Elasticsearch简称es，在企业内同样是一款应用非常广泛的搜索�
    # root执行
    # 导入仓库密钥
    rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
-   
+
    # 添加yum源
-   # 编辑文件 
+   # 编辑文件
    vim /etc/yum.repos.d/elasticsearch.repo
-   
+
    [elasticsearch-7.x]
    name=Elasticsearch repository for 7.x packages
    baseurl=https://artifacts.elastic.co/packages/7.x/yum
@@ -1273,8 +1273,8 @@ Elasticsearch简称es，在企业内同样是一款应用非常广泛的搜索�
    enabled=1
    autorefresh=1
    type=rpm-md
-   
-   
+
+
    # 更新yum缓存
    yum makecache
    ```
@@ -1289,16 +1289,16 @@ Elasticsearch简称es，在企业内同样是一款应用非常广泛的搜索�
 
    ```shell
    vim /etc/elasticsearch/elasticsearch.yml
-   
+
    # 17行，设置集群名称
    cluster.name: my-cluster
-   
+
    # 23行，设置节点名称
    node.name: node-1
-   
+
    # 56行，允许外网访问
    network.host: 0.0.0.0
-   
+
    # 74行，配置集群master节点
    cluster.initial_master_nodes: ["node-1"]
    ```
@@ -1385,11 +1385,11 @@ Elasticsearch简称es，在企业内同样是一款应用非常广泛的搜索�
    ```shell
    # 修改主机名
    hostnamectl set-hostname node1
-   
+
    # 修改IP地址
    vim /etc/sysconfig/network-scripts/ifcfg-ens33
    IPADDR="192.168.88.131"
-   
+
    # 重启网卡
    systemctl stop network
    systemctl start network
@@ -1605,10 +1605,10 @@ Zookeeper是一款分布式的集群化软件，可以在多台服务器上部�
    ```shell
    # 下载
    wget http://archive.apache.org/dist/zookeeper/zookeeper-3.5.9/apache-zookeeper-3.5.9-bin.tar.gz
-   
+
    # 确保如下目录存在，不存在就创建
    mkdir -p /export/server
-   
+
    # 解压
    tar -zxvf apache-zookeeper-3.5.9-bin.tar.gz -C /export/server
    ```
@@ -1623,7 +1623,7 @@ Zookeeper是一款分布式的集群化软件，可以在多台服务器上部�
 
    ```shell
    vim /export/server/zookeeper/conf/zoo.cfg
-   
+
    tickTime=2000
    # zookeeper数据存储目录
    dataDir=/export/server/zookeeper/data
@@ -1640,7 +1640,7 @@ Zookeeper是一款分布式的集群化软件，可以在多台服务器上部�
    ```shell
    # 1. 创建Zookeeper的数据目录
    mkdir /export/server/zookeeper/data
-   
+
    # 2. 创建文件，并填入1
    vim /export/server/zookeeper/data/myid
    # 在文件内填入1即可
@@ -1656,7 +1656,7 @@ Zookeeper是一款分布式的集群化软件，可以在多台服务器上部�
 
    ```shell
    cd /export/server
-   
+
    scp -r apache-zookeeper-3.5.9 node2:`pwd`/
    scp -r apache-zookeeper-3.5.9 node3:`pwd`/
    ```
@@ -1666,7 +1666,7 @@ Zookeeper是一款分布式的集群化软件，可以在多台服务器上部�
    ```shell
    # 1. 创建软链接
    ln -s /export/server/apache-zookeeper-3.5.9 /export/server/zookeeper
-   
+
    # 2. 修改myid文件
    vim /export/server/zookeeper/data/myid
    # 修改内容为2
@@ -1677,7 +1677,7 @@ Zookeeper是一款分布式的集群化软件，可以在多台服务器上部�
    ```shell
    # 1. 创建软链接
    ln -s /export/server/apache-zookeeper-3.5.9 /export/server/zookeeper
-   
+
    # 2. 修改myid文件
    vim /export/server/zookeeper/data/myid
    # 修改内容为3
@@ -1694,7 +1694,7 @@ Zookeeper是一款分布式的集群化软件，可以在多台服务器上部�
 
     ```shell
     jps
-    
+
     # 结果中找到有：QuorumPeerMain 进程即可
     ```
 
@@ -1702,10 +1702,10 @@ Zookeeper是一款分布式的集群化软件，可以在多台服务器上部�
 
     ```shell
     /export/server/zookeeper/zkCli.sh
-    
+
     # 进入到Zookeeper控制台中后，执行
     ls /
-    
+
     # 如无报错即配置成功
     ```
 
@@ -1754,10 +1754,10 @@ Kafka多数都是运行在分布式（集群化）模式下，所以课程将以
 
    ```shell
    mkdir -p /export/server			# 此文件夹如果不存在需先创建
-   
+
    # 解压
    tar -zxvf kafka_2.12-2.4.1.tgz -C /export/server/
-   
+
    # 创建软链接
    ln -s /export/server/kafka_2.12-2.4.1 /export/server/kafka
    ```
@@ -1780,7 +1780,7 @@ Kafka多数都是运行在分布式（集群化）模式下，所以课程将以
 
    ```shell
    cd /export/server
-   
+
    # 复制到node2同名文件夹
    scp -r kafka_2.12-2.4.1 node2:`pwd`/
    # 复制到node3同名文件夹
@@ -1792,7 +1792,7 @@ Kafka多数都是运行在分布式（集群化）模式下，所以课程将以
    ```shell
    # 创建软链接
    ln -s /export/server/kafka_2.12-2.4.1 /export/server/kafka
-   
+
    cd /export/server/kafka/config
    # 指定broker的id
    broker.id=2
@@ -1809,7 +1809,7 @@ Kafka多数都是运行在分布式（集群化）模式下，所以课程将以
    ```shell
    # 创建软链接
    ln -s /export/server/kafka_2.12-2.4.1 /export/server/kafka
-   
+
    cd /export/server/kafka/config
    # 指定broker的id
    broker.id=3
@@ -1825,10 +1825,10 @@ Kafka多数都是运行在分布式（集群化）模式下，所以课程将以
 
    ```shell
    # 请先确保Zookeeper已经启动了
-   
+
    # 方式1：【前台启动】分别在node1、2、3上执行如下语句
    /export/server/kafka/bin/kafka-server-start.sh /export/server/kafka/config/server.properties
-   
+
    # 方式2：【后台启动】分别在node1、2、3上执行如下语句
    nohup /export/server/kafka/bin/kafka-server-start.sh /export/server/kafka/config/server.properties 2>&1 >> /export/server/kafka/kafka-server.log &
    ```
@@ -1958,11 +1958,11 @@ Hadoop生态体系中总共会出现如下进程角色：
    ```shell
    # 1. 下载
    wget http://archive.apache.org/dist/hadoop/common/hadoop-3.3.0/hadoop-3.3.0.tar.gz
-   
+
    # 2. 解压
    # 请确保目录/export/server存在
    tar -zxvf hadoop-3.3.0.tar.gz -C /export/server/
-   
+
    # 3. 构建软链接
    ln -s /export/server/hadoop-3.3.0 /export/server/hadoop
    ```
@@ -1995,7 +1995,7 @@ Hadoop生态体系中总共会出现如下进程角色：
    export YARN_LOG_DIR=$HADOOP_HOME/logs/yarn
    # Hadoop hdfs 日志文件夹
    export HADOOP_LOG_DIR=$HADOOP_HOME/logs/hdfs
-   
+
    # Hadoop的使用启动用户配置
    export HDFS_NAMENODE_USER=root
    export HDFS_DATANODE_USER=root
@@ -2016,16 +2016,16 @@ Hadoop生态体系中总共会出现如下进程角色：
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-   
+
        http://www.apache.org/licenses/LICENSE-2.0
-   
+
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
      See the License for the specific language governing permissions and
      limitations under the License. See accompanying LICENSE file.
    -->
-   
+
    <!-- Put site-specific property overrides in this file. -->
    <configuration>
      <property>
@@ -2033,7 +2033,7 @@ Hadoop生态体系中总共会出现如下进程角色：
        <value>hdfs://node1:8020</value>
        <description></description>
      </property>
-   
+
      <property>
        <name>io.file.buffer.size</name>
        <value>131072</value>
@@ -2051,49 +2051,49 @@ Hadoop生态体系中总共会出现如下进程角色：
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-   
+
        http://www.apache.org/licenses/LICENSE-2.0
-   
+
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
      See the License for the specific language governing permissions and
      limitations under the License. See accompanying LICENSE file.
    -->
-   
+
    <!-- Put site-specific property overrides in this file. -->
-   
+
    <configuration>
        <property>
            <name>dfs.datanode.data.dir.perm</name>
            <value>700</value>
        </property>
-   
+
      <property>
        <name>dfs.namenode.name.dir</name>
        <value>/data/nn</value>
        <description>Path on the local filesystem where the NameNode stores the namespace and transactions logs persistently.</description>
      </property>
-   
+
      <property>
        <name>dfs.namenode.hosts</name>
        <value>node1,node2,node3</value>
        <description>List of permitted DataNodes.</description>
      </property>
-   
+
      <property>
        <name>dfs.blocksize</name>
        <value>268435456</value>
        <description></description>
      </property>
-   
-   
+
+
      <property>
        <name>dfs.namenode.handler.count</name>
        <value>100</value>
        <description></description>
      </property>
-   
+
      <property>
        <name>dfs.datanode.data.dir</name>
        <value>/data/dn</value>
@@ -2119,46 +2119,46 @@ Hadoop生态体系中总共会出现如下进程角色：
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-   
+
        http://www.apache.org/licenses/LICENSE-2.0
-   
+
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
      See the License for the specific language governing permissions and
      limitations under the License. See accompanying LICENSE file.
    -->
-   
+
    <!-- Put site-specific property overrides in this file. -->
-   
+
    <configuration>
      <property>
        <name>mapreduce.framework.name</name>
        <value>yarn</value>
        <description></description>
      </property>
-   
+
      <property>
        <name>mapreduce.jobhistory.address</name>
        <value>node1:10020</value>
        <description></description>
      </property>
-   
-   
+
+
      <property>
        <name>mapreduce.jobhistory.webapp.address</name>
        <value>node1:19888</value>
        <description></description>
      </property>
-   
-   
+
+
      <property>
        <name>mapreduce.jobhistory.intermediate-done-dir</name>
        <value>/data/mr-history/tmp</value>
        <description></description>
      </property>
-   
-   
+
+
      <property>
        <name>mapreduce.jobhistory.done-dir</name>
        <value>/data/mr-history/done</value>
@@ -2199,9 +2199,9 @@ Hadoop生态体系中总共会出现如下进程角色：
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
-   
+
        http://www.apache.org/licenses/LICENSE-2.0
-   
+
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -2209,69 +2209,69 @@ Hadoop生态体系中总共会出现如下进程角色：
      limitations under the License. See accompanying LICENSE file.
    -->
    <configuration>
-   
+
    <!-- Site specific YARN configuration properties -->
    <property>
        <name>yarn.log.server.url</name>
        <value>http://node1:19888/jobhistory/logs</value>
        <description></description>
    </property>
-   
+
      <property>
        <name>yarn.web-proxy.address</name>
        <value>node1:8089</value>
        <description>proxy server hostname and port</description>
      </property>
-   
-   
+
+
      <property>
        <name>yarn.log-aggregation-enable</name>
        <value>true</value>
        <description>Configuration to enable or disable log aggregation</description>
      </property>
-   
+
      <property>
        <name>yarn.nodemanager.remote-app-log-dir</name>
        <value>/tmp/logs</value>
        <description>Configuration to enable or disable log aggregation</description>
      </property>
-   
-   
+
+
    <!-- Site specific YARN configuration properties -->
      <property>
        <name>yarn.resourcemanager.hostname</name>
        <value>node1</value>
        <description></description>
      </property>
-   
+
      <property>
        <name>yarn.resourcemanager.scheduler.class</name>
        <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler</value>
        <description></description>
      </property>
-   
+
      <property>
        <name>yarn.nodemanager.local-dirs</name>
        <value>/data/nm-local</value>
        <description>Comma-separated list of paths on the local filesystem where intermediate data is written.</description>
      </property>
-   
-   
+
+
      <property>
        <name>yarn.nodemanager.log-dirs</name>
        <value>/data/nm-log</value>
        <description>Comma-separated list of paths on the local filesystem where logs are written.</description>
      </property>
-   
-   
+
+
      <property>
        <name>yarn.nodemanager.log.retain-seconds</name>
        <value>10800</value>
        <description>Default time (in seconds) to retain log files on the NodeManager Only applicable if log-aggregation is disabled.</description>
      </property>
-   
-   
-   
+
+
+
      <property>
        <name>yarn.nodemanager.aux-services</name>
        <value>mapreduce_shuffle</value>
@@ -2294,7 +2294,7 @@ Hadoop生态体系中总共会出现如下进程角色：
    ```shell
    # 在node1执行
    cd /export/server
-   
+
    scp -r hadoop-3.3.0 node2:`pwd`/
    scp -r hadoop-3.3.0 node2:`pwd`/
    ```
@@ -2358,7 +2358,7 @@ Hadoop生态体系中总共会出现如下进程角色：
 
     ```shell
     start-dfs.sh
-    
+
     # 如需停止可以执行
     stop-dfs.sh
     ```
@@ -2371,7 +2371,7 @@ Hadoop生态体系中总共会出现如下进程角色：
 
     ```shell
     start-yarn.sh
-    
+
     # 如需停止可以执行
     stop-yarn.sh
     ```
@@ -2380,7 +2380,7 @@ Hadoop生态体系中总共会出现如下进程角色：
 
     ```shell
     mapred --daemon start historyserver
-    
+
     # 如需停止将start更换为stop
     ```
 
@@ -2388,7 +2388,7 @@ Hadoop生态体系中总共会出现如下进程角色：
 
     ```shell
     yarn-daemon.sh start proxyserver
-    
+
     # 如需停止将start更换为stop
     ```
 
@@ -2404,7 +2404,7 @@ Hadoop生态体系中总共会出现如下进程角色：
 
    ```shell
    hadoop fs -put test.txt /test.txt
-   
+
    hadoop fs -cat /test.txt
    ```
 
@@ -2417,10 +2417,10 @@ Hadoop生态体系中总共会出现如下进程角色：
    itheima itcast hadoop
    itheima hadoop hadoop
    itheima itcast
-   
+
    # 将文件上传到HDFS中
    hadoop fs -put words.txt /words.txt
-   
+
    # 执行如下命令验证YARN是否正常
    hadoop jar /export/server/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.0.jar wordcount -Dmapred.job.queue.name=root.root /words.txt /output
    ```
@@ -2462,10 +2462,10 @@ HBase在大数据领域应用十分广泛，现在我们来在node1、node2、no
    ```shell
    # 下载
    wget http://archive.apache.org/dist/hbase/2.1.0/hbase-2.1.0-bin.tar.gz
-   
+
    # 解压
    tar -zxvf hbase-2.1.0-bin.tar.gz -C /export/server
-   
+
    # 配置软链接
    ln -s /export/server/hbase-2.1.0 /export/server/hbase
    ```
@@ -2543,7 +2543,7 @@ HBase在大数据领域应用十分广泛，现在我们来在node1、node2、no
    # 配置在/etc/profile内，追加如下两行
    export HBASE_HOME=/export/server/hbase
    export PATH=$HBASE_HOME/bin:$PATH
-   
+
    source /etc/profile
    ```
 
@@ -2553,7 +2553,7 @@ HBase在大数据领域应用十分广泛，现在我们来在node1、node2、no
 
    ```shell
    start-hbase.sh
-   
+
    # 如需停止可使用
    stop-hbase.sh
    ```
@@ -2572,16 +2572,16 @@ HBase在大数据领域应用十分广泛，现在我们来在node1、node2、no
 
     ```shell
     hbase shell
-    
+
     # 创建表
     create 'test', 'cf'
-    
+
     # 插入数据
     put 'test', 'rk001', 'cf:info', 'itheima'
-    
+
     # 查询数据
     get 'test', 'rk001'
-    
+
     # 扫描表数据
     scan 'test'
     ```
@@ -2624,10 +2624,10 @@ Spark在大数据体系是明星产品，作为最新一代的综合计算引擎
 
    ```shell
    wget https://archive.apache.org/dist/spark/spark-2.4.5/spark-2.4.5-bin-hadoop2.7.tgz
-   
+
    # 解压
    tar -zxvf spark-2.4.5-bin-hadoop2.7.tgz -C /export/server/
-   
+
    # 软链接
    ln -s /export/server/spark-2.4.5-bin-hadoop2.7 /export/server/spark
    ```
@@ -2646,15 +2646,15 @@ Spark在大数据体系是明星产品，作为最新一代的综合计算引擎
    ```shell
    ## 设置JAVA安装目录
    JAVA_HOME=/export/server/jdk
-   
+
    ## HADOOP软件配置文件目录，读取HDFS上文件和运行YARN集群
    HADOOP_CONF_DIR=/export/server/hadoop/etc/hadoop
    YARN_CONF_DIR=/export/server/hadoop/etc/hadoop
-   
+
    ## 指定spark老大Master的IP和提交任务的通信端口
    export SPARK_MASTER_HOST=node1
    export SPARK_MASTER_PORT=7077
-   
+
    SPARK_MASTER_WEBUI_PORT=8080
    SPARK_WORKER_CORES=1
    SPARK_WORKER_MEMORY=1g
@@ -2685,7 +2685,7 @@ Spark在大数据体系是明星产品，作为最新一代的综合计算引擎
 
    ```shell
    /export/server/spark/sbin/start-all.sh
-   
+
    # 如需停止，可以
    /export/server/spark/sbin/stop-all.sh
    ```
@@ -2740,10 +2740,10 @@ Spark更加偏向于离线计算而Flink更加偏向于实时计算。
 
    ```shell
    wget https://archive.apache.org/dist/flink/flink-1.10.0/flink-1.10.0-bin-scala_2.11.tgz
-   
+
    # 解压
    tar -zxvf flink-1.10.0-bin-scala_2.11.tgz -C /export/server/
-   
+
    # 软链接
    ln -s /export/server/flink-1.10.0 /export/server/flink
    ```
@@ -2878,7 +2878,7 @@ grep 'temporary password' /var/log/mysqld.log
 # 修改root用户密码
 mysql -u root -p -h localhost
 Enter password:
- 
+
 mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'Root!@#$';
 
 # 如果你想设置简单密码，需要降低Mysql的密码安全级别
@@ -2978,7 +2978,7 @@ Now your Zabbix server is up and running!
 
 **打开:`http://192.168.88.131/zabbix`**
 
-即可进入Zabbix页面，在首次打开的时候，会进入设置页面，如图：
+即可进入Zabbix页面，在首次打开时，会进入设置页面，如图：
 
 ![1571993951841](https://image-set.oss-cn-zhangjiakou.aliyuncs.com/img-out/2022/10/26/20221026175338.png)
 
@@ -3094,7 +3094,7 @@ yum install grafana
 
 `grafana-server`具有许多配置选项，这些选项可以在`.ini`配置文件中指定，也可以使用环境变量指定。
 
->  **Note.** `Grafana ` needs to be restarted for any configuration changes to take effect. 
+>  **Note.** `Grafana ` needs to be restarted for any configuration changes to take effect.
 
 #### 配置文件注释
 

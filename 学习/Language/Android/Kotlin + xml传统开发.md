@@ -5,7 +5,7 @@
 - Linux 内核层
 Android 系统是基于 Linux 内核的，这一层为 Android 设备的各种硬件提供了底层的驱动，如显示驱动、音频驱动、照相机驱动、蓝牙驱动、Wi-Fi 驱动、电源管理等。
 - 系统运行库层
-这一层通过一些 C/C++库为 Android 系统提供了主要的特性支持。在这一层还有 Android 运行时库，它主要提供了一些核心库，允许开发者使用 Java 语言来编写 Android 应用。另外，Android 运行时库中还包含了 Dalvik 虚拟机（5.0 系统之后改为ART 运行环境），它使得每一个 Android 应用都能运行在独立的进程中，并且拥有一个自己的虚拟机实例。
+这一层通过一些 C/C++库为 Android 系统提供了主要的特性支持。在这一层还有 Android 运行时库，它主要提供了一些核心库，允许开发者使用 Java 语言来编写 Android 应用。另外，Android 运行时库中还包含了 Dalvik 虚拟机（5.0 系统后改为ART 运行环境），它使得每一个 Android 应用都能运行在独立的进程中，并且拥有一个自己的虚拟机实例。
 - 应用框架层
 这一层主要提供了构建应用程序时可能用到的各种 API
 - 应用层
@@ -40,7 +40,7 @@ Android 系统还提供了丰富的多媒体服务
 目录弄得乱糟糟的。
 - AndroidManifest. xml
 	这是整个 Android 项目的配置文件，你在程序中定义的所有**四大组件都需要在这个文件里注册**，另外还可以在这个文件中给应用程序添加权限声明。由于这个文件以后会经常用到，
-我们等用到的时候再做详细说明。
+我们等用到时再做详细说明。
 - test
 	此处是用来编写 Unit Test 测试用例的，是对项目进行自动化测试的另一种方式。- .gitignore
 	这个文件用于将 app 模块内指定的目录或文件排除在版本控制之外，作用和外层的. gitignore 文件类似。
@@ -98,7 +98,7 @@ class MainActivity : ComponentActivity() {
 }
 ```
 - `MainActivity : ComponentActivity` 是一种向下继承，兼容的做法，使 activity 在不同系统版本中保持一致，`ComponentActivity` 也是子类，最终继承的是 Activity 类
-- onCreate 函数表示在翠香创建的时候要做的事
+- onCreate 函数表示在翠香创建时要做的事
 - 两个文件中并没有出现 HelloWorld 字样，Android 程序的设计讲究**逻辑和视图分离**，因此是不推荐在 Activity 中直接编写界面的。一种更加通用的做法是，在布局文件中编写界面，然后在 Activity 中引入进来。
 可以知道，Helloworld 字样在 `setContent` 中引入的配置文件中被调用
 
@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
 - 所有以“mipmap”开头的目录都是用来放应用图标的
 - 所有以“values”开头的目录都是用来放字符串、样式、颜色等配置的
 - 所有以“layout”开头的目录都是用来放布局文件的。
-之所以有这么多“mipmap”开头的目录，其实主要是为了让程序能够**更好地兼容各种设备**。drawable 目录也是相同的道理，更多的时候美工只会提供给我们一份图片，这时你把所有图片都放在 `drawable-xxhdpi` 目录下就好了，因这是最主流的设备分辨率目录。
+之所以有这么多“mipmap”开头的目录，其实主要是为了让程序能够**更好地兼容各种设备**。drawable 目录也是相同的道理，更多时美工只会提供给我们一份图片，这时你把所有图片都放在 `drawable-xxhdpi` 目录下就好了，因这是最主流的设备分辨率目录。
 ### 资源是如何使用的
 ```xml
 <resources>
@@ -194,7 +194,7 @@ allprojects {
 }
 ```
 - 构建的文件都是配置性质的，在其中声明配置有全局影响
-- 两处 repositories 的闭包中都声明了 `google ()` 和 `jcenter () `这两行配置，那么它们是什么意思呢？其实它们分别对应了一个**代码仓库**，google 仓库中包含的主要是 Google 自家的扩展依赖库，而 jcenter 仓库中包含的大多是一些第三方的开源库。声明了这两行配置之后，我们就可以在项目中轻松引用任何 google 和 jcenter 仓库中依赖库了。
+- 两处 repositories 的闭包中都声明了 `google ()` 和 `jcenter () `这两行配置，那么它们是什么意思呢？其实它们分别对应了一个**代码仓库**，google 仓库中包含的主要是 Google 自家的扩展依赖库，而 jcenter 仓库中包含的大多是一些第三方的开源库。声明了这两行配置后，我们就可以在项目中轻松引用任何 google 和 jcenter 仓库中依赖库了。
 - Gradle 并不是专门为构建 Android 项目而开发的，如果我们要想使用它来构建Android 项目，则需要声明 com. android. tools. build:gradle: 3.5.2 这个插件
 外部 build. gradle 文件
 ```gradle
@@ -238,7 +238,7 @@ dependencies {					// 指定当前项目的所有依赖关系
 - `Log.d()`。用于打印一些调试信息，这些信息对你调试程序和分析问题应该是有帮助的。对应级别 debug，比 verbose 高一级。
 - `Log.i()`。用于打印一些比较重要的数据，这些数据应该是你非常想看到的、可以帮你分析用户行为的数据。对应级别 info，比 debug 高一级。
 - `Log.w()`。用于打印一些警告信息，提示程序在这个地方可能会有潜在的风险，最好去修复一下这些出现警告的地方。对应级别 warn，比 info 高一级。
-- `Log.e()`。用于打印程序中错误信息，比如程序进入了 catch 语句中。当有错误信息打印出来的时候，一般代表你的程序出现严重问题了，必须尽快修复。对应级别 error，比warn 高一级。
+- `Log.e()`。用于打印程序中错误信息，比如程序进入了 catch 语句中。当有错误信息打印出来时，一般代表你的程序出现严重问题了，必须尽快修复。对应级别 error，比warn 高一级。
 logcat 中会输出日志工具打印的日志，使用 log 工具打印日志可以比较方便地师徒值日志标签，通过过滤器过滤
 ![[Pasted image 20241211212511.png]]
 对日志分类，只显示出想要看到的日志
@@ -808,7 +808,7 @@ class Student(val sno: String = "", val grade: Int = 0, name: String = "", age: 
 	Person(name, age) {
 }
 ```
-kotlin 中由于 val 必须有初始值，一般在主构造函数中将所有参数初始化，传参的时候无论使用什么样的参数组合都能够正确识别，**这也是为什么次构造函数很少用到的原因**
+kotlin 中由于 val 必须有初始值，一般在主构造函数中将所有参数初始化，传参时无论使用什么样的参数组合都能够正确识别，**这也是为什么次构造函数很少用到的原因**
 
 # 先从看得到的入手，探究 Activity
 ## Activity 是什么
@@ -861,7 +861,7 @@ class FirstActivity : AppCompatActivity() {
 `setContentView` 用来显示布局
 一个 Activity 是一个活动，活动中有各种内容，要让活动作用，发生视觉、交互功能需要在 AndroidManifest.xml 中注册
 ![[Pasted image 20241216115239.png]]
-配置完成之后，还需要为程序配置主Activity。也就是说，程序运行起来的时候，不知道要首先启动哪个 Activity。
+配置完成后，还需要为程序配置主Activity。也就是说，程序运行起来时，不知道要首先启动哪个 Activity。
 配置方法是在 `<activity>` 标签的内部加入 `<intent-filter>` 标签，并在这个标签里添加 `<action> android:name="android. intent. action. MAIN"/>` 和`<category
 `android:name="android. intent. category. LAUNCHER" />`这两句声明即可
 ```xml
@@ -922,7 +922,7 @@ class FirstActivity : AppCompatActivity() {
 #### findViewById() 方法使用
 为每一个控件使用一次 findViewById() 函数有点麻烦但kotlin-android-extensions 已经在 kotlin 1.4 版本弃用，viewBinding 似乎也不能在 Gradle 中启用，所以最好的办法是使用 Jetpack compose 或者继续使用 findViewById
 ### 创建菜单
-在 res 中创建一个 menu 文件，在 FirstActivity 中重写（Ctrl+O），来改变应用打开之后显示菜单（需要调整 activity 的先后顺序 ）
+在 res 中创建一个 menu 文件，在 FirstActivity 中重写（Ctrl+O），来改变应用打开后显示菜单（需要调整 activity 的先后顺序 ）
 ```kotlin
 override fun onCreateOptionsMenu(menu: Menu?): Boolean {
 	menuInflater.inflate(R.menu.main, menu)
@@ -1043,7 +1043,7 @@ startActivity(intent)
 val intent = Intent("com.example.myapp.ACTION_VIEW")
 startActivity(intent)
 ```
-- 这个隐式 `Intent` 并没有指定具体的 `Activity`，但，如果 `AndroidManifest.xml` 中存在符合 `ACTION_VIEW` 动作的 `Activity`，系统会启动该 `Activity`（`android.intent.category.DEFAULT` 是一种默认的category，在调用startActivity()方法的时候会自动将这个category添加到Intent中）。
+- 这个隐式 `Intent` 并没有指定具体的 `Activity`，但，如果 `AndroidManifest.xml` 中存在符合 `ACTION_VIEW` 动作的 `Activity`，系统会启动该 `Activity`（`android.intent.category.DEFAULT` 是一种默认的category，在调用startActivity()方法时会自动将这个category添加到Intent中）。
 - 每个 Intent 中只能指定一个 action，但能指定多个 category，对 `Intent` 类型变量使用 `addCategory()` 函数增加
 - action 和 category 标签中字段类型是 `String`，**可以自定义**，也可以用内置的
 - **`category` 是可选的**，如果没有指定，系统会默认假设使用 `DEFAULT` 类别。

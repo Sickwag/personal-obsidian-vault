@@ -72,21 +72,21 @@ print(random_number)
 在这段代码中，`import random` 的作用是引入 Python 中的 `random` 模块，这样你就可以使用该模块中提供的函数和方法来生成随机数。通过 `import random`，你可以在代码中调用 `random.randint()` 函数来生成指定范围内的随机整数。
 - `import`: `import` 关键字用于在 Python 中引入模块，让你可以使用模块中定义的函数、变量和类。在这里，`import random` 表示引入 Python 标准库中的 `random` 模块，它提供了生成随机数的函数。
 - `random`: `random` 是 Python 中的一个标准库模块，提供了生成随机数的函数。通过 `random.randint(a, b)` 方法，你可以生成一个位于 `a` 和 `b` 之间的随机整数。
-- random.randint () 是 ramdom 标准库中的随机函数  
-    random. randint 是该库中随机函数关键字  
-    
+- random.randint () 是 ramdom 标准库中的随机函数
+    random. randint 是该库中随机函数关键字
+
 #### 关闭函数提示
-在 Visual Studio Code 中，当你输入完函数名并且之后的括号时，会出现一个弹出提示框显示函数的用法。如果你想关闭这个提示的显示，可以按照以下步骤进行操作：
+在 Visual Studio Code 中，当你输入完函数名并且后的括号时，会出现一个弹出提示框显示函数的用法。如果你想关闭这个提示的显示，可以按照以下步骤进行操作：
 **在设置中禁用函数签名提示：**
 **打开 Visual Studio Code。转到左侧的侧边栏，点击设置图标（齿轮图标）。在搜索框中输入 "Signature Help"。找到 "Editor › Parameter Hints: Enabled"，然后将其关闭（将其设置为 false）。**
 ![Untitled 228.png](../Attachments/Untitled%20228.png)
 #### 多条件满足任几条判断语句写法
-应用场景：一所公司正在招聘，需要  
-1. 具有大学本科学历  
-2. 性别为男，  
-3. 体重不高于 75 KG  
-4. 身高不低于 175 cm 的员工  
-满足四个条件中的任意三个即可应聘成功。应聘者需要填写问卷  
+应用场景：一所公司正在招聘，需要
+1. 具有大学本科学历
+2. 性别为男，
+3. 体重不高于 75 KG
+4. 身高不低于 175 cm 的员工
+满足四个条件中的任意三个即可应聘成功。应聘者需要填写问卷
 ```Python
 print("this is a pre onboarding application questionaire .")
 # 获取应聘者信息
@@ -173,32 +173,32 @@ print(keys_list)  # 输出: ['a', 'b', 'c']
 - 如果传递的参数不是可迭代对象，将导致 `TypeError` 错误。
 总之，`list()` 函数是一个非常有用的工具，用于快速将不同类型的数据转换为列表。
 #### 无线电呼号英文序号单词
-A - Alpha  
-B - Bravo  
-C - Charlie  
-D - Delta  
-E - Echo  
-F - Foxtrot  
-G - Golf  
-H - Hotel  
-I - India  
-J - Juliett  
-K - Kilo  
-L - Lima  
-M - Mike  
-N - November  
-O - Oscar  
-P - Papa  
-Q - Quebec  
-R - Romeo  
-S - Sierra  
-T - Tango  
-U - Uniform  
-V - Victor  
-W - Whiskey  
-X - X-ray  
-Y - Yankee  
-Z - Zulu  
+A - Alpha
+B - Bravo
+C - Charlie
+D - Delta
+E - Echo
+F - Foxtrot
+G - Golf
+H - Hotel
+I - India
+J - Juliett
+K - Kilo
+L - Lima
+M - Mike
+N - November
+O - Oscar
+P - Papa
+Q - Quebec
+R - Romeo
+S - Sierra
+T - Tango
+U - Uniform
+V - Victor
+W - Whiskey
+X - X-ray
+Y - Yankee
+Z - Zulu
 #### len 函数对不同的参数的返回值
 `len()` 函数是 Python 中的一个内置函数，用来返回一个序列（如字符串、列表、元组等）或集合（如字典、集合等）的长度或元素个数。其作用是根据提供的序列或集合，返回其中元素的数量。
 以下是 `len()` 函数的基本用法示例：
@@ -237,7 +237,7 @@ print("1", "2", "3", sep=' - ')  # 使用短横线和空格分隔
 点选选取的起始点
 按住 shift + alt 点选终止点
 #### 使用过个光标同时编辑
-按住 alt 点选起点, 松开之后输入内容会在所有光标起点处输入
+按住 alt 点选起点, 松开后输入内容会在所有光标起点处输入
 #### 美国 50 个州的缩写和名称
 1. AL - Alabama
 2. AK - Alaska
@@ -332,7 +332,7 @@ open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, clo
 下面是每个参数的详细说明：
 1. `file`：必需参数，表示要打开的文件路径或文件对象。可以是字符串、字节字符串或路径对象。
 2. `mode`：可选参数，表示文件打开的模式。默认为 `'r'`（只读模式）。常见的模式有：
-   
+
     - `'r'`：只读模式（默认）。如果文件不存在，会抛出 `FileNotFoundError`。
     - `'w'`：写入模式。如果文件已存在，会被覆盖；如果文件不存在，会创建新文件。
     - `'x'`：独占创建模式。如果文件已存在，操作会失败。
@@ -340,9 +340,9 @@ open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, clo
     - `'b'`：二进制模式。
     - `'t'`：文本模式（默认）。
     - `'+'`：更新模式，打开一个磁盘文件进行读写。
-    
+
     这些模式可以组合使用，例如 `'rb'` 或 `'w+'`。
-    
+
 3. `buffering`：可选参数，用于设置缓冲策略。`0` 表示无缓冲，`1` 表示行缓冲，任何大于 `1` 的值表示使用该值指定的缓冲区大小。负值（默认）表示使用系统默认的缓冲策略。
 4. `encoding`：可选参数，用于指定文件的编码格式。这在处理文本文件时非常有用。默认值依赖于平台，但在大多数情况下是 `'utf-8'`。
 5. `errors`：可选参数，用于指定如何处理编码错误。常见的值有 `'strict'`（默认，遇到编码错误会抛出异常）、`'ignore'`（忽略错误）、`'replace'`（用替代字符替换无法编码的字符）等。
@@ -364,32 +364,32 @@ with open('example.txt', 'w') as file:
 
 **indices = [index for index, value in enumerate (my_list) if value == 指定的值]**
 这段代码的含义是
-- `enumerate(my_list)`：`enumerate` 是 Python 中的一个内置函数，它接受一个可迭代对象（在这个例子中是列表 `my_list`）作为参数，并返回一个枚举对象。这个枚举对象生成一个包含元素索引和元素值的元组序列。例如，对于列表 `[5, 1, 2, 3, 4, 5]`，`enumerate` 会生成序列 `[(0, 5), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5)]`。  
-    enumerate 先将 mylist 中的所有元素解包拿出来, 将每一个元素的索引和值分别打包  
-    
+- `enumerate(my_list)`：`enumerate` 是 Python 中的一个内置函数，它接受一个可迭代对象（在这个例子中是列表 `my_list`）作为参数，并返回一个枚举对象。这个枚举对象生成一个包含元素索引和元素值的元组序列。例如，对于列表 `[5, 1, 2, 3, 4, 5]`，`enumerate` 会生成序列 `[(0, 5), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5)]`。
+    enumerate 先将 mylist 中的所有元素解包拿出来, 将每一个元素的索引和值分别打包
+
     ```Python
     以(index,value)  #即前面放元素索引,后面放元素的值的格式
     ```
     以每个打包用元组的形式存放起来, 再将所有的元素用列表形式存储, 即:
-    
+
     ```Python
     接受enumerate返回值的变量 = [(index,value),(index,value),(index,value).....]
     indice = [(0, 5), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5)]
     ```
 - 列表推导式的语法:
-  
+
     ```Python
     [expression for item in iterable if condition]
     ```
     - `expression` 部分是 `index`，这意味着我们希望在新列表 `indices` 中存储的是 `enumerate(my_list)` 返回的每个元组中的 `index` 部分，而不是 `value` 部分。
-      
+
         `enumerate(my_list)` 生成的每个元组包含两个元素：第一个元素是当前元素的索引（`index`），第二个元素是当前元素的值（`value`）。列表推导式中的 `for index, value in enumerate(my_list)` 语句将这些元组解包，使得每次迭代时，`index` 变量被赋予当前元组的索引值，而 `value` 变量被赋予当前元组的值。((**之所以每次迭代循环赋值是因为前面使用了 for**)
-        
+
     - index 和 value 中间用, 表示 for 允许迭代两个元素, 否则解包出来的两个元素只会有其中一个循环赋值给 for 前面的变量
     - if 的作用是筛选出符合 value == 5 条件的元组, 并不是元组的第二个元素是元组的 value, 而是根据前面 item 自定义的名称使用 condition
-- 代码的后半部分是解包— 组合— 筛选三步组合的操作 ,  
-    for 前面的 expression 表示符合 if 后面的条件的元组每有一个, 执行一次将 expression 放入 indice 中作为列表中的元素的操作  
-    
+- 代码的后半部分是解包— 组合— 筛选三步组合的操作 ,
+    for 前面的 expression 表示符合 if 后面的条件的元组每有一个, 执行一次将 expression 放入 indice 中作为列表中的元素的操作
+
 #### 字符串对象的 split 和 strip 方法
 对字符串对象使用 split 和 strip 方法在不传入参数情况下, 会默认根据空格和换行符\n 将字符串分割成子字符串列表
 强调去掉\n 的写法为
@@ -467,7 +467,7 @@ print(Student)  # 输出 <class 'student.Student'>
 在这个例子中，`student.py` 是包含 `Student` 类定义的模块文件，因此打印 `Student` 类时，输出的模块名称是 `student`。
 在另一文件导入并打印时, 输出 <class 'student.Student'>表示 Student 是 student. py 文件中的 Student 类,
 #### 对类中 init 函数的认识
-是一种  
+是一种
 [Python Basics](Python%20Basics.md)
 #### 在一个类中定义不同的方法返回值的理解
 是的，您的理解是正确的。在 Python 中，类的每个方法都可以有自己特定的返回值，这些返回值可以是不同的数据类型，而且它们之间不会互相干扰。每个方法的返回值只会在该方法被调用时执行对应的 `return` 语句。
@@ -565,20 +565,20 @@ MyClass.static_method()   # 输出: This is a static method
 `instance_method` 是一个实例方法，它通过 `self` 参数访问实例属性。`class_method` 是一个类方法，它通过 `cls` 参数访问类属性。`static_method` 是一个静态方法，它不依赖于类或实例的属性和方法。注意，实例方法通过实例调用，类方法和静态方法通过类本身调用。
 #### 类的初始化思考, 其他拓展概念
 #### 函数/方法/类的初始化
-1. **函数初始化**：  
-    函数初始化通常指的是在函数定义时设置的默认参数值。当函数被调用时，如果没有提供某些参数，就会使用这些默认值。  
-    
+1. **函数初始化**：
+    函数初始化通常指的是在函数定义时设置的默认参数值。当函数被调用时，如果没有提供某些参数，就会使用这些默认值。
+
     ```Python
     python
     def greet(name="World"):
         print(f"Hello, {name}!")
     ```
     在上面的例子中，`name="World"` 就是函数的初始化部分。如果调用 `greet()` 而不传递任何参数，`name` 将默认为 "World"。
-    
-2. **方法初始化**：  
-    对于类的方法，特别是  
+
+2. **方法初始化**：
+    对于类的方法，特别是
     `__init__` 方法，它用于在创建对象时初始化对象的状态。这是类的构造器，用于设置对象的属性。
-    
+
     ```Python
     python
     class Person:
@@ -587,7 +587,7 @@ MyClass.static_method()   # 输出: This is a static method
             self.age = age
     ```
     当然, 下面这种初始化也叫初始化, 只不过没有在__init__这类魔术方法中在调用类时被封装在魔术方法中而是类中, 要稍微麻烦
-    
+
     ```Python
     class Person:
     		name = none
@@ -597,11 +597,11 @@ MyClass.static_method()   # 输出: This is a static method
             self.age = age
     ```
     在这个例子中，`__init__(self, name, age)` 是方法的初始化部分。创建 `Person` 类的新实例时，需要提供 `name` 和 `age` 参数，这些参数被用来设置实例的属性。
-    
-3. **类的初始化**：  
-    类的初始化通常指的是在类定义中设置的初始状态，这通常在  
+
+3. **类的初始化**：
+    类的初始化通常指的是在类定义中设置的初始状态，这通常在
     `__init__` 方法中完成。
-    
+
     ```Python
     python
     class Car:
@@ -611,7 +611,7 @@ MyClass.static_method()   # 输出: This is a static method
             print(f"A new car has been initialized: {self.model}, {self.year}")
     ```
     在这个例子中，`__init__(self, model, year)` 部分是类的初始化过程，它定义了创建 `Car` 类实例时需要的初始设置。
-    
+
 #### super 函数的参数意义
 1. 第一个参数 `Singleton` 是当前类的名称，它告诉 `super()` 函数当前类是 `Singleton`。这个参数用于确定 `super()` 函数的上下文，即在哪个类的继承链中查找父类的方法。
 2. 第二个参数 `cls` 是当前类的引用，它指向当前正在执行的类（在 `__new__` 方法中，`cls` 就是 `Singleton`）。这个参数用于 `super()` 函数在继承链中向上查找父类时，确定从哪个类开始查找.
@@ -648,7 +648,7 @@ class Singleton:
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
-        return cls._instance  
+        return cls._instance
     def __init__(self):
         print("Singleton instance created")
 # 使用模块作为单例

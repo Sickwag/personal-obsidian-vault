@@ -1,6 +1,6 @@
- 
 
-                
+
+
 
 ![加载头像](HTML%20import/Attachments/comment.gif)
 
@@ -20,7 +20,7 @@ C++在线帮助文档
 
 爱编程的大丙
 
-](https://subingwen.cn/) 
+](https://subingwen.cn/)
 
 [CMake 保姆级教程（上）](javascript:anzhiyu.scrollToDest(0,%20500))
 
@@ -55,13 +55,13 @@ C++在线帮助文档
 [搜索](javascript:void(0); "搜索🔍")
 
 - [![微信](data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7)](https://subingwen.cn/images/wechatpay.png)
-    
+
     微信
-    
+
 - [![支付宝](data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7)](https://subingwen.cn/images/alipay.png)
-    
+
     支付宝
-    
+
 
 互动
 
@@ -118,7 +118,7 @@ Lee
 
 ](https://subingwen.cn/comments/#f380561066fb7dd80d79e69145b2ba08)
 
-[丙哥丙哥，有考虑出手搓c++ stl的教程吗？板块中缺一个stl的部分[图片] [图片]](https://subingwen.cn/comments/#f380561066fb7dd80d79e69145b2ba08 "丙哥丙哥，有考虑出手搓c++ stl的教程吗？板块中缺一个stl的部分[图片] [图片] 
+[丙哥丙哥，有考虑出手搓c++ stl的教程吗？板块中缺一个stl的部分[图片] [图片]](https://subingwen.cn/comments/#f380561066fb7dd80d79e69145b2ba08 "丙哥丙哥，有考虑出手搓c++ stl的教程吗？板块中缺一个stl的部分[图片] [图片]
 ") 9 天前
 
 兴趣点
@@ -134,44 +134,44 @@ Lee
 归档[](https://subingwen.cn/archives/ "查看更多")
 
 - [九月 2024
-    
+
     2篇
-    
+
     ](https://subingwen.cn/archives/2024/09/)
 - [七月 2024
-    
+
     3篇
-    
+
     ](https://subingwen.cn/archives/2024/07/)
 - [六月 2024
-    
+
     14篇
-    
+
     ](https://subingwen.cn/archives/2024/06/)
 - [五月 2024
-    
+
     2篇
-    
+
     ](https://subingwen.cn/archives/2024/05/)
 - [十月 2023
-    
+
     10篇
-    
+
     ](https://subingwen.cn/archives/2023/10/)
 - [九月 2023
-    
+
     1篇
-    
+
     ](https://subingwen.cn/archives/2023/09/)
 - [八月 2023
-    
+
     10篇
-    
+
     ](https://subingwen.cn/archives/2023/08/)
 - [三月 2023
-    
+
     2篇
-    
+
     ](https://subingwen.cn/archives/2023/03/)
 
 ---
@@ -209,7 +209,7 @@ CMake 是一个项目构建工具，并且是跨平台的。关于项目构建�
 - 蓝色虚线表示使用`makefile`构建项目的过程
 - 红色实线表示使用`cmake`构建项目的过程
 
-介绍完CMake的作用之后，再来总结一下它的优点：
+介绍完CMake的作用后，再来总结一下它的优点：
 
 - 跨平台
 - 能够管理大型项目
@@ -247,144 +247,144 @@ cmake
 ### [](https://subingwen.cn/cmake/CMake-primer/#2-1-1-%E5%85%B1%E5%A4%84%E4%B8%80%E5%AE%A4 "2.1.1 共处一室")2.1.1 共处一室
 
 1. 准备工作，为了方便测试，在我本地电脑准备了这么几个测试文件
-    
+
     - **add.c**
-        
+
         c++
-        
+
         |   |   |
         |---|---|
         |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7|#include <stdio.h>  <br>#include "head.h"  <br>  <br>int add(int a, int b)  <br>{  <br>    return a+b;  <br>}|
-        
+
     - **sub.c**
-        
+
         c++
-        
+
         |   |   |
         |---|---|
         |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7  <br>8|#include <stdio.h>  <br>#include "head.h"  <br>  <br>// 你好  <br>int subtract(int a, int b)  <br>{  <br>    return a-b;  <br>}|
-        
+
     - **mult.c**
-        
+
         c++
-        
+
         |   |   |
         |---|---|
         |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7|#include <stdio.h>  <br>#include "head.h"  <br>  <br>int multiply(int a, int b)  <br>{  <br>    return a*b;  <br>}|
-        
+
     - **div.c**
-        
+
         c++
-        
+
         |   |   |
         |---|---|
         |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7|#include <stdio.h>  <br>#include "head.h"  <br>  <br>double divide(int a, int b)  <br>{  <br>    return (double)a/b;  <br>}|
-        
+
     - **head.h**
-        
+
         c++
-        
+
         |   |   |
         |---|---|
         |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7  <br>8  <br>9  <br>10  <br>11|#ifndef _HEAD_H  <br>#define _HEAD_H  <br>// 加法  <br>int add(int a, int b);  <br>// 减法  <br>int subtract(int a, int b);  <br>// 乘法  <br>int multiply(int a, int b);  <br>// 除法  <br>double divide(int a, int b);  <br>#endif|
-        
+
     - **main.c**
-        
+
         c++
-        
+
         |   |   |
         |---|---|
         |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7  <br>8  <br>9  <br>10  <br>11  <br>12  <br>13  <br>14|#include <stdio.h>  <br>#include "head.h"  <br>  <br>int main()  <br>{  <br>    int a = 20;  <br>    int b = 12;  <br>    printf("a = %d, b = %d\n", a, b);  <br>    printf("a + b = %d\n", add(a, b));  <br>    printf("a - b = %d\n", subtract(a, b));  <br>    printf("a * b = %d\n", multiply(a, b));  <br>    printf("a / b = %f\n", divide(a, b));  <br>    return 0;  <br>}|
-        
+
 2. 上述文件的目录结构如下：
-    
+
     shell
-    
+
     |   |   |
     |---|---|
     |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7  <br>8|$ tree  <br>.  <br>├── add.c  <br>├── div.c  <br>├── head.h  <br>├── main.c  <br>├── mult.c  <br>└── sub.c|
-    
+
 3. **添加 `CMakeLists.txt` 文件**
-    
+
     在上述源文件所在目录下添加一个新文件 CMakeLists.txt，文件内容如下：
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1  <br>2  <br>3|cmake_minimum_required(VERSION 3.0)  <br>project(CALC)  <br>add_executable(app add.c div.c main.c mult.c sub.c)|
-    
+
     接下来依次介绍一下在 CMakeLists.txt 文件中添加的三个命令:
-    
+
     - `cmake_minimum_required`：指定使用的 cmake 的最低版本
-        
+
         - **可选，非必须，如果不加可能会有警告**
     - `project`：定义工程名称，并可指定工程的版本、工程描述、web主页地址、支持的语言（默认情况支持所有语言），如果不需要这些都是可以忽略的，只需要指定出工程名字即可。
-        
+
         cmake
-        
+
         |   |   |
         |---|---|
         |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7|# PROJECT 指令的语法是：  <br>project(<PROJECT-NAME> [<language-name>...])  <br>project(<PROJECT-NAME>  <br>       [VERSION <major>[.<minor>[.<patch>[.<tweak>]]]]  <br>       [DESCRIPTION <project-description-string>]  <br>       [HOMEPAGE_URL <url-string>]  <br>       [LANGUAGES <language-name>...])|
-        
+
     - `add_executable`：定义工程会生成一个可执行程序
-        
+
         cmake
-        
+
         |   |   |
         |---|---|
         |1|add_executable(可执行程序名 源文件名称)|
-        
+
         - 这里的可执行程序名和`project`中的项目名没有任何关系
-            
+
         - 源文件名可以是一个也可以是多个，如有多个可用空格或`;`间隔
-            
+
             cmake
-            
+
             |   |   |
             |---|---|
             |1  <br>2  <br>3  <br>4|# 样式1  <br>add_executable(app add.c div.c main.c mult.c sub.c)  <br># 样式2  <br>add_executable(app add.c;div.c;main.c;mult.c;sub.c)|
-            
+
 4. 执行`CMake` 命令
-    
-    万事俱备只欠东风，将 CMakeLists.txt 文件编辑好之后，就可以执行 `cmake`命令了。
-    
+
+    万事俱备只欠东风，将 CMakeLists.txt 文件编辑好后，就可以执行 `cmake`命令了。
+
     shell
-    
+
     |   |   |
     |---|---|
     |1  <br>2|# cmake 命令原型  <br>$ cmake CMakeLists.txt文件所在路径|
-    
+
     shell
-    
+
     |   |   |
     |---|---|
     |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7  <br>8  <br>9  <br>10  <br>11  <br>12|$ tree  <br>.  <br>├── add.c  <br>├── CMakeLists.txt  <br>├── div.c  <br>├── head.h  <br>├── main.c  <br>├── mult.c  <br>└── sub.c  <br>  <br>0 directories, 7 files  <br>robin@OS:~/Linux/3Day/calc$ cmake .|
-    
-    当执行`cmake`命令之后，CMakeLists.txt 中的命令就会被执行，所以一定要注意给`cmake` 命令指定路径的时候一定不能出错。
-    
-    执行命令之后，看一下源文件所在目录中是否多了一些文件：
-    
+
+    当执行`cmake`命令后，CMakeLists.txt 中的命令就会被执行，所以一定要注意给`cmake` 命令指定路径时一定不能出错。
+
+    执行命令后，看一下源文件所在目录中是否多了一些文件：
+
     shell
-    
+
     |   |   |
     |---|---|
     |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7  <br>8  <br>9  <br>10  <br>11  <br>12  <br>13|$ tree -L 1  <br>.  <br>├── add.c  <br>├── CMakeCache.txt         # new add file  <br>├── CMakeFiles             # new add dir  <br>├── cmake_install.cmake    # new add file  <br>├── CMakeLists.txt  <br>├── div.c  <br>├── head.h  <br>├── main.c  <br>├── Makefile               # new add file  <br>├── mult.c  <br>└── sub.c|
-    
+
     我们可以看到在对应的目录下生成了一个`makefile`文件，此时再执行`make`命令，就可以对项目进行构建得到所需的可执行程序了。
-    
+
     shell
-    
+
     |   |   |
     |---|---|
     |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7  <br>8  <br>9  <br>10  <br>11  <br>12  <br>13  <br>14  <br>15  <br>16  <br>17  <br>18  <br>19  <br>20  <br>21  <br>22  <br>23  <br>24  <br>25|$ make  <br>Scanning dependencies of target app  <br>[ 16%] Building C object CMakeFiles/app.dir/add.c.o  <br>[ 33%] Building C object CMakeFiles/app.dir/div.c.o  <br>[ 50%] Building C object CMakeFiles/app.dir/main.c.o  <br>[ 66%] Building C object CMakeFiles/app.dir/mult.c.o  <br>[ 83%] Building C object CMakeFiles/app.dir/sub.c.o  <br>[100%] Linking C executable app  <br>[100%] Built target app  <br>  <br># 查看可执行程序是否已经生成  <br>$ tree -L 1  <br>.  <br>├── add.c  <br>├── app					# 生成的可执行程序  <br>├── CMakeCache.txt  <br>├── CMakeFiles  <br>├── cmake_install.cmake  <br>├── CMakeLists.txt  <br>├── div.c  <br>├── head.h  <br>├── main.c  <br>├── Makefile  <br>├── mult.c  <br>└── sub.c|
-    
+
     最终可执行程序`app`就被编译出来了（这个名字是在`CMakeLists.txt`中指定的）。
-    
+
 
 ### [](https://subingwen.cn/cmake/CMake-primer/#2-1-2-VIP-%E5%8C%85%E6%88%BF "2.1.2 VIP 包房")2.1.2 VIP 包房
 
-通过上面的例子可以看出，如果在`CMakeLists.txt`文件所在目录执行了`cmake`命令之后就会生成一些目录和文件（`包括 makefile 文件`），如果再基于`makefile文件`执行`make`命令，程序在编译过程中还会生成一些中间文件和一个可执行文件，这样会导致整个项目目录看起来很混乱，不太容易管理和维护，此时我们就可以把生成的这些与项目源码无关的文件统一放到一个对应的目录里边，比如将这个目录命名为`build`:
+通过上面的例子可以看出，如果在`CMakeLists.txt`文件所在目录执行了`cmake`命令后就会生成一些目录和文件（`包括 makefile 文件`），如果再基于`makefile文件`执行`make`命令，程序在编译过程中还会生成一些中间文件和一个可执行文件，这样会导致整个项目目录看起来很混乱，不太容易管理和维护，此时我们就可以把生成的这些与项目源码无关的文件统一放到一个对应的目录里边，比如将这个目录命名为`build`:
 
 shell
 
@@ -394,7 +394,7 @@ shell
 
 现在`cmake`命令是在`build`目录中执行的，但是`CMakeLists.txt`文件是`build`目录的上一级目录中，所以`cmake` 命令后指定的路径为`..`，即当前目录的上一级目录。
 
-当命令执行完毕之后，在`build`目录中会生成一个`makefile`文件
+当命令执行完毕后，在`build`目录中会生成一个`makefile`文件
 
 shell
 
@@ -427,7 +427,7 @@ cmake
 
 ### [](https://subingwen.cn/cmake/CMake-primer/#2-2-2-%E6%8C%87%E5%AE%9A%E4%BD%BF%E7%94%A8%E7%9A%84C-%E6%A0%87%E5%87%86 "2.2.2 指定使用的C++标准")2.2.2 指定使用的C++标准
 
-在编写C++程序的时候，可能会用到C++11、C++14、C++17、C++20等新特性，那么就需要在编译的时候在编译命令中制定出要使用哪个标准：
+在编写C++程序时，可能会用到C++11、C++14、C++17、C++20等新特性，那么就需要在编译时在编译命令中制定出要使用哪个标准：
 
 shell
 
@@ -438,23 +438,23 @@ shell
 上面的例子中通过参数`-std=c++11`指定出要使用c++11标准编译程序，C++标准对应有一宏叫做`DCMAKE_CXX_STANDARD`。在CMake中想要指定C++标准有两种方式：
 
 1. 在 CMakeLists.txt 中通过 set 命令指定
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1  <br>2  <br>3  <br>4  <br>5  <br>6|#增加-std=c++11  <br>set(CMAKE_CXX_STANDARD 11)  <br>#增加-std=c++14  <br>set(CMAKE_CXX_STANDARD 14)  <br>#增加-std=c++17  <br>set(CMAKE_CXX_STANDARD 17)|
-    
-2. 在执行 cmake 命令的时候指定出这个宏的值
-    
+
+2. 在执行 cmake 命令时指定出这个宏的值
+
     shell
-    
+
     |   |   |
     |---|---|
     |1  <br>2  <br>3  <br>4  <br>5  <br>6|#增加-std=c++11  <br>cmake CMakeLists.txt文件路径 -DCMAKE_CXX_STANDARD=11  <br>#增加-std=c++14  <br>cmake CMakeLists.txt文件路径 -DCMAKE_CXX_STANDARD=14  <br>#增加-std=c++17  <br>cmake CMakeLists.txt文件路径 -DCMAKE_CXX_STANDARD=17|
-    
+
     在上面例子中 CMake 后的路径需要根据实际情况酌情修改。
-    
+
 
 ### [](https://subingwen.cn/cmake/CMake-primer/#2-2-3-%E6%8C%87%E5%AE%9A%E8%BE%93%E5%87%BA%E7%9A%84%E8%B7%AF%E5%BE%84 "2.2.3 指定输出的路径")2.2.3 指定输出的路径
 
@@ -470,11 +470,11 @@ cmake
 - 第二行：将拼接好的路径值设置给`EXECUTABLE_OUTPUT_PATH`宏
     - **如果这个路径中的子目录不存在，会自动生成，无需自己手动创建**
 
-由于可执行程序是基于 cmake 命令生成的 makefile 文件然后再执行 make 命令得到的，所以如果此处指定可执行程序生成路径的时候使用的是相对路径 ./xxx/xxx，那么这个路径中的 ./ 对应的就是 makefile 文件所在的那个目录。
+由于可执行程序是基于 cmake 命令生成的 makefile 文件然后再执行 make 命令得到的，所以如果此处指定可执行程序生成路径时使用的是相对路径 ./xxx/xxx，那么这个路径中的 ./ 对应的就是 makefile 文件所在的那个目录。
 
 ## [](https://subingwen.cn/cmake/CMake-primer/#2-3-%E6%90%9C%E7%B4%A2%E6%96%87%E4%BB%B6 "2.3 搜索文件")2.3 搜索文件
 
-如果一个项目里边的源文件很多，在编写`CMakeLists.txt`文件的时候不可能将项目目录的各个文件一一罗列出来，这样太麻烦也不现实。所以，在CMake中为我们提供了搜索文件的命令，可以使用`aux_source_directory`命令或者`file`命令。
+如果一个项目里边的源文件很多，在编写`CMakeLists.txt`文件时不可能将项目目录的各个文件一一罗列出来，这样太麻烦也不现实。所以，在CMake中为我们提供了搜索文件的命令，可以使用`aux_source_directory`命令或者`file`命令。
 
 ### [](https://subingwen.cn/cmake/CMake-primer/#2-3-1-%E6%96%B9%E5%BC%8F1 "2.3.1 方式1")2.3.1 方式1
 
@@ -497,7 +497,7 @@ cmake
 
 ### [](https://subingwen.cn/cmake/CMake-primer/#2-3-2-%E6%96%B9%E5%BC%8F2 "2.3.2 方式2")2.3.2 方式2
 
-如果一个项目里边的源文件很多，在编写`CMakeLists.txt`文件的时候不可能将项目目录的各个文件一一罗列出来，这样太麻烦了。所以，在CMake中为我们提供了搜索文件的命令，他就是`file（当然，除了搜索以外通过 file 还可以做其他事情）`。
+如果一个项目里边的源文件很多，在编写`CMakeLists.txt`文件时不可能将项目目录的各个文件一一罗列出来，这样太麻烦了。所以，在CMake中为我们提供了搜索文件的命令，他就是`file（当然，除了搜索以外通过 file 还可以做其他事情）`。
 
 cmake
 
@@ -517,19 +517,19 @@ cmake
 |1  <br>2|file(GLOB MAIN_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)  <br>file(GLOB MAIN_HEAD ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)|
 
 - CMAKE_CURRENT_SOURCE_DIR 宏表示当前访问的 CMakeLists.txt 文件所在的路径。
-    
+
 - 关于要搜索的文件路径和类型可加双引号，也可不加:
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|file(GLOB MAIN_HEAD "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")|
-    
+
 
 ## [](https://subingwen.cn/cmake/CMake-primer/#2-4-%E5%8C%85%E5%90%AB%E5%A4%B4%E6%96%87%E4%BB%B6 "2.4 包含头文件")2.4 包含头文件
 
-在编译项目源文件的时候，很多时候都需要将源文件对应的头文件路径指定出来，这样才能保证在编译过程中编译器能够找到这些头文件，并顺利通过编译。在CMake中设置要包含的目录也很简单，通过一个命令就可以搞定了，他就是`include_directories`:
+在编译项目源文件时，很多时候都需要将源文件对应的头文件路径指定出来，这样才能保证在编译过程中编译器能够找到这些头文件，并顺利通过编译。在CMake中设置要包含的目录也很简单，通过一个命令就可以搞定了，他就是`include_directories`:
 
 cmake
 
@@ -569,7 +569,7 @@ cmake
 |---|---|
 |1|add_library(库名称 STATIC 源文件1 [源文件2] ...)|
 
-在Linux中，静态库名字分为三部分：`lib`+`库名字`+`.a`，此处只需要指定出库的名字就可以了，另外两部分在生成该文件的时候会自动填充。
+在Linux中，静态库名字分为三部分：`lib`+`库名字`+`.a`，此处只需要指定出库的名字就可以了，另外两部分在生成该文件时会自动填充。
 
 在Windows中虽然库名和Linux格式不同，但也只需指定出名字即可。
 
@@ -601,7 +601,7 @@ cmake
 |---|---|
 |1|add_library(库名称 SHARED 源文件1 [源文件2] ...)|
 
-在Linux中，动态库名字分为三部分：`lib`+`库名字`+`.so`，此处只需要指定出库的名字就可以了，另外两部分在生成该文件的时候会自动填充。
+在Linux中，动态库名字分为三部分：`lib`+`库名字`+`.so`，此处只需要指定出库的名字就可以了，另外两部分在生成该文件时会自动填充。
 
 在Windows中虽然库名和Linux格式不同，但也只需指定出名字即可。
 
@@ -631,7 +631,7 @@ cmake
 
 #### [](https://subingwen.cn/cmake/CMake-primer/#%E6%96%B9%E5%BC%8F2-%E9%83%BD%E9%80%82%E7%94%A8 "方式2 - 都适用")方式2 - 都适用
 
-由于在Linux下生成的静态库默认不具有可执行权限，所以在指定静态库生成的路径的时候就不能使用`EXECUTABLE_OUTPUT_PATH`宏了，而应该使用`LIBRARY_OUTPUT_PATH`，这个宏对应静态库文件和动态库文件都适用。
+由于在Linux下生成的静态库默认不具有可执行权限，所以在指定静态库生成的路径时就不能使用`EXECUTABLE_OUTPUT_PATH`宏了，而应该使用`LIBRARY_OUTPUT_PATH`，这个宏对应静态库文件和动态库文件都适用。
 
 cmake
 
@@ -669,11 +669,11 @@ cmake
 |---|---|
 |1|link_libraries(<static lib> [<static lib>...])|
 
-用于设置全局链接库，这些库会链接到之后定义的所有目标上。
+用于设置全局链接库，这些库会链接到后定义的所有目标上。
 
 - **参数1**：指定出要链接的静态库的名字
     - 可以是全名 `libxxx.a`
-    - 也可以是掐头（`lib`）去尾（`.a`）之后的名字 `xxx`
+    - 也可以是掐头（`lib`）去尾（`.a`）后的名字 `xxx`
 - **参数2-N**：要链接的其它静态库的名字
 
 如果该静态库不是系统提供的（自己制作或者使用第三方提供的静态库）可能出现静态库找不到的情况，此时可以将静态库的路径也指定出来：
@@ -684,7 +684,7 @@ cmake
 |---|---|
 |1|link_directories(<lib path>)|
 
-这样，修改之后的`CMakeLists.txt`文件内容如下:
+这样，修改后的`CMakeLists.txt`文件内容如下:
 
 cmake
 
@@ -709,22 +709,22 @@ cmake
 用于指定一个目标（如可执行文件或库）在编译时需要链接哪些库。它支持指定库的名称、路径以及链接库的顺序。
 
 - **target**：指定要加载的库的文件的名字
-    
+
     - 该文件可能是一个源文件
     - 该文件可能是一个动态库/静态库文件
     - 该文件可能是一个可执行文件
 - **PRIVATE|PUBLIC|INTERFACE**：动态库的访问权限，默认为`PUBLIC`
-    
+
     - 如果各个动态库之间没有依赖关系，无需做任何设置，三者没有没有区别，一般无需指定，使用默认的 PUBLIC 即可。
-        
+
     - `动态库的链接具有传递性`，如果动态库 A 链接了动态库B、C，动态库D链接了动态库A，此时动态库D相当于也链接了动态库B、C，并可以使用动态库B、C中定义的方法。
-        
+
         cmake
-        
+
         |   |   |
         |---|---|
         |1  <br>2|target_link_libraries(A B C)  <br>target_link_libraries(D A)|
-        
+
         - `PUBLIC`：在public后面的库会被Link到前面的target中，并且里面的符号也会被导出，提供给第三方使用。
         - `PRIVATE`：在private后面的库仅被link到前面的target中，并且终结掉，第三方不能感知你调了啥库
         - `INTERFACE`：在interface后面引入的库不会被链接到前面的target中，只会导出符号。
@@ -734,9 +734,9 @@ cmake
 动态库的链接和静态库是完全不同的：
 
 - 静态库会在生成可执行程序的链接阶段被打包到可执行程序中，所以可执行程序启动，静态库就被加载到内存中了。
-- 动态库在生成可执行程序的链接阶段**不会**被打包到可执行程序中，当可执行程序被启动并且调用了动态库中的函数的时候，动态库才会被加载到内存
+- 动态库在生成可执行程序的链接阶段**不会**被打包到可执行程序中，当可执行程序被启动并且调用了动态库中的函数时，动态库才会被加载到内存
 
-因此，在`cmake`中指定要链接的动态库的时候，`应该将命令写到生成了可执行文件之后：`
+因此，在`cmake`中指定要链接的动态库时，`应该将命令写到生成了可执行文件后：`
 
 cmake
 
@@ -747,7 +747,7 @@ cmake
 在`target_link_libraries(app pthread)`中：
 
 - `app:` 对应的是最终生成的可执行程序的名字
-- `pthread`：这是可执行程序要加载的动态库，这个库是系统提供的线程库，全名为`libpthread.so`，在指定的时候一般会掐头（lib）去尾（.so）。
+- `pthread`：这是可执行程序要加载的动态库，这个库是系统提供的线程库，全名为`libpthread.so`，在指定时一般会掐头（lib）去尾（.so）。
 
 #### [](https://subingwen.cn/cmake/CMake-primer/#%E9%93%BE%E6%8E%A5%E7%AC%AC%E4%B8%89%E6%96%B9%E5%8A%A8%E6%80%81%E5%BA%93 "链接第三方动态库")链接第三方动态库
 
@@ -767,7 +767,7 @@ cmake
 |---|---|
 |1  <br>2  <br>3  <br>4  <br>5  <br>6|cmake_minimum_required(VERSION 3.0)  <br>project(TEST)  <br>file(GLOB SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)  <br>include_directories(${PROJECT_SOURCE_DIR}/include)  <br>add_executable(app ${SRC_LIST})  <br>target_link_libraries(app pthread calc)|
 
-在**第六行**中，`pthread、calc`都是可执行程序`app`要链接的动态库的名字。当可执行程序`app`生成之后并执行该文件，会提示有如下错误信息：
+在**第六行**中，`pthread、calc`都是可执行程序`app`要链接的动态库的名字。当可执行程序`app`生成后并执行该文件，会提示有如下错误信息：
 
 shell
 
@@ -775,7 +775,7 @@ shell
 |---|---|
 |1  <br>2|$ ./app   <br>./app: error while loading shared libraries: libcalc.so: cannot open shared object file: No such file or directory|
 
-这是因为可执行程序启动之后，去加载`calc`这个动态库，但是不知道这个动态库被放到了什么位置[解决动态库无法加载的问题](https://subingwen.cn/linux/library/#2-4-1-%E5%BA%93%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86 "解决动态库无法加载的问题")，所以就加载失败了，在 CMake 中可以在生成可执行程序之前，通过命令指定出要链接的动态库的位置，指定静态库位置使用的也是这个命令：
+这是因为可执行程序启动后，去加载`calc`这个动态库，但是不知道这个动态库被放到了什么位置[解决动态库无法加载的问题](https://subingwen.cn/linux/library/#2-4-1-%E5%BA%93%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86 "解决动态库无法加载的问题")，所以就加载失败了，在 CMake 中可以在生成可执行程序之前，通过命令指定出要链接的动态库的位置，指定静态库位置使用的也是这个命令：
 
 cmake
 
@@ -783,7 +783,7 @@ cmake
 |---|---|
 |1|link_directories(path)|
 
-所以修改之后的`CMakeLists.txt`文件应该是这样的：
+所以修改后的`CMakeLists.txt`文件应该是这样的：
 
 cmake
 
@@ -791,7 +791,7 @@ cmake
 |---|---|
 |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7  <br>8  <br>9  <br>10  <br>11|cmake_minimum_required(VERSION 3.0)  <br>project(TEST)  <br>file(GLOB SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)  <br># 指定源文件或者动态库对应的头文件路径  <br>include_directories(${PROJECT_SOURCE_DIR}/include)  <br># 指定要链接的动态库的路径  <br>link_directories(${PROJECT_SOURCE_DIR}/lib)  <br># 添加并生成一个可执行程序  <br>add_executable(app ${SRC_LIST})  <br># 指定要链接的动态库  <br>target_link_libraries(app pthread calc)|
 
-通过`link_directories`指定了动态库的路径之后，在执行生成的可执行程序的时候，就不会出现找不到动态库的问题了。
+通过`link_directories`指定了动态库的路径后，在执行生成的可执行程序时，就不会出现找不到动态库的问题了。
 
 ### [](https://subingwen.cn/cmake/CMake-primer/#2-6-3-%E6%80%BB%E7%BB%93 "2.6.3 总结")2.6.3 总结
 
@@ -800,55 +800,55 @@ cmake
 **target_link_libraries**
 
 - **功能**: `target_link_libraries` 用于指定一个目标（如可执行文件或库）在编译时需要链接哪些库。它支持指定库的名称、路径以及链接库的顺序。
-    
+
 - **语法**:
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1  <br>2|target_link_libraries(target_name [item1 [item2 [...]]]  <br>                      [<debug\|optimized\|general> <lib1> [<lib2> [...]]])|
-    
+
 - **优点**:
-    
+
     - 更精确地控制目标的链接库。
     - 可以指定库的不同链接条件（如调试版本、发布版本）。
     - 支持多个目标和多个库之间的复杂关系。
     - 更加灵活和易于维护，特别是在大型项目中。
 - **示例**:
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1  <br>2|add_executable(my_executable main.cpp)  <br>target_link_libraries(my_executable PRIVATE my_dynamic_library)|
-    
+
 
 **link_libraries**
 
-- **功能**: `link_libraries` 用于设置全局链接库，这些库会链接到之后定义的所有目标上。它会影响所有的目标，适用于全局设置，但不如 `target_link_libraries` 精确。
-    
+- **功能**: `link_libraries` 用于设置全局链接库，这些库会链接到后定义的所有目标上。它会影响所有的目标，适用于全局设置，但不如 `target_link_libraries` 精确。
+
 - **语法**:
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|link_libraries(lib1 lib2 [...])|
-    
+
 - **缺点**:
-    
+
     - 缺乏针对具体目标的控制，不适合复杂的项目结构。
     - 容易导致意外的依赖关系，因为它对所有目标都生效。
     - 一旦设置，全局影响可能导致难以追踪的链接问题。
 - **示例**:
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1  <br>2|link_libraries(my_static_library)  <br>add_executable(my_executable main.cpp)|
-    
+
 
 **总结**
 
@@ -926,7 +926,7 @@ cmake
 |---|---|
 |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7  <br>8|cmake_minimum_required(VERSION 3.0)  <br>project(TEST)  <br>set(TEMP "hello,world")  <br>file(GLOB SRC_1 ${PROJECT_SOURCE_DIR}/src1/*.cpp)  <br>file(GLOB SRC_2 ${PROJECT_SOURCE_DIR}/src2/*.cpp)  <br># 追加(拼接)  <br>list(APPEND SRC_1 ${SRC_1} ${SRC_2} ${TEMP})  <br>message(STATUS "message: ${SRC_1}")|
 
-在CMake中，使用`set`命令可以创建一个`list`。一个在`list`内部是一个由`分号;`分割的一组字符串。例如，`set(var a b c d e)`命令将会创建一个`list:a;b;c;d;e`，但是最终打印变量值的时候得到的是`abcde`。
+在CMake中，使用`set`命令可以创建一个`list`。一个在`list`内部是一个由`分号;`分割的一组字符串。例如，`set(var a b c d e)`命令将会创建一个`list:a;b;c;d;e`，但是最终打印变量值时得到的是`abcde`。
 
 cmake
 
@@ -968,29 +968,29 @@ cmake
 |---|---|
 |1  <br>2  <br>3  <br>4  <br>5  <br>6  <br>7  <br>8  <br>9  <br>10|cmake_minimum_required(VERSION 3.0)  <br>project(TEST)  <br>set(TEMP "hello,world")  <br>file(GLOB SRC_1 ${PROJECT_SOURCE_DIR}/*.cpp)  <br># 移除前日志  <br>message(STATUS "message: ${SRC_1}")  <br># 移除 main.cpp  <br>list(REMOVE_ITEM SRC_1 ${PROJECT_SOURCE_DIR}/main.cpp)  <br># 移除后日志  <br>message(STATUS "message: ${SRC_1}")|
 
-可以看到，在`第8行`把将要移除的文件的名字指定给`list`就可以了。但是一定要注意通过 file 命令搜索源文件的时候得到的是文件的绝对路径（在list中每个文件对应的路径都是一个item，并且都是绝对路径），那么在移除的时候也要将该文件的绝对路径指定出来才可以，否是移除操作不会成功。
+可以看到，在`第8行`把将要移除的文件的名字指定给`list`就可以了。但是一定要注意通过 file 命令搜索源文件时得到的是文件的绝对路径（在list中每个文件对应的路径都是一个item，并且都是绝对路径），那么在移除时也要将该文件的绝对路径指定出来才可以，否是移除操作不会成功。
 
 关于`list`命令还有其它功能，但是并不常用，在此就不一一进行举例介绍了。
 
 1. 获取 list 的长度。
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list(LENGTH <list> <output variable>)|
-    
+
     - `LENGTH`：子命令LENGTH用于读取列表长度
     - `<list>`：当前操作的列表
     - `<output variable>`：新创建的变量，用于存储列表的长度。
 2. 读取列表中指定索引的的元素，可以指定多个索引
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list(GET <list> <element index> [<element index> ...] <output variable>)|
-    
+
     - `<list>`：当前操作的列表
     - `<element index>`：列表元素的索引
         - 从0开始编号，索引0的元素为列表中的第一个元素；
@@ -998,109 +998,109 @@ cmake
         - 当索引（不管是正还是负）超过列表的长度，运行会报错
     - `<output variable>`：新创建的变量，存储指定索引元素的返回结果，也是一个列表。
 3. 将列表中的元素用连接符（字符串）连接起来组成一个字符串
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list (JOIN <list> <glue> <output variable>)|
-    
+
     - `<list>`：当前操作的列表
     - `<glue>`：指定的连接符（字符串）
     - `<output variable>`：新创建的变量，存储返回的字符串
 4. 查找列表是否存在指定的元素，若果未找到，返回-1
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list(FIND <list> <value> <output variable>)|
-    
+
     - `<list>`：当前操作的列表
     - `<value>`：需要再列表中搜索的元素
     - `<output variable>`：新创建的变量
         - 如果列表`<list>`中存在`<value>`，那么返回`<value>`在列表中的索引
         - 如果未找到则返回-1。
 5. 将元素追加到列表中
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list (APPEND <list> [<element> ...])|
-    
+
 6. 在list中指定的位置插入若干元素
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list(INSERT <list> <element_index> <element> [<element> ...])|
-    
+
 7. 将元素插入到列表的0索引位置
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list (PREPEND <list> [<element> ...])|
-    
+
 8. 将列表中最后元素移除
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list (POP_BACK <list> [<out-var>...])|
-    
+
 9. 将列表中第一个元素移除
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list (POP_FRONT <list> [<out-var>...])|
-    
+
 10. 将指定的元素从列表中移除
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list (REMOVE_ITEM <list> <value> [<value> ...])|
-    
+
 11. 将指定索引的元素从列表中移除
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list (REMOVE_AT <list> <index> [<index> ...])|
-    
+
 12. 移除列表中的重复元素
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list (REMOVE_DUPLICATES <list>)|
-    
+
 13. 列表翻转
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list(REVERSE <list>)|
-    
+
 14. 列表排序
-    
+
     cmake
-    
+
     |   |   |
     |---|---|
     |1|list (SORT <list> [COMPARE <compare>] [CASE <case>] [ORDER <order>])|
-    
+
     - `COMPARE`：指定排序方法。有如下几种值可选：
         - `STRING`:按照字母顺序进行排序，为默认的排序方法
         - `FILE_BASENAME`：如果是一系列路径名，会使用basename进行排序
@@ -1114,7 +1114,7 @@ cmake
 
 ## [](https://subingwen.cn/cmake/CMake-primer/#2-9-%E5%AE%8F%E5%AE%9A%E4%B9%89 "2.9 宏定义")2.9 宏定义
 
-在进行程序测试的时候，我们可以在代码中添加一些宏定义，通过这些宏来控制这些代码是否生效，如下所示：
+在进行程序测试时，我们可以在代码中添加一些宏定义，通过这些宏来控制这些代码是否生效，如下所示：
 
 c++
 
@@ -1124,7 +1124,7 @@ c++
 
 在程序的第七行对`DEBUG`宏进行了判断，如果该宏被定义了，那么第八行就会进行日志输出，如果没有定义这个宏，第八行就相当于被注释掉了，因此最终无法看到日志输入出（**上述代码中并没有定义这个宏**）。
 
-为了让测试更灵活，我们可以不在代码中定义这个宏，而是在测试的时候去把它定义出来，其中一种方式就是在`gcc/g++`命令中去指定，如下：
+为了让测试更灵活，我们可以不在代码中定义这个宏，而是在测试时去把它定义出来，其中一种方式就是在`gcc/g++`命令中去指定，如下：
 
 shell
 
@@ -1180,13 +1180,13 @@ cmake
 感谢你赐予我前进的力量
 
 - [![微信](data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7)](https://subingwen.cn/images/wechatpay.png)
-    
+
     微信
-    
+
 - [![支付宝](data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7)](https://subingwen.cn/images/alipay.png)
-    
+
     支付宝
-    
+
 
 [
 
@@ -1636,7 +1636,7 @@ love love love love love love
 
 [复制地址](javascript:void(0);)[关闭热评](javascript:void(0);)[深色模式](javascript:void(0);)[轉為繁體](javascript:void(0);)
 
- 
+
 
 通知
 

@@ -2,7 +2,7 @@
 [简介 - Git教程 - 廖雪峰的官方网站 (liaoxuefeng.com)](https://liaoxuefeng.com/books/git/introduction/index.html)
 步骤：
 
-1. 使用 cat > filename 之后使用 ctrl+d 保存退出
+1. 使用 cat > filename 后使用 ctrl+d 保存退出
 
 2. 创建 file. txt 文件，内容为
 > 1. this is the first line of file. txt
@@ -30,7 +30,7 @@
 12. 同样，git reset HEAD \<file name>   同样可以将暂存区的修改回退到工作区
 13. echo "this is a file will be deleted.">>test. txt 创建新文件并过会删除
 14. 操作系统提供的删除文件命令是rm \<file name>未 git add 添加之前这个操作**不会被 git 记录**
-    但 git rm \<file name>**只会删除已受到管理的文件**，即被添加 add 之后的文件，这个操作会被 git 记录，删除对应的文件：之后：
+    但 git rm \<file name>**只会删除已受到管理的文件**，即被添加 add 后的文件，这个操作会被 git 记录，删除对应的文件：后：
 	- git rm 确认从版本中删除文件，git commit 使工作区和版本库同统一
 	- git checkout -- \<file name>可以找回文件
 	![450](../../Files%20&%20LongText/Attachments/Pasted%20image%2020240812164550.png)
@@ -77,7 +77,7 @@ $ ssh-keygen -t rsa -C "Sickwag@outlook.com"
 	- branch_name 是指向提交记录的指针
 	- head 是一种**可以**指向指向提交记录的指针（一级或者二级）
 ![[Pasted image 20241206204048.png|调整head之前]]
-![[Pasted image 20241206204113.png|调整之后]]
+![[Pasted image 20241206204113.png|调整后]]
 
 #### 相对引用
 - git 的每一次提交使用*哈希值*标记唯一性，可以通过哈希编码对应找到每一次记录，但它太长了（虽然可以使用前几个字符自动填充），所以引入了相对位置引用：
@@ -103,7 +103,7 @@ $ ssh-keygen -t rsa -C "Sickwag@outlook.com"
 - git reset
 `git reset <branch_name/pointer>` 表示将指针所指向的位置向上移动，如
 `git reset HEAD^1` 表示将 HEAD **所指向的内容**（一般是分支名）向上移动一位
-一般用来移动**分支名**，这样本地 repo 中不会知道有原 HEAD 之后的分支创建过
+一般用来移动**分支名**，这样本地 repo 中不会知道有原 HEAD 后的分支创建过
 ![[Pasted image 20241206212132.png]]
 
 - git revert 用于远程提交的撤回操作（git reset 对远程仓库无效），使用时会创建一个**包含撤操作的提交记录**，其中 `·C2 ` 和 ` C2 ` 一致
@@ -157,7 +157,7 @@ HEAD~4，也就是 C 1 位置是终止位置，执行后可以操作 C 2~C 5 所
 
 #### 向上回溯的不确定行为
 ![[Pasted image 20241207100419.png]]
-- 合并之后向上回溯时，只会跳转到正上方的节点（也就是嫡系为合并后节点的 parent 节点）
+- 合并后向上回溯时，只会跳转到正上方的节点（也就是嫡系为合并后节点的 parent 节点）
 - 使用 `main^2` 跳转到旁系，跳转旁系的依据是合并时的顺序
 - 一般使用 rebase ，merge 只会产生二叉关系，默认合并时第一个节点（第一个参数）是第一个父提交，后面的以此类推
 - 跳转操作符支持链式操作（注意只有 `^` 才支持选择父节点跳转，`~` 只支持向上跳转一次）
@@ -169,5 +169,5 @@ HEAD~4，也就是 C 1 位置是终止位置，执行后可以操作 C 2~C 5 所
 - 如果在远程仓库中使用 git commit，main 分支不会和 head 一起跳转到下一次提交，而是实型 HEAD 分离状态，如：
 ![[Pasted image 20241207104207.png|在远程仓库中commit分离head|375]]
 注意提交之前 HEAD 指向 `o/main` 而不是本地仓库的 main，
-因只有当本地仓库中有相应的更新之后才会才在远程仓库中更新 main 分支
+因只有当本地仓库中有相应的更新后才会才在远程仓库中更新 main 分支
 ![[Pasted image 20241207104724.png|300]]

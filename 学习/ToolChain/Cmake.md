@@ -39,18 +39,18 @@ C 程序源文件到可执行文件需要经过：
 # CMake 编写规范
 ## 基本规范
 ### 配置书写顺序
-- 注意所有 `set(CMAKE_…..)` 的设置cmake配置的代码应该放在设置cmake版本代码之后，在project之前。
+- 注意所有 `set(CMAKE_…..)` 的设置cmake配置的代码应该放在设置cmake版本代码后，在project之前。
 - `project()` 之前，CMake 不知道你要用什么语言，也不知道编译器是谁 CMake 在 `project()` 时才会：设置默认编译器（如 MSVC / GCC），***所有的 set 语句和 cmake_... 语句设置的变量直到 project 语句时才会执行***，更准确的说法是：
 
 > `set(...)` 和 `cmake_...` 命令在它们出现时**立即执行**，但它们对 CMake 行为的影响，可能要在 `project()` 后才“生效”或“被使用”。
 
-- `find_package()` 必须放在 `project()` 之后，因 CMake 需要**先初始化项目环境（编译器、语言、架构）**，才能正确查找和链接外部库。
+- `find_package()` 必须放在 `project()` 后，因 CMake 需要**先初始化项目环境（编译器、语言、架构）**，才能正确查找和链接外部库。
 
 ### 工具链文件预处理逻辑
 
 > 作用：全局集成（推荐用于个人开发环境）
 
-在安装 vcpkg 之后，通常需要输入：
+在安装 vcpkg 后，通常需要输入：
 ```powershell
 vcpkg integrate project
 ```
@@ -64,7 +64,7 @@ vcpkg integrate project
 	- 在本机开发多个项目，都使用 vcpkg
 	- 简化 CMakeLists.txt，不每次都写 `set(CMAKE_TOOLCHAIN_FILE ...)`
 	- 用 Qt Creator / VSCode / Visual Studio 等 IDE，希望自动识别依赖
-使用这句之后，在 cmake 项目中即使不写 `CMAKE_TOOLCHAIN_FILE` cmake 仍能够正确识别 vcpkg 中安装的库，而不是在别的地方寻找
+使用这句后，在 cmake 项目中即使不写 `CMAKE_TOOLCHAIN_FILE` cmake 仍能够正确识别 vcpkg 中安装的库，而不是在别的地方寻找
 
 > [!NOTE]
 > 可以通过运行 `vcpkg integrate remove` 清除全局集成
@@ -99,19 +99,19 @@ include(vcpkg.cmake)  # 或者 set(CMAKE_TOOLCHAIN_FILE "vcpkg.cmake")
 常用于避免旧版兼容问题（如 `CMP0167 `）
 - `option (VARIABLE "Description" ON/OFF)`
 作用：定义用户可选的开关变量（常用于 GUI 或命令行）
-立即执行，可在 `project()` 之前或之后使用
+立即执行，可在 `project()` 之前或后使用
 - `include (CMakeLists. txt) 或 include (Module. cmake)`
 作用：包含其他 CMake 文件
 立即执行，内容会被“内联”到当前脚本中
 - `target_include_directories (TARGET PRIVATE|PUBLIC|INTERFACE DIR...)`
 作用：为目标添加头文件搜索路径
-必须在 add_executable 或 add_library 之后调用
+必须在 add_executable 或 add_library 后调用
 - `target_compile_definitions (TARGET PRIVATE|PUBLIC|INTERFACE DEFINITION...)`
 作用：为目标添加预处理器宏
-必须在 add_executable 或 add_library 之后调用
+必须在 add_executable 或 add_library 后调用
 - `target_compile_options (TARGET PRIVATE|PUBLIC|INTERFACE OPTION...)`
 作用：为目标添加编译选项
-必须在 add_executable 或 add_library 之后调用
+必须在 add_executable 或 add_library 后调用
 target_compile_options (main PRIVATE "-Wall" "-Wextra")
 适用于特定目标的优化或警告设置。
 - `install (TARGETS ... DESTINATION ...) / install (DIRECTORY ... DESTINATION ...)`
@@ -124,7 +124,7 @@ install (DIRECTORY include/ DESTINATION include)
 ```
 - `add_custom_command () / add_custom_target ()`
 作用：定义自定义构建步骤或目标
-必须在 project () 之后调用
+必须在 project () 后调用
 ```cmake
 add_custom_command (
     OUTPUT generated. h
@@ -163,7 +163,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # endif()
 
 project(learn_dll_lib VERSION 0.1.0 LANGUAGES C CXX)
-find_package(Boost REQUIRED COMPONENTS system) # find_package在project之后
+find_package(Boost REQUIRED COMPONENTS system) # find_package在project后
 
 add_library(learn_dll_lib learn_dll_lib.cpp)
 
@@ -229,7 +229,7 @@ Call Stack (most recent call first):
 ### 问题
 怎么都找不到 vcpkg 的 tool_chain_file
 
-当通过 `settings.json` 和 `CMakePresets.json` 中设置 vcpkg 的 cmake 配置工具链文件都出现了找不到 vcpkg 安装库下对应第三方库文件的 cmake 配置文件时（无法找到 `xxxx-config.cmake`），可能是 cmake 在 `find_package` 命令执行时，按照系统环境变量搜索，而不是按照 `vcpkg/installed` 搜索，有的时候会搜索 anaconda 目录，这是由于安装了 Visual studio 造成。
+当通过 `settings.json` 和 `CMakePresets.json` 中设置 vcpkg 的 cmake 配置工具链文件都出现了找不到 vcpkg 安装库下对应第三方库文件的 cmake 配置文件时（无法找到 `xxxx-config.cmake`），可能是 cmake 在 `find_package` 命令执行时，按照系统环境变量搜索，而不是按照 `vcpkg/installed` 搜索，有时会搜索 anaconda 目录，这是由于安装了 Visual studio 造成。
 ### 各种参数和工作原理
 如果还是找不到 vcpkg 的安装目录或者还是在 anaconda 中寻找：强制指定 vcpkg 库安装目录可以解决
 ```cpp
@@ -402,7 +402,7 @@ httplib 是一个单头文件库，只需要使用 `find_package(httplib CONFIG 
 ### 找不到头文件和 `LNK2019` 错误
 一般引入单头文件库只需要将头文件复制到项目目录中并添加到 includepath 中即可，并不需要链接。但如果通过包管理工具引入但头文件库，可能会将头文件编译为库，也有可能不会，所以保险起见还是都使用 `target_link_libraries()` 链接.
 
-添加链接之后错误消失，推测可能是 vcpkg 将 httplib 编译成了库，但 everything 未查找到对应文件
+添加链接后错误消失，推测可能是 vcpkg 将 httplib 编译成了库，但 everything 未查找到对应文件
 ```cmake
 project(ExplainLNK2019 VERSION 0.1.0 LANGUAGES C CXX)
 find_package(httplib CONFIG REQUIRED)
@@ -487,7 +487,7 @@ $1
 ```
 查阅这些符号来自什么库，通过 find_package 和 target_link_libraries 链接接口
 
-msbuild 中对 vcpkg 有很好的支持（使用 `vcpkg integrate install` 后），会自动在 vcpkg 中寻找，而 cmake 构建中，如果没有指定 tool_chain_file 就不会自动寻找，所以可能会导致问题（有的时候指定了也会这样，原因未知 #未知错误 ）
+msbuild 中对 vcpkg 有很好的支持（使用 `vcpkg integrate install` 后），会自动在 vcpkg 中寻找，而 cmake 构建中，如果没有指定 tool_chain_file 就不会自动寻找，所以可能会导致问题（有时指定了也会这样，原因未知 #未知错误 ）
 ## qt-creator linux 版诡异问题
 ### 没有添加 qt 目录到 CMAKE_PREFIX_PATH 也能构建
 如题，这时候 qt-creator 可以正常工作但手动使用 `cmake -B && cmake --build` 在终端构建会报错找不到 qt 库（没有设置环境变量）
@@ -543,7 +543,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 ## vcpkg
 ### 下载速度问题
 参考：[vcpkg国内镜像源替换-CSDN博客](https://blog.csdn.net/weixin_41364246/article/details/140123907)
-修改国内镜像之后，大部分包能够快速下载，但不在 github 拖管的包需要自己替换源
+修改国内镜像后，大部分包能够快速下载，但不在 github 拖管的包需要自己替换源
 ### 老库在新 cmake 不兼容导致无法编译
 #### 日志内容
 ```bash
@@ -636,7 +636,7 @@ vcpkg 安装的库，在 `vcpkg/ports/库名称/portfile.cmake` 中的 vcpkg_cma
 ```cmake
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
-    OPTIONS 
+    OPTIONS
         # 其他选项...
         -DCMAKE_POLICY_VERSION_MINIMUM=3.5  # 添加此行
 )
@@ -727,7 +727,7 @@ cmake -S /path/to/source -B /path/to/build -G <generate-name>
 # 当前cmake支持的生成器通过命令查看
 # cmake --help | grep -A 50 "The following generators"
 ```
-使用不同的生成器生成文件之后，就可以用对应的构建工具生成文件
+使用不同的生成器生成文件后，就可以用对应的构建工具生成文件
 ```bash
 cmake -S . -B --build -G Ninja
 cd build && ninja
@@ -981,8 +981,8 @@ target_sources(MathFunctions PRIVATE
 	MathFunctions/MathFunctions.h
 )
 ```
-`add_library` 可以放在 `target_link_libraries ` 之后，然后再通过 `target_source` 定义库（目标）的具体细节，有点像先声明再定义。
-链接之后 cmake 就可以读取库头文件内容，可以使用 `#include` 命令引入。整个过程用术语表述为：*将 `MathFunctions` 添加到 `Tutorial` 的链接库中，将 `Tutorial` 可执行文件描述为 `MathFunctions` 目标的消费者*
+`add_library` 可以放在 `target_link_libraries ` 后，然后再通过 `target_source` 定义库（目标）的具体细节，有点像先声明再定义。
+链接后 cmake 就可以读取库头文件内容，可以使用 `#include` 命令引入。整个过程用术语表述为：*将 `MathFunctions` 添加到 `Tutorial` 的链接库中，将 `Tutorial` 可执行文件描述为 `MathFunctions` 目标的消费者*
 
 ### 练习 4 - 子目录
 需要注意的是子 cmake 目录中 `cmakelists.txt` 中字符串/路径变量相对位置会改变。添加当前文件目录中文件作为 includePath 时，base_dir 属性可以留空
@@ -1037,7 +1037,7 @@ target_sources(MathFunctions PRIVATE
 )
 ```
 会对 target**添加 `header_set` 和 `interface_header_sets`**，`internalOnlyHeaders` 的值将添加到 [`HEADER_SETS`](https://cmake.com.cn/cmake/help/latest/prop_tgt/HEADER_SETS.html#prop_tgt:HEADER_SETS "HEADER_SETS")，`consumerOnlyHeaders` 将添加到 [`INTERFACE_HEADER_SETS`](https://cmake.com.cn/cmake/help/latest/prop_tgt/INTERFACE_HEADER_SETS.html#prop_tgt:INTERFACE_HEADER_SETS "INTERFACE_HEADER_SETS")，而 `publicHeaders` 将添加到两者。
-在函数中定义 file_set 之后，作用域仅限于**当前 target**
+在函数中定义 file_set 后，作用域仅限于**当前 target**
 #### target_link_directories
 只会定义**连接器搜索库文件路径**，类似编译器的 `-L` 参数，定义的只是文件夹，而 `target_link_libraries` 定义的是具体链接的库文件名称
 ## 第 2 步：CMake 语言基础
@@ -1133,7 +1133,7 @@ cmake \
   -P StickyCacheVariable.cmake
 StickyCacheVariable: Commandline always wins
 ```
-缓存变量通常不能更改，但它们可以被普通变量 *覆盖*。设置一个与缓存变量同名的变量会导致**变量名指向普通变量的值**，使用 `unset` 之后又会指向缓存变量
+缓存变量通常不能更改，但它们可以被普通变量 *覆盖*。设置一个与缓存变量同名的变量会导致**变量名指向普通变量的值**，使用 `unset` 后又会指向缓存变量
 
 ### 练习 1 - 使用选项
 添加可选项：
@@ -1395,7 +1395,7 @@ add_executable(exe_b main_b.cpp $<TARGET_OBJECTS:Utils>)
 #### 库和工程编译器不一致
 - **Windows 下的静态库(.lib)具有编译器特定性**，MSVC 编译的库只能由 MSVC 链接，MinGW 编译的库只能由 MinGW 链接
 - 不同编译器的 ABI（应用二进制接口）不兼容，会导致符号链接失败
-工程编译完成之后的**链接这一步需要编译器对应的链接器**，否则会在链接阶段大量找不到符号
+工程编译完成后的**链接这一步需要编译器对应的链接器**，否则会在链接阶段大量找不到符号
 ```bash
 D:/Program/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: CMakeFiles\thread_pool_myself.dir/objects.a(main.cpp.obj): in function `main':
 D:/Code Files/temp_projects/MyTinyTools/thread_pool_myself/main.cpp:6:(.text+0x33): undefined reference to `fastlog::set_console_log_level(fastlog::LogLevel)'
@@ -1412,7 +1412,7 @@ CMake 生成器决定了使用哪个编译器工具链，但是
 - Linux: `objdump -h library.a` 或 `readelf -h library.so`
 
 ```bash
-dumpbin.exe .\thirdparty\fastlog-debug\lib\fastlog.lib     
+dumpbin.exe .\thirdparty\fastlog-debug\lib\fastlog.lib
 Microsoft (R) COFF/PE Dumper Version 14.44.35215.0
 Copyright (C) Microsoft Corporation.  All rights reserved.
 ....
@@ -1526,7 +1526,7 @@ ctest --test-dir build -R SpecificTest
 ### 练习 1 - 添加测试
 具体建立测试步骤为：
 1. 在根目录中使用 `enable_testing()`
-2. 需要测试位置像创建一个可执行程序一样 `add_executable`，链接文件/库之后，为每一个测试编写 `add_test()`，并在其中声明 `NAME` 和 `COMMAND`，COMMAND 的用法就是命令行程序的用法，比如命令行程序名为 `main.exe`，那么 `add_test` 应该写成
+2. 需要测试位置像创建一个可执行程序一样 `add_executable`，链接文件/库后，为每一个测试编写 `add_test()`，并在其中声明 `NAME` 和 `COMMAND`，COMMAND 的用法就是命令行程序的用法，比如命令行程序名为 `main.exe`，那么 `add_test` 应该写成
 ```cmake
 add_test(
 	NAME name
@@ -1571,7 +1571,7 @@ install(
 ![[PixPin_2026-01-10_11-15-36.png]]
 配置完成后用户就能通过 `cmake --install` 命令将项目安装到对应的位置并使用了
 ### 练习 2 - 导出目标
-但对于库，使用[[#练习 1 - 安装构件]]的配置并不能实现要求，有些库在安装之后文件结构比较复杂，如果需要使用这些库需要在导入项目中使用很多 `target_link/include_XXX` 来指定文件路径，非常麻烦
+但对于库，使用[[#练习 1 - 安装构件]]的配置并不能实现要求，有些库在安装后文件结构比较复杂，如果需要使用这些库需要在导入项目中使用很多 `target_link/include_XXX` 来指定文件路径，非常麻烦
 导出目标用来**将 CMake 项目中目标（如库或可执行文件）导出为可重用的配置文件**，以便其他项目可以通过 `find_package()` 直接使用这些目标，由于 `find_package` 实际上会查找对应库的 `Config.cmake` 配置文件并引入，所以导出目标就需要设置这些内容
 install 命令本质上只是在做定义工作，真正的导出文件行为会在使用 `install` 命令时执行
 #### install (TARGETS ...) 定义目标
@@ -1777,7 +1777,7 @@ install(
 	DESTINATION include  # 头文件安装到 /usr/local/include/
 )
 ```
-这条命令会将所有 cmake 在 include 路径中扫描到的头文件放在这个 destination 位置，如果 DIRECTORY 中有头文件在其他位置使用了 `target_include_directories()` 添加到指定位置则会被忽略，之后通常就能通过：
+这条命令会将所有 cmake 在 include 路径中扫描到的头文件放在这个 destination 位置，如果 DIRECTORY 中有头文件在其他位置使用了 `target_include_directories()` 添加到指定位置则会被忽略，后通常就能通过：
 ```cmake
 # 其他项目的 CMakeLists.txt
 find_package(MyProject 1.2.0 REQUIRED)  # 自动加载 MyProjectConfig.cmake
@@ -1902,7 +1902,7 @@ target_link_libraries(MyApp PRIVATE ${MYLIB_LIBRARY})
 	3. 子目录 `Package`（如 `/usr/local/include/Package/Package.h`）
 	- 如果找到，`PackageIncludeFolder` 会被设置为包含 `Package.h` 的目录（如 `/usr/local/include/Package`）
 	- 如果未找到，CMake 报错并终止
-- 查找完之后手动添加到 includepath 中
+- 查找完后手动添加到 includepath 中
 ## 第 11 步：杂项功能
 ### 练习 1：目标别名
 没什么意义，并且教程中缺失安装 SimpleTest 这一步
@@ -2161,7 +2161,7 @@ if (WIN32)
     )
 endif ()
 ```
-构建可执行程序时直接编译出打包之后的样子，调用 windeploy 部署
+构建可执行程序时直接编译出打包后的样子，调用 windeploy 部署
 #### 其他项目使用的方法
 使用
 ```cmake
@@ -2213,4 +2213,4 @@ add_executable(${PROJECT_NAME}
 
 source_group("UI Generated Files" FILES ${UI_HEADERS})
 ```
-当使用 AUTOUIC 自动处理时，CMake 会为每个.ui 文件自动生成对应的头文件，可能导致*非必要文件修改之后*总是重新编译（但这里不是，仅仅是为了在 vs ide 中显示他们，更好地了解细节）
+当使用 AUTOUIC 自动处理时，CMake 会为每个.ui 文件自动生成对应的头文件，可能导致*非必要文件修改后*总是重新编译（但这里不是，仅仅是为了在 vs ide 中显示他们，更好地了解细节）

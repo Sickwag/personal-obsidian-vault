@@ -107,7 +107,7 @@ arcpy.<toolname>_<toolboxalias>
 ```python
 arcpy.PairwiseErase_analysis("etobicoke", "fire_buffer", "no_service")
 ```
-这段代码的意思是从 etobicoke 要素（通常是地图块）中减去 fire_buffer 要素之后留下来的内容转化为一个要素，存储在 no_servive 中
+这段代码的意思是从 etobicoke 要素（通常是地图块）中减去 fire_buffer 要素后留下来的内容转化为一个要素，存储在 no_servive 中
 ### 差集擦除
 ArcGIS 中 `arcpy.PairwiseErase_analysis` 工具，它的作用是进行 **“差集”**（Erase）空间分析。具体来说，它会从第一个输入要素类（`"etobicoke"`）中移除与第二个输入要素类（`"fire_buffer"`）重叠的部分，并将结果保存到第三个参数指定的输出要素类（`"no_service"`）中。
 

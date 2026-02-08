@@ -663,7 +663,7 @@ struct EmailData {
 class SimpleEmailSender {
    public:
     /**
-     * @note 建议主函数开头使用curl_global_init(CURL_GLOBAL_DEFAULT)，发送完邮件之后使用curl_global_cleanup()，释放资源，不建议纳入send_email函数中，否则建立连接和释放连接开销较大
+     * @note 建议主函数开头使用curl_global_init(CURL_GLOBAL_DEFAULT)，发送完邮件后使用curl_global_cleanup()，释放资源，不建议纳入send_email函数中，否则建立连接和释放连接开销较大
      */
     bool send_email(const std::string& smtp_server,
                            int port,

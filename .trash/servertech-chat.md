@@ -6,7 +6,7 @@
 - 安装编译 boost 库必须的开发套件包 `bashsudo apt install build-essential g++ python3-dev libicu-dev libbz2-dev wget`，其中 g++不会是最新的
 - 在 [Boost 1.89.0](https://www.boost.org/releases/latest/) 中找到最新 boost 库，使用 `wget` 下载对应的包
 	- `tar -xvf` 解压包
-	- `cd` 之后 `./bootstrap -prefix=/usr/local/boost_1.89.0` ，prefix 参数决定了之后使用 `./b2 install` 会将 boost 库文件安装在什么位置
+	- `cd` 后 `./bootstrap -prefix=/usr/local/boost_1.89.0` ，prefix 参数决定了后使用 `./b2 install` 会将 boost 库文件安装在什么位置
 	- `./b2 install` 安装 boost 库
 	- 检查 `ls -al /usr/local/boost_1.89.0` 中是否有 include 和 lib 文件夹，以及其中是否有大量的 `.hpp` 文件
 - 在(https://cmake.org/files/v3.29/cmake-3.29.0.tar.gz) 中下载 cmake 构建工具
@@ -20,7 +20,7 @@
 ```cmake
 find_package(Boost REQUIRED COMPONENTS headers context json regex url)
 # 改为
-find_package(Boost REQUIRED COMPONENTS headers context json regex url charconv) 
+find_package(Boost REQUIRED COMPONENTS headers context json regex url charconv)
 target_link_libraries(
     servertech_chat
     PUBLIC
@@ -31,11 +31,11 @@ target_link_libraries(
     pthread
 )
 ```
-- 在进入 serve 目录之后使用
+- 在进入 serve 目录后使用
 ```bash
 cmake . -DCMAKE_CXX_STANDARD=17 && make
 ```
-出现 main 文件之后继续按照指引即可
+出现 main 文件后继续按照指引即可
 如果使用 `npm run dev` 出现缺少依赖的问题：
 ```bash
 sickwag@VM-20-9-ubuntu:~/code_files/servertech-chat/client$ npm run dev
@@ -259,13 +259,13 @@ email. cpp 及其头文件的功能是否是我理解诶的那样：
 	- 如果使用了自定义类并且继承自 `boost::system::error_category`，就必须要在 boost:: system 命名空间中创建一个特化模板，它的格式为：
 ```cpp
 template <>
-struct is_error_code_enum<chat::errc> { 
+struct is_error_code_enum<chat::errc> {
    static constexpr bool value = true;
 };
 ```
 模板类型名称一定要为 `struct is_error_code_enum`，才能够将 `chat::errc` 中的错误类型假入 boost:: system 管理。
 #### 整体结构
-1. error. hpp 中定义 enum class errc 定义所有可能出现的错误，error. cpp 中使用 `BOOST_DESCIBE_ENUM` 描述 to_string 之后的信息。
+1. error. hpp 中定义 enum class errc 定义所有可能出现的错误，error. cpp 中使用 `BOOST_DESCIBE_ENUM` 描述 to_string 后的信息。
 2. to_string 创建转换规则，将 `char::ec`；类型对应的 BOOST_DESCIBE_ENUM 类型对应，转换为对应字符串。和 chat_category 将自定义错误注册让 boost:: system 来管理。to_strng 名为了避免冲突，并且他只服务于 chat_category 中，所以放在匿名 namespace 中。
 3. 注册还有一个步骤是在 boost:: system 中创建一个特化模板(is_error_code_num)，表示 chat:: errc 已经是其中一员。
 4. 两个宏定义让外部**需要返回 error_code 类型的函数**使用他们时，传入错误，即可创建附带位置的 error_code 对象直接中断函数，return 出现的错误。如果

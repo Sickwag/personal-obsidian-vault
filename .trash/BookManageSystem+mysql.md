@@ -1,5 +1,5 @@
 ## Cmake 设置问题
-当通过 `settings.json` 和 `CMakePresets.json` 中设置 vcpkg 的 cmake 配置工具链文件都出现了找不到 vcpkg 安装库下对应第三方库文件的 cmake 配置文件时（无法找到 `xxxx-config.cmake`），可能是 cmake 在 `find_package` 命令执行时，按照系统环境变量搜索，而不是按照 `vcpkg/installed` 搜索，有的时候会搜索 anaconda 目录，这是由于安装了 Visual studio 造成。
+当通过 `settings.json` 和 `CMakePresets.json` 中设置 vcpkg 的 cmake 配置工具链文件都出现了找不到 vcpkg 安装库下对应第三方库文件的 cmake 配置文件时（无法找到 `xxxx-config.cmake`），可能是 cmake 在 `find_package` 命令执行时，按照系统环境变量搜索，而不是按照 `vcpkg/installed` 搜索，有时会搜索 anaconda 目录，这是由于安装了 Visual studio 造成。
 如果还是找不到 vcpkg 的安装目录或者还是在 anaconda 中寻找：强制指定 vcpkg 库安装目录可以解决
 ```cpp
 set(Boost_DEBUG ON)
@@ -108,7 +108,7 @@ protected:
 };
 
 // librarian.h
-#pragma once 
+#pragma once
 #include "user.h"
 #include "utils.h"
 class Librarian : public User {
@@ -132,7 +132,7 @@ public:
 ```
 ```error
 严重性	代码	说明	项目	文件	行	抑制状态	详细信息
-错误	C2504	“Librarian”: 未定义基类	mysql-connect-demo	D:\Code Files\vsstudio\mysql-connect-demo\mysql-connect-demo\sys_admin.h	5		
+错误	C2504	“Librarian”: 未定义基类	mysql-connect-demo	D:\Code Files\vsstudio\mysql-connect-demo\mysql-connect-demo\sys_admin.h	5
 ```
 **![[Pasted image 20250712150300.png]]**
 ## 单例模式使用模板
@@ -520,7 +520,7 @@ awaitable<void> Reader::login_with_pwd(const std::string& name, const std::strin
 - 如果每个“模块类”中的“服务类”对象都使用引用传递，这样可以解决资源浪费问题，但是每个“模块类”实例化都需要
 	- 提前创建***生命周期长于模块类对象***的服务类对象，将对象传入模块类的构造函数中
 	- 如果模块类需要的服务很多，构造函数需要传入很多参数，可读性降低，不好维护
-	- 新增模块类的时候需要了解底层实现，了解各类服务都是什么
+	- 新增模块类时需要了解底层实现，了解各类服务都是什么
 ### 解决方案
 创建服务管理类对象，统一管理所有服务，为**所有模块**提供服务
 ```cpp
@@ -622,12 +622,12 @@ int main() {
 
 int main() {
     Py_Initialize();
-    
+
     boost::python::object module = boost::python::import("script");
     boost::python::object result = module.attr("main")("arg1", "arg2");
-    
+
     std::cout << "Result: " << boost::python::extract<std::string>(result) << std::endl;
-    
+
     Py_Finalize();
     return 0;
 }

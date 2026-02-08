@@ -325,7 +325,7 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 </head>
 ```
 - 外部样式表
-当样式需要被应用到很多页面的时候，外部样式表将是理想的选择。使用外部样式表，你就可以通过更改一个文件来改变整个站点的外观。
+当样式需要被应用到很多页面时，外部样式表将是理想的选择。使用外部样式表，你就可以通过更改一个文件来改变整个站点的外观。
 ```html
 <head>
 <link rel="stylesheet" type="text/css" href="mystyle.css">
@@ -347,11 +347,11 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 - 差别 1：
 本质的差别：link 属于 XHTML 标签，而 @import 完全是 CSS 提供的一种方式。
 - 差别 2：
-加载顺序的差别： 当一个页面被加载的时候（就是被浏览者浏览的时候) ，link 引用的 CSS 会同时被加载，而 @import 引用的 CSS 会等到页面全部被下载完再被加载。所以有时候浏览 @import 加载 CSS 的页面时开始会没有样式 (就是闪烁)，网速慢的时候还挺明显。
+加载顺序的差别： 当一个页面被加载时（就是被浏览者浏览时) ，link 引用的 CSS 会同时被加载，而 @import 引用的 CSS 会等到页面全部被下载完再被加载。所以有时候浏览 @import 加载 CSS 的页面时开始会没有样式 (就是闪烁)，网速慢时还挺明显。
 - 差别 3：
 兼容性的差别: @import 是 CSS 2.1 提出的，所以老的浏览器不支持，@import 只有在 IE 5 以上的才能识别，而 link 标签无此问题。
 - 差别 4：
-使用 dom (document object model 文档对象模型 ) 控制样式时的差别：当使用 javascript 控制 dom 去改变样式的时候，只能使用 link 标签，因@import 不是 dom 可以控制的。
+使用 dom (document object model 文档对象模型 ) 控制样式时的差别：当使用 javascript 控制 dom 去改变样式时，只能使用 link 标签，因@import 不是 dom 可以控制的。
 #### HTML 图片
 使用 `img` 标签中属性设置图片，也可以用 CSS 层级样式
 - `src `设置图片来源
@@ -958,7 +958,7 @@ option 还有拓展 optgroup
 
 ##### 相似控件区别
 ###### button 和 input type="button"
-- **`<button>` 标签**：不同浏览器对 `<button>` 的默认样式可能有所不同，按钮之中支持 img，audio 等不同 html 元素，并且可以指定按下按钮之后**向服务器发送的内容默认值（value）、编码格式等（formenctype）**
+- **`<button>` 标签**：不同浏览器对 `<button>` 的默认样式可能有所不同，按钮之中支持 img，audio 等不同 html 元素，并且可以指定按下按钮后**向服务器发送的内容默认值（value）、编码格式等（formenctype）**
 - **`<input type="button">`**：默认样式较为简单，通常只包含按钮文本。value 值是按钮显示的文字
 
 | 特性       | `<button>` 标签     | `<input type="button">` |
@@ -1206,7 +1206,7 @@ canvas 中 height 和 width 属性可以限制画布尺寸
 #### colgroup
 `<colgroup>` 标签用于对表格中列进行组合，以便对其进行格式化。
 通过使用 `<colgroup>` 标签，可以向整个列应用样式，而不需要重复为每个单元格或每一行设置样式。
-**注释：**只能在 `<table>` 元素之内，在任何一个 `<caption>` 元素之后，在任何一个 `<thead>`、`<tbody>`、`<tfoot>`、`<tr>` 元素之前使用 `<colgroup>` 标签。**
+**注释：**只能在 `<table>` 元素之内，在任何一个 `<caption>` 元素后，在任何一个 `<thead>`、`<tbody>`、`<tfoot>`、`<tr>` 元素之前使用 `<colgroup>` 标签。**
 colgroup 定义在一个 table 中，按顺序从左至右为每一个 col 设置格式
 ![[Pasted image 20250114162637.png]]
 ```html

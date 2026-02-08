@@ -83,12 +83,12 @@ linux由系统内核和系统及应用程序（系统出厂自带程序）
 虚拟处理器 1核即可
 ### 远程连接linux
 内linux外windows会使文件传输内容复制不方便,所以使用finalshell
-重启之后IP地址会改变, 同样使用linux的ifconfig查找并输入到finalshell中
+重启后IP地址会改变, 同样使用linux的ifconfig查找并输入到finalshell中
 ### 拓展: 通过WSL使用ubuntu
 WSL直接连宿主机的硬件, 性能远超虚拟机
 ### 虚拟机快照
 类似于windows的回溯点
-虚拟机关机之后创建关机比较安全
+虚拟机关机后创建关机比较安全
 ![Untitled 1 41.png](Untitled%201%2041.png)
 # 第二章
 ## Linux基础命令
@@ -195,7 +195,7 @@ cat -n example.txt
 - 连接多个文件的内容并显示：`cat file1 file2`
 - 创建或覆盖文件内容：`cat > filename`
 - 追加内容到文件末尾：`cat >> filename`
-**写完内容之后使用Ctrl+D结束输入,使用Ctrl+W删除一整行内容**
+**写完内容后使用Ctrl+D结束输入,使用Ctrl+W删除一整行内容**
 ### more 命令
 - **全称**: 无特定全称，直接是 `more`。
 - **用法**: 逐页显示文件内容。
@@ -909,7 +909,7 @@ Linux 中主机名同 Windows 一样可以查看和修改
 ##### IP 地址和主机名映射设置
 域名解析原理得知 Windows 首先查找本地 IP 地址映射，这里修改本地 host 文件将主机名映射到IP 地址
 ![Pasted image 20240917204900.png](Pasted%20image%2020240917204900.png)
-在 host 文件中添加主机名和 IP 地址之后在 finnalshell 中可以将主机名作为映射连接到相应的 IP 地址
+在 host 文件中添加主机名和 IP 地址后在 finnalshell 中可以将主机名作为映射连接到相应的 IP 地址
 ##### 配置 vm 的固定 IP 地址
 配置固定 IP 地址使其不用每次都连接
 1. 在 VMwareWorkstation（或 Fusion）中配置 IP 地址网关和网段（IP 地址的范围）
@@ -983,7 +983,7 @@ tcp6       0      0 :::111                  :::*                    LISTEN      
 ```
 LISTEN 表示端口正在监听，netstat 命令可以搜索层序名或者端口号，所以可以用来判断端口是否空闲
 ### 进程管理
-为管理运行的程序，每一个程序在运行的时候，便被操作系统注册为系统中一个进程分配一个独有的：进程 ID（进程号）
+为管理运行的程序，每一个程序在运行时，便被操作系统注册为系统中一个进程分配一个独有的：进程 ID（进程号）
 #### ps 命令
 可以通过 ps 命令查看 Linux 系统中进程信息
 语法：`ps[-e-f]`
@@ -1068,7 +1068,7 @@ num 1：数字，刷新间隔，num 2：数字，刷新几次
 虚线内大部分是运维专业内容，一般只需要关注加粗项即可
 
 -------------
-- rrqm/s:个请求合并 Merge，提高 IO 利用率，避免重复调用）;\[每秒这个设备相关的读取请求有多少被 Merge 了（当系统调用需要读取数据的时候，VFS 将请求发到各个 FS, 如果 FS 发现不同的读取请求读取的是相同 Block 的数据，FS 会将这
+- rrqm/s:个请求合并 Merge，提高 IO 利用率，避免重复调用）;\[每秒这个设备相关的读取请求有多少被 Merge 了（当系统调用需要读取数据时，VFS 将请求发到各个 FS, 如果 FS 发现不同的读取请求读取的是相同 Block 的数据，FS 会将这
 - wrqm/s: 每秒这个设备相关的写入请求有多少被 Merge 了。
 - rsec/s: 每秒读取的扇区数；sectors
 - wsec/: 每秒写入的扇区数。
@@ -1181,7 +1181,7 @@ tar 的常用组合为：
 将 1. txt 2. txt 3. txt 压缩到 test. tar. gz 文件内，使用 gzip 模式
 ##### zip
 语法：`zip [-r] 参数 1 参数 2... 参数 N`
--r，被压缩的包含文件夹的时候，需要使用-r 选项，和 rm、cp 等命令的-r 效果一致
+-r，被压缩的包含文件夹时，需要使用-r 选项，和 rm、cp 等命令的-r 效果一致
 `zip test.zip a.txt b.txt c.txt`
 将a.txtb. txtc. txt 压缩到 test. zip 文件内
 `zip -r test.zip test itheima a.txt`
@@ -1237,7 +1237,7 @@ lrwxrwxrwx. 1 root root   12 9月  17 11:51 yum.conf -> etc/yum.conf
 
 ### Tomcat
 - 下载好的文件放在 `/home/sickwag/download_files` 文件夹中
-- 通过软连接链接文件夹目的是使保留版本号可查，更新之后只需要更改软连接指向即可使用新版本
+- 通过软连接链接文件夹目的是使保留版本号可查，更新后只需要更改软连接指向即可使用新版本
 - java_home 在配置环境变量中是为了防止使用新 Java 版本导致环境变量错乱。使用 java_home 中转，有新的 Java 版本只需要修改 java_home 即可
 - 删除系统 java 目的是使用自己版本的 java
 ```bash
@@ -1300,7 +1300,7 @@ Setting tags for user "admin" to [administrator] ...
 ### elasticsearch
 按照文档走，但还未解决无法连接上[主机 IP 地址:9200](连接主机控制台) 问题
 ### 集群化环境前置准备
-创建多台虚拟机之后 [Linux long text explanation \> centos 修改 linuxIP 地址](Linux%20long%20text%20explanation.md#centos%20修改%20linuxIP%20地址)
+创建多台虚拟机后 [Linux long text explanation \> centos 修改 linuxIP 地址](Linux%20long%20text%20explanation.md#centos%20修改%20linuxIP%20地址)
 在修改 IP 地址时，由于没有实现设置静态 IP，所以 ifcfg 文件中内容与视频中不一样，并且 centos 8 以上版本中**重启网络服务旧命令已被弃用**
 `systemctl restart network` 已被弃用，改用 `nmcli c reload`
 使用前面的命令会出现错误提示

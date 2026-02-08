@@ -264,7 +264,7 @@ print(bad_sort(3))   # [3]
 print(bad_sort(1))   # [1, 3]  <-- 继续用同一个列表！
 print(bad_sort(2))   # [1, 2, 3]
 ```
-4. 绑定参数之后**不能解绑**，但可以**复制提取**其中对象。
+4. 绑定参数后**不能解绑**，但可以**复制提取**其中对象。
 ```python
 original = power   # 提前备份是一种方法
 square = partial(power, exp=2)
@@ -438,7 +438,7 @@ Foo = type('Foo', (object, ), {'foo': True, 'greet': greet})
 - 所有类都是 `type` **或其子类** 的实例。
 - `type(name, bases, dict)` 才是解释器在背后执行的那一步。
 - 你自定义一个 `MyMeta(type)`，就可以拦截并改造「工厂图纸」，决定新类长什么样。
-- 当你发现“**对每个类都想偷偷干点什么**”的时候，就是元类出场的时候；否则，十有八九用类装饰器或 `__init_subclass__` 就够了。
+- 当你发现“**对每个类都想偷偷干点什么**”时，就是元类出场时；否则，十有八九用类装饰器或 `__init_subclass__` 就够了。
 ```python
 class PrefixMetaclass(type):
     def __new__(cls, name, bases, attrs):

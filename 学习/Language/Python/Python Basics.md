@@ -403,7 +403,7 @@ print(f"there are {count} even number(s) in this sentence.")
 ### continue和break
 - continue的作用是在写continue的位置停止下面的内容，直接从头==**开始本次循环**==
 - continue只会作用最近的一个结构
-- break作用是直接==**结束本次循环**==，执行循环结构之后的语句
+- break作用是直接==**结束本次循环**==，执行循环结构后的语句
 - 同样break之作用于一个结构
 
 ```Python
@@ -474,9 +474,9 @@ my_len(name3)
 ```
 ### 定义的语法
 ![Untitled 24 12.png](../../../Files%20&%20LongText/Attachments/Untitled%2024%2012.png)
-定义完函数之后需要调用函数才能使用（先定义，后使用）
+定义完函数后需要调用函数才能使用（先定义，后使用）
 ### 参数使用
-在函数进行计算的时候对外部数据调用
+在函数进行计算时对外部数据调用
 ```Python
 def add(x,y):
     z = x + y
@@ -497,9 +497,9 @@ check(temp)
 #检查提问小程序
 ```
 ### 返回值定义语法
-- 函数返回值表示函数执行的结果，可以自定义满足某种条件之后返回的特定结果，返回值通过变量接收
-- 定义返回值之后函数的结果是return结果，不管函数是怎么执行的
-- 定义函数中一旦遇到return，之后的同一层的所有函数体全部失效
+- 函数返回值表示函数执行的结果，可以自定义满足某种条件后返回的特定结果，返回值通过变量接收
+- 定义返回值后函数的结果是return结果，不管函数是怎么执行的
+- 定义函数中一旦遇到return，后的同一层的所有函数体全部失效
 
 ```Python
 def add(x,y):
@@ -572,7 +572,7 @@ def main_menu():
 def check_balance(show_header):
     if show_header:
         print("------checking deposit------")
-        # 因每次进行查询操作之后都要显示余额，可以直接调用余额查询函数
+        # 因每次进行查询操作后都要显示余额，可以直接调用余额查询函数
         # 余额函数会显示表头，可以通过不同定义函数的参数控制是否生成表头
     print(f"dear {name},your account has left with {money}$")
 def deposit(num):
@@ -922,7 +922,7 @@ print(name_str.index("wat"))
     print(name_str)
     print(type(name_str))
     ```
-    经过分割之后的字符串将每个分割部分变为列表中元素，原来的str类型的字符串也变为了列表类型
+    经过分割后的字符串将每个分割部分变为列表中元素，原来的str类型的字符串也变为了列表类型
 
 3. 字符串的规整操作
 
@@ -960,7 +960,7 @@ print(name_str.index("wat"))
 
     步长可以留空,表示1
 
-- 同样,序列不支持修改,对他进行操作之后得到的是一个新的序列
+- 同样,序列不支持修改,对他进行操作后得到的是一个新的序列
 - 序列切片就是从序列中取出一个子序列
 - 步长如果是负数那么取元素的顺序反向
 - 起始和结束下标必须有但可以留空，所以序列语法中[]最少要有一个:
@@ -1207,7 +1207,7 @@ print(f"set is {my_set}")
     level = "level"
     techology = "techology"
     market = "market"
-    # 定义变量的目的是为了下面写信息的时候编译器自动填充
+    # 定义变量的目的是为了下面写信息时编译器自动填充
     information = {
         "alpha":{
             apartment : techology,
@@ -1334,7 +1334,7 @@ print(f"result is {z},type is {type(z)}")
     根据定义参数的位置匹配传入参数时相应位置的参数
 2. 关键字参数
    ![Untitled 62 10.png](../../../Files%20&%20LongText/Attachments/Untitled%2062%2010.png)
-    在传入参数时, 根据定义函数中定义参数的名称作为 key, 之后手动输入 key 对应的 value
+    在传入参数时, 根据定义函数中定义参数的名称作为 key, 后手动输入 key 对应的 value
     这种形式不受顺序显示, 阅读代码更简单, 关键字参数和位置参数可以混合使用, **但混用时需要将位置参数放在最前面, 不然 syntax invalid**
 
     ```Python
@@ -1436,8 +1436,8 @@ open 函数 mode 参数列表
 | wb  | 以二进制格式打开一个文件只用于写入。如果该文件已存在则打开文件，并从开头开始编辑，即原有内容会被删除。如果该文件不存在，创建新文件。一般用于非文本文件如图片等。  |
 | w+  | 打开一个文件用于读写。如果该文件已存在则打开文件，并从开头开始编辑，即原有内容会被删除。如果该文件不存在，创建新文件。                       |
 | wb+ | 以二进制格式打开一个文件用于读写。如果该文件已存在则打开文件，并从开头开始编辑，即原有内容会被删除。如果该文件不存在，创建新文件。一般用于非文本文件如图片等。   |
-| a   | 打开一个文件用于追加。如果该文件已存在，文件指针将会放在文件的结尾。也就是说，新的内容将会被写入到已有内容之后。如果该文件不存在，创建新文件进行写入。       |
-| ab  | 以二进制格式打开一个文件用于追加。如果该文件已存在，文件指针将会放在文件的结尾。也就是说，新的内容将会被写入到已有内容之后。如果该文件不存在，创建新文件进行写入。 |
+| a   | 打开一个文件用于追加。如果该文件已存在，文件指针将会放在文件的结尾。也就是说，新的内容将会被写入到已有内容后。如果该文件不存在，创建新文件进行写入。       |
+| ab  | 以二进制格式打开一个文件用于追加。如果该文件已存在，文件指针将会放在文件的结尾。也就是说，新的内容将会被写入到已有内容后。如果该文件不存在，创建新文件进行写入。 |
 | a+  | 打开一个文件用于读写。如果该文件已存在，文件指针将会放在文件的结尾。文件打开时会是追加模式。如果该文件不存在，创建新文件用于读写。                 |
 | ab+ | 以二进制格式打开一个文件用于追加。如果该文件已存在，文件指针将会放在文件的结尾。如果该文件不存在，创建新文件用于读写。                       |
 - 读取操作
@@ -1454,7 +1454,7 @@ open 函数 mode 参数列表
     all_string = f.readlines()
     print(f"get all string in the file :{all_string}")
     ```
-    使用read操作读取到文件内容之后, 指针会指在最后读取位置, 之后的读取read/readlines操作(**虽然操作方式不同,但操作的是同一个对象)**会在指针出开始向后读取,而不是从头开始
+    使用read操作读取到文件内容后, 指针会指在最后读取位置, 后的读取read/readlines操作(**虽然操作方式不同,但操作的是同一个对象)**会在指针出开始向后读取,而不是从头开始
     ```Python
     f = open("D:/test.txt","r",encoding="UTF-8")
     print(f"the type is {type(f)}")
@@ -1607,7 +1607,7 @@ with open("D:/test3.txt", "r", encoding="UTF-8") as file, open("D:/test3.txt.bak
 在编写程序时对可能出现的异常进行提前处理就是异常捕获
 基本语法:捕获所有类型的异常
 ![Untitled 75 9.png](../../../Files%20&%20LongText/Attachments/Untitled%2075%209.png)
-出现异常之后执行except下面的语句
+出现异常后执行except下面的语句
 ```Python
 try :
     file = open("D:/abc.txt","r",encoding="UTF-8") #单独写这一行代码会报错
@@ -1660,14 +1660,14 @@ def func2():
     print("func 2 start execute .")
     func1()
     print("func 2 over execute .")
-# func2调用func1的时候出现异常
+# func2调用func1时出现异常
 def func3():
     try :
         func2()
     except Exception as error :
         print(f"the error is {error}")
 # func3调用func2出现异常
-# 因每一个异常出现之后会停止执行函数,所以每一个print over信息不出现
+# 因每一个异常出现后会停止执行函数,所以每一个print over信息不出现
 func3()# 调用func3函数返回错误信息
 ```
  ^0dab48
@@ -2523,7 +2523,7 @@ object.print_something()#no error
 ```
 ### self 参数
 self 作用类似于 [this指针](../C%20C++/C++%20Basics.md#this%20指针)，将引用这个方法对象传入作为 self 参数，**为了让函数知道那个对象在调用这个方法**，不至于 C++中不用 this 指针所有对象使用方法不分开存储
-如果不加 self 则表示变量是方法中局部变量，在方法运行完之后销毁，标记 self 表示这个变量是实例的属性，在方法内定义，生命周期和实例的生命周期相同
+如果不加 self 则表示变量是方法中局部变量，在方法运行完后销毁，标记 self 表示这个变量是实例的属性，在方法内定义，生命周期和实例的生命周期相同
 ```Python
 class Student:
     name = None
@@ -3039,7 +3039,7 @@ all_data = text_content.read_data(Record) + json_content.read_data(Record)      
 """
 data_dict={}
 for record in all_data:     # 将实例赋值给变量,所以record也能调用类的属性
-    if record.date in data_dict.keys(): \#record被赋予data_dictz之后便有是一个数据格式
+    if record.date in data_dict.keys(): \#record被赋予data_dictz后便有是一个数据格式
         if record.date in data_dict.keys(): # record.data表示调用示例all_data的一个属性值date, all_data追根溯源是Record的示例,所以也有所有Record有的属性和方法
             data_dict[record.date] += data_dict[record.date]
         else:
@@ -3079,7 +3079,7 @@ class TextFileReader(FileReader):   # csv文件内容读取
             line = line.strip()
             data_list = line.split(",") # 这两个方法都不会修改原列表,需要变量接收新列表
             record = Record(data_list[0],data_list[1],
-            data_list[2],data_list[3])  # data中前四个数据对应了Record类中四个参数,record变量中只有一行中四个数据,根据main文件中定义record类,输入四个之后得到的是return中字符串内容
+            data_list[2],data_list[3])  # data中前四个数据对应了Record类中四个参数,record变量中只有一行中四个数据,根据main文件中定义record类,输入四个后得到的是return中字符串内容
             record_list.append(record)  #将字符串内容(Record)的字符串内容返回的数值之间用,隔开,放在recordlist会因,自动识别为列表的四个元素
         file.close()
         return record_list
@@ -3091,11 +3091,11 @@ class JsonFileReader(FileReader):       # json文件读取器
         record_list :Record= []
         for line in file.readlines():   \#json数据只有一个字典,不是只有一行,字典其那套字典的方式,用不同的key嵌套
             data_dict = json.loads(line)    #每一行内容是字典以{开头}结束,json模块将字符串内容转换为字典类型
-            record = Record(data_dict["data"],data_dict["order_id"],int(data_dict["money"]),data_dict["province"])    #将每一行的内容输入到Record作为参数,其中转换为字典之后,字典中key和value内容的类型也是字符串,所以搜索匹配才需要"",同理value值中数字也需要被转化
+            record = Record(data_dict["data"],data_dict["order_id"],int(data_dict["money"]),data_dict["province"])    #将每一行的内容输入到Record作为参数,其中转换为字典后,字典中key和value内容的类型也是字符串,所以搜索匹配才需要"",同理value值中数字也需要被转化
             record_list.append(record)
         file.close
         return record_list
-# 最后一个问题,导包之后如果需要使用if __name__ == main测试运行,return值返回的只会是内存地址,方便需要用到这个包的函数通过内存地址读取到包的内容
+# 最后一个问题,导包后如果需要使用if __name__ == main测试运行,return值返回的只会是内存地址,方便需要用到这个包的函数通过内存地址读取到包的内容
 ```
 ```Python
 data_define.py
@@ -3303,7 +3303,7 @@ for lines in result:          # 读取元组返回其中每一个元素,
 fetchall返回所有的数据并且以元组数据容器组织
 #### 数据插入
 python执行语句插入到mysql中,同样使用create语句
-不同的一点是创建数据插入数据库中之后需要使用commit方法提交数据库改动请求.
+不同的一点是创建数据插入数据库中后需要使用commit方法提交数据库改动请求.
 ```Python
 from pymysql import Connection
 conn = Connection(
@@ -3364,10 +3364,10 @@ def account_creat(initial_amount):
     def atm(num, deposit=True):
         nonlocal initial_amount
         if deposit:
-            initial_amount += num       # 存钱之后的钱变成新的initial money
+            initial_amount += num       # 存钱后的钱变成新的initial money
             print(f"save{num}, and the deposit left with {initial_amount}")
         else :
-            initial_amount -= num       # 存钱之后的钱变成新的initial money
+            initial_amount -= num       # 存钱后的钱变成新的initial money
             print(f"save{num}, and the deposit left with {initial_amount}")
     return atm    # 最重要的一步:返回内部函数
 atm = account_creat(0)      # 在vscode中不会默认赋值未定义的变量为0
@@ -3415,9 +3415,9 @@ sleep()
 ```
 对于装饰器的理解
 - 装饰器的核心功能是接收一个函数作为参数，并返回一个新的函数，这个新函数通常会包含对原始函数的调用以及额外的功能。不使用闭包会限制其功能。
-- `@outer`是一个装饰器语法的简写形式，它位于一个函数定义的上方。这种语法是Python的语法糖，它等同于将装饰器应用于函数。具体来说，当你在`def sleep()`前面写上`@outer`时，你实际上是在告诉Python解释器，在定义`sleep`函数之后，立即使用`outer`装饰器来处理这个函数。
+- `@outer`是一个装饰器语法的简写形式，它位于一个函数定义的上方。这种语法是Python的语法糖，它等同于将装饰器应用于函数。具体来说，当你在`def sleep()`前面写上`@outer`时，你实际上是在告诉Python解释器，在定义`sleep`函数后，立即使用`outer`装饰器来处理这个函数。
 - 装饰器函数必须返回一个函数,并实际上是通过这个函数来对被装饰函数进行功能扩充.一般这个被返回的函数卸载装饰器函数内部
-- `@outer` 作用就是呼叫outer函数,中需要的参数func就是下面的函数, 处理之后的函数函数名不变,**方便阅读和维护,符合思维惯性**
+- `@outer` 作用就是呼叫outer函数,中需要的参数func就是下面的函数, 处理后的函数函数名不变,**方便阅读和维护,符合思维惯性**
 
 ### 设计模式
 #### 单例模式

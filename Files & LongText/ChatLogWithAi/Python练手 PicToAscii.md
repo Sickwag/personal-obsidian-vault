@@ -186,7 +186,7 @@ VS Code 的自动补全提示为 `add_argument` 提供了非常实用的信息�
 - > type: _ActionType = ...: type 参数名， : _ActionType 表示类型应该是一个 _ActionType (通常对应于可以进行类型转换的函数
 type既然是一个可选参数，那么它的作用就是在未显式指定type时，type的值会调用_Actiontype这个函数来解析action这个参数的类型并传入type中，对吗？
 - 我没有完全理解这段代码的含义：`add_argument(option_string, option_string, ..., name=value, ...)`，明明其中有两个option_string，为什么可以供一个或多个 `option_string` (选项字符串)？这是如何做到的？
-- 如何在实现一个函数之后，指定传入不同参数数量和类型之后函数的行为？
+- 如何在实现一个函数后，指定传入不同参数数量和类型后函数的行为？
 
 ---
 
@@ -285,7 +285,7 @@ parser.add_argument('-v', '--verbose', action='store_true', help='启用详细�
 
 **4.  关于实现函数后指定不同参数数量和类型的行为：**
 
-> `- 如何在实现一个函数之后，指定传入不同参数数量和类型之后函数的行为？`
+> `- 如何在实现一个函数后，指定传入不同参数数量和类型后函数的行为？`
 
 **解释与方法:**
 
@@ -472,14 +472,14 @@ complex_function(True)
 *   **`...` (省略号) 的含义:**  `...`  在这里是 **省略号 (ellipsis)**，  在文档中，它通常用来表示 **"等等"**, **"以此类推"**, **"还有更多..."**  的意思。
 
     *   在 `option_string, option_string, ...` 中 的 `...` 表示你可以提供 **更多个 `option_string`** （虽然实际应用中通常只用一到两个，短选项和长选项）。
-    *   在 `..., name=value, ...`  中 的 前面的 `...`  表示  `option_string, option_string, ...` 部分之后 **还可以有其他位置参数 (虽然 `add_argument` 函数定义中，选项字符串之后就没有位置参数了)**。 后面的 `...` 表示在 `name=value` 关键字参数之后， **还可以有更多的关键字参数** （例如 `**kwargs` 会接收额外的关键字参数）。
+    *   在 `..., name=value, ...`  中 的 前面的 `...`  表示  `option_string, option_string, ...` 部分后 **还可以有其他位置参数 (虽然 `add_argument` 函数定义中，选项字符串后就没有位置参数了)**。 后面的 `...` 表示在 `name=value` 关键字参数后， **还可以有更多的关键字参数** （例如 `**kwargs` 会接收额外的关键字参数）。
 
 **总结与修正后理解:**
 
 `add_argument(option_string, option_string, ..., name=value, ...)`  文档签名表示：
 
 *   你可以提供 **一个或多个**  `option_string`  作为函数的前几个参数 (定义命令行参数的标志)。
-*   之后，你可以使用 **关键字参数**  `name=value`  来配置该参数的其他属性 (例如 `action`, `type`, `default`, `help` 等)。
+*   后，你可以使用 **关键字参数**  `name=value`  来配置该参数的其他属性 (例如 `action`, `type`, `default`, `help` 等)。
 *   `...` (省略号) 表示  “更多，以此类推”。
 
 **4. 关于 RGB 转灰度值的代码:**
@@ -548,7 +548,7 @@ def get_char(r, g, b, alpha=256):
     length = len(ascii_char)
     gray = int(0.2126 * r + 0.7152 * g + 0.0722 * b)
     unit = (256.0 + 1) / length
-    # 把rgb转化为gray(0~255)之间的值之后，映射到alpha中字符
+    # 把rgb转化为gray(0~255)之间的值后，映射到alpha中字符
     return ascii_char[int(gray / unit)]
 
 
@@ -588,7 +588,7 @@ parser.add_argument("-o", " --output")
 
 **错误分析:**
 
-*   `argparse` 中 `add_argument()` 函数当需要定义**短参数名** (例如 `-o`) 和**长参数名** (例如 `--output`) 的时候， 应该将它们**作为独立的字符串参数**传入，而不是将它们放在同一个字符串中。
+*   `argparse` 中 `add_argument()` 函数当需要定义**短参数名** (例如 `-o`) 和**长参数名** (例如 `--output`) 时， 应该将它们**作为独立的字符串参数**传入，而不是将它们放在同一个字符串中。
 *   当前代码将 `" --output"` 作为一个**位置参数** (positional argument) 传递给了 `add_argument("-o", ...)`。  `argparse` 会将 `"--output"` 误认为是 `-o` 参数的**值**，而不是作为 `--output` 长参数名来解析。
 
 **修改建议:**
@@ -662,7 +662,7 @@ def get_char(r, g, b, alpha=256):
     length = len(ascii_char)
     gray = int(0.2126 * r + 0.7152 * g + 0.0722 * b)
     unit = (256.0 + 1) / length
-    # 把rgb转化为gray(0~255)之间的值之后，映射到alpha中字符
+    # 把rgb转化为gray(0~255)之间的值后，映射到alpha中字符
     return ascii_char[int(gray / unit)]
 
 
@@ -737,7 +737,7 @@ def get_char(r, g, b, alpha=256):
     length = len(ascii_char)
     gray = int(0.2126 * r + 0.7152 * g + 0.0722 * b)
     unit = (256.0 + 1) / length
-    # 把rgb转化为gray(0~255)之间的值之后，映射到alpha中字符
+    # 把rgb转化为gray(0~255)之间的值后，映射到alpha中字符
     return ascii_char[int(gray / unit)]
 
 

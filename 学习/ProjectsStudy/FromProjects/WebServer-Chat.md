@@ -10,7 +10,7 @@ resource_3: https://www.bilibili.com/video/BV1114y117Yh?spm_id_from=333.788.play
 - 安装编译 boost 库必须的开发套件包 `bashsudo apt install build-essential g++ python3-dev libicu-dev libbz2-dev wget`，其中 g++不会是最新的
 - 在 [Boost 1.89.0](https://www.boost.org/releases/latest/) 中找到最新 boost 库，使用 `wget` 下载对应的包
 	- `tar -xvf` 解压包
-	- `cd` 之后 `./bootstrap -prefix=/usr/local/boost_1.89.0` ，prefix 参数决定了之后使用 `./b2 install` 会将 boost 库文件安装在什么位置
+	- `cd` 后 `./bootstrap -prefix=/usr/local/boost_1.89.0` ，prefix 参数决定了后使用 `./b2 install` 会将 boost 库文件安装在什么位置
 	- `./b2 install` 安装 boost 库
 	- 检查 `ls -al /usr/local/boost_1.89.0` 中是否有 include 和 lib 文件夹，以及其中是否有大量的 `.hpp` 文件
 - 在(https://cmake.org/files/v3.29/cmake-3.29.0.tar.gz) 中下载 cmake 构建工具
@@ -20,11 +20,11 @@ resource_3: https://www.bilibili.com/video/BV1114y117Yh?spm_id_from=333.788.play
 - 项目使用boost 1.74，最新的 boost 1.89 已经将 `time.expires_from_now()` 舍弃，所以需要替换为 `time.expires_after()`，位置在 servertech-chat/server/src/services/mysql_client. cpp:182:23。
 - 根据指引 pdf 中将 mysql 服务的账号密码设置正确
 - 在本机的 redis.conf 文件中将 requirepass 设置为 `""` 空，项目只能接受密码为空值的 redis 服务，否则前端无法和后端交互
-- 在进入 serve 目录之后使用
+- 在进入 serve 目录后使用
 ```bash
 cmake . -DCMAKE_CXX_STANDARD=17 && make
 ```
-出现 main 文件之后继续按照指引即可
+出现 main 文件后继续按照指引即可
 # 前置要求
 ## 协程
 参考：[一篇文章搞懂c++ 20 协程 Coroutine - 知乎](https://zhuanlan.zhihu.com/p/615828280)
@@ -88,13 +88,13 @@ cr_ret会保存在promise承诺对象中（通过`return_value`函数）。在�
 
 ### 协程相关对象
 #### 协程帧(coroutine frame)
-当 caller 调用一个协程的时候会先创建一个协程帧，协程帧会构建 promise 对象，再通过 promise 对象产生 return object。
+当 caller 调用一个协程时会先创建一个协程帧，协程帧会构建 promise 对象，再通过 promise 对象产生 return object。
 协程帧中主要有这些内容：
 - 协程参数
 - 局部变量
 - promise 对象
 
-这些内容在协程恢复运行的时候需要用到，caller 通过协程帧的句柄 std::coroutine_handle 来访问协程帧。
+这些内容在协程恢复运行时需要用到，caller 通过协程帧的句柄 std::coroutine_handle 来访问协程帧。
 #### promise_type
 promise_type 是 promise 对象的类型。promise_type 用于定义一类协程的行为，包括
 - 协程创建方式
@@ -292,7 +292,7 @@ struct is_error_code_enum<chat::errc> {
 ```
 模板类型名称一定要为 `struct is_error_code_enum`，才能够将 `chat::errc` 中错误类型假入 boost:: system 管理。
 #### 整体结构
-1. error. hpp 中定义 enum class errc 定义所有可能出现的错误，error. cpp 中使用 `BOOST_DESCIBE_ENUM` 描述 to_string 之后的信息。
+1. error. hpp 中定义 enum class errc 定义所有可能出现的错误，error. cpp 中使用 `BOOST_DESCIBE_ENUM` 描述 to_string 后的信息。
 2. to_string 创建转换规则，将 `char::ec`；类型对应的 BOOST_DESCIBE_ENUM 类型对应，转换为对应字符串。和 chat_category 将自定义错误注册让 boost:: system 来管理。to_strng 名为了避免冲突，并且他只服务于 chat_category 中，所以放在匿名 namespace 中。
 3. 注册还有一个步骤是在 boost:: system 中创建一个特化模板(is_error_code_num)，表示 chat:: errc 已经是其中一员。
 4. 两个宏定义让外部**需要返回 error_code 类型的函数**使用他们时，传入错误，即可创建附带位置的 error_code 对象直接中断函数，return 出现的错误。如果
@@ -376,7 +376,7 @@ signals.async_wait([st, &ctx](boost::system::error_code, int) {
 使用 `asio::ip::tcp::acceptor` 接受所有的**入站请求**，所有由外部发送到**其监听端口**的 tcp 都由 acceptor 统一接受管理，并转交给内核。
 关于 `SO_REUSEADDR`：
 当你关闭一个 TCP 服务器时，操作系统内核会将该端口保持在 `TIME_WAIT` 状态（通常为 2-4 分钟）。这是 **TCP协议的正常行为**，确保所有延迟的数据包能被正确处理。
-但开发过程中需要频繁运行项目，不使用 reuseaddr 会导致下次传入同样的端口**绑定失败**，需要几分钟之后才可以（这是由系统内核管控的）
+但开发过程中需要频繁运行项目，不使用 reuseaddr 会导致下次传入同样的端口**绑定失败**，需要几分钟后才可以（这是由系统内核管控的）
 
 在原生 C 代码中，连接到 tcp 服务需要：
 ```cpp
@@ -460,7 +460,7 @@ acceptor.listen();
 ```
 常用的设置配置有：
 ```cpp
-// 在open之后，bind之前使用， 可以多次调用设置添加配置
+// 在open后，bind之前使用， 可以多次调用设置添加配置
 acceptor.set_option(asio::socket_base::reuse_address(true));
 acceptor.set_option(asio::ip::tcp::no_delay(true)); // 禁用 Nagle's algorithm
 acceptor.set_option(asio::socket_base::keep_alive(true));
@@ -557,7 +557,7 @@ gen = co_await handler(ctx, st);
 boost::beast::http::response<boost::beast::http::string_body>  // 构建响应头
 boost::beast::http::request<boost::beast::http::string_body>   // 构建请求头
 ```
-使用这两个对象构建头之后，最好都要调用一遍 `prepare_payload` 用来
+使用这两个对象构建头后，最好都要调用一遍 `prepare_payload` 用来
 1. 自动计算 Content-Length: 根据响应体大小设置头部
 2. 处理 Transfer-Encoding: 如需要，设置 chunked 编码
 3. 验证协议合规性: 确保响应符合 HTTP 规范
@@ -603,7 +603,7 @@ if (result.has_value()) {
 使用了 pimpl 模式，头文件中只实现接口，源文件中实现接口定义，并且实现接口的方法不是简单实现，而使继承实现。头文件中只暴露一个工厂函数接口
 
 #### 消息处理
-如果知道房间号，那么就可以调用 `get_root_history` 获取房间号中对应的所有聊天记录，使用message_batch型封装，其中 `std::vector<message>` 中保存了所有这个房间的信息。如果一次受限于常数essage_batch_size大小，所有聊天记录条数大于这个常数，那么就会给batch标识 `has_more =true`，这样如果客户端想要加载更多消息之后再次发送的请求中只需要记录上次看到的最后一条消息的 message_id 就能够实现滚动无限加载
+如果知道房间号，那么就可以调用 `get_root_history` 获取房间号中对应的所有聊天记录，使用message_batch型封装，其中 `std::vector<message>` 中保存了所有这个房间的信息。如果一次受限于常数essage_batch_size大小，所有聊天记录条数大于这个常数，那么就会给batch标识 `has_more =true`，这样如果客户端想要加载更多消息后再次发送的请求中只需要记录上次看到的最后一条消息的 message_id 就能够实现滚动无限加载
 ```cpp
 asio::awaitable<result<std::vector<message_batch>>> get_room_history(
     std::span<const room_history_request> input) final override {
@@ -676,7 +676,7 @@ XREVRANGE "beast" "(1698123456789-0" "-" COUNT 20
 ```
 
 
-最终返回值中由于 `*result` 是一个左值 `auto result = parse_batch_xadd_response(*res);`，并且拥有数据的同时数据产生之后就要马上使用，并不需要长生命周期保存。
+最终返回值中由于 `*result` 是一个左值 `auto result = parse_batch_xadd_response(*res);`，并且拥有数据的同时数据产生后就要马上使用，并不需要长生命周期保存。
 虽然 C++中 std 容器都实现了移动语义，但这种情况仅发生在**返回函数内部局部 std 对象**（C++17 以后还可能直接在栈上构造，不需要复制或者移动）时触发，具体可以参考 [[Modern C++#移动语义]]
 
 ### include/services/redis_serialization. hpp & src/services/redis_serialization. cpp
@@ -793,12 +793,12 @@ rm -rf ./build 然后重新编译运行
 - 设置 cmake 时确保所有 set 都在 project 之前
 - 使用 cmake 运行程序时注意工作目录变化
 - 当程序输出代码中没有的字符串时，最有可能的原因是**二进制文件过期**
-- rm build 目录之后重新编译注意 cmake **构建和编译过程中输出**
+- rm build 目录后重新编译注意 cmake **构建和编译过程中输出**
 ### linux telnet 终端输入
 #### 背景
-编写客户端断开连接之后服务端将 user.state 改为 offline 的逻辑，运行后发现 Ctrl+C 断开方式并不会调用 mysql 执行 sql 而是*服务端抛出异常并终止*
+编写客户端断开连接后服务端将 user.state 改为 offline 的逻辑，运行后发现 Ctrl+C 断开方式并不会调用 mysql 执行 sql 而是*服务端抛出异常并终止*
 #### 原因
-使用 telnet 连接上服务器之后，telnet 会进入一个**输入程序**，***此时的已经不是一个终端了***，ctrl+C 不会停止程序，而是**输入一个 `^[` 字符**，这时候客户端的 json 解析会解析到这个符号抛出异常
+使用 telnet 连接上服务器后，telnet 会进入一个**输入程序**，***此时的已经不是一个终端了***，ctrl+C 不会停止程序，而是**输入一个 `^[` 字符**，这时候客户端的 json 解析会解析到这个符号抛出异常
 ```bash
  [json.exception.parse_error.101] parse error at line 1, column 1: syntax error while parsing value - unexpected ']'
 ```
@@ -819,7 +819,7 @@ root@VM-20-9-ubuntu:~/CodeFiles/muduo-server-chat#
 ```
 添加 json 解析异常处理，参考[[#完善数据层功能]]
 ### 获取 mysql 数据避免无限循环
-获取 mysql 的数据时以行为单位，一定要在循环之后更新游标到下一行，否则会内存膨胀
+获取 mysql 的数据时以行为单位，一定要在循环后更新游标到下一行，否则会内存膨胀
 ```cpp
 std::vector<std::string> OfflineMsgModel::query(int userid) {
 	if(db.is_connected()) {
@@ -880,7 +880,7 @@ main.cpp:(.text+0x45df): undefined reference to `User::User(int, std::__cxx11::b
 从上往下依次解决即可，类似 `main.cpp:(.text+0x45df)` 这样形式的报错在说明报错出现在源代码中字符流位置
 ## muduo 网络库工作基本原理
 ![[PixPin_2026-01-12_16-06-41.png]]
-运行程序的之后，程序根据**设备 CPU 数量来做到线程数约等于程序工作线程数**，从而做到*尽可能的高并发*
+运行程序的后，程序根据**设备 CPU 数量来做到线程数约等于程序工作线程数**，从而做到*尽可能的高并发*
 - 主线程用来处理用户连接/断开，是 I/O 线程
 - 剩余（如果有）的线程用来处理用户网络读写操作（通过 socketfd 等）
 - 如果有耗时操作可能会**新开一个线程来解决**
@@ -1485,7 +1485,7 @@ server {
 ![[PixPin_2026-01-17_09-58-45.png|图中配置为旧版nginx写在stream中]]
 - weight 配置权重，负载均衡会按照权重比分发对应数量的数据包，一般按照不同服务器的性能强弱配置
 - max_fails 和 timeout 用于设置心跳间隔时长和重试次数
-配置之后测试语法
+配置后测试语法
 ```bash
 root@VM-20-9-ubuntu:/www/server/panel/vhost/nginx/tcp# nginx -t
 nginx: the configuration file /www/server/nginx/conf/nginx.conf syntax is ok
@@ -1522,7 +1522,7 @@ server {
 ![[PixPin_2026-01-17_09-29-16.png]]
 解决方法是使用中间件
 ![[PixPin_2026-01-17_09-31-27.png]]
-有了消息队列之后，
+有了消息队列后，
 - 客户端只需要 **订阅(subscribe)** 消息队列的一个**频道(channel)**，在消息队列中表明对 XXX 感兴趣
 - 服务器端只需要在消息队列中 **发布(publish)** 消息
 - 消息队列根据 publish 和 subscribe 之间的关系，找到不同 Server 感兴趣的内容并 **推送(notify)** 给 Server，即可完成集群间的跨服务器通信
@@ -1607,7 +1607,7 @@ bool Redis::connect() {
 ```cpp
 redisReply* reply = (redisReply*)redisCommand(publishContext_, "PUBLISH %d %s", channel, message.c_str());
 ```
-类似这样的命令组装语句之后直接执行，需写入缓冲区执行
+类似这样的命令组装语句后直接执行，需写入缓冲区执行
 ```cpp
 bool Redis::unsubscribe(int channel) {
 	if(REDIS_ERR == redisAppendCommand(this->subscribeContext_, "UNSUBSCRIBE %d", channel)) {
@@ -1659,7 +1659,7 @@ bool Redis::unsubscribe(int channel) {
 #### 数据安全
 不能直接说没做，不会，需要提到的点：
 - 需要引入一种加密算法，客户端发送和服务端返回时都需要加密，反之需要解密，加密解密密钥动态更新
-- 可能我在编写的时候没有想清楚，具体怎么实现我还需要根据业务逻辑查资料
+- 可能我在编写时没有想清楚，具体怎么实现我还需要根据业务逻辑查资料
 
 对称加密
 ![[PixPin_2026-01-18_09-36-04.png]]
@@ -1671,7 +1671,7 @@ bool Redis::unsubscribe(int channel) {
 服务器私钥，客户端公钥，数据都通过这对密钥加解密，密钥加密算法有 rsa 等，性能较低
 
 混合加密
-使用非对称加密在程序启动时验证对称加密的 AES 密钥然后传输，只有验证身份/更新密钥的时候使用非对称，数据传输使用对称加密。保证安全性的同时提高效率
+使用非对称加密在程序启动时验证对称加密的 AES 密钥然后传输，只有验证身份/更新密钥时使用非对称，数据传输使用对称加密。保证安全性的同时提高效率
 #### 历史消息存储
 本地存储:
 - 以文件形式存储，每个文件通过加密算法生成**客户端唯一的**加解密密钥
@@ -1692,7 +1692,7 @@ bool Redis::unsubscribe(int channel) {
 
 - 不能给消息添加时间戳，因后发送的消息仍有可能先到达客户端（不同的消息通过不同路由发送），根据每一条消息的事件进行排序那么需要设置一个排序周期，比如 1s 内 client 接收到的 server 消息进行排序后显示，如果网络延迟>1s 仍会出错
 - 所以应该根据序号排序，如果序号之间出现间隔则说明出现丢包->等待 timeout->重试请求->客户端显示网络异常这才是正确做法
-- 最好需要对每一个群/个人，client 都需要维护一个 sequence ，接收消息成功之后色 sequence++
+- 最好需要对每一个群/个人，client 都需要维护一个 sequence ，接收消息成功后色 sequence++
 - 由于 sequence 的存在，实现**消息撤回**功能也很方便，消息撤回操作相当于发送一条 sequence=X 的指令
 - tcp/ip 基于的 ttl 协议中报文在网络环境中**最大跳数为 64**,超过这个大小则认为这个数据包应该被丢弃，不会再有路由器转发，这就是**丢包**
 -

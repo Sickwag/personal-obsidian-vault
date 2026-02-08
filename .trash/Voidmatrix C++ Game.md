@@ -3,15 +3,15 @@
 easyX 文档：[EasyX\_Help.chm](../../Files%20&%20LongText/Attachments/EasyX_Help.chm)
 
 # 开发环境搭建
-## 绘制实心圆 
+## 绘制实心圆
 使用函数
-1. initgraph  
+1. initgraph
 2. solidcircle 这个函数用于画无边框的填充圆。
 3. peekmessage 函数
 
 ## 井字棋游戏
 ### 使用函数
-1. cleardevice 
+1. cleardevice
 
 不使用双缓冲机制，每次使用绘图函数渲染函数时，easyX 会将新的绘图**逐渐地**绘制到屏幕上，由于使用 cleardevice 函数，图形被不断地绘制并消除
 beginbatchdraw 函数可以创建一张新的**不可见的画布**，默认将所有绘图操作画在这张画布中，flushbatchdraw 函数通过交换现有屏幕和不可见新画布（新的渲染缓冲区）位置，交换过程远快于绘制过程，所以看不见闪烁的圆
@@ -180,7 +180,7 @@ void LoadAnimation() {
 inline void putimage_alpha(int x, int y, IMAGE * img) {
 	int w = img->getwidth();
 	int h = img->getheight();
-	AlphaBlend(GetImageHDC(NULL), x, y, w, h, 
+	AlphaBlend(GetImageHDC(NULL), x, y, w, h,
 		GetImageHDC(img), 0, 0, w, h, { AC_SRC_OVER,0,255,AC_SRC_ALPHA });
 }
 ```
@@ -223,7 +223,7 @@ int main(){
 	}
 }
 ```
-- 直接运行游戏可以看到 C++使用了和 pygame 同样的消息处理队列机制，按住按键瞬间会有一个 msg 传入到消息队列处理，之后等待一段时间之后才有不断地 msg 信息传入消息队列
+- 直接运行游戏可以看到 C++使用了和 pygame 同样的消息处理队列机制，按住按键瞬间会有一个 msg 传入到消息队列处理，后等待一段时间后才有不断地 msg 信息传入消息队列
 - 移动卡顿原因为 msg 的 keydown 事件默认和主循环异步进行，有自己的循环时钟，不和主循环配合导致了有的 keydown 事件时钟周期短，有的长，每个时钟周期中执行不同次数的位置移动操作，主循环的绘图函数在相同的主循环时钟间隔内绘制移动部均匀的图像，导致卡顿
 - 这也是为什么需要设置按下事件，更需要设置**松开事件**，[允许不断移动需要设置8个键盘事件](Form%20Scratch%20to%20Practice.md#允许不断移动)
 - 设置松开事件同时检测上下左右四个键的按下和松开情况，松开也是一个消息传入消息队列中，这就**显式定义**了什么按键事件下玩家的移动情况，实现了多个按键按下，**消息队列中掺杂多个按键的松开和释放信息**，同时处理，玩家==斜向移动==
@@ -301,7 +301,7 @@ Animation anim_right_player(_T("img/player_right_%d.png"), 6, 45);
 void drawplayer(int delta, int dir_x) {
 	// facingleft表示是否面向左侧
 	// dir_x表示x轴方向上的移动，=0 表示没有向左移动
-	static bool fancing_left = false; 
+	static bool fancing_left = false;
 	if (dir_x < 0)
 		fancing_left = true;
 	else if (dir_x > 0)

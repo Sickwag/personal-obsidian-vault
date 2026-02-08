@@ -71,10 +71,10 @@ the return value is a string indicates validate fail.
 3. 支持验证功能来确保参数匹配正确的选项
 要创建位置参数，只需在选项名称中包含一个不以破折号开头的名称：
 ```cpp
-std::string filename;  
-app.add_option("filename", filename, "Input file");  
-  
-// 或者同时支持位置参数和选项形式  
+std::string filename;
+app.add_option("filename", filename, "Input file");
+
+// 或者同时支持位置参数和选项形式
 app.add_option("-f,--file,filename", filename, "Input file");
 ```
 当启用 `prefix_command` 模式后，CLI11会在遇到第一个无法识别的参数时立即停止解析，并将所有剩余的参数都存储到 `remaining` 数组中。
@@ -110,13 +110,13 @@ CHECK(std::vector<std::string>({"three", "four"}) == sub->remaining());
 ### 子命令用法
 子命令实际上也是一个CLI11风格的app，只是运行在主要app下，它通常通过输入不用-作为前缀的参数来调起，比如如果我在代码中添加
 ```cpp
-auto* process_cmd = app.add_subcommand("process", "Process files"); 
-process_cmd->add_option("-i,--input", input_files, "Input files")->required()->check(CLI::ExistingFile); 
+auto* process_cmd = app.add_subcommand("process", "Process files");
+process_cmd->add_option("-i,--input", input_files, "Input files")->required()->check(CLI::ExistingFile);
 ```
-那么调用的方法为： 
+那么调用的方法为：
 ```bash
-MyProgram add/*这里开始调用子命令*/ -a -s /*子命令的参数*/ 
-``` 
+MyProgram add/*这里开始调用子命令*/ -a -s /*子命令的参数*/
+```
 并且这些参数命令的执行是按顺序的，执行子命令的同时不能执行主命令，不允许
 ```bash
 MyProgram -i /*其他主命令的参数*/ add/*这里开始调用子命令*/ -a -s /*子命令的参数*/
@@ -196,7 +196,7 @@ App 类提供了许多用于自定义行为的方法。大多数方法返回 `t
 | `fallthrough()`                | Allows options to be passed to parent command  <br>允许将选项传递给父命令                                             |
 | `require_subcommand(min, max)` | Sets subcommand requirements  <br>设置子命令要求                                                                  |
 | `positionals_at_end()`         | Forces positional arguments to end  <br>强制位置参数结束                                                           |
-| `option_defaults()`            | 设置子命令的默认属性，使用之后集成主命令的所有参数                                                                                  |
+| `option_defaults()`            | 设置子命令的默认属性，使用后集成主命令的所有参数                                                                                  |
 
 
 | 函数                              | 作用          | 继承性 |
@@ -217,27 +217,27 @@ App 类提供了许多用于自定义行为的方法。大多数方法返回 `t
 | `preparse_callback()`           | 解析前回调       | 否   |
 | `immediate_callback()`          | 控制回调时机      | 是   |
 ```cpp
-CLI::App app{"My Application"};  
-  
-// 基本配置  
-app.allow_extras(true);                    // 允许额外参数  
-app.prefix_command(true);                  // 前缀命令模式  
-app.ignore_case(true);                     // 忽略大小写  
-app.ignore_underscore(true);               // 忽略下划线  
-app.fallthrough(true);                     // 允许选项穿透  
-app.positionals_at_end(true);              // 位置参数在末尾  
-app.allow_windows_style_options(true);     // 允许Windows风格  
-  
-// 子命令要求  
-app.require_subcommand(1, 2);              // 要求1-2个子命令  
-  
-// 选项默认设置  
-app.option_defaults()->required(true);     // 所有选项默认必需  
-app.option_defaults()->ignore_case(true);  // 所有选项忽略大小写  
-  
-// 自定义格式化器  
-auto formatter = std::make_shared<CLI::Formatter>();  
-formatter->column_width(40);  
+CLI::App app{"My Application"};
+
+// 基本配置
+app.allow_extras(true);                    // 允许额外参数
+app.prefix_command(true);                  // 前缀命令模式
+app.ignore_case(true);                     // 忽略大小写
+app.ignore_underscore(true);               // 忽略下划线
+app.fallthrough(true);                     // 允许选项穿透
+app.positionals_at_end(true);              // 位置参数在末尾
+app.allow_windows_style_options(true);     // 允许Windows风格
+
+// 子命令要求
+app.require_subcommand(1, 2);              // 要求1-2个子命令
+
+// 选项默认设置
+app.option_defaults()->required(true);     // 所有选项默认必需
+app.option_defaults()->ignore_case(true);  // 所有选项忽略大小写
+
+// 自定义格式化器
+auto formatter = std::make_shared<CLI::Formatter>();
+formatter->column_width(40);
 app.formatter(formatter);
 ```
 ## Usage Pattern 使用模式
@@ -259,11 +259,11 @@ try {
 # Options 选项类
 ## 选项参数配置
 可以通过多种方式设置选项：
-- **Short names**: Single-character names prefixed with a single dash (e.g., `-v`, `-h`)  
+- **Short names**: Single-character names prefixed with a single dash (e.g., `-v`, `-h`)
     短名称：以单个短横线前缀的单字符名称（例如， `-v` ， `-h` ）
-- **Long names**: Multi-character names prefixed with double dashes (e.g., `--verbose`, `--help`)  
+- **Long names**: Multi-character names prefixed with double dashes (e.g., `--verbose`, `--help`)
     长名称：以双短横线前缀的多字符名称（例如， `--verbose` ， `--help` ）
-- **Positional names**: Names without dashes used for positional arguments  
+- **Positional names**: Names without dashes used for positional arguments
     位置名称：用于位置参数的名称，不带短横线
 Multi-Option Policies  多选项策略
 For options that can be specified multiple times, you can set the multi-option policy:
@@ -281,16 +281,16 @@ app.add_option("-v,--value", values)
 ```
 
 ## 兼容类型
-- **Basic types**: integers, floating-point, boolean, strings, characters  
+- **Basic types**: integers, floating-point, boolean, strings, characters
     基本类型：整数、浮点数、布尔值、字符串、字符
-- **Container types**: vectors, sets, lists, maps, etc.  
+- **Container types**: vectors, sets, lists, maps, etc.
     容器类型：向量、集合、列表、映射等。
-- **Tuple-like types**: pairs, tuples, arrays  
+- **Tuple-like types**: pairs, tuples, arrays
     元组类型：对、元组、数组
 - **Complex types**: like `std::complex`  复杂类型：如 `std::complex`
-- **Optional types**: `std::optional`, `boost::optional`  
+- **Optional types**: `std::optional`, `boost::optional`
     可选类型： `std::optional` , `boost::optional`
-- **User-defined types**: with appropriate conversion support  
+- **User-defined types**: with appropriate conversion support
     用户自定义类型：具有适当的转换支持
 ## 内置验证器
 ### 用于 add_option
@@ -298,17 +298,17 @@ app.add_option("-v,--value", values)
 app.add_option("--num", num)
    ->check(CLI::Range(0, 10) | CLI::Range(20, 30));
 ```
-- `Range` - Check if value is within a range  
-- `PositiveNumber` - Check if value is positive  
-- `NonNegativeNumber` - Check if value is non-negative  
-- `ExistingFile` - Check if file exists  
-- `ExistingDirectory` - Check if directory exists  
-- `IsMember` - Check if value is in a set of allowed values  
+- `Range` - Check if value is within a range
+- `PositiveNumber` - Check if value is positive
+- `NonNegativeNumber` - Check if value is non-negative
+- `ExistingFile` - Check if file exists
+- `ExistingDirectory` - Check if directory exists
+- `IsMember` - Check if value is in a set of allowed values
 ### 用于 get_option
-- `count()` - Returns how many times the option was specified  
-- `empty()` - Checks if any values were provided  
-- `results()` - Returns the **raw string results**  
-- `as<T>()` - Returns the converted value of type T  
+- `count()` - Returns how many times the option was specified
+- `empty()` - Checks if any values were provided
+- `results()` - Returns the **raw string results**
+- `as<T>()` - Returns the converted value of type T
 ```cpp
 // or explicitly:
 int value = app.get_option("--number")->as<int>();
@@ -336,7 +336,7 @@ optA->excludes(optB);  // optA and optB cannot both be used
 ```
 设置回调函数：
 ```cpp
-app.add_option_function<int>("--callback", 
+app.add_option_function<int>("--callback",
     [](int value) {
         std::cout << "Callback with value: " << value << std::endl;
     },

@@ -25,7 +25,7 @@ class Ship():
             self.center -= self.ai_settings.ship_speed_factor
         self.rect.centerx = self.center
 ```
-- 关键定在于创建一个新的 center 变量接受浮点数速度值，用变量改变 center 值，之后传入rect.centerx，不然**用+=操作self.centerx 会导致小数点被截断**
+- 关键定在于创建一个新的 center 变量接受浮点数速度值，用变量改变 center 值，后传入rect.centerx，不然**用+=操作self.centerx 会导致小数点被截断**
 - 并且后面还需要写便捷检查代码，在逻辑上应该先判断是否超出边界，然后再更新 `self.rect.centerx`
 -
 ### 13.5.1　检测子弹与外星人的碰撞
@@ -78,7 +78,7 @@ def center_ship(self):
     self.rect.centerx = self.screen_rect.centerx
     self.rect.bottom = self.screen_rect.bottom - 10
 ```
-原因是**每次调用 update**时都会充值self.rect，这就相当重置了飞船位置，但相撞之后（调用**ship_hit**之后）进入下一个循环 `ship.update` 就会将飞船拉回原地，
+原因是**每次调用 update**时都会充值self.rect，这就相当重置了飞船位置，但相撞后（调用**ship_hit**后）进入下一个循环 `ship.update` 就会将飞船拉回原地，
 
 ### 14.1.1　创建  `Button 类
 `pygame.display.flip() ` 的作用是将**最近通过 `blit` 和 `draw ` 绘制的图形显示出来**，是一次性统一的绘制

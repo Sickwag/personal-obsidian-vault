@@ -268,7 +268,7 @@ QTextEdit{
 	background:skyblueurl(:/resource/girl.jpg)repeatlefttop;
 }
 ```
-基本的属性用法语法就这些，~~自己写的时候还得查文档~~
+基本的属性用法语法就这些，~~自己写时还得查文档~~
 ## Brush 模型介绍
 color 属性有多重写法：rgb，rgba，hsv，hsva，需要注意的是 `#rrggbb` 用十六进制表示的颜色，其中 `#6677FF` 这种两个通道之间一样可以简写为 `#67F`
 渐变色，zaiqt 中要加上 q 前缀

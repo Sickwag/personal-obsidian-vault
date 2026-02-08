@@ -497,11 +497,11 @@ https://gitcode.com/Open-source-documentation-tutorial/97151
 ### 类和结构体
 - 类名是名词，每个单词以大写字母开头，不包含下划线
 - 类成员声明注意**先声明函数，信号函数，槽函数，然后是变量**，顺序按照 public，protect，private
-- 仅在代码中需要拷贝一个类对象的时候使用拷贝构造函数；不需要拷贝时应使用 `Q_DISABLE_COPY(MyClass)` (QT 自带的不可复制宏)。
+- 仅在代码中需要拷贝一个类对象时使用拷贝构造函数；不需要拷贝时应使用 `Q_DISABLE_COPY(MyClass)` (QT 自带的不可复制宏)。
 - 仅当只有数据时使用struct，其它一概使用class
 - 使用组合（composition）通常比使用继承更适宜，如果使用继承的话，只使用公共继承
 ### 语句
-- new申请内存之后。使用try catch捕获申请内存是否成功。原因：new申请内存可能失败
+- new申请内存后。使用try catch捕获申请内存是否成功。原因：new申请内存可能失败
 - 条件和循环语句第一个大括号不换行
 - 使用指针前必须检查指针是否为空
 - 空循环体应使用{}或continue，而不是一个简单的分号
@@ -781,7 +781,7 @@ selectionModeLabel->setBuddy(selectionModeCombo);
 - 文本显示为："Selection mode: "（没有&符号）
 - 字母 "S" 会带下划线显示
 - 用户可以按 Alt + S 快速将焦点移到 selectionModeCombo 下拉框上
-如果想要显示 "&" 字符，则需要代码中写入 `&&`，如果要在 windows 中没有显示出下划线（一般 windows 10/11 之后默认不显示，只有按下 ALT + 激活按键之后才会显示）则需要在控制面板中设置"•	控制面板 → 轻松使用 → 使键盘更易于使用 → “启用以便于访问的下划线快捷键”
+如果想要显示 "&" 字符，则需要代码中写入 `&&`，如果要在 windows 中没有显示出下划线（一般 windows 10/11 后默认不显示，只有按下 ALT + 激活按键后才会显示）则需要在控制面板中设置"•	控制面板 → 轻松使用 → 使键盘更易于使用 → “启用以便于访问的下划线快捷键”
 
 ![[Pasted image 20250924120532.png|../../../../Files & LongText/Attachments/Pasted image 20250924120532.png]]
 
@@ -808,7 +808,7 @@ connect(comboBox, &QComboBox::currentIndexChanged, this, &Window::languageChange
 
 `currentIndexChange` 函数具体 change 到了哪一个 index ？
 
-> 我们为一个 QComobox addItem 之后，相当于添加了一个**具有自定义标签数值**的选项，如果选中了这个选项，QComboBox 组件会自动将自身状态中 `currentIndex`（可以通过调用同名函数返回其副本）更新为组件的自定义标签数值，并将其作为参数传给 connect 连接的槽函数中
+> 我们为一个 QComobox addItem 后，相当于添加了一个**具有自定义标签数值**的选项，如果选中了这个选项，QComboBox 组件会自动将自身状态中 `currentIndex`（可以通过调用同名函数返回其副本）更新为组件的自定义标签数值，并将其作为参数传给 connect 连接的槽函数中
 > 第二个参数的作用：
 > - 它不是让"第一个参数具有值"
 > - 而是让当前索引位置关联一个额外的数据
@@ -960,7 +960,7 @@ void Window::createGeneralOptionsGroupBox() {
 	verticalHeaderChanged(verticalHeaderCombo->currentIndex());
 }
 ```
-由于 connect 函数只负责连接信号和槽，而信号是在**运行时用户发出动作**之后广播。所有组件刚打开时显示的是**连接组件时的默认值**，而实际值**由初始化函数定义**
+由于 connect 函数只负责连接信号和槽，而信号是在**运行时用户发出动作**后广播。所有组件刚打开时显示的是**连接组件时的默认值**，而实际值**由初始化函数定义**
 ![[Pasted image 20250925103623.png|正常显示]]
 ```cpp
 	firstDayChanged(firstDayCombo->currentIndex()+1);
@@ -989,7 +989,7 @@ Qt 会自动将 findButton 的 clicked() 信号连接到`on_findButton_clicked()
 > 这是 Qt 的内置行为，您无需额外编写代码来实现高亮效果。
 
 ### QT 资源文件在 MSBuild 环境下的连接方式
-如果是常规 CMake 或者 Qmake 构建系统创建的项目，引入资源文件之后需要在 CMakeLists.txt 文件中写入
+如果是常规 CMake 或者 Qmake 构建系统创建的项目，引入资源文件后需要在 CMakeLists.txt 文件中写入
 ```cmake
 set(PROJECT_SOURCES
         main.cpp
@@ -1001,7 +1001,7 @@ set(PROJECT_SOURCES
 )
 ```
 才能够将文件引入项目，打包到二进制文件中
-在 MSBuild 中，在 qrc 和 ui 文件中编辑之后，**一定要按 Ctrl+s**保存，之后 vxproj 文件中会自动将这两个文件中内容引入。不需要写 CMakeLists. txt，并且写了 MSBuild 也无法读取
+在 MSBuild 中，在 qrc 和 ui 文件中编辑后，**一定要按 Ctrl+s**保存，后 vxproj 文件中会自动将这两个文件中内容引入。不需要写 CMakeLists. txt，并且写了 MSBuild 也无法读取
 
 
 ## Books
@@ -1056,7 +1056,7 @@ if (!q.prepare(INSERT_BOOK_SQL))
 - 表的列名字符串不再显示为数据库中名称（`setHeaderData()` 设置 model 的“显示值”，并不会改动数据库中元信息）
 - model 设置的是由数据库中各张表**根据 `setRelation()` 设置的规则**组合出来的“混合数据表”，别的 TableView 组件可以通过 `setModel()` 来获取这张“表"中信息（qt 中讲这种行为称为***获取数据模型***）并显示在 gui 界面上。
 
-最终显示在 gui 程序中图标是通过 `QTableView* tableView` 组件实现的，数据库中数据经过 model 加工设置之后，显示在 tableView gui中
+最终显示在 gui 程序中图标是通过 `QTableView* tableView` 组件实现的，数据库中数据经过 model 加工设置后，显示在 tableView gui中
 
 - configureWidgets 函数中设置的是 tableView 组件的样式
 - createModel 函数中设置的是显示数据的内容。
@@ -1116,7 +1116,7 @@ QSqlRelation 的文档说：
 也就是说，代码 `model->setRelation(authorIdx, QSqlRelation("authors", "id", "name"));` ：
 - 将 books（`setTable` 设置的参考表）中第 `authorIdx` 列**标记为为外键**（能够与别的表中列数据对应的列）
 - 用外键链接到 `authors` 表，链接依据是 `books.author == author.id`
-- 连接之后将数据表中 authorIdx 列数据显示为 `author.name` 中数据
+- 连接后将数据表中 authorIdx 列数据显示为 `author.name` 中数据
 
 ```sql
 -- books 表实际存储：
@@ -1153,7 +1153,7 @@ LEFT JOIN genres g ON b.genre = g.id
 ```
 
 #### 通过关系数据模型获取混合数据
-对于 `QSqlRelationTableMode` 对象，通过各种 set 函数[[#最终显示视图和数据模型视图|设置其中规则]]并[[#数据模型获取数据库数据|调用`select`函数]]之后，由于这个模型**只保存 setTable设置的参照表引用和各项施加于参照表的规则**，所以有两种获取“混合数据表”中数据的方法：
+对于 `QSqlRelationTableMode` 对象，通过各种 set 函数[[#最终显示视图和数据模型视图|设置其中规则]]并[[#数据模型获取数据库数据|调用`select`函数]]后，由于这个模型**只保存 setTable设置的参照表引用和各项施加于参照表的规则**，所以有两种获取“混合数据表”中数据的方法：
 - 获取参照表的数据
 	- `model.fieldIndex(Qstring str)`，通过列`名返回这列数据在表中 index
 	- `model.record().fieldName(int index)`，通过 index 返回列名
@@ -1350,7 +1350,7 @@ QPushButton *newScreenshotButton;
 ### 布局和控件关系
 布局是不可见的**管理器**，控制其中对象的排列规则，管理部件几何形状和位置，不关心**其父对象**中有多少子对象，子对象是什么。
 控件**大多是可见的**，能够 `addxxx()` 的控件可以看做是一个 container，他只关心其中有什么，不关心其中东西如何排列。
-如果一个控件是 layout，那么它支持**在构造函数中使用 parent 参数指向父对象**，前提是父对象是一个 container，设置好父对象之后，对这个 layout 中操作（如 addWidget）都会自动纳入父对象中作为子对象
+如果一个控件是 layout，那么它支持**在构造函数中使用 parent 参数指向父对象**，前提是父对象是一个 container，设置好父对象后，对这个 layout 中操作（如 addWidget）都会自动纳入父对象中作为子对象
 ```cpp
 QGridLayout *optionsGroupBoxLayout = new QGridLayout(optionsGroupBox);
 optionsGroupBoxLayout->addWidget(new QLabel(tr("Screenshot Delay:"), this), 0, 0);
@@ -1398,7 +1398,7 @@ mainLayout->addWidget(optionsGroupBox);  // addWidget
   QObject 实例。
 创建一个 QObject或其子类时，如果没有在构造函数中指定 parent 参数：
 * 拥有一个 `nullptr` 的父对象指针。它的 `parent()` 函数会返回 nullptr。
-* 不隶属于任何 Qt 对象树。它独立存在，Qt 的对象树内存管理机制不会自动管理它的生命周期。**也就是说脱离之后他自己不会成为一个新的对象树**
+* 不隶属于任何 Qt 对象树。它独立存在，Qt 的对象树内存管理机制不会自动管理它的生命周期。**也就是说脱离后他自己不会成为一个新的对象树**
 * 需要手动管理内存。必须在适当的时机调用 delete 来释放其占用的内存，否则会导致内存泄漏。
 ### 文件对话框简单用法（QFileDialog）
 #### 设置基本参数
@@ -1544,7 +1544,7 @@ endif()
 ```cmake
 qt_add_library()
 ```
-用来将一些代码**预编译**之后作为库文件，分为静态库（. a/. lib）和动态库（. so/.dll/. dylib）
+用来将一些代码**预编译**后作为库文件，分为静态库（. a/. lib）和动态库（. so/.dll/. dylib）
 `include_directories` 方式：
 - 只是告诉编译器在哪里找到头文件
 - 每次编译使用该头文件的源文件时，都会重新编译整个头文件内容

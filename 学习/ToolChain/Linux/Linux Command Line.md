@@ -43,7 +43,7 @@ shell 就是一个程序，它接受从键盘输入的命令，然后
 ## 各种命令
 ### 手册信息查看命令
 **whatis**
-启动 whatis 之前先要建立 whatis 数据库，centos 7 之前使用 `makewhatis`，之后使用 `mandb`
+启动 whatis 之前先要建立 whatis 数据库，centos 7 之前使用 `makewhatis`，后使用 `mandb`
 - whatis 是一个简洁的命令解释器，返回命令在手册中简洁说明
 
 **apropos 命令**

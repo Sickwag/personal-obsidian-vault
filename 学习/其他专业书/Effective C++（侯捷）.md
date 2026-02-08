@@ -5,7 +5,7 @@
 - `explicit` 关键字用于防止构造函数或转换操作符的隐式转换。它的出现是为了避免意外的类型转换，增强代码的安全性和可读性
 #### 细节问题
 ##### extern
-一般在 `.h` 文件中使用 extern 声明但不定义，在 `.cpp` 文件中赋值定义，在其他文件中需要**引用使用**到这个变量时，include `.h` 文件之后，即可访问到相同变量名称的相同变量
+一般在 `.h` 文件中使用 extern 声明但不定义，在 `.cpp` 文件中赋值定义，在其他文件中需要**引用使用**到这个变量时，include `.h` 文件后，即可访问到相同变量名称的相同变量
 ##### constexpr
 更多细节可以参考 [[Modern C++#constexpr]]
 `constexpr` 函数的本质是允许在编译时执行函数，并将其结果作为编译时常量。如果在函数定义中不使用 `constexpr`，则该函数无法在编译时被调用，也就无法用于初始化编译时常量（如 `constexpr int value = factorial(5);`）。
@@ -124,7 +124,7 @@ const 可以用在：
  const 修饰不同内容，放置位置的区别可以参考 [[C++ Basics#const 常量]]
 
 ### STL 中 const
-迭代器的作用就像个 T* 指针。迭代器为 const 就像声明指针为 const 一样（即声明一个 T* const 指针），表示这个**迭代器在定义之后不能指向不同的东西**，但它所指的**东西的值**是可以改动的。
+迭代器的作用就像个 T* 指针。迭代器为 const 就像声明指针为 const 一样（即声明一个 T* const 指针），表示这个**迭代器在定义后不能指向不同的东西**，但它所指的**东西的值**是可以改动的。
 ```cpp
 vector<int> vec;
 const vector<int>::iterator iter = vec.begin();  // iter被限制只能指向vec这个vector对象的第一个元素，指向不能改
@@ -328,7 +328,7 @@ int main() {
 # 2.  构造／析构／赋值运算
 ## 条款 05：了解 C+＋默默编写并调用哪些函数
 ### 默认构造行为和调用方法
-什么时候 empty class （空类）不再是个 empty class 呢？**当 C+＋处理过它之后**。如果你自己没声明，编译器就会为它声明**编译器版本的**
+什么时候 empty class （空类）不再是个 empty class 呢？**当 C+＋处理过它后**。如果你自己没声明，编译器就会为它声明**编译器版本的**
 - 一个 copy 构造函数
 - 一个 copy assignment 操作符
 - 一个析构函数
@@ -429,7 +429,7 @@ class HomeForSale: private Uncopyable {		//class不再声明
 | `protected` | **基类 public 被降级为 protected，private 仍不可见**        |
 | `private`   | 基类 public 和 protected 都变为 private，private 成员仍不可见 |
 
-C++11 之后能够写为：
+C++11 后能够写为：
 ```cpp
 class HomeForSale {
 public:
@@ -444,7 +444,7 @@ public:
 
 > 当 derived class 对象经由一个 baseclass 指针被删除，而该 base class 带着一个 non-virtual 析构函数，其结果**未有定义**
 
-明白一点说就是：derived class 派生类继承 base 类，如果 base 类中没有将析构函数设置为 virtual，那么在通过子类构造函数创建父类对象的指针之后想要删除指针，调用 delete 命令之后就会出现派生类对象无法释放内存而导致内存泄漏问题
+明白一点说就是：derived class 派生类继承 base 类，如果 base 类中没有将析构函数设置为 virtual，那么在通过子类构造函数创建父类对象的指针后想要删除指针，调用 delete 命令后就会出现派生类对象无法释放内存而导致内存泄漏问题
 场景复现：
 ```cpp
 class Base {

@@ -157,7 +157,7 @@ BOOST_DATA_TEST_CASE(test1, fibonacci_dataset() ^ bdata::make({ 1, 2, 3, 5, 8, 1
 	BOOST_TEST(fib_sample == exp);
 }
 ```
-如上定义的数据集在测试模块开始执行之前就作为全局对象被构造。这使得在数据集生成器内部和迭代过程中，无法访问 `argc` / `argv`、[主测试套件](https://boost.ac.cn/doc/libs/latest/libs/test/doc/html/boost_test/tests_organization/test_tree/master_test_suite.html "主测试套件")（以及预处理后的 `argc` / `argv`）或在测试模块入口的 `main` 之后实例化的任何其他对象。
+如上定义的数据集在测试模块开始执行之前就作为全局对象被构造。这使得在数据集生成器内部和迭代过程中，无法访问 `argc` / `argv`、[主测试套件](https://boost.ac.cn/doc/libs/latest/libs/test/doc/html/boost_test/tests_organization/test_tree/master_test_suite.html "主测试套件")（以及预处理后的 `argc` / `argv`）或在测试模块入口的 `main` 后实例化的任何其他对象。
 如果需要解决这个问题，需要使用延迟数据集，本质是**惰性地**实例化数据集
 ```cpp
 BOOST_DATA_TEST_CASE(dataset_test_case,
@@ -190,7 +190,7 @@ auto sizes = bdata::make({"S", "M", "L"});       // [S, M, L]
 auto products = colors * sizes;                  // 所有组合
 
 // 结果：
-// [(Red, S), (Red, M), (Red, L), 
+// [(Red, S), (Red, M), (Red, L),
 //  (Green, S), (Green, M), (Green, L)]
 // 总共 2 × 3 = 6 个组合
 ```
@@ -294,7 +294,7 @@ test 2: 2, 2
 - 测试用例：树中包含测试主体（body）的元素，它们构成了树的 **叶子**。
 - 测试套件：树的内部节点。这些元素本身没有主体或可执行代码，但可以附加执行代码和测试的夹具。
 - 主测试套件：树的根节点，定义上就是一个测试套件。附加到主测试套件的夹具是 **全局** 夹具。
-- 夹具：在上述测试单元之前和/或之后执行的代码单元。
+- 夹具：在上述测试单元之前和/或后执行的代码单元。
 ![[Pasted image 20260203121417.jpg|500]]
 > [!note]
 > 修饰可以添加到测试套件和用例上，但主测试套件除外。这些修饰可能会改变单元测试框架处理树的方式。例如，除了夹具及其相关的元素（套件、用例）之外，树本身不强制执行测试用例的执行顺序；修饰可用于指示树元素之间的特定顺序。
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_SUITE_END()
 ```bash
 Running 4 test cases...
 test4.cpp(11): fatal error: in "test_suite1/test_case2": critical check 1 == 2 has failed [1 != 2]
-test4.cpp(23): error: in "test_suite2/test_case4": check false has failed      
+test4.cpp(23): error: in "test_suite2/test_case4": check false has failed
 *** 2 failures are detected in the test module "example"
 ```
 #### 手动注册
