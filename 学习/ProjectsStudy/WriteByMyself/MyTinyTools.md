@@ -1438,6 +1438,16 @@ MysqlConnectionPool::MysqlConnectionPool(asio::io_context& ctx, const db_config&
 [^1]: 原则上 `std::unique_ptr` 对象指向的资源不应该被其他指针指向，但是 C++没有限制这点。如果使用 `get()/release()` 获取裸指针还是能够将指针资源地址赋予其他指针/智能指针。但这样会导致重复释放资源地址等未定义行为
 # kama 内存池
 ## 杂项
+### placement new 语法
+```cpp
+// 普通new：分配内存 + 构造对象，具体问配内存在什么位置由操作系统决定
+T* ptr = new T(args);  
+
+// Placement new：只构造对象（内存已存在）
+T* ptr;
+void* mem = get_memory_from_pool(sizeof(T));  // 预先获得内存
+new(mem) T(args);  // 在指定内存位置构造对象
+```
 ### pthread 库链接问题
 linux 环境中如果使用了 `std::thread`，就需要链接 pthread 库
 ```cmake
@@ -1695,6 +1705,8 @@ void* MemoryPool::allocate() {
 - `lastSlot_ = reinterpret_cast<Slot*>(reinterpret_cast<size_t>(newBlock) + BlockSize_ - SlotSize_ + 1);`:
 	- `reinterpret_cast<size_t>(newBlock)` newBlock 是**新分配的内存块的开始位置**，转换为内存地址
 	- 加上 BlockSize_，跳转到**新分配块的末尾**
+	- 回退一个 slot，再+1 保证 lastSlot_一定在 curSlot_之后
+![[Pasted image 20260208212305.png]]
 #### 多级内存池
 MemoryPool 设计内存池，HashBucket 管理内存池，提供入口
 ```md
@@ -1748,13 +1760,66 @@ MemoryPool::allocate()
     ├── 若当前块不足，调用allocateNewBlock()
     └── 返回curSlot_并移动指针
 
-释放内存流程
-释放ptr指针
-↓
-HashBucket确定对应MemoryPool
-↓
-MemoryPool::deallocate(ptr)
-↓
-pushFreeList(ptr) → 加入freeList_链表头部
-
 ```
+#### 释放内存流程
+1. 调用 `deleteElement(T* p)`
+2. 调用T类型析构函数释放资源对内存占用
+3. HashBucket确定对应**哪一个大小的MemoryPool**中存放着这个对象
+4. `freeMemory(ptr, size)`函数中释放指针指向的内存位置的size大小内存
+5. 对应内存池调用`MemoryPool::deallocate(ptr)`将指针转换为Slot类型，因为无论如何一个对象只会占用一个内存槽
+6. `pushFreeList(ptr)`回收使用过的内存到`freeList_`链表头部
+其中指针类型从`T* -> void* -> Slot*`，从具体的类类型转化为底层的内存大小数据来释放
+```cpp
+// 1
+template <typename T>
+void deleteElement(T* p) {
+	if(p) {
+		p->~T();
+		HashBucket::freeMemory(reinterpret_cast<void*>(p), sizeof(T));
+	}
+}
+// 2
+static void freeMemory(void* ptr, size_t size) {
+	if(!ptr)
+		return;
+	if(size > MAX_SLOT_SIZE) {
+		operator delete(ptr);
+		return;
+	}
+
+	getMemoryPool(((size + 7) / SLOT_BASE_SIZE) - 1).deallocate(ptr);
+}
+// 3
+void MemoryPool::deallocate(void* ptr) {
+	if(!ptr)
+		return;
+
+	Slot* slot = reinterpret_cast<Slot*>(ptr);
+	pushFreeList(slot);
+}
+// 4
+bool MemoryPool::pushFreeList(Slot* slot) {
+	while(true) {
+		Slot* oldHead = freeList_.load(std::memory_order_relaxed);
+		slot->next.store(oldHead, std::memory_order_relaxed);
+
+		if(freeList_.compare_exchange_weak(oldHead, slot, std::memory_order_release, std::memory_order_relaxed)) {
+			return true;
+		}
+	}
+}
+```
+
+由于我们有两种分配内存方式：
+- 大于 512 字节对象由操作系统分配
+	对于大对象单从代码上来看并没有指明这个对象占用了多大内存， `operator delete(ptr)` 确实不知道大小，但统级别的内存管理器知道，会指导 delete 函数或关键字来释放内存
+	C++对象模型的内存布局为：
+```md
+[元数据区] [实际返回给用户的内存(1000字节)]
+ ↑由malloc记录大小等信息
+ 
+`new` / `operator new` 在分配时会记录元数据到数据区中
+调用operator delete(ptr)系统通过ptr向前查找元数据，知道大小是1000字节
+```
+- 小于由内存池管理
+	`freeMemory` 函数中调用 delete 函数，会让系统级别内存管理器通过访问元数据位置部分的内容清楚对象的内存占用，如果调用 `operator delete(ptr, size)` (C++14)，显式清理整个内存槽中内存，反而会降低效率。内存槽
