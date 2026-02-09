@@ -85,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "iterator_",
+                "query": "",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -106,12 +106,12 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -216,7 +216,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "129968db299d0d8b",
+  "active": "8e5344210c995e78",
   "lastOpenFiles": [
     "学习/algorithm/刷题路线.md",
     "Files & LongText/ChatLogWithAi/AiQuiz/内存池.md",
