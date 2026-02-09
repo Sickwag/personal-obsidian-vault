@@ -13,13 +13,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Chores/computer learning puzzles.md",
+                "file": "Files & LongText/Long code/C++ Code Snippets.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "computer learning puzzles"
+              "title": "C++ Code Snippets"
             }
           },
           {
@@ -36,8 +36,24 @@
               "icon": "lucide-file",
               "title": "内存池"
             }
+          },
+          {
+            "id": "8e5344210c995e78",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/algorithm/用法导向知识.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "用法导向知识"
+            }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -69,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "iterator_",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -90,7 +106,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -199,14 +216,15 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "9bdc4926f27a9774",
+  "active": "129968db299d0d8b",
   "lastOpenFiles": [
-    "Daily/Learned Record.md",
-    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
+    "学习/algorithm/刷题路线.md",
     "Files & LongText/ChatLogWithAi/AiQuiz/内存池.md",
     "Files & LongText/Long code/C++ Code Snippets.md",
-    "Files & LongText/ChatLogWithAi/Linux Concepts.md",
     "Chores/computer learning puzzles.md",
+    "Daily/Learned Record.md",
+    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
+    "Files & LongText/ChatLogWithAi/Linux Concepts.md",
     "学习/其他专业书/Python编程三剑客.md",
     "Files & LongText/Long code/Mysql Snippets.md",
     "Files & LongText/Long code/HTML.md",
@@ -236,7 +254,6 @@
     "Files & LongText/Attachments/PixPin_2026-01-23_10-01-58.png",
     "学习/ProjectsStudy/FromProjects/线程池.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinySTL.md",
-    "学习/ProjectsStudy/FromDocs/Boost库文档学习.md",
     "test.exe",
     "test.cpp",
     "Files & LongText/Attachments/PixPin_2026-01-05_23-34-07.mp4",

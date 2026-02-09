@@ -497,6 +497,87 @@ int main(){
 ```
 
 ## 读写文件
+### 检查文件是否而二进制文件
+#### 可疑字符比例换算法
+```cpp
+#include <fstream>
+#include <cctype>
+
+bool is_likely_text_file(const std::string& filename, 
+                        size_t max_check = 4096) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) return false;
+    
+    unsigned char c;
+    size_t bytes_checked = 0;
+    size_t suspicious_chars = 0;
+    
+    while (file.read(reinterpret_cast<char*>(&c), 1) && 
+           bytes_checked < max_check) {
+        bytes_checked++;
+        
+        // 二进制文件的强烈迹象
+        if (c == 0) return false; // NULL字节
+        
+        // 控制字符（除了常见的空白字符）
+        if (c < 32 && c != 9 && c != 10 && c != 13 && c != 26) {
+            suspicious_chars++;
+        }
+        
+        // 如果可疑字符超过一定比例
+        if (suspicious_chars > max_check / 100) { // 1%
+            return false;
+        }
+    }
+    
+    // 如果文件为空或全是可打印字符
+    return bytes_checked > 0;
+}
+```
+#### 检查二进制控制字符
+```cpp
+#include <fstream>
+#include <iostream>
+#include <cctype>
+
+bool is_binary_file(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        return false; // 无法打开
+    }
+    
+    char buffer[1024];
+    size_t bytes_read = 0;
+    const size_t max_check = 4096; // 检查前4KB通常足够
+    
+    while (file.read(buffer, sizeof(buffer)) && bytes_read < max_check) {
+        size_t chunk_size = file.gcount();
+        
+        for (size_t i = 0; i < chunk_size; ++i) {
+            unsigned char c = buffer[i];
+            
+            // ASCII控制字符（除了\t, \n, \r）
+            if (c < 32 && c != 9 && c != 10 && c != 13) { // 9=\t, 10=\n, 13=\r
+                return true; // 找到二进制控制字符
+            }
+            
+            // 检查UTF-8 BOM（可选）
+            if (bytes_read + i == 0 && c == 0xFF) {
+                // 可能的UTF-8 BOM开始
+                if (chunk_size > 2 && 
+                    static_cast<unsigned char>(buffer[1]) == 0xFE &&
+                    static_cast<unsigned char>(buffer[2]) == 0xFF) {
+                    return false; // UTF-16 BE BOM，其实是文本
+                }
+            }
+        }
+        
+        bytes_read += chunk_size;
+    }
+    
+    return false; // 很可能是文本文件
+}
+```
 ### C++读写二进制文件
 ```cpp
 struct Record {
