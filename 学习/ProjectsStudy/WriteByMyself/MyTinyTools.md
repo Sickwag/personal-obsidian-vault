@@ -1965,7 +1965,7 @@ ThreadCache::allocate(size)
 MemoryPool::allocate()
 ↓
 ThreadCache::allocate()  // 优先从线程本地分配
-│   ├── 成功 → 大内存系统malloc分配，小内存
+│   ├── 成功 → 大内存系统malloc分配，小内存如果本地自由链表为空则判断失败
 │   └── 失败 → CentralCache::fetchRange()  // 批量获取
 │       ├── 成功 → 填充ThreadCache后返回
 │       └── 失败 → PageCache::allocateSpan()  // 申请新span
@@ -1993,4 +1993,8 @@ v2 的改进
 - __批量分配__：一次获取多个内存块，减少系统调用
 - __延迟归还__：内存使用完之后累计到一定程度后归还 CentralCache 中，避免频繁的内存归还操作
 - __三级缓存__：根据对象大小选择不同层级的缓存
-```
+### 线程本地缓存
+每个线程都有自己的 ThreadCache 实例，不会发生竟态条件且生命周期安全随线程创建而创建，线程结束时销毁。
+- 大对象（>256KB）：直接使用 malloc 分配，内存块布局就是普通的 malloc
+返回的内存块，没有特殊的前 8 字节作为 next 指针的设计，所以在 deallocate 中对于大对象使用 `free(ptr)` 释放内存
+- 小对象（≤256KB）：由内存池管理，allocate 和 deallocate 内存块的前 8 字节确实被用作 next 指针，因为最终要被放入 freeList_中
