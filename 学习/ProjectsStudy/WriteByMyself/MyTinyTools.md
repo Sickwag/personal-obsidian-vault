@@ -1997,4 +1997,5 @@ v2 的改进
 每个线程都有自己的 ThreadCache 实例，不会发生竟态条件且生命周期安全随线程创建而创建，线程结束时销毁。
 - 大对象（>256KB）：直接使用 malloc 分配，内存块布局就是普通的 malloc
 返回的内存块，没有特殊的前 8 字节作为 next 指针的设计，所以在 deallocate 中对于大对象使用 `free(ptr)` 释放内存
-- 小对象（≤256KB）：由内存池管理，allocate 和 deallocate 内存块的前 8 字节确实被用作 next 指针，因为最终要被放入 freeList_中
+- 小对象（≤256KB）：由内存池管理，allocate 和 deallocate 内存块的前 8 字节确实被用作 next 指针，因为最终要被放入 freeList_链表中，需要指针指向
+
