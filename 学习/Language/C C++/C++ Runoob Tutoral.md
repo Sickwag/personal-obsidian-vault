@@ -7627,6 +7627,152 @@ struct FNVHash {
     }
 };
 ```
+### C++提供的类型转换方式
+#### static_cast
+`static_cast<T*>(ptr)` 在以下情况下是合法的：
+- `ptr` 是一个指向某个类的指针
+- `T` 是该类的派生类（向下转型）
+- `ptr` 实际指向的是 `T` 类型的对象
+#### dynamic_cast
+#### reinterpret_cast
+#### const_cast
+#### qobject_cast
+#### any_cast
+### C++的多态形式
+#### 运行时多态（动态多态）
+- **原理**：通过虚函数实现，虚函数表（vtable）在运行时决定调用哪个函数
+- **语法**：`virtual` 关键字
+- **优点**：灵活、支持运行时动态绑定
+- **缺点**：性能开销（虚函数调用、虚表）、不能内联优化
+```cpp
+struct Base {
+    virtual void foo() { cout << "Base\n"; }
+};
+struct Derived : Base {
+    void foo() override { cout << "Derived\n"; }
+};
+```
+#### 编译期多态（静态多态）
+- **原理**：通过模板参数传递子类类型，实现编译期绑定
+- **语法**：CRTP、模板方法
+- **优点**：零运行时开销、支持内联优化
+- **缺点**：代码复用性差、调试复杂
+```cpp
+template <typename Derived>
+struct Base {
+    void foo() { static_cast<Derived*>(this)->foo_impl(); }
+};
+struct Derived : Base<Derived> {
+    void foo_impl() { cout << "Static polymorphism\n"; }
+};
+```
+#### 函数重载（Overload）
+- **原理**：编译器根据参数类型选择不同函数
+- **优点**：简单、直观
+- **缺点**：仅限于函数名相同、参数不同
+参考 [[C++ Runoob Tutoral#函数重载]]
+#### 运算符重载（Operator Overload）
+- **原理**：为类定义运算符行为
+- **优点**：提升可读性和表达力
+- **缺点**：容易滥用导致代码混乱
+参考 [[C++ Runoob Tutoral#运算符重载]]
+#### 模板泛型多态（Generic Polymorphism）
+- **原理**：通过模板参数实现通用逻辑
+- **优点**：高度复用、类型安全
+- **缺点**：代码膨胀、编译时间长
+参考[[模板元编程]]
+#### 标签分发（Tag Dispatching）
+- **原理**：根据类型标签选择不同实现，是静态编译期多态的一种，使用空结构体作为“标签”，有点像函数重载，每个重载之间的参数列表不同，但不同的只有一项**作为标签**的参数，标签通常由一个*空结构体*标识这个重载用于什么场景
+- 利用函数重载或模板特化，根据标签选择不同实现
+- **优点**：清晰表达意图、支持 SFINAE，不同使用场景的调用的是相同的函数，但传入不同的标签实现不同效果
+- **缺点**：代码略复杂
+```cpp
+struct input_iterator_tag {};
+struct random_access_iterator_tag {};
+
+template <typename Iterator>
+void advance(Iterator& it, int n, random_access_iterator_tag) {
+    it += n; // 随机访问迭代器支持直接加减
+}
+
+template <typename Iterator>
+void advance(Iterator& it, int n, input_iterator_tag) {
+    while (n--) ++it; // 输入迭代器只能逐个移动
+}
+
+template <typename Iterator>
+void advance(Iterator& it, int n) {
+    using category = typename Iterator::iterator_category;
+    advance(it, n, category{}); // 自动选择实现
+}
+```
+#### 策略模式（Policy-based Design）
+- **原理**：通过模板参数传入策略类，每个策略类封装一种行为，主类通过模板参数接受策略类，组合不同行为。一种业务可以被多种方式实现，每种方式都有自己的应用场景，每一个编写一套不相关的代码维护起来比较困难，使用时也需要知道每一种方式的存在。将每一个封装成一个类，用*策略类统一管理和调用*
+- **优点**：高度灵活、可组合
+- **缺点**：模板代码复杂
+```cpp
+struct LogToConsole {
+    static void log(const std::string& msg) {
+        std::cout << "[Console] " << msg << std::endl;
+    }
+};
+
+struct LogToFile {
+    static void log(const std::string& msg) {
+        // 写入文件
+    }
+};
+
+template <typename LogPolicy>
+class Logger : public LogPolicy {
+public:
+    void logMessage(const std::string& msg) {
+        LogPolicy::log(msg);
+    }
+};
+
+int main() {
+    Logger<LogToConsole> logger1;
+    logger1.logMessage("Hello Console");
+
+    Logger<LogToFile> logger2;
+    logger2.logMessage("Hello File");
+}
+```
+#### 类型擦除（Type Erasure）
+- **原理**：使用 `std::function`、`std::any` 等隐藏一段功能代码的类型特性，方便统一管理和调用，管理和调用时他们都是平等的，调用同一个对象，但实现不同的功能
+- **优点**：统一接口、支持异构类型
+- **缺点**：性能开销、类型安全降低
+```cpp
+// 使用std::function
+int main() {
+    std::vector<std::function<void()>> tasks;
+
+    tasks.push_back([]() { std::cout << "Task 1\n"; });
+    tasks.push_back([]() { std::cout << "Task 2\n"; });
+
+    for (auto& task : tasks) {
+        task(); // 调用不同类型的函数对象
+    }
+}
+
+// std::any
+int main() {
+    std::any a = 42;
+    std::cout << std::any_cast<int>(a) << std::endl;
+
+    a = std::string("Hello");
+    std::cout << std::any_cast<std::string>(a) << std::endl;
+}
+```
+关于性能开销：
+- 如果使用虚函数实现类型擦除，`std::function` 的内部实现是构造一个将结构体，并通过结构体成员模板结构体成员虚函数通过虚函数表查找（发生在运行时），无法内联优化（原因是无法在编译器得知类型信息）
+- 通常 `std::function` 和 `std::any` 将对象 new 在堆
+- `std::any` 的开销花费在保存任意类型数据时，会将数据的特征信息一同保存，通过 `any_cast<T>` 还原/转化数据时会进行类型检查（调用 `type()` 返回内部保存数据和 `typeid(T)` 结果比较）
+
+[^1]: 这需要用户手动实现，但是大部 stl 容器都有默认实现，如果没有指定则编译器使用默认实现：将所有资源通过 `std::move()` 转移，源对象中资源被置为对应类型的初始值或者 `nullptr`
+
+
 ## 常见问题及其技术细节
 ### std::invoke 和 std::apply 使用
 #### `std::invoke` 是什么？
@@ -7679,7 +7825,6 @@ func(std::get<0>(args), std::get<1>(args), std::get<2>(args));
 ```
 这很麻烦，尤其是参数很多或不确定时。
 于是 `std::apply` 出现了，它可以自动展开 tuple 并调用函数。
-### 使用示例：
 ```cpp
 void print(int a, double b, const std::string& c) {
     std::cout << a << ", " << b << ", " << c << std::endl;
@@ -7698,7 +7843,6 @@ int main() {
 | 调用方式     | 直接传参           | 展开 `tuple` 后传参    |
 | 适用场景     | 通用可调用对象调用      | 从 `tuple` 中调用函数   |
 | 是否支持成员函数 | ✅ 支持           | ✅ 支持（通过 `invoke`） |
-
 #### 它们为了解决什么问题而出现？
 - **统一调用接口（`std::invoke`）**
     - 在泛型编程中，我们不知道传入的是函数、lambda 还是成员函数。
@@ -7895,149 +8039,53 @@ bool c = vec[0];						// better
 - 不要将任意一个 `vector<bool>` 中元素赋值给一个 auto 类型变量
 - 使用 `[]` 或者 `at()` 时配合 `static_cast<bool>` 转换
 - 将元素显式赋值给 bool 变量使用
-### C++提供的类型转换方式
-#### static_cast
-`static_cast<T*>(ptr)` 在以下情况下是合法的：
-- `ptr` 是一个指向某个类的指针
-- `T` 是该类的派生类（向下转型）
-- `ptr` 实际指向的是 `T` 类型的对象
-#### dynamic_cast
-#### reinterpret_cast
-#### const_cast
-#### qobject_cast
-#### any_cast
-### 类 this 指向内存的布局
-### C++的多态形式
-#### 运行时多态（动态多态）
-- **原理**：通过虚函数实现，虚函数表（vtable）在运行时决定调用哪个函数
-- **语法**：`virtual` 关键字
-- **优点**：灵活、支持运行时动态绑定
-- **缺点**：性能开销（虚函数调用、虚表）、不能内联优化
-```cpp
-struct Base {
-    virtual void foo() { cout << "Base\n"; }
-};
-struct Derived : Base {
-    void foo() override { cout << "Derived\n"; }
-};
-```
-#### 编译期多态（静态多态）
-- **原理**：通过模板参数传递子类类型，实现编译期绑定
-- **语法**：CRTP、模板方法
-- **优点**：零运行时开销、支持内联优化
-- **缺点**：代码复用性差、调试复杂
-```cpp
-template <typename Derived>
-struct Base {
-    void foo() { static_cast<Derived*>(this)->foo_impl(); }
-};
-struct Derived : Base<Derived> {
-    void foo_impl() { cout << "Static polymorphism\n"; }
-};
-```
-#### 函数重载（Overload）
-- **原理**：编译器根据参数类型选择不同函数
-- **优点**：简单、直观
-- **缺点**：仅限于函数名相同、参数不同
-参考 [[C++ Runoob Tutoral#函数重载]]
-#### 运算符重载（Operator Overload）
-- **原理**：为类定义运算符行为
-- **优点**：提升可读性和表达力
-- **缺点**：容易滥用导致代码混乱
-参考 [[C++ Runoob Tutoral#运算符重载]]
-#### 模板泛型多态（Generic Polymorphism）
-- **原理**：通过模板参数实现通用逻辑
-- **优点**：高度复用、类型安全
-- **缺点**：代码膨胀、编译时间长
-参考[[模板元编程]]
-#### 标签分发（Tag Dispatching）
-- **原理**：根据类型标签选择不同实现，是静态编译期多态的一种，使用空结构体作为“标签”，有点像函数重载，每个重载之间的参数列表不同，但不同的只有一项**作为标签**的参数，标签通常由一个*空结构体*标识这个重载用于什么场景
-- 利用函数重载或模板特化，根据标签选择不同实现
-- **优点**：清晰表达意图、支持 SFINAE，不同使用场景的调用的是相同的函数，但传入不同的标签实现不同效果
-- **缺点**：代码略复杂
-```cpp
-struct input_iterator_tag {};
-struct random_access_iterator_tag {};
+### RAII 机制
+#### RAII 解决的问题
+##### 异常安全
+字面意思上：资源获取即初始化，但更重要的是**资源释放即析构**，但这是针对**栈对象**而言的
 
-template <typename Iterator>
-void advance(Iterator& it, int n, random_access_iterator_tag) {
-    it += n; // 随机访问迭代器支持直接加减
-}
+> [!warning] 
+> ***析构函数必须保证不抛出异常***，因为抛出异常会**栈展开**，逆序地调用对象的析构函数（从子类的调用到父类的）。C++异常处理过程是 try-catch，如果 catch 块中又抛出了异常（即子类的某个父类的析构函数又抛出了异常）而 catch 块中没有再嵌套 try-catch，就会导致调用 `std::terminate` 终止程序。所以析构函数是**隐式声明为 noexcept 的**
 
-template <typename Iterator>
-void advance(Iterator& it, int n, input_iterator_tag) {
-    while (n--) ++it; // 输入迭代器只能逐个移动
-}
+> [!note]
+> 需要注意 `std::thread` 中 RAII 的实现是，如果类对象中又线程资源，**必须在析构函数中使用 `join`**，否则如果类的生命周期结束->资源释放->线程还没结束->直接调用 `std::terminate()` 终止线程
 
-template <typename Iterator>
-void advance(Iterator& it, int n) {
-    using category = typename Iterator::iterator_category;
-    advance(it, n, category{}); // 自动选择实现
+有这样一段代码
+```cpp
+class Source {
+	Source();
+	~Source();
+};
+
+int main(){
+	try{
+		Source s1;
+		Source s2;
+		Source* s3 = new Source();
+		
+		if(true){
+			throw std::runtime_error(...);
+		}
+		delete s2;
+	}catch(...){
+		// 异常处理
+	}
 }
 ```
-#### 策略模式（Policy-based Design）
-- **原理**：通过模板参数传入策略类，每个策略类封装一种行为，主类通过模板参数接受策略类，组合不同行为。一种业务可以被多种方式实现，每种方式都有自己的应用场景，每一个编写一套不相关的代码维护起来比较困难，使用时也需要知道每一种方式的存在。将每一个封装成一个类，用*策略类统一管理和调用*
-- **优点**：高度灵活、可组合
-- **缺点**：模板代码复杂
-```cpp
-struct LogToConsole {
-    static void log(const std::string& msg) {
-        std::cout << "[Console] " << msg << std::endl;
-    }
-};
-
-struct LogToFile {
-    static void log(const std::string& msg) {
-        // 写入文件
-    }
-};
-
-template <typename LogPolicy>
-class Logger : public LogPolicy {
-public:
-    void logMessage(const std::string& msg) {
-        LogPolicy::log(msg);
-    }
-};
-
-int main() {
-    Logger<LogToConsole> logger1;
-    logger1.logMessage("Hello Console");
-
-    Logger<LogToFile> logger2;
-    logger2.logMessage("Hello File");
-}
-```
-#### 类型擦除（Type Erasure）
-- **原理**：使用 `std::function`、`std::any` 等隐藏一段功能代码的类型特性，方便统一管理和调用，管理和调用时他们都是平等的，调用同一个对象，但实现不同的功能
-- **优点**：统一接口、支持异构类型
-- **缺点**：性能开销、类型安全降低
-```cpp
-// 使用std::function
-int main() {
-    std::vector<std::function<void()>> tasks;
-
-    tasks.push_back([]() { std::cout << "Task 1\n"; });
-    tasks.push_back([]() { std::cout << "Task 2\n"; });
-
-    for (auto& task : tasks) {
-        task(); // 调用不同类型的函数对象
-    }
-}
-
-// std::any
-int main() {
-    std::any a = 42;
-    std::cout << std::any_cast<int>(a) << std::endl;
-
-    a = std::string("Hello");
-    std::cout << std::any_cast<std::string>(a) << std::endl;
-}
-```
-关于性能开销：
-- 如果使用虚函数实现类型擦除，`std::function` 的内部实现是构造一个将结构体，并通过结构体成员模板结构体成员虚函数通过虚函数表查找（发生在运行时），无法内联优化（原因是无法在编译器得知类型信息）
-- 通常 `std::function` 和 `std::any` 将对象 new 在堆
-- `std::any` 的开销花费在保存任意类型数据时，会将数据的特征信息一同保存，通过 `any_cast<T>` 还原/转化数据时会进行类型检查（调用 `type()` 返回内部保存数据和 `typeid(T)` 结果比较）
-
-[^1]: 这需要用户手动实现，但是大部 stl 容器都有默认实现，如果没有指定则编译器使用默认实现：将所有资源通过 `std::move()` 转移，源对象中资源被置为对应类型的初始值或者 `nullptr`
-
+s1 s2 在栈上分配资源使用析构函数释放资源，s3 在堆上使用 delete 释放资源，但是在 delete 之前抛出了异常，程序直接调用 `std::terminate()` 终止，但由于编译器的编译期魔法，会让栈对象在抛出异常代码的前面进行栈展开，先释放 s2,然后 s1。而堆对象就不会。确认会抛出异常的代码会被剪裁。无法 delete 导致内存泄漏
+##### 避免手动管理
+忘记 delete 导致内存泄漏
+### 作用域与生命周期
+RAII 不是在对象离开**作用域时调用析构函数**，更准确地描述是将对象的资源和生命周期绑定。
+作用域一词很不精准，比如局部 static 对象作用域和生命周期就不相同
+#### C++中不同对象的生命周期和析构规则
+| 对象类型              | 构造时机       | 析构时机       | 顺序规则           |
+| ----------------- | ---------- | ---------- | -------------- |
+| 全局对象              | `main()` 前 | `main()` 后 | 逆序（跨编译单元顺序未定义） |
+| 静态全局对象            | `main()` 前 | `main()` 后 | 与全局对象混合逆序      |
+| 静态局部对象            | 首次执行到声明处   | `main()` 后 | 逆序             |
+| 类成员对象             | 类构造时       | 类析构时       | 按声明顺序          |
+| 栈上对象              | 进入作用域      | 离开作用域      | 逆序（嵌套作用域）      |
+| `thread_local` 对象 | 线程首次使用     | 线程退出       | 逆序（每个线程内）      |
+| 动态分配对象            | `new` 时    | `delete` 时 | 无自动顺序          |
+| 临时对象              | 表达式求值      | 完整表达式结束    | 创建顺序的逆序        |
