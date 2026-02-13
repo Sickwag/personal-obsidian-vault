@@ -37,8 +37,7 @@
               "title": "FastLog"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -70,7 +69,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "/\\\\033/",
+                "query": "对象切片",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -202,8 +201,9 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "06245cd98ceef767",
+  "active": "77eee0e3d2d4d353",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/ProjectsStudy/FromProjects/Sudoku.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
@@ -224,7 +224,6 @@
     "Files & LongText/Attachments/Pasted image 20260208212305.png",
     "学习/其他专业书/Modern C++.md",
     "学习/ProjectsStudy/FromDocs/Boost库学习.md",
-    "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/ToolChain/Cmake.md",
     "Chores/operation in devices.md",
     "Files & LongText/Attachments/Pasted image 20260203121417.jpg",
