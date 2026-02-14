@@ -1897,28 +1897,48 @@ bool MemoryPool::pushFreeList(Slot* slot) {
 v1 阶段：[[C++ Code Snippets#AI 测试题#内存池测试题]]
 ## 三级缓存结构 v2
 ### 整体设计
+#### 数据结构设计
+ThreadCache 中，每个线程一个 freeList_，被**隐式定义为一个链表形式**，每个内存块前 8 字节存储 next 指针
+CentralCache 设计中心缓存自由列表，使用array存储因为这本质上是多条链表，每条链表的指针指向一个固定大小内存块链条的起始位置
+```cpp
+std::array<std::atomic<void*>, FREE_LIST_SIZE> centralFreeList_;
+```
+所以 ThreadCache 中 fetchFromCentralCache 传入的 index 表示需要的内存所在的索引，不同索引对应不同的对象大小，CentralCache 中有不同的自由链表
+```md
+index 0  → 8字节对象
+index 1  → 16字节对象
+index 2  → 24字节对象
+index 3  → 32字节对象
+...
+index 31 → 256字节对象
+```
+returnToCentralCache 函数中，index 同理
 ```cpp
 ┌─────────────────────────────────────────────────────┐
 │                    ThreadCache (线程缓存)                    │
-├─────────────────────────────────────────────────────────────┤
-│         线程本地自由链表，无锁访问，最快速度                      │
+│  freeList_[0] → [块1] → [块2] → [块3] → nullptr              │
+│  freeList_[1] → [块1] → [块2] → nullptr                     │
+│  ... (每个大小类独立链表)                                   │
 └─────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
+								│
+								▼
 ┌─────────────────────────────────────────────────────┐
 │                    CentralCache (中心缓存)                    │
-├─────────────────────────────────────────────────────────────┤
-│         线程间共享，批量分配，减少锁竞争                          │
+│  centralFreeList_[0] → [块1] → [块2] → [块3] → nullptr    │
+│  centralFreeList_[1] → [块1] → [块2] → nullptr           │
+│  ... (每个大小类独立链表)                               │
+│  + spanTrackers_[1024] (span信息追踪)                  │
 └─────────────────────────────────────────────────────────────┘
 								│
 								▼
 ┌─────────────────────────────────────────────────────┐
 │                    PageCache (页面缓存)                    │
-├─────────────────────────────────────────────────────────────┤
-│        系统内存管理，大块内存分配，mmap使用                      │
+│  freeSpans_[8] → [span1] → [span2] → nullptr           │
+│  freeSpans_[16] → [span1] → nullptr                     │
+│  ... (按页数分类的span链表)                             │
 └─────────────────────────────────────────────────────────────┘
 ```
-请求分配内存流程
+#### 请求分配内存流程
 ```md
 请求分配size字节
 ↓
@@ -1930,6 +1950,26 @@ ThreadCache::allocate(size)
     ├── 从PageCache获取span
     └── 切分成小块返回给ThreadCache
 
+分配流程
+MemoryPool::allocate()
+↓
+ThreadCache::allocate()  // 优先从线程本地分配
+│   ├── 成功 → 大内存系统malloc分配，小内存如果本地自由链表为空则判断失败
+│   └── 失败 → CentralCache::fetchRange()  // 批量获取
+│       ├── 成功 → 填充ThreadCache后返回
+│       └── 失败 → PageCache::allocateSpan()  // 申请新span
+↓
+返回用户内存
+
+释放流程
+MemoryPool::deallocate()
+↓
+ThreadCache::deallocate()  // 优先放回线程本地
+│   ├── 未超过阈值 → 仅更新本地链表
+│   └── 超过阈值 → CentralCache::returnRange()  // 批量归还
+│       ├── 定期 → PageCache::deallocateSpan()  // 合并大块
+↓
+完成释放
 ```
 #### 1. `Common.h` - 基础工具类
 - 提供内存对齐计算（`roundUp`）
@@ -1958,31 +1998,6 @@ ThreadCache::allocate(size)
 - **简化接口**：隐藏三级缓存实现细节
 - **路由分配**：根据大小选择ThreadCache或直接系统分配
 - **类型擦除**：提供`void*`接口，与C++标准库兼容
-
-### 三级缓存协作流程
-#### 分配路径：
-```
-MemoryPool::allocate()
-↓
-ThreadCache::allocate()  // 优先从线程本地分配
-│   ├── 成功 → 大内存系统malloc分配，小内存如果本地自由链表为空则判断失败
-│   └── 失败 → CentralCache::fetchRange()  // 批量获取
-│       ├── 成功 → 填充ThreadCache后返回
-│       └── 失败 → PageCache::allocateSpan()  // 申请新span
-↓
-返回用户内存
-```
-#### 释放路径：
-```
-MemoryPool::deallocate()
-↓
-ThreadCache::deallocate()  // 优先放回线程本地
-│   ├── 未超过阈值 → 仅更新本地链表
-│   └── 超过阈值 → CentralCache::returnRange()  // 批量归还
-│       ├── 定期 → PageCache::deallocateSpan()  // 合并大块
-↓
-完成释放
-```
 ### 和 v1 的区别
 v1 的局限性
 - 单层架构，所有线程竞争同一套内存池
@@ -1999,3 +2014,21 @@ v2 的改进
 返回的内存块，没有特殊的前 8 字节作为 next 指针的设计，所以在 deallocate 中对于大对象使用 `free(ptr)` 释放内存
 - 小对象（≤256KB）：由内存池管理，allocate 和 deallocate 内存块的前 8 字节确实被用作 next 指针，因为最终要被放入 freeList_链表中，需要指针指向
 
+计算分割点 splitNode 需要将内存从 `void**` 转换为 `char*` 因为内存块前的指针是 1 字节的，char 刚好 1 字节
+```cpp
+// 假设请求32字节对象，实际分配40字节（32+8）
+// 内存布局：
+[0x1000] 0x00002000  // next指针（8字节）
+[0x1008] 用户数据（32字节） ← ptr指向这里
+[0x1028] 0x00003000  // next指针（8字节）
+[0x1030] 用户数据（32字节）
+
+void* ptr = 0x1008;  // 指向用户数据区
+char* p = reinterpret_cast<char*>(ptr);  // p = 0x1008
+
+// 遍历时：
+p = reinterpret_cast<char*>(*reinterpret_cast<void**>(p));
+// 等效于：
+void* next = *reinterpret_cast<void**>(0x1008);  // 读取0x1000-0x1007的值然后发现值 = 0x2000
+p = reinterpret_cast<char*>(next);  // p = 0x2000，获取到当前内存块指向的下一个内存块所在的位置，解引用这个位置即可得到 0x3000
+```
