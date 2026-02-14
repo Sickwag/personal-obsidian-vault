@@ -13,6 +13,21 @@
             "state": {
               "type": "markdown",
               "state": {
+                "file": "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "Qt Official Tutorial"
+            }
+          },
+          {
+            "id": "f81d07120e8c56f7",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
                 "file": "学习/Language/C C++/C++ Runoob Tutoral.md",
                 "mode": "source",
                 "source": false,
@@ -23,21 +38,22 @@
             }
           },
           {
-            "id": "06245cd98ceef767",
+            "id": "c41b024543e9260e",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/ProjectsStudy/FromProjects/FastLog.md",
+                "file": "学习/algorithm/用法导向知识.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "FastLog"
+              "title": "用法导向知识"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -69,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "对象切片",
+                "query": "/^#+\\sconst_cast/",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -201,19 +217,20 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "77eee0e3d2d4d353",
+  "active": "f81d07120e8c56f7",
   "lastOpenFiles": [
+    "学习/algorithm/用法导向知识.md",
+    "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/ProjectsStudy/FromProjects/Sudoku.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
     "Files & LongText/Attachments/Pasted image 20260210143735.png",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
     "学习/ProjectsStudy/WriteByMyself/ExplainLNK2019.md",
     "Files & LongText/ChatLogWithAi/AiQuiz/内存池.md",
     "Files & LongText/Long code/C++ Code Snippets.md",
-    "学习/algorithm/用法导向知识.md",
     "学习/algorithm/刷题路线.md",
     "Chores/computer learning puzzles.md",
     "Daily/Learned Record.md",
@@ -233,7 +250,6 @@
     "Files & LongText/Attachments/PixPin_2026-01-27_20-48-49.png",
     "Files & LongText/Attachments/PixPin_2026-01-26_13-20-40.png",
     "Files & LongText/Attachments/PixPin_2026-01-26_13-20-28.png",
-    "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "学习/Bases/设计模式/详解设计模式（视频教程）.md",
     "Files & LongText/Attachments/PixPin_2026-01-23_13-22-25.png",
     "Files & LongText/Attachments/PixPin_2026-01-23_13-22-15.png",
