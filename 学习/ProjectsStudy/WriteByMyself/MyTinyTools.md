@@ -2032,3 +2032,6 @@ p = reinterpret_cast<char*>(*reinterpret_cast<void**>(p));
 void* next = *reinterpret_cast<void**>(0x1008);  // 读取0x1000-0x1007的值然后发现值 = 0x2000
 p = reinterpret_cast<char*>(next);  // p = 0x2000，获取到当前内存块指向的下一个内存块所在的位置，解引用这个位置即可得到 0x3000
 ```
+### 中心缓存
+线程让渡
+`std::this_thread::yield();` 会主动让出当前时间片
