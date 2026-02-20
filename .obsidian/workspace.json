@@ -4,37 +4,22 @@
     "type": "split",
     "children": [
       {
-        "id": "5249b8272944850c",
+        "id": "2eefd51d69e43ee8",
         "type": "tabs",
         "children": [
           {
-            "id": "a05252f506abeb17",
+            "id": "c46cd6c9238b5871",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
+                "file": "学习/ProjectsStudy/WriteByMyself/nanochat.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "CPP网络编程实战"
-            }
-          },
-          {
-            "id": "c7dae9d36f5e2a8a",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Language/C C++/C++ Runoob Tutoral.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "C++ Runoob Tutoral"
+              "title": "nanochat"
             }
           }
         ]
@@ -69,7 +54,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "/#{1,}\\s.*[bB]oost.*/",
+                "query": "",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -90,12 +75,12 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -183,7 +168,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 219.5
+    "width": 219.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -199,8 +185,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "129968db299d0d8b",
+  "active": "c46cd6c9238b5871",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/WriteByMyself/nanochat.md",
+    "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
     "Files & LongText/Long code/C++ Code Snippets.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
@@ -208,7 +196,6 @@
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/ProjectsStudy/FromProjects/Sudoku.md",
-    "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
     "Files & LongText/Attachments/Pasted image 20260210143735.png",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
     "学习/ProjectsStudy/WriteByMyself/ExplainLNK2019.md",
@@ -232,7 +219,6 @@
     "Files & LongText/Attachments/PixPin_2026-01-27_20-48-49.png",
     "Files & LongText/Attachments/PixPin_2026-01-26_13-20-40.png",
     "Files & LongText/Attachments/PixPin_2026-01-26_13-20-28.png",
-    "学习/Bases/设计模式/详解设计模式（视频教程）.md",
     "Files & LongText/Attachments/PixPin_2026-01-23_13-22-25.png",
     "Files & LongText/Attachments/PixPin_2026-01-23_13-22-15.png",
     "Files & LongText/Attachments/PixPin_2026-01-23_12-52-58.png",
