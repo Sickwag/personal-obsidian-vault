@@ -420,28 +420,6 @@ add_executable(ExplainLNK2019 httplib.cpp)
 target_link_libraries(ExplainLNK2019 PRIVATE httplib::httplib OpenSSL::SSL OpenSSL::Crypto)
 ```
 即可
-## cmake 多配置管理
-如果需要 cmake 一次性编译出 debug 和 release 版本的文件，需要设置 `CMAKE_CONFIGURATION_TYPES` 变量，如果没有，那么需要：
-- 执行两次 cmake 命令
-- 每次指定不同的目录作为目标文件输出位置
-- 为不同编译指令制定不同的预定义选项
-```cmake
-if(CMAKE_CONFIGURATION_TYPES)
-    set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
-endif()
-
-# 这样Debug和Release版本的可执行文件会分别放在不同的子目录中
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin/Debug
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/Release
-)
-
-# 为不同配置添加预处理器定义（可选）
-target_compile_definitions(${PROJECT_NAME}
-    PRIVATE $<$<CONFIG:Debug>:DEBUG_BUILD>
-    PRIVATE $<$<CONFIG:Release>:RELEASE_BUILD>
-)
-```
 ## vscode 配置 cmake qt 环境
 首先 cmake 引入 qt 模块
 ```cmake
@@ -539,7 +517,29 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 # ...
 ```
 正常的 cpp 项目不需要包含头文件就能构建编译，但是 qt 的 moc 会**将带有 `Q_OBJECT` 宏的头文件**预编译为 moc.h 头文件，但由于宏声明在头文件中，所以如果不包含近项目就会导致 moc 文件不被包含，无法生成
-# 包管理有关
+## cmake 多配置管理
+如果需要 cmake 一次性编译出 debug 和 release 版本的文件，需要设置 `CMAKE_CONFIGURATION_TYPES` 变量，如果没有，那么需要：
+- 执行两次 cmake 命令
+- 每次指定不同的目录作为目标文件输出位置
+- 为不同编译指令制定不同的预定义选项
+```cmake
+if(CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
+endif()
+
+ 这样Debug和Release版本的可执行文件会分别放在不同的子目录中
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin/Debug
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/Release
+)
+
+ 为不同配置添加预处理器定义（可选）
+target_compile_definitions(${PROJECT_NAME}
+    PRIVATE $<$<CONFIG:Debug>:DEBUG_BUILD>
+    PRIVATE $<$<CONFIG:Release>:RELEASE_BUILD>
+)
+```
+# 包管理相关
 ## vcpkg
 ### 下载速度问题
 参考：[vcpkg国内镜像源替换-CSDN博客](https://blog.csdn.net/weixin_41364246/article/details/140123907)
@@ -643,6 +643,181 @@ vcpkg_cmake_configure(
 ```
 方法 2：创建补丁文件
 为源码的CMakeLists.txt创建补丁，将 `cmake_minimum_required(VERSION X.X)` 改为 `cmake_minimum_required(VERSION 3.5)` 或更高版本。
+# 引入资源文件
+### 使用 GNU objcopy （Linux 标准做法）
+利用 `objcopy` 将任何文件转换成一个目标文件 (`.o`)，然后像链接其他代码一样把它链接到程序中
+#### 1. 核心命令：`objcopy` 详解
+```bash
+objcopy -I binary -O elf64-x86-64 -B i386:x86-64 \
+    --rename-section .data=.rodata,alloc,load,readonly,data,contents \
+    resource.txt resource.o
+```
+*   **`objcopy`**: 来自 GNU Binutils 工具集的命令，专门用于复制和转换目标文件的内容。
+*   **`-I binary`** (`--input-target=binary`)：**指定输入文件格式**。这里我们用 `binary` 告诉 `objcopy`，输入文件 `resource.txt` 不是一个标准的对象文件（如 ELF），而是一个原始的二进制文件。
+*   **`-O elf64-x86-64`** (`--output-target=elf64-x86-64`)：**指定输出文件格式**。这告诉 `objcopy` 要生成一个 64 位的 ELF 格式的目标文件，这样它才能和程序（也是 ELF 格式）链接在一起。如果程序是32位的，这里应该用 `elf32-i386` 。
+*   **`-B i386:x86-64`** (`--binary-architecture=i386:x86-64`)：**指定二进制架构**。这个选项为输出的目标文件设置一个架构，告诉链接器这个文件是为哪个处理器（这里是 x86-64）准备的，让链接器能够接受它。
+*   **`--rename-section .data=.rodata,alloc,load,readonly,data,contents`**：**重命名并设置段属性**。这是很重要的一步。
+    *   默认情况下，`objcopy` 会把二进制数据放到一个名为 `.data` 的段里。`.data` 段在程序运行时一般是可读写的。
+    *   资源文件在程序运行时通常不需要被修改。这个命令把段名从 `.data` 改成了 `.rodata`（只读数据段）。后面的 `,alloc,load,readonly,data,contents` 是为这个新段设置的各种属性，确保它被加载到只读内存区域，可以节省内存并提高安全性。
+*   **`resource.txt`**: **输入文件**，也就是想要嵌入的资源。
+*   **`resource.o`**: 生成的**输出文件**，一个可以被链接器处理的目标文件。
+#### 2. 在代码中如何访问
+`objcopy` 的魔法不仅仅在于转换格式，它还会在生成的目标文件里自动创建三个特殊的**链接器符号**，用来标记这段数据的起止位置和大小。
+
+**符号的命名规则**是：`_binary_` + **源文件名（其中的点 `.` 会被替换成下划线 `_`）** + `_start` / `_end` / `_size`。
+
+*   `_binary_resource_txt_start`: 指向资源数据开头的符号。
+*   `_binary_resource_txt_end`: 指向资源数据结尾的符号。
+*   `_binary_resource_txt_size`: 资源数据的大小。
+
+> [!note]
+> 例如资源文件名叫 `my-icon.png`，那么生成的符号名就是 `_binary_my_icon_png_start`、`_binary_my_icon_png_end` 和 `_binary_my_icon_png_size`
+
+```cpp
+#include <iostream>
+#include <string_view>
+
+// 声明由 objcopy 生成的外部符号。
+// 注意：这些不是变量，而是符号，所以要用 extern char 来声明它们的地址。
+extern "C" {
+    extern const char _binary_resource_txt_start[];
+    extern const char _binary_resource_txt_end[];
+    extern const size_t _binary_resource_txt_size;
+}
+
+int main() {
+    // 1. 获取资源数据的指针
+    const char* data_ptr = _binary_resource_txt_start;
+    
+    // 2. 计算数据大小
+    // 方法一：使用结束地址减去开始地址
+    size_t data_size_1 = _binary_resource_txt_end - _binary_resource_txt_start;
+    
+    // 方法二：直接使用 _size 符号 (推荐，更清晰)
+    size_t data_size_2 = _binary_resource_txt_size;
+    
+    // 3. 作为字符串视图使用（假设是文本文件）
+    std::string_view resource_data(data_ptr, data_size_2);
+    std::cout << "资源内容: " << resource_data << std::endl;
+    
+    // 如果是二进制数据（如图片），可以直接用指针和大小去操作
+    // process_image_data(data_ptr, data_size_2);
+    
+    return 0;
+}
+```
+
+一个需要特别注意的细节是：**`_binary_resource_txt_start` 不是一个包含数据的指针变量，而是一个标记数据起始地址的符号**。这就是为什么我们需要把它声明为 `extern char []`，这样取它的地址 `&_binary_resource_txt_start` 或者直接使用它（在表达式中它会退化为指针）就能得到正确的内存位置。
+#### 3. 如何编译和链接
+把源代码和这个新生成的 `resource.o` 文件一起编译链接。
+```bash
+# 1. 将资源文件转换成目标文件
+objcopy -I binary -O elf64-x86-64 -B i386:x86-64 \
+    --rename-section .data=.rodata,alloc,load,readonly,data,contents \
+    resource.txt resource.o
+
+# 2. 编译你的主程序（生成 main.o）
+g++ -c main.cpp -o main.o
+
+# 3. 链接所有目标文件，生成最终的可执行文件
+g++ main.o resource.o -o my_program
+```
+执行完 `g++` 链接命令后，`resource.txt` 里的数据就被永久地嵌入到 `my_program` 可执行文件中
+### CMake 脚本自动化（CMake 方案）
+把它集成进 cmake 脚本更优雅、更易于维护。
+#### 1. 核心思想
+不直接调用 `objcopy`，而是通过 CMake 的 `add_custom_command` 功能，让 CMake 在构建时自动生成这些 `.o` 文件，并自动处理依赖关系。
+#### 2. 编写一个通用的 CMake 函数
+单独定义一个 cmake 模块 `cmake/EmbedResource.cmake`，参考 [[scripts#引入资源文件 cmake 模块]]
+#### 3. 在代码中使用
+```cpp
+// 包含自动生成的头文件，来自cmake脚本生成
+#include "embedded_resources.h"
+
+// 辅助函数：获取资源数据
+std::string_view get_resource_data(
+    const uint8_t* start, 
+    const uint8_t* end, 
+    size_t size
+) {
+    return std::string_view(reinterpret_cast<const char*>(start), size);
+}
+
+// 辅助模板：获取资源引用
+template<typename T>
+class ResourceRef {
+public:
+    ResourceRef(const uint8_t* start, const uint8_t* end, size_t size)
+        : m_start(start), m_end(end), m_size(size) {}
+    
+    const uint8_t* data() const { return m_start; }
+    const uint8_t* begin() const { return m_start; }
+    const uint8_t* end() const { return m_end; }
+    size_t size() const { return m_size; }
+    
+    std::string_view as_string_view() const {
+        return std::string_view(reinterpret_cast<const char*>(m_start), m_size);
+    }
+    
+    // 保存到文件（用于调试）
+    bool save_to_file(const std::string& filename) const {
+        std::ofstream file(filename, std::ios::binary);
+        if (!file) return false;
+        file.write(reinterpret_cast<const char*>(m_start), m_size);
+        return true;
+    }
+
+private:
+    const uint8_t* m_start;
+    const uint8_t* m_end;
+    size_t m_size;
+};
+
+// 定义资源访问宏，使使用更简洁
+#define RESOURCE(name) \
+    ResourceRef<decltype(_binary_##name##_start)>( \
+        _binary_##name##_start, \
+        _binary_##name##_end, \
+        _binary_##name##_size \
+    )
+
+int main() {
+	// 通过上述：直接获取生成的符号 & 资源获取模板 & 宏获取资源    
+    // 方式1：直接使用生成的，来自embedded_resources.h
+    std::cout << "Config.json 大小: " << _binary_config_json_size << " 字节\n";
+    std::cout << "Icon.png 大小: " << _binary_icon_png_size << " 字节\n";
+    std::cout << "Data.bin 大小: " << _binary_data_bin_size << " 字节\n\n";
+    
+    // 方式2：使用ResourceRef包装器
+    auto config = RESOURCE(config_json);
+    auto icon = RESOURCE(icon_png);
+    auto data = RESOURCE(data_bin);
+    
+    std::cout << "通过包装器访问:\n";
+    std::cout << "Config: " << config.size() << " 字节\n";
+    std::cout << "Icon: " << icon.size() << " 字节\n";
+    std::cout << "Data: " << data.size() << " 字节\n\n";
+    
+    // 解析JSON配置（示例）
+    std::string_view config_text = config.as_string_view();
+    std::cout << "Config 内容预览 (前50字符):\n";
+    std::cout << config_text.substr(0, 50) << "...\n\n";
+    
+    // 保存资源到文件（验证用）
+    // config.save_to_file("extracted_config.json");
+    // icon.save_to_file("extracted_icon.png");
+    // data.save_to_file("extracted_data.bin");
+    
+    // 遍历二进制数据
+    std::cout << "Data.bin 前16字节: ";
+    for (size_t i = 0; i < std::min(size_t(16), data.size()); ++i) {
+        printf("%02X ", data.data()[i]);
+    }
+    std::cout << "\n";
+    
+    return 0;
+}
+```
 # CMake 基本内容教程
 参考：[CMake 教程 — CMake 4.2.0 文档 - CMake 构建系统](https://cmake.com.cn/cmake/help/latest/guide/tutorial/index.html)
 ## 杂项内容
