@@ -513,8 +513,6 @@ Content-Type: application/json
 ```
 这样一个请求头中，除第一行外的**键值对**都可以使用**同名方法**获取其值，GET 是请求动作 `http::field::verb`， url 及其参数是 target，可以使用 `target()` 获取，http 版本可以使用 `version` 获取，这也是如果要构造这个对象需要使用初始化列表语法填这三个内容，他们是必须的
 
-
-
 `using handler_fn = asio::awaitable<http::message_generator> (*)(request_context&, shared_state&);` 定义一个函数指针，指向一个返回类型为 `asio::awaitable<http::message_generator>*;` 的指针，这个指针是一个接受 `request_context&` 和 `shared_state&` 参数的函数，它的作用是统一请求的格式
 ```cpp
 // 定义路由表

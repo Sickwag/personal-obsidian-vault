@@ -69,7 +69,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "req.set",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -90,11 +90,13 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -199,21 +201,21 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "982f21257484af50",
+  "active": "0a73919186f97c02",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
+    "Files & LongText/Long code/C++ Code Snippets.md",
     "学习/ToolChain/Cmake.md",
     "Files & LongText/Long code/scripts.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Language/SQL/MySQL.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
-    "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
     "学习/ToolChain/redis.md",
     "Files & LongText/Attachments/Pasted image 20260222145521.png",
     "Files & LongText/Attachments/Pasted image 20260222145505.png",
     "Files & LongText/Attachments/Pasted image 20260222111702.png",
     "学习/ProjectsStudy/WriteByMyself/nanochat.md",
     "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
-    "Files & LongText/Long code/C++ Code Snippets.md",
     "学习/algorithm/用法导向知识.md",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "学习/ProjectsStudy/FromProjects/FastLog.md",
