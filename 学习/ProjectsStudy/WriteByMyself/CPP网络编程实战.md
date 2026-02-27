@@ -743,8 +743,21 @@ auto results = resolver_.resolve(host, port);  // 解析主机和端口
 - 一个 HttpSession 对象只能被一个 HttpServer 对象管理
 有以下两个原因不能使用：
 - HttpSession 只是借用 HttpSever 对象的 router_handler_对象来使用，并不是独占的，还有其他会话对象也会需要借用 router_handler
-- C++设计 unique_ptr 语意为一个对象任意时刻一个 unique_ptr 只能指向，否则发生未定义行为，参考 [[C++ Runoob Tutoral#]]
+- C++设计 unique_ptr 语意为一个对象任意时刻一个 unique_ptr 只能指向，否则发生未定义行为，参考 [[Modern C++#5.3 std unique_ptr]]
 #### 类的裸指针成员
+既然不能使用 unique_ptr，那为什么要用裸指针？
+- 裸指针能从外部通过构造函数传入，不影响 HttpSession 访问 router_handler_
+- 在 HttpSession 被 RAII 析构时，所有成员都会调用其析构函数释放资源，而指针类型成员则会被系统销毁。指针对象自身占用的资源被释放
+- HttpSession 构造函数是**值传递**HttpServer 指针副本，指针成员被删除不影响原对象
+- 所有 httpsession 对象的指向 httpserver 的指针不属于 httpsession 对象管理，借用者并没有权力接管借用的资源，也**不应该释放 server_ptr 指向的资源**
+- 所以只管使用即可，裸指针的生命周期由**自身** RAII 管理，指向的资源**由 HttpServer 对象的 RAII 管理**
+
+> [!note]
+> 内存泄漏只会发生在
+> - `delete server_ptr_;` 试图删除不属于自己的内存
+> - 双重释放内存
+> - 忘记释放自己真正拥有的资源
+
 #### 异步操作中外部指针的生命周期问题
 ```cpp
 // server
@@ -780,3 +793,7 @@ void HttpSession::do_read() {
 					 });
 }
 ```
+可以看到 HttpSession 继承了 `std::enable_shared_from_this<HttpSession>`，因为：
+- 异步操作函数**会立刻返回**，不会阻塞线程
+- 异步操作中使用到的外部**引用/指针资源**可能会失效（触发异步操作的时间在资源对下岗你被销毁之后），导致未定义行为
+- 
