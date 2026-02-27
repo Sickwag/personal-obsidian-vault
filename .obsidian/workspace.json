@@ -13,13 +13,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Files & LongText/Long code/C++ Code Snippets.md",
+                "file": "学习/Language/C C++/C++ Runoob Tutoral.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "C++ Code Snippets"
+              "title": "C++ Runoob Tutoral"
             }
           },
           {
@@ -28,13 +28,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Files & LongText/Long code/scripts.md",
+                "file": "学习/Language/C C++/C++ Runoob Tutoral.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "scripts"
+              "title": "C++ Runoob Tutoral"
             }
           }
         ]
@@ -69,7 +69,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "req.set",
+                "query": "友元",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -203,11 +203,11 @@
   },
   "active": "0a73919186f97c02",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
-    "Files & LongText/Long code/C++ Code Snippets.md",
-    "学习/ToolChain/Cmake.md",
     "Files & LongText/Long code/scripts.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/ToolChain/Cmake.md",
+    "Files & LongText/Long code/C++ Code Snippets.md",
+    "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
     "学习/Language/SQL/MySQL.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "学习/ToolChain/redis.md",

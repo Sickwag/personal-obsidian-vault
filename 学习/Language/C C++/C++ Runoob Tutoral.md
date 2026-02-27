@@ -1949,7 +1949,14 @@ using 是 C++11 引入的关键字，用于定义类型别名。其语法为：
 通过类创建的对象没有其中变量的属性，也没有被初始化为变量的值
 没有在__init__中初始化，通过 `.` 调用的是类中定义的默认成员，并不是对象本身有的，**只是调用**，而在 init 定义后则是对象特有
 #### 友元
-友元（Friend）是特殊的类成员访问**权限**。友元可以是一个函数、类或另一个类的成员函数。通过将函数或类声明为友元，这些函数或类可以访问**当前类**的私有（private）和保护（protected）成员。
+友元（Friend）是特殊的类成员访问**权限**。友元可以是一个函数、类或另一个类的成员函数。通过将函数或类声明为友元，这些函数或类可以访问**当前类**所有成员
+- 友元关系是单向的：B 是 A 的友元，但 A 不是 B 的友元。
+- 友元关系不继承：B 的子类不是 A 的友元。
+- 友元关系不传递：如果 C 是 B 的友元，C 也不是 A 的友元。
+- 友元**不是类的成员**，不能使用this 指针指向
+- 只存在友元函数&友元类，不能使用友元变量
+- 友元是类级别的声明，**与访问修饰符无关**
+- 如果有前向声明，可以不包含友元对象的头文件
 
 | **场景**  | **实现方式**                     | **示例代码** |
 | ------- | ---------------------------- | -------- |
@@ -2012,70 +2019,7 @@ class MyFriendClass {
 };
 ```
 ##### 限制友元函数作用范围
-限制特定友元类的特定的友元函数访问：
-```cpp
-class MyClass {
-    private:
-        int privateVar;
-
-    protected:
-        void protectedFunc() {}
-
-    public:
-        // 只有MyFriendClass的accessMembers函数是友元
-        friend void MyFriendClass::accessMembers();
-};
-
-class MyFriendClass {
-    public:
-        void accessMembers(); // 声明为友元
-        void cannotAccess();  // 非友元
-};
-
-void MyFriendClass::accessMembers() {
-    MyClass obj;
-    obj.privateVar = 30; // 可以访问
-    obj.protectedFunc();  // 可以访问
-}
-
-void MyFriendClass::cannotAccess() {
-    MyClass obj;
-    // obj.privateVar = 40; // 错误：无法访问
-}
-```
-用命名空间显示友元
-```cpp
-namespace Internal {
-    class MyClass {
-        private:
-            int privateVar;
-
-        protected:
-            void protectedFunc() {}
-
-        public:
-            friend class MyFriendClass; // 友元类在同一命名空间
-    };
-
-    class MyFriendClass {
-        public:
-            void access() {
-                MyClass obj;
-                obj.privateVar = 40; // 可以访问
-            }
-    };
-}
-
-// 外部类无法访问
-class ExternalClass {
-    public:
-        void tryAccess() {
-            Internal::MyClass obj;
-            // obj.privateVar = 50; // 错误：无法访问
-        }
-};
-
-```
+限定 B 类只能访问
 #### 函数内联
 ##### 常规函数调用过程
 1. **保存当前函数的寄存器状态**
