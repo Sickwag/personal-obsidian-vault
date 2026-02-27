@@ -659,3 +659,124 @@ bool DecodeBase64::save_qr_to_file(std::string filepath, const std::string& deco
 	return true;
 }
 ```
+## Http 服务端和客户端通信
+完整代码参：[[C++ Code Snippets#Http 客户端和服务端通信]]
+### 基本知识
+#### 架构设计
+- client & server 都能够收发消息：使用了不同的通信方式：
+	- 服务端 `tcp::socket`
+		- Boost.Asio 的基本 TCP 套接字类型
+		- 底层网络通信的基础组件
+		- 提供基本的连接、读写功能
+		- 使用异步操作，直接使用 tcp::socket 配合 Beast 的异步读写函数更高效
+	- 客户端 `beast::tcp_stream`：
+		- Boost.Beast 封装的流类型
+		- 在 tcp::socket 基础上增加了 HTTP 协议支持
+		- 提供更好的错误处理和协议兼容性
+		- 使用同步操作，beast::tcp_stream 提供更高级的 HTTP 抽象
+#### 处理流程
+- server 启动，初始化 server 对象，run 函数调用->do_accept 调用->还没有 client 连接，所以创建一个回调
+```cpp
+[this](beast::error_code ec, tcp::socket socket) {
+	if (!ec) {
+		std::make_shared<HttpSession>(std::move(socket), this)->run();
+	}
+	do_accept();
+};
+```
+含义为等接受到新的连接进入之后创建一个 HttpSession 对象并使用 run 启动这个会话，然后再次监听新的连接
+- client 启动，初始化 client 对象，调用 connect 函数但还没有发送消息->server 结检测到有 client 连接，所以 do_accept 中的回调函数被唤醒
+- server 为这个连接创建一个 HttpSession 对象
+	- HttpSession 对象初始化这几个对象
+	- 接受请求内容的缓冲区 buffer_
+	- 记录下请求内容的 request_
+	- 根据请求内容发送的相应 response_
+	- 启动这个 HttpSession 会话对象，调用会话对象的 do_read 函数用来解析请求从而发送不同的相应
+	- 会话对象 do_read 还没有接受到客户端发来的消息
+		- 同理 do_read 先创建一个回调函数 do_read
+		- 在**当前连接**发送消息时，调用 handle_request 函数，**但一个会话对象接受到 client 发来的请求之后的回调中没有再次调用 do_read 函数，当前在接受到消息后如果没有后续 do_write 函数操作只能读取一次请求**
+```cpp
+[this, self](beast::error_code ec, std::size_t bytes_transferred) {
+	if (!ec) {
+		handle_request();
+	}
+}
+```
+- client 发送请求（包含请求头/请求体等内容）
+- HttpSession 中的 do_read 被唤醒
+- handle_request路由表生成相应的`http::response<http::string_body> response `对象请求的相应
+- 调用 do_write，将生成的相应数据发送出去
+- 重新调用 do_read 让当前连接的会话能够继续监听发来的请求（这保证了同一个 client 能够不断地发送消息，而 server 在一个与 client 的会话（HttpSession）中，必须等待上一个 request 处理完成后才能继续监听（do_read）下一个请求
+#### 1. tcp::acceptor 
+- __监听端口__：绑定到特定 IP 地址和端口号，等待客户端连接
+- __接受连接__：当有客户端发起连接请求**结束握手**时，acceptor 会接受这个连接
+- __创建 socket__：为每个成功的连接创建一个新的 socket，用于与特定客户端通信
+```cpp
+tcp::acceptor acceptor_(ioc);  // 创建acceptor
+acceptor_.bind(endpoint);      // 绑定到端口3599
+acceptor_.listen();            // 开始监听
+acceptor_.async_accept(...);   // 异步接受连接
+```
+服务器必须有个"门卫"来监听端口并接受来自客户端的连接请求。
+
+#### 2. tcp::resolver
+
+__tcp::resolver__ 是 DNS 解析器，它的作用是：
+
+- __域名解析__：将主机名（如"example.com"）转换为 IP 地址
+- __服务解析__：将服务名（如"http"）转换为端口号
+
+```cpp
+tcp::resolver resolver_(ioc);
+auto results = resolver_.resolve(host, port);  // 解析主机和端口
+```
+
+在我们的客户端中，虽然使用的是 IP 地址"127.0.0.1"，但 resolver 仍然需要将字符串形式的端口号"3599"转换为数值形式。
+### 注意事项
+#### 请求头构建
+`req.set()` 函数只能通过 `http::field` 设置请求头中的内容，不能设置请求体，需要使用 `req.body() = body` 返回引用对象然后赋值才可以
+`req.prepareload()` 用来**自动计算 Content-Type**头，所以一般在请求中有 body 部分才会调用，否则会浪费性能
+
+#### HttpSession 类中的 HttpSever 裸指针
+不能使用 `std::unique_ptr<HttpSession>` 
+- 一个 HttpServer 对象管理多个 HttpSession 对象
+- 一个 HttpSession 对象只能被一个 HttpServer 对象管理
+有以下两个原因不能使用：
+- HttpSession 只是借用 HttpSever 对象的 router_handler_对象来使用，并不是独占的，还有其他会话对象也会需要借用 router_handler
+- C++设计 unique_ptr 语意为一个对象任意时刻一个 unique_ptr 只能指向，否则发生未定义行为，参考 [[C++ Runoob Tutoral#]]
+#### 类的裸指针成员
+#### 异步操作中外部指针的生命周期问题
+```cpp
+// server
+void HttpServer::do_accept() {
+	acceptor_.async_accept([this](beast::error_code ec, tcp::socket socket) -> void {
+		if(!ec) {
+			std::make_shared<HttpSession>(std::move(socket), this)->run();
+		}
+		do_accept();
+	});
+}
+
+void HttpSession::do_write() {
+	auto self = shared_from_this();
+	http::async_write(socket_, response_, [this, self](beast::error_code ec, std::size_t bytes_transferred) {
+		if(!ec) {
+			request_.clear();
+			response_.clear();
+			do_read();
+		}
+	});
+}
+
+void HttpSession::do_read() {
+	auto self = shared_from_this();
+	http::async_read(socket_,
+					 buffer_,
+					 request_,
+					 [this, self](beast::error_code ec, std::size_t bytes_transferred) -> void {
+						 if(!ec) {
+							 handle_request();
+						 }
+					 });
+}
+```

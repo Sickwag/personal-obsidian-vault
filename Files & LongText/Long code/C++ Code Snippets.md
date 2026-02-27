@@ -5928,3 +5928,403 @@ std::string API::get_needs_from_response(const json& response) {
 	return response.at("qrcode_base64").get<std::string>();
 }
 ```
+### Http 客户端和服务端通信
+#### client.h
+```cpp
+class HttpClient {
+
+  public:
+	HttpClient(asio::io_context& ctx);
+	bool connect(const std::string& host, const std::string& port);
+	http::response<http::string_body>
+		 send_request(http::verb verb, const std::string& target, const std::string& body = "");
+	void close();
+
+  private:
+	tcp::resolver	  resolver_;
+	beast::tcp_stream stream_;
+	beast::error_code ec_;
+};
+```
+client.cpp
+```cpp
+#include <iostream>
+#include "client.h"
+
+HttpClient::HttpClient(asio::io_context& ctx)
+	: resolver_(ctx)
+	, stream_(ctx) {}
+
+bool HttpClient::connect(const std::string& host, const std::string& port) {
+	try{
+		const auto result = resolver_.resolve(host, port);
+		beast::get_lowest_layer(stream_).connect(result);
+	}catch(const std::exception& e){
+		std::cout << "connection failed: " << e.what() << '\n';
+		return false;
+	}
+	return true;
+}
+
+http::response<http::string_body>
+HttpClient::send_request(http::verb verb, const std::string& target, const std::string& body) {
+	http::request<http::string_body> req;
+	req.version(11);
+	req.target(target);
+	req.method(verb);
+	req.set(http::field::host, "127.0.0.1");
+	req.set(http::field::user_agent, "HttpClient/1.0");
+	req.set(http::field::content_type, "text/plain");
+	if(!body.empty()){
+		req.body() = body;
+		req.prepare_payload();
+	}
+
+	// sendout request
+	ec_.clear();
+	http::write(stream_, req, ec_);
+	if(ec_){
+		std::cout << "write error: " << ec_.message() << '\n';
+		return http::response<http::string_body>();
+	}
+
+	// make callback to process response
+	ec_.clear();
+	beast::flat_buffer buffer;
+	http::response<http::string_body> res;
+	http::read(stream_, buffer, res, ec_);
+	if(ec_){
+		std::cout << "Read error: " << ec_.message() << std::endl;
+		return http::response<http::string_body>();
+	}
+	return res;
+}
+
+void HttpClient::close() {
+	ec_.clear();
+	stream_.close();
+}
+
+```
+#### server.h
+```cpp
+class HttpServer {
+  public:
+	  HttpServer(asio::io_context &ctx, const tcp::endpoint &endpoint);
+	  void init_routers();
+	  void run();
+
+  private:
+	  void do_accept();
+	  asio::io_context& ctx_;
+	  tcp::acceptor acceptor_;
+	  std::unordered_map<std::string, // key->http target
+						 std::function<void(const http::request<http::string_body> &,
+											http::response<http::string_body> &)> // value->router handler
+						 >
+		  route_handlers_;
+
+	  friend HttpSession;
+};
+```
+#### session.h
+```cpp
+// 前向声明
+class HttpServer;
+
+class HttpSession : public std::enable_shared_from_this<HttpSession> {
+  public:
+	explicit HttpSession(tcp::socket socket, HttpServer* server_ptr);
+	void run();
+
+  private:
+	void							  do_read();
+	void							  handle_request();
+	void							  do_write();
+	tcp::socket						  socket_;
+	beast::flat_buffer				  buffer_;
+	http::request<http::string_body>  request_;
+	http::response<http::string_body> response_;
+	HttpServer*		  server_ptr_;
+
+	friend HttpServer;
+};
+
+```
+#### client.cpp
+```cpp
+#include <iostream>
+#include "client.h"
+
+HttpClient::HttpClient(asio::io_context& ctx)
+	: resolver_(ctx)
+	, stream_(ctx) {}
+
+bool HttpClient::connect(const std::string& host, const std::string& port) {
+	try{
+		const auto result = resolver_.resolve(host, port);
+		beast::get_lowest_layer(stream_).connect(result);
+	}catch(const std::exception& e){
+		std::cout << "connection failed: " << e.what() << '\n';
+		return false;
+	}
+	return true;
+}
+
+http::response<http::string_body>
+HttpClient::send_request(http::verb verb, const std::string& target, const std::string& body) {
+	http::request<http::string_body> req;
+	req.version(11);
+	req.target(target);
+	req.method(verb);
+	req.set(http::field::host, "127.0.0.1");
+	req.set(http::field::user_agent, "HttpClient/1.0");
+	req.set(http::field::content_type, "text/plain");
+	if(!body.empty()){
+		req.body() = body;
+		req.prepare_payload();
+	}
+
+	// sendout request
+	ec_.clear();
+	http::write(stream_, req, ec_);
+	if(ec_){
+		std::cout << "write error: " << ec_.message() << '\n';
+		return http::response<http::string_body>();
+	}
+
+	// make callback to process response
+	ec_.clear();
+	beast::flat_buffer buffer;
+	http::response<http::string_body> res;
+	http::read(stream_, buffer, res, ec_);
+	if(ec_){
+		std::cout << "Read error: " << ec_.message() << std::endl;
+		return http::response<http::string_body>();
+	}
+	return res;
+}
+
+void HttpClient::close() {
+	ec_.clear();
+	stream_.close();
+}
+
+```
+#### server.cpp
+```cpp
+#include "server.h"
+#include "session.h"
+
+HttpServer::HttpServer(asio::io_context& ctx, const tcp::endpoint& endpoint)
+	: ctx_(ctx)
+	, acceptor_(ctx) {
+	acceptor_.open(endpoint.protocol());
+	acceptor_.set_option(net::socket_base::reuse_address(true));
+	acceptor_.bind(endpoint);
+	acceptor_.listen(asio::socket_base::max_listen_connections);
+	init_routers();
+}
+
+void HttpServer::init_routers() {
+	// GET handler
+	route_handlers_["GET"] = [](const http::request<http::string_body>& req,
+								http::response<http::string_body>&		res) {
+		std::cout << "[GET REQUEST] Received GET request to: " << req.target() << std::endl;
+		std::cout << "[GET REQUEST] Headers: " << req.base() << std::endl;
+
+		res.result(http::status::ok);
+		res.set(http::field::content_type, "text/plain");
+		res.body() = "This is a GET request handler. Hello from GET!";
+	};
+
+	// POST handler
+	route_handlers_["POST"] = [](const http::request<http::string_body>& req,
+								 http::response<http::string_body>&		 res) {
+		std::cout << "[POST REQUEST] Received POST request to: " << req.target() << std::endl;
+		std::cout << "[POST REQUEST] Body: " << req.body() << std::endl;
+		std::cout << "[POST REQUEST] Headers: " << req.base() << std::endl;
+
+		res.result(http::status::ok);
+		res.set(http::field::content_type, "text/plain");
+		res.body() = "This is a POST request handler. Received data: " + req.body();
+	};
+
+	// DELETE handler
+	route_handlers_["DELETE"] = [](const http::request<http::string_body>& req,
+								   http::response<http::string_body>&	   res) {
+		std::cout << "[DELETE REQUEST] Received DELETE request to: " << req.target() << std::endl;
+		std::cout << "[DELETE REQUEST] Headers: " << req.base() << std::endl;
+
+		res.result(http::status::ok);
+		res.set(http::field::content_type, "text/plain");
+		res.body() = "This is a DELETE request handler. Resource deleted successfully!";
+	};
+}
+
+void HttpServer::run() { do_accept(); }
+
+void HttpServer::do_accept() {
+	acceptor_.async_accept([this](beast::error_code ec, tcp::socket socket) -> void {
+		if(!ec) {
+			std::make_shared<HttpSession>(std::move(socket), this)->run();
+		}
+		do_accept();
+	});
+}
+```
+#### session.cpp
+```cpp
+#include "server.h"
+#include "session.h"
+
+HttpServer::HttpServer(asio::io_context& ctx, const tcp::endpoint& endpoint)
+	: ctx_(ctx)
+	, acceptor_(ctx) {
+	acceptor_.open(endpoint.protocol());
+	acceptor_.set_option(net::socket_base::reuse_address(true));
+	acceptor_.bind(endpoint);
+	acceptor_.listen(asio::socket_base::max_listen_connections);
+	init_routers();
+}
+
+void HttpServer::init_routers() {
+	// GET handler
+	route_handlers_["GET"] = [](const http::request<http::string_body>& req,
+								http::response<http::string_body>&		res) {
+		std::cout << "[GET REQUEST] Received GET request to: " << req.target() << std::endl;
+		std::cout << "[GET REQUEST] Headers: " << req.base() << std::endl;
+
+		res.result(http::status::ok);
+		res.set(http::field::content_type, "text/plain");
+		res.body() = "This is a GET request handler. Hello from GET!";
+	};
+
+	// POST handler
+	route_handlers_["POST"] = [](const http::request<http::string_body>& req,
+								 http::response<http::string_body>&		 res) {
+		std::cout << "[POST REQUEST] Received POST request to: " << req.target() << std::endl;
+		std::cout << "[POST REQUEST] Body: " << req.body() << std::endl;
+		std::cout << "[POST REQUEST] Headers: " << req.base() << std::endl;
+
+		res.result(http::status::ok);
+		res.set(http::field::content_type, "text/plain");
+		res.body() = "This is a POST request handler. Received data: " + req.body();
+	};
+
+	// DELETE handler
+	route_handlers_["DELETE"] = [](const http::request<http::string_body>& req,
+								   http::response<http::string_body>&	   res) {
+		std::cout << "[DELETE REQUEST] Received DELETE request to: " << req.target() << std::endl;
+		std::cout << "[DELETE REQUEST] Headers: " << req.base() << std::endl;
+
+		res.result(http::status::ok);
+		res.set(http::field::content_type, "text/plain");
+		res.body() = "This is a DELETE request handler. Resource deleted successfully!";
+	};
+}
+
+void HttpServer::run() { do_accept(); }
+
+void HttpServer::do_accept() {
+	acceptor_.async_accept([this](beast::error_code ec, tcp::socket socket) -> void {
+		if(!ec) {
+			std::make_shared<HttpSession>(std::move(socket), this)->run();
+		}
+		do_accept();
+	});
+}
+
+```
+#### client_main.cpp
+```cpp
+#include "client.h"
+#include <iostream>
+
+int main(){
+	try {
+		asio::io_context ioc;
+
+		std::cout << "Creating HTTP client..." << std::endl;
+		HttpClient client(ioc);
+
+		// Connect to server on port 3599
+		std::string host = "127.0.0.1";
+		std::string port = "3599";
+
+		std::cout << "Connecting to " << host << ":" << port << std::endl;
+
+		// Connect to server
+		if(!client.connect(host, port)) {
+			std::cout << "Failed to connect to server" << std::endl;
+			return 1;
+		}
+
+		std::cout << "Connected successfully!" << std::endl;
+
+		// Send GET request
+		std::cout << "\nSending GET request..." << std::endl;
+		auto get_res = client.send_request(http::verb::get, "/");
+		std::cout << "GET Response: " << get_res.result_int() << " " << get_res.body() << std::endl;
+
+		// Send POST request with data
+		std::cout << "\nSending POST request..." << std::endl;
+		auto post_res = client.send_request(http::verb::post, "/", "Hello from POST request!");
+		std::cout << "POST Response: " << post_res.result_int() << " " << post_res.body() << std::endl;
+
+		// Send DELETE request
+		std::cout << "\nSending DELETE request..." << std::endl;
+		auto delete_res = client.send_request(http::verb::delete_, "/");
+		std::cout << "DELETE Response: " << delete_res.result_int() << " " << delete_res.body() << std::endl;
+
+		// Send unsupported method to test error handling
+		std::cout << "\nSending PUT request (should be unsupported)..." << std::endl;
+		auto put_res = client.send_request(http::verb::put, "/");
+		std::cout << "PUT Response: " << put_res.result_int() << " " << put_res.body() << std::endl;
+
+		client.close();
+		std::cout << "\nClient finished." << std::endl;
+
+	} catch(std::exception const& e) {
+		std::cerr << "Error: " << e.what() << std::endl;
+		return 1;
+	}
+
+	return 0;
+}
+```
+#### server_main.cpp
+```cpp
+#include <server.h>
+
+int main() {
+	try {
+		// Set up io_context
+		asio::io_context ioc;
+
+		// Listen on port 3599
+		tcp::endpoint endpoint(asio::ip::make_address("0.0.0.0"), 3599);
+
+		std::cout << "Starting HTTP server on port 3599..." << std::endl;
+		std::cout << "Available endpoints:" << std::endl;
+		std::cout << "  GET    http://localhost:3599/" << std::endl;
+		std::cout << "  POST   http://localhost:3599/ (with data)" << std::endl;
+		std::cout << "  DELETE http://localhost:3599/" << std::endl;
+
+		HttpServer server(ioc, endpoint);
+
+		server.run();
+
+		// Run the I/O service
+		ioc.run();
+
+	} catch(std::exception const& e) {
+		std::cerr << "Error: " << e.what() << std::endl;
+		return 1;
+	}
+
+	return 0;
+}
+```
+```
+```
