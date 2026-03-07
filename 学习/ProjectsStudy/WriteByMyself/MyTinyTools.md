@@ -1473,10 +1473,14 @@ delete p;
 // 值仍然保持原来的地址值，但该地址已无效
 ```
 #### operator delete(ptr)
+不同于使用 new 关键字**由系统分配对应大小的内存给特定的对象**（分配多大由系统决定），operator new 会分配**原始字节块**，不能用普通 delete 删除，必须也使用配套的 operator delete，并且
+-  `::operator delete` 的签名是 `void operator delete(void* ptr)`
+- cur 是 Slot* 类型，需要转换为 void* 才能匹配函数签名
+- 这明确表达了"这只是原始内存，不是真正的 Slot 对象"
 ```cpp
 operator delete(ptr);
 ```
-提供更高的自由度，如果直接调用**只会释放指针的内存块内存，不会调用析构函数**,但可以在括号中对指针进行操作，调用分配器来释放内存。**对应 `new` 分配的内存**，同理，调用后指针悬空
+提供更高的自由度，如果使用 delete 会先调用对象的析构函数，然后调用 `operator delete`,但可以在括号中对指针进行操作，调用分配器来释放内存。**对应 `new` 分配的内存**，同理，调用后指针悬空
 ```cpp
 class Test {
   public:
