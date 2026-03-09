@@ -2095,3 +2095,4 @@ PageCache 层级：
 - 负责内存页的合并和回收
 # llmapi
 ## 杂项
+接口库：如果在 add_library 中设置了 `INTERFACE` 属性，那么最终这个库**不会生成库文件**，
