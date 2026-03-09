@@ -2060,3 +2060,37 @@ p = reinterpret_cast<char*>(next);  // p = 0x2000，获取到当前内存块指�
 - 没有其他就绪线程等待运行时
 - 实时调度器（如 Linux 的 `SCHED_FIFO`）中相同优先级的线程
 - 在优先级调度系统中，高优先级线程可能不会被低优先级线程的 `yield()` 影响
+#### 内存结构
+CentralCache 是一个承上启下的数据结构：
+基础概念：
+- __块(Block)__：最小的内存分配单元，大小为8的倍数（8, 16, 24, 32...字节）
+- __页(Page)__：操作系统内存管理的基本单位，固定4KB（4096字节）
+- __Span__：由连续的多个页组成的内存区域，用于管理大块内存
+数据结构层次关系：
+```cpp
+内存池系统
+├── ThreadCache (线程本地缓存)
+│   ├── freeList_ 数组 [FREE_LIST_SIZE] - 每个大小类的自由链表
+│   └── freeListSize_ 数组 [FREE_LIST_SIZE] - 每个链表的大小统计
+├── CentralCache (中心缓存) 
+│   ├── centralFreeList_ 数组 [FREE_LIST_SIZE] - 每个大小类的自由链表
+│   ├── spanTrackers_ 数组 [1024] - Span信息追踪器
+│   └── locks_ 数组 [FREE_LIST_SIZE] - 每个大小类的自旋锁
+└── PageCache (页面缓存)
+    ├── freeSpans_ map - 按页数管理的空闲span链表
+    └── spanMap_ map - 页地址到span的映射
+```
+ThreadCache 层级：
+- 每个线程拥有独立的 ThreadCache 实例（通过 thread_local）
+- 维护多个自由链表，每个链表对应一个大小类
+- 小对象（≤256KB）通过 ThreadCache 分配
+CentralCache 层级：
+- 全局共享的中心缓存
+- 每个大小类对应一个自由链表
+- 当 ThreadCache 不足时从中获取批量内存
+- 维护 span 的使用状态信息
+PageCache 层级：
+- 管理 4KB 页面级别的内存
+- 从操作系统获取大块内存
+- 负责内存页的合并和回收
+# 
