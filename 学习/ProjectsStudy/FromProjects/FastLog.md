@@ -209,7 +209,7 @@ FileLogger 涉及文件读写，为减少磁盘 IO，设计三缓冲日志数据
 std::string_view to_color() {
     switch (__level) {
         case LogLevel::Trace:
-            return "\033[46m";  // cyan
+            return "w\033[46m";  // cyan
         case LogLevel::Debug:
             return "\033[44m";  // blue
         case LogLevel::Info:
