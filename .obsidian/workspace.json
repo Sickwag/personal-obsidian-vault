@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "7047d783c5f82f94",
+        "id": "7a8891760c88d48c",
         "type": "tabs",
         "children": [
           {
-            "id": "8d945a0cb989b7ac",
+            "id": "5e580ec97c9b5d5d",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -54,7 +54,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "\\033",
+                "query": "",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -75,8 +75,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -186,8 +185,13 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "8d945a0cb989b7ac",
+  "active": "5e580ec97c9b5d5d",
   "lastOpenFiles": [
+    "学习/algorithm/题型分类.md",
+    "学习/algorithm/刷题路线.md",
+    "学习/algorithm/分析优化.md",
+    "学习/algorithm/用法导向知识.md",
+    "学习/algorithm/Hello aglo.md",
     "学习/Bases/开发范式/C++开发范式.md",
     "学习/Fragments/面试八股/面试题.md",
     "学习/ProjectsStudy/FromProjects/FastLog.md",
@@ -202,7 +206,6 @@
     "学习/其他专业书/Modern C++.md",
     "Files & LongText/Long code/C++ Code Snippets.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/algorithm/用法导向知识.md",
     "学习/ToolChain/Cmake.md",
     "Files & LongText/Long code/scripts.md",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
@@ -214,10 +217,6 @@
     "学习/ProjectsStudy/WriteByMyself/nanochat.md",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "Files & LongText/Attachments/Pasted image 20260210143735.png",
-    "学习/ProjectsStudy/WriteByMyself/ExplainLNK2019.md",
-    "Files & LongText/ChatLogWithAi/AiQuiz/内存池.md",
-    "学习/algorithm/刷题路线.md",
-    "Chores/computer learning puzzles.md",
     "Files & LongText/Attachments/Pasted image 20260208212305.png",
     "Files & LongText/Attachments/Pasted image 20260203121417.jpg",
     "Files & LongText/Attachments/PixPin_2026-01-27_20-48-49.png",
