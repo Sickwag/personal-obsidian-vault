@@ -225,102 +225,6 @@ public:
 };
 ```
 在函数中定义的 static 变量是局部静态变量，在函数执行完毕后销毁
-
-#### const 的作用
-##### 常量
-可以参考 [[C++ Basics#const 全局变量]] && [[C++ Basics#const 局部变量]]
-声明 `const` 表示 const 所在的作用域不会被操作改变, 表示“常”，限定修饰内容不能修改（不是内存地址不能修改），为只读状态，
-- `const` 关键字在 C++中作用是**声明变量为常量**，这意味着一旦该变量被初始化后，它的值就不能被修改。并不保证对象的内存地址（每次程序启动由操作系统分配）在程序运行过程中不变。在使用动态内存分配（如 `new` 和 `delete`）时 `const` 修饰的对象仍可以被移动或重新分配内存地址 ^0ca58b
-```cpp
-int &ref = 10;//是不被允许的，引用的初始化必须是一个已经存在的对象，10是字面量，os不为他分配内存
-const int &ref = 10;//使用const创建一个临时常量引用，10在编译器中被音隐式创建成了一个常量，分配内存，所以才能被引用初始化（绑定）
-//这样写也是为了防止误操作将ref更改
-```
-- 从汇编角度看 const ：
-	- 可以节省空间，避免不必要的内存分配，const定义常量从汇编的角度来看，只是给出了对应的内存地址，而不是像 `#define` 一样给出的是立即数。
-	- const定义的常量在程序运行过程中只有一份拷贝，而 `#define` 定义的常量在内存中有若干个拷贝。
-- 从作用域角度看 const：
-	- const定义常量从汇编的角度来看，只是给出了对应的内存地址，而不像`#define`给出的是立即数。
-	- const定义的常量在程序运行过程中只有一份拷贝，而 `#define` 定义的常量在内存中有若干个拷贝。
-	- 注意：**非 const 变量默认为 extern**。要使 const 变量能够在其他文件中访问，必须在文件中显式地指定它为 extern，比如下面代码中
-```cpp
-// file1.cpp
-int ext = 10;
-// file2.cpp
-#include<iostream>
-
-extern int ext;
-int main(){
-    std::cout<<(ext+10)<<std::endl;
-}
-```
-虽然 `file2.cpp` 并没有 `include "file1.cpp"` 但由于**链接机制存在**，会将所有**extern**变量连接在同一个作用域中
-未被const修饰的变量不需要extern显式声明！而const常量需要显式声明extern，并且需要做初始化！
-- 从指针和 const 关系来看：
-	- 如果_const_位于 `*` 的左侧，则const就是用来修饰指针所指向的变量，即指针指向为常量；
-	- 如果const位于 `*` 的右侧，`const` 就是修饰指针本身，即指针本身是常量。
-	- 可以这样理解：
-利用英文从右边往左边读，并且以to为分界，to之前为描述指针的特性，to后为描述目标的特性<br>
-```cpp
-const char * p; //p is a pointer to const char
-char const * p; //同上， 表示p指针指向一个const char类型的内存块，不可通过p指针修改（可以有其他方式获取地址，然后修改），但这里的指针是一个非const变量，可以修改指针变量的值，也就是指向的位置（如果没有delete，会导致内存泄漏）
-char * const p; //p is a const pointer to char， const修饰指针本身，表示不能改变指向地址和内存块类型（已经被指定是char类型内存块了），但地址对应的内存块的内容可以通过指针改写，*char = ‘y'
-const char * const p; //p is a const pointer to const char
-```
-当指针被加上const特性，则指针不可改变指向的地址
-当指向的目标特性为char，则内容可以透过指针被修改，如: `*char='y';
-当指向的目标特性为 `const char`，则内容不可透过指针修改
-第四种情况创建了一个**不能改变指向地址的指针，指向一块不能通过指针改变值的 char 内存块**
-- `void *` 指针
-	- `void*` 指针**不能直接解引用**（即不能通过 `*void_ptr` 访问内容）
-	- `void*`指针**不能直接参与指针运算**，
-	- 最重要的是：`void*` 指针**无法保证它指向的内容不会被修改**
-- 指针指向 const 对象---**不能使用非 const 指针指向 const 变量**：
-```cpp
-const int x = 10;
-int* ptr = &x;  // 错误！不能将const对象的地址赋给非const指针
-*ptr = 20;      // 这将破坏const的承诺！
-```
-这样的操作语法上没有错误，但违反了 const 语义，编译器会阻止
-- const 指针指向非 const 对象：
-	- 不能使用指向const对象的指针修改基础对象，然而如果该指针指向了非const对象，可用其他方式（如引用）修改其所指的对象。可以修改const指针所指向的值的，但不能通过const对象指针来进行而已
-- 函数返回 const 类型，可以参考 [[C++ Basics#const 修饰成员函数]]：
-	- `const int func1();`  这个本身无意义，因参数返回本身就是赋值给其他的变量！
-	- `const int* func2();`  指针指向的内容不变。
-	- `int *const func2();`  指针本身不可变。
-
-##### 常函数
-- const 修饰成员函数：当 `const` 用于成员函数的末尾时，它表示该成员函数不会修改调用它的对象的状态。这意味着在 `const` 成员函数中，你不能修改任何非 `mutable` 成员变量的值。指针指向的内存空间的数据不能修改，除了 mutable 修饰的变量
-```cpp
-class Person{
-public:
-    Person(){
-        m_A = 0;
-        m_B = 0;
-    }
-    void ShowPerson() const{//加const表示类的对象不能修改类中定义的源数据，即类内存地址的数据
-        this->m_B = 100;//常函数中不允许修改类的属性值，
-    }
-    int m_A;
-    int m_B;
-    mutable int m_B;//定义一样，但修饰表示允许被常函数修改
-};
-*this //普通this指针写法，指向本身
-*const this //指针本质是常量，指针指向（也就是常量值--指向内存地址编号不支持修改，）
-const class_name *const this //指针指向内存地址的值也不允许修改
-```
-##### 常对象
-同样，不允许修改指针指向内存地址位置**存储的值**
-常对象不允许修改**类的对象**的属性，如果能够调用非 const 函数，非 const 函数可修改对象的属性，常对象调用非 const 函数**间接修改**了属性，违反常对象特点
-```cpp
-const Person p;//创建常对象
-cout << person.m_A << endl;
-//person.mA = 100; //常对象不能修改成员变量的值,但可以访问
-person.m_B = 100; //但常对象可以修改mutable修饰成员变量
-
-//常对象访问成员函数
-person.MyFunc(); //常对象只能调用const的函数
-```
 ### 变量的作用域
 和 python [Python Basics \> 命名空间](Python%20Basics.md#命名空间) \变量类型 [Python Basics \> 变量的作用范围](Python%20Basics.md#变量的作用范围)差不多
 - **局部/全局/块/类作用域**：在函数内部声明的变量具有局部作用域，它们只能在  **函数内部/程序中任何函数/代码块内部/所有成员函数**  访问。局部变量在函数每次被调用时被创建，在执行完后被销毁。
@@ -607,7 +511,6 @@ for (int i : boost::irange(1, 5 + 1)) {
     std::cout << i << " ";
 }
 ```
-
 #### 范围类迭代器
 ```cpp
 class Range {
@@ -5327,6 +5230,78 @@ extern 修改时的是**全局变量**
 - 在 A 文件中想要使用 B 文件中定义的的 extern 变量，需要在 A 文件中声明 `extern var ;` 告诉编译器有这么一个 `extern` 变量在其他的文件中，链接时自己找
 ### 常量
 #### const 常量
+##### 常量
+可以参考 [[C++ Basics#const 全局变量]] && [[C++ Basics#const 局部变量]]
+声明 `const` 表示被修饰对象在的作用域不会被操作改变, 表示“常”，限定修饰内容不能修改（不是内存地址不能修改），为只读状态，
+- `const` 关键字在 C++中作用是**声明变量为常量**，这意味着一旦该变量被初始化后，它的值就不能被修改。并不保证对象的内存地址（每次程序启动由操作系统分配）在程序运行过程中不变。在使用动态内存分配（如 `new` 和 `delete`）时 `const` 修饰的对象仍可以被移动或重新分配内存地址 ^0ca58b
+```cpp
+int &ref = 10;//是不被允许的，引用的初始化必须是一个已经存在的对象，10是字面量，os不为他分配内存
+const int &ref = 10;//使用const创建一个临时常量引用，10在编译器中被隐式创建了，分配和const int代码效果一样的内存，所以才能被引用初始化（绑定）
+//这样写也是为了防止误操作将ref更改
+```
+- 从汇编角度看 const ：
+	- 可以节省空间，避免不必要的内存分配，const定义常量从汇编的角度来看，只是给出了对应的内存地址，而不是像 `#define` 一样给出的是立即数。
+	- **const定义的常量在程序运行过程中只有一份拷贝**，而 `#define` 定义的常量在内存中有若干个拷贝。
+- 从作用域角度看 const：
+	- const定义常量从汇编的角度来看，只是给出了对应的内存地址，每次需要这个数就到对应位置去拿
+	- 注意：**非 const 变量默认为 extern**。要使 const 变量能够在其他文件中访问，必须在文件中显式地指定它为 extern，比如下面代码中
+```cpp
+// file1.cpp
+int ext = 10;
+// file2.cpp
+#include<iostream>
+
+extern int ext;
+int main(){
+    std::cout<<(ext+10)<<std::endl;
+}
+```
+虽然 `file2.cpp` 并没有 `include "file1.cpp"` 但由于**链接机制存在**，会将所有**extern**变量连接在同一个作用域中
+未被 const 修饰的变量不需要 extern 显式声明！而 const 常量需要显式声明 extern，并且需要做初始化！
+- 从指针和 const 关系来看：
+	- 如果const位于 `*` 的左侧，则 const 就是用来修饰指针所指向的变量，即指针指向为常量；
+	- 如果const位于 `*` 的右侧，`const` 就是修饰指针本身，即指针本身是常量。
+	- 可以这样理解：
+利用英文从右边往左边读，并且以to为分界，to之前为描述指针的特性，to后为描述目标的特性<br>
+```cpp
+const char * p; //p is a pointer to const char
+char const * p; //同上， 指针指向为常量，不可通过p指针修改指向的值（可以有其他方式获取地址，然后修改），但这里的指针是一个非const变量，可以修改指针变量的值，也就是指向的位置（如果没有delete，会导致内存泄漏）
+char * const p; //p is a const pointer to char， const修饰指针本身，表示不能改变指向地址和内存块类型（已经被指定是char类型内存块了），但地址对应的内存块的内容可以通过指针改写，*char = ‘y'
+const char * const p; //p is a const pointer to const char
+```
+当指向的目标特性为 `const char`，则内容不可透过指针修改（第 1，2 种情况）
+当指针被加上 const 特性，则指针不可改变指向的地址，内容可以透过指针被修改，如: `*char='y';` （第 3 种情况）
+第四种情况创建了一个**不能改变指向地址的指针，指向一块不能通过指针改变值的 char 内存块**
+- `void *` 指针
+	- `void*` 指针**不能直接解引用**（即不能通过 `*void_ptr` 访问内容）
+	- `void*` 指针**不能直接参与指针运算**，
+	- 最重要的是：`void*` 指针**无法保证它指向的内容不会被修改**
+- 指针指向 const 对象---**不能使用非 const 指针指向 const 变量**：
+```cpp
+const int x = 10;
+int* ptr = &x;  // 错误！不能将const对象的地址赋给非const指针
+*ptr = 20;      // 这将破坏const的承诺！
+```
+这样的操作语法上没有错误，但违反了 const 语义，编译器会阻止
+- const 指针指向非 const 对象：
+	- 不能使用指向 const 对象的指针修改基础对象，然而如果该指针指向了非 const 对象，可用其他方式（如引用）修改其所指的对象。可以修改 const 指针所指向的值的，但不能通过 const 对象指针来进行而已
+- 函数返回 const 类型，可以参考 [[C++ Basics#const 修饰成员函数]]：
+	- `const int func1();`  这个本身无意义，因参数返回本身就是赋值给其他的变量！
+	- `const int* func2();`  指针指向的内容不变。
+	- `int *const func2();`  指针本身不可变。
+
+##### 常对象
+同样，不允许修改指针指向内存地址位置**存储的值**
+常对象不允许修改**类的对象**的属性，如果能够调用非 const 函数，非 const 函数可修改对象的属性，常对象调用非 const 函数**间接修改**了属性，违反常对象特点
+```cpp
+const Person p;//创建常对象
+cout << person.m_A << endl;
+//person.mA = 100; //常对象不能修改成员变量的值,但可以访问
+person.m_B = 100; //但常对象可以修改mutable修饰成员变量
+
+//常对象访问成员函数
+person.MyFunc(); //常对象只能调用const的函数
+```
 ##### const 全局/局部常量
 使用 `const` 修饰的**全局变量**数据是放在常量区的，[C++ Basics \> 内存分区模型](#内存分区模型)
 无法直接修改（重定义），和间接修改（使用指针修改常量内存地址）
@@ -5366,8 +5341,7 @@ const char* const str3 = "hello"; // const指针，指向const char
 ![C++ Runoob Tutoral \> ^0ca58b](C++%20Runoob%20Tutoral.md#^0ca58b)
 **常函数：**
 * 成员函数后，函数体前加 const 后我们称为这个函数为**常函数**
-* 常函数内不可以修改成员属性，
-* 成员属性声明时加关键字 mutable 后，在常函数中依然可以修改
+* 不能在函数体中修改任何非 `mutable` 成员变量的值
 * 声明对象前加 const 称该对象为常对象
 * **常对象只能调用常函数**
 * 只能在类的成员函数中使用
@@ -5393,18 +5367,9 @@ obj.getName() = "new name"; // 错误：不能修改const引用
 ```cpp
 void test(){
     char *p1 = "hello";
-    char *p2 = "hello";
-    char *p3 = "hello";
-
     printf("%d \n", p1);
-    printf("%d \n", p2);
-    printf("%d \n", p3);
-
     p1[0] = 'w';
-    printf("%d \n", p1); // could be compile but cannot run in C
-}
-int main(){
-    test();
+    printf("%d \n", p1); // may pass C++ compiler but definitely cannot in C
 }
 ```
 
