@@ -3785,7 +3785,7 @@ int main() {
 ```
 ### 高级使用
 #### decltype 关键字
-decltype 分析表达式并得到它的类型，不会计算执行表达式。函数调用也一种表达式，因此不必担心在使用 decltype 时执行了函数。
+decltype 分析表达式并得到它的类型，**不会计算执行表达式**。函数调用也一种表达式，因此不必担心在使用 decltype 时执行了函数。
 语法：`decltype (expression) var;`
 ```cpp
 int a = 5;
@@ -3797,7 +3797,7 @@ auto add(T t, U u) -> decltype(t + u) {
 }//后面的->表示auto的推断结果根据decltype(t + u)来判断
 ```
 使用引用类型，则需要初始化，`decltype(cx)` 是一个计算式，返回 `cx` 的类型, 所以 `decltype(cx) cy = x` 等价于 `int cy = x`，作用原理上：
-- decltype 不保留变量的 cv 信息（`const`，`volatile`）和引用信息
+- **auto 会丢弃所有 cv 修饰符和引用信息**，并且**不能推导表达式**，只能推导值，`auto` 推导发生在"赋值"时，`decltype` 推导发生在"看到表达式"时，完全保留类型信息
 - 可以接受任何表达式或者变量（**包括类的静态成员，对象的成员**）
 ```cpp
 //引用类型
@@ -3827,13 +3827,18 @@ struct A {
 
 - `auto add(T t, U u) -> decltype(t + u)` 是一种函数返回类型尾置的写法，与前置的 auto 地位相同
 ##### 判断规则
-这里将 decltype 中括起来的部分称为***value***，返回结果称为***res***
-1) 如果 value 是没有用括号括起来的**纯右值**，则 res 的类型与该标识符的类型相同，**包括 cv 限定符（const 和 volatile） 等限定符**。
-2) 如果 value 是左值（能取地址）、或者用**括号括起来的标识符**，那么 res 的类型是 value 的引用。
-3) 如果 value 是**将亡值**，则会返回类型的右值引用
-4) 如果 value 是一个带有括号的内容，那么会被当成一个表达式处理，先计算表达式的值，然后计算他**去除引用后的基本类型**
-5) 如果 value 是函数调用，则 res 的类型与函数的返回值类型相同（**函数不能返回 void**，但可以返回 void*）
-6) decltype 中是函数调用，则返回函数的返回值类型，decltype 中只填函数名称不调用，则是返回函数的类型，在 res 前加 `*` 则返回函数指针
+简单来看：
+decltype 推导有三种情况：
+1. 如果是变量名：给出该变量的声明类型
+2. 如果是表达式：给出表达式结果的类型
+3. 如果是返回左值的表达式：给出引用类型
+具体细则：这里将 decltype 中括起来的部分称为***value***，返回结果称为***res***
+4) 如果 value 是没有用括号括起来的**纯右值**，则 res 的类型与该标识符的类型相同，**包括 cv 限定符（const 和 volatile） 等限定符**。
+5) 如果 value 是左值（能取地址）、或者用**括号括起来的标识符**，那么 res 的类型是 value 的引用。
+6) 如果 value 是**将亡值**，则会返回类型的右值引用
+7) 如果 value 是一个带有括号的内容，那么会被当成一个表达式处理，先计算表达式的值，然后计算他**去除引用后的基本类型**
+8) 如果 value 是函数调用，则 res 的类型与函数的返回值类型相同（**函数不能返回 void**，但可以返回 void*）
+9) decltype 中是函数调用，则返回函数的返回值类型，decltype 中只填函数名称不调用，则是返回函数的类型，在 res 前加 `*` 则返回函数指针
 ![[Pasted image 20250917092227.png]]
 ```cpp
 int func(){
@@ -3863,25 +3868,57 @@ decltype(s1+",world") s2 = s1;
 decltype(s1.append(",world")) s3 = s1;
 std::cout<<s3<<std::endl;  // 输出 Hello
 ```
-所以遇到返回值根据函数参数列表决定的函数时，可以通过 auto 和 decltype 联合使用解决，但 decltype 只能放在后面，因参数 x，y 的作用域从函数调用后开始，`}` 位置结束
-```cpp
-template<typename T1,typename T2>
-auto func(T1 x,T2 y)->decltype(x+y){
-	//其它的代码。
-	decltype(x+y) tmp=x+y;
-	cout<<"tmp="<<tmp<<endl;
-	return tmp;
-}
-int main(){
-	func();
-}
-```
+
+> [!note]
+> ***为什么需要尾置返回类型（Trailing Return Type）?***
+> - 返回值根据函数参数列表决定的函数时，返回类型表达式中出现在参数列表中才会被声明的变量，出现未定义符号报错
+> 通过 auto 和 decltype 联合使用解决，但 decltype 只能放在后面，
+> ```cpp
+> template<typename T1,typename T2>
+> auto func(T1 x,T2 y)->decltype(x+y){
+> // decltype(x + y) func(T1 x, T2 y) {} // 如果使用这种方式会在编译时报错，因为编译器解析是从左到右的，x和y的类型在参数列表中才会声明，但在返回之中已经提前使用
+> 	decltype(x+y) tmp=x+y;
+> 	cout<<"tmp="<<tmp<<endl;
+> 	return tmp;
+> }
+> int main(){
+> 	func();
+> }
+> ```
+> - 如果需要返回类内成员类型，同样是因为类没实例化类型符号是未知的：
+> ```cpp
+> class Container {
+> public:
+>     using iterator = MyIterator;
+>     // 必须在后置位置，因为Container类还没完全定义
+>     auto begin() -> iterator;
+> private:
+>     int* data;
+> };
+> 
+> // 这里iterator才完全可见
+> auto Container::begin() -> iterator {
+>     return iterator(data);
+> }
+> ```
+> - 函数指针和函数引用：
+> ```cpp
+> // 复杂的函数指针返回类型
+> auto(*get_func_ptr(int x))() -> int;  // 返回int(*)()
+> 
+> // 用尾置更清晰
+> auto get_func_ptr(int x) -> int(*)();
+> 
+> // 甚至更复杂的
+> auto get_complex(int x) -> int(*(*)())(int, int);
+> // 翻译：返回"指向返回'指向接受(int,int)返回int的函数指针'的函数"的指针
+> ```
 ##### 使用方法和返回值
-`decltype` 的本质：：
-- `decltype(cmp)` 返回的是变量 `cmp` 的**确切类型**（包括是否引用、const 等修饰符），而非无脑返回引用类型。`decltype` 是一个类型推导工具，它返回表达式的类型。`decltype` 不会返回引用，除非表达式本身是一个引用。
+`decltype` 的本质：
+- `decltype(cmp)` 返回的是表达式 `cmp` 的**确切类型**（包括是否引用、const 等修饰符），而非无脑返回引用类型。`decltype` 是一个类型推导工具，它返回表达式的类型。`decltype` 不会返回引用，除非表达式本身是一个引用。
 - 若 `cmp` 是 `auto&&` 或函数引用，`decltype` 会保留引用属性；对于普通变量，返回其实际类型。
 在需要传入比较器类型的容器中（如：[[#priority_queue|priority_queue]]），模板参数中 compare 需要传入**自定义比较器类型**，但比较器通过 [[#lambda 函数|lambda 函数]]定义无法实例化，不能用一个只有类型没有实现逻辑的参数作为比较器（没有实现无法比较），这时候就需要借助 decltype 和容器的构造函数将示例传入，而 decltype 传入类型—— [[刷题路线#3170. 删除星号以后字典序最小的字符串]]
-`decltype(auto)`：
+#### decltype(auto)
 -  `decltype(auto) var = 初始表达式` 会自动计算表达式的类型（C++11 以后），等价于 `decltype(初始表达式) var = 初始表达式` 如果使用这个特性，则表达式会被切实执行（decltype 计算 auto，auto 计算括号外部表达式，运行时）
 ```cpp
 std::string s1 = "hello";
@@ -3946,6 +3983,18 @@ string add<string&,string&>(string& t,string& u);
 配合完美转发自动推导模板返回值类型
 易错理解：
 ![[Pasted image 20250917093842.png]]
+#### decltype/decltype(auto)/auto 之间的区别
+| 方面          | auto   | decltype | decltype(auto)     |
+| ----------- | ------ | -------- | ------------------ |
+| **推导目标**    | 变量类型   | 表达式类型    | 变量类型（但按decltype规则） |
+| **计算表达式**   | 是（初始化） | 否（只分析）   | 是（初始化）             |
+| **变量vs表达式** | 无区别    | 有区别（括号）  | 有区别（括号）            |
+| **保留引用**    | 否      | 是        | 是                  |
+| **保留const** | 只保留底层  | 全部保留     | 全部保留               |
+| **主要用途**    | 简化类型书写 | 元编程、类型特征 | 完美转发类型             |
+- `auto`：**"告诉我这个值的类型，可以简化（丢弃 cv 和引用，数组会退化成指针）"**
+- `decltype`：**"告诉我这个表达式的准确类型，一个字都不许改"**
+- `decltype(auto)`：**"请按decltype的严格规则，告诉我这个值的类型"**
 #### 类模板
 类模板，模板类同函数模板，模板函数同理，一个意思
 - 类模板的通用类型（T）可以放置于成员变量前，成员函数的参数位置，成员函数的代码中，成员函数的返回值位置，总之，**哪里需要通用类型，哪里就能放**
