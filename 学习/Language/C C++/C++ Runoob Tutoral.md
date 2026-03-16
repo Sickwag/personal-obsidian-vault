@@ -3796,10 +3796,8 @@ auto add(T t, U u) -> decltype(t + u) {
     return t + u;
 }//后面的->表示auto的推断结果根据decltype(t + u)来判断
 ```
-----
 使用引用类型，则需要初始化，`decltype(cx)` 是一个计算式，返回 `cx` 的类型, 所以 `decltype(cx) cy = x` 等价于 `int cy = x`，作用原理上：
-- decltype 不保留变量的 cv 信息（`const`，`volatile`）
-- decltype 不保留变量的引用信息
+- decltype 不保留变量的 cv 信息（`const`，`volatile`）和引用信息
 - 可以接受任何表达式或者变量（**包括类的静态成员，对象的成员**）
 ```cpp
 //引用类型
@@ -3865,11 +3863,10 @@ decltype(s1+",world") s2 = s1;
 decltype(s1.append(",world")) s3 = s1;
 std::cout<<s3<<std::endl;  // 输出 Hello
 ```
-
 所以遇到返回值根据函数参数列表决定的函数时，可以通过 auto 和 decltype 联合使用解决，但 decltype 只能放在后面，因参数 x，y 的作用域从函数调用后开始，`}` 位置结束
 ```cpp
 template<typename T1,typename T2>
-auto func(T1x,T2y)->decltype(x+y){
+auto func(T1 x,T2 y)->decltype(x+y){
 	//其它的代码。
 	decltype(x+y) tmp=x+y;
 	cout<<"tmp="<<tmp<<endl;
@@ -5228,9 +5225,8 @@ extern 修改时的是**全局变量**
 - 属于外部连接属性
 - 在函数外不使用 static 修饰的普通变量定义默认在开头加上 `extern`
 - 在 A 文件中想要使用 B 文件中定义的的 extern 变量，需要在 A 文件中声明 `extern var ;` 告诉编译器有这么一个 `extern` 变量在其他的文件中，链接时自己找
-### 常量
-#### const 常量
-##### 常量
+### const 关键字
+#### 常量
 可以参考 [[C++ Basics#const 全局变量]] && [[C++ Basics#const 局部变量]]
 声明 `const` 表示被修饰对象在的作用域不会被操作改变, 表示“常”，限定修饰内容不能修改（不是内存地址不能修改），为只读状态，
 - `const` 关键字在 C++中作用是**声明变量为常量**，这意味着一旦该变量被初始化后，它的值就不能被修改。并不保证对象的内存地址（每次程序启动由操作系统分配）在程序运行过程中不变。在使用动态内存分配（如 `new` 和 `delete`）时 `const` 修饰的对象仍可以被移动或重新分配内存地址 ^0ca58b
@@ -5290,7 +5286,7 @@ int* ptr = &x;  // 错误！不能将const对象的地址赋给非const指针
 	- `const int* func2();`  指针指向的内容不变。
 	- `int *const func2();`  指针本身不可变。
 
-##### 常对象
+#### 常对象
 同样，不允许修改指针指向内存地址位置**存储的值**
 常对象不允许修改**类的对象**的属性，如果能够调用非 const 函数，非 const 函数可修改对象的属性，常对象调用非 const 函数**间接修改**了属性，违反常对象特点
 ```cpp
@@ -5302,7 +5298,7 @@ person.m_B = 100; //但常对象可以修改mutable修饰成员变量
 //常对象访问成员函数
 person.MyFunc(); //常对象只能调用const的函数
 ```
-##### const 全局/局部常量
+#### 全局/局部常量
 使用 `const` 修饰的**全局变量**数据是放在常量区的，[C++ Basics \> 内存分区模型](#内存分区模型)
 无法直接修改（重定义），和间接修改（使用指针修改常量内存地址）
 ```cpp
@@ -5337,7 +5333,7 @@ const char* str1 = "hello"; // 指向const char的指针
 char* const str2 = buffer;  // const指针，指向char
 const char* const str3 = "hello"; // const指针，指向const char
 ```
-##### const 修饰成员函数
+#### 修饰成员函数
 ![C++ Runoob Tutoral \> ^0ca58b](C++%20Runoob%20Tutoral.md#^0ca58b)
 **常函数：**
 * 成员函数后，函数体前加 const 后我们称为这个函数为**常函数**
@@ -5358,9 +5354,96 @@ std::string& ref = obj.getName(); // 错误：不能丢弃const限定
 const std::string& ref = obj.getName(); // 正确
 obj.getName() = "new name"; // 错误：不能修改const引用
 ```
-##### const 修饰函数参数
+#### 修饰函数参数
 表示函数内部不能修改这个参数，但外部调用者可以。只需要让这个函数外部的其它代码修改这个传入的参数即可
-#### 字符串常量
+#### 常量引用
+const 关键字在不同使用场景下的作用
+##### 1. const 左值引用（最常用）
+```cpp
+std::string s = "hello";
+const std::string& ref = s;  // ref 是 s 的 const 引用
+
+// ref[0] = 'H';  // ❌ 错误：不能通过 const 引用修改
+s[0] = 'H';        // ✅ 可以通过原变量修改
+
+std::cout << ref << std::endl;  // ✅ 可以读取
+// 重要特性：可以绑定到临时对象
+const std::string& r1 = std::string("temp");  // ✅ 合法，延长生命周期
+// std::string& r2 = std::string("temp");     // ❌ 非法，不能绑定临时对象
+
+void process(const std::string& s) {
+    std::cout << "const 引用版本: " << s << std::endl;
+}
+
+void process(std::string& s) {
+    std::cout << "非 const 引用版本，可以修改" << std::endl;
+    s += " modified";
+}
+
+int main() {
+    std::string s = "hello";
+    const std::string cs = "world";
+    
+    process(s);   // 调用非 const 版本
+    process(cs);  // 调用 const 版本
+    process("temp"); // 调用 const 版本（临时对象绑定到 const 引用）
+}
+```
+- 不能通过该引用修改对象
+- 可以延长临时对象的生命周期（本质是临时对象在编译期定义了，存储在程序的常量区，所以延长），而非 const 对象不能绑定右值
+- 可以绑定到右值（临时对象）
+##### 2. 引用折叠中的 const
+在模板编程中，const 与引用折叠交互：
+```cpp
+template<typename T>
+void foo(T&& param) {  // 万能引用
+    // 如果传入 const 对象，T 会推导为 const T&
+}
+
+int main() {
+    const int ci = 10;
+    foo(ci);  // T 推导为 const int&
+    
+    std::string s = "hello";
+    const std::string& ref = s;
+    foo(ref);  // T 推导为 const std::string&
+}
+```
+##### 3. 右值引用和 const
+```cpp
+std::string s = "hello";
+
+// 右值引用（非常量）
+std::string&& rref1 = std::move(s);  // ✅
+// std::string&& rref2 = s;           // ❌ 不能绑定左值
+
+// const 右值引用（很少用）
+const std::string&& crref = std::move(s);  // ✅ 合法但很少用
+// crref 是 const，不能移动
+```
+##### 4. 成员函数 const 重载
+```cpp
+class MyClass {
+    std::string data;
+public:
+    // 非 const 版本：返回可修改的引用
+    std::string& get() { return data; }
+    
+    // const 版本：返回 const 引用
+    const std::string& get() const { return data; }
+};
+
+void use() {
+    MyClass obj;
+    obj.get() = "new value";  // 调用非 const 版本
+    
+    const MyClass cobj;
+    // cobj.get() = "error";  // ❌ 调用 const 版本，不能修改
+    std::cout << cobj.get();   // ✅ 可以读取
+}
+```
+
+### 字符串常量
 - 在常量区创建多个指针初始化指向相同的常量时，**有的编译器**会为了节省内存只保留一个
 - 因字符串常量是可以共享的，所以所有指针都指向同一个地址
 - 字符串既然是常量，放在常量区中，但 ANSI 协会定义：**修改字符串常量是未定义的**，结果由编译器决定
