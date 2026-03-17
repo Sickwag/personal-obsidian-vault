@@ -3786,6 +3786,24 @@ int main() {
 ### 高级使用
 #### decltype 关键字
 decltype 分析表达式并得到它的类型，**不会计算执行表达式**。函数调用也一种表达式，因此不必担心在使用 decltype 时执行了函数。
+`decltype` 关键字是为了解决 `auto` 关键字只能对变量进行类型推导的缺陷而出现的。
+```cpp
+auto x = 1;
+auto y = 2;
+decltype(x+y) z;
+```
+但不能这么写：
+```cpp
+decltype(x+y) add(T x, U y) {/* body */}
+```
+判断类型是否相同还可以使用 `is_same<type1, type2>decltype expr` 的返回类型：根据 expr 是左值/右值/id 表达式等决定
+
+| 表达式形式（expr）    | decltype(expr) 类型 | 说明                         |
+| -------------- | ----------------- | -------------------------- |
+| 普通变量名（如 x）     | T（原类型）            | `decltype(x)` 表示变量的实际类型    |
+| 加括号的变量（如 (x)）  | T&（左值引用）          | `decltype((x))` 返回引用类型     |
+| 字面量 / 构造函数临时对象 | T（prvalue）        | `decltype(1 + 2)` 返回 `int` |
+| 带捕获的 lambda    | 某个闭包类型            | 由编译器生成的类型                  |
 语法：`decltype (expression) var;`
 ```cpp
 int a = 5;

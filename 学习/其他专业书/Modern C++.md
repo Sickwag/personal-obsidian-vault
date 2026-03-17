@@ -408,24 +408,7 @@ int main() {
 }
 ```
 ### decltype 类型推导
-基本知识可以参考 [[C++ Runoob Tutoral#decltype 关键字]] `decltype` 关键字是为了解决 `auto` 关键字只能对变量进行类型推导的缺陷而出现的。
-```cpp
-auto x = 1;
-auto y = 2;
-decltype(x+y) z;
-```
-但不能这么写：
-```cpp
-decltype(x+y) add(T x, U y) {/* body */}
-```
-判断类型是否相同还可以使用 `is_same<type1, type2>decltype expr` 的返回类型：根据 expr 是左值/右值/id 表达式等决定
-
-| 表达式形式（expr）    | decltype(expr) 类型 | 说明                         |
-| -------------- | ----------------- | -------------------------- |
-| 普通变量名（如 x）     | T（原类型）            | `decltype(x)` 表示变量的实际类型    |
-| 加括号的变量（如 (x)）  | T&（左值引用）          | `decltype((x))` 返回引用类型     |
-| 字面量 / 构造函数临时对象 | T（prvalue）        | `decltype(1 + 2)` 返回 `int` |
-| 带捕获的 lambda    | 某个闭包类型            | 由编译器生成的类型                  |
+参考 [[C++ Runoob Tutoral#decltype 关键字]] 
 ## 2.5 模板
 - C++11 开始，连续的右尖括号将变得合法
 ### 变长参数模板
