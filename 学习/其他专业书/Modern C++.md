@@ -516,7 +516,16 @@ C++ 编译器不是一个真正的逻辑执行环境，但它 **可以模拟一�
 3. 二元右折叠 (args op ... op 初值) 成为 (args1 op (... op (argsN−1 op (argsN op 初值))))
 4. 二元左折叠 (初值 op ... op args) 成为 ((((初值 op args1) op args2) op ...) op argsN)
 ```
-**一元折叠表达式（Unary Fold）**：对参数包中每个参数应用一个一元操作符 **二元折叠表达式（Binary Fold）**：对参数包中每个参数应用一个二元操作符，二元表达式的初始值**必须要有返回值并且重载 op 符号**
+**一元折叠表达式（Unary Fold）**：对参数包中每个参数应用一个一元操作符
+**二元折叠表达式（Binary Fold）**：
+- 对参数包中每个参数应用一个二元操作符
+- 二元表达式的初始值**必须要有返回值并且重载 op 符号**
+- 二元语法中，两个 op 必须是相同并且有结合性的（即可以连续使用）
+- 语法中的 init **并不是指的单个符号，而是一个语句/表达式**，比如 `(std::cout << "" << ... << args;)` 一个二元左折叠
+	- init = `std::cout << ""`
+	- op = `<<`
+	- 展开后得到：`((((std::cout << "") << arg1) << arg2)... << argN)`
+	- 语法合理
 #### 一元右折叠
 ```cpp
 (argPack op ...) --> (((arg1 op arg2) op arg3) op arg4....)// 前置
@@ -565,6 +574,13 @@ void print_left(Args&&... args){
     (std::cout << ... << args);
     // (((((std::cout << args1) << args2 ) << args3..... << argsN);  // 展开形式
     // std::cout << ... << args; // 报错，因为展开必须在语序的上下文中才能进行
+    // ((std::cout << args1 << " "), ((std::cout << args2 << " "), ...))))))
+    
+	// 不能写成这样
+	// (std::cout << args << ... << " ");
+	// 因为这样展开之后是
+	// cout << (arg1 << (arg2 << (... << (argN << " ")));
+	// 根据运算规则，最深层括号中的表达式先运算，而argN << " "是语法错误的
 }
 ```
 这里需要注意 `std::cout` 作为了初始值，返回一个 `ostream` 对象，重载了 `<<` 操作符 报错是因没有遵循折叠表达式语法，参考 [[#Note：折叠表达式#含义和本质]]和 [[C++ Runoob Tutoral#各种符号在上下文中语义#... 语义|...的语义]]
@@ -616,15 +632,33 @@ static_assert(total == 1 + 2 + 3 + 4);
 ```cpp
 template <class... Args>
 auto func(Args&&... args) {
-    std::vector<std::common_type_t<Args...>> res{};
-    bool tmp{false};
-    (tmp = ... = ((void)res.push_back(args), false));
-    // (((tmp = (res.push_back(args1), false)) = (res.push_back(args2), false)) = ...) = (res.push_back(argsN), false) // 展开
-    return res;
+	std::vector<std::common_type_t<Args...>> res{};
+	bool									 temp{ false };
+	(temp = ... = ((void)res.push_back(args), false));
+	/**
+	 * init -> temp
+	 * op -> =
+	 * pack -> ((void)res.push_back(args), false)
+	 * 展开公式(I op ... op arg) -> ((((I op arg1) op arg2) op ...) op argN)
+	 * 所以展开后的结果为
+	 * (((...(((
+	 * 		temp = (res.push_back(args1), false))
+	 *  	= (res.push_back(args2), false))	// 最后一个右括号和temp前面的左括号对应
+	 *  	= (res.push_back(args3), false))
+	 *  	...
+	 *  	= (res.push_back(argsN), false)
+	 * )
+	 * (((...((( temp = (res.push_back(args1), false)) = (res.push_back(args2), false)) = (res.push_back(args3), false))	...	= (res.push_back(argsN), false))
+	 * 整个表达式可以看作(left = (res.push_back(argsN), false))
+	 * 这时第一个（也是最右边的等号开始结合），从右向左，所以先执行了右边部分的表达式
+	 * 计算左边时发现左边也是一个复合结构，同样递归执行下去，每次先执行复合结构的右边部分
+	 * 这样的结果就是虽然括号影响了运算结果的流向，但是没有改变=的结合方向
+	 */
+	return res;
 }
 ```
 这段代码的实际作用是将变长参数列表中参数**逆序填容器中并返回**
-- 由于 `=` 需要赋值，所以每一个[[模板元编程#包展开和模式|模式]] 必须要有一个值, 这里使用 `,` 运算符表达一个 false 作为返回值，副作用是 `push_back(args)` 没有返回值，所以需要手动定义一个
+- 由于 `=` 需要赋值，所以每一个[[模板元编程#包展开和模式|模式]] 必须要有一个值, 这里使用 `,` 运算符表达一个 false 作为返回值，副作用是 `push_back(args)` ，它没有返回值，所以都过逗号手动返回一个
 - 由于我们不关心值，只关心副作用，所以这里使用[[模板元编程#弃值表达式]] `(void)` 忽略计算值
 - 可以看到展开后是左折叠形式，按道理应该括号改变了结合顺序，**结合顺序**为先左边后右边，确实左边的括号层级比右边的深，但 `=` 的**计算顺序**是先右边后左边
 - 每一个 `=` 先**计算**右边，自然就**逆序添加**元素了
