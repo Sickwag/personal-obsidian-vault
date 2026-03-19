@@ -37,8 +37,7 @@
               "title": "Cmake"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -96,7 +95,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -201,8 +201,9 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "8b35947d8e2f4db9",
+  "active": "4c555eb9549c61ba",
   "lastOpenFiles": [
+    "学习/ToolChain/Cmake.md",
     "Files & LongText/ChatLogWithAi/C++学习对话.md",
     "Files & LongText/Long code/C++ Code Snippets.md",
     "学习/Fragments/面试八股/针对简历的知识点复习.md",
@@ -237,7 +238,6 @@
     "学习/Fragments/面试八股/C++语法&特性.md",
     "学习/Fragments/编程相关/Prompt Project.md",
     "学习/其他专业书/Google C++ Style Guide.md",
-    "学习/ToolChain/Cmake.md",
     "Files & LongText/Long code/scripts.md",
     "test.exe",
     "test.cpp",
