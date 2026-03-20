@@ -100,13 +100,11 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -211,7 +209,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "4c555eb9549c61ba",
+  "active": "982f21257484af50",
   "lastOpenFiles": [
     "学习/Fragments/面试八股/针对简历的知识点复习.md",
     "学习/ToolChain/Cmake.md",
