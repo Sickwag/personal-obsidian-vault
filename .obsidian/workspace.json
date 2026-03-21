@@ -47,7 +47,8 @@
               "title": "新标签页"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -104,7 +105,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -209,7 +211,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "982f21257484af50",
+  "active": "4af3990283fffafb",
   "lastOpenFiles": [
     "学习/Fragments/面试八股/针对简历的知识点复习.md",
     "学习/ToolChain/Cmake.md",
