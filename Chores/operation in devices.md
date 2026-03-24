@@ -135,3 +135,23 @@ user-session=cinnamon
 [SeatDefaults]
 user-session=xfce4
 ```
+## qt creator 及 qt 编译的程序无法输入中文
+解决方法参考：
+https://www.cnblogs.com/ericling0529/p/18097102
+https://zhuanlan.zhihu.com/p/1940814172234429631
+添加完 qt 路径之后，出现找不到 ECMConfig.cmake，那么参考第二个连接，**先一个个用 apt 安装**，不要一次性全部安装，可能会起冲突
+全部安装完后应该就能构建成功，如果用 qt6 编译还有可能出现 qt 核心模块的 private 版本路径加载和 api 过期问题，ai 的解决方法为：
+> [!note]
+> 问题原因总结
+> 构建失败的主要原因是：
+>  1. Qt6 私有头文件路径问题：Qt6Gui_PRIVATE_INCLUDE_DIRS 变量没有正确设置，导致 moc 和编译器找不到 Qt
+> 	的私有头文件（如 qplatforminputcontextplugin_p.h、qglobal_p.h 等）。
+>  2. IID 宏定义问题：QPlatformInputContextFactoryInterface_iid 宏在 moc 解析时未被正确展开。
+> 解决方案
+> 做了以下修改：
+>  3. `qt6/CMakeLists.txt`：显式查找 Qt6GuiPrivate 和 Qt6CorePrivate 模块
+>  4. `qt6/platforminputcontext/CMakeLists.txt`：从 Qt6::GuiPrivate 和 Qt6::CorePrivate
+> 	目标获取私有头文件目录
+>  5. `qt6/platforminputcontext/main.h`：将 Q_PLUGIN_METADATA 中的 IID 宏改为字符串字面量
+
+可法这段总结给 ai，然后让他根据这些经验找到问题，修改即可
