@@ -13,13 +13,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Chores/operation in devices.md",
+                "file": "学习/其他专业书/QT样式表合集.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "operation in devices"
+              "title": "QT样式表合集"
             }
           }
         ]
@@ -187,6 +187,7 @@
   },
   "active": "4af3990283fffafb",
   "lastOpenFiles": [
+    "Chores/operation in devices.md",
     "学习/algorithm/刷题路线.md",
     "学习/Language/ScriptLangs/Bash shell.md",
     "学习/Language/ScriptLangs",
@@ -223,7 +224,6 @@
     "学习/Fragments/面试八股/开发情景题.md",
     "学习/Fragments/面试八股/C++语法&特性.md",
     "学习/Fragments/编程相关/Prompt Project.md",
-    "学习/其他专业书/Google C++ Style Guide.md",
     "test.exe",
     "test.cpp",
     "Files & LongText/Attachments/PixPin_2026-01-05_23-34-07.mp4",
