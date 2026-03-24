@@ -21,8 +21,19 @@
               "icon": "lucide-file",
               "title": "刷题路线"
             }
+          },
+          {
+            "id": "ac62543b98350027",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -79,8 +90,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -185,10 +195,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "4af3990283fffafb",
+  "active": "ac62543b98350027",
   "lastOpenFiles": [
-    "学习/Fragments/面试八股/针对简历的知识点复习.md",
     "学习/algorithm/刷题路线.md",
+    "学习/Fragments/面试八股/针对简历的知识点复习.md",
     "Files & LongText/Attachments/Pasted image 20260321134736.png",
     "Files & LongText/Attachments/Pasted image 20260321134731.png",
     "学习/ToolChain/Cmake.md",
