@@ -88,3 +88,8 @@ Msg parse_msg(const char* data) {
 }
 ```
 这个模块相当于将加解密/序列化/解序列化的操作合并处理
+
+## UI 布局
+### 设置组件在布局中对齐方式
+垂直布局中的组件如果想要水平对齐，就需使用 `QLayout::setAlignment()` 包含 widget 的那个布局上设置才生效，而不是在父布局上
+也就是说，setAligment 函数只会作用于其**直属 QWidget**，而不会作用于子布局中的子组件，细致调整可以通过 `QLayout::addWidget()` 第二个参数调整
