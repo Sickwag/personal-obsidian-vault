@@ -28,17 +28,32 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/ProjectsStudy/WriteByMyself/nanochat.md",
+                "file": "学习/其他专业书/QT6开发指南.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "nanochat"
+              "title": "QT6开发指南"
+            }
+          },
+          {
+            "id": "871d26f9d853779d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chores/operation in devices.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "operation in devices"
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -70,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "Q_OBJ",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -91,7 +106,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -201,9 +217,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "f4863d80a9b65ef6",
+  "active": "871d26f9d853779d",
   "lastOpenFiles": [
     "学习/其他专业书/QT样式表合集.md",
+    "学习/其他专业书/QT6开发指南.md",
     "学习/ProjectsStudy/WriteByMyself/nanochat.md",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
     "学习/ProjectsStudy/FromProjects/QTExamples.md",
@@ -239,7 +256,6 @@
     "学习/Fragments/面试八股/面试题.md",
     "学习/ProjectsStudy/FromProjects/FastLog.md",
     "学习/ProjectsStudy/FromProjects/Sudoku.md",
-    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
     "test.exe",
     "test.cpp",
     "Files & LongText/Attachments/PixPin_2026-01-05_23-34-07.mp4",

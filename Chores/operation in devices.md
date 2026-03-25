@@ -155,3 +155,4 @@ https://zhuanlan.zhihu.com/p/1940814172234429631
 >  5. `qt6/platforminputcontext/main.h`：将 Q_PLUGIN_METADATA 中的 IID 宏改为字符串字面量
 
 可法这段总结给 ai，然后让他根据这些经验找到问题，修改即可
+编译完成后进入 build 目录，使用 `make install`，系统会自动将组件安装到 qt 运行目录中，这样可以解决***qt 编译的程序无法输入中文的情况，似乎 qt creator 不能输入中文还是要手动复制*** 
