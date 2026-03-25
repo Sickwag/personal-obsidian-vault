@@ -1546,16 +1546,11 @@ cout << "pointer3.use_count() = " << pointer3.use_count() << endl; // 2
 ```
 `pointer`、`pointer2` 和 `pointer3` 都拥有独立的 `shared_ptr` 对象（占用各自的空间），但共享同一个控制块（控制块唯一地对应一块内存资源，这块资源每被引用一次，引用计数器就会+1，任何引用这块资源的 `shared_ptr` 的 `use_count` 方法都指向这个计数器）。
 - 控制块包含三个关键数据：
-  
   1. 对真实资源（如动态分配对象）的指针；
-  
   2. 当前引用计数和销毁时触发的清理逻辑。
-  
   3. 只要有一个 `shared_ptr` 存在，`shared_ptr` 指向的对象就不会被销毁。
 - 调用 `reset` 方法会使：
-  
   - 将`pointer2`指向null，同时**释放其对原资源的所有权**。
-  
   - 这相当于将该控制块的引用计数**减一**。
 ---
 使用 `std::make_shared<T>(...)` 创建 `shared_ptr` 会一次性分配内存给资源和控制块，比直接使用 `shared_ptr<T>(new T(...))` 更高效。
