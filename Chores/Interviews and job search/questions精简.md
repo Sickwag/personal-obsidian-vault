@@ -1,0 +1,2815 @@
+# 面试问题全集
+
+> 基于简历、职位描述和项目代码分析生成  
+> 项目：**nanochat** (跨平台分布式即时通讯系统) | **DevFoundations** (C++ 高性能组件库)  
+> 面试岗位：Linux/Android 软件开发实习生
+
+---
+
+## 目录
+
+- [一、C++ 基础与语言特性](#一 c-基础与语言特性)
+- [二、并发编程与多线程](#二并发编程与多线程)
+- [三、内存管理与优化](#三内存管理与优化)
+- [四、网络编程与系统架构](#四网络编程与系统架构)
+- [五、DevFoundations 项目深度问题](#五 devfoundations-项目深度问题)
+- [六、nanochat 项目深度问题](#六 nanochat-项目深度问题)
+- [七、系统设计场景题](#七系统设计场景题)
+- [八、工程实践与软技能](#八工程实践与软技能)
+- [九、补充问题](#九补充问题)
+
+---
+
+## 一、C++ 基础与语言特性
+
+### 问题 1：请解释一下 C++ 中的 RAII 机制，你在项目中是如何应用的？
+
+**考察点：**
+- 对 RAII（Resource Acquisition Is Initialization）的理解
+- 资源管理意识
+- 实际应用能力
+
+**推荐回答要点：**
+```
+1. RAII 核心思想：资源获取即初始化，更重要的是析构即释放，将资源的释放和生命周期绑定，利用栈对象析构函数自动释放资源
+2. 关键要素：
+   - 构造函数获取资源
+   - 析构函数释放资源
+   - 禁止拷贝或实现深拷贝/移动语义
+1. 优势：异常安全、代码简洁、避免资源泄漏
+```
+
+**可能的追问：**
+- 智能指针有哪些？区别是什么？
+- `std::unique_ptr` 如何实现移动语义？
+- 如果需要在类中存储可拷贝的智能指针怎么办？
+
+---
+
+### 问题 2：你提到了解 C++11 新特性，能说说你在项目中用到了哪些吗？
+
+**在你项目中的体现：**
+- **lambda 表达式**: 线程池任务提交、回调函数
+- **智能指针**: `unique_ptr`/`shared_ptr`/`weak_ptr`
+- **右值引用和移动语义**: `std::move` 在连接池中的应用，每一个连接只能被连接池接管，两者是拥有被拥有这种从属关系，所以使用 `unique_ptr`，而一个应用可能有多个地方需要操作数据库，共享关系所以连接池对象使用 shared_ptr 
+- **变长模板**: FastLog 的 `format<Level>(fmt, args...)`
+- **std::array**: MemoryPool 中的自由链表数组
+- **std::atomic**: 内存池和线程池中的无锁/少锁设计
+- **std::function/std::bind**: 线程池的任务封装
+
+**推荐回答要点：**
+```
+1. 智能指针：连接池用 unique_ptr 管理连接，线程池用 shared_ptr 管理任务
+2. 右值引用：连接池归还时使用 std::move 避免拷贝
+3. Lambda 表达式：
+   - 线程池：submit_task 传入 lambda 任务
+   - 条件变量等待谓词：cv.wait(lock, []{ return condition; })
+4. 变长模板 + std::format：FastLog 的类型安全格式化输出
+5. std::atomic：内存池自旋锁使用 atomic_flag
+6. std::array：替代裸数组，更安全
+7. std::function/bind：线程池封装任意可调用对象
+```
+
+---
+
+### 问题 3：你在 FastLog 中使用了 C++20 的 std::format，它和 printf/sprintf 有什么区别？
+
+**推荐回答要点：**
+```
+1. 类型安全：
+   - printf 依赖格式字符串，类型不匹配会导致未定义行为
+   - std::format 编译期检查类型匹配
+2. 扩展性：
+   - std::format 支持自定义类型的 formatter 特化
+   - printf 只能处理基本类型
+1. 现代 C++ 风格：
+   - 与 std::string 无缝集成
+   - 支持命名参数（某些实现）
+```
+
+---
+
+### 问题 4：解释一下你在内存池中使用的自旋锁，它和互斥锁有什么区别？
+
+**考察点：**
+- 锁机制的理解
+- 性能优化意识
+
+**在你项目中的体现：**
+- **DevFoundations/memory_pool/v3/include/CentralCache.h**:
+```cpp
+std::array<std::atomic_flag, FREE_LIST_SIZE> locks_;  // 自旋锁
+```
+- **CentralCache.cpp**:
+```cpp
+while(locks_[index].test_and_set(std::memory_order_acquire)) {
+    std::this_thread::yield();  // 线程让步
+}
+```
+
+**推荐回答要点：**
+```
+1. 自旋锁原理：
+   - 忙等待，不进入睡眠状态
+   - 使用原子操作 (test_and_set) 实现
+2. 与互斥锁的区别：
+   - 互斥锁：获取失败时线程睡眠，涉及用户态/内核态切换
+   - 自旋锁：持续循环检查，不切换上下文
+3. 适用场景：
+   - 自旋锁：临界区短、锁竞争不激烈
+   - 互斥锁：临界区长、可能长时间持有锁
+自旋锁的原理比较简单，如果持有锁的线程能在短时间内释放锁资源，那么那些等待竞争锁的线程就不需要做内核态和用户态之间的切换进入阻塞状态，它们只需要等一等(自旋)，等到持有锁的线程释放锁之后即可获取，这样就避免了用户进程和内核切换的消耗。
+```
+但是如果锁的竞争激烈，或者持有锁的线程需要长时间占用锁执行同步块，这时候就不适合使用自旋锁了，因为自旋锁在获取锁前一直都是占用 cpu 做无用功，占着 XX 不 XX，同时有大量线程在竞争一个锁，会导致获取锁的时间很长，线程自旋的消耗大于线程阻塞挂起操作的消耗，其它需要 cpu 的线程又不能获取到 cpu，造成 cpu 的浪费。所以这种情况下我们要关闭自旋锁。
+参考 https://www.cnblogs.com/cxuanBlog/p/11679883.html
+**可能的追问：**
+- 什么是内存序？有哪些内存序？
+- 为什么自旋锁适合短临界区？
+- `std::atomic_flag` 和 `std::atomic<bool>` 有什么区别？
+
+---
+
+### 问题 5：你在项目中大量使用了模板，能解释一下模板元编程是什么吗？
+
+**推荐回答要点：**
+```
+1. 模板元编程定义：
+   - 不同类/函数的代码生成，减少编写代码工作量
+   - 在编译期进行计算，提高运行时速度
+1. 优势：
+   - 类型安全：编译期检查
+   - 性能优化：编译期计算
+   - 代码复用：泛型编程
+4. 现代 C++ 改进：
+   - C++17: if constexpr
+   - C++20: concept 约束更清晰
+```
+
+---
+
+### 问题 6：你在 nanojson 中使用了类型擦除技术，能解释一下什么是类型擦除吗？
+这是 OOP 多态特性的一种体现，参考 [[#C++的多态形式|C++的多态形式]]
+**在你项目中的体现：**
+- **DevFoundations/thread_pool/include/threadpool.h**:
+```cpp
+class Any {
+    class Base { virtual ~Base() = default; };
+    template <typename T> class Derive : public Base { T data_; };
+    std::unique_ptr<Base> base_;
+};
+```
+
+**推荐回答要点：**
+```
+1. 类型擦除定义：
+   - 隐藏具体类型，提供统一接口
+   - 运行时多态的另一种实现方式
+2. 实现方式：
+   - 基类指针指向派生类对象
+   - 通过虚函数调用具体实现
+1. 与虚函数的区别：
+   - 虚函数：编译期知道可能的类型集合
+   - 类型擦除：运行时可以存储任意类型
+   用于NanoJson中存储Json键值对中不同类型的值
+```
+
+---
+
+### 问题 7：你在连接池中使用了 boost::json 进行配置解析，JSON 解析的性能瓶颈通常在哪里？
+
+**考察点：**
+- 对 JSON 解析原理的理解
+- 性能分析能力
+
+**在你项目中的体现：**
+- **DevFoundations/nanojson**: 你自己实现了一个 JSON 库
+- 性能对比数据显示 nanojson 在数组/对象访问上优于 boost::json
+
+**推荐回答要点：**
+```
+1. JSON 解析的主要开销：
+   - 字符串解析：转义字符处理、内存分配
+   - 数字解析：浮点数精度处理
+   - 内存分配：频繁的小对象分配
+   - 类型判断：运行时类型检查
+2. nanojson 的优化：
+   - O(1) 数组索引访问（使用 std::vector）
+   - 类型擦除减少虚函数调用
+   - 自定义删除器自动管理资源
+3. 性能对比结果：
+   - 数组访问：nanojson 比 boost::json 快 4.99 倍
+   - 对象访问：nanojson 比 boost::json 快 1.12 倍
+   - 解析性能：boost::json 更快（更成熟的优化）
+4. 进一步优化方向：
+   - SIMD 加速字符串解析
+   - 内存池减少分配开销
+   - 零拷贝解析（SAX 风格）
+```
+
+---
+
+### 问题 8：你的 NanoJson 中为什么使用了你选择的这些容器？
+
+**推荐回答要点：**
+```
+1. 序列式容器：
+   - vector: 随机访问 O(1), 尾部插入 O(1) 摊销，中间插入 O(n)
+   - list: 双向链表，插入删除 O(1), 访问 O(n)
+   - array: 固定大小数组，所有操作同 vector
+2. 关联式容器：
+   - map: 红黑树，查找/插入/删除 O(log n)
+   - unordered_map: 哈希表，平均 O(1), 最坏 O(n)
+3. 项目中的选择：
+   - json_object 用 map: 需要有序遍历
+   - Router 用 unordered_map: 需要 O(1) 查找
+   - PageCache 用 map: 需要 lower_bound 查找
+   - 日志缓冲用 list: 频繁头尾操作
+4. 内存布局考虑：
+   - vector/array 连续内存，cache 友好
+   - list/map 节点分散，cache 不友好
+```
+尽量使用连续内存的容器，list/map 这种容器在 json 文件很大的时候缓存命中率很低
+
+## 二、并发编程与多线程
+
+### 问题 9：请详细解释一下你的线程池是如何工作的？
+
+**考察点：**
+- 线程池设计理解
+- 任务调度机制
+- 线程同步
+
+**在你项目中的体现：**
+- **DevFoundations/thread_pool/include/threadpool.h**: 完整的线程池实现
+- **DevFoundations/thread_pool/src/threadpool.cpp**: 核心逻辑
+
+**推荐回答要点：**
+```
+1. 核心组件：
+   - 线程数组：vector<unique_ptr<Thread>> 管理工作线程
+   - 任务队列：queue<shared_ptr<Task>> 存储待执行任务
+   - 同步机制：mutex + 2 个 condition_variable
+   - 信号量：自定义 Semaphore 用于 Result 同步
+2. 工作流程：
+   a) 提交任务：
+      - 加锁，检查队列是否已满
+      - 任务入队，task_size_++
+      - 通知 cv_not_empty_
+   b) 工作线程：
+      - 等待 cv_not_empty_
+      - 获取任务，task_size_--
+      - 通知 cv_not_full_
+      - 执行 task->exec()
+3. 两种模式：
+   - ModeFixed: 固定线程数
+   - ModeCached: 动态缓存模式（代码中预留）
+4. 优雅关闭：
+   - 析构时等待任务完成
+   - 使用 atomic 标志位
+5. 性能指标：
+   - 吞吐量：~333,000 任务/秒
+   - 小任务性能：27ms/100 任务
+```
+
+**可能的追问：**
+- 为什么使用两个条件变量？->一个 not_full 检测，一个 not_empty，让线程数量位置在一个稳定的区间
+- 如果任务执行抛出异常会怎样？
+- 如何检测线程泄漏？
+
+---
+
+### 问题 10：你的连接池是如何实现优雅关闭的？
+**在你项目中的体现：**
+- **DevFoundations/connection_pool/include/mysqlconnectionpool.h**:
+```cpp
+std::atomic<bool> shutdown_;  // for elegant shutdown this pool
+```
+- **DevFoundations/connection_pool/src/mysqlconnectionpool.cpp**:
+```cpp
+MysqlConnectionPool::~MysqlConnectionPool() {
+    shutdown_.store(true);
+    cv_connections_available_.notify_all();
+    cv_pool_needs_filling_.notify_all();
+    if(producer_.joinable()) producer_.join();
+    if(recycler_.joinable()) recycler_.join();
+}
+```
+
+**推荐回答要点：**
+```
+1. 关闭流程：
+   a) 设置一个无锁变量 shutdown 标志为 true
+   b) 通知所有等待的条件变量
+   c) 等待工作线程 join
+   d) 清理所有连接
+2. 工作线程实际上是一个死循环，在循环开始时检测shutdown表示是否为true
+   - produce_connection: while(!shutdown_.load())
+   - recycle_connection: while(!shutdown_.load())
+3. 为什么用 atomic<bool>:
+   - 无锁操作，线程安全
+   - 避免数据竞争
+1. 连接清理：
+   - 遍历队列 pop 所有连接
+   - unique_ptr 自动释放资源
+```
+
+---
+
+### 问题 11：条件变量的 wait 和 wait_for 有什么区别？你在项目中是如何选择的？
+
+**考察点：**
+- 条件变量的深入理解
+- 超时处理机制
+
+**在你项目中的体现：**
+- **DevFoundations/thread_pool/src/threadpool.cpp**:
+```cpp
+cv_not_full_.wait_for(lock, std::chrono::seconds(1), [...])
+```
+- **DevFoundations/connection_pool/src/mysqlconnectionpool.cpp**:
+```cpp
+cv_connections_available_.wait_for(lock, std::chrono::milliseconds(timeout_), [...])
+```
+
+**推荐回答要点：**
+```
+1. 区别：
+   - wait: 可能会导致无限期等待或者假唤醒
+   - wait_for: 等待指定时间，超时自动返回
+2. 返回值：
+   - wait: void
+   - wait_for: bool，true 表示条件满足，false 表示超时
+1. 最佳实践：
+   - 总是使用带谓词的 wait
+   - 考虑使用 wait_for 避免死锁
+   - 设置谓词可以避免假唤醒，也方便处理超时情况
+```
+
+---
+
+### 问题 12：你在内存池中提到了"三层缓存架构"，请详细解释一下它的工作原理？
+
+**考察点：**
+- 内存管理架构设计
+- 性能优化思路
+- 缓存层次理解
+
+**在你项目中的体现：**
+- **DevFoundations/memory_pool/v3**: 完整的三层缓存实现
+- 架构：ThreadCache → CentralCache → PageCache
+
+**推荐回答要点：**
+```
+1. 三层架构：
+   ┌─────────────────────────────────────┐
+   │ ThreadCache (线程本地缓存)           │
+   │ - 每个线程独立的自由链表数组         │
+   │ - 无锁分配，最快                     │
+   └─────────────────────────────────────┘
+                    ↓
+   ┌─────────────────────────────────────┐
+   │ CentralCache (中心缓存)              │
+   │ - 自旋锁保护                         │
+   │ - 批量分配/回收                      │
+   └─────────────────────────────────────┘
+                    ↓
+   ┌─────────────────────────────────────┐
+   │ PageCache (页缓存)                   │
+   │ - 以 4KB 页为单位向系统申请           │
+   │ - mmap 分配内存                      │
+   └─────────────────────────────────────┘
+
+3. 关键优化：
+   - 内存对齐：8 字节对齐，减少 cache miss
+   - 批量操作：减少锁竞争
+   - 自旋锁：短临界区，减少上下文切换
+```
+---
+
+### 问题 13：你在 FastLog 中使用了双缓冲异步写入，请解释一下它的工作原理？
+
+**考察点：**
+- 异步日志设计
+- 缓冲机制
+- 生产者 - 消费者模式
+
+**在你项目中的体现：**
+- **DevFoundations/fastlog/include/logger.hpp**:
+```cpp
+logbuf_ptr current_buffer_;
+std::list<logbuf_ptr> empty_buffers_{};
+std::list<logbuf_ptr> full_buffers_{};
+```
+
+**推荐回答要点：**
+```
+empty缓冲区用来存放还没有写入日志的内存(std::array)，full存放装满了的，current存放正在写的
+- current写完放入full，full满了向empty申请
+- empty不够了条件变量通知->将full中所有内容写入文件
+- full中已经写入完的容器clear之后放回empty
+- 不同的容器转交，写入文件工作时用锁保护
+```
+
+---
+
+### 问题 14：你在项目中使用了 muduo 网络库，能解释一下 Reactor 模式吗？
+
+**考察点：**
+- 网络编程模型理解
+- 事件驱动架构
+
+**在你项目中的体现：**
+- **nanochat/server**: 使用 muduo 的 EventLoop 和 TcpServer
+- **DevFoundations/nanoserver**: 基于 muduo Reactor 模式
+
+**推荐回答要点：**
+```
+1. Reactor 模式核心：
+   - 事件收集器（epoll/kqueue）
+   - 事件分发器（EventLoop）
+   - 事件处理器（Channel/Connection）
+2. muduo 的实现：
+   - EventLoop: 事件循环，调用 epoll_wait
+   - TcpServer: 封装 acceptor 和连接管理
+   - Channel: 封装 fd 和事件回调
+3. 工作流程：
+   a) 注册事件：
+      - TcpServer 监听端口
+      - 新连接注册到 EventLoop
+   b) 事件循环：
+      - epoll_wait 等待事件
+      - 分发到对应回调
+      - on_connection / on_message
+4. 与 Proactor 的区别：
+   - Reactor: 事件驱动，应用处理 I/O
+   - Proactor: 异步 I/O，内核处理 I/O
+5. 项目中的应用：
+   - nanochat: 处理客户端连接和消息
+   - NanoServer: HTTP 请求处理
+```
+
+**可能的追问：**
+- epoll 和 select/poll 有什么区别？
+- 什么是 LT 模式和 ET 模式？
+- 如何处理百万并发连接？
+
+---
+
+### 问题 15：你在连接池中使用了生产者 - 消费者模式，请解释一下它的实现？
+
+**考察点：**
+- 经典并发模式
+- 条件变量应用
+
+**在你项目中的体现：**
+- **DevFoundations/connection_pool/src/mysqlconnectionpool.cpp**:
+```cpp
+void produce_connection();   // 生产者
+void recycle_connection();   // 消费者/回收者
+```
+
+**推荐回答要点：**
+```
+1. 角色划分：
+   - 生产者：produce_connection 线程，创建新连接
+   - 消费者：get_connection 调用者，获取连接
+   - 回收者：recycle_connection 线程，回收空闲连接
+2. 同步机制：
+   - mutex_: 保护 connection_queue_
+   - cv_connections_available_: 连接可用通知
+   - cv_pool_needs_filling_: 需要生产连接通知
+3. 生产流程：
+   a) 等待 cv_pool_needs_filling_
+   b) 检查连接数 < min_size_
+   c) add_connection() 创建连接
+   d) notify cv_connections_available_
+4. 消费流程：
+   a) 等待 cv_connections_available_
+   b) 从队列取出连接
+   c) 如果队列 < min_size_，notify 生产者
+5. 回收流程：
+   a) 定期检查连接空闲时间
+   b) 超过 max_idle_time_ 的连接被销毁
+   c) 连接数 < min_size_ 时通知生产者
+6. 优雅关闭：
+   - shutdown_ 标志位
+   - notify_all 唤醒所有线程
+```
+
+---
+
+## 三、内存管理与优化
+
+### 问题 16：为什么要做内存池？内存池解决了什么问题？
+
+**考察点：**
+- 内存管理理解
+- 性能优化动机
+
+**在你项目中的体现：**
+- **DevFoundations/memory_pool**: 完整的内存池实现和性能测试
+
+**推荐回答要点：**
+```
+1. 问题背景：
+   a) 动态内存分配开销大：
+      - malloc/free 需要系统调用
+      - 进入内核态成本高
+   b) 内存碎片：
+   	  - 分配的小对象使用8字节对齐，方便管理
+      - 混合大小的内存频繁分配而不统一管理会导致内存利用率下降，分配时间也不稳定（index查找计算复杂）
+	  - 一次性获取大块内存然后切片分组管理，重复利用可以减少**系统调用次数**，不是磁盘IO
+	  - 三级缓存中最大的页缓存由更小一级的span组成，当空闲且相邻的span达到一定数量时合并为一个页一次返回
+```
+
+---
+### 问题 18：什么是内存对齐？为什么要内存对齐？
+
+**考察点：**
+- 计算机体系结构理解
+- 性能优化原理
+
+**在你项目中的体现：**
+- **DevFoundations/memory_pool/v3/include/Common.h**:
+```cpp
+constexpr size_t ALIGNMENT = 8;
+constexpr size_t roundUp(size_t bytes) {
+    return (bytes + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
+}
+```
+
+**推荐回答要点：**
+```
+1. 为什么要对齐：
+   a) CPU 访问效率：
+      - 对齐的数据一次读取完成
+      - 未对齐可能多次访问
+   b) 硬件要求：
+      - 某些架构强制对齐
+      - 未对齐会触发异常
+
+
+2. 项目中的实现：
+   - ALIGNMENT = 8 (8 字节对齐)
+   - roundUp 函数向上取整
+   - 公式：(n + align - 1) & ~(align - 1)
+
+4. 示例：
+   - 请求 17 字节 → 对齐后 24 字节
+   - 请求 33 字节 → 对齐后 40 字节
+
+5. 代价：
+   - 少量内存浪费（内部碎片）
+   - 换取性能提升
+```
+
+**可能的追问：**
+- 解释一下 `(n + align - 1) & ~(align - 1)` 的原理？
+- 什么是 cache line？
+- 如何检测内存对齐问题？
+---
+### 问题 21：你在 FastLog 中如何实现 250 万行/秒的吞吐量？
+
+**考察点：**
+- 高性能日志设计
+- 性能优化技巧
+
+**在你项目中的体现：**
+- **DevFoundations/fastlog**: 异步日志库
+
+**推荐回答要点：**
+```
+1. 关键优化：
+   a) 双缓冲机制：
+      - 减少锁竞争
+      - 批量写入
+   b) 异步写入：
+      - 独立工作线程单独管理不同缓冲区的文件写入，缓冲区交换，日记记录太快的丢弃操作
+      - 记录日志线程是无干扰的，只管记录
+	  - 这样批量写入减少磁盘IO和线程上下文切换，只有在操作缓冲区时才会用锁保护（缓冲区也只是指针）
+   c) 格式化优化：
+      - 使用 std::format
+      - 编译期解析格式串
+```
+
+---
+
+## 四、网络编程与系统架构
+### 问题 23：请解释一下你的 HTTP 服务器是如何处理一个请求的？
+
+	**考察点：**
+- 系统架构理解
+- 请求处理流程
+
+**在你项目中的体现：**
+- **DevFoundations/nanoserver/HttpServer/include/http/HttpServer.h**: 完整服务器架构
+
+**推荐回答要点：**
+```
+1. 整体架构：
+   ┌─────────────────────────────────────┐
+   │         Application Layer            │
+   ├─────────────────────────────────────┤
+   │         Router Layer                 │
+   ├─────────────────────────────────────┤
+   │      Middleware Chain                │
+   ├─────────────────────────────────────┤
+   │         HTTP Parser                  │
+   ├─────────────────────────────────────┤
+   │        SSL/TLS Layer                 │
+   ├─────────────────────────────────────┤
+   │    Network Layer (muduo)             │
+   └─────────────────────────────────────┘
+
+2. 请求处理流程：
+   a) 网络层：
+      - muduo TcpServer 接收连接
+      - on_message 回调接收数据
+   b) 协议解析：
+      - HTTP 解析 (Boost.Beast)
+      - 提取方法、路径、头部
+   c) 中间件处理：
+      - process_before 正向处理请求
+      - CORS、认证等
+   d) 路由匹配：
+      - 静态路由 O(1) 查找
+      - 动态路由正则匹配
+   e) 业务处理：
+      - 调用注册的 handler
+      - 生成响应
+   f) 中间件响应：
+      - process_after 反向处理
+   g) 发送响应：
+      - 序列化 HTTP 响应
+      - 通过 TcpConnection 发送
+
+3. 关键组件：
+   - EventLoop: 事件循环
+   - Router: 路由分发
+   - MiddlewareChain: 中间件链
+   - SessionManager: 会话管理
+```
+
+---
+
+### 问题 24：你在 nanochat 项目中如何实现消息的端到端加密？
+
+**考察点：**
+- 加密算法理解
+- 安全通信设计
+
+**在你项目中的体现：**
+- **nanochat/utils/include/encryption.h**: OpenSSL 封装
+
+**推荐回答要点：**
+```
+1. 加密方案：
+   - 使用 OpenSSL 库
+   - RSA 非对称加密
+   - 端到端加密
+
+3. 加密流程：
+   a) 发送方：
+      - 获取接收方公钥
+      - 使用 Encryptor 加密消息
+      - 发送加密数据
+   b) 接收方：
+      - 使用自己的私钥
+      - Decryptor 解密消息
+      - 获取原始内容
+
+5. 安全考虑：
+   - 密钥本地存储
+   - 不传输私钥
+   - 每次会话可更换密钥
+```
+
+---
+
+### 问题 25：你在 NanoServer 中如何实现中间件链？
+
+**考察点：**
+- 设计模式应用
+- 责任链模式理解
+
+**在你项目中的体现：**
+- **DevFoundations/nanoserver/HttpServer/include/middleware/MiddlewareChain.h**:
+
+**推荐回答要点：**
+```
+1. 设计模式：
+   - 责任链模式 (Chain of Responsibility)
+   - 中间件可插拔
+
+2. 接口定义：
+   class Middleware {
+       virtual void process_before(RequestInfo& request) = 0;
+       virtual void process_after(ResponseInfo& response) = 0;
+   };
+
+3. 中间件链：
+   class MiddlewareChain {
+       std::vector<std::shared_ptr<Middleware>> middlewares_;
+       
+       void process_before(RequestInfo& request) {
+           for(auto& mw : middlewares_) {
+               mw->process_before(request);
+           }
+       }
+       
+       void process_after(ResponseInfo& response) {
+           // 反向执行，后注册的先处理
+           for(auto it = middlewares_.rbegin(); it != middlewares_.rend(); ++it) {
+               (*it)->process_after(response);
+           }
+       }
+   };
+
+4. 使用示例：
+   - CORS 中间件：添加跨域头部
+   - 认证中间件：验证 token
+   - 日志中间件：记录请求信息
+
+5. 优势：
+   - 解耦业务逻辑和横切关注点
+   - 中间件可复用
+   - 灵活组合
+```
+
+---
+### 问题 27：你在项目中是如何使用 SSL/TLS 的？
+
+**考察点：**
+- 网络安全
+- SSL/TLS 理解
+
+**在你项目中的体现：**
+- **DevFoundations/nanoserver/HttpServer/include/ssl/**: SSL 相关实现
+
+**推荐回答要点：**
+```
+1. SSL 支持：
+   - 基于 OpenSSL
+   - HTTPS 加密传输
+   - 完整的握手流程
+
+2. SslContext 封装：
+   - 管理证书和私钥
+   - 配置 SSL 选项
+   - 创建 SSL 连接
+
+3. 工作流程：
+   a) 服务器启动：
+      - 加载证书文件
+      - 创建 SSL_CTX
+      - 配置验证模式
+   b) 新连接：
+      - 创建 SSL 对象
+      - 执行握手
+      - 加密通信
+   c) 数据传输：
+      - SSL_read/SSL_write
+      - 自动加解密
+
+4. 证书管理：
+   - PEM 格式证书
+   - 私钥保护
+   - 支持证书链
+
+5. 性能考虑：
+   - SSL 会话复用
+   - 减少握手开销
+```
+
+---
+
+## 五、DevFoundations 项目深度问题
+
+### 问题 29：你的内存池有三个版本 (v1/v2/v3)，它们之间有什么区别？
+
+**考察点：**
+- 迭代优化能力
+- 架构演进理解
+
+**在你项目中的体现：**
+- **DevFoundations/memory_pool/v1, v2, v3**: 三个版本的实现
+
+**推荐回答要点：**
+```
+1. V1 - 基础版本：
+   - 单一自由链表管理所有内存块
+   - 简单但效率低
+   - 所有大小对象混在一起
+
+2. V2 - 分级版本：
+   - 按内存大小分级管理
+   - 多个自由链表数组
+   - 减少内部碎片
+   - 改进：相同大小对象放同一链表
+
+3. V3 - 三层缓存版本：
+   - ThreadCache: 线程本地缓存，无锁分配
+   - CentralCache: 中心缓存，自旋锁保护
+   - PageCache: 页缓存，mmap 申请
+   - 批量操作减少锁竞争
+   - 内存对齐提高 cache 命中率
+   - 性能接近 new/delete
+```
+---
+
+### 问题 31：你的 FastLog 支持哪些日志级别？如何实现彩色输出？
+
+**考察点：**
+- 日志库设计
+- 终端控制
+
+**在你项目中的体现：**
+- **DevFoundations/fastlog/include/loglevel.hpp**: 日志级别定义
+
+**推荐回答要点：**
+```
+1. 日志级别：
+   - Trace: 最详细调试信息
+   - Debug: 调试信息
+   - Info: 一般信息
+   - Warn: 警告
+   - Error: 错误
+   - Fatal: 致命错误
+
+2. 彩色输出：
+   - ANSI 转义序列
+   - 不同级别不同颜色
+   - 例如：
+     - Error: 红色 "\033[31m"
+     - Warn: 黄色 "\033[33m"
+     - Info: 绿色 "\033[32m"
+     - Debug: 蓝色 "\033[34m"
+
+3. 重置格式：
+   - "\033[0m" 重置所有格式
+   - 每条日志结束后重置
+```
+
+---
+
+### 问题 32：你的线程池中的 Result 类是如何工作的？
+
+**考察点：**
+- 异步任务结果获取
+- 同步机制设计
+
+**在你项目中的体现：**
+- **DevFoundations/thread_pool/include/threadpool.h**:
+```cpp
+class Result {
+    Any any_;
+    Semaphore sem_;
+    std::shared_ptr<Task> task_;
+};
+```
+
+**推荐回答要点：**
+```
+1. Result 的作用：
+   - 获取异步任务的返回值
+   - 同步等待任务完成
+
+2. 核心组件：
+   - Any: 存储任意类型的返回值
+   - Semaphore: 同步信号量
+   - shared_ptr<Task>: 指向任务对象
+
+3. 工作流程：
+   a) 提交任务：
+      - 创建 Result 对象
+      - Result 持有 Task 的 shared_ptr
+      - Task 持有 Result 的指针
+   b) 任务执行：
+      - Task::run() 执行用户代码
+      - 返回值包装成 Any
+      - Result::set_value() 存储结果
+      - sem_.post() 发出信号
+   c) 获取结果：
+      - 调用 Result::get()
+      - sem_.wait() 等待信号
+      - 返回 Any
+      - any_cast<T> 转换类型
+
+4. 同步机制：
+   - 信号量初始为 0
+   - get() 时 wait
+   - set_value() 时 post
+   - 确保先完成后获取
+```
+
+---
+### 问题 34：你在 NanoServer 中如何处理动态路由（带参数的路由）？
+
+**考察点：**
+- 正则表达式应用
+- 路由参数提取
+
+**在你项目中的体现：**
+- **DevFoundations/nanoserver/HttpServer/include/router/Router.h**:
+```cpp
+std::regex convert_to_regex(const std::string& pathPattern) {
+    std::string regex_pattern = "^" + 
+        std::regex_replace(pathPattern, std::regex(R"(/:([^/]+))"), R"(/([^/]+))") + "$";
+    return std::regex(regex_pattern);
+}
+```
+
+**推荐回答要点：**
+```
+预编译正则表达式，将动态路由中可能包含参数的位置捕获，然后做对应的解析
+3. 路由匹配流程：
+   a) 先查找静态路由 (O(1))
+   b) 未找到则遍历动态路由
+   c) 使用 regex_match 匹配
+   d) 提取参数到 request
+```
+
+---
+### 问题 36：你的线程池支持哪两种模式？有什么区别？
+
+**考察点：**
+- 线程池模式设计
+- 动态线程管理
+
+**在你项目中的体现：**
+- **DevFoundations/thread_pool/include/threadpool.h**:
+```cpp
+enum class PoolMode { ModeFixed, ModeCached };
+void set_mode(PoolMode mode);
+```
+
+**推荐回答要点：**
+```
+1. 两种模式：
+   a) ModeFixed (固定模式):
+      - 启动时创建固定数量线程
+      - 线程数不变
+      - 适合负载稳定的场景，减少分配线程时间和上下文切换成本
+
+   b) ModeCached (缓存模式):
+      - 线程数可动态调整
+      - 空闲线程超时销毁
+      - 适合负载波动的场景，降低内存/CPU占用
+```
+
+---
+
+## 六、nanochat 项目深度问题
+
+### 问题 37：请介绍一下 nanochat 项目的整体架构？
+
+**考察点：**
+- 系统架构理解
+- 项目全局视角
+
+**在你项目中的体现：**
+- **nanochat/**: 完整的即时通讯系统
+
+**推荐回答要点：**
+```
+1. 项目概述：
+   - 跨平台分布式即时通讯系统
+   - 类似 QQ 的 UI 界面
+   - 支持单聊、群聊、文件传输
+
+2. 整体架构：
+   ┌──────────────────────────────────────┐
+   │            Client (Qt)               │
+   │  ┌────────────────────────────────┐  │
+   │  │  UI 层：MainWindow, Widgets    │  │
+   │  ├────────────────────────────────┤  │
+   │  │  业务层：ClientSession         │  │
+   │  ├────────────────────────────────┤  │
+   │  │  数据层：LocalDatabase         │  │
+   │  └────────────────────────────────┘  │
+   └──────────────────────────────────────┘
+                    │ TCP/WebSocket
+   ┌──────────────────────────────────────┐
+   │            Server (muduo)            │
+   │  ┌────────────────────────────────┐  │
+   │  │  网络层：TcpServer             │  │
+   │  ├────────────────────────────────┤  │
+   │  │  业务层：MainServer            │  │
+   │  ├────────────────────────────────┤  │
+   │  │  数据层：MySQL + Redis         │  │
+   │  └────────────────────────────────┘  │
+   └──────────────────────────────────────┘
+
+3. 核心功能：
+   - 用户注册/登录
+   - 好友管理
+   - 群组管理
+   - 实时聊天
+   - 文件传输
+   - 离线消息
+
+4. 技术栈：
+   - 客户端：Qt + SQLite
+   - 服务端：muduo + MySQL + Redis
+   - 加密：OpenSSL
+```
+
+---
+### 问题 39：你的客户端是如何处理离线消息的？
+
+**考察点：**
+- 离线消息机制
+- 数据同步
+
+**在你项目中的体现：**
+- **nanochat/client/include/ClientSession.h**:
+
+**推荐回答要点：**
+```
+1. 离线消息场景：
+   - 用户 A 发送消息时，用户 B 不在线
+   - 消息需要暂存
+   - 用户 B 上线后接收
+
+1. 同步流程：
+   a) 客户端上线：
+      - 发送 GetOfflineMessagesRequest
+      - 携带本地最大 msg_id
+   b) 服务端：
+      - 查询 Redis/MySQL
+      - 返回 msg_id 之后的消息
+   c) 客户端：
+      - 接收消息
+      - 存入 SQLite
+      - 更新 UI
+
+2. 去重机制：
+   - 本地记录已处理的最大 msg_id
+   - 只处理新消息
+```
+
+---
+### 问题 44：你的项目是如何实现跨平台部署的？
+
+**考察点：**
+- 跨平台能力
+- 部署方案
+
+**在你项目中的体现：**
+- **简历描述**: "通过 Qt CMake 脚本+dpkg-deb 打包客户端，服务端采用静态链接编译方式"
+- **nanochat/CMakeLists.txt**: CMake 配置
+
+**推荐回答要点：**
+```
+1. 客户端打包 (Linux):
+   a) CMake 配置：
+      - 设置 Qt 依赖
+      - 配置安装路径
+   b) dpkg-deb 打包：
+      - 创建 DEBIAN/control 文件
+      - 指定依赖和版本
+      - 生成 .deb 安装包
+   c) 一键安装：
+      dpkg -i nanochat.deb
+
+2. 服务端静态链接：
+   a) 编译选项：
+      -static 或 -static-libgcc -static-libstdc++
+   b) 优势：
+      - 无依赖
+      - 任意 Linux 发行版可运行
+   c) 注意：
+      - 文件体积较大
+      - 某些库不支持静态链接
+
+3. 跨平台考虑：
+   - Windows: 使用 Qt Installer Framework
+   - macOS: 使用 appbundle
+   - Linux: deb/rpm/AppImage
+
+4. 版本管理：
+   - 语义化版本号
+   - 自动更新机制
+```
+
+---
+
+## 七、系统设计场景题
+
+### 问题 45：如果要你设计一个支持百万并发的 IM 系统，你会如何设计？
+
+**考察点：**
+- 系统架构能力
+- scalability 设计
+
+**推荐回答要点：**
+```
+1. 架构分层：
+   - 客户端层：Web / Mobile / Desktop
+   - 接入层：Nginx / LVS + 自研 Gateway
+   - 逻辑层：消息服务 / 用户服务 / 群组服务
+   - 数据层：Redis Cluster + MySQL 分库分表
+
+2. 关键技术点：
+   a) 连接管理：
+      - 分布式 Gateway 集群
+      - 心跳保活
+   b) 消息路由：
+      - 一致性哈希
+      - 用户 - 服务器映射 (Redis)
+      - 消息队列削峰
+   c) 消息存储：
+      - 使用qt的读写锁而不是标准库的lock_guard
+      - 冷热数据分离
+      - 一台服务器专门用来做数据库和消息同步
+   d) 高可用：
+      - 多活部署
+      - 故障转移
+      - 数据备份
+```
+
+### 问题 46：如果服务器突然收到大量请求，你会如何应对？
+
+**考察点：**
+- 限流熔断
+- 系统保护
+
+**推荐回答要点：**
+```
+1. 问题识别：
+   - 监控告警 (QPS 突增)
+   - 响应时间变长
+   - 错误率上升
+
+2. 应对措施：
+   a) 限流：
+      - 令牌桶/漏桶算法
+      - 按用户/IP 限流
+      - 降级非核心功能
+   b) 熔断：
+      - 下游服务故障时熔断
+      - 快速失败
+      - 自动恢复
+   c) 降级：
+      - 关闭非核心功能
+      - 返回缓存数据
+      - 简化业务逻辑
+   d) 扩容：
+      - 自动扩容 (K8s HPA)
+      - 负载均衡
+      - 数据库读写分离
+
+3. 在你的项目中：
+   - 连接池的 max_size 限制
+   - 线程池的 task_que_max_threshold
+   - 可以添加限流中间件
+```
+
+---
+
+### 问题 47：如何设计一个高可用的数据库连接池？
+
+**考察点：**
+- 高可用设计
+- 连接池优化
+
+**推荐回答要点：**
+```
+1. 核心功能：
+   - 连接管理
+   - 健康检查
+   - 故障转移
+   - 负载均衡
+
+2. 高可用设计：
+   a) 多主库支持：
+      - 配置多个数据库地址
+      - 主库故障自动切换
+   b) 健康检查：
+      - 定期 ping 数据库
+      - 检测连接状态
+      - 自动剔除坏连接
+   c) 连接预热：
+      - 启动时预创建连接
+      - 避免冷启动
+   d) 优雅关闭：
+      - 等待任务完成
+      - 连接归还后再关闭
+
+3. 性能优化：
+   - 本地缓存连接
+   - 批量创建连接
+   - 异步回收
+
+4. 监控指标：
+   - 活跃连接数
+   - 等待队列长度
+   - 获取连接耗时
+   - 错误率
+
+5. 参考你的项目：
+   - MysqlConnectionPool 可添加多主库支持
+   - 健康检查机制可增强
+```
+
+---
+
+### 问题 48：如果要实现消息的已读未读状态，你会如何设计？
+
+**考察点：**
+- 状态管理
+- 数据一致性
+
+**推荐回答要点：**
+```
+1. 数据结构：
+   a) 消息表：
+      messages(id, from_id, to_id, content, created_at)
+   b) 已读状态表：
+      message_read(msg_id, user_id, read_at)
+   c) 会话表：
+      conversation(user_id, target_id, last_msg_id, unread_count)
+
+2. 实现方案：
+   a) 写扩散 (适合群聊)：
+      - 发送消息时写入多份
+      - 每人一份，标记未读
+      - 读取时标记已读
+   b) 读扩散 (适合单聊)：
+      - 消息只存一份
+      - 读取时查询未读状态
+      - 适合一对一
+
+3. 已读同步：
+   - 客户端上报已读
+   - 服务端更新状态
+   - 推送给发送方
+
+4. 性能优化：
+   - Redis 缓存未读数
+   - 批量更新已读状态
+   - 异步写入数据库
+
+5. 参考你的项目：
+   - nanochat 中已有 Redis 存储已读状态
+   - 可扩展为完整方案
+```
+
+---
+---
+### 问题 50：如果要实现一个群聊功能，消息应该如何存储和分发？
+
+**考察点：**
+- 群聊架构
+- 消息分发策略
+
+**推荐回答要点：**
+```
+1. 两种模式：
+   a) 写扩散 (Push):
+      - 发送消息时写入每个成员的收件箱
+      - 读取时直接查自己的收件箱
+      - 适合小群
+   b) 读扩散 (Pull):
+      - 消息只存一份 (群消息表)
+      - 每个成员维护未读游标
+      - 读取时拉取
+      - 适合大群
+
+2. 推荐方案 (混合模式)：
+   - 小群 (<100 人): 写扩散
+   - 大群 (>100 人): 读扩散
+   - 超级群 (>1000 人): 读扩散 + 消息分级
+
+```
+
+---
+
+## 八、工程实践与软技能
+
+### 问题 51：你在项目中是如何进行测试的？
+
+**考察点：**
+- 测试意识
+- 测试方法
+
+**在你项目中的体现：**
+- **DevFoundations/**: 每个组件都有 test 目录
+- **CMakeLists.txt**: `enable_testing()`, `include(CTest)`
+
+**推荐回答要点：**
+```
+1. 测试框架：
+   - Boost.Unit Test
+   - CTest 集成
+   - CMake 预设配置
+
+2. 测试类型：
+   a) 单元测试：
+      - 测试单个函数/类
+      - 例如：nanojson_tests
+   b) 性能测试：
+      - 基准测试
+      - 例如：nanojson_benchmark
+   c) 功能测试：
+      - 完整功能验证
+      - 例如：connection_pool 测试
+
+3. 测试覆盖：
+   - FastLog: 基础功能测试
+   - ThreadPool: 单元测试 + 性能测试
+   - MemoryPool: 功能测试 + 性能测试
+   - NanoJSON: 单元测试 + 性能对比
+   - ConnectionPool: 功能测试 + 性能对比
+
+4. 运行测试：
+   ctest --preset debug
+   # 100% tests passed
+
+5. 测试指标：
+   - 功能正确性
+   - 性能基准
+   - 回归测试
+```
+
+## 九、补充问题
+
+### 问题 59：什么是自旋锁？
+
+**考察点：**
+- 锁机制理解
+- 并发编程基础
+
+**推荐回答要点：**
+```
+1. 自旋锁定义：
+   - 一种忙等待的锁机制
+   - 获取锁失败时不睡眠，持续循环检查
+   - 适用于短临界区
+
+2. 实现原理：
+   - 使用原子操作 (test_and_set)
+   - 检测锁标志位
+   - 获取失败时 yield 让出 CPU
+
+3. 项目中的实现：
+   // DevFoundations/memory_pool/v3/include/CentralCache.h
+   std::array<std::atomic_flag, FREE_LIST_SIZE> locks_;
+   
+   while(locks_[index].test_and_set(std::memory_order_acquire)) {
+       std::this_thread::yield();  // 线程让步，避免忙等待消耗 CPU
+   }
+
+4. 与互斥锁对比：
+   | 特性 | 自旋锁 | 互斥锁 |
+   |------|--------|--------|
+   | 等待方式 | 忙等待 | 睡眠 |
+   | 上下文切换 | 无 | 有 |
+   | 适用场景 | 短临界区 | 长临界区 |
+   | CPU 消耗 | 高 | 低 |
+
+5. 使用场景：
+   - 内存池 CentralCache：临界区只是链表操作，非常快
+   - 内核编程：不能睡眠的上下文
+```
+
+---
+
+### 问题 60：三层缓冲如何做到的？
+
+**考察点：**
+- 内存池架构设计
+- 缓存层次理解
+
+**推荐回答要点：**
+```
+1. 三层架构：
+
+   ThreadCache (线程本地缓存)
+   ├── 每个线程独立的自由链表数组
+   ├── 使用 thread_local 实现线程本地存储
+   ├── 无锁分配，最快
+   └── 管理小对象 (≤256KB)
+   
+   CentralCache (中心缓存)
+   ├── 所有线程共享
+   ├── 自旋锁保护
+   ├── 批量分配/回收
+   └── 从 PageCache 获取大块内存
+   
+   PageCache (页缓存)
+   ├── 以 4KB 页为单位向系统申请
+   ├── 使用 mmap 分配内存
+   ├── 管理 span (连续页)
+   └── 合并相邻空闲 span
+
+2. 分配流程：
+   a) ThreadCache 分配：
+      - 检查本地自由链表
+      - 有 → 直接返回 (O(1), 无锁)
+      - 无 → 从 CentralCache 批量获取
+   
+   b) CentralCache 分配：
+      - 自旋锁保护
+      - 检查中心自由链表
+      - 有 → 返回
+      - 无 → 从 PageCache 获取 span，切分后返回
+   
+   c) PageCache 分配：
+      - 查找合适的 span
+      - 无 → mmap 申请新页
+      - 返回内存地址
+
+3. 关键代码：
+   // ThreadCache - 线程本地存储
+   static ThreadCache* getInstance() {
+       static thread_local ThreadCache instance;
+       return &instance;
+   }
+   
+   // CentralCache - 自旋锁
+   while(locks_[index].test_and_set(std::memory_order_acquire)) {
+       std::this_thread::yield();
+   }
+   
+   // PageCache - mmap 申请
+   void* ptr = mmap(nullptr, size, PROT_READ | PROT_WRITE, 
+                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+4. 回收流程：
+   - ThreadCache 保留 1/4，归还 3/4 给 CentralCache
+   - CentralCache 累积到一定程度归还 PageCache
+   - PageCache 合并相邻 span
+
+5. 性能优势：
+   - 90%+ 的分配在 ThreadCache 完成（无锁）
+   - 减少锁竞争
+   - 批量操作 amortize 开销
+```
+
+---
+### 问题 63：HTTPS 服务器整个消息接受->响应流程
+
+**考察点：**
+- HTTPS 理解
+- 服务器架构
+
+**推荐回答要点：**
+```
+1. 整体流程：
+
+   客户端                    服务器
+     │                        │
+     │  1. TCP 连接            │
+     ├───────────────────────>│
+     │                        │
+     │  2. SSL 握手            │
+     ├───────────────────────>│
+     │ <───────────────────────┤
+     │                        │
+     │  3. 加密 HTTP 请求       │
+     ├───────────────────────>│
+     │                        │
+     │  4. 解密请求             │
+     │     业务处理            │
+     │                        │
+     │  5. 加密 HTTP 响应       │
+     │ <───────────────────────┤
+     │                        │
+     │  6. 关闭连接            │
+     ├───────────────────────>│
+
+2. 详细步骤：
+
+   a) TCP 连接建立：
+      - 三次握手
+      - 建立 Socket 连接
+   
+   b) SSL/TLS 握手：
+      - ClientHello: 客户端发送支持的加密套件
+      - ServerHello: 服务器选择加密套件，发送证书
+      - 客户端验证证书
+      - 生成会话密钥
+      - 建立加密通道
+   
+   c) HTTP 请求处理：
+      - SSL_read: 读取加密数据
+      - SSL_decrypt: 解密为明文
+      - HTTP 解析：提取方法、路径、头部
+      - 中间件处理
+      - 路由匹配
+      - 业务逻辑处理
+   
+   d) HTTP 响应：
+      - 生成响应数据
+      - HTTP 序列化
+      - SSL_encrypt: 加密
+      - SSL_write: 发送
+```
+
+---
+
+### 问题 64：JSON 解析你是如何解析的，流程实现什么？
+
+**考察点：**
+- JSON 解析原理
+- 编译器设计基础
+
+**推荐回答要点：**
+```
+1. 解析流程：
+
+   JSON 字符串
+       │
+       ▼
+   ┌─────────────────┐
+   │  词法分析       │  → Token 流
+   │  (Lexer)        │
+   └─────────────────┘
+       │
+       ▼
+   ┌─────────────────┐
+   │  语法分析       │  → AST
+   │  (Parser)       │
+   └─────────────────┘
+       │
+       ▼
+   ┌─────────────────┐
+   │  构建 JSON 对象   │  → json_object/json_array
+   │  (Builder)      │
+   └─────────────────┘
+
+2. 详细实现：
+
+   a) 词法分析：
+      - 遍历字符串
+      - 识别 Token: { } [ ] : , "string" number true false null
+      - 跳过空白字符
+   
+   b) 语法分析 (递归下降)：
+      parse_value():
+          - 根据第一个字符判断类型
+          - '{' → parse_object()
+          - '[' → parse_array()
+          - '"' → parse_string()
+          - 数字 → parse_number()
+          - true/false → parse_boolean()
+          - null → parse_null()
+      
+      parse_object():
+          - 解析 '{'
+          - 循环解析 key-value 对
+          - 解析 '}'
+      
+      parse_array():
+          - 解析 '['
+          - 循环解析元素
+          - 解析 ']'
+```
+
+---
+
+### 问题 65：Redis 存储已读状态与消息游标，实现增量拉取同步是怎么做到的？
+
+**考察点：**
+- Redis 应用
+- 消息同步设计
+
+**推荐回答要点：**
+```
+1. 数据结构设计：
+
+   a) 已读状态：
+      Key: user:read:{user_id}:{msg_id}
+      Value: timestamp (已读时间)
+      
+   b) 消息游标：
+      Key: user:cursor:{user_id}:{device_id}
+      Value: last_read_msg_id (最后读取的消息 ID)
+      
+   c) 离线消息：
+      Key: offline:{user_id}
+      Type: List
+      Value: [msg1, msg2, msg3, ...]
+
+2. 增量拉取流程：
+
+   a) 客户端上线：
+      - 发送请求：GET /sync?user_id=123&cursor=456
+      - cursor 是本地记录的最后读取消息 ID
+   
+   b) 服务端处理：
+      - 从 Redis 获取 user:cursor:123
+      - 查询消息表：SELECT * FROM messages 
+                     WHERE msg_id > 456 AND to_id = 123
+      - 查询已读状态：HGETALL user:read:123
+      - 返回增量消息和已读状态
+```
+
+---
+
+### 问题 66：Nginx 分布式部署的基本使用
+
+**考察点：**
+- Nginx 配置
+- 负载均衡
+
+**推荐回答要点：**
+```
+1. Nginx 作用：
+   - 反向代理
+   - 负载均衡
+   - SSL 终止
+   - 静态文件服务
+
+2. 基本配置示例：
+
+   # nginx.conf
+   http {
+       upstream backend {
+           # 负载均衡策略，配置每个主机的地址和权重，消息同步由redis完成，同步策略用least_conn而不是默认的轮询（配置了权重那么使用权重）
+           least_conn;  # 最少连接
+           
+           server 192.168.1.10:8080 weight=3;  # 权重 3
+           server 192.168.1.11:8080 weight=2;
+           server 192.168.1.12:8080 weight=1;
+       }
+       
+```
+
+---
+
+### 问题 68：CMake 交叉工具编译方法
+
+**考察点：**
+- CMake 交叉编译
+- 构建系统理解
+
+**推荐回答要点：**
+```
+1. 交叉编译概念：
+   - 在一种架构上编译另一种架构的可执行文件
+   - 例如：x86 编译 ARM 程序
+
+2. CMake 工具链文件：
+
+   // arm-toolchain.cmake
+   set(CMAKE_SYSTEM_NAME Linux)
+   set(CMAKE_SYSTEM_PROCESSOR arm)
+   
+   # 指定交叉编译工具链
+   set(CMAKE_C_COMPILER arm-linux-gnueabihf-gcc)
+   set(CMAKE_CXX_COMPILER arm-linux-gnueabihf-g++)
+   
+   # 指定目标系统路径
+   set(CMAKE_FIND_ROOT_PATH /usr/arm-linux-gnueabihf)
+   set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+   set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+   set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+```
+
+---
+
+### 问题 69：QSS 基本语法，几个选择器要知道
+
+**考察点：**
+- Qt 样式表
+- UI 定制能力
+
+**推荐回答要点：**
+```
+1. QSS 语法：
+   选择器 { 属性：值; }
+   
+   类似 CSS，但支持有限
+
+2. 常用选择器：
+
+   a) 类型选择器：
+      QPushButton {
+          background-color: #4CAF50;
+          color: white;
+          border-radius: 4px;
+          padding: 8px 16px;
+      }
+   
+   b) 类选择器：
+      .MyCustomClass {
+          background: red;
+      }
+   
+   c) ID 选择器：
+      #loginButton {
+          background-color: blue;
+      }
+   
+   d) 属性选择器：
+      QPushButton[flat="true"] {
+          border: none;
+      }
+   
+   e) 伪状态选择器：
+      QPushButton:hover {
+          background-color: #45a049;
+      }
+      
+      QPushButton:pressed {
+          background-color: #3d8b40;
+      }
+      
+      QPushButton:disabled {
+          background-color: #cccccc;
+      }
+      
+      QPushButton:checked {
+          background-color: #2196F3;
+      }
+   
+   f) 后代选择器：选择所有的后代（子对象，孙子对象...）
+      QDialog QPushButton {
+          color: white;
+      }
+   
+   g) 子控件选择器：
+      QComboBox::drop-down {
+          border: none;
+      }
+      
+      QScrollBar::handle {
+          background: #888;
+          border-radius: 4px;
+      }
+    h) 子元素选择器：只选择一个，直属的子元素
+   可以使用 Qt Designer 预览
+```
+
+---
+
+### 问题 70：Qt connect 函数几种变体
+
+**考察点：**
+- Qt 信号槽机制
+- 连接方式理解
+
+**推荐回答要点：**
+```
+1. Qt4 风格（宏）：
+   connect(sender, SIGNAL(signal()), receiver, SLOT(slot));
+   
+   缺点：编译时不检查，运行时才发现错误
+
+2. Qt5 风格（函数指针）：
+   connect(sender, &Sender::signal, receiver, &Receiver::slot);
+   
+   优点：编译时检查类型匹配
+
+3. 几种变体：
+
+   a) 基本连接：
+      connect(button, &QPushButton::clicked, 
+              this, &MainWindow::onButtonClicked);
+   
+   c) Lambda 表达式：
+      connect(button, &QPushButton::clicked, this, [=]() {
+          // 处理点击
+      });
+   
+   d) 函数对象：
+      connect(button, &QPushButton::clicked, 
+              [this]() { handleClicked(); });
+   
+   e) 接收者为 nullptr（自动清理）：
+      connect(timer, &QTimer::timeout, this, [this]() {
+          updateUI();
+      }, Qt::QueuedConnection);
+      // 接收者销毁时自动断开
+
+4. 连接类型详解：
+   - Qt::DirectConnection: 
+     信号发出时立即调用槽函数（同线程）
+   
+   - Qt::QueuedConnection: 
+     信号发出时将调用放入事件队列（跨线程）
+   
+   - Qt::BlockingQueuedConnection: 
+     同 QueuedConnection，但阻塞发送线程直到槽函数执行完成
+     （不能用于同线程，会死锁）
+   
+   - Qt::AutoConnection: 
+     默认值，同线程=Direct，跨线程=Queued
+```
+
+---
+
+### 问题 71：deb 包怎么打包的？
+
+**考察点：**
+- Linux 打包部署
+- 工程化能力
+
+**推荐回答要点：**
+```
+1. deb 包结构：
+   package_name_version_arch.deb
+   ├── DEBIAN/
+   │   ├── control      # 包信息
+   │   ├── preinst      # 安装前脚本
+   │   ├── postinst     # 安装后脚本
+   │   ├── prerm        # 卸载前脚本
+   │   └── postrm       # 卸载后脚本
+   └── usr/
+       ├── bin/         # 可执行文件
+       ├── lib/         # 库文件
+       └── share/       # 资源文件
+
+```
+## 十一、补充问题详解
+
+### 11.1 原子操作 std::atomic 是什么？本质是什么？有什么作用？
+
+**问题：** 原子操作作为 C++ 多线程编程中的常用工具，使用 std::atomic 来设计，不过它是什么，本质是什么，有什么作用我一直不太懂
+
+**解答：**
+
+```cpp
+1. 原子操作定义：
+   - 不可中断的操作，要么完全执行，要么完全不执行
+   - 执行过程中不会被其他线程干扰
+   - 多线程并发访问时保证数据一致性
+
+2. std::atomic 本质：
+   - 模板类，包装任意类型（主要是整数和指针）
+   - 底层使用 CPU 的原子指令（如 x86 的 LOCK 前缀）
+   - 保证读写操作的原子性
+   
+   示例：
+   std::atomic<int> counter(0);
+   counter++;  // 原子操作，不会被中断
+
+3. 为什么需要原子操作：
+   
+   问题场景（非原子）：
+   int counter = 0;
+   // 线程 1          // 线程 2
+   counter++;        counter++;
+   // 实际执行：
+   // 1. 读取 counter (0)
+   // 2. 读取 counter (0)  ← 线程 2 也读取到 0
+   // 3. 加 1 (1)
+   // 4. 加 1 (1)
+   // 5. 写入 counter (1)
+   // 6. 写入 counter (1)  ← 结果应该是 2，但实际是 1！
+   
+   解决方案（原子操作）：
+   std::atomic<int> counter(0);
+   counter++;  // 保证原子性，结果正确为 2
+
+4. 主要作用：
+   a) 无锁编程：
+      - 替代互斥锁，减少锁竞争
+      - 提高并发性能
+   
+   b) 标志位：
+      - 线程间通信
+      - 停止标志
+      示例：
+      std::atomic<bool> shutdown(false);
+      // 线程 1
+      shutdown.store(true);
+      // 线程 2
+      while(!shutdown.load()) { work(); }
+   
+   c) 引用计数：
+      - shared_ptr 的引用计数使用 atomic
+      - 保证线程安全
+   
+   d) 计数器：
+      - 性能统计
+      - 任务计数
+
+5. 支持的操作：
+   std::atomic<int> val(0);
+   
+   val.load();              // 原子读取
+   val.store(10);           // 原子写入
+   val.exchange(20);        // 交换并返回旧值
+   val.compare_exchange_weak(expected, desired);  // CAS 操作
+   val.fetch_add(1);        // 原子加法
+   val.fetch_sub(1);        // 原子减法
+   val++;                   // 原子自增
+   val--;                   // 原子自减
+
+```
+
+---
+
+### 11.2 什么是内存序？它有什么作用？
+
+**问题：** 什么是内存序？它有什么作用？它经常在原子操作的赋值和读取过程中使用到，但是具体什么时候使用我并不明白
+
+**解答：**
+
+```cpp
+1. 内存序定义：
+   - 控制内存操作的顺序保证
+   - 解决编译器和 CPU 的重排序问题
+   - 多线程环境下保证正确的执行顺序
+
+2. 为什么需要内存序：
+   
+   问题场景：
+   // 线程 1
+   data = 42;           // 1. 写入数据
+   ready.store(true);   // 2. 设置标志
+   
+   // 线程 2
+   while(!ready.load()) { }  // 等待标志
+   std::cout << data;        // 期望输出 42
+   
+   问题：编译器/CPU 可能重排序，导致线程 1 先执行 2 再执行 1
+   结果：线程 2 可能读到 0 而不是 42
+
+3. C++11 的 6 种内存序：
+
+   a) memory_order_relaxed（最宽松）：
+      - 只保证原子性，不保证顺序
+      - 性能最好
+      - 适用：计数器、统计信息
+      示例：
+      counter.fetch_add(1, std::memory_order_relaxed);
+
+   b) memory_order_consume：
+      - 依赖的数据不会被重排序到前面
+      - 较少使用
+
+   c) memory_order_acquire（获取操作）：
+      - 当前操作之后的读写不会被重排序到前面
+      - 用于读取端
+      示例：
+      if(ready.load(std::memory_order_acquire)) {
+          // 保证 data 的读取在 ready 之后
+          use(data);
+      }
+
+   d) memory_order_release（释放操作）：
+      - 当前操作之前的读写不会被重排序到后面
+      - 用于写入端
+      示例：
+      data = 42;  // 保证在 store 之前完成
+      ready.store(true, std::memory_order_release);
+
+   e) memory_order_acq_rel（获取 - 释放）：
+      - acquire + release
+      - 用于读 - 改 - 写操作
+      示例：
+      flag.fetch_add(1, std::memory_order_acq_rel);
+
+   f) memory_order_seq_cst（顺序一致性，默认）：
+      - 最强的保证
+      - 所有线程看到相同的操作顺序
+      - 性能开销最大
+      示例：
+      ready.store(true);  // 默认就是 seq_cst
+
+4. 典型使用模式：
+
+   a) 释放 - 获取同步（Release-Acquire）：
+      // 线程 1 - 写入者
+      data = 42;  // 准备数据
+      ready.store(true, std::memory_order_release);  // 释放操作
+      
+      // 线程 2 - 读取者
+      while(!ready.load(std::memory_order_acquire)) {  // 获取操作
+          // 等待
+      }
+      std::cout << data;  // 保证读到 42
+
+   b) 自旋锁实现：
+      class SpinLock {
+          std::atomic_flag flag = ATOMIC_FLAG_INIT;
+      public:
+          void lock() {
+              // acquire: 获取锁后，临界区操作不会被重排序到前面
+              while(flag.test_and_set(std::memory_order_acquire)) {
+                  std::this_thread::yield();
+              }
+          }
+          void unlock() {
+              // release: 释放锁前，临界区操作已经完成
+              flag.clear(std::memory_order_release);
+          }
+      };
+
+5. 项目中的使用：
+   // DevFoundations/memory_pool/v3/include/CentralCache.h
+   while(locks_[index].test_and_set(std::memory_order_acquire)) {
+       std::this_thread::yield();  // 获取锁，使用 acquire
+   }
+   // ... 临界区操作 ...
+   locks_[index].clear(std::memory_order_release);  // 释放锁，使用 release
+
+6. 何时使用什么内存序：
+   
+   | 场景 | 推荐内存序 |
+   |------|-----------|
+   | 计数器、统计 | relaxed |
+   | 标志位同步 | release/acquire |
+   | 自旋锁 | acquire/release |
+   | 不确定时 | seq_cst（默认，最安全） |
+   | 性能关键的无锁算法 | 根据需求选择 |
+```
+
+---
+
+### 11.3 为什么 atomic 可以用于无锁/少锁设计？
+
+**问题：** 为什么 atomic 可以用于无锁/少锁设计？
+
+**解答：**
+
+```cpp
+1. 传统锁的问题：
+   - 互斥锁需要系统调用（进入内核态）
+   - 线程阻塞和唤醒开销大
+   - 上下文切换成本高
+   - 可能导致死锁
+
+2. atomic 如何实现无锁：
+   
+   a) CAS 操作（Compare-And-Swap）：
+      原理：
+      bool compare_exchange_weak(T& expected, T desired) {
+          if (*this == expected) {
+              *this = desired;
+              return true;
+          } else {
+              expected = *this;
+              return false;
+          }
+      }
+      
+      使用示例（无锁栈）：
+      template<typename T>
+      class LockFreeStack {
+          std::atomic<Node*> head;
+      public:
+          void push(T value) {
+              Node* new_node = new Node(value);
+              new_node->next = head.load();
+              // CAS: 如果 head 没变，更新为 new_node
+              while(!head.compare_exchange_weak(new_node->next, new_node));
+          }
+      };
+
+   b) 原子标志位替代锁：
+      // 有锁版本
+      std::mutex mtx;
+      void increment() {
+          std::lock_guard<std::mutex> lock(mtx);
+          counter++;
+      }
+      
+      // 无锁版本
+      std::atomic<int> counter;
+      void increment() {
+          counter.fetch_add(1, std::memory_order_relaxed);
+      }
+
+3. 少锁设计：
+   
+   a) 细粒度锁：
+      // 粗粒度（一个锁保护所有）
+      std::mutex mtx;
+      void process(int index) {
+          std::lock_guard<std::mutex> lock(mtx);
+          data[index]++;
+      }
+      
+      // 细粒度（每个元素一个原子变量）
+      std::atomic<int> data[N];
+      void process(int index) {
+          data[index].fetch_add(1);  // 不需要锁
+      }
+
+   b) 读写分离：
+      // 原子操作保护读，锁保护写
+      std::atomic<Data*> current_data;
+      std::mutex write_mutex;
+      
+      Data* read() {
+          return current_data.load(std::memory_order_acquire);
+      }
+      
+      void write(Data* new_data) {
+          std::lock_guard<std::mutex> lock(write_mutex);
+          // 准备新数据...
+          current_data.store(new_data, std::memory_order_release);
+      }
+
+4. 项目中的使用：
+   // DevFoundations/memory_pool/v3/include/CentralCache.h
+   
+   a) 自旋锁（少锁）：
+      std::array<std::atomic_flag, FREE_LIST_SIZE> locks_;
+      
+      void lock(size_t index) {
+          // 使用 atomic_flag 实现自旋锁
+          while(locks_[index].test_and_set(std::memory_order_acquire)) {
+              std::this_thread::yield();  // 让步，减少 CPU 空转
+          }
+      }
+      
+      // 比互斥锁轻量，临界区短时更高效
+
+   b) 原子指针数组：
+      std::array<std::atomic<void*>, FREE_LIST_SIZE> centralFreeList_;
+      
+      // 原子读取，不需要锁
+      void* ptr = centralFreeList_[index].load(std::memory_order_relaxed);
+
+5. 无锁编程的优势：
+   - 无阻塞：线程不会被挂起
+   - 无死锁：没有锁就不会死锁
+   - 高并发：适合读多写少场景
+   - 可预测：实时性更好
+
+6. 无锁编程的挑战：
+   - 实现复杂
+   - 调试困难
+   - 需要深入理解内存序
+   - 不一定总是更快（取决于场景）
+```
+
+---
+
+### 11.4 如果需要在类中存储可拷贝的智能指针怎么办？
+
+**问题：** 如果需要在类中存储可拷贝的智能指针怎么办？
+
+**解答：**
+
+```cpp
+1. 问题背景：
+   - unique_ptr 不可拷贝
+   - shared_ptr 可拷贝但共享所有权
+   - 有时需要"可拷贝的 unique_ptr"语义
+
+2. 解决方案：
+
+   a) 使用 shared_ptr（推荐）：
+      class Widget {
+          std::shared_ptr<Data> data_;
+      public:
+          // 可拷贝
+          Widget(const Widget& other) = default;
+      };
+      
+      适用场景：多个对象共享同一资源
+
+   b) 实现深拷贝的 unique_ptr：
+      class DeepCopyPtr {
+          std::unique_ptr<Data> ptr_;
+      public:
+          // 深拷贝构造函数
+          DeepCopyPtr(const DeepCopyPtr& other)
+              : ptr_(other.ptr_ ? std::make_unique<Data>(*other.ptr_) : nullptr) {}
+          
+          // 移动构造函数
+          DeepCopyPtr(DeepCopyPtr&&) = default;
+          
+          // 拷贝赋值
+          DeepCopyPtr& operator=(const DeepCopyPtr& other) {
+              if (this != &other) {
+                  ptr_ = other.ptr_ ? std::make_unique<Data>(*other.ptr_) : nullptr;
+              }
+              return *this;
+          }
+      };
+
+   | 需求 | 方案 |
+   |------|------|
+   | 共享所有权 | shared_ptr |
+   | 深拷贝语义 | 自定义包装类 |
+   | 多态对象 | clone() 虚函数 |
+   | 性能关键 | 裸指针 + 明确所有权 |
+```
+
+---
+
+### 11.5 std::atomic_flag 和 ` std::atomic<bool>` 有什么区别？
+
+**问题：** `std::atomic_flag` 和 `std::atomic<bool>` 有什么区别？
+
+**解答：**
+
+```cpp
+1. 主要区别：
+
+| 特性 | atomic_flag | atomic<bool> |
+|------|-------------|--------------|
+| 操作 | 只有 test_and_set, clear | 所有原子操作 |
+| 返回值 | bool | bool |
+| 无锁保证 | 保证无锁 | 不保证无锁 |
+| 初始化 | ATOMIC_FLAG_INIT | 构造函数 |
+| 大小 | 最小 | 可能更大 |
+
+2. atomic_flag 的特点：
+
+a) 最简单的原子类型：
+  std::atomic_flag flag = ATOMIC_FLAG_INIT;
+  
+b) 只有两个操作：
+  - test_and_set(): 设置并返回旧值
+  - clear(): 清除标志
+```
+
+---
+### 11.7 NanoJson 访问小对象的速度远超 Boost.json，这是如何做到的？
+
+boost 需要兼容 asio，强制边界检查，注释读取
+boost 使用了 simd 加速
+
+---
+
+### 11.8 什么叫做缓存命中率？
+
+**问题：** 什么叫做缓存命中率？
+
+**解答：**
+
+```cpp
+1. CPU 缓存基础：
+
+2. 缓存命中率定义：
+- 命中（Hit）：数据在缓存中，快速访问
+- 未命中（Miss）：数据不在缓存中，需要从内存加载
+- 缓存行是 CPU 缓存的最小单位
+-       CPU → L1 缓存 → L2 缓存 → L3 缓存 → 主内存结构中，层级越低访问它消耗的时钟周期就越长
+
+3. 影响缓存命中率的因素：
+
+a) 空间局部性：
+b) 时间局部性：
+c) 数据结构布局：
+4. 提高缓存命中率的方法：
+
+a) 数据布局优化：
+b) 循环优化：
+c) 预取（Prefetching）：
+```
+
+---
+
+### 11.9 如果线程池项目中，任务 Task 抛出了异常，正确的处理方式是什么？
+
+**问题：** 如果线程池项目中，任务 Task 抛出了异常，正确的处理方式是什么？
+
+**解答：**
+
+```cpp
+1. 正确的处理方式：
+
+a) 在任务执行时捕获异常：
+b) 使用 std::exception_ptr 传递异常：
+c) 线程函数中捕获异常：
+
+3. 最佳实践：
+
+a) 记录异常信息->写入日志->处理异常->忽略处理不了的异常（特殊处理）
+b) 通知调用者：
+c) 线程健康检查：
+  - 监控线程数量
+  - 线程异常退出时重启
+  - 设置最大重试次数
+```
+
+---
+
+### 11.10 什么叫做线程泄漏？如何处理线程池对象中的线程泄漏？
+
+**问题：** 什么叫做线程泄漏？如何处理线程池对象中的线程泄漏？
+
+**解答：**
+
+```cpp
+1. 线程泄漏定义：
+- 线程创建后没有被正确 join 或 detach
+- 线程资源没有被释放
+- 类似内存泄漏，但是线程资源
+
+2. 线程泄漏的场景：
+
+a) 忘记 join/detach：
+b) 异常导致跳过 join，还没 join 先抛出异常程序跳转到另一个位置，并且其后没有 join/detach
+
+b) 优雅关闭机制：
+c) 使用 RAII 封装 std::thread，自动在析构时 join 线程：
+```
+
+---
+
+### 11.11 为什么内存池的大对象分配要使用系统的 malloc，而不用内存池来分配？
+
+**问题：** 为什么内存池的大对象分配要使用系统的 malloc，而不用内存池来分配？
+
+**解答：**
+
+```cpp
+1. 内存池的设计目标：
+- 优化小对象的频繁分配
+- 减少系统调用
+- 提高分配速度
+- 减少内存碎片
+
+2. 为什么大对象不用内存池：
+
+  场景：请求 300KB
+  - 如果用内存池：需要预分配 300KB 的块
+  - 但可能只用一次
+  - 长期占用，浪费内存
+  - 我的内存池设计上是为了解决小对象频繁分配问题，如果加入大对象管理会占用很大内存，浪费空间并可能导致以下塞满。不过修改设计也是可以做到的，但要考虑的东西就很多了，系统的 malloc 处理大对象时有对象切片，mmap 分配，实现起来很复杂
+
+```
+
+---
+
+### 11.12 malloc 和 new 有什么区别？
+
+**问题：** malloc 和 new 有什么区别？
+
+**解答：**
+
+```cpp
+1. 基本区别：
+
+| 特性 | malloc/free | new/delete |
+|------|-------------|------------|
+| 来源 | C 库函数 | C++ 运算符 |
+| 类型安全 | 返回 void* | 返回具体类型 |
+| 构造/析构 | 不调用 | 调用构造函数/析构函数 |
+| 大小计算 | 手动指定 | 自动计算 |
+| 失败处理 | 返回 NULL | 抛出 bad_alloc |
+| 重载 | 不可重载 | 可重载 |
+| 数组 | malloc(n*sizeof(T)) | new T[n] |
+
+```
+
+### 11.14 什么是 LT 模式和 ET 模式？
+
+**问题：** 什么是 LT 模式和 ET 模式？
+
+**解答：**
+
+```cpp
+1. 定义：
+
+LT (Level Triggered) - 水平触发：
+- 只要 fd 处于就绪状态，就会持续通知
+- 类似水位线，到了就通知
+- 默认模式
+
+ET (Edge Triggered) - 边缘触发：
+- 只在状态变化时通知一次
+- 类似边沿，从 0 到 1 的瞬间
+- 需要显式设置 EPOLLET
+
+2. 直观对比：
+
+场景：socket 接收缓冲区有 2KB 数据
+
+LT 模式：
+- epoll_wait 返回，告知可读
+- 读取 1KB，缓冲区还有 1KB
+- 再次调用 epoll_wait，仍然返回可读 ✅
+- 可以继续读取剩余的 1KB
+
+ET 模式：
+- epoll_wait 返回，告知可读
+- 读取 1KB，缓冲区还有 1KB
+- 再次调用 epoll_wait，不返回 ❌
+- 必须一次读完所有数据
+
+3. 代码示例：
+
+a) LT 模式（默认）：
+  struct epoll_event ev;
+  ev.events = EPOLLIN;  // 默认就是 LT
+  ev.data.fd = sockfd;
+  epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, &ev);
+  
+  // 处理时可以分多次读取
+  while(true) {
+	  int n = epoll_wait(epfd, events, MAX, timeout);
+	  for(int i = 0; i < n; i++) {
+		  if(events[i].events & EPOLLIN) {
+			  char buf[1024];
+			  ssize_t len = read(fd, buf, sizeof(buf));
+			  // 可以下次再读
+		  }
+	  }
+  }
+
+b) ET 模式：
+  struct epoll_event ev;
+  ev.events = EPOLLIN | EPOLLET;  // 设置 ET
+  ev.data.fd = sockfd;
+  epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, &ev);
+  
+  // 处理时必须一次读完
+  while(true) {
+	  int n = epoll_wait(epfd, events, MAX, timeout);
+	  for(int i = 0; i < n; i++) {
+		  if(events[i].events & EPOLLIN) {
+			  char buf[1024];
+			  while(true) {  // 循环读取直到 EAGAIN
+				  ssize_t len = read(fd, buf, sizeof(buf));
+				  if(len == -1) {
+					  if(errno == EAGAIN || errno == EWOULDBLOCK) {
+						  break;  // 数据读完
+					  }
+					  // 其他错误
+				  }
+				  if(len == 0) {
+					  // 连接关闭
+					  break;
+				  }
+				  // 处理数据
+			  }
+		  }
+	  }
+  }
+
+4. 优缺点对比：
+
+| 特性 | LT 模式 | ET 模式 |
+|------|--------|--------|
+| 通知次数 | 多次 | 一次 |
+| 编程难度 | 简单 | 复杂 |
+| 性能 | 较低 | 较高 |
+| 适用场景 | 一般应用 | 高性能服务器 |
+| 错误处理 | 容错性好 | 必须正确处理 |
+
+5. 为什么 ET 模式性能更高：
+
+a) 减少通知次数：
+  - LT: 每次 epoll_wait 都检查
+  - ET: 只在变化时通知
+
+b) 减少系统调用：
+  - LT: 可能多次 epoll_wait
+  - ET: 一次处理完
+
+c) 适合批量处理：
+  - ET 强制一次读完
+  - 减少上下文切换
+
+6. 项目中的使用：
+
+muduo 默认使用 LT 模式：
+- 更简单，不易出错
+- 性能对于大多数场景足够
+- 代码可维护性更好
+
+如果需要 ET 模式：
+channel_->set_events(Channel::kReadEvent | Channel::kETMode);
+```
+
+---
+
+### 11.15 为什么自旋锁可以减少锁竞争？
+
+**问题：** 为什么自旋锁可以减少锁竞争？
+
+**解答：**
+
+```cpp
+1. 问题澄清：
+
+准确说，自旋锁不是"减少"锁竞争，而是：
+- 在特定场景下比互斥锁更高效
+- 避免上下文切换开销
+- 适合短临界区
+
+2. 互斥锁的问题：
+
+a) 上下文切换开销：
+
+b) 系统调用开销：
+  - futex 系统调用
+  - 进入内核态
+  - 调度器介入
+
+3. 自旋锁的优势：
+
+a) 无上下文切换：
+  // 线程 B 尝试获取锁
+  while(lock.test_and_set()) {
+	  // 忙等待，不睡眠
+	  std::this_thread::yield();  // 让出 CPU
+  }
+  
+  // 优势：
+  // - 保持在用户态
+  // - 无系统调用
+  // - 无调度开销
+
+b) 适合短临界区：
+  场景：临界区执行时间 < 上下文切换开销
+  
+  示例：
+  void increment() {
+	  spinlock.lock();
+	  counter++;  // 几条指令
+	  spinlock.unlock();
+  }
+  
+  如果用互斥锁：
+  - 上下文切换：10μs
+  - 临界区执行：0.1μs
+  - 开销占比：99%！
+  
+  用自旋锁：
+  - 忙等待：0.5μs（假设）
+  - 临界区执行：0.1μs
+  - 总开销更小
+
+为什么这里用自旋锁：
+- 临界区只是指针操作，非常快（< 1μs）
+- 锁持有时间短
+- 避免上下文切换更划算
+
+5. 自旋锁的缺点：
+
+a) CPU 空转：
+  // 如果临界区执行时间长
+  while(lock.test_and_set()) {
+	  // 持续消耗 CPU
+	  // 浪费能源
+  }
+
+```
+
+## 智能指针相关
+![[Modern C++#第 5 章 智能指针与内存管理]]
+## C++提供的类型转换方式
+
+![[C++ Runoob Tutoral#C++提供的类型转换方式]]
+## C++中的多态
+![[C++ Runoob Tutoral#C++的多态形式]]
+## 面试八股
+### explict 作用
+- 强制原本能够通过构造函数进行隐式类型转化的一些类型必须显示调用构造函数完成类型转化
+	- 单个参数的 `Foo f = 10` 能够成立的前提是 `Foo::Foo(int x)`
+	- 类型操作转换符号中也可以使用 explict，必须要使用 `static_cast<typename>`
+```cpp
+class Double {
+public:
+    explicit operator int() const {
+        return static_cast<int>(value);
+    }
+private:
+    double value;
+};
+
+Double d;
+int i = d;               // 错误，无法隐式转换
+int j = static_cast<int>(d);  // 正确，显式转换
+```
+### final 关键字作用
+- 防止类被继承或虚函数被覆盖（override）
+- 一般结合 override 关键字使用，**显式声明这个继承（类）/重写（函数）到此为止**了
+- 编译器可能会有优化，因为调用 final 函数时可以直接展开，不通过虚函数表调用
+redis 数据类型
+redis 的数据类新包含：String、List、Set、Zset、hash 等； 
+1. String 常用的指令包括：set key value、get key（添加，获取 key）、incre key、decre key（对 key 的值进行加减一），所以可应用于微信文章的阅读数或点赞； 
+2. List 是一个双向链表，常用的指令包括：Lpush key value1、Rpush key value1、Lpop key、Rpop key、Lrange key 0 -1（获取所有的元素），所以可应用于微薄的粉丝列表或好友列表 
+3. Set 是一个存储不重复元素的结构，常用的指令包括：sadd key value、srem key、srandom key number（随机取出几个元素），所以可应用于抽奖，通过 sadd 添加不同的用户，srandom key number 选出中将用户；还有集合的运算：sdiff、sintern 与 sunio 就是集合的差交并运算，所以可应用于 QQ 的共同好友 
+4. Zset 是一个排了序的 set，常用的指令 zadd key score value，其中 score 就是排序的依据，所以可应用于排行榜，类似于微博热搜 
+5. hash，相当于 java 的 hash 结构，key 为 string，值还是一个 hashmap 结构常用指令为 hset key field value，可用于存储用户数据，一个 key 代表一个用户，feild 表示用户的各个属性，然后对应的 value 就是属性对应的值 w
+### TCP 和 UDP 区别
+1. 连接方式
+TCP：面向连接，需通过三次握手建立连接，传输结束后通过四次挥手释放连接。
+UDP：无连接，直接发送数据，无需预先建立连接。
+
+2. 可靠性
+TCP：可靠传输，通过确认应答（ACK）、超时重传、丢包重发等机制保证数据完整有序。
+UDP：不可靠传输，不保证数据是否到达或顺序正确。
+
+3. 数据顺序
+TCP：通过序列号和确认机制保证数据按发送顺序到达。
+UDP：不保证顺序，即使数据乱序到达也不会重新排序。
+
+4. 流量控制
+TCP：通过滑动窗口机制动态调整发送速率，避免接收方缓冲区溢出。
+UDP：无流量控制，可能因发送过快导致丢包。
+
+5. 拥塞控制
+TCP：通过慢启动、拥塞避免等算法（如 Reno、CUBIC）避免网络拥堵。
+UDP：无拥塞控制，可能加剧网络拥堵。
+
+6. 传输效率
+TCP：因连接管理、重传等机制，头部开销大（20 字节以上），传输效率较低。
+UDP：头部仅 8 字节，无额外控制机制，传输效率高。
+
+7. 数据边界
+TCP：基于字节流，无明确消息边界，需应用层自行处理（如添加分隔符）。
+UDP：保留数据报边界，每次发送/接收均为独立报文。
+
+8. 多播/广播支持
+TCP：仅支持单播（一对一通信）。
+UDP：支持单播、多播（一对多）和广播（一对所有）。
+
+9. 适用场景
+TCP：要求可靠传输的场景（如网页浏览、文件传输、电子邮件）。
+UDP：实时性优先的场景（如视频流、语音通话、在线游戏、DNS 查询）。
+
+10. 首部大小
+TCP：首部至少 20 字节（包含选项字段可更长）。
+UDP：固定 8 字节首部（源端口、目的端口、长度、校验和）。
+
+### HTTP/HTTPS 区别
+1. HTTP 是明文传输，HTTPS 加了 TLS 协议，是加密传输，更安全； 
+2. HTTP 只需要 TCP 三次握手过程，而 HTTPS 还增加了 TLS 握手过程； 
+3. HTTP 端口号是 80，HTTPS 端口号是 443； 
+4. HTTPS 需要通过 CA（证书权威机构）申请数字证书，确保服务器是可信的；
+### 线程和进程
+#### 线程状态
+**操作系统中的线程状态**（以 Linux 为例）：
+- **新建态**（New）：线程刚创建
+- **就绪态**（Ready）：等待 CPU 调度
+- **运行态**（Running）：正在执行
+- **阻塞态**（Blocked）：等待资源
+- **终止态**（Terminated）：执行完毕
+#### 进程和线程概念及识别
+**进程**：系统资源分配的基本单位
+**线程**：CPU 调度执行的基本单位
+```cpp
+// 获取当前线程ID
+std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
+// 获取当前进程ID
+std::cout << "Process ID: " << getpid() << std::endl;
+```
+### C++线程间通信的方式
+**操作系统级别的 IPC 机制**有：管道、消息队列、共享内存、信号量、信号，标准 C++中一般做不到，主要通过信号量/条件变量/原子操作/future&promise
+```cpp
+// 1. 条件变量（推荐）
+#include <mutex>
+#include <condition_variable>
+std::mutex mtx;
+std::condition_variable cv;
+bool ready = false;
+
+void worker() {
+    std::unique_lock<std::mutex> lock(mtx);
+    cv.wait(lock, []{ return ready; });
+    // 处理任务
+}
+
+void notifier() {
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        ready = true;
+    }
+    cv.notify_one();
+}
+
+// 2. 原子操作
+#include <atomic>
+std::atomic<bool> flag{false};
+
+// 3. Future/Promise
+#include <future>
+std::promise<int> prom;
+auto fut = prom.get_future();
+prom.set_value(42);  // 通知
+int result = fut.get(); // 等待并获取结果
+```
+### Redis 持久化策略
+
+1. RDB: redis database 在指定的时间间隔内，将内存中的数据集的快照写入磁盘，文件名 dump.rdb 适合大规模的数据恢复，对数据库的完整性和一致性要求不是很高一定时间间隔备份一次，如果数据库意外 down 掉，就会失去最后一次快照的所有修改 
+2. AOF: append only file 以日志的形式记录每个写操作，只允许追加文件，不允许改写文件，redis 启动时会读取这个文件，并从头到尾执行一遍，以此来恢复数据，文件名 appendonly.aof 在最恶劣的环境下，也丢失不会超过 2 秒的数据，完整性较高，但是会对磁盘持续的进行 IO，代价太大。企业级最少需要 5G 才能支持如果.aof 文件大小超过原来的一倍，会进行重写压缩，保留最小的指令集合 
+3. 优先级 aof>rdb
+
+### MySQL 使用 B+树
+二叉树和红黑树都会导致树高过高，带来多次 IO 开销，并且无法进行范围查找
+B 树中非叶子节点中也会存储数据，在连续查找/范围查找时可能导致缓存未命中开销
+B+树所有叶子节点之间都有一个链表指针，指向下一个叶子节点，顺序访问提高了性能
+B/B+树层高固定，查询性能稳定
+### enum 和 enum class 区别
+作用域：
+- enum：枚举成员是直接进入包含它的作用域（也就是说，在定义枚举后，你可以直接使用枚举成员，而不需要前缀）。
+- enum class：枚举成员只能通过显式地指定它们的枚举类型来访问（即使用枚举名作为前缀，类似于作用域解析）。
+类型安全：
+- enum：传统枚举类型不安全，枚举成员会隐式转换为整数类型。
+- enum class：强类型枚举是类型安全的，不能隐式转换为其他类型，必须显式转换 (`static_cast`)
+### using 和 typedef 区别
+using 可以用来定义别名模板和引入命名空间，typedef 不行
+### 虚函数和虚表指针
+虚表是一个指针数组，其元素是虚函数的指针，每个元素对应一个虚函数的函数指针。需要指出的是，普通的函数即非虚函数，其调用并不需要经过虚表，所以虚表的元素并不包括普通函数的函数指针。
+继承具有链式关系，所以这样一段代码：
+```cpp
+class A {
+public:
+    virtual void vfunc1();
+    virtual void vfunc2();
+    void func1();
+    void func2();
+private:
+    int m_data1, m_data2;
+};
+class B : public A {
+public:
+    virtual void vfunc1();
+    void func1();
+private:
+    int m_data3;
+};
+class C: public B {
+public:
+    virtual void vfunc2();
+    void func2();
+private:
+    int m_data1, m_data4;
+};
+```
+B 的虚表中有 A 的 vfunc2，vfunc1 已经被 B 自己覆盖了
+C 的虚表中有 B 的 vfunc1，vfunc2 被 C 自己的覆盖
+关于纯虚函数，必须要在继承链条中至少被实现一次
+继承访问修饰符：
+- **public 继承**：基类的 public 成员在派生类中仍为 public
+- **protected 继承**：基类的 public/protected 成员在派生类中变为 protected
+- **private 继承**：基类的所有成员在派生类中都变为 private
+虚类中含有一个虚指针 `__vptr`，指向虚表指针数组，访问修饰符在技术上是 public 的（编译器可以访问，语义上是 private 的，用户不能直接访问）虚表在**编译时期**确定，写入在 `.rodata`，初始化值不为零的内存中
+
+> [!note]
+> ps：this 指针不是类的成员函数，也不是类的静态变量，而是**编译器在编译时自动传递给***非 static 成员***的隐含参数**，这也就是为什么 python 中类的成员函数第一个参数是 self，并且使用 `std::bind` 的时候必须要在第一个参数中写入调用对象/类的地址/this 指针
+### C 和 C++的内存管理
+#### 堆和栈区别
+- 栈区通常用于存放临时变量等生命周期较短的变量，由编译器自动分配和释放，编译器自动管理，访问速度快，空间有限（由操作系统控制大小）
+- 堆区通常用于存放指针对象，需要程序员进行手动管理，适合管理大块或者生命周期不确定的数据，但是分配和释放的管理成本较高
+两者在物理上没有本质区别，但是：
+- 栈都是对象/指针，指向堆中的大对象数据，有硬件优化和结构优势（简单指针运算，空间局部性好）
+#### 分配内存
+C 代码中，使用 malloc 分配的内存必须要使用 free 释放
+C++中使用 new 分配的内存，必须要使用 delete 删除
+
+| 特性        | malloc/free | new/delete |
+| --------- | ----------- | ---------- |
+| **语言级别**  | C语言函数       | C++操作符     |
+| **类型安全**  | 无类型检查       | 有类型检查      |
+| **构造/析构** | 不调用         | 调用构造/析构函数  |
+| **重载**    | 不能重载        | 可以重载       |
+| **返回值**   | void*需强转    | 自动返回正确类型   |
+#### 深浅拷贝
+自定义拷贝构造函数的意义一般就是为了解决浅拷贝问题，default 实现的拷贝构造函数是浅拷贝
+- 浅拷贝：
+仅复制对象的**第一层成员变量**
+**基本数据类型直接复制值**，**指针类型仅复制指针地址**，新旧对象**共享同一内存**
+由编译器生成的默认拷贝构造函数和赋值运算符实现
+可能导致**双重释放**和**悬垂指针**问题
+- 深拷贝：
+递归**复制对象的所有层级**
+为指针成员**分配新内存并复制内容**
+新旧对象**完全独立，互不影响**
+需要**手动实现**拷贝构造函数和赋值运算符
+**避免内存问题**但**带来额外性能开销**
+
+> [!note]
+> 在C++中，当类管理**动态内存(如new分配的资源)或者有指针成员变量**时，**必须使用深拷贝**来避免内存管理问题。
+
+> [!warning]
+> 可能的追问：
+> - 在 STL 容器中存储自定义对象时，拷贝语义如何影响容器行为？
+> STL 容器采用值语义存储对象，任何插入操作都会触发拷贝构造（如 push_back 或 insert），若自定义类包含指针成员且未实现深拷贝，会导致多个对象共享同一内存，引发双重释放问题。
+> 例如，vector 存储含指针的 Person 对象时，默认浅拷贝会使容器内外指针指向同一地址，析构时重复释放内存而崩溃。
+> 此外，继承场景下，向基类容器插入派生类对象会因拷贝丢失派生类特性（"切片问题"），此时建议改用指针容器（如`vector<Widget*>`）或智能指针。
+> 
+> - 如何设计一个既能深拷贝又能共享资源的灵活类？
+> 可通过引用计数+写时复制（COW）实现：默认共享资源（浅拷贝），仅在修改时触发深拷贝。核心是维护共享指针（如 shared_ptr）和引用计数，拷贝构造时递增计数，修改前检查计数，若>1 则创建新副本并重置计数
+### 迭代器失效的场景
+#### 什么是迭代器
+迭代器就像是一个"指针"，指向容器（比如 vector、list）中的某个元素。通过迭代器，我们可以访问、修改容器中的元素，还能在容器中移动（前进或后退）
+#### 失效的场景和原因
+1. `std::vector` （所有**线性且内存连续的容器**）中，push_back 和 insert 都可能导致内存扩容，导致原油迭代器指向位置失效，insert 会让插入位置后的元素向后移动位置，导致这些**后面的迭代器全部失效**
+2. 同理，删除元素 erase 会导致前移，移动位置后的迭代器全部失效？
+3. 关联容器的 `std::list` / `std::map/set` 增加&修改不会有任何失效，删除会让**删除的节点迭代器失效**，但在 erase 之后递增一次或者根据返回值更新旧的迭代器即可
+对失效的迭代器对象使用自增，解引用等操作可能直接导致程序崩溃
+#### 解决方法
+erase 和 insert 都会返回**下一个有效迭代器**，可以用这个返回值更新旧的迭代器对象保证有效
+使用稳定方法修改容器中的元素，比如 `std::list::splice`，不会影响迭代器
+#### 常见出错场景
+```cpp
+vector<int> nums = {1, 2, 3, 4, 5, 6};
+for (auto it = nums.begin(); it != nums.end(); ++it) {
+    if (*it % 2 == 0) {
+        nums.erase(it); // 错误！迭代器失效
+    }
+}
+
+vector<int> nums = {1, 2, 3};
+for (auto it = nums.begin(); it != nums.end(); ++it) {
+    if (*it == 2) {
+        nums.push_back(4); // 错误！可能导致迭代器失效，解决方法是使用**索引而非迭代器**
+    }
+}
+```
