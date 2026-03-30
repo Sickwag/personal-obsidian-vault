@@ -82,7 +82,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "/.*指针/",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -103,7 +103,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -211,7 +212,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "5cbfa89913c9fe59",
+  "active": "129968db299d0d8b",
   "lastOpenFiles": [
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Language/C C++/模板元编程.md",
