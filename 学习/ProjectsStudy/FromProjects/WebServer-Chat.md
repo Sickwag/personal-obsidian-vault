@@ -1693,4 +1693,25 @@ bool Redis::unsubscribe(int channel) {
 - 最好需要对每一个群/个人，client 都需要维护一个 sequence ，接收消息成功后色 sequence++
 - 由于 sequence 的存在，实现**消息撤回**功能也很方便，消息撤回操作相当于发送一条 sequence=X 的指令
 - tcp/ip 基于的 ttl 协议中报文在网络环境中**最大跳数为 64**,超过这个大小则认为这个数据包应该被丢弃，不会再有路由器转发，这就是**丢包**
--
+
+# AzzatoChat
+## 基本 UI 构建
+### LoginDialog
+#### 图片按窗口比例缩放
+如果需要让图片按比例大小显示在 QLabel 中
+![[Pasted image 20260401092221.png]]
+```cpp
+wxQRLabel_ = new QLabel(this);
+QPixmap pic(QString(":/resource/wxQR.jpg"));
+QPixmap scaledPic = pic.scaled(200, 200, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+wxQRLabel_->setPixmap(scaledPic);
+mainlayout->addWidget(wxQRLabel_, 0, Qt::AlignCenter);
+```
+不能直接添加图片到 pixmap 中，这样图片会保持原有的像素和缩放比例
+![[Pasted image 20260401092346.png]]
+#### QMainWindow 的中心组件问题
+一个 QMainWindow 对象 `setCentralWidget` 之后，如果再重新设置，可能会导致之前设置的中心组件被删除
+
+> [!note] qt 文档中的描述：
+> Note: QMainWindow takes ownership of the widget pointer and deletes it at the appropriate time.
+

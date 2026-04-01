@@ -41,40 +41,6 @@ qApp->setStyleSheet("ns--MyPushButton{background:yellow;}");
 ```css
 .QPushButton{color:blue;}
 ```
-#### id 选择器
-```css
-#id{属性:值;}
-```
-qt 控件没有 id 属性，但所有 QObject 及其派生类都有 `objectName` 属性，**原则上全局唯一的**，匹配所有objectName为ID选择器所指定的名称的对象，如果前面有类型名称还会筛选对象的类型
-需要注意：
-注意点:
-1. objectName 是大小写敏感的.
-2. “#”与 ID 之间不可以有空格
-3. 由于 objectName 是所有 QObject 类对象的一个属性，在运行过程中可以改变，所以一般情况下，要使用 ID 选择器时，保证 objectName 不要在运行时被改变，否则**重新加载 stylesheet 文件/字符串**时，对应的 ID 选择器将不会匹配到原来的控件。
-4. 由于 objectName 允许字符串中含有空格，但 ID 选择器中，ID 是从紧跟`#`后的第一个字符开始直到遇到空格或 “{”之间的字符串，**因此，如果是为了使用 ID 选择器而设置 objectName，则 objectName 中不能含有空格**
-5. 由于任何对象的 objectName 都可以出现重复，保证唯一性是**开发者的责任**
-6. Qt 官方给出的 ID 选择器的格式为: `类名#id {属性: 值;}`（在 CSS 中被称为交集选择器），在正式开发中，还是建议加上类名，因这样可以看出这个 id 选择器所匹配的对象的类型，有利于提高阅读性.
-保证名称唯一性的方法：
-- 命名约定：
-```cpp
-// 使用层次化命名
-btn1->setObjectName("mainWindow.loginDialog.submitButton");
-btn2->setObjectName("mainWindow.settingsDialog.submitButton");
-```
-- 动态生成名称编码
-```cpp
-// 使用计数器或唯一标识符
-static int buttonCounter = 0;
-QString uniqueName = QString("button_%1").arg(++buttonCounter);
-button->setObjectName(uniqueName);
-```
-- UUID
-```cpp
-#include <QUuid>
-
-QString uniqueName = QUuid::createUuid().toString();
-button->setObjectName(uniqueName);
-```
 #### 后代选择器
 ```css
 祖先选择器 后代选择器 { 属性: 值; }
@@ -84,16 +50,6 @@ button->setObjectName(uniqueName);
 - 后代可以是儿子，孙子，重孙子，**任意深度的后代**元素都会被匹配
 - 嵌套的后代选择器可以是**任意形式，id 选择，类选择，类型选择，状态选择**
 ```css
-/* 组合选择 */
-/* 选择 MainForm 中提交按钮 */
-QWidget#mainForm QPushButton#submitBtn {
-    background-color: green;
-}
-
-/* 选择 SettingsDialog 中取消按钮 */
-QDialog#settingsDlg QPushButton#cancelBtn {
-    background-color: red;
-}
 /* 多级嵌套 */
 QMainWindow QWidget QPushButton {
     font-size: 16px;
@@ -125,6 +81,58 @@ QDialogQComboBox,QDialogQLineEdit{
 QDialog>QComboBox,QDialog>QLineEdit{
 	border:1pxsolidblue;
 }
+```
+#### ID 选择器
+```css
+#id{属性:值;}
+```
+qt 控件没有 id 属性，但所有 QObject 及其派生类都有 `objectName` 属性，通过 QWidget 的 `setObjectName()` 来设置一个控件的 id，**原则上全局唯一的**，匹配所有 objectName 为 ID 选择器所指定的名称的对象，如果前面有类型名称还会筛选对象的类型
+需要注意：
+注意点:
+1. objectName 是大小写敏感的.
+2. “#”与 ID 之间不可以有空格
+3. 由于 objectName 是所有 QObject 类对象的一个属性，在运行过程中可以改变，所以一般情况下，要使用 ID 选择器时，保证 objectName 不要在运行时被改变，否则**重新加载 stylesheet 文件/字符串**时，对应的 ID 选择器将不会匹配到原来的控件。
+4. 由于 objectName 允许字符串中含有空格，但 ID 选择器中，ID 是从紧跟 `#` 后的第一个字符开始直到遇到空格或 “{”之间的字符串，**因此，如果是为了使用 ID 选择器而设置 objectName，则 objectName 中不能含有空格**
+5. 由于任何对象的 objectName 都可以出现重复，保证唯一性是**开发者的责任**
+6. Qt 官方给出的 ID 选择器的格式为: `类名#id {属性: 值;}`（在 CSS 中被称为交集选择器），在正式开发中，还是建议加上类名，因这样可以看出这个 id 选择器所匹配的对象的类型，有利于提高阅读性.
+保证名称唯一性的方法：
+- 命名约定：
+```cpp
+// 使用层次化命名
+btn1->setObjectName("mainWindow.loginDialog.submitButton");
+btn2->setObjectName("mainWindow.settingsDialog.submitButton");
+```
+这样就可以在 qss 中直接全局设置
+```css
+#mainWindow.loginDialog.submitButton{
+	background-color: green;
+}
+
+也可以一个个限定作用域：
+/* 组合选择 */
+/* 选择 MainForm 中提交按钮 */
+QWidget#mainForm QPushButton#submitBtn {
+    background-color: green;
+}
+
+/* 选择 SettingsDialog 中取消按钮 */
+QDialog#settingsDlg QPushButton#cancelBtn {
+    background-color: red;
+}
+```
+- 动态生成名称编码
+```cpp
+// 使用计数器或唯一标识符
+static int buttonCounter = 0;
+QString uniqueName = QString("button_%1").arg(++buttonCounter);
+button->setObjectName(uniqueName);
+```
+- UUID
+```cpp
+#include <QUuid>
+
+QString uniqueName = QUuid::createUuid().toString();
+button->setObjectName(uniqueName);
 ```
 #### 属性组合器
 ```css
