@@ -420,7 +420,7 @@ empty缓冲区用来存放还没有写入日志的内存(std::array)，full存�
 - 事件驱动架构
 
 **在你项目中的体现：**
-- **nanochat/server**: 使用 muduo 的 EventLoop 和 TcpServer
+- **nanochat/server**: 使用 muduo 的 EventLoop 
 - **DevFoundations/nanoserver**: 基于 muduo Reactor 模式
 
 **推荐回答要点：**
@@ -431,11 +431,11 @@ empty缓冲区用来存放还没有写入日志的内存(std::array)，full存�
    - 事件处理器（Channel/Connection）
 2. muduo 的实现：
    - EventLoop: 事件循环，调用 epoll_wait
-   - TcpServer: 封装 acceptor 和连接管理
+   - TpServer: 封装 acceptor 和连接管理
    - Channel: 封装 fd 和事件回调
 3. 工作流程：
    a) 注册事件：
-      - TcpServer 监听端口
+      - TpServer 监听端口
       - 新连接注册到 EventLoop
    b) 事件循环：
       - epoll_wait 等待事件
@@ -622,8 +622,7 @@ constexpr size_t roundUp(size_t bytes) {
 
 2. 请求处理流程：
    a) 网络层：
-      - muduo TcpServer 接收连接
-      - on_message 回调接收数据
+      - muduo TpServer 接收连接      - on_message 回调接收数据
    b) 协议解析：
       - HTTP 解析 (Boost.Beast)
       - 提取方法、路径、头部
@@ -640,7 +639,7 @@ constexpr size_t roundUp(size_t bytes) {
       - process_after 反向处理
    g) 发送响应：
       - 序列化 HTTP 响应
-      - 通过 TcpConnection 发送
+
 
 3. 关键组件：
    - EventLoop: 事件循环
@@ -901,11 +900,11 @@ void set_mode(PoolMode mode);
    │  │  数据层：LocalDatabase         │  │
    │  └────────────────────────────────┘  │
    └──────────────────────────────────────┘
-                    │ TCP/WebSocket
+                    │ TP/WebSocket
    ┌──────────────────────────────────────┐
    │            Server (muduo)            │
    │  ┌────────────────────────────────┐  │
-   │  │  网络层：TcpServer             │  │
+   │  │  网络层：TpServer             │  │
    │  ├────────────────────────────────┤  │
    │  │  业务层：MainServer            │  │
    │  ├────────────────────────────────┤  │
@@ -1257,7 +1256,7 @@ void set_mode(PoolMode mode);
 
    客户端                    服务器
      │                        │
-     │  1. TCP 连接            │
+     │  1. TP 连接            │
      ├───────────────────────>│
      │                        │
      │  2. SSL 握手            │
@@ -1278,7 +1277,11 @@ void set_mode(PoolMode mode);
 
 2. 详细步骤：
 
-   a) TCP 连接建立：
+   a) T
+   
+   
+   
+   P 连接建立：
       - 三次握手
       - 建立 Socket 连接
    
@@ -2146,56 +2149,6 @@ ET 模式：
 - 再次调用 epoll_wait，不返回 ❌
 - 必须一次读完所有数据
 
-3. 代码示例：
-
-a) LT 模式（默认）：
-  struct epoll_event ev;
-  ev.events = EPOLLIN;  // 默认就是 LT
-  ev.data.fd = sockfd;
-  epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, &ev);
-  
-  // 处理时可以分多次读取
-  while(true) {
-	  int n = epoll_wait(epfd, events, MAX, timeout);
-	  for(int i = 0; i < n; i++) {
-		  if(events[i].events & EPOLLIN) {
-			  char buf[1024];
-			  ssize_t len = read(fd, buf, sizeof(buf));
-			  // 可以下次再读
-		  }
-	  }
-  }
-
-b) ET 模式：
-  struct epoll_event ev;
-  ev.events = EPOLLIN | EPOLLET;  // 设置 ET
-  ev.data.fd = sockfd;
-  epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, &ev);
-  
-  // 处理时必须一次读完
-  while(true) {
-	  int n = epoll_wait(epfd, events, MAX, timeout);
-	  for(int i = 0; i < n; i++) {
-		  if(events[i].events & EPOLLIN) {
-			  char buf[1024];
-			  while(true) {  // 循环读取直到 EAGAIN
-				  ssize_t len = read(fd, buf, sizeof(buf));
-				  if(len == -1) {
-					  if(errno == EAGAIN || errno == EWOULDBLOCK) {
-						  break;  // 数据读完
-					  }
-					  // 其他错误
-				  }
-				  if(len == 0) {
-					  // 连接关闭
-					  break;
-				  }
-				  // 处理数据
-			  }
-		  }
-	  }
-  }
-
 4. 优缺点对比：
 
 | 特性 | LT 模式 | ET 模式 |
@@ -2303,9 +2256,82 @@ a) CPU 空转：
 	  // 持续消耗 CPU
 	  // 浪费能源
   }
+```
+### TCP/IP 机制
+```md
+-------------三次握手----------------------
+Client                    Server
+  │                         │
+  │───── SYN, seq=x ───────>│  (1) 请求连接
+  │                         │
+  │<──── SYN, seq=y, ACK=x+1│  (2) 确认+自己的SYN
+  │                         │
+  │───── ACK=y+1 ──────────>│  (3) 确认建立
+  │                         │
+  
+**什么是三次而不是两次？**
+- **防止历史连接**：客户端发出的SYN可能延迟到达，三次握手让双方都能确认对方收到了自己的SYN    
+- **同步序列号**：双方都需要确认对方的初始序列号
+- **避免资源浪费**：两次握手下，服务器不知道客户端是否准备好
 
+-------------四次挥手-----------------------
+Client                    Server
+  │                         │
+  │───── FIN, seq=u ───────>│  (1) 主动关闭
+  │                         │
+  │<──── ACK=u+1 ───────────│  (2) 确认
+  │                         │
+  │<──── FIN, seq=v ────────│  (3) 被动关闭
+  │                         │
+  │───── ACK=v+1 ──────────>│  (4) 最终确认
+  │                         │
+  │      TIME_WAIT          │	
+  
+**为什么需要TIME_WAIT？
+- 持续**2MSL**（Maximum Segment Lifetime，通常2分钟）
+- 确保最后一个ACK能到达对方（防止FIN重传）
+- 防止旧连接的数据包影响新连接
+```
+粘包问题解决
+TCP是流式协议，没有消息边界
+
+| 方案        | 示例                    | 优缺点     |
+| --------- | --------------------- | ------- |
+| **固定长度**  | `char data[1024]`     | 简单但浪费空间 |
+| **长度前缀**  | `uint32_t len + data` | 最常用，高效  |
+| **特殊分隔符** | `\r\n\r\n`（HTTP）      | 简单但需转义  |
+| **应用层协议** | Protobuf + 长度前缀       | 结构清晰    |
+
+### socket 编程
+```md
+TCP客户端                    TCP服务端
+    │                           │
+socket() ◄───────────────────── socket()
+    │                           │
+    │                           bind()
+    │                           │
+    │                           listen()
+    │                           │
+connect() ─────────────────────► accept()
+    │                           │
+    │      (三次握手)            │
+    │                           │
+write()/send() ◄──────────────► read()/recv()
+    │                           │
+read()/recv() ◄─────────────── write()/send()
+    │                           │
+close() ───────────────────────► close()
 ```
 
+### Q: 浏览器输入 URL 后发生了什么？
+1. DNS 解析：域名→IP
+2. TCP 三次握手
+3. TLS 握手（HTTPS）
+4. 发送 HTTP 请求
+5. 服务端处理（可能查询数据库）
+6. 返回 HTTP 响应
+7. 浏览器解析渲染
+8. TCP 四次挥手
 ## 智能指针相关
 ![[Modern C++#第 5 章 智能指针与内存管理]]
 ## C++提供的类型转换方式
@@ -2345,44 +2371,44 @@ redis 的数据类新包含：String、List、Set、Zset、hash 等；
 5. hash，相当于 java 的 hash 结构，key 为 string，值还是一个 hashmap 结构常用指令为 hset key field value，可用于存储用户数据，一个 key 代表一个用户，feild 表示用户的各个属性，然后对应的 value 就是属性对应的值 w
 ### TCP 和 UDP 区别
 1. 连接方式
-TCP：面向连接，需通过三次握手建立连接，传输结束后通过四次挥手释放连接。
-UDP：无连接，直接发送数据，无需预先建立连接。
+T：面向连接，需通过三次握手建立连接，传输结束后通过四次挥手释放连接。
+U：无连接，直接发送数据，无需预先建立连接。
 
 2. 可靠性
-TCP：可靠传输，通过确认应答（ACK）、超时重传、丢包重发等机制保证数据完整有序。
-UDP：不可靠传输，不保证数据是否到达或顺序正确。
+T：可靠传输，通过确认应答（ACK）、超时重传、丢包重发等机制保证数据完整有序。
+U：不可靠传输，不保证数据是否到达或顺序正确。
 
 3. 数据顺序
-TCP：通过序列号和确认机制保证数据按发送顺序到达。
-UDP：不保证顺序，即使数据乱序到达也不会重新排序。
+T：通过序列号和确认机制保证数据按发送顺序到达。
+U：不保证顺序，即使数据乱序到达也不会重新排序。
 
 4. 流量控制
-TCP：通过滑动窗口机制动态调整发送速率，避免接收方缓冲区溢出。
-UDP：无流量控制，可能因发送过快导致丢包。
+T：通过滑动窗口机制动态调整发送速率，避免接收方缓冲区溢出。
+U：无流量控制，可能因发送过快导致丢包。
 
 5. 拥塞控制
-TCP：通过慢启动、拥塞避免等算法（如 Reno、CUBIC）避免网络拥堵。
-UDP：无拥塞控制，可能加剧网络拥堵。
+T：通过慢启动、拥塞避免等算法（如 Reno、CUBIC）避免网络拥堵。
+U：无拥塞控制，可能加剧网络拥堵。
 
 6. 传输效率
-TCP：因连接管理、重传等机制，头部开销大（20 字节以上），传输效率较低。
-UDP：头部仅 8 字节，无额外控制机制，传输效率高。
+T：因连接管理、重传等机制，头部开销大（20 字节以上），传输效率较低。
+U：头部仅 8 字节，无额外控制机制，传输效率高。
 
 7. 数据边界
-TCP：基于字节流，无明确消息边界，需应用层自行处理（如添加分隔符）。
-UDP：保留数据报边界，每次发送/接收均为独立报文。
+T：基于字节流，无明确消息边界，需应用层自行处理（如添加分隔符）。
+U：保留数据报边界，每次发送/接收均为独立报文。
 
 8. 多播/广播支持
-TCP：仅支持单播（一对一通信）。
-UDP：支持单播、多播（一对多）和广播（一对所有）。
+T：仅支持单播（一对一通信）。
+U：支持单播、多播（一对多）和广播（一对所有）。
 
 9. 适用场景
-TCP：要求可靠传输的场景（如网页浏览、文件传输、电子邮件）。
-UDP：实时性优先的场景（如视频流、语音通话、在线游戏、DNS 查询）。
+T：要求可靠传输的场景（如网页浏览、文件传输、电子邮件）。
+U：实时性优先的场景（如视频流、语音通话、在线游戏、DNS 查询）。
 
 10. 首部大小
-TCP：首部至少 20 字节（包含选项字段可更长）。
-UDP：固定 8 字节首部（源端口、目的端口、长度、校验和）。
+T：首部至少 20 字节（包含选项字段可更长）。
+U：固定 8 字节首部（源端口、目的端口、长度、校验和）。
 
 ### HTTP/HTTPS 区别
 1. HTTP 是明文传输，HTTPS 加了 TLS 协议，是加密传输，更安全； 
