@@ -52,8 +52,7 @@
               "title": "面试准备"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -216,9 +215,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "1748c86adf1acc79",
+  "active": "f4863d80a9b65ef6",
   "lastOpenFiles": [
     "Chores/Interviews and job search/questions精简.md",
+    "Chores/Interviews and job search/面试准备.md",
     "学习/Fragments/面试八股/针对简历的知识点复习.md",
     "学习/其他专业书/Modern C++.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
@@ -235,7 +235,6 @@
     "Files & LongText/Attachments/notification.jpg",
     "Files & LongText/Attachments/MessageList.png",
     "Chores/Interviews and job search/项目简介.md",
-    "Chores/Interviews and job search/面试准备.md",
     "Chores/Interviews and job search/简历内容.md",
     "Chores/Interviews and job search/公司筛选.md",
     "Chores/Interviews and job search",
