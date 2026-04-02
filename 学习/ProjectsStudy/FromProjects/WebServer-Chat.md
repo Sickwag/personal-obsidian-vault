@@ -1715,3 +1715,12 @@ mainlayout->addWidget(wxQRLabel_, 0, Qt::AlignCenter);
 > [!note] qt 文档中的描述：
 > Note: QMainWindow takes ownership of the widget pointer and deletes it at the appropriate time.
 
+### 单例模板和 http 管理类
+#### std::once_flat 和 std::call_once 保证多线程单例
+`std::once_flag` 和 `std::call_once` 是C++11标准库提供的**多线程安全的初始化机制**。
+- **`std::once_flag`**：是一个辅助类，作为`std::call_once`的标志参数[1](https://en.cppreference.com/w/cpp/thread/once_flag.html)[2](https://cppreference.net/cpp/thread/once_flag.html)[3](https://cplusplus.com/reference/mutex/once_flag/)[5](https://www.apiref.com/cpp/cpp/thread/once_flag.html)。它既不可复制也不可移动。
+- **`std::call_once`**：是一个函数模板，确保传递给它的函数只执行一次，即使被多个线程同时调用 [2](https://cppreference.net/cpp/thread/once_flag.html) [5](https://www.apiref.com/cpp/cpp/thread/once_flag.html)
+`std::once_flag` 是 `std::call_once` 的**标志参数**：
+- 同一个`once_flag`对象传递给多次`call_once`调用，确保这些调用协调工作[1](https://en.cppreference.com/w/cpp/thread/once_flag.html)[2](https://cppreference.net/cpp/thread/once_flag.html)
+- 只有第一个调用会真正执行函数，后续调用会等待函数执行完成，然后直接返回
+现代 C++提倡使用 Magic static（静态局部变量来实现**单纯的单例模式**），而这两个方式已经退化成在多线程中确保某些操作只能**单次执行**的操作/功能，而不仅仅适用于创建单例对象。
