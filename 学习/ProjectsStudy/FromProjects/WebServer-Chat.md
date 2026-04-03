@@ -1724,3 +1724,4 @@ mainlayout->addWidget(wxQRLabel_, 0, Qt::AlignCenter);
 - 同一个`once_flag`对象传递给多次`call_once`调用，确保这些调用协调工作[1](https://en.cppreference.com/w/cpp/thread/once_flag.html)[2](https://cppreference.net/cpp/thread/once_flag.html)
 - 只有第一个调用会真正执行函数，后续调用会等待函数执行完成，然后直接返回
 现代 C++提倡使用 Magic static（静态局部变量来实现**单纯的单例模式**），而这两个方式已经退化成在多线程中确保某些操作只能**单次执行**的操作/功能，而不仅仅适用于创建单例对象。
+
