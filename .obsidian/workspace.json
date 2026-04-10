@@ -37,7 +37,8 @@
               "title": "刷题路线"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -200,10 +201,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "ea297ef82c216bdb",
+  "active": "2f79030ce975a0ca",
   "lastOpenFiles": [
-    "学习/algorithm/刷题路线.md",
     "学习/algorithm/用法导向知识.md",
+    "学习/algorithm/刷题路线.md",
     "Files & LongText/Attachments/Pasted image 20260409220939.png",
     "Files & LongText/Attachments/Pasted image 20260409220933.png",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
