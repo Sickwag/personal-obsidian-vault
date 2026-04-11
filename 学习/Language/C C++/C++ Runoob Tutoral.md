@@ -7021,10 +7021,10 @@ int main() {
 ```
 请注意，`native_handle` 的具体使用和返回类型依赖于编译器和平台，因此在跨平台代码中使用时需要谨慎。通常，它用于与特定平台相关的高级操作，如线程优先级设置等。
 #### ranges 库
+##### 核心概念
 > [!note] Ranges 库存在的意义：
 > C++20 引入的 std::ranges 库是对算法和迭代器库的扩展，旨在提供更强大和可组合的功能，使得处理可迭代序列更加简洁和高效。
 
-核心概念
 1. **范围（Range）**: 范围是可以被迭代的元素序列，任何支持 `begin()` 和 `end()` 函数的类型都可以被视为一个范围，例如 `std::vector`、`std::list` 等。
 2. **视图（View）**: 视图是轻量级的范围，它不拥有数据，而是对现有范围的一个变换，***这一点特性让视图只能操作左值，操作临视值会直接报错***。视图可以进行过滤、转换等操作，而不会修改原始数据。时间复杂度 O(1) 的构造和拷贝
 3. **操作（Action）**：操作是可以修改原始范围的操作，例如排序、删除元素等。通过将范围、视图和操作分离，范围库实现了更高的灵活性和可组合性
@@ -7053,20 +7053,6 @@ auto result = ranges::iota(0) /* 如果不加take就会从0开始无限生成*/
 // result = {4, 16, 36}
 ```
 - 管道/流式处理：`R | View` 等价于 `View(R)`，但可读性更强，符合数据流思维
-常见的 view 处理工具：
-```cpp
-std::views::iota(0, 10)           // 生成 [0,10) 序列
-std::views::iota(0) | take(5)     // 惰性生成前5个自然数
-
-std::views::filter(pred)          // 过滤满足条件的元素
-std::views::transform(func)       // 映射转换
-std::views::take(n)               // 取前n个元素
-std::views::drop(n)               // 跳过前n个元素
-std::views::reverse               // 反向视图
-std::views::keys(map)             // 提取map的key
-std::views::values(map)           // 提取map的value
-ranges::to<vector>();			  // 将视图中的数据放入容器中
-```
 - 投影（projection）：举一个例子，ranges 库中的 sort 函数有一个重载 `ranges::sort(R&& r, Comp comp, Proj proj)` 在[[刷题路线#1356. 根据数字二进制下 1 的数目排序]]中， r 是 `vector<int>`，Comp 是空的，projection 却返回一个 `std::pair<int,int>` 类型，这显然不符 r 中存储的 int，projection **不会把 int 转成 pair 存回 arr**，只在"比较两个元素时"临时计算一个代理值
 ```md
 原容器: vector<int> arr = [3, 7, 8, 9]
@@ -7086,8 +7072,22 @@ ranges::to<vector>();			  // 将视图中的数据放入容器中
 
 最终: arr 仍然是 vector<int>，内容变为 [8, 3, 9, 7]
 ```
-- 比较谓词，在[[刷题路线#1356. 根据数字二进制下 1 的数目排序]]中，谓词使用了 `{}` 并**不是表示生成一个空结构体**，而是表示**调用默认参数类型的**默认构造函数生成对象，而默认参数类型是 `std::ranges::less`
-- 
+- 比较谓词，在[[刷题路线#1356. 根据数字二进制下 1 的数目排序]]中，谓词使用了 `{}` 并**不是表示生成一个空结构体**，而是表示**调用默认参数类型的**默认构造函数生成对象，而默认参数类型是 `std::ranges::less`。并且投影参数的**返回值会被传递给 Comp 谓词**。所以返回值类型只要重载了 `operator<` 都能够被 Comp 接受 ^3fg3sp
+##### 常见的 view 处理工具：
+```cpp
+std::views::iota(0, 10)           // 生成 [0,10) 序列
+std::views::iota(0) | take(5)     // 惰性生成前5个自然数
+
+std::views::filter(pred)          // 过滤满足条件的元素
+std::views::transform(func)       // 映射转换
+std::views::take(n)               // 取前n个元素
+std::views::drop(n)               // 跳过前n个元素
+std::views::reverse               // 反向视图
+std::views::keys(map)             // 提取map的key
+std::views::values(map)           // 提取map的value
+ranges::to<vector>();			  // 将视图中的数据放入容器中
+std::views::enumerate` 			  // 需要注意在 C++23 中返回的是 std::tuple<size_t, T>，而不是 std::pair<size_t, T>
+```
 ##### 自定义哨兵
 必须满足 concept 
 ```cpp
@@ -7109,7 +7109,19 @@ struct MySentinel {
 };
 
 static_assert(std::sentinel_for<MySentinel, const char*>); // ✓
+
+// 处理C-style字符串
+struct NullTerminator {
+    template<std::input_iterator I>
+        requires std::same_as<std::iter_value_t<I>, char>
+    friend bool operator==(const I& it, const NullTerminator&) {
+        return *it == '\0';
+    }
+};
 ```
+>[!note]
+>有时为了简洁性，可以使用 `std::range::take_while` 代替谓词驱动哨兵
+
 #### thread
 大部分用法放在[多线程](#多线程)中
 # C++高级特性
