@@ -68,7 +68,7 @@
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -232,10 +232,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "2f79030ce975a0ca",
+  "active": "5d19c1a02e54890e",
   "lastOpenFiles": [
-    "学习/algorithm/用法导向知识.md",
     "学习/algorithm/刷题路线.md",
+    "学习/algorithm/用法导向知识.md",
     "Chores/LearningDailyRecord/LearnDaily.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Chores/Life/Renting House.md",
