@@ -2418,6 +2418,20 @@ install(EXPORT fastlogTargets
 - 安装完成后要导出给其他项目时能够可见，需要使用 `install(EXPORT)` 描述目标的命名空间和目标的架构，配置是怎么样的。这些内容分别被写在 `NAMESPACE` 和 `DESTINATION + FILE` 所指向的文件里
 #### 项目的 CMakeLists.txt 配置
 ```cmake
+# Set default install prefix to install folder
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/install" CACHE PATH "Install prefix" FORCE)
+endif()
+
+set_target_properties(fastlog PROPERTIES
+    VERSION 1.0.0
+    SOVERSION 1
+)
+```
+- 决定安装目录，如果安装目录是默认值（Windows: `C:/c:/Program Files/${PROJECT_NAME}`，Unix 是 `/usr/local`），由于这里 CMakePresets.json 中设置了 install 位置，这里不会进入 if
+- 设置库版本需要设置 `target_properities`，其中的 VERSION 和 `project()` 中的版本意思不同，`project()` 指的是库代码项目的版本，这里 VERSION 指的是发布库的库 API 版本
+- 设置由于库可以有 dll/so 动态库，而**热更新/增量更新**只会修改动态库内容，所以需要额外给动态库添加一个版本号（SOVERSION->shared obj version），为 0 则表示暴露给外部的 api 还没有开发
+```cmake
 # Create and install config files for find_package support
 include(CMakePackageConfigHelpers)
 
@@ -2435,18 +2449,18 @@ configure_package_config_file(
     INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/fastlog
 )
 
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/fastlog.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/fastlog.pc"
+    @ONLY
+)
+
 # 上面的操作只生成了文件，这里决定生成的文件放在什么位置
 install(
     FILES
         "${CMAKE_CURRENT_BINARY_DIR}/fastlogConfig.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/fastlogConfigVersion.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/fastlog
-)
-
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/fastlog.pc.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/fastlog.pc"
-    @ONLY
 )
 
 install(
@@ -2456,4 +2470,69 @@ install(
 ```
 - 主项目中配置的颗粒度是整个项目，保证整个项目能够被正确使用的配置
 - `${CMAKE_CURRENT_SOURCE_DIR}/fastlogConfig.cmake.in` 下的配置需要手动编写，这个文件决定了 `find_package` 能否**正确找到并使用**这个库
+写法是这样的:
+```cmake
+@PACKAGE_INIT@
 
+# 生成好的target将被包含使用，一般有几个target就会有几个target.cmake文件
+include("${CMAKE_CURRENT_LIST_DIR}/fastlogTargets.cmake")
+
+set(fastlog_INCLUDE_DIRS "@PACKAGE_INCLUDE_INSTALL_DIR@")
+set(fastlog_LIBRARIES fastlog::fastlog) # 设置库变量，方便cmake查找库用
+
+macro(fastlog_required_components)
+    # This macro can be used to check for required components
+    # Currently no components are defined
+endmacro()
+
+# Export variables for backward compatibility
+set(FASTLOG_FOUND TRUE)
+set(FASTLOG_INCLUDE_DIRS ${fastlog_INCLUDE_DIRS})
+set(FASTLOG_LIBRARIES ${fastlog_LIBRARIES})
+
+# 会在cmake -B 阶段打印到控制台
+message(STATUS "Found fastlog: @PACKAGE_INSTALL_PREFIX@")
+```
+- cmake 会用模板替换 `@...@` 包裹内容（无关紧要）
+- `@PACKAGE_INCLUDE_INSTALL_DIR@`会被 CMake 替换为实际安装路径
+#### pkgconfig 设置
+pkgconfig 是一个用于解决
+- 库引入麻烦，需要配置大量路径，cmake 脚本设置复杂（即[[#使 fastlog 库能够被安装]]章节中为跨平台而需要手写大量脚本内容）
+- 老项目不使用 cmake，纯 makefile 导致的维护困难
+- 相同库的多版本在同一个项目中被使用
+的工具
+为库配置一个 `pkgconfig.in` 然后再 cmake 中引用即可，使用 pkgconfig:
+```cmake
+# 启用 PkgConfigfind_package(PkgConfig REQUIRED)
+# 用 PkgConfig 找 libcurl
+pkg_check_modules(CURL REQUIRED libcurl)
+# 把 PkgConfig 查到的参数传给项目
+include_directories(${CURL_INCLUDE_DIRS})
+target_link_libraries(your_project ${CURL_LIBRARIES})
+```
+写给其他项目使用写法:
+```pkgconfig
+# 当前项目中的配置
+prefix=${CMAKE_INSTALL_PREFIX}				# 不用写cmake路径的一种做法
+exec_prefix=${CMAKE_INSTALL_PREFIX}			# 库二进制文件所在位置
+libdir=${CMAKE_INSTALL_PREFIX}/lib			# 库文件路径（链接时用
+includedir=${CMAKE_INSTALL_PREFIX}/include	# 头文件路径（编译时用
+
+Name: fastlog
+Description: High-performance C++ logging library
+Version: 1.0.0									# 库版本
+Libs: -L${libdir} -lfastlog						# 链接时需要的参数（-L... -l... 以及依赖库）
+Libs.private: -lz -lssl -lcrypto -ldl -lpthread	# 链接时的私有依赖（如果有）
+Cflags: -I${includedir}
+```
+让自己的 cmake 项目支持 pkgconfig
+```cmake
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/fastlog.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/fastlog.pc"
+    @ONLY
+)
+```
+- only 是 configure_file 命令的一个选项:
+	- 没有 `@ONLY`：替换 `${VAR}` 和 `@VAR@` 两种语法
+	- 有`@ONLY`：只替换`@VAR@`，不替换`${VAR}`
