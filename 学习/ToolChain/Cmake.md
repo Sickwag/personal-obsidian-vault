@@ -1872,18 +1872,6 @@ install(TARGETS MathFunctions
   INCLUDES DESTINATION include  # 配合 INSTALL_INTERFACE 使用
 )
 ```
-#### 安装 Config.cmake 文件的其他方法
-除了使用 `install` 命令引入**手动编写的 Config.cmake**文件（教程中其实也就有 `include(XXXtarget.cmake)` 这样的内容），还可以通过 `configure_package_config_fie()` 函数实现自动编写
-```cmake
-include(GNUInstallDirs)
-configure_package_config_file(
-    ${PROJECT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in
-    ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-    INSTALL_DESTINATION lib/cmake
-    PATH_VARS INCLUDE_DIRS LIBRARIES LIB_DIR
-    INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}
-)
-```
 #### 构建可导出的目标总体方法
 总体目的是：将 CMake 项目中库文件、头文件和构建配置信息导出为可重用的模块，使其他项目通过 `find_package()` 即可直接使用这些库
 1. 项目配置阶段
@@ -2388,3 +2376,78 @@ add_executable(${PROJECT_NAME}
 source_group("UI Generated Files" FILES ${UI_HEADERS})
 ```
 当使用 AUTOUIC 自动处理时，CMake 会为每个.ui 文件自动生成对应的头文件，可能导致*非必要文件修改后*总是重新编译（但这里不是，仅仅是为了在 vs ide 中显示他们，更好地了解细节）
+
+### 使 fastlog 库能够被安装
+#### target 的 CMakeLists.txt 配置
+首先使用:
+```cmake
+# 这里使用`PUBLIC`主要是因为fastlog库很小，可以直接将源码复制到项目中编译使用而不是用库文件
+target_include_directories(fastlog PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+```
+使用[[#练习 2：生成器表达式|生成器表达式]]保证 不同输出情况下找到头文件的路径不一样
+```cmake
+install(TARGETS fastlog
+    EXPORT fastlogTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}	# 这里导出到特定位置
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}				# 这里在特定位置接受这些文件
+    FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)
+
+install(TARGETS example
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(EXPORT fastlogTargets
+    FILE fastlogTargets.cmake
+    NAMESPACE fastlog::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/fastlog
+)
+
+```
+- 颗粒度为单个 target 的配置
+- fastlog 主库和测试用例都是 target，所以分开两个install ，而 include 文件夹下的内容是其他项目需要使用 fastlog 库时的头文件，这些 install 函数里的安装配置最终会被写入到安装目录下的 `.cmake` 文件中
+- 安装完成后要导出给其他项目时能够可见，需要使用 `install(EXPORT)` 描述目标的命名空间和目标的架构，配置是怎么样的。这些内容分别被写在 `NAMESPACE` 和 `DESTINATION + FILE` 所指向的文件里
+#### 项目的 CMakeLists.txt 配置
+```cmake
+# Create and install config files for find_package support
+include(CMakePackageConfigHelpers)
+
+# 创建库版本文件，不需要手写，根据主CMakeLists.txt生成
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/fastlogConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion # 大版本号相同即兼容
+)
+
+# 需要手写，这里只做简单复制更名
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/fastlogConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/fastlogConfig.cmake"
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/fastlog
+)
+
+# 上面的操作只生成了文件，这里决定生成的文件放在什么位置
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/fastlogConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/fastlogConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/fastlog
+)
+
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/fastlog.pc"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+```
+- 主项目中配置的颗粒度是整个项目，保证整个项目能够被正确使用的配置
+- `${CMAKE_CURRENT_SOURCE_DIR}/fastlogConfig.cmake.in` 下的配置需要手动编写，这个文件决定了 `find_package` 能否**正确找到并使用**这个库
+
