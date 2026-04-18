@@ -2443,6 +2443,12 @@ install(
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/fastlog
 )
 
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/fastlog.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/fastlog.pc"
+    @ONLY
+)
+
 install(
     FILES "${CMAKE_CURRENT_BINARY_DIR}/fastlog.pc"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
