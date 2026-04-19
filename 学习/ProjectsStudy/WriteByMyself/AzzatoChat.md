@@ -98,10 +98,31 @@ void HttpManager::postHttpRequest(QUrl url, QJsonObject json, RequestId reqId, M
 			return;
 		}
 		// else: no error -> read return buffer -> send out result
-		QString res = reply->readAll();
+		QString res = QString::fromUtf8(reply->readAll());
 		emit	self->signalHttpFinish(reqId, res, ErrorCodes::SUCCESS, mod);
 		reply->deleteLater(); // easy to forget that!
 		return;
 	});
 }
 ```
+- HTTP 头的 Content-Length 必须是字符串（如 "123"），而 `QNetworkRequest::setHeader()` 第二个参数是 QVariant，`QByteArray::number()` 将整数转换为字符串形式的 QByteArray
+- **在写大部分含有回调逻辑的代码时，需要考虑生命周期问题**。这里的 connect 信号槽机制也是回调的一种，信号在运行时的**某一个时间点**被触发
+	- 创建信号槽之后 postHttpRequest 函数中的**局部变量**reply 就被删除了，但触发在创建信号槽连接之后，所以***值捕获&& `deleteLater`***
+	- 同理槽函数中需要用到 `self->singalHttpFinish()`，self 在外部同样是局部变量，函数结束后删除->引用计数-1，这时候如果引用计数为零则指针删除，lambda 访问已经被删除的内存->未定义行为。跨线程通信时也可能导致相同问题
+	- reqI 等函数参数在蛤属结束时弹出栈消失，同理不能引用捕获
+```cpp
+// 使用this捕获，即使没有{}代码块，分散在多个文件中的HttpManager实例很难保证触发信号时引用计数不为零
+int main() {
+    {
+        auto manager = std::make_shared<HttpManager>();
+        manager->makeRequest();
+    }  // manager 被销毁，但 lambda 还在等待网络响应！
+    
+    // 网络响应到达，lambda 执行，访问无效的 this → 崩溃
+    return 0;
+}
+```
+
+>[!Tip]
+>即使 disconnect 断开了信号槽，断开之前触发的信号还有可能触发，Qt 采用异步队列信号槽触发机制，发出信号->找到槽函数->槽函数触发事件进入队列->**断开连接**->不影响调用槽函数
+
