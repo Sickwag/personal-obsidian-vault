@@ -131,4 +131,19 @@ int main() {
 ### 基本构件
 使用 dynamic_body 而不是 string_body
 socket 没有拷贝构造，所以以使用移动，socket 是因为没有也是因为需要复用对象
- 
+http::shutdown 和 beast::socket::close 有什么区别？close 关闭哪一个对象有什么区别？
+什么时候用 close 什么时候 shutdown？
+数据类型 httpConnection 类在 LogicSystem 中为了防止重复引用增加编译时长，这里仅仅做声明
+为什么继承单例类的所有类（比如 LogicSystem） 都需要将 `Singleton<类>` 作为友元类？是为了这个类能够访问 Singleton 的构造函数从而达到无法被复制吗（继承了仅用拷贝构造函数和拷贝构造运算符的构造函数）
+继承了 `std::shared_from_this` 的类为什么要将构造函数设置为 private？
+如果一个继承自 `std::shared_from_this<Myclass>` 的类 Myclass，如何防止这个类被误用，通过以下代码将对象析构？
+```cpp
+class Myclass : public std::shared_from_this<Myclass> {
+	void doSomething(){
+		auto self = shared_from_this();
+		auto ptr = self.get();
+		delete ptr;
+	}
+};
+```
+我看到网上有一种说法: 通过将类的析构函数放在 private 中，然后创建一个能够访问 Myclass 析构函数的辅助类的指针指针即可解决问题。但是我没懂这是什么意思，请你详细解释
