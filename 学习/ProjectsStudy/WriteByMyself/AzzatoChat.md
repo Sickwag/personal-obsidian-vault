@@ -238,20 +238,20 @@ int main() {
 >即使 disconnect 断开了信号槽，断开之前触发的信号还有可能触发，Qt 采用异步队列信号槽触发机制，发出信号->找到槽函数->槽函数触发事件进入队列->**断开连接**->不影响调用槽函数
 
 ## gateServer
-网关服务器编写，对应视频第五集
 ### 基本构件
+网关服务器编写，对应视频第五集
 #### 单例模式
 复用[[#单例模板和 http 管理类]]中的单例代码
 #### http 消息解析
 Boost.Beast 中，`string_body` 和 `dynamic_body` 是两种 HTTP 消息体类型，注意是请求体而不是请求头
 - `string_body` 是最基础的消息体类型，它将 HTTP 消息体存储为字符串（`std::basic_string`）[1](https://boost.ac.cn/libraries/latest/grid/):
-	- **内存存储**：数据完全存储在**连续，整块**内存中，大小一般由 boost 自行控制，由于大小在几个数值中固定，所以可能会有一些空间浪费问题
+	- **内存存储**：数据完全存储在**连续，整块**内存中，大小一般由 boost 自行控制，由于大小虽然是动态变化的，但由于 `std::string` 的标准实现有预留空间，所以可能会有一些空间浪费问题
 	- **简单易用**：接口直观，使用方便
 	- **适合小数据**：适用于消息体大小可控的场景（通常在几 KB 以内的文本内容）
 - `dynamic_body` 使用动态缓冲区（`multi_buffer`）作为消息体容器，提供了最大的灵活性 [2](https://boost.ac.cn/libraries/latest/grid/):
 	- **动态增长**：支持数据的动态增长和收缩
 	- **内存控制**：可以限制缓冲区大小
-	- **流式处理**：可以边接收边处理，接口不能直接像 `string_body` 一样用 `.body()` 获取内容。而需要配合 `boost::beast::ostream(buffer, dynamic_string_obj.body())`，buffer 用来控制缓冲区大小
+	- **流式处理**：可以边接收边处理，接口不能直接像 `string_body` 一样用 `.body()` 获取内容。而需要配合 `boost::beast::ostream(dynamic_string_obj.body()) << 其他内容` ，- 控制缓冲区大小应该用 `multi_buffer` 的 `prepare()` / `commit()` 方法，或构造时指定限制
 	- **内存存储**：`ynamic_body` 使用的 `multi_buffer` 是分散的内存块
 	- 适用于大数据，（如文件），将整个内容存储为字符串会占用大量连续内存
 	- 适用于流式处理文件（音视频）边播放边解析
@@ -260,7 +260,7 @@ Boost.Beast 中，`string_body` 和 `dynamic_body` 是两种 HTTP 消息体类�
 void CServer::start() {
 	auto self = shared_from_this();
 
-	// similarly use value copy to avoiding this obj destructed when _acceptor callback occurs
+	// similarly use value copy to avoiding this obj being destructed when _acceptor callback occurs
 	_acceptor.async_accept(_socket, [self](const beast::error_code& ec) {
 		if(ec) {
 			self->start();
@@ -270,7 +270,10 @@ void CServer::start() {
 	});
 }
 ```
-socket 是文件描述符资源，所以没有拷贝构造而使用移动，并且这里 socket 是因为没有也是因为需要复用对象（每有一个连接进来就要新建一个 HttpConnection 管理这个连接，每个连接需要一个 socket 辨明身份），所以这里使用 `std::move()` 把 socket 内容转交给 HttpConnection 管理，而 `self->_socket` 内容清空以便接受下一个连接。
+socket 是文件描述符资源，所以没有拷贝构造而使用移动，并且这里 socket 是因为没有也是因为需要复用对象（每有连接进来就要新建 HttpConnection 管理连接，每个连接对应一个 socket 辨明身份），所以
+1. `_acceptor.async_accept(_socket, callback)` - 当新连接到来时，新建的 socket 会被放入 `_socket`
+2. `std::move(self->_socket)` - 将这个 socket 移动给 HttpConnection
+3. 此时 `self->_socket` 内容清空以便接受下一个连接。
 #### 关闭连接
 TCP 是一个**全双工**协议，两个方向的数据流是独立的。半关闭（half-close）允许一端告诉对方"我说完了"，但仍然可以继续接收数据。
 - 调用`shutdown(tcp::socket::shutdown_send)`
@@ -292,4 +295,133 @@ TCP 是一个**全双工**协议，两个方向的数据流是独立的。半关
 | **socket 重用** | socket 对象仍然可用（可继续接收）   | socket 对象不可用，需要重新创建         |
 | **资源释放**      | 不释放 socket 文件描述符       | 释放 socket 文件描述符             |
 
+### 网络路由
+对应视频 6
+#### URL 百分号编码
+URL 的定义（RFC 3986）规定，URL 只允许包含 ASCII 字符中的非控制字符
+对于非 ASCII 字符，首先将 Unicode 字符通过 UTF-8 转换
+```
+Unicode: U+4E2D  "中"
+UTF-8:   E4 B8 AD (三个字节)
+============将每个字节转换为%XX形式============
+E4 → %E4
+B8 → %B8
+AD → %AD
+```
 
+>[!TIP] 如何确定一个中文字符到底是 3 个还是 4 个字节？
+>根据 UTF-8 规范，一个中文字符占用 3~4 个字节，所以解析需要区分变长字符长度。
+>
+>| Unicode 码点范围 | 字节数 | 首字节特征 | 后续字节 |
+> |------------------|--------|------------|----------|
+> | U+0000 ~ U+007F  | 1 字节 | `0xxxxxxx` | 无 |
+> | U+0080 ~ U+07FF  | 2 字节 | `110xxxxx` | `10xxxxxx` |
+> | U+0800 ~ U+FFFF  | 3 字节 | `1110xxxx` | `10xxxxxx` × 2 |
+> | U+10000 ~ U+10FFFF | 4 字节 | `11110xxx` | `10xxxxxx` × 3 |
+> 首字节的高位模式就是"长度指纹"：
+> ```
+> - 0xxx xxxx → 1 字节
+> - 110x xxxx → 2 字节
+> - 1110 xxxx → 3 字节  
+> - 1111 0xxx → 4 字节
+> ```
+> 不同长度的字符在设计 Unicode 字符编码时根据放在不同的首字节特征区域就能够判定长度
+
+```cpp
+unsigned char FromHex(unsigned char x) {
+    unsigned char y;
+    if (x >= 'A' && x <= 'Z') y = x - 'A' + 10;
+    else if (x >= 'a' && x <= 'z') y = x - 'a' + 10;
+    else if (x >= '0' && x <= '9') y = x - '0';
+    else assert(0);
+    return y;
+}
+
+unsigned char ToHex(unsigned char x) {
+    return  x > 9 ? x + 55 : x + 48;
+}
+
+std::string UrlDecode(const std::string& str) {
+    std::string strTemp = "";
+    size_t length = str.length();
+    for (size_t i = 0; i < length; i++)
+    {
+        //还原+为空
+        if (str[i] == '+') strTemp += ' ';
+        //遇到%将后面的两个字符从16进制转为char再拼接
+        else if (str[i] == '%')
+        {
+            assert(i + 2 < length);
+            unsigned char high = FromHex((unsigned char)str[++i]);
+            unsigned char low = FromHex((unsigned char)str[++i]);
+            strTemp += high * 16 + low;
+        }
+        else strTemp += str[i];
+    }
+    return strTemp;
+}
+
+std::string UrlEncode(const std::string& str) {
+    std::string strTemp = "";
+    size_t length = str.length();
+    for (size_t i = 0; i < length; i++)
+    {
+        //判断是否仅有数字和字母构成
+        if (isalnum((unsigned char)str[i]) ||
+            (str[i] == '-') ||
+            (str[i] == '_') ||
+            (str[i] == '.') ||
+            (str[i] == '~'))
+            strTemp += str[i];
+        else if (str[i] == ' ') //为空字符
+            strTemp += "+";
+        else
+        {
+            //其他字符需要提前加%并且高四位和低四位分别转为16进制
+            strTemp += '%';
+            strTemp += ToHex((unsigned char)str[i] >> 4);
+            strTemp += ToHex((unsigned char)str[i] & 0x0F);
+        }
+    }
+    return strTemp;
+}
+
+std::string _get_url;
+std::unordered_map<std::string, std::string> _get_params;
+
+void HttpConnection::PreParseGetParam() {
+    // 提取 URI  
+    auto uri = _request.target();
+    // 查找查询字符串的开始位置（即 '?' 的位置）  
+    auto query_pos = uri.find('?');
+    if (query_pos == std::string::npos) {
+        _get_url = uri;
+        return;
+    }
+
+    _get_url = uri.substr(0, query_pos);
+    std::string query_string = uri.substr(query_pos + 1);
+    std::string key;
+    std::string value;
+    size_t pos = 0;
+    while ((pos = query_string.find('&')) != std::string::npos) {
+        auto pair = query_string.substr(0, pos);
+        size_t eq_pos = pair.find('=');
+        if (eq_pos != std::string::npos) {
+            key = UrlDecode(pair.substr(0, eq_pos)); // 假设有 url_decode 函数来处理URL解码  
+            value = UrlDecode(pair.substr(eq_pos + 1));
+            _get_params[key] = value;
+        }
+        query_string.erase(0, pos + 1);
+    }
+    // 处理最后一个参数对（如果没有 & 分隔符）  
+    if (!query_string.empty()) {
+        size_t eq_pos = query_string.find('=');
+        if (eq_pos != std::string::npos) {
+            key = UrlDecode(query_string.substr(0, eq_pos));
+            value = UrlDecode(query_string.substr(eq_pos + 1));
+            _get_params[key] = value;
+        }
+    }
+}
+```
