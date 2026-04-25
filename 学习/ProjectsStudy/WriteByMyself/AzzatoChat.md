@@ -70,6 +70,76 @@ mainlayout->addWidget(wxQRLabel_, 0, Qt::AlignCenter);
 > 因为没有意义
 > 已经成为子窗口的窗口控件没有必要设置 WindowsHint（窗口最小/大化按钮，无边框等内容）
 ### 单例模板和 http 管理类
+#### std::shared_ptr 和 std::make_shared 区别
+##### 用法和特性
+
+| 对比项                   | `std::shared_ptr<T>(new T)`                       | `std::make_shared<T>(args...)` |
+| --------------------- | ------------------------------------------------- | ------------------------------ |
+| **内存分配**              | 两次分配：一次给 `T` 对象，一次给控制块（引用计数等）                     | 一次分配：对象和控制块在同一块内存中             |
+| **异常安全**              | 不安全：`new T` 可能抛出异常，若在 `shared_ptr` 构造前发生异常则导致内存泄漏 | 安全：所有操作在函数内部完成                 |
+| **控制块位置**             | 控制块与对象分离                                          | 控制块与对象在同一内存块                   |
+| **性能**                | 较慢（两次分配）                                          | 较快（一次分配，更好的缓存局部性）              |
+| **自定义删除器**            | 支持                                                | 不支持                            |
+| **访问 `private` 构造函数** | 支持（通过友元 + `new`）                                  | 不支持（`make_shared` 不是类的友元）      |
+- 优先用 `make_shared`：大多数情况，性能更好，异常安全
+- 需要用 `shared_ptr<T>(new T)`：当构造函数是 private/protected 时（如单例模式）；或需要自定义删除器时
+- `make_shared_for_overwrite`：当你创建一个即将被立即覆盖的大对象时（如缓冲区），避免不必要的零初始化开销
+##### 工作原理
+```cpp
+std::shared_ptr<Foo> ptr(new Foo(1, 2));
+// 内存布局：
+// 1 堆内存 1: [ Foo 对象 ]
+// 2 堆内存 2: [ 控制块: 引用计数=1, 弱引用计数=0, 删除器... ]
+```
+执行过程：
+1. `new Foo(1, 2)` — 在堆上分配内存，调用 Foo 的构造函数，返回裸指针 p
+2. shared_ptr 构造函数 — 在堆上另外分配一块内存作为控制块（control block），存储引用计数、弱引用计数、删除器等
+3. 将 p 和控制块关联起来
+两次堆分配，两次释放。
+```cpp
+auto ptr = std::make_shared<Foo>(1, 2);
+// 内存布局：
+ // 1 堆内存: [ 控制块 | Foo 对象 ]  ← 连续内存
+```
+执行过程：
+ 1. 一次分配一块足够大的连续内存，同时容纳 Foo 对象和控制块
+ 2. 在这块内存中构造 Foo 对象（完美转发参数）
+ 3. 初始化控制块
+一次堆分配，一次释放。
+##### 异常安全
+`std::shared_ptr` 的 new 对象过程如果抛出异常**不会被捕获**，导致 new 对象泄漏，而 `make_shared` 将他们放在同一步骤中，自动处理异常
+#### 为什么使用 std::shared_ptr 构建 instance 对象？
+```cpp
+// Singleton.h
+template <typename T>
+std::shared_ptr<T> Singleton<T>::getInstance() {
+    static std::once_flag onceFlag;
+    std::call_once(onceFlag, [&]() { _instance = std::shared_ptr<T>(new T); });
+    return _instance;
+}
+// LogicSystem.h
+class LogicSystem : public Singleton<LogicSystem> {
+    friend class Singleton<LogicSystem>;  // 声明 Singleton 为友元
+private:
+    LogicSystem();  // 私有构造函数
+};
+```
+参考 [[#std shared_ptr 和 std make_shared 区别]]，   `std::make_shared<LogicSystem>() ` 是一个全局函数模板，内部调用 new LogicSystem()。**但 LogicSystem 构造函数是 private 的，make_shared 类不是 LogicSystem 的友元**，所以编译错误。
+
+而 `std::shared_ptr<LogicSystem>(new LogicSystem) `中：
+ - new LogicSystem 是在 Singleton::getInstance() 内部执行的
+ - `Singleton<LogicSystem>` 是 LogicSystem 的友元（`friend class Singleton<LogicSystem>`）
+ - 友元可以访问 private 成员，所以 new LogicSystem() 可以成功
+ - 然后裸指针交给 shared_ptr 管理
+
+#### 闭包思想
+闭包（Closure） 是一个函数实体，它"捕获"了创建它时的外部环境（变量），使得这个函数可以在之后被调用时，仍然能访问那些变量。
+C++中没有原生闭包支持，一般通过 lambda 表达式**值捕获来模拟**，外部环境通过值捕获被加入到*生成出的匿名类中*以保证生命周期和结构体一致。
+不过注意，如果**外部环境是一个指针，需要使用 `std::shared_from_this` 获取类对象指针**，然后将他**值捕获**到列表中，因为指针本身只是一个 int 数字，保存它的生命周期和匿名类一致没有意义，有意义的是对应内存。
+由于单从裸指针无法得知内存有没有被释放，所以这里用 shared_from_this 通过计数保证生命周期。
+
+> [!caution] 捕获 this 指针带来生命周期问题
+> 正因如此，**直接在 lambda 中捕获 this 指针是一种很危险的行为**，尤其在异步处理函数中
 #### std::once_flat 和 std::call_once 保证多线程单例
 `std::once_flag` 和 `std::call_once` 是 C++11 标准库提供的**多线程安全的初始化机制**。
 - **`std::once_flag`**：是一个辅助类，作为 `std::call_once` 的标志参数 [1](https://en.cppreference.com/w/cpp/thread/once_flag.html) [2](https://cppreference.net/cpp/thread/once_flag.html) [3](https://cplusplus.com/reference/mutex/once_flag/) [5](https://www.apiref.com/cpp/cpp/thread/once_flag.html)。它既不可复制也不可移动。
@@ -129,8 +199,37 @@ int main() {
 ## gateServer
 网关服务器编写，对应视频第五集
 ### 基本构件
-使用 dynamic_body 而不是 string_body
-socket 没有拷贝构造，所以以使用移动，socket 是因为没有也是因为需要复用对象
+#### 单例模式
+复用[[#单例模板和 http 管理类]]中的单例代码
+#### http 消息解析
+Boost.Beast 中，`string_body` 和 `dynamic_body` 是两种 HTTP 消息体类型，注意是请求体而不是请求头
+- `string_body` 是最基础的消息体类型，它将 HTTP 消息体存储为字符串（`std::basic_string`）[1](https://boost.ac.cn/libraries/latest/grid/):
+	- **内存存储**：数据完全存储在**连续，整块**内存中，大小一般由 boost 自行控制，由于大小在几个数值中固定，所以可能会有一些空间浪费问题
+	- **简单易用**：接口直观，使用方便
+	- **适合小数据**：适用于消息体大小可控的场景（通常在几 KB 以内的文本内容）
+- `dynamic_body` 使用动态缓冲区（`multi_buffer`）作为消息体容器，提供了最大的灵活性 [2](https://boost.ac.cn/libraries/latest/grid/):
+	- **动态增长**：支持数据的动态增长和收缩
+	- **内存控制**：可以限制缓冲区大小
+	- **流式处理**：可以边接收边处理，接口不能直接像 `string_body` 一样用 `.body()` 获取内容。而需要配合 `boost::beast::ostream(buffer, dynamic_string_obj.body())`，buffer 用来控制缓冲区大小
+	- **内存存储**：`ynamic_body` 使用的 `multi_buffer` 是分散的内存块
+	- 适用于大数据，（如文件），将整个内容存储为字符串会占用大量连续内存
+	- 适用于流式处理文件（音视频）边播放边解析
+#### 启动服务和 socket 复用
+```cpp
+void CServer::start() {
+	auto self = shared_from_this();
+
+	// similarly use value copy to avoiding this obj destructed when _acceptor callback occurs
+	_acceptor.async_accept(_socket, [self](const beast::error_code& ec) {
+		if(ec) {
+			self->start();
+			return;
+		}
+		std::make_shared<HttpConnection>(std::move(self->_socket))->start();
+	});
+}
+```
+socket 是文件描述符资源，所以没有拷贝构造而使用移动，并且这里 socket 是因为没有也是因为需要复用对象（每有一个连接进来就要新建一个 HttpConnection 管理这个连接，每个连接需要一个 socket 辨明身份），所以这里使用 `std::move()` 把 socket 内容转交给 HttpConnection 管理，而 `self->_socket` 内容清空以便接受下一个连接。
 http::shutdown 和 beast::socket::close 有什么区别？close 关闭哪一个对象有什么区别？
 什么时候用 close 什么时候 shutdown？
 数据类型 httpConnection 类在 LogicSystem 中为了防止重复引用增加编译时长，这里仅仅做声明
