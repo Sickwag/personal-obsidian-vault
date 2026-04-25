@@ -14,5 +14,5 @@
     "downscalePercent": 70
   },
   "showLineNumber": true,
-  "vimMode": false
+  "vimMode": true
 }

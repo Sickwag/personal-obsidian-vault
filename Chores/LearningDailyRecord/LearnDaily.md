@@ -19,4 +19,6 @@
 - shared 指针细节和 make_shared-> [[AzzatoChat#std shared_ptr 和 std make_shared 区别]] -> [[AzzatoChat#为什么使用 std shared_ptr 构建 instance 对象？]]
 - 闭包思想和 C++注意事项-> [[AzzatoChat#闭包思想]]
 - 构造和析构函数放在不同修饰符中的差异-> [[C++ Runoob Tutoral#构造函数]] -> [[C++ Runoob Tutoral#构造函数 vs 析构函数对比总结]]
+- tcp 消息解析和传输关闭方向-> [[AzzatoChat#关闭连接]] -> [[AzzatoChat#http 消息解析]]
+- shared_ptr 各种细节-> [[AzzatoChat#防止shared_from_this 被误用]] -> [[AzzatoChat#std shared_ptr 和 std make_shared 区别]] -> [[AzzatoChat#为什么使用 std shared_ptr 构建 instance 对象？]]
 - 

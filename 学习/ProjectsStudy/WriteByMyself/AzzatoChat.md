@@ -127,11 +127,14 @@ private:
 参考 [[#std shared_ptr 和 std make_shared 区别]]，   `std::make_shared<LogicSystem>() ` 是一个全局函数模板，内部调用 new LogicSystem()。**但 LogicSystem 构造函数是 private 的，make_shared 类不是 LogicSystem 的友元**，所以编译错误。
 
 而 `std::shared_ptr<LogicSystem>(new LogicSystem) `中：
- - new LogicSystem 是在 Singleton::getInstance() 内部执行的
- - `Singleton<LogicSystem>` 是 LogicSystem 的友元（`friend class Singleton<LogicSystem>`）
- - 友元可以访问 private 成员，所以 new LogicSystem() 可以成功
- - 然后裸指针交给 shared_ptr 管理
+- new LogicSystem 是在 Singleton::getInstance() 内部执行的
+- `Singleton<LogicSystem>` 是 LogicSystem 的友元（`friend class Singleton<LogicSystem>`）
+- 友元可以访问 private 成员，所以 new LogicSystem() 可以成功
+- 然后裸指针交给 shared_ptr 管理
 
+> [!warning] 在 LogicSystem 中生命 make_shared 函数模板特化为他的友元也是错误的
+> singleton 的析构函数必须非private，否则引用计数为 0 时会调用默认删除器 `::operator delete`，private 析构函数因为无法访问到。
+> 这导致了每一个T 类型的析构函数必须放在 public/protect 中，维护困难
 #### 闭包思想
 闭包（Closure） 是一个函数实体，它"捕获"了创建它时的外部环境（变量），使得这个函数可以在之后被调用时，仍然能访问那些变量。
 C++中没有原生闭包支持，一般通过 lambda 表达式**值捕获来模拟**，外部环境通过值捕获被加入到*生成出的匿名类中*以保证生命周期和结构体一致。
@@ -140,6 +143,44 @@ C++中没有原生闭包支持，一般通过 lambda 表达式**值捕获来模�
 
 > [!caution] 捕获 this 指针带来生命周期问题
 > 正因如此，**直接在 lambda 中捕获 this 指针是一种很危险的行为**，尤其在异步处理函数中
+#### 防止shared_from_this 被误用
+一个继承自 `std::enable_shared_from_this<Myclass>` 的类 Myclass 在以下场景中将指针删除导致内存泄漏
+```cpp
+class Myclass : public std::shared_from_this<Myclass> {};
+
+class OutSideMyclass {
+	void doSomething(){
+		auto mc_ptr = std::make_shared<Myclass>();
+		auto ptr = self.get();
+		delete ptr;
+	}
+};
+```
+解决方式: 将析构函数设置为private，并只能通过外部辅助类来删除对象
+```cpp
+// 前置声明删除器
+struct MyClassDeleter;
+
+class MyClass : public std::enable_shared_from_this<MyClass> {
+    friend struct MyClassDeleter;  // 删除器是友元
+    
+private:
+    ~MyClass() = default;  // 私有析构函数
+    
+public:
+    static std::shared_ptr<MyClass> create() {
+        return std::shared_ptr<MyClass>(new MyClass(), MyClassDeleter());
+    }
+};
+
+struct MyclassDeleter {
+    void operator()(MyClass* p) {
+        delete p;  // ✅ 友元可以访问私有析构函数
+    }
+};
+```
+这样，如果在外部调用delete 删除ptr，delete 检查析构函数访问，发现在 private 中无法访问->报错，只能通过 MyclassDeleter 删除指针。
+这种方式比较麻烦，**并且无法保证Myclass 内部函数获取裸指针然后删除**（类内部可以访问private 成员）。这一版不能通过CRTP 等严格的保护措施做到，不过这昂灰增加维护困难，因此不在类内部删除类自身的shared_ptr 裸指针***开发者自己的责任***
 #### std::once_flat 和 std::call_once 保证多线程单例
 `std::once_flag` 和 `std::call_once` 是 C++11 标准库提供的**多线程安全的初始化机制**。
 - **`std::once_flag`**：是一个辅助类，作为 `std::call_once` 的标志参数 [1](https://en.cppreference.com/w/cpp/thread/once_flag.html) [2](https://cppreference.net/cpp/thread/once_flag.html) [3](https://cplusplus.com/reference/mutex/once_flag/) [5](https://www.apiref.com/cpp/cpp/thread/once_flag.html)。它既不可复制也不可移动。
@@ -179,11 +220,11 @@ void HttpManager::postHttpRequest(QUrl url, QJsonObject json, RequestId reqId, M
 - **在写大部分含有回调逻辑的代码时，需要考虑生命周期问题**。这里的 connect 信号槽机制也是回调的一种，信号在运行时的**某一个时间点**被触发
 	- 创建信号槽之后 postHttpRequest 函数中的**局部变量**reply 就被删除了，但触发在创建信号槽连接之后，所以***值捕获&& `deleteLater`***
 	- 同理槽函数中需要用到 `self->singalHttpFinish()`，self 在外部同样是局部变量，函数结束后删除->引用计数-1，这时候如果引用计数为零则指针删除，lambda 访问已经被删除的内存->未定义行为。跨线程通信时也可能导致相同问题
-	- reqI 等函数参数在蛤属结束时弹出栈消失，同理不能引用捕获
+	- reqI 等函数参数在结束时弹出栈消失，同理不能引用捕获
 ```cpp
 // 使用this捕获，即使没有{}代码块，分散在多个文件中的HttpManager实例很难保证触发信号时引用计数不为零
 int main() {
-    {
+	{
         auto manager = std::make_shared<HttpManager>();
         manager->makeRequest();
     }  // manager 被销毁，但 lambda 还在等待网络响应！
@@ -230,19 +271,25 @@ void CServer::start() {
 }
 ```
 socket 是文件描述符资源，所以没有拷贝构造而使用移动，并且这里 socket 是因为没有也是因为需要复用对象（每有一个连接进来就要新建一个 HttpConnection 管理这个连接，每个连接需要一个 socket 辨明身份），所以这里使用 `std::move()` 把 socket 内容转交给 HttpConnection 管理，而 `self->_socket` 内容清空以便接受下一个连接。
-http::shutdown 和 beast::socket::close 有什么区别？close 关闭哪一个对象有什么区别？
-什么时候用 close 什么时候 shutdown？
-数据类型 httpConnection 类在 LogicSystem 中为了防止重复引用增加编译时长，这里仅仅做声明
-为什么继承单例类的所有类（比如 LogicSystem） 都需要将 `Singleton<类>` 作为友元类？是为了这个类能够访问 Singleton 的构造函数从而达到无法被复制吗（继承了仅用拷贝构造函数和拷贝构造运算符的构造函数）
-继承了 `std::shared_from_this` 的类为什么要将构造函数设置为 private？
-如果一个继承自 `std::shared_from_this<Myclass>` 的类 Myclass，如何防止这个类被误用，通过以下代码将对象析构？
-```cpp
-class Myclass : public std::shared_from_this<Myclass> {
-	void doSomething(){
-		auto self = shared_from_this();
-		auto ptr = self.get();
-		delete ptr;
-	}
-};
-```
-我看到网上有一种说法: 通过将类的析构函数放在 private 中，然后创建一个能够访问 Myclass 析构函数的辅助类的指针指针即可解决问题。但是我没懂这是什么意思，请你详细解释
+#### 关闭连接
+TCP 是一个**全双工**协议，两个方向的数据流是独立的。半关闭（half-close）允许一端告诉对方"我说完了"，但仍然可以继续接收数据。
+- 调用`shutdown(tcp::socket::shutdown_send)`
+	1. 服务器写完响应后，关闭发送方向 `socket.shutdown(tcp::socket::shutdown_send)`，本端不能再发送数据
+	2. 服务器仍然可以接收（比如处理客户端的后续请求），或者等待客户端关闭连接
+	3. 对方收到 FIN 后，知道本端已经发送完毕
+	4. 当对方也关闭连接时，完整的四次挥手才会发生
+- 当调用 `close()` 时，如果发送缓冲区还有数据未确认，tcp 会尝试发送完这些数据，然后执行正常的四次挥手。主动关闭的一方会进入 **time-wait** 状态，持续 2msl（约 1-4 分钟）。
+	1. TIME-WAIT 的目的是：
+		1. 确保最后的 ACK 能被对方收到（如果丢失，对方会重传 FIN）
+		2. 防止旧连接的延迟数据包干扰新连接
+这可以用 shutdown 或关闭 socket 实现:
+
+|               | `socket.shutdown(...)` | `socket.close()`            |
+| ------------- | ---------------------- | --------------------------- |
+| **作用**        | 关闭连接的**一个或两个方向**的数据流   | 立即**完全销毁** socket 及其底层文件描述符 |
+| **TCP 层面**    | 发送 FIN 包（半关闭）          | 发送 RST 包（强制终止）              |
+| **数据**        | 已发送但未确认的数据会继续尝试发送      | 丢弃所有未发送/未确认的数据              |
+| **socket 重用** | socket 对象仍然可用（可继续接收）   | socket 对象不可用，需要重新创建         |
+| **资源释放**      | 不释放 socket 文件描述符       | 释放 socket 文件描述符             |
+
+
