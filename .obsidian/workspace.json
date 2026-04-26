@@ -83,7 +83,7 @@
             }
           }
         ],
-        "currentTab": 4
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -136,7 +136,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -229,7 +230,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 218.5
+    "width": 218.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -245,12 +247,12 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "77090912b6310521",
+  "active": "556c05ef6377e781",
   "lastOpenFiles": [
+    "学习/algorithm/用法导向知识.md",
     "学习/algorithm/刷题路线.md",
     "# 代码错误分析.md",
     "学习/algorithm/题型分类.md",
-    "学习/algorithm/用法导向知识.md",
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Chores/LearningDailyRecord/LearnDaily.md",
