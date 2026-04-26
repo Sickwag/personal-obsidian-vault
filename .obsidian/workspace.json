@@ -66,9 +66,19 @@
               "icon": "lucide-file",
               "title": "LearnDaily"
             }
+          },
+          {
+            "id": "27c99884e6477553",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -232,11 +242,11 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "ccb6d9497fdc760d",
+  "active": "27c99884e6477553",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Chores/LearningDailyRecord/LearnDaily.md",
-    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/algorithm/用法导向知识.md",
     "学习/algorithm/刷题路线.md",
     "Chores/operation in devices.md",
