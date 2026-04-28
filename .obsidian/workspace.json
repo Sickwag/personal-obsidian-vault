@@ -115,7 +115,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "dijk",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
