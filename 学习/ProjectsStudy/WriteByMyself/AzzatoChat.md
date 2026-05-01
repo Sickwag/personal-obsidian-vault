@@ -432,3 +432,142 @@ void HttpConnection::PreParseGetParam() {
     }
 }
 ```
+#### 异步函数捕获异常
+异步函数运行后**立刻返回**，网络传输中经常用到一部回调函数，而项目中
+```cpp
+void CServer::start() {
+	auto self = shared_from_this();
+
+	// similarly use value copy to avoiding this obj being destructed when _acceptor callback occurs
+	_acceptor.async_accept(_processingSocket, [self](const beast::error_code& ec) {
+		try {
+			if (ec) {
+				// give up this connection instead of listen a new one
+				self->start();
+				return;
+			}
+			std::make_shared<HttpConnection>(std::move(self->_processingSocket))->start();
+			self->start();
+		}
+		catch (std::exception& e) {
+			fastlog::console.error("error occurs in acceptor accept a connection: {}", e.what());
+			self->start();
+		}
+	});
+}
+
+void HttpConnection::start() {
+	auto self = shared_from_this();
+	http::async_read(
+		_socket, _buffer, _request, [self](const beast::error_code& ec, ::std::size_t bytes_transferred) {
+			try {
+				if(ec) {
+					fastlog::console.debug("http read error is: {}", ec.what());
+					return;
+				}
+				boost::ignore_unused(bytes_transferred);
+				self->handleRequest();
+				self->checkDeadline();
+			} catch(std::exception& e) {
+				fastlog::console.debug("exception occurs, description: {}", e.what());
+			}
+		});
+}
+
+int main() {
+	try {
+		unsigned short			port = static_cast<unsigned short>(8080);
+		asio::io_context		ioc{ 1 };
+		boost::asio::signal_set signals(ioc, SIGINT, SIGTERM);
+		signals.async_wait([&ioc](const boost::system::error_code ec, int signal_number) {
+			if(ec) {
+				return;	 // QUES: maybe it deserver a more elegant way to ignore
+			}
+			ioc.stop();
+		});
+		std::make_shared<CServer>(ioc, port)->start();
+		ioc.run();
+	} catch(std::exception& e) {
+		fastlog::console.error("error occurs: {}", e.what());
+	}
+}
+```
+中都用到了回调函数处理，这些回调函数**随时可能被调用**，而调用时上层（这里的"上层"指的是抽象意义的上层，比如 main 函数中try-catch 里看似包裹了 CServer 的 start 函数，但 CServer::start()运行时 main 函数已经在 `ioc.run()` 的事件循环里了，回调函数抛出的异常不会被 main 函数的 try-catch 捕获）
+```
+实际运行时序（不是代码顺序！）：                                                             
+                                                                                             
+时间轴 →→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→                                    
+                                                                                             
+时刻 1：ioc.run() 检测到有数据到达                                                           
+  调用栈：main → ioc.run() → [asio内部] → handleRequest() → async_write()                    
+                                   ↑                             ↑                           
+                             事件循环派发                    注册回调函数:发起写操作后立即返回          
+                                                                                             
+时刻 2：handleRequest() 返回                                                                 
+  调用栈：main → ioc.run() → [asio内部继续派发其他请求...]                                   
+  此时 handleRequest 的栈帧已销毁。                                                          
+                                                                                             
+时刻 3：写操作完成 ← 这可能是毫秒或秒之后                                                    
+  调用栈：main → ioc.run() → [asio内部] → lambda(ec, n) { shutdown; cancel; }                
+                                  ↑                           ↑                              
+                            事件循环发现写完成，派发回调      回调真正执行                   
+                                                                                             
+注意时刻 1 和时刻 3 的区别：                                                                 
+                                                                                             
+- 时刻 1 的调用栈：main → ioc.run() → handleRequest() → async_write()                        
+- 时刻 3 的调用栈：main → ioc.run() → lambda
+```
+
+> [!QUESTION] 异步回调函数中为什么要用 try-catch？
+> 异步回调运行在 **io_context 的事件循环**（`ioc.run()`）中，而非主调函数的栈上（异常需要在栈上展开）
+> ```cpp
+> http::async_read(..., [self](...) {
+>     // 这里抛异常
+>     throw std::runtime_error("xxx");
+>     // ↑ 没有人能 catch 它，程序直接 terminate
+> });
+> ```
+> - C++的异常处理是**依赖于调用栈的**，内层抛出异常后，会将异常**沿着函数栈帧生长的相反方向**传递异常，知道被捕获。
+> - 而回调函数的注册&唤醒依赖事件循环（`ioc.run()`）
+> - `ioc.run()` 没有设置异常处理逻辑。
+> - 如果回调函数出现了异常没有在回调内被捕获，将会传递到 `ioc.run()` 位置抛出异常，**main 函数中的最外层 try-catch**捕获异常
+> - 捕获完成后直接导致程序结束
+> 
+> 所以总而言之回调函数中使用 try-catch 是为了不让一个回调抛出异常直接让事件循环断开，程序结束。回调入口处包一层 `try-catch` 将异常限制在回调内部不会影响外部。
+#### 异步回调的调试体验
+**而是异步回调天然难以单步调试**，同样使用这一段异步代码:
+```cpp
+http::async_write(_socket, _response, [self](beast::error_code ec, std::size_t bytes_transferred) {
+->断点	self->_socket.shutdown(tcp::socket::shutdown_send, ec);
+->断点	self->_deadline.cancel();  // stop count time when send response back to client
+});
+```
+这里在注册回调，回调已经被加入事件循环，所以这个回到函数会在执行到这里**立刻返回**，而当回调函数被唤醒时，执行流程被切断了：
+- 当写操作真正完成时，io_context 的事件循环从 `ioc.run()` 内部直接调用回调
+- 调用栈是：`ioc.run()` → `asio::detail::...` → 你的 lambda
+- 和发起 `async_write` 的那段代码**已经不是同一个调用栈了**
+
+所以你在 `handleRequest()` 里发起 `async_write`，然后在 lambda 里设断点，当断点命中时，你看到的调用栈是从 `ioc.run()` 深处一路进来的，中间隔了很多 asio 内部实现——"怎么进来的"的确是模糊的。
+
+一种实用的调试方式：**在回调的 lambda 里加日志输出**，以及在 `ioc.run()` 前后加日志。还有就是，对回调内部的复杂逻辑，把它提取成命名函数，单独单元测试。
+
+协程正是为了解决这个问题，C++20 协程 + Asio 的 `awaitable` 正是为了把异步回调写成**同步形式的顺序代码**
+```cpp
+// 回调写法
+async_write(socket, response, [self](ec, n) {
+    async_read(socket, buffer, request, [self](ec, n) {
+        // 嵌套回调...
+    });
+});
+
+// 协程写法（示意）
+asio::awaitable<void> handle() {
+    co_await async_write(socket, response, asio::use_awaitable);
+    co_await async_read(socket, buffer, request, asio::use_awaitable);
+    // 顺序书写，不需要嵌套
+}
+```
+协程的好处：
+- **调试回归自然**：单步可以沿着顺序代码逐行走，调用栈是连续的
+- **没有回调嵌套**（callback hell）
+- **异常处理同步化**：`try-catch` 包裹整个协程体即可
