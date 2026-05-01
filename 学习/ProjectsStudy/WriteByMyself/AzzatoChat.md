@@ -262,11 +262,18 @@ void CServer::start() {
 
 	// similarly use value copy to avoiding this obj being destructed when _acceptor callback occurs
 	_acceptor.async_accept(_socket, [self](const beast::error_code& ec) {
-		if(ec) {
-			self->start();
-			return;
+		try {
+			if (ec) {
+				// give up this connection instead of listen a new one
+				self->start();
+				return;
+			}
+			std::make_shared<HttpConnection>(std::move(self->_processingSocket))->start();
 		}
-		std::make_shared<HttpConnection>(std::move(self->_socket))->start();
+		catch (std::exception& e) {
+			fastlog::console.error("error occurs in acceptor accept a connection: {}", e.what());
+			self->start();
+		}
 	});
 }
 ```
