@@ -82,8 +82,7 @@
               "title": "用法导向知识"
             }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "vertical"
@@ -115,7 +114,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "dijk",
+                "query": "分割",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -136,8 +135,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -247,7 +245,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "556c05ef6377e781",
+  "active": "ccb6d9497fdc760d",
   "lastOpenFiles": [
     "学习/algorithm/用法导向知识.md",
     "学习/algorithm/刷题路线.md",
