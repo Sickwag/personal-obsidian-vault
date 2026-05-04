@@ -81,9 +81,19 @@
               "icon": "lucide-file",
               "title": "题型分类"
             }
+          },
+          {
+            "id": "ae4c9216b01604b3",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 3
+        "currentTab": 5
       }
     ],
     "direction": "vertical"
@@ -247,10 +257,10 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "77090912b6310521",
+  "active": "ae4c9216b01604b3",
   "lastOpenFiles": [
-    "学习/algorithm/题型分类.md",
     "学习/algorithm/用法导向知识.md",
+    "学习/algorithm/题型分类.md",
     "学习/algorithm/刷题路线.md",
     "Files & LongText/Attachments/Pasted image 20260504165744.png",
     "Files & LongText/Attachments/Pasted image 20260504165711.png",
