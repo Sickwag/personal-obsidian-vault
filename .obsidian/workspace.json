@@ -115,7 +115,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "筛",
+                "query": "闰年",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
