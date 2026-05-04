@@ -571,3 +571,4 @@ asio::awaitable<void> handle() {
 - **调试回归自然**：单步可以沿着顺序代码逐行走，调用栈是连续的
 - **没有回调嵌套**（callback hell）
 - **异常处理同步化**：`try-catch` 包裹整个协程体即可
+
