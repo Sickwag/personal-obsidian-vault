@@ -426,7 +426,55 @@ int server_accept_new_connection() {
 └─────────────────────────────────────────────────────────────────┘
 ```
 #### 消息收发缓冲区结构
+Boost Asio 的**类型安全设计**——用 C++ 类型系统在编译期防止错误。
+所谓 buffer 就是接收和发送数据时缓存数据的结构。 asio 提供了 `asio::mutable_buffer` 用于写服务和 `asio::const_buffer` 用于读服务这两个结构，他们**是一段连续的空间**，首字节存储了后续数据的长度
+但是这两个结构都没有被 asio 的 api 直接使用，asio 提出了 MutableBufferSequence 和 ConstBufferSequence 概念，他们是由多个 `asio::mutable_buffer` 和 `asio::const_buffer` 组成的。也就是说为了节省空间，将一部分连续的空间组合起来（***本质上他们是一段能够被连续的索引找到并连续遍历的一段不连续的空间集合***），作为参数交给 api 使用。这种方式节省了空间的同时没有降低性能，同时设计的也很优雅
+![[Pasted image 20260505230524.png|500]]
+> [!note] 
+> "零拷贝"不是"不需要复制"，而是**不需要在用户态创建临时合并缓冲区**。
+> 
+> 虽然缓冲区中的数据在物理上不是连续的，但是可以缓冲区序列（抽象地类比为 `std::vector<XXXSequence>` 是连续存储的，并且每一个分散的的 buffer 也是连续的，内存地址和长度也是确定的，所以整个缓冲区序列虽然在物理上分散，但是逻辑上是连续的，所以可以被近似连续地遍历
+> 
+> 内核可以直接根据这些信息，用 scatter-gather I/O 从多个不连续地址同时读取，无需用户态临时合并。
+> ```md
+> ┌─────────────────────────────────────────────────────────────────────┐
+> │                    传统方式：需要额外复制                           │
+> ├─────────────────────────────────────────────────────────────────────┤
+> │                                                                     │
+> │   应用数据1 (0x1000)  ─┐                                            │
+> │   应用数据2 (0x2000)  ─┼──→ 临时缓冲区 (0x3000) ──→ 内核 ──→ 网络  │
+> │   应用数据3 (0x3000)  ─┘    ↑ 需要额外分配和复制                   │
+> │                                                                     │
+> │   问题：需要先合并，再发送                                          │
+> │                                                                     │
+> └─────────────────────────────────────────────────────────────────────┘
+> 
+> ┌─────────────────────────────────────────────────────────────────────┐
+> │                    Asio 方式：零拷贝（scatter-gather）              │
+> ├─────────────────────────────────────────────────────────────────────┤
+> │                                                                     │
+> │   应用数据1 (0x1000, 100字节) ─┐                                    │
+> │   应用数据2 (0x2000, 200字节) ─┼──→ 直接传给内核 ──→ 网络         │
+> │   应用数据3 (0x3000,  50字节) ─┘    ↑ 不需要临时缓冲区             │
+> │                                                                     │
+> │   内核使用 scatter-gather I/O，同时从多个地址读取                   │
+> │                                                                     │
+> └─────────────────────────────────────────────────────────────────────┘
+> ```
 
+我们可以理解为MutableBufferSequence的数据结构为 `std::vector<asio::mutable_buffer>(asio::mutable_buffer)`，同理 ConstBufferSequence。
+这么复杂的结构交给用户使用并不合适，所以 asio 提出了 `buffer()` 函数，该函数接收多种形式的字节流，该函数返回 `asio::mutable_buffers_1` 或者 `asio::const_buffers_1` 结构的对象。  
+- 如果传递给 buffer()的参数是一个只读类型，则函数返回 `asio::const_buffers_1` 类型对象。  
+- 如果传递给 buffer()的参数是一个可写类型，则返回 `asio::mutable_buffers_1` 类型对象。
+
+可以看到，真正进行数据读写的 api 接受的参数类型都是 MutableBufferSequence 和 ConstBufferSequence 类型，而 `asio::const_buffers_1` 和 `asio::mutable_buffers_1` 是 `asio::mutable_buffer` 和 `asio::const_buffer` 的适配器，提供了符合 MutableBufferSequence 和 ConstBufferSequence 概念的接口
+```cpp
+// send的api接口
+template<typename ConstBufferSequence>
+std::size_t send(const ConstBufferSequence & buffers);
+```
+***那么普通类型的数据如何转换为这符合两种概念的类型呢？***
+-> 使用 `buffer()` 函数，`buffer()` 是"工厂函数"，把各种形式的内存转换为 Asio API 需要的"缓冲区序列"格式。根据传入参数类型决定返回值类型
 # 简单网络请求
 ## 静态 html 源代码获取
 参考教程： https://www.bilibili.com/video/BV11HsqzFEUN/?spm\_id\_from=333.1387.favlist.content.click&vd\_source=876be08bc9c030f4a9ea1fb97e0d0342
