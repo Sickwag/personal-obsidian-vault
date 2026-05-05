@@ -25,6 +25,7 @@ GET /api/products?category=electronics&minPrice=500 HTTP/1.1
 # Boost.Asio 编程
 参考:https://www.yuque.com/lianlianfengchen-cvvh2/krco73
 ## 网络编程基本流程
+### 流程概览
 服务端  
 1. socket----创建 socket 对象。
 2. bind----绑定本机 ip+port。
@@ -37,6 +38,224 @@ GET /api/products?category=electronics&minPrice=500 HTTP/1.1
 8. write、read----建立连接后，就可发收消息了。
 传统的网络阻塞 IO 模型
 ![[Pasted image 20260505135436.png|500]]
+
+### 代码编写
+#### 创建 endpoint
+```cpp
+void printIfErrorExist(boost::system::error_code& ec, const std::string& additionalText = "") {
+	if(ec.value() != 0) {
+		std::string info =
+			std::format("{}, error_code: {}, message: {}\n", additionalText, ec.value(), ec.message());
+		std::cout << info;
+	}
+}
+
+int client_endpoint_create() {
+	// set target server endpoint to connect, not the client itself
+	const std::string		  targetServerIPAddress = "127.0.0.1";
+	const unsigned short	  targetServerPort		= 3333;
+	boost::system::error_code ec;
+
+	// construct server endpoint
+	asio::ip::address serverIPAddress = asio::ip::address::from_string(targetServerIPAddress, ec);
+    printIfErrorExist(ec, "failed to parse target server ip address");
+    // notice there have no info of client itself
+    asio::ip::tcp::endpoint targetServerEndpoint(serverIPAddress, targetServerPort);
+	return 0;
+}
+
+int server_endpoint_create() {
+	// the listen port is OS distribute to this server application as the response to its apply
+	const unsigned short	serverListenPort = 3333;
+	asio::ip::address		acceptIPAddress = asio::ip::address_v6::any();  // accept all ipv6 connection come in, it can be use in acceptor
+	asio::ip::tcp::endpoint endpoint(acceptIPAddress, serverListenPort);
+}
+```
+- 按理说任何通信都需要**双方知道对方的**确切的网络地址（ip 地址+端口号），那么客户端**和服务端通信也需要一个端口**，但这会由操作系统随机分配（当时空闲），并在通信是连同通信信息一同发向服务端，这样服务端就能根据这些信息来知道对方的地址。
+- 但是 CS 架构中，客户端和服务端并不需要知道自己的 ip 地址，发送信息只需要知道对方的即可，**绑定 socket 时**需要知道自己的 IP（可以填 `INADDR_ANY` 让系统选择）
+- boost 支持指定客户端和服务端的运行端口，但不推荐
+如果使用 C api 写:
+```cpp
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+void print_error(const char *additional_text, int err_code, const char *err_msg) {
+    if (err_code != 0) {
+        printf("%s, error_code: %d, message: %s\n", additional_text, err_code, err_msg);
+    }
+}
+
+// ============================================================
+// 客户端：创建连接服务器的 endpoint
+// ============================================================
+int client_endpoint_create() {
+    // 目标服务器地址
+    const char *target_server_ip   = "127.0.0.1";
+    const unsigned short target_server_port = 3333;
+
+    // 1. 创建 socket (TCP)
+    int client_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (client_fd < 0) {
+        print_error("failed to create socket", errno, strerror(errno));
+        return -1;
+    }
+
+    // 2. 构造目标服务器地址结构
+    struct sockaddr_in server_addr;
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family      = AF_INET;                    // IPv4
+    server_addr.sin_port        = htons(target_server_port);  // 端口（需要转成网络字节序）
+    inet_pton(AF_INET, target_server_ip, &server_addr.sin_addr);  // IP 地址
+
+    // 3. 连接到服务器（相当于 Boost.Asio 的 connect）
+    int ret = connect(client_fd, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (ret < 0) {
+        print_error("failed to connect to server", errno, strerror(errno));
+        close(client_fd);
+        return -1;
+    }
+
+    printf("Connected to server %s:%d, client fd: %d\n", 
+           target_server_ip, target_server_port, client_fd);
+    
+    // 注意：客户端端口由系统自动分配，调用 getsockname() 可查看
+    struct sockaddr_in client_addr;
+    socklen_t addr_len = sizeof(client_addr);
+    getsockname(client_fd, (struct sockaddr *)&client_addr, &addr_len);
+    printf("Client assigned port: %d\n", ntohs(client_addr.sin_port));
+
+    // 实际使用中，这里会返回 socket fd
+    close(client_fd);  // 演示用，直接关闭
+    return 0;
+}
+
+// ============================================================
+// 服务器：创建监听 endpoint
+// ============================================================
+int server_endpoint_create() {
+    // 服务器监听端口
+    const unsigned short server_listen_port = 3333;
+
+    // 1. 创建 socket (TCP)
+    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd < 0) {
+        print_error("failed to create socket", errno, strerror(errno));
+        return -1;
+    }
+
+    // 允许端口快速复用（解决 "Address already in use" 问题）
+    int opt = 1;
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    // 2. 构造服务器地址结构（绑定到指定端口，监听所有网卡）
+    struct sockaddr_in server_addr;
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family      = AF_INET;                    // IPv4
+    server_addr.sin_port        = htons(server_listen_port);  // 监听端口
+    server_addr.sin_addr.s_addr = INADDR_ANY;                 // 监听所有网卡 (相当于 address_v6::any())
+
+    // 3. 绑定 socket 到地址（相当于 Boost.Asio 的 bind）
+    int ret = bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (ret < 0) {
+        print_error("failed to bind socket", errno, strerror(errno));
+        close(server_fd);
+        return -1;
+    }
+
+    // 4. 开始监听（相当于 Boost.Asio 的 listen）
+    ret = listen(server_fd, SOMAXCONN);
+    if (ret < 0) {
+        print_error("failed to listen", errno, strerror(errno));
+        close(server_fd);
+        return -1;
+    }
+
+    printf("Server listening on port %d, fd: %d\n", server_listen_port, server_fd);
+    
+    close(server_fd);  // 演示用，直接关闭
+    return 0;
+}
+
+// ============================================================
+int main() {
+    printf("=== Client Endpoint ===\n");
+    client_endpoint_create();
+
+    printf("\n=== Server Endpoint ===\n");
+    server_endpoint_create();
+
+    return 0;
+}
+```
+#### 创建 socket
+```cpp
+int create_server_socket() {
+	// An instance of 'io_service' class is required by socket constructor.
+	asio::io_context ioc;
+    asio::ip::tcp protocol = asio::ip::tcp::v4();
+    asio::ip::tcp::socket serverSocket(ioc);
+    boost::system::error_code ec;
+    serverSocket.open(protocol, ec);
+    printIfErrorExist(ec, "Failed to open server socket");
+    return 0;
+}
+
+int create_client_acceptor_socket() {
+    asio::io_context ioc;
+    asio::ip::tcp protocol = asio::ip::tcp::v6();
+    asio::ip::tcp::acceptor acceptor(ioc);
+    boost::system::error_code ec;
+    acceptor.open(protocol, ec);
+    printIfErrorExist(ec, "failed to open acceptor socket");
+    return 0;
+}
+```
+- 一台设备可以有多个 socket 分别用于对不同其他设备的通信，客户端由于**只需要和一个服务端通信，只用一个 socket 即可**，不需要监听，而服务端会接受多个客户端通信，所以使用 acceptor 接受新的连接。
+- 从底层理解，socket 封装了 `read`, `write`, `connect`，acceptor 封装了 `accept`, `listen`, `bind`，acceptor 收到一个新的连接之后，会返回一个**专门与这个新连接的客户端通信的 socket**，并继续监听原 endpoint
+```md
+┌─────────────────────────────────────────────────────────────┐
+│                        服务端                                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   Acceptor (监听socket)                                     │
+│   ┌─────────────────────┐                                   │
+│   │  端口: 3333         │  ◄── 只负责"监听"新连接           │
+│   │  状态: listening    │                                   │
+│   └─────────────────────┘                                   │
+│            ▲                                                 │
+│            │ accept() 产生新socket                          │
+│            │                                                 │
+│   ┌────────┴────────┐    ┌────────────┐    ┌────────────┐  │
+│   │ Client Socket 1 │    │Client Socket2│   │Client Socket3│ │
+│   │ 连接客户端A      │    │ 连接客户端B  │    │ 连接客户端C   │ │
+│   └─────────────────┘    └────────────┘    └────────────┘  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                        客户端                                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   Socket (通信socket)                                       │
+│   ┌─────────────────────┐                                   │
+│   │  连接到: IP:端口     │  ◄── 主动发起连接                 │
+│   │  状态: connected    │                                   │
+│   └─────────────────────┘                                   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+#### 绑定 acceptor 和 socket
+- 每一对连接都需要接收方和发送方的 socket 和地址（ip 地址和端口号）才能进行通信
+- `asio::ip::address` 用于设置单个 ip 地址（自己是客户端，客户端运行在特定端口上发送信息），如果设置为 `any()` 一般是作为服务端，传入 acceptor 中，
+- socket 是通信之间的身份标识符，有了它双方才能区分自己是在和谁通信，他和当前设备的 ip 地址，程序运行的端口号无关
+- endpoint 是 socket ，设备 ip 地址，使用 ip 协议版本和通信端口号封装在一起的类，包含了通信所需要的所有必须信息
+- acceptor 是服务端为了解决接受多个连接问题的封装类，可以被当作 socket 使用（因为有新的连接 acceptor 就会返回和这个连接通信的 socket）
 # 简单网络请求
 ## 静态 html 源代码获取
 参考教程： https://www.bilibili.com/video/BV11HsqzFEUN/?spm\_id\_from=333.1387.favlist.content.click&vd\_source=876be08bc9c030f4a9ea1fb97e0d0342
