@@ -73,7 +73,7 @@ int server_endpoint_create() {
 ```
 - 按理说任何通信都需要**双方知道对方的**确切的网络地址（ip 地址+端口号），那么客户端**和服务端通信也需要一个端口**，但这会由操作系统随机分配（当时空闲），并在通信是连同通信信息一同发向服务端，这样服务端就能根据这些信息来知道对方的地址。
 - 但是 CS 架构中，客户端和服务端并不需要知道自己的 ip 地址，发送信息只需要知道对方的即可，**绑定 socket 时**需要知道自己的 IP（可以填 `INADDR_ANY` 让系统选择）
-- boost 支持指定客户端和服务端的运行端口，但不推荐
+- boost 支持指定客户端和服务端的运行端口，但不推荐，如果将 `targetServerPort` 设置为 0 表示自动
 如果使用 C api 写:
 ```cpp
 #include <stdio.h>
@@ -196,8 +196,9 @@ int main() {
 #### 创建 socket
 ```cpp
 int create_server_socket() {
-	// An instance of 'io_service' class is required by socket constructor.
-	asio::io_context ioc;
+    // An instance of 'io_service' class is required by socket constructor.
+    // only for one client connection
+    asio::io_context ioc;
     asio::ip::tcp protocol = asio::ip::tcp::v4();
     asio::ip::tcp::socket serverSocket(ioc);
     boost::system::error_code ec;
@@ -206,7 +207,8 @@ int create_server_socket() {
     return 0;
 }
 
-int create_client_acceptor_socket() {
+int create_server_acceptor_socket() {
+    // use acceptor enables multi-connection
     asio::io_context ioc;
     asio::ip::tcp protocol = asio::ip::tcp::v6();
     asio::ip::tcp::acceptor acceptor(ioc);
@@ -250,12 +252,181 @@ int create_client_acceptor_socket() {
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
+需要注意的是，客户端和服务端的 ip 通信协议版本不同可能导致连接错误
+
+| 客户端协议 | 服务器协议 | 能否通信                        |
+| ----- | ----- | --------------------------- |
+| IPv4  | IPv6  | **通常可以**（需服务器启用 dual-stack） |
+| IPv6  | IPv4  | **不能直接通信**                  |
+现代操作系统支持 **IPv4-mapped IPv6 地址**，可以将 IPv4 地址映射为 IPv6 格式。服务器需要设置 `v6_only(false)`：
+```cpp
+int create_server_socket_v6_dual_stack() {
+    asio::io_context ioc;
+    asio::ip::tcp::acceptor acceptor(ioc);
+    
+    // 1. 打开 IPv6 socket
+    acceptor.open(asio::ip::tcp::v6());
+    
+    // 2. 关键：关闭 v6_only 选项，允许同时接受 IPv4
+    boost::system::error_code ec;
+    acceptor.set_option(asio::ip::v6_only(false), ec);
+    
+    // 3. 绑定监听
+    asio::ip::tcp::endpoint endpoint(asio::ip::tcp::v6(), 3333);
+    acceptor.bind(endpoint, ec);
+    acceptor.listen();
+    
+    // 现在可以同时接受 IPv4 和 IPv6 客户端
+}
+```
 #### 绑定 acceptor 和 socket
-- 每一对连接都需要接收方和发送方的 socket 和地址（ip 地址和端口号）才能进行通信
-- `asio::ip::address` 用于设置单个 ip 地址（自己是客户端，客户端运行在特定端口上发送信息），如果设置为 `any()` 一般是作为服务端，传入 acceptor 中，
-- socket 是通信之间的身份标识符，有了它双方才能区分自己是在和谁通信，他和当前设备的 ip 地址，程序运行的端口号无关
+- 每一对连接都需要双方（本地和远端）的 socket 和地址（ip 地址和端口号）才能进行通信
+- `asio::ip::address` 用于设置单个 ip 地址（自己是客户端，客户端运行在特定端口上发送信息），如果设置为 `any()` 一般是作为服务端，传入 acceptor 中让自己能够接受任何地址的客户端连接，**如果用于客户端，则表示由 OS 分配本地 IP**
+- socket 是通信之间的身份标识符，有了它双方才能区分自己是在和谁通信，绑定之后会关联本地 IP + 端口
+	- 本地信息：通过 bind() 绑定
+	- 远端信息：通过 `connect()/accept()` 建立连接后获得
 - endpoint 是 socket ，设备 ip 地址，使用 ip 协议版本和通信端口号封装在一起的类，包含了通信所需要的所有必须信息
-- acceptor 是服务端为了解决接受多个连接问题的封装类，可以被当作 socket 使用（因为有新的连接 acceptor 就会返回和这个连接通信的 socket）
+- acceptor 是服务端为了解决接受多个连接问题的封装管理类，***可以被当作 socket 使用***（因为有新的连接 acceptor 就会返回和这个连接通信的 socket），其中并没有存储连接信息（地址，端口，协议等）。其中*返回新的 socket的方式是复用同一个 socket*，具体参考[[#服务端接受连接]]
+- bind 操作将 endpoint 信息关联到 socket/acceptor
+	- 服务端：绑定监听地址和端口，将 endpoint 中的信息告诉 acceptor，让他按照 endpoint 中的地址和端口监听制定协议和制定 ip 地址范围的新连接。如果监听到了就返回 socket 作为和这个连接通信的依据
+	- 客户端：绑定本地地址（可选，不绑定则由系统分配）
+	- **未绑定时 socket 只知道自己的本地信息**
+```cpp
+int bind_acceptor_socket() {
+    const unsigned short port= 3333;
+    asio::ip::tcp::endpoint endpoint(asio::ip::address_v4::any(), port);
+    asio::io_context ioc;
+    boost::system::error_code ec;
+    asio::ip::tcp::acceptor acceptor(ioc, endpoint.protocol());
+    acceptor.bind(endpoint, ec);
+    printIfErrorExist(ec, "failed to bind socket with acceptor");
+    asio::ip::tcp::acceptor acceptor(ioc, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
+}
+```
+#### 客户端发送连接请求
+```cpp
+int client_connect_to_server() {
+	std::string			 targetServerIPAddress = "127.0.0.1";
+	const unsigned short portNum			   = 3333;
+	try {
+		asio::ip::tcp::endpoint targetServerEndpoint(asio::ip::address::from_string(targetServerIPAddress),
+													 portNum);
+		asio::io_context		ioc;
+		asio::ip::tcp::socket	sock(ioc, targetServerEndpoint.protocol());	 // default protocol is IPV4
+		sock.connect(targetServerEndpoint);
+		// At this point socket 'sock' is connected to the server application and can be used to send data to or receive data from it.
+	} catch(const boost::system::error_code& ec) {
+		printIfErrorExist(ec, "failed in client connect to server");
+		return ec.value();
+	}
+	return 0;
+}
+
+int client_use_dns_connect_to_server() {
+	std::string					   targetHost = "www.baidu.com";
+	const unsigned short		   portNum	  = 3333;
+	asio::io_context			   ioc;
+	asio::ip::tcp::resolver::query resolverQuery(
+		targetHost, std::to_string(portNum), asio::ip::tcp::resolver::query::numeric_service);
+	asio::ip::tcp::resolver resolver(ioc);
+	try {
+		auto				  it = resolver.resolve(resolverQuery);
+		asio::ip::tcp::socket sock(ioc);
+        asio::connect(sock, it);
+    }
+    catch (const boost::system::error_code& ec) {
+		printIfErrorExist(ec, "failed in use dns connect to server");
+		return ec.value();
+	}
+	return 0;
+}
+```
+- 一种是使用 ip 地址直接连接，另一种是通过dns 域名
+- 一个域名可能有多个 ip 管理，`asio::connect` 的多种重载保证及可以接受单个 ip 地址，也可以接受 query 解析出来的 ip 结果集
+
+|特性|说明|
+|---|---|
+|自动遍历|依次尝试每个 IP|
+|自动跳过失败|一个 IP 连接失败，自动试下一个|
+|返回成功位置|返回成功连接的那个迭代器|
+|错误处理|全部失败才返回错误|
+如果需要手动控制每个解析到的 ip:
+```cpp
+// 方式1：使用连接条件（可以跳过特定 IP）
+asio::connect(sock, results, 
+    [](const boost::system::error_code& ec, asio::ip::tcp::resolver::iterator) {
+        return !ec;  // 只要成功就停止
+    });
+
+// 方式2：手动遍历（完全控制）
+for (auto it = results.begin(); it != results.end(); ++it) {
+    boost::system::error_code ec;
+    sock.close();  // 关闭之前的尝试
+    sock.connect(it->endpoint(), ec);
+    
+    if (!ec) {
+        std::cout << "Connected to: " << it->endpoint().address().to_string();
+        break;
+    }
+}
+```
+#### 服务端接受连接
+```cpp
+int server_accept_new_connection() {
+	const int				BACKLOG_SIZE = 30;
+	const unsigned short	portNum		 = 3333;
+	asio::ip::tcp::endpoint serverAvailableEndpointComeIn(asio::ip::address_v4::any(), portNum);
+	asio::io_context		ioc;
+	try {
+		asio::ip::tcp::acceptor acceptor(ioc, serverAvailableEndpointComeIn.protocol());
+		acceptor.bind(serverAvailableEndpointComeIn);
+		acceptor.listen(BACKLOG_SIZE);
+		asio::ip::tcp::socket sock(ioc);
+		acceptor.accept(sock);
+	} catch(const boost::system::error_code& ec) {
+		printIfErrorExist(ec, "failed in server accept ne connection");
+		return ec.value();
+	}
+	return 0;
+}
+```
+- 先初始化 socket 对象，此时这个 socket 并没有绑定 endpoint，所以只知道本地的 endpoint 信息（也是在 acceptor 中存储的，socket 对象中并没存储，是空白的），也并没有占用本地 socket 通信资源
+	1. 从操作系统获取新连接（fd，来自远端客户端，包含远端信息）
+	2. 关闭初始化传入 sock 原有的连接（如果有）
+	3. 将新连接的 fd **转移**给传入的sock
+	4. 现在 sock 有了：本地信息（操作系统分配端口）+ 远端信息（客户端 IP:端口）
+- 可以看到 `accept()` 返回值是 void，避免返回新 socket 的开销acceptor 中仍然复用初始化时传入的 socket 对象，这样可以减少为每个新连接**分配内存**
+- **传入的 socket 对象被重复使用，每次 accept 只是更换其内部的连接资源**
+```md
+┌─────────────────────────────────────────────────────────────────┐
+│                     传统方式（返回新对象）                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   acceptor.accept()                                             │
+│          │                                                      │
+│          ▼                                                      │
+│   ┌──────────────┐     每次都创建新对象（内存分配）              │
+│   │  New Socket  │ ◄── 如果频繁调用，内存分配/释放开销大         │
+│   └──────────────┘                                             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     Boost Asio 方式（传入复用）                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   asio::ip::tcp::socket sock(ioc);   ◄── 创建一次               │
+│          │                                                      │
+│          ▼                                                      │
+│   acceptor.accept(sock);         ◄── 复用已存在的 socket        │
+│          │                                                      │
+│          ▼                                                      │
+│   sock 的内部资源被"重新初始化"，指向新连接                      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+#### 消息收发缓冲区结构
+
 # 简单网络请求
 ## 静态 html 源代码获取
 参考教程： https://www.bilibili.com/video/BV11HsqzFEUN/?spm\_id\_from=333.1387.favlist.content.click&vd\_source=876be08bc9c030f4a9ea1fb97e0d0342
