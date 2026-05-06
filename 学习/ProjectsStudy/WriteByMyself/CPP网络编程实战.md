@@ -475,6 +475,88 @@ std::size_t send(const ConstBufferSequence & buffers);
 ```
 ***那么普通类型的数据如何转换为这符合两种概念的类型呢？***
 -> 使用 `buffer()` 函数，`buffer()` 是"工厂函数"，把各种形式的内存转换为 Asio API 需要的"缓冲区序列"格式。根据传入参数类型决定返回值类型
+```cpp
+// simulate a situation have no adapter as `asio::const_buffers_1` or `asio::mutable_buffers_1`, we have
+// to use traditional containers to satisfy `MutableBufferSequence` and `ConstBufferSequence` these 2 concepts
+void construct_const_buffer() {
+	std::string						buf = "hello world";
+	asio::const_buffer				asioBuffer(buf.data(), buf.length());
+	std::vector<asio::const_buffer> bufferSequence;
+	bufferSequence.emplace_back(asioBuffer);
+}
+
+// or we use adapter of MutableBufferSequence and ConstBufferSequence
+void use_buffer_str() {
+	asio::const_buffers_1 outputBuf = asio::buffer("hello world");
+}
+
+void use_buffer_array() {
+	const size_t			BUFFER_SIZE_BYTES = 20;
+	std::unique_ptr<char[]> buf(new char[BUFFER_SIZE_BYTES]);
+	asio::mutable_buffers_1 inputBuf = asio::buffer(static_cast<void*>(buf.get()), BUFFER_SIZE_BYTES);
+}
+```
+只要满足 `begin()/end()` 且对单个元素解引用返回 `mutable_buffer` / `const_buffer`，就可以用于 Asio 的 API，asio 只对概念进行约束，并**不是强硬的类型限制**
+- `asio::const_buffer asioBuffer(buf.data(), buf.length());` 
+	- 这是将 std::string 的数据"视图化"为 Asio 的缓冲区 
+	- asio::const_buffer 是**实现了接口的具体类型**  
+	- 它本身就可以直接使用，不需要再包装
+- `std::vector<asio::const_buffer> bufferSequence`; 
+	- 这**已经满足** ConstBufferSequence 概念
+	- 有 begin()/end()，解引用返回 const_buffer/mutable_buffer
+	- 可以直接传给 send() 等函数
+- `const_buffers_1` 的作用： 
+	- ***让单个 buffer 也能以"序列"方式使用***，命名中的 1 也是这个意思，虽然他是 buffers，但是其中只有一个缓冲区，自定义的数据结构中（比如 `std::vector<mutable_buffer>`）可以放入多个缓冲区，但和 `const_buffers_1` 一样都可以传入 asio api 中
+	- 相当于给单个 buffer 提供了 begin/end 接口的适配器，这样做是为了让适配器和自动容器都能够**使用同一套 asio 的 api 接口**，增强适配性
+- 需要注意如果是指针数组类型，需要转化为 `void*` 后指定长度
+	- 和 C 语言一样 `void*` 类型并不可怕，可怕的是在没有指定内存长度的情况下直接读取内存
+	- buffer 函数没有 `char *` 的重载/特化（但有 `const char*` 用于字面量类型）
+	- 其他类型的指针数组也一样，为了避免这种情况，asio 统一重载 `void*` 参数类型用于数组类型，**传入其他类型的指针都会被强转为 `void*`**
+```md
+┌─────────────────────────────────────────────────────────────────────┐
+│                        缓冲区类型对比                                │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   基础类型（单个内存块）                                            │
+│   ────────────────────                                             │
+│   mutable_buffer   → 可写内存块                                     │
+│   const_buffer     → 只读内存块                                     │
+│                                                                     │
+│   序列适配器（提供 begin/end）                                      │
+│   ──────────────────────────                                       │
+│   mutable_buffers_1  → 适配单个 mutable_buffer                      │
+│   const_buffers_1    → 适配单个 const_buffer                        │
+│                                                                     │
+│   容器（存储多个 buffer）                                           │
+│   ────────────────────                                              │
+│   std::vector<mutable_buffer>   → 可变数量，可直接用               │
+│   std::vector<const_buffer>     → 可变数量，可直接用               │
+│   std::array<mutable_buffer, N> → 固定数量，可直接用               │
+│   std::array<const_buffer, N>   → 固定数量，可直接用               │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+> [!note]
+> 流式传输缓冲区
+> ```cpp
+> void use_stream_buffer() {
+>     asio::streambuf buf;
+>     std::ostream output(&buf);
+>     // Writing the message to the stream-based buffer.
+>     output << "Message1\nMessage2";
+>     // Now we want to read all data from a streambuf
+>     // until '\n' delimiter.
+>     // Instantiate an input stream which uses our 
+>     // stream buffer.
+>     std::istream input(&buf);
+> 
+>     // We'll read data into this string.
+>     std::string message1;
+> 
+>     std::getline(input, message1);
+>     // Now message1 string contains 'Message1'.
+> }
+> ```
 # 简单网络请求
 ## 静态 html 源代码获取
 参考教程： https://www.bilibili.com/video/BV11HsqzFEUN/?spm\_id\_from=333.1387.favlist.content.click&vd\_source=876be08bc9c030f4a9ea1fb97e0d0342
