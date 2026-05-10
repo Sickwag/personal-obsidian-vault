@@ -426,6 +426,7 @@ int server_accept_new_connection() {
 └─────────────────────────────────────────────────────────────────┘
 ```
 #### 消息收发缓冲区结构
+##### 设计意义
 Boost Asio 的**类型安全设计**——用 C++ 类型系统在编译期防止错误。
 所谓 buffer 就是接收和发送数据时缓存数据的结构。 asio 提供了 `asio::mutable_buffer` 用于写服务和 `asio::const_buffer` 用于读服务这两个结构，他们**是一段连续的空间**，首字节存储了后续数据的长度
 但是这两个结构都没有被 asio 的 api 直接使用，asio 提出了 MutableBufferSequence 和 ConstBufferSequence 概念，他们是由多个 `asio::mutable_buffer` 和 `asio::const_buffer` 组成的。也就是说为了节省空间，将一部分连续的空间组合起来（***本质上他们是一段能够被连续的索引找到并连续遍历的一段不连续的空间集合***），作为参数交给 api 使用。这种方式节省了空间的同时没有降低性能，同时设计的也很优雅
@@ -461,7 +462,7 @@ Boost Asio 的**类型安全设计**——用 C++ 类型系统在编译期防止
 > │                                                                     │
 > └─────────────────────────────────────────────────────────────────────┘
 > ```
-
+##### 使用方法
 我们可以理解为MutableBufferSequence的数据结构为 `std::vector<asio::mutable_buffer>(asio::mutable_buffer)`，同理 ConstBufferSequence。
 这么复杂的结构交给用户使用并不合适，所以 asio 提出了 `buffer()` 函数，该函数接收多种形式的字节流，该函数返回 `asio::mutable_buffers_1` 或者 `asio::const_buffers_1` 结构的对象。  
 - 如果传递给 buffer()的参数是一个只读类型，则函数返回 `asio::const_buffers_1` 类型对象。  
@@ -475,9 +476,11 @@ std::size_t send(const ConstBufferSequence & buffers);
 ```
 ***那么普通类型的数据如何转换为这符合两种概念的类型呢？***
 -> 使用 `buffer()` 函数，`buffer()` 是"工厂函数"，把各种形式的内存转换为 Asio API 需要的"缓冲区序列"格式。根据传入参数类型决定返回值类型
+所以这里就引入了两种能够构造 `write_some` 等函数使用的 Buffer 的方法
 ```cpp
 // simulate a situation have no adapter as `asio::const_buffers_1` or `asio::mutable_buffers_1`, we have
 // to use traditional containers to satisfy `MutableBufferSequence` and `ConstBufferSequence` these 2 concepts
+// 手动创建单个const_buffer，然后组装到一起作为一个满足SequenceBuffer的缓冲区
 void construct_const_buffer() {
 	std::string						buf = "hello world";
 	asio::const_buffer				asioBuffer(buf.data(), buf.length());
@@ -486,10 +489,12 @@ void construct_const_buffer() {
 }
 
 // or we use adapter of MutableBufferSequence and ConstBufferSequence
+// 构建单个适配器
 void use_buffer_str() {
 	asio::const_buffers_1 outputBuf = asio::buffer("hello world");
 }
 
+// 补充:对堆对象，数组类型的构建方式
 void use_buffer_array() {
 	const size_t			BUFFER_SIZE_BYTES = 20;
 	std::unique_ptr<char[]> buf(new char[BUFFER_SIZE_BYTES]);
@@ -557,6 +562,27 @@ void use_buffer_array() {
 >     // Now message1 string contains 'Message1'.
 > }
 > ```
+
+#### 发送消息
+满足 buffer 或者 bufferSequence 概念的缓冲区都可以被 write_some/read_some 发送或读取
+```cpp
+// 本质上来讲发送过程应该是这样的
+void write_to_socket(asio::ip::tcp::socket& sock) {
+	std::string buffer = "hello world";
+	size_t totalBytesWrite = 0;
+	while (totalBytesWrite != buffer.length()) {
+		totalBytesWrite += sock.write_some(asio::buffer(buffer.c_str() + totalBytesWrite, buffer.length() - totalBytesWrite));
+	}
+}
+
+// 但asio其实不用自己手动循环读取，而会自动将分片发送
+void write_to_socket(asio::ip::tcp::socket& sock) {
+    std::string buffer = "hello world";
+    boost::system::error_code ec;
+    sock.write_some(asio::buffer(buffer), ec);
+    // 同理，asio对sequenceBuffer也做了处理，直接将vector<const_buffer>类型传入write_some中就鞥自动翻篇发送
+}
+```
 # 简单网络请求
 ## 静态 html 源代码获取
 参考教程： https://www.bilibili.com/video/BV11HsqzFEUN/?spm\_id\_from=333.1387.favlist.content.click&vd\_source=876be08bc9c030f4a9ea1fb97e0d0342
