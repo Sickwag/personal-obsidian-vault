@@ -265,7 +265,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 218.5
+    "width": 218.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -281,8 +282,10 @@
   "lastOpenFiles": [
     "学习/algorithm/题型分类.md",
     "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "Chores/JobInterviews/面试准备.md",
+    "Chores/JobInterviews/项目简介.md",
     "学习/algorithm/刷题路线.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "未命名.base",
     "未命名.canvas",
     "Files & LongText/Attachments/Pasted image 20260505230524.png",
@@ -314,7 +317,6 @@
     "Chores/LearningDailyRecord",
     "学习/Fragments/面试八股/针对简历的知识点复习.md",
     "Chores/JobInterviews/questions精简.md",
-    "Chores/JobInterviews/面试准备.md",
     "学习/Fragments/编程相关/基本知识/零碎但需要知道的.md",
     "学习/ProjectsStudy/WriteByMyself/nanochat.md",
     "Chores/Interviews and job search/简历内容.md",
