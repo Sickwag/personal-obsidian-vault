@@ -39,7 +39,7 @@ GET /api/products?category=electronics&minPrice=500 HTTP/1.1
 传统的网络阻塞 IO 模型
 ![[Pasted image 20260505135436.png|500]]
 
-### 代码编写
+### 基本架构代码编写
 #### 创建 endpoint
 ```cpp
 void printIfErrorExist(boost::system::error_code& ec, const std::string& additionalText = "") {
@@ -563,8 +563,8 @@ void use_buffer_array() {
 > }
 > ```
 
-#### 发送消息
-满足 buffer 或者 bufferSequence 概念的缓冲区都可以被 write_some/read_some 发送或读取
+#### 收发消息
+满足 buffer 或者 bufferSequence 概念的缓冲区都可以被 write_some/read_some 发送或读取，由于 TCP 协议中，最大传输单元是有限度的，所以如果数据过长并不能通过一次 TCP 连接发送完全，这就需要不断计算每次连接发送数据的大小
 ```cpp
 // 本质上来讲发送过程应该是这样的
 void write_to_socket(asio::ip::tcp::socket& sock) {
@@ -583,6 +583,68 @@ void write_to_socket(asio::ip::tcp::socket& sock) {
     // 同理，asio对sequenceBuffer也做了处理，直接将vector<const_buffer>类型传入write_some中就鞥自动翻篇发送
 }
 ```
+如果想要一次性发送完所有数据（阻塞式发送），就需要使用 send 函数，其内部循环会自动保证所有数据被**全部发送**
+- `socket::send/asio::write` 会将所有数据从用户态放入 tcp 缓冲区中，**一直阻塞到全部发送完为止**
+- `sendLength < 0` 表明出现了错误，`==0` 表示*对端关闭*，`>0` 的情况只可能会等于发送数据的长度，如果有部分字节因为发送缓冲区满无法发送，则阻塞等待，直到发送缓冲区可用，则继续发送完成。
+```cpp
+int send_data_by_write() {
+	std::string	   raw_ip_address = "127.0.0.1";
+	unsigned short port_num		  = 3333;
+	try {
+		asio::ip::tcp::endpoint ep(asio::ip::address::from_string(raw_ip_address), port_num);
+		asio::io_service		ios;
+		// Step 1. Allocating and opening the socket.
+		asio::ip::tcp::socket sock(ios, ep.protocol());
+		sock.connect(ep);
+		std::string buf			= "Hello World!";
+		int			send_length = asio::write(sock, asio::buffer(buf.c_str(), buf.length()));
+		// also equals to 
+		int			send_length = sock.send(buf.c_str(), buf.length());
+		if(send_length <= 0) {
+			cout << "send failed" << endl;
+			return 0;
+		}
+	} catch(system::system_error& e) {
+		std::cout << "Error occured! Error code = " << e.code() << ". Message: " << e.what();
+		return e.code().value();
+	}
+	return 0;
+}
+```
+
+| 特性       | `write_some` | `send`                      |
+| -------- | ------------ | --------------------------- |
+| **保证**   | 不保证一次发送完所有数据 | 保证发送完所有数据（或出错）              |
+| **返回值**  | 实际发送的字节数     | 实际发送的字节数（总是等于请求发送的字节数，除非出错） |
+| **使用场景** | 需要精确控制发送过程   | 简单场景，发送小数据                  |
+| **阻塞模式** | 需循环调用确保全部发送  | 内部循环，自动完成                   |
+接收消息同理也有 `read_some` 和 `recieve`，同样分为阻塞和非阻塞，接收消息时可以自定义缓冲区
+```cpp
+int read_data_by_receive() {
+	std::string	   raw_ip_address = "127.0.0.1";
+	unsigned short port_num		  = 3333;
+	try {
+		asio::ip::tcp::endpoint ep(asio::ip::address::from_string(raw_ip_address), port_num);
+		asio::io_service		ios;
+		asio::ip::tcp::socket	sock(ios, ep.protocol());
+		sock.connect(ep);
+		const unsigned char BUFF_SIZE = 7;
+		char				buffer_receive[BUFF_SIZE]; // 自定义接收缓冲区，每次只接受7字节大小
+		int					receive_length = sock.receive(asio::buffer(buffer_receive, BUFF_SIZE));
+		// also same as
+		int					receive_length = asio::read(sock, asio::buffer(buffer_receive, BUFF_SIZE));
+		// 还可以读取到指定字符
+		int received_length = asio::read_until(sock, buf, '\n');
+		if(receive_length <= 0) { /* */ }
+	} catch(boost::system::system_error& e) {
+
+	}
+	return 0;
+}
+```
+### 同步编写客户端和服务端
+
+
 # 简单网络请求
 ## 静态 html 源代码获取
 参考教程： https://www.bilibili.com/video/BV11HsqzFEUN/?spm\_id\_from=333.1387.favlist.content.click&vd\_source=876be08bc9c030f4a9ea1fb97e0d0342
