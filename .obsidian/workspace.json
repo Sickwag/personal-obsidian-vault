@@ -98,7 +98,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -278,13 +278,13 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "556c05ef6377e781",
+  "active": "77090912b6310521",
   "lastOpenFiles": [
+    "学习/algorithm/刷题路线.md",
     "学习/algorithm/题型分类.md",
     "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
     "Chores/JobInterviews/面试准备.md",
     "Chores/JobInterviews/项目简介.md",
-    "学习/algorithm/刷题路线.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "未命名.base",
     "未命名.canvas",
