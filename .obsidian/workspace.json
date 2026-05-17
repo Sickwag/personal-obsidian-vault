@@ -98,7 +98,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -130,7 +130,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "闰年",
+                "query": "滑动窗口（",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -151,7 +151,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -265,8 +266,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 218.5,
-    "collapsed": true
+    "width": 218.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -278,11 +278,13 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "556c05ef6377e781",
+  "active": "a1e6588f27584846",
   "lastOpenFiles": [
-    "学习/algorithm/用法导向知识.md",
     "学习/algorithm/刷题路线.md",
     "学习/algorithm/题型分类.md",
+    "学习/algorithm/刷题路线.md.tmp.34210.64a88d09f6aa",
+    "学习/algorithm/题型分类.md.tmp.34210.626308445dd1",
+    "学习/algorithm/用法导向知识.md",
     "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
     "Chores/JobInterviews/面试准备.md",
     "Chores/JobInterviews/项目简介.md",
@@ -319,13 +321,10 @@
     "Chores/JobInterviews/questions精简.md",
     "学习/Fragments/编程相关/基本知识/零碎但需要知道的.md",
     "学习/ProjectsStudy/WriteByMyself/nanochat.md",
-    "Chores/Interviews and job search/简历内容.md",
     "Chores/JobInterviews",
     "学习/Language/ScriptLangs",
     "test.exe",
     "test.cpp",
-    "Files & LongText/Attachments/PixPin_2026-01-05_23-34-07.mp4",
-    "Files & LongText/Attachments/PixPin_2026-01-05_23-32-50.mp4",
-    "find_large_files.ps1"
+    "Files & LongText/Attachments/PixPin_2026-01-05_23-34-07.mp4"
   ]
 }
