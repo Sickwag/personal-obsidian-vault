@@ -144,7 +144,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "单调队列",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -170,8 +170,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -293,7 +292,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "e7e9bd46ce5cda07",
+  "active": "129968db299d0d8b",
   "lastOpenFiles": [
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
