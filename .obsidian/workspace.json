@@ -112,7 +112,8 @@
               "title": "AzzatoChat"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -170,7 +171,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -292,14 +294,14 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "129968db299d0d8b",
+  "active": "556c05ef6377e781",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/algorithm/用法导向知识.md",
     "学习/algorithm/题型分类.md",
-    "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
     "学习/algorithm/刷题路线.md",
+    "学习/algorithm/用法导向知识.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
+    "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
     "Chores/LearningDailyRecord/LearnDaily.md",
     "学习/algorithm/刷题路线.md.tmp.34210.6d3049879b93",
     "学习/algorithm/sed5xgzch",
