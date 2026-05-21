@@ -145,7 +145,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "P29",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -171,7 +171,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -295,9 +296,11 @@
   },
   "active": "556c05ef6377e781",
   "lastOpenFiles": [
+    "学习/algorithm/刷题路线 3.md",
+    "学习/algorithm/题型分类.md",
+    "学习/algorithm/刷题路线 2.md",
     "学习/algorithm/刷题路线.md",
     "学习/algorithm/刷题路线 1.md",
-    "学习/algorithm/题型分类.md",
     "学习/algorithm/刷题路线P2947/[USACO09MAR/] Look Up S.md",
     "学习/algorithm/刷题路线P2947/[USACO09MAR",
     "学习/algorithm/刷题路线P2947",
@@ -339,8 +342,6 @@
     "Chores/JobInterviews/IT竞赛.md",
     "学习/ProjectsStudy/FromProjects/WebServer-Chat.md",
     "学习/algorithm/SQL刷题记录.md",
-    "学习/Fragments/面试八股/针对简历的知识点复习.md",
-    "Chores/JobInterviews/questions精简.md",
-    "学习/Fragments/编程相关/基本知识/零碎但需要知道的.md"
+    "学习/Fragments/面试八股/针对简历的知识点复习.md"
   ]
 }
