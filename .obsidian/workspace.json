@@ -111,7 +111,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -220,8 +221,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 218.5,
-    "collapsed": true
+    "width": 218.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -233,7 +233,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "129968db299d0d8b",
+  "active": "77090912b6310521",
   "lastOpenFiles": [
     "学习/algorithm/用法导向知识.md",
     "学习/Language/HTML/HTML.md",
