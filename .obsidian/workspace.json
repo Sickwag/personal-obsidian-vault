@@ -98,7 +98,7 @@
             }
           }
         ],
-        "currentTab": 3
+        "currentTab": 5
       }
     ],
     "direction": "vertical"
@@ -277,8 +277,9 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "2fc5a4dd97efdbb7",
+  "active": "3ab567433b7e6a4a",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/FromBlogs/awesome cpp-backend blogs.md",
     "学习/ProjectsStudy/WriteByMyself/template_restructured.md",
     "学习/algorithm/分析优化.md",
     "学习/algorithm/刷题路线.md",
@@ -324,7 +325,6 @@
     "学习/ToolChain/Cmake.md",
     "Daily/Observations/正常交际.md",
     "Chores/computer learning puzzles.md",
-    "# 代码错误分析.md",
-    "学习/ToolChain/Geography Learning/From Tutorial/ArcGIS Pro 中的 Notebooks 入门.md"
+    "# 代码错误分析.md"
   ]
 }
