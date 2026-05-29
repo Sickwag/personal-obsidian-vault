@@ -124,6 +124,14 @@ class QPushButton : public QAbstractButton {
 | **调用示例**  | `return this->flat;` | `return d->dynamicProperties["flat"]`             |
 | **时间复杂度** | O(1)（直接内存偏移）         | O(1)（但存在哈希计算和字符串比较开销）                             |
 | **值类型**   | 固定类型（如`bool flat`）   | 通用容器`QVariant`（需类型转换）                             |
+##### 两者对比
+| 对比项           | 静态属性 (`Q_PROPERTY`)               | 动态属性                                                 |
+| ------------- | --------------------------------- | ---------------------------------------------------- |
+| **定义方式**      | MOC 编译时从 `Q_PROPERTY` 宏生成         | 运行时 `obj->setProperty("key", value)`                 |
+| **元对象注册**     | 在 `QMetaObject` 中有条目，可被反射查询       | 不注册到 `QMetaObject`，通过 `QObject` 内部的 `QVariantMap` 存储 |
+| **性能**        | getter/setter 是编译时确定的函数指针，调用无查找开销 | 字符串 key → QVariant，哈希查找，有开销                          |
+| **NOTIFY 信号** | 支持，值变化自动发射信号                      | 不支持，需要手动发射                                           |
+| **用途**        | QML 绑定、属性动画、Designer 面板、框架层功能     | 临时附加数据——比如给某个 widget 打标签、存储用户自定义元数据                  |
 #### qt 定义类属性
 属性系统还有一个宏Q CLASSINFO0.可以为类的元对象定义“名称-值” 信息
 ```cpp
