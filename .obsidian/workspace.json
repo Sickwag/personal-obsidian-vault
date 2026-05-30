@@ -100,7 +100,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "静态属性",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -236,7 +236,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 218.5
+    "width": 218.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -250,6 +251,7 @@
   },
   "active": "d1bc7fa5743605f4",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/Pasted image 20260530185058.png",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Chores/JobInterviews/questions.md",
     "Chores/JobInterviews/面试准备.md",
@@ -279,7 +281,6 @@
     "学习/algorithm/刷题路线P2947/[USACO09MAR",
     "学习/algorithm/刷题路线P2947",
     "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
-    "Chores/LearningDailyRecord/LearnDaily.md",
     "学习/algorithm/刷题路线.md.tmp.34210.6d3049879b93",
     "学习/algorithm/sed5xgzch",
     "学习/algorithm/刷题路线.md.tmp.34210.8f130eaeac34",
