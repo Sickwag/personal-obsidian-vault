@@ -2406,10 +2406,8 @@ delete b2;          // ❌ 编译错误
 ```
 
 关键机制：
-- delete d（Derived*）→ 编译器调 ~Derived()（public），~Derived() 的析构体中会调用基类析构
-~Base()，而派生类的成员函数可以访问基类的 protected 成员 → 正常编译
-- delete b（Base*）→ 编译器检查静态类型 Base*，发现 ~Base() 是 protected，外部代码没有访问权限 →
-编译错误
+- delete d（Derived*）→ 编译器调 ~Derived()（public），~Derived() 的析构体中会调用基类析构~Base()，而派生类的成员函数可以访问基类的 protected 成员 → 正常编译
+- delete b（Base*）→ 编译器检查静态类型 Base*，发现 ~Base() 是 protected，外部代码没有访问权限 → 编译错误
 典型用途：强制使用 shared_ptr 管理多态对象
 ```cpp
 class Interface {
@@ -2432,10 +2430,7 @@ auto p = std::shared_ptr<Interface>(new Impl());
 // ✅ make_shared 也可以
 auto p3 = std::shared_ptr<Interface>(std::make_shared<Impl>());
 ```
-核心原理： shared_ptr
-的删除器在构造时通过类型擦除记住了原始指针的完整类型（Impl*），所以析构时即使静态类型是
-Interface*，实际调用的还是 delete (Impl*)p，走 ~Impl() → ~Interface() 的析构链。而 unique_ptr
-的默认删除器是模板参数的一部分，绑定的是 Interface，所以会尝试调 ~Interface() → 编译错误。
+核心原理： shared_ptr 的删除器在构造时通过类型擦除记住了原始指针的完整类型（Impl*），所以析构时即使静态类型是Interface*，实际调用的还是 delete (Impl*)p，走 ~Impl() → ~Interface() 的析构链。而 unique_ptr 的默认删除器是模板参数的一部分，绑定的是 Interface，所以会尝试调 ~Interface() → 编译错误。
 ##### private 析构函数
 ```cpp
 class OnlyOnHeap {
@@ -2497,14 +2492,42 @@ public:
 ```
 这里 Singleton 实例在静态存储区（函数局部 static），析构由 C++ runtime 管理，但 private
 析构防止外部误写 delete &Singleton::getInstance()。
-
-### 构造函数 vs 析构函数对比总结
-构造函数访问控制：
-析构函数访问控制：
-protected 构造 vs private 构造：
-protected 析构 vs private 析构 vs virtual 析构：
 #### 构造函数 vs 析构函数对比总结
-（这里你需要创建一个对比表格，总结以上所有内容）
+构造函数访问控制：
+
+| 控制级别           | public | protected  |  private   |  = delete  |
+| :------------- | :----: | :--------: | :--------: | :--------: |
+| 外部直接创建         |   ✅    |     ❌      |     ❌      |     ❌      |
+| 派生类构造中调用       |   ✅    |     ✅      |     ❌      |     ❌      |
+| 友元创建           |   ✅    |     ✅      |     ✅      |     ❌      |
+| static factory |   ✅    |     ✅      |     ✅      |     ❌      |
+| 纯静态类           |   —    |     —      |     —      |     ✅      |
+| 典型用途           |  常规类   | 弱抽象基类、工厂层次 | 单例、建造者、标记类 | 工具类、不可复制对象 |
+析构函数访问控制：
+
+| 控制级别 | public | protected | private | = delete |
+|:---------|:------:|:---------:|:-------:|:--------:|
+| 栈上分配 | ✅ | ❌ | ❌ | ❌ |
+| 堆上 delete | ✅ | ❌ | ❌ | ❌ |
+| 友元 delete | ✅ | ✅ | ✅ | ❌ |
+| shared_ptr 管理 | ✅ | ✅ (自动记住完整类型) | ✅ (需自定义 deleter) | ❌ |
+| unique_ptr 管理 | ✅ | ❌ (默认 deleter) | ❌ (默认 deleter) | ❌ |
+protected 构造 vs private 构造：
+
+| 对比维度        | protected 构造 | private 构造  |
+| :---------- | :----------- | :---------- |
+| 派生类能否构造     | ✅ 可以         | ❌ 不可以       |
+| 是否需要 friend | ❌ 不需要        | ✅ 需要 friend |
+| 抽象程度        | 弱抽象（允许子类扩展）  | 强控制（禁止外部扩展） |
+| 典型场景        | 抽象基类、工厂层次    | 单例、建造者、标记类型 |
+protected 析构 vs private 析构 vs virtual 析构：
+
+| 对比维度          | protected 析构         | private 析构     | virtual 析构 |
+| :------------ | :------------------- | :------------- | :--------- |
+| delete 基类指针   | ❌ 禁止                 | ❌ 禁止           | ✅ 正确销毁派生类  |
+| shared_ptr 管理 | ✅ 自动正确销毁             | ✅ 需自定义 deleter | ✅ 自动正确销毁   |
+| 意图            | 限定销毁路径               | 完全控制销毁时机       | 多态正确析构     |
+| 替代方案          | virtual + unique_ptr | 对象池 / 引用计数     | 没有替代方案     |
 #### 移动构造函数
 ##### 作用和意义
 移动构造函数是一种特殊构造函数，接受右值引用参数，用于将资源从一个对象"移动"到另一个对象。
