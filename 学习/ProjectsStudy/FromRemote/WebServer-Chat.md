@@ -713,7 +713,7 @@ XADD key * field1 value1 field2 value2 ...
 ## 编写过程中问题
 学习阶段可以一步步跟着来然后修改，但自己设计时一定要首先设计好数据结构和各种代码中枚举值转换关系
 ### 编写数据模块和业务模块交互
-在[[#业务模块代码#添加数据层]]时出现
+在[[#业务模块代码#添加数据层|业务模块代码 > 添加数据层]]时出现
 commit 01b82787cfd0ff719f70b9813475d4943f809aed
 usermodel.cpp 中 user.state 默认设置为 Offline，而数据库中结构为:
 ```sql
@@ -737,7 +737,7 @@ sprintf(sql, "insert into user(name, password, state) values('%s', '%s', '%s')",
 // insert into User（大写错误）
 ```
 ### cmake 变量失效导致不更新二进制文件
-发生在[[#添加数据层]]中
+发生在[[#添加数据层|添加数据层]]中
 #### 起因
 修改了主 cmake 配置，本意是优化 cmake 结构配置，明确语义，但 `set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)` 被设置到了 `project` 之前，导致这个变量失效。
 #### 后果
@@ -815,7 +815,7 @@ Escape character is '^]'.  # 退出方法
 telnet> quit
 root@VM-20-9-ubuntu:~/CodeFiles/muduo-server-chat#
 ```
-添加 json 解析异常处理，参考[[#完善数据层功能]]
+添加 json 解析异常处理，参考[[#完善数据层功能|完善数据层功能]]
 ### 获取 mysql 数据避免无限循环
 获取 mysql 的数据时以行为单位，一定要在循环后更新游标到下一行，否则会内存膨胀
 ```cpp
@@ -1043,7 +1043,7 @@ target_link_libraries(ChatServer PRIVATE
 aux_source_directory(. SRC_LIST)
 add_executable(ChatClient ${SRC_LIST})
 ```
-主要部分代码和 [[#muduo 网络库工作基本原理]]中框架代码一致
+主要部分代码和 [[#muduo 网络库工作基本原理|muduo 网络库工作基本原理]]中框架代码一致
 ```cpp
 ChatServer::ChatServer(net::EventLoop* loop, const net::InetAddress& listenAddr, const muduo::string& nameArg) : server_(loop, listenAddr, nameArg), loop_(loop) {
 	server_.setConnectionCallback(std::bind(&ChatServer::onConnect, this,  _1));
@@ -1253,7 +1253,7 @@ void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffe
 	}
 }
 ```
-用户退出逻辑，也就是断开连接（telnet 中按下 ctrl+\]或者直接关闭终端），也由 onConnection 接管，这里出现了一个问题，参考[[#编写过程中问题#linux telnet 终端输入]]
+用户退出逻辑，也就是断开连接（telnet 中按下 ctrl+\]或者直接关闭终端），也由 onConnection 接管，这里出现了一个问题，参考[[#编写过程中问题#linux telnet 终端输入|编写过程中问题 > linux telnet 终端输入]]
 ```cpp
 void ChatServer::onConnect(const net::TcpConnectionPtr& conn) {
 	LOG_INFO << "onConnect called, connected: " << conn->connected();
@@ -1317,7 +1317,7 @@ void UserModel::resetState() {
 	}
 }
 ```
-注意这里没有直接将对应逻辑写在 chatservice 中，根据[[#各个模块和业务模块的关系]]的设计，调整 user.state 是用户数据层面的操作，委托给对应的类来执行
+注意这里没有直接将对应逻辑写在 chatservice 中，根据[[#各个模块和业务模块的关系|各个模块和业务模块的关系]]的设计，调整 user.state 是用户数据层面的操作，委托给对应的类来执行
 中断操作未来也不止需要改用户状态，更细致的管理->更多的步骤都写在 chatservice 中统一业务管理而没有具体操作，高内聚低耦合
 
 > [!note]
@@ -1524,7 +1524,7 @@ server {
 - 客户端只需要 **订阅(subscribe)** 消息队列的一个**频道(channel)**，在消息队列中表明对 XXX 感兴趣
 - 服务器端只需要在消息队列中 **发布(publish)** 消息
 - 消息队列根据 publish 和 subscribe 之间的关系，找到不同 Server 感兴趣的内容并 **推送(notify)** 给 Server，即可完成集群间的跨服务器通信
-参考[[#消息队列]]
+参考[[#消息队列|消息队列]]
 
 ### redis 工作原理
 #### Redis 的基本架构
@@ -1645,7 +1645,7 @@ bool Redis::unsubscribe(int channel) {
 - 在什么技术网站上进行过一些提问
 - 未来规划：积累更多的技术和经验，也希望能够在公司岗位上发挥自己的价值
 #### 项目介绍
-**可能需要准备 2~3min 的项目介绍**，即对[[#项目输出]]中内容的介绍，可以按照逻辑顺序说明：
+**可能需要准备 2~3min 的项目介绍**，即对[[#项目输出|项目输出]]中内容的介绍，可以按照逻辑顺序说明：
 - 项目使用 C++进行开发，不使用传统 socket （太麻烦），使用了 muduo 库
 - muduo 库的 tcp 部分特性是依赖 onConnect 和 onMessage 两个事件处理回调，所以我将网络模块&业务模块解耦
 - 业务模块结构需要用到 C++11 的 `std::bind` 进行回调函数绑定设计，使用各种回调函数处理对应的消息

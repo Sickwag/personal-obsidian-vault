@@ -254,7 +254,7 @@ ANSI 转义序列的本质 ：`\033[46m` 这样的字符串并不是 C++ 特有�
 并且这个类使用了
 - 工厂模式，make，delete，get ，工厂化生产不同类型的 Logger 对象
 - 所有对象统一用 unordered_map 管理，避免临时 Logger 对象**频繁创建和销毁**的开销
-相类似 [[#logbuffer.hpp]] 中 `capacity()`，`size()` 等简单函数实现，可以使用 `[[nodiscard]]` 强制返回值接受，函数体使用 `<const> noexcept` 并且本项目中这些函数统一使用后置返回值类型，相对于传统前置更凸显现代 C++语言风格
+相类似 [[#logbuffer.hpp|logbuffer.hpp]] 中 `capacity()`，`size()` 等简单函数实现，可以使用 `[[nodiscard]]` 强制返回值接受，函数体使用 `<const> noexcept` 并且本项目中这些函数统一使用后置返回值类型，相对于传统前置更凸显现代 C++语言风格
 ## 安全构造 logger 对象
 make/delete/get logger 的函数，都应该保证能够操作成功或者有对应处理措施
 ```cpp

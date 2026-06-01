@@ -2199,6 +2199,7 @@ int main (){
 Object line is being created
 Object column is being created column was defined 10  //参数显示在结果中
 ```
+##### 注意事项
 #### 析构函数
 - **析构函数名必须和类名一致**，前加~表示为析构函数，不能带有参数
 - 可以在析构函数中写函数执行后的操作，实现每次调用相关函数后自动“善后”。如关闭文件，释放内存。构造函数只能有一个
