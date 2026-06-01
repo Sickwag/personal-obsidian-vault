@@ -4515,77 +4515,169 @@ void print(T arg1, T arg2)
 - **预处理指令的顺序**：预处理器按照它们在源文件中出现的顺序来处理预处理指令。
 - **宏展开的文本替换**：宏展开是简单的文本替换，不考虑 C++的作用域规则或类型检查。
 - **宏的全局性**：由于预处理器在编译之前处理宏，宏定义在文件中是全局有效的，从定义点开始直到文件结束，或者直到宏被取消定义。
-### define 全局宏
-
-**语法**
+### 宏的使用方法
+#### 基础分类
 ```cpp
-#define macro-name replacement-text
+#define NAME value            // 对象宏（Object-like macro）
+#define NAME(参数) 体         // 函数宏（Function-like macro）
+#undef NAME                   // 取消定义
 ```
-`#define PI 3.14159` 表示在 `#define` 的**作用域**中，所有出现的 `PI` 字样都将替换为 3.14159
-也可以用下面形式定义简单函数
+#### 四个特殊预处理运算符
+##### `#` — 字符串化
+将宏参数变成 C 字符串字面量。**这是宏独有的能力，函数无法做到。**
 ```cpp
-#define SQUARE(x) ((x) * (x))
-#define MIN(a,b) (a<b ? a : b)
-```
-全局宏替换会在编译过程之前进行
-### 条件编译
-调试过程中可以使用条件编译创建调试开关来检查代码
-```cpp
-#include <iostream>
-#define DEBUG // 打开调试信息显示开关
+#define STR(x) #x
+STR(42)         // → "42"
+STR(hello)      // → "hello"
 
-int main() {
-    int x = 10;
-#ifdef DEBUG //定义需要现实的调试信息
-    cerr << "Variable x = " << x << endl;
-#endif
-    // 其他代码...
-    return 0;
+// 工程用法：
+#define ASSERT(cond) \
+    if (!(cond)) log_error(#cond)
+
+ASSERT(ptr != nullptr);  // → log_error("ptr != nullptr")
+```
+注意：`#x` 中的 x 如果本身是宏，不会展开。需要两层宏：
+```cpp
+#define VALUE 100
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+STR(VALUE)   // → "100"（先展开 VALUE → 100，再 #）
+```
+##### `##` — 标记粘贴
+将两个预处理标记拼接成一个新标记。
+```cpp
+#define CONCAT(a, b) a##b
+CONCAT(my, Variable)  // → myVariable
+
+// 生成 getter
+#define DECLARE_GETTER(type, name) \
+    type get_##name() const { return m_##name; }
+
+DECLARE_GETTER(int, age)
+// 展开：int get_age() const { return m_age; }
+```
+##### `\` — 续行符
+宏定义默认只占一行。`\` 表示宏继续到下一行。
+
+```cpp
+#define ASSERT(cond, msg)                                  \
+    if (!(cond)) {                                          \
+        log_error(#cond, msg, __FILE__, __LINE__);          \
+        abort();                                            \
+    }
+```
+##### `#@` — 字符化（非标准）
+仅 GCC/Clang 扩展，把参数变成字符字面量。不推荐使用。
+#### 可变参数宏
+```cpp
+#define LOG(format, ...) \
+    printf(format, __VA_ARGS__)
+
+LOG("hello %d", 42);    // ✅
+LOG("hello");            // ❌ 多了一个逗号
+```
+**解决空参数多余逗号：**
+```cpp
+// GCC 扩展（##__VA_ARGS__）：
+#define LOG(format, ...) \
+    printf(format, ##__VA_ARGS__)
+// 如果 __VA_ARGS__ 为空，## 删除前面逗号
+
+// C++20 标准（__VA_OPT__）：
+#define LOG(format, ...) \
+    printf(format __VA_OPT__(,) __VA_ARGS__)
+// 如果 __VA_ARGS__ 非空，__VA_OPT__(,) 展开为 ,
+```
+#### `do { ... } while(0)` 惯用法
+解决多语句宏在 `if`/`else` 中展开后控制流错误。
+```cpp
+// ❌ 错误写法：
+#define CALL_AND_LOG(fn) { fn(); log(#fn); }
+if (condition)
+    CALL_AND_LOG(process);
+else
+    other();
+// 展开后：
+// if (condition) { process(); log("process"); };
+// else other();   // ← 分号导致 else 悬空！
+
+// ✅ 正确写法：
+#define CALL_AND_LOG(fn) \
+    do { fn(); log(#fn); } while(0)
+// 展开后：
+// do { process(); log("process"); } while(0);
+// 不会干扰外部 if-else
+```
+#### X-Macro 模式
+一次定义数据列表，多次用不同宏展开生成关联代码：
+```cpp
+#define COLOR_LIST \
+    X(RED)    \
+    X(GREEN)  \
+    X(BLUE)
+
+enum Color {
+#define X(name) name,
+    COLOR_LIST
+#undef X
+};
+
+std::string color_to_string(Color c) {
+    switch (c) {
+#define X(name) case name: return #name;
+        COLOR_LIST
+#undef X
+    }
+    return "unknown";
+}
+// 展开：enum Color { RED, GREEN, BLUE };
+// case RED: return "RED"; ...
+```
+#### 常用预定义宏
+
+| 宏             | 值                | 说明                     |
+| ------------- | ---------------- | ---------------------- |
+| `__LINE__`    | 整数               | 当前行号                   |
+| `__FILE__`    | `"filename"`     | 当前文件名                  |
+| `__DATE__`    | `"Mmm dd yyyy"`  | 编译日期                   |
+| `__TIME__`    | `"hh:mm:ss"`     | 编译时间                   |
+| `__cplusplus` | `201703L` 等      | C++ 标准版本               |
+| `__func__`    | `"functionName"` | 当前函数名（C99/C++11）       |
+| `__COUNTER__` | 0,1,2,...        | 每次使用递增（GCC/Clang/MSVC） |
+`__COUNTER__` 用法：
+```cpp
+#define CONCAT(a, b) a##b
+#define GEN_NAME(prefix) CONCAT(prefix, __COUNTER__)
+
+int GEN_NAME(tmp) = 1;  // → int tmp0 = 1;
+int GEN_NAME(tmp) = 2;  // → int tmp1 = 2;
+```
+#### `__FILE__` / `__LINE__` vs `std::source_location` (C++20)
+
+| 对比维度   | `__FILE__`/`__LINE__` | `std::source_location` |
+| ------ | --------------------- | ---------------------- |
+| 标准版本   | C 语言起就有               | C++20                  |
+| 类型安全   | 文本替换                  | 强类型                    |
+| 列号信息   | ❌ 无                   | ✅ `column()`           |
+| 函数名    | ❌（需 `__func__`）       | ✅ `function_name()`    |
+| 能否替代宏？ | —                     | ❌ 只能替代信息获取部分           |
+`std::source_location` **能替代**日志/断言中获取文件名、行号、函数名的功能：
+```cpp
+void log_info(const std::string& msg,
+              const std::source_location& loc = std::source_location::current()) {
+    std::cout << loc.file_name() << ":" << loc.line() << ": " << msg;
 }
 ```
-### \# 和 \## 运算符
-在与处理指令中用 `#` 表示将 `#` 后的字符转换为 `“字符”` 形式
-```cpp
-#define MKSTR( x ) #x
-int main ()
-{
-    cout << MKSTR(HELLO C++) << endl;
-    return 0;
-}
-```
-代码中 MKSTR 与处理函数将 `HELLO C++` 转换为 `"HELLO C++"` 凡在 `<<` 中使字符串正常显示
+`std::source_location` **不能替代**：`#x` 字符串化、`##` 标记粘贴、条件编译（`#ifdef`）、`__builtin_expect` 分支预测、头文件保护。
+#### 现代 C++ 对宏的原则
 
-`##` 运算符用于连接两个令牌
-```cpp
-#define concat(a, b) a ## b
-int main()
-{
-   int xy = 100;
-   cout << concat(x, y);
-   return 0;
-}
-```
-### 预定义宏
-| 宏        | 描述                                               |
-| -------- | ------------------------------------------------ |
-| __LINE__ | 这会在程序编译时包含当前行号。                                  |
-| __FILE__ | 这会在程序编译时包含当前文件名。                                 |
-| __DATE__ | 这会包含一个形式为 month/day/year 的字符串，它表示把源文件转换为目标代码的日期。 |
-| __TIME__ | 这会包含一个形式为 hour:minute: second 的字符串，它表示程序被编译的时间。   |
-```cpp
-int main ()
-{
-    cout << "Value of __LINE__ : " << __LINE__ << endl;
-    cout << "Value of __FILE__ : " << __FILE__ << endl;
-    cout << "Value of __DATE__ : " << __DATE__ << endl;
-    cout << "Value of __TIME__ : " << __TIME__ << endl;
-
-    return 0;
-}
-```
-
-注意 DATE 和 TIME 显示的是被编译的时间而不是运行程序时的时间
-
+| 可替代（用 constexpr/模板）               | 不可替代                    |
+| --------------------------------- | ----------------------- |
+| `#define MAX(x, y)` → `constexpr` | `#x` 字符串化               |
+| `#define PI 3.14` → `constexpr`   | `__FILE__` `__LINE__`   |
+| `#define PRINT(x)` → 模板           | `__builtin_expect` 分支预测 |
+| 常量定义 → `constexpr` / `enum`       | 头文件保护 `#ifndef`         |
+**能用 constexpr/模板替代的就不用宏，但宏特有的能力（`#x`、`__LINE__`、`__builtin_expect`）大胆用**，具体例子可以参考 [[Sylar Backend Collection#]]
 ## 信号处理
 ### 中断信号
 信号是由操作系统传给进程的中断，会提早终止一个程序。在 UNIX、LINUX、Mac OS X 或 Windows 系统上，可以通过按 Ctrl+C 产生中断。
