@@ -2170,10 +2170,9 @@ CMyClass:: CMyClass (int x, int y) : m_y (y), m_x (m_y){};
 #### 构造函数
 构造函数是一种初始化类的对象的各种属性的方法，类似于 [python 中\_\_init\_\_方法](Python%20Basics.md#^386d6a)
 - **析构函数名必须和类名相同**
-- python 中初始化函数__init__不和类同名
+- `class_name object_name ();` 这样的写法编译器认为是一个返回值为 class_name 类型的函数声明，不会调用默认构造函数，需要加 `typename` 前缀
 - **创建对象后**会执行所有构造函数函数体中代码块，这叫**初始化对象**
 - 构造函数可以有多个重载，而析构函数==不能重载==
-- 构造函数中需要在别处调用的部分用 public 修饰
 - 构造函数**只会在创建对象时调用**，对已经**存在的对象不能调用构造函数**来初始化内容或者希望将对象=="回到初始状态"== ^ijuyxe
 ```cpp
 class Line{
@@ -2199,351 +2198,313 @@ int main (){
 Object line is being created
 Object column is being created column was defined 10  //参数显示在结果中
 ```
-##### 注意事项
 #### 析构函数
 - **析构函数名必须和类名一致**，前加~表示为析构函数，不能带有参数
 - 可以在析构函数中写函数执行后的操作，实现每次调用相关函数后自动“善后”。如关闭文件，释放内存。构造函数只能有一个
-##### private 析构函数
-析构函数放在 private中会导致对象只能在堆上创建，不能在栈上创建
-```cpp
-class OnlyOnHeap {
-private:
-    ~OnlyOnHeap() {}  // 私有析构函数
-public:
-    static void destroy(OnlyOnHeap* p) { delete p; }
-};
-
-OnlyOnHeap obj;           // ❌ 编译错误：析构函数不可访问
-static OnlyOnHeap obj2;   // ❌ 编译错误：析构函数不可访问
-auto* p = new OnlyOnHeap; // ✅ 可以：new 不调用析构函数
-delete p;                 // ❌ 编译错误：析构函数不可访问
-p->destroy();             // ✅ 可以：通过静态成员函数调用 delete
-```
-原因： 当对象离开作用域时，编译器会自动插入析构函数调用。如果析构函数是 private，编译器无法生成这段代码，所以禁止在栈上创建对象。
-一般用于:
-**1. 强制使用工厂函数 + 自定义销毁动作**
-```cpp
-class DatabaseConnection {
-private:
-    ~DatabaseConnection() {}
-public:
-    static std::unique_ptr<DatabaseConnection, void(*)(DatabaseConnection*)> create() {
-        return { new DatabaseConnection(), [](DatabaseConnection* p) {
-            p->close();  // 关闭连接
-            delete p;
-        }};
-    }
-    void close() { /* ... */ }
-};
-```
-**2. 引用计数对象（类似 COM 模式）**
-```cpp
-class RefCounted {
-private:
-    ~RefCounted() {}  // 只能通过 release() 销毁，不能自己delete
-    int _refCount = 1;
-public:
-    void retain() { ++_refCount; }
-    void release() { if (--_refCount == 0) delete this; }
-};
-```
-这里 `delete this` 是在成员函数内部调用的，可以访问 private 析构函数。
-**3. 单例模式**
-```cpp
-class Singleton {
-private:
-    ~Singleton() {}  // 防止外部 delete
-public:
-    static Singleton& getInstance() {
-        static Singleton instance;
-        return instance;
-    }
-};
-```
-虽然这里 Singleton 是栈上对象（静态局部变量），但 private 析构函数防止了外部代码误写 `delete &Singleton::getInstance()`。
-##### protect 析构函数
+#### 使用显式关键字控制构造函数行为
+`=default `隐式生成的控制
+首先补充一个前提：C++ 编译器会隐式生成默认构造函数和析构函数，但规则是：
+- 如果你定义了任何构造函数 → 编译器不再生成默认构造
+- 如果你没有声明析构函数 → 编译器生成一个 public 的
+- `=default` 可以在 class 内任何访问区域显式要求编译器生成
+`=delete` 如果用于构造函数则表示**禁止任何实例化操作**，一般用于:
+1. 纯静态工具类 — 禁止任何实例化（std::char_traits、std::numeric_limits）
+2. 不可复制/移动的对象 — mutex、file descriptor、socket
+3. 必须有初始化参数的类型 — 默认构造无意义
+#### 使用 virtual 关键字控制析构函数行为
+##### virtual 构造函数（不存在）
+**C++ 中不存在 virtual 构造函数。** 这是 C++ 语言设计的基本限制：构造函数在对象创建时调用，此时虚表指
+针（vptr）尚未初始化，虚函数机制不可用。如果构造函数是 virtual，调用时还没有 vptr，无法分派。
+##### virtual 析构函数
+**核心规则：一个类中有虚函数，必须要有虚析构。**
 
 ```cpp
 class Base {
-protected:
-    ~Base() {}  // 保护析构函数
-};
-
-class Derived : public Base {
-    // 可以正常析构父类对象
-};
-```
-效果：只能通过派生类指针析构，不能通过基类指针 delete
-
-```cpp
-Derived* d = new Derived();
-delete d;           // ✅ 可以：Derived 的析构函数可以访问 Base 的保护析构函数
-
-Base* b = new Derived();
-delete b;           // ❌ 编译错误：~Base() 是 protected，外部不可访问
-```
-典型用途：强制使用虚析构 + 智能指针
-```cpp
-class Interface {
-protected:
-    ~Interface() = default;  // 保护非虚析构函数
 public:
-    virtual void doSomething() = 0;
-};
-
-class Impl : public Interface {
-public:
-    void doSomething() override {}
-};
-
-// 使用 shared_ptr 时，删除器会从最派生类型获取析构函数
-auto p = std::make_shared<Impl>();  // ✅ 可以
-// auto p2 = std::unique_ptr<Interface>(new Impl());  // ❌ 编译错误
-auto p3 = std::shared_ptr<Interface>(new Impl());     // ✅ 可以
-```
-
-`shared_ptr` 的删除器在构造时记住了 `Impl` 的完整类型（通过 `make_shared` 或类型推导），所以即使基类析构函数是 protected，也能正确调用派生类析构函数。
-##### 总结对比
-
-| 修饰符         | 栈上创建 | `new` 创建 | `delete` 外部调用 | 典型用途                         |
-| ----------- | ---- | -------- | ------------- | ---------------------------- |
-| `public`    | ✅    | ✅        | ✅             | 普通类                          |
-| `protected` | ❌    | ✅        | ❌（基类指针）       | 抽象接口，强制使用派生类指针或 `shared_ptr` |
-| `private`   | ❌    | ✅        | ❌             | 单例、引用计数对象、仅堆对象               |
-#### 不同访问修饰符中的差异
-##### 构造函数放在 private
-```cpp
-class Singleton {
-private:
-    Singleton() {}  // 私有构造函数
-public:
-    static Singleton& getInstance() {
-        static Singleton instance;
-        return instance;
-    }
-};
-
-// Singleton obj;              // ❌ 编译错误：构造函数不可访问
-// auto* p = new Singleton();  // ❌ 编译错误：构造函数不可访问
-// auto sp = std::make_shared<Singleton>();  // ❌ 编译错误
-```
-友元和类内部可以创建
-```cpp
-class Factory {
-public:
-    static Singleton* create() {
-        return new Singleton();  // ❌ 编译错误：Factory 不是 Singleton 的友元
-    }
-};
-
-class Singleton {
-    friend class Factory;  // 声明友元
-private:
-    Singleton() {}
-};
-
-// 现在 Factory 可以创建
-Factory::create();  // ✅ 可以
-```
-静态成员函数可以创建（最常见的单例模式）
-典型用途
-**1. 单例模式** — 强制全局唯一实例
-```cpp
-class Singleton {
-private:
-    Singleton() {}
-public:
-    static Singleton& getInstance() {
-        static Singleton instance;  // ✅ 可以：类内部可以访问私有构造函数
-        return instance;
-    }
-};
-```
-单例模式只允许有一个全局对象，所以没有必要让外部调构造函数
-**2. 工厂模式** — 强制通过工厂创建
-```cpp
-class Connection {
-    friend class ConnectionFactory;
-private:
-    Connection(std::string host, int port) {}
-};
-
-class ConnectionFactory {
-public:
-    static Connection createTCP(std::string host, int port) {
-        return Connection(host, port);  // ✅ 友元可以访问私有构造函数
-    }
-};
-
-// 外部只能：
-auto conn = ConnectionFactory::createTCP("localhost", 8080);
-// auto conn2 = Connection("localhost", 8080);  // ❌ 编译错误
-```
-**3. 仅允许特定创建方式**
-```cpp
-class Task {
-    friend class TaskPool;
-private:
-    Task() {}
-};
-
-class TaskPool {
-    std::vector<Task*> _tasks;
-public:
-    Task* createTask() {
-        auto* t = new Task();  // ✅ 友元可以
-        _tasks.push_back(t);
-        return t;
-    }
-};
-```
-##### 构造函数放在 protected
-```cpp
-class Base {
-protected:
-    Base() {}  // 保护构造函数
+  virtual ~Base() = default;
+  virtual void run() = 0;
 };
 
 class Derived : public Base {
 public:
-    Derived() : Base() {}  // ✅ 派生类可以访问
+  ~Derived() { /* 释放派生类资源 */ }
+  void run() override {}
+};
+Base* p = new Derived();
+delete p;  // 没有 virtual ~Base() → 只调 ~Base()，不调 ~Derived() → 资源泄漏
+```
+原理： delete 通过静态类型决定调用哪个析构函数。若没有 virtual，delete base_ptr 调 ~Base()；virtual
+让析构像其他虚函数一样走动态分派，调用 ~Derived()，然后自动调用基类析构。
+
+例外： 如果一个类不用于多态（不做基类、无派生类重写），不需要虚析构。但这条难以提前保证，实践上：任何有虚函数的类，或设计为基类的类，都加上 `virtual ~ClassName() = default`。
+##### pure virtual 析构函数
+```cpp
+class AbstractOnly {
+public:
+  virtual ~AbstractOnly() = 0;    // 纯虚析构，使类抽象
+};
+AbstractOnly::~AbstractOnly() = default;   // 必须提供实现！
+```
+为什么需要函数体？ 派生类析构时，析构链的最后一环一定是调用基类析构函数。即使析构是纯虚的，它仍然需要
+有实现，否则链接会报错。
+使用场景：极少。当你同时需要：
+- 类不能被实例化（抽象类）
+- 但没有其他纯虚函数可以声明
+- 且派生类析构链需要调用基类析构
+#### 使用访问修饰符控制构造函数行为
+前置知识：隐式生成的规则
+- 没有定义任何构造函数 → 编译器隐式生成 public 默认构造
+- 定义了任何构造函数 → 编译器不再生成默认构造
+- = default 可以在任意访问区域显式要求编译器生成
+- = delete 构造函数
+```cpp
+// 禁止默认构造
+class Config {
+public:
+  Config() = delete;
+  Config(const std::string& path);
+};
+// 禁止拷贝
+class UniqueResource {
+public:
+  UniqueResource(const UniqueResource&) = delete;
+};
+// 禁止所有构造（纯静态类）
+class MathUtils {
+public:
+  MathUtils() = delete;
+  MathUtils(const MathUtils&) = delete;
+  static double pi() { return 3.14159; }
 };
 ```
-**1. 外部无法直接创建基类对象**
+典型用途：
+- 纯静态工具类 — 禁止任何实例化（如 std::char_traits）
+- 不可复制/移动对象 — mutex、socket、fd 等资源句柄
+- 需初始化参数的类 — 默认构造无意义
+= delete 析构函数
 ```cpp
-Base obj;        // ❌ 编译错误
+class NeverDestroy {
+public:
+  ~NeverDestroy() = delete;
+};
+auto* p = new NeverDestroy();  // ✅
+// delete p;                    // ❌ 编译错误
+```
+实际用途极其有限。对象可以被 new 但永远不能被销毁，造成内存泄漏。仅用于嵌入式/系统编程中 mmap
+固定的内存区域。
+##### public 构造函数
+默认无限制。
+##### protected 构造函数
+外部无法直接创建基类对象，派生类可以创建，友元可以创建。
+```cpp
+Base obj;            // ❌ 编译错误
 auto* p = new Base();  // ❌ 编译错误
 ```
-**2. 派生类可以创建**
-```cpp
-class Derived : public Base {
-public:
-    Derived() : Base() {}  // ✅ 可以
-};
-
-Derived d;       // ✅ 可以
-auto* p = new Derived();  // ✅ 可以
-```
-**3. 友元可以创建**
-```cpp
-class Base {
-    friend class Helper;
-protected:
-    Base() {}
-};
-
-class Helper {
-public:
-    static Base* create() {
-        return new Base();  // ✅ 友元可以
-    }
-};
-```
-典型用途
-**1. 抽象基类（不希望被实例化）**
+典型用途：
+1. 抽象基类 — 不希望基类实例化但允许子类，算是一种"弱化的抽象"
 ```cpp
 class Shape {
 protected:
-    Shape() {}  // 不能直接创建 Shape，只能创建派生类
+  Shape() {}
 public:
-    virtual double area() const = 0;
-    virtual ~Shape() = default;
+  virtual double area() const = 0;
+  virtual ~Shape() = default;
 };
 
 class Circle : public Shape {
 public:
-    Circle(double r) : Shape() {}
-    double area() const override { return 3.14 * r * r; }
-private:
-    double r;
+  Circle(double r) : Shape() {}
+  double area() const override { return 3.14 * r * r; }
 };
 
 Shape s;          // ❌ 编译错误
 Circle c(5.0);    // ✅ 可以
 ```
-**2. 模板方法模式（基类控制流程，派生类实现细节）**
+2. 工厂类层次 — 基类构造 protected，只有友元工厂能创建具体子类
 ```cpp
-class DataProcessor {
+class Connection {
+  friend class ConnectionFactory;
 protected:
-    DataProcessor() {}  // 只能通过派生类创建
+  Connection(const std::string& host, int port);
+};
+
+class TcpConnection : public Connection { /* ... */ };
+class SslConnection : public Connection { /* ... */ };
+
+class ConnectionFactory {
 public:
-    void process() {
-        auto data = loadData();
-        auto result = transform(data);
-        saveResult(result);
-    }
+  static Connection* createTcp(const std::string& h, int p) {
+	  return new TcpConnection(h, p);     // 友元可访问 protected
+  }
+};  
+```
+##### private 构造函数
+表示友元和类内部可以创建对象，外部不可创建
+典型用途：
+1. 单例模式 — 强制全局唯一实例
+```cpp
+class SingletonDB {
 private:
-    virtual std::string loadData() = 0;
-    virtual std::string transform(const std::string&) = 0;
-    virtual void saveResult(const std::string&) = 0;
-};
-
-class CSVProcessor : public DataProcessor {
+  SingletonDB() = default;
+  static SingletonDB* s_instance;
 public:
-    CSVProcessor() : DataProcessor() {}
-    // 实现三个虚函数...
+  static SingletonDB* getInstance();
 };
 ```
-**3. 与 `shared_from_this` 配合（强制只能通过 shared_ptr 管理）**
+2. 工厂模式 — 强制通过工厂创建
 ```cpp
-class AsyncObject : public std::enable_shared_from_this<AsyncObject> {
-protected:
-    AsyncObject() {}  // 防止栈上创建和 unique_ptr
-public:
-    static std::shared_ptr<AsyncObject> create() {
-        // 这里只能用 shared_ptr<T>(new T)，不能用 make_shared
-        return std::shared_ptr<AsyncObject>(new AsyncObject());
-    }
-    void doAsync() {
-        auto self = shared_from_this();  // 安全：确保是 shared_ptr 管理
-    }
+class Connection {
+  friend class ConnectionFactory;
+private:
+  Connection(std::string host, int port) { /* init */ }
 };
 
-// auto obj = AsyncObject();           // ❌ 编译错误
-// auto obj = std::make_shared<AsyncObject>();  // ❌ 编译错误
-auto obj = AsyncObject::create();       // ✅ 正确
-obj->doAsync();                         // ✅ shared_from_this 安全
+class ConnectionFactory {
+public:
+  static Connection createTCP(std::string host, int port) {
+	  return Connection(host, port);  // ✅ 友元可以访问私有构造函数
+  }
+};  
+
+auto conn = ConnectionFactory::createTCP("localhost", 8080);
+// auto conn2 = Connection("localhost", 8080);   // ❌ 编译错误
+```
+3. 不完整删除（Noncopyable 模式）
+```cpp
+class Noncopyable {
+public:
+  Noncopyable() = default;
+  Noncopyable(const Noncopyable&) = delete;          // 不能拷贝
+  Noncopyable& operator=(const Noncopyable&) = delete; // 不能赋值
+};
+```
+4. 建造者模式 — Builder 作为友元，只有 Builder 能逐步构建复杂对象
+5. 标记类/类型标签 — 为模板特化做区分，不需要实例化
+```cpp
+struct HttpTag { private: HttpTag() = default; friend struct Router; };
+struct WsTag   { private: WsTag() = default;   friend struct Router; };
+```
+#### 使用访问修饰符控制析构函数行为
+##### public 析构函数
+默认情况，无限制。栈上堆上都可以销毁。
+##### protected 析构函数
+```cpp
+class Base {
+protected:
+  ~Base() {}
+};
+
+class Derived : public Base { };
+
+Derived* d = new Derived();
+delete d;           // ✅ 可以：~Derived() 体中可以访问 ~Base()（protected）
+
+Base* b = new Derived();
+delete b;           // ❌ 编译错误：~Base() 是 protected，外部不可访问
+auto* b2 = new Derived();
+delete b2;          // ❌ 编译错误
 ```
 
+关键机制：
+- delete d（Derived*）→ 编译器调 ~Derived()（public），~Derived() 的析构体中会调用基类析构
+~Base()，而派生类的成员函数可以访问基类的 protected 成员 → 正常编译
+- delete b（Base*）→ 编译器检查静态类型 Base*，发现 ~Base() 是 protected，外部代码没有访问权限 →
+编译错误
+典型用途：强制使用 shared_ptr 管理多态对象
+```cpp
+class Interface {
+protected:
+  ~Interface() = default;
+public:
+  virtual void doSomething() = 0;
+};
+
+class Impl : public Interface {
+public:
+  void doSomething() override {}
+};
+// ✅ shared_ptr 可以：它在构造时通过类型擦除记住了 Impl* 的完整类型
+auto p = std::shared_ptr<Interface>(new Impl());
+
+// ❌ unique_ptr 不可以：默认删除器绑定的是 Interface 类型，尝试调 ~Interface()
+// auto p2 = std::unique_ptr<Interface>(new Impl());
+
+// ✅ make_shared 也可以
+auto p3 = std::shared_ptr<Interface>(std::make_shared<Impl>());
+```
+核心原理： shared_ptr
+的删除器在构造时通过类型擦除记住了原始指针的完整类型（Impl*），所以析构时即使静态类型是
+Interface*，实际调用的还是 delete (Impl*)p，走 ~Impl() → ~Interface() 的析构链。而 unique_ptr
+的默认删除器是模板参数的一部分，绑定的是 Interface，所以会尝试调 ~Interface() → 编译错误。
+##### private 析构函数
+```cpp
+class OnlyOnHeap {
+private:
+  ~OnlyOnHeap() {}
+public:
+  static void destroy(OnlyOnHeap* p) { delete p; }
+};
+OnlyOnHeap obj;           // ❌ 编译错误：离开作用域要调析构但不可访问
+static OnlyOnHeap obj2;   // ❌ 编译错误：同上（静态变量在程序退出时也要调析构）
+auto* p = new OnlyOnHeap; // ✅ 可以：new 不调用析构函数
+delete p;                 // ❌ 编译错误：析构函数不可访问
+p->destroy();             // ✅ 可以：通过静态成员函数调用 delete（成员函数内有访问权限）
+```
+原因： 对象离开作用域或程序退出时，编译器会自动插入析构函数调用。如果析构是
+private，编译器无法生成这段代码。
+典型用途：
+1. 强制工厂函数 + 自定义销毁
+```cpp
+class DatabaseConnection {
+private:
+  ~DatabaseConnection() {}
+public:
+  static std::shared_ptr<DatabaseConnection> create() {
+	  return std::shared_ptr<DatabaseConnection>(
+		  new DatabaseConnection(),
+		  [](DatabaseConnection* p) {
+			  p->close();
+			  delete p;
+		  }   
+	  );
+  }   
+  void close() { /* flush, release */
+```
+2. 引用计数对象（类似 COM 模式）
+```cpp
+class RefCounted {
+private:
+  ~RefCounted() {}
+  int _refCount = 1;
+public:
+  void retain() { ++_refCount; }
+  void release() {
+	  if (--_refCount == 0) delete this;  // ✅ 成员函数可访问 private 析构
+  }
+};
+```
+3. 单例模式
+```cpp
+class Singleton {
+private:
+  ~Singleton() {}           // 防止外部误写 delete &getInstance()
+public:
+  static Singleton& getInstance() {
+	  static Singleton instance;
+	  return instance;
+  }   
+};
+```
+这里 Singleton 实例在静态存储区（函数局部 static），析构由 C++ runtime 管理，但 private
+析构防止外部误写 delete &Singleton::getInstance()。
+
+### 构造函数 vs 析构函数对比总结
+构造函数访问控制：
+析构函数访问控制：
+protected 构造 vs private 构造：
+protected 析构 vs private 析构 vs virtual 析构：
 #### 构造函数 vs 析构函数对比总结
-
-| | 构造函数 private | 构造函数 protected | 析构函数 private | 析构函数 protected |
-|---|---|---|---|---|
-| **栈上创建** | ❌ | ❌ | ❌ | ❌ |
-| **`new` 创建** | ❌（外部） | ❌（外部） | ✅ | ✅ |
-| **派生类创建** | ❌ | ✅ | ✅ | ✅ |
-| **友元创建** | ✅ | ✅ | ✅ | ✅ |
-| **静态成员创建** | ✅ | ✅ | ✅ | ✅ |
-| **核心目的** | 控制**谁**能创建 | 控制**谁**能实例化基类 | 控制**如何**销毁 | 控制**通过什么指针**销毁 |
-
-**一个关键区别：**
-
-- **private 构造函数** → 阻止外部创建，常用于单例、工厂
-- **protected 构造函数** → 阻止基类实例化，常用于抽象基类
-- **private 析构函数** → 阻止栈上创建，强制堆分配 + 自定义销毁
-- **protected 析构函数** → 阻止通过基类指针 `delete`，强制通过派生类指针或 `shared_ptr` 销毁
-
-**本项目中的体现：**
-
-```cpp
-class LogicSystem : public Singleton<LogicSystem> {
-    friend class Singleton<LogicSystem>;
-private:
-    LogicSystem();  // 私有构造函数：强制通过 Singleton::getInstance() 获取
-};
-```
-
-这里构造函数是 private，意味着：
-- 外部不能 `new LogicSystem()` 或 `make_shared<LogicSystem>()`
-- 只能通过 `LogicSystem::getInstance()` 获取全局唯一实例
-- 由于 `Singleton<LogicSystem>` 是友元，它可以在 `getInstance()` 内部调用构造函数
-#### 构造函数的特点
-所有构造函数的特征是：
-1. **名称与类名相同**：构造函数的名称必须与类名完全相同，没有返回类型，也不包括返回值。
-2. **无返回值**：构造函数不返回任何值，包括 `void` ，不能在函数中写 return 语句
-3. **自动调用**：当创建类的对象时，构造函数会自动被调用，用于初始化对象，对象在销毁前，析构函数会自动调用，都只会调用**一次**。
-4. **可重载**：一个类可以有多个构造函数，只要它们的[参数不同](C++%20Basics.md#函数重载满足条件)，这称为构造函数的重载。
-5. 注意创建对象就会调用构造函数，`class_name object_name ();` 这样的写法编译器认为是一个返回值为 class_name 类型的函数声明，不会调用默认构造函数
+（这里你需要创建一个对比表格，总结以上所有内容）
 #### 移动构造函数
 ##### 作用和意义
 移动构造函数是一种特殊构造函数，接受右值引用参数，用于将资源从一个对象"移动"到另一个对象。
@@ -5295,7 +5256,7 @@ std::cv_status wait_for( std::unique_lock<std::mutex>& lock,
 3. **修改条件**：当条件变量的条件被满足时（==通常由其他线程完成==），调用 `notify_one` 或 `notify_all` 来唤醒等待的线程。
 4. **继续执行**：被唤醒的线程会尝试重新获取互斥量，如果成功，它们将继续执行。
 #### 实例
-通常用于[[详解设计模式（视频教程）#生产者-消费者模式|消费者-生产者模式]]
+通常用于[[设计模式#生产者-消费者模式|消费者-生产者模式]]
 - 一个线程等待“数据准备好”，另一个线程负责“生成数据”
 - 一个线程等待“任务队列非空”，另一个线程负责“添加任务”
 如果等待线程一直等待，并定时询问 CPU 资源是否准备好，会造成资源浪费，所以 C++提供了挂起线程，等待适合时机唤醒的操作
@@ -5332,7 +5293,7 @@ void mainThread() {
 - 线程被唤醒时（无论是否虚假唤醒）都会检查一遍谓词，如果返回 true 则表明条件确实满足，可以唤醒，反之不会
 ### 信号量 semaphore
 用于做简单的资源计数，没办法细致控制多线程访问共享资源的具体条件，只能简单做到避免竞态条件和资源的有无（甚至无法获取具体计数大小）
-简单的[[详解设计模式（视频教程）#生产者-消费者模式|生产者-消费者模式]]
+简单的[[设计模式#生产者-消费者模式|生产者-消费者模式]]
 ```cpp
 std::queue<int>		  buffer;
 std::binary_semaphore empty(10);  // 缓冲区空槽位
