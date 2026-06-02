@@ -113,7 +113,7 @@
             }
           }
         ],
-        "currentTab": 6
+        "currentTab": 5
       }
     ],
     "direction": "vertical"
@@ -294,19 +294,19 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "6a34e1441d0696cc",
+  "active": "7fa60b86b2f67272",
   "lastOpenFiles": [
-    "学习/Bases/开发范式/C++开发范式和术语.md",
-    "学习/Language/C C++/模板元编程.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/ProjectsStudy/FromRemote/Sudoku.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
+    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "Chores/JobInterviews/面试准备.md",
+    "学习/Bases/设计模式/设计模式.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/Language/C C++/模板元编程.md",
+    "学习/Bases/开发范式/C++开发范式和术语.md",
+    "学习/ProjectsStudy/FromRemote/Sudoku.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
     "Chores/JobInterviews/questions精简.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.89718.f6e5135b22ca",
-    "学习/Bases/设计模式/设计模式.md",
-    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/Fragments/编程相关/操作经验/软件使用错误.md",
     "学习/Fragments/编程相关/操作经验/乱码对照表及其解决方法.md",
     "Daily/Learned Record.md",
