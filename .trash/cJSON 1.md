@@ -50,7 +50,7 @@ void setGlobalVar(int value) {
 ###  if 预处理头文件保护
 假设你有一个全局变量和一个函数，它们需要在多个文件中使用，可以将他们放在一个 `.h` 头文件中，并且使用头文件保护防止重复定义
 - **头文件保护的作用是防止重复包含**，而不是阻止使用。
-- 当 `myfunc.h` 第一次被包含时，它的内容（即 `extern int globalVar;` 和 `void setGlobalVar(int value);`）已经被引入到编译单元中。
+- 当 `myfunc.h` 第一次被包含时，它的内容（即 `extern int globalVar;` 和 `void setGlobalVar(int value);`）已经被引入到翻译单元中。
 - 后续包含 `myfunc.h` 的文件（如 `a.cpp` 和 `b.cpp`）虽然跳过了头文件的内容，但它们仍然可以使用这些声明，因为声明已经在第一次包含时生效了。
 ### 头&源文件内容安排
 #### 头文件内容安排

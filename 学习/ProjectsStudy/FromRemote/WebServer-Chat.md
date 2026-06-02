@@ -276,7 +276,7 @@ email. cpp 及其头文件的功能是否是我理解诶的那样：
 ### src/error. cpp & include/error.hpp
 #### 问题
 - 为什么 `to_string` 和 `chat_category` 对象 `cat` 要放在匿名命名空间中？
-  匿名命名空间（`namespace { ... }`）的作用是**将符号（函数、变量等）限制在当前编译单元（Translation Unit）内**，相当于C语言中 `static` 修饰符，避免全局命名冲突。
+  匿名命名空间（`namespace { ... }`）的作用是**将符号（函数、变量等）限制在当前翻译单元（Translation Unit）内**，相当于C语言中 `static` 修饰符，避免全局命名冲突。
 	- `to_string` 是一个辅助函数，仅在 `chat_category::message(int)` 中被调用，不需要暴露给外部代码。
 	- `chat_category cat` 是单例对象，用于注册错误类别，外部无需直接访问它。
 	- 如果放在匿名命名空间外，可能会造成**符号污染**或与其他模块的同名符号冲突。
