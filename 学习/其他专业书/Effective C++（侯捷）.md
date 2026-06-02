@@ -263,14 +263,14 @@ C+＋有着十分固定的“成员初始化次序”。初始化次序总是相
 
 ---
 [1]: 晦涩错误，指的是两个成员变量的初始化带有次序性。例如初始化 array 时需要指定大小，因此代表大小的那个成员变量必须先有初值，但如果初始化次序导致他没有初值**也是合法的**
-### 不同编译单元内定义之 non-local static 对象的初始化次序。
+### 不同翻译单元内定义之 non-local static 对象的初始化次序。
 - static 对象：参考 [[C++ Runoob Tutoral#类的静态成员|static对象]]，不是 stact 和 heap-based 对象包括 global 对象、定义 namespace 作用域内、在 classes 内、在函数内、以及在 file 作用域内被声明为 static 的对象。
 - no-local-static 对象：函数**内**的 static 对象称为 local static 对象（因它们对函数而言是 local) ，其他 static 对象称为 non-localStatic 对象。
-- 编译单元（translation unit）：是指产出单一目标文件 (single object file) 的那些源码。基本上它是单一源码文件加上其所含入的头文件
+- 翻译单元（translation unit）：是指产出单一目标文件 (single object file) 的那些源码。基本上它是单一源码文件加上其所含入的头文件
 
-> 如果某编译单元内的某个 non-local static 对象的初始化动作使用了另一编译单元内的某个 non-localstatic 对象，它所用到的这个对象可能尚未被初始化
+> 如果某翻译单元内的某个 non-local static 对象的初始化动作使用了另一翻译单元内的某个 non-localstatic 对象，它所用到的这个对象可能尚未被初始化
 
-不同于初始化列表中**初始化次序完全按照代码顺序**， C++ 对“定义于不同的编译单元内的 non-local static 对象”的初始化相对次序并无明确定义，所以***决定它们的初始化次序相
+不同于初始化列表中**初始化次序完全按照代码顺序**， C++ 对“定义于不同的翻译单元内的 non-local static 对象”的初始化相对次序并无明确定义，所以***决定它们的初始化次序相
 当困难，非常困难，根本无解。***
 ```cpp
 class Directory { ／／由程序库客户建立
@@ -323,7 +323,7 @@ int main() {
 ### 总而言之
 > - [[Effective C++（侯捷）#内置型 non-member 对象|内置型（non-number）对象]] 进行手工初始化，因 C++不保证初始化它们。
 > - 构造函数最好使用成员初值列 (member initialization list) ，而不要在构造函数本体内使用赋值操作 (assignment) 。初值列列出的成员变量，其排列次序应该和它们在 class 中声明次序相同。
-> - 为免除“跨编译单元之初始化次序”问题，请以 local static 对象替换 non-localstatic 对象。
+> - 为免除“跨翻译单元之初始化次序”问题，请以 local static 对象替换 non-localstatic 对象。
 
 # 2.  构造／析构／赋值运算
 ## 条款 05：了解 C+＋默默编写并调用哪些函数

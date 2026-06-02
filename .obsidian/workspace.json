@@ -145,7 +145,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "开发范式",
+                "query": "编译单元",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -166,7 +166,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -280,7 +281,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 218.5
+    "width": 218.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {

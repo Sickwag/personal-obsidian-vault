@@ -1348,7 +1348,7 @@ class CPointSort {
 static const unsigned int UNSELECTED = 0;
 ```
 - 定义未选中状态的标识值
-- `static`限定作用域为本编译单元（防止多文件包含时重复定义）
+- `static`限定作用域为本翻译单元（防止多文件包含时重复定义）
 
 #### 2.2 枚举类型
 **游戏难度枚举**：
