@@ -81,9 +81,39 @@
               "icon": "lucide-file",
               "title": "Sylar Backend Collection"
             }
+          },
+          {
+            "id": "7fa60b86b2f67272",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/Bases/开发范式/C++开发范式和术语.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "C++开发范式和术语"
+            }
+          },
+          {
+            "id": "6a34e1441d0696cc",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/Language/C C++/模板元编程.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "模板元编程"
+            }
           }
         ],
-        "currentTab": 4
+        "currentTab": 6
       }
     ],
     "direction": "vertical"
@@ -115,7 +145,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "高地址",
+                "query": "开发范式",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -136,8 +166,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -251,8 +280,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 218.5,
-    "collapsed": true
+    "width": 218.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -264,11 +292,16 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "69ffdc47bd97420e",
+  "active": "6a34e1441d0696cc",
   "lastOpenFiles": [
-    "Chores/JobInterviews/面试准备.md",
+    "学习/Bases/开发范式/C++开发范式和术语.md",
+    "学习/Language/C C++/模板元编程.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/ProjectsStudy/FromRemote/Sudoku.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
+    "Chores/JobInterviews/面试准备.md",
+    "学习/其他专业书/Effective C++（侯捷）.md",
+    "Chores/JobInterviews/questions精简.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.89718.f6e5135b22ca",
     "学习/Bases/设计模式/设计模式.md",
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
@@ -291,10 +324,6 @@
     "Files & LongText/Attachments/Pasted image 20260522134724.png",
     "学习/algorithm/用法导向知识.md",
     "学习/Language/HTML/HTML.md",
-    "Chores/Life/Renting House.md",
-    "Chores/operation in devices.md",
-    "Daily/Observations/工作职场.md",
-    "学习/algorithm/刷题路线 3.md",
     "学习/algorithm/刷题路线P2947/[USACO09MAR",
     "学习/algorithm/刷题路线P2947",
     "学习/algorithm/刷题路线.md.tmp.34210.6d3049879b93",

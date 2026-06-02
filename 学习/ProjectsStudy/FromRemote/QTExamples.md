@@ -16,7 +16,7 @@ namespace Ui {
 ```
 导致如果要使用 widget 类所对应的 ui 文件，就需要 `#include "ui_widget.h"` 文件，并且使用 ui 文件中组件时，需要使用 `ui->component`
 ### 原因分析
-Designer使用了 [[C++开发范式#PImpl (Pointer to Implementation)|pimpl手法]]，pImpl手法[[C++开发范式#qt 的 d-pointer 模式|在 qt 中主要作用]] 是解开类的使用接口和实现的耦合，即为了减少各个源文件之间的联系。可以参考链接
+Designer使用了 [[C++开发范式和术语#PImpl (Pointer to Implementation)|pimpl手法]]，pImpl手法[[C++开发范式和术语#qt 的 d-pointer 模式|在 qt 中主要作用]] 是解开类的使用接口和实现的耦合，即为了减少各个源文件之间的联系。可以参考链接
 # 常规GUI控件
 ## moc 的元对象和属性的用法
 标题太长简化，参考[元对象系统moc(Meat-Object System)的对象MetaObject和(含动态)属性Propert的用法_metaobject 判断 有无该字段-CSDN博客](https://xmuli.blog.csdn.net/article/details/105925608)

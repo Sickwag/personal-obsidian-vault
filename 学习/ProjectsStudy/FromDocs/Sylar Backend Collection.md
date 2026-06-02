@@ -189,25 +189,6 @@ T byteswap(T value) {
 #endif
 ```
 BYTE_ORDER、BIG_ENDIAN、LITTLE_ENDIAN 来自 <endian.h>（Linux 标准头文件）。这是在编译期决定的，因为编译器知道目标平台的字节序。
-
-#### 条件交换 —— `byteswapOnLittleEndian`
-不同平台上 `byteswapOnLittleEndian` 和 `byteswapOnBigEndian` 编译出不同的代码：需要交换的平台上执行 `bswap`，不需要的平台上直接 `return t`。使用者总是写 `byteswapOnLittleEndian(value)`，不管当前是什么平台。
-
-#### 在项目中的实际使用
-```cpp
-// address.cc — 套接字地址用网络字节序（大端）
-m_addr.sin_port = byteswapOnLittleEndian(port);
-
-// ws_session.cc — WebSocket 帧头长度字段用大端
-length = sylar::byteswapOnLittleEndian(len);
-
-// bytearray.cc — 目标字节序与平台不一致时交换
-if(m_endian != SYLAR_BYTE_ORDER) { value = byteswap(value); }
-```
-
-### 调用栈回溯
-见上方「分支预测」中 SYLAR_ASSERT 宏的展开。实际调用链：`SYLAR_ASSERT` → `BacktraceToString` → `Backtrace` → `::backtrace()` + `backtrace_symbols()` + `demangle()`
-
 ### 其他工具函数
 
 #### `vasprintf` 可变参数格式化
@@ -230,22 +211,28 @@ if(m_endian != SYLAR_BYTE_ORDER) { value = byteswap(value); }
 基于已用流量动态计算等待时间，而非固定间隔。`m_curCount / m_countPerMS` 算出理论应耗毫秒数，与实际耗时比较后 `usleep` 差值，输出速率平滑。
 
 ### 线程 ID 获取：`gettid` vs `pthread_self`
-
-- `syscall(SYS_gettid)`：返回内核级线程 ID（Linux 内核叫 PID）。在 Linux 中每个线程由 `clone()` 创建，独立分配 PID，可在 `/proc/[tid]/` 目录中查看
+这是 Linux 线程模型中的经典概念混淆。关键在于：Linux 中线程和进程在内核看来是同一个东西
 - `pthread_self()`：返回 POSIX 线程库的内部句柄，不透明类型（可能是 `unsigned long` 或结构体指针），不能传给内核 API
-
+- `syscall(SYS_gettid)`：返回内核级线程 ID（Linux 内核叫 PID）。在 Linux 中每个线程由 `clone()` 创建并独立分配 PID，可在 `/proc/[tid]/` 目录中查看
+TGID 是进程 ID，线程组内所有线程共享）。也就是说：
+```md
+进程（主线程）： 	PID = TGID = 12345
+子线程：         PID = 12346, TGID = 12345
+子线程：         PID = 12347, TGID = 12345
+```
+pthread_self 的值在不同线程之间唯一，但你不能把它传给任何内核 API。而 gettid 的值在`/proc/[tid]/status`、top -H、gdb info threads 中看到，也可以用 kill 发送信号。
 调试多线程问题时，`gdb` / `strace` 显示的是 `gettid()` 的值，不是 `pthread_self()` 的值。
-
 ### `localtime` vs `localtime_r`
-
 标准 `localtime` 用 `static` 内部缓冲区：
 ```cpp
-static struct tm __internal_buffer;  // 多线程共享！
+static struct tm __internal_buffer;  // 仅仅只是一个静态结构体，多线程共享！
 struct tm* localtime(const time_t* t) {
     return &__internal_buffer;        // 多线程同时调用会覆盖
 }
 ```
-`localtime_r` 接受调用者提供的缓冲区：
+`localtime_r` 接受调用者提供的缓冲区，**调用者的缓冲区一般是临时变量且如果没有跨线程的情况下**，这就是线程安全的。sylar 是多线程服务器框架，可能在任意线程中调用日志模块输出带时间戳的日志。如果用
+  localtime，日志系统本身线程安全的但时间格式化却不安全。`_r`  后缀（reentrant，可重入版本）是 C 标准库线程安全化的标配命名约定（strtok_r、gmtime_r、readdir_r 等）。
+
 ```cpp
 struct tm result;
 localtime_r(&t, &result);  // 写入 result，线程安全
@@ -261,33 +248,45 @@ localtime_r(&t, &result);  // 写入 result，线程安全
 | Epoch | 1970-01-01 | 1970-01-01 | 系统启动后某点 |
 | 类型安全 | ❌ struct timeval | ✅ time_point | ✅ |
 | 可移植性 | POSIX only | 全平台 | 全平台 |
+```cpp
+uint64_t GetCurrentMS() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()
+    ).count();
+}
 
+uint64_t GetCurrentUS() {
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()
+    ).count();
+}
+```
 原则：
 - 人类可读时间 → `system_clock`
 - 测量经过时间 → `steady_clock`（不回跳）
+- 高精度短时测量：high_resolution_clock（通常是 steady_clock 的别名）
 
 ### `access()` 函数
-
 `int access(const char* pathname, int mode)`：
 - mode = `F_OK`(0)：检查路径是否存在（比 stat 轻量，不读元数据）
 - mode = `R_OK`(4)：是否可读
 - mode = `W_OK`(2)：是否可写
 - mode = `X_OK`(1)：是否可执行
-
-### ListAllFile 的 filesystem 重写
-
-使用 `std::filesystem::recursive_directory_iterator` 替代 POSIX `opendir`/`readdir`/`closedir`。需注意：
-1. 后缀过滤：`entry.path().extension() == subfix`
-2. 异常安全：遇到权限不足的目录会抛异常，用 `directory_options::skip_permission_denied` 跳过
-3. `generic_string()` 函数保持 POSIX 风格路径分隔符
-
+如果使用 `struct stat st`，那么文件信息（`st.st_mode`，`st.st_size`）还会写入结构体中，但是这里只单纯检查文件权限并不需要，性能也更好
 ### filesystem 权限管理
+`std::filesystem` 没有直接像 ` access()` 那样检查权限的静态函数，但还是可以做到的
 ```cpp
 fs::file_status status = fs::status(path);
 auto perms = status.permissions();
+// 转为8禁止，chmod信息
+std::cout << std::oct << static_cast<int>(perm);
 // 检查
 bool can_write = (perms & fs::perms::owner_write) != fs::perms::none;
+bool owner_can_write = (perm & fs::perms::owner_write) != fs::perms::none;
+bool others_can_read = (perm & fs::perms::others_read) != fs::perms::none;
+
 // 修改
 fs::permissions(path, fs::perms::owner_all | fs::perms::group_read,
                 fs::perm_options::replace);
 ```
+### static 关键字又一理解
