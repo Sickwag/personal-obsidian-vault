@@ -2,13 +2,10 @@
 ## 含义解释
 意思是“替换失败并非错误”。
 - 当编译器在重载决议过程中尝试将模板参数替换到函数模板时，如果这个替换导致了一个无效的代码（比如，一个不存在的类型成员、无效的表达式等），编译器不会立即报错，而是**简单地忽略这个候选模板**，继续尝试其他可用的重载版本。
-- **只有**当没有任何一个可行的重载版本时，编译器才会最终报错
+- **只有**当没有任何一个可行的重载版本时，编译器才会最终报错，主要体现在 `std::enable_if` 的使用上
 - SFINAE 的主要用途是**在编译期根据类型特性来启用或禁用某些模板函数**。它是实现**编译期多态**和**静态反射**的强大工具。
 ## 代码体现
 ```cpp
-#include <iostream>
-#include <type_traits>
-
 // 这个版本仅当 T 是整数类型时可用
 template <typename T>
 typename std::enable_if<std::is_integral<T>::value, void>::type
@@ -29,9 +26,9 @@ int main() {
     // func("hello"); // 编译错误！没有匹配的版本，因 const char* 既不是 integral 也不是 floating point
 }
 ```
-当调用 `func(42)` 时，编译器尝试第二个版本，`std::is_floating_point<int>` 结果返回为 ` false `，导致 ` std::enable_if<false, void>` 没有 ` type ` 成员，替换失败。于是它被忽略。然后编译器成功匹配第一个版本。
-
-现代 C++可以使用条件编译和 Concept 概念在编译时尽量让错误提前暴露
+当调用 `func(42)` 时，编译器尝试第二个版本，`std::is_floating_point<int>` 结果返回为 ` false `，导致 ` std::enable_if<false, void>` 没有 ` type ` 成员，替换失败。于是它被忽略。编译器成功匹配第一个版本。
+这一点可以在[[Sylar Backend Collection#`std enable_if` + `sizeof(T)` 实现重载选择（SFINAE）|字节序零开销选择]]上，是教科书般的 SFINAE 特性使用
+现代 C++可以使用条件编译和 Concept 概念在编译时尽量让错误提前暴露，避免给每一种类型都写一个 `std::enable_if` 的模板，同时 `if constexpr` 保证了不损失性能
 ```cpp
 // c++14
 template <typename T>
@@ -204,6 +201,82 @@ d.interface();  // 实际调用的是 Derived::implementation()
 - 调试时短点跳转可能难以理解
 - 子类必须实现父类中方法，否则编译报错
 
+# ODR（ One Definition Rule）
+ 程序中每个实体（如变量、函数、类、模板，**类型别名**包括 typedef 和using）在整个程序中必须只有**一个定义**
+ ### ODR 的基本规则
+## ODR 基本原则
+### ODR-used 定义
+一个实体（变量、函数等）被 ODR-used 通常意味着程序需要知道它的定义。
+例如，调用一个非内联函数、读取或写入一个变量的值（非 decltype 等情况）、需要知道一个类的完整定义来创建对象或访问成员等。
+根据 C++标准，ODR-used 的正式定义包括：
+- 变量被引用
+- 函数被调用
+- 类被实例化
+- 其他需要知道其完整类型信息的情况（如对象构造、成员访问）
+### 判断逻辑
+1. 单个翻译单元中（一个 .cpp 文件加上它 `#include` 的头）只能有**一次定义**。重复定义会在编译阶段报错。
+2. 多个翻译单元中（多个 .cpp 文件）可以**多次定义**，但前提是：
+- 它们**内容必须完全相同**（逐字节一致！）
+- 必须是 **允许多定义的实体**：如 `inline` 函数、模板、`inline static` 成员变量等
+- 编译器和链接器要能把它们“合并成一个”定义
+所以严格意义上说，ODR 保证**所有编译单元**中一个符号的定义只能有一个
+- **在整个程序中**，ODR式使用**非 `inline` 函数或变量只允许有且仅有一个定义。**编译器不要求对这条规则的违反进行诊断，但违法它的行为是未定义的
+- 对于`inline函数`或`inline 变量 (C++17 起)`来说，在**ODR式**使用了它的每个翻译单元中都需要一个定义
+- 在以需要将类作为**完整类型**的方式给予的每个翻译单元中，要求有且仅有该类的一个定义。
+### 违反 ODR 的场景
+#### 在头文件中定义非内联函数或变量
+**如果一个头文件中定义了一个函数并且在多个源文件中被 include 且函数非 inline 时**，出现**链接而不是编译**报错，变量的 inline 在 C++17 引入
+#### 类型、模板、内联函数/变量定义不一致
+```cpp
+// config.h
+#ifdef USE_FLAG_X
+struct AppConfig {
+    int version = 2;
+    bool flag= true;
+};
+#else
+struct AppConfig {
+    int version = 1;
+};
+#endif
+
+// a.cpp (编译时定义了 USE_FLAG_X)
+// g++ -D USE_FLAG_X a.cpp ...
+#include "config.h"
+
+void process_a(const AppConfig& config) {
+    std::cout << "A: Version " << config.version;
+    if (config.flag) { // ODR Violation may occur here
+        std::cout << ", Flag X enabled" << std::endl;
+    } else {
+        std::cout << std::endl;
+    }
+}
+
+// b.cpp (编译时未定义 USE_FLAG_X)
+// g++ b.cpp ...
+#include "config.h"
+
+AppConfig global_config_b; // Uses definition without flag
+extern void process_a(const AppConfig& config);
+void func_b() {
+    process_a(global_config_b); // Passing AppConfig defined differently! UB!
+}
+```
+名称相同的 AppConfig 符号在不同编译单元中定义不同->内存布局不同->访问无效内存->UB
+**编译器&链接器都无法检测出问题**
+可以用以下方法规避:
+- 给符号添加 inline 关键字
+- 使用 `#pragma once` 或 include guards 保护或条件编译
+- 对于模板，这也是需要将定义写在头文件中的一种原因，参考[[模板元编程#类模板分文件]]
+### 使用原则（规避违反的方法）
+可以总结为:
+- 所有变量定义放在 `.cpp`，声明用 `extern` 放头文件。并在唯一一个源文件 （`.cpp`） 中进行定义。C++17 开始可以使用 inline 变量方法代替
+- 如果是普通函数，那么同上。如果希望函数能够内联，那么定义可以放在头文件中并加上 inline 关键字，不过即使是 `inline` 函数，其定义在所有使用它的 TU 中也必须完全相同
+- 模板定义全部放在 `.h` 文件中。
+- 如果函数会在多个 `.cpp` 中使用，加上 `inline`。
+- 用 `#pragma once` 或 include guard 防止重复包含。
+- 类静态变量推荐用 `inline static`（C++17 起）。
 # 类型擦除
 ## std::any 中的实现
 

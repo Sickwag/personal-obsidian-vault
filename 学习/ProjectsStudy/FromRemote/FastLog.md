@@ -159,7 +159,7 @@ using format_string_wrapper =
 ```
 解参数包的同时，用 `std::type_identity_t<Args>` 禁止每一个参数类型推导或转换
 ## CRTP 编译时多态加快速度
-关于 CRTP 设计参考：[[C++开发范式#CRTP（Curiously Recurring Template Pattern）|奇异递归模板]]
+关于 CRTP 设计参考：[[C++开发范式和术语#CRTP（Curiously Recurring Template Pattern）|奇异递归模板]]
 ### 基类设计
 #### 继承逻辑
 先防止复制，因这个类仅仅是给 ConsoleLogger 类和 FileLogger 类使用的，这两个类**管理全局资源**，在当前项目应当只有他们能够控制 `std::cerr/cout` 和日志文件的读写：
