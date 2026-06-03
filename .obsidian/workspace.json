@@ -113,7 +113,7 @@
             }
           }
         ],
-        "currentTab": 4
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -145,7 +145,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "编译单元",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -166,13 +166,11 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -294,13 +292,13 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "69ffdc47bd97420e",
+  "active": "982f21257484af50",
   "lastOpenFiles": [
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/Language/C C++/模板元编程.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "Chores/JobInterviews/面试准备.md",
     "学习/Bases/设计模式/设计模式.md",
     "学习/ProjectsStudy/FromRemote/Sudoku.md",
