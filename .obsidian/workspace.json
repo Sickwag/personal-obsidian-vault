@@ -58,13 +58,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
+                "file": "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "AzzatoChat"
+              "title": "MyTinyTools"
             }
           },
           {
@@ -111,6 +111,21 @@
               "icon": "lucide-file",
               "title": "模板元编程"
             }
+          },
+          {
+            "id": "894d5154c387a75e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Files & LongText/ChatLogWithAi/AiQuiz/内存池.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "内存池"
+            }
           }
         ],
         "currentTab": 3
@@ -145,7 +160,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "内存序",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -166,11 +181,13 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -292,18 +309,25 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "982f21257484af50",
+  "active": "ba262dda311ee672",
   "lastOpenFiles": [
     "学习/Language/C C++/模板元编程.md",
+    "Files & LongText/ChatLogWithAi/AiQuiz/内存池.md",
+    "学习/其他专业书/Modern C++.md",
+    "Chores/JobInterviews/questions精简.md",
+    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
+    "Files & LongText/Attachments/gif 1.gif",
+    "Files & LongText/Attachments/gif.gif",
+    "Files & LongText/Attachments/Pasted image 20260603163829.png",
+    "Files & LongText/Attachments/Pasted image 20260603162938.png",
+    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "Chores/JobInterviews/面试准备.md",
     "学习/Bases/设计模式/设计模式.md",
     "学习/ProjectsStudy/FromRemote/Sudoku.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
-    "Chores/JobInterviews/questions精简.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.89718.f6e5135b22ca",
     "学习/Fragments/编程相关/操作经验/软件使用错误.md",
     "学习/Fragments/编程相关/操作经验/乱码对照表及其解决方法.md",
@@ -312,8 +336,6 @@
     "学习/algorithm/刷题路线.md",
     "Files & LongText/Attachments/Pasted image 20260530185058.png",
     "学习/ProjectsStudy/FromRemote/QTExamples.md",
-    "学习/ProjectsStudy/WriteByMyself/MyTinyTools.md",
-    "学习/其他专业书/Modern C++.md",
     "学习/其他专业书/C++ prime plus.md",
     "学习/algorithm/题型分类.md",
     "学习/ProjectsStudy/FromBlogs/awesome cpp-backend blogs.md",
@@ -323,7 +345,6 @@
     "分析优化.pdf",
     "Files & LongText/Attachments/Pasted image 20260522134724.png",
     "学习/algorithm/用法导向知识.md",
-    "学习/Language/HTML/HTML.md",
     "学习/algorithm/刷题路线P2947/[USACO09MAR",
     "学习/algorithm/刷题路线P2947",
     "学习/algorithm/刷题路线.md.tmp.34210.6d3049879b93",
@@ -336,10 +357,6 @@
     "Files & LongText/Attachments/Pasted image 20260505230524.png",
     "Files & LongText/Attachments/Pasted image 20260505221706.png",
     "Files & LongText/Attachments/Pasted image 20260505135436.png",
-    "Files & LongText/Attachments/Pasted image 20260504165744.png",
-    "Files & LongText/Attachments/Pasted image 20260504165711.png",
-    "Files & LongText/Attachments/Pasted image 20260504165632.png",
-    "Files & LongText/Attachments/Pasted image 20260504165533.png",
-    "Files & LongText/Attachments/Pasted image 20260504165221.png"
+    "Files & LongText/Attachments/Pasted image 20260504165744.png"
   ]
 }

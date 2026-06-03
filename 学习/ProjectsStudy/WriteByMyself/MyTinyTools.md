@@ -1580,6 +1580,7 @@ C 标准库函数，用于将 `malloc` / `calloc` / `realloc` 分配的内
 
 ### 原子操作中的内存序
 #### 基本知识
+参考 [[Modern C++#Note：内存模型]]
 现代计算机不是简单的顺序执行模型，在多线程任务中的执行顺序非常复杂，即使统一线程中按顺序编写的代码操作也有可能会因为：
 - **编译器优化重排**：编译器为了优化可能调整指令顺序
 - **CPU 乱序执行**：CPU 为了性能可能乱序执行指令
@@ -2093,6 +2094,269 @@ PageCache 层级：
 - 管理 4KB 页面级别的内存
 - 从操作系统获取大块内存
 - 负责内存页的合并和回收
-# llmapi
-## 杂项
-接口库：如果在 add_library 中设置了 `INTERFACE` 属性，那么最终这个库**不会生成库文件**，
+# SkipList-CPP
+## 参考
+代码参考: https://github.com/youngyangyang04/Skiplist-CPP.git
+跳表数据结构原理参考:
+- https://zhuanlan.zhihu.com/p/1979147519796745215
+- https://blog.csdn.net/m0_49834705/article/details/112465244
+## 实现原理
+### 数据结构
+![[Pasted image 20260603162938.png]]
+### forward 数组的本质
+跳表**只有一条单向链表**，各"层"是抽象概念。每个 `Node` 有一个 `forward` 指针数组：
+```cpp
+ Node(50)  node_level = 2  
+   forward[2] → Node(100)     ← level 2 上的下一个节点  
+   forward[1] → Node(70)      ← level 1 上的下一个节点  
+   forward[0] → Node(60)      ← level 0 上的下一个节点
+```
+一个节点即为一个对象，`forward[i]` 存储该节点在第 i 层的"下一个节点"指针。各层跳转关系通过 forward 数组指向不同节点来体现。不存在"不同层有不同节点"——红框中的同一个节点，其 forward 数组链接到链表在当前节点后不同位置的不同节点用于跳转。
+本质上是通过多添加几个*层*来作为索引，不过需要注意的是:
+- forward 数组用于存储**每个节点之后（"之后"表示排序排在当前链表之后）的**
+- 跳表只是一条链表，每个节点的 forward 数组链接到链表在当前节点后不同位置的不同节点用于跳转，但本质上是一条单向链表。
+- 用来索引的各个层只是我们想象的一种抽象，每层间的节点可能有不同的父子节点，这些节点关系在物理内存结构体现为一个节点通过 forward 数组指向节点来体现父子关系
+![[Pasted image 20260603163829.png]]
+- 红框的 1 其实是一个节点，他有三个子节点，子节点地址存储在 `forward` 数组中，同理，`Node(7)` 节点也有多个父节点，但是不能通过子节点索引到父节点，一个子节点的父节点都有谁这个信息存储在各层节点的 forward 中，非常零散
+- `forward[index]` 如果为 nullptr，说明节点是链表的末尾了
+- 所有的父子关系体现在一个个指针地址的指向中，父子关系存储不会影响空间复杂度，但实现中每个节点都需要存储一个 forward 数组，大小为最大层高（需要记录每层的当前节点下一个节点是谁）
+### 时间复杂度
+按照每两个节点抽出一个节点作为上一级索引的节点，那么第一级索引节点大约是 n/2 个，第二级的索引大约是 n/4 个，以此类推，第 k 级索引的节点个数是第 k-1 级索引的节点个数的 1/2，那么第 k 级索引点的个数：$n/2{^{k}}$
+
+假设索引有 h 级，最高级的索引是 2 个节点，通过上面的例子可以得到：
+$$
+\frac{n}{2^h}=2
+$$
+$$
+h=log_2n-1
+$$
+
+如果包含原始链表这一层，那么整个跳表的高度是：$log_2n$，在跳表查询某个数据的时候，如果每一层都要遍历m个节点，那在跳表查询一个数据的时间复杂度是：$O(m*logn)$，但实际从上到下范围越来越小，每向下一层精度"翻倍"，所以查找，删除，插入时间复杂度为 $O(logn)$
+### 空间复杂度
+理性情况下，每层节点数量关系为 `1:2`，所以:
+$$
+\frac{N}{2} + \frac{N}{4} + \frac{N}{8}+.... + 2 = n - 2
+$$
+时间复杂度为 $O(n)$，如果为 `1:3`，则会
+$$
+\frac{n}{3} + \frac{n}{9} + \frac{n}{27} + ... + 1 = \frac{n-1}{2}
+$$
+但是相应的，查找速度会变低
+### 跳表应用场景
+
+| 应用                             | 跳表的作用             | 为什么用跳表              |
+| ------------------------------ | ----------------- | ------------------- |
+| **Redis Sorted Set**           | 排行榜存储             | 实现简单、支持范围查询、易于并发    |
+| **LevelDB / RocksDB Memtable** | LSM-Tree 的内存写入缓冲区 | 有序遍历、O(log n) 写入    |
+| **Java ConcurrentSkipListMap** | JDK 标准库并发有序 Map   | 相比树更容易实现无锁并发        |
+| 与其他数据结构对比：                     |                   |                     |
+|                                | 跳表                | 平衡树（AVL/红黑树）        |
+| 有序遍历                           | ✅ 天然支持            | ✅ 中序遍历              |
+| 实现复杂度                          | ⭐ 简单              | ⭐⭐⭐ 复杂              |
+| 范围查询                           | ✅ 容易              | ✅ 一般                |
+| 并发改造                           | ✅ 较容易（锁局部）        | ❌ 困难                |
+## 实现细节
+### 插入节点
+**关键概念：`update[i]` 数组**
+`update[i]` 记录在第 i 层上应该插入新节点的**前驱节点**（predecessor）。本质是将单链表插入在每一层各做一次：
+```cpp
+// 单链表插入（一层）：
+node->next = prev->next;
+prev->next = node;
+// 跳表插入（所有层）：
+for (int i = 0; i <= randomLevel; i++) {
+    inserted_node->forward[i] = update[i]->forward[i];
+    update[i]->forward[i] = inserted_node;
+}
+```
+**总体流程：**
+```cpp
+template <typename K, typename V>
+inline size_t SkipList<K, V>::insertElement(const K& key, const V& value) {
+    Node<K, V>* current = this->_header;
+    Node<K, V>* update[_maxLevel + 1];
+    memset(update, 0, sizeof(Node<K, V>*) * (_maxLevel + 1));
+    // Step 1: 从高层到低层，找到每层的前驱节点
+    for(int i = _skipListLevel; i >= 0; i--) {
+        // 在当前层向右走，直到下一个节点的 key >= 目标 key
+        while(current->forward[i] != nullptr && current->forward[i]->getKey() < key) {
+            current = current->forward[i];
+        }
+        update[i] = current;  // 记录每一层的前驱
+    }
+    // Step 2: 推进到候选节点，检查是否已存在
+    current = current->forward[0];
+    if(current != nullptr && current->getKey() == key) {
+        // key 已存在，拒绝插入（去重）
+        return 1;
+    }
+    // Step 3: 随机层数 + 插入
+    if(current == nullptr || current->getKey() != key) {
+        size_t randomLevel = generateRandomLevel();
+        if(randomLevel > _skipListLevel) {
+            for(int i = _skipListLevel + 1; i <= static_cast<int>(randomLevel); i++) {
+                update[i] = _header;
+            }
+            _skipListLevel = randomLevel;
+        }
+        Node<K, V>* needInsert = createNode(key, value, randomLevel);
+        for(int i = 0; i <= static_cast<int>(randomLevel); i++) {
+            needInsert->forward[i] = update[i]->forward[i];
+            update[i]->forward[i]  = needInsert;
+        }
+        _elementCount++;
+    }
+    return 0;
+}
+```
+-   插入需要知道插入位置的前驱结点和后继结点，通过改变这两个节点的 `forward` 数组改变父子关系实现插入，update 数组中记录了每一层中**最后一次小于目标节点**的节点，**本层这些节点的后面要被插入**，代码中体现为在**层循环**中的 `current->forward[i]`
+-   当遍历到最底层（真实数据）时，`current = current->forward[0];` 的操作让 current 指向插入节点的需要插入的位置的后一个节点（next），这个节点用来检查是否重复插入
+-   得到 update 数组并检查重复后，才是插入过程
+### 关于去重
+标准跳表作为有序字典使用时，key 是唯一的。两种变体：
+
+| 变体                         | 去重  | 对应 C++ 类比       | 典型行为                |
+| -------------------------- | --- | --------------- | ------------------- |
+| Unique-key skip list（字典模式） | ✅   | `std::map`      | 同 key 第二次插入 → 拒绝或更新 |
+| Multi-key skip list（多重集模式） | ❌   | `std::multimap` | 同 key 可插入多次         |
+项目中把它当作一种有序字典，所以是去重的，不去重会导致:
+- 插入 3 次 key=19，跳表中有 3 个 19（分布在 level 0/1 等不同位置）
+- `search_element(19)` 只找到第一个就返回，剩下两个永远查不到
+- `delete_element(19)` 只删掉第一个，剩下的变成"幽灵节点"
+- dump_file 写出 3 行 19:xxx，重新 load_file 再插入 3 次
+- `size()` 和实际元素数量对不上（期望 1，实际 3）
+### 删除节点
+```cpp
+template <typename K, typename V>
+inline void SkipList<K, V>::deleteElement(const K& key) {
+    Node<K, V>* current = this->_header;
+    Node<K, V>* update[_maxLevel + 1];
+    for(int i = _skipListLevel; i >= 0; i--) {
+        while(current->forward[i] != nullptr && current->forward[i]->getKey() < key) {
+            current = current->forward[i];
+        }
+        update[i] = current;
+    }
+    current = current->forward[0];
+    if(current != nullptr && current->getKey() == key) {
+        // 逐层跳过目标节点
+        for(int i = 0; i <= _skipListLevel; i++) {
+            if(update[i]->forward[i] != current) break;
+            update[i]->forward[i] = current->forward[i];
+        }
+        // 移除空层
+        while(_skipListLevel > 0 && _header->forward[_skipListLevel] == 0) {
+            _skipListLevel--;
+        }
+        delete current;
+        _elementCount--;
+    }
+}
+```
+-   同[插入节点](#SkipList-CPP#插入节点)，找到**每一层对应节点的**前驱后继，更改指针指向即可完成删除。
+-   检查完后需要更新层高和节点计数
+### 查找节点
+```cpp
+template <typename K, typename V>
+inline std::optional<Node<K, V>*> SkipList<K, V>::searchElement(const K& key) {
+    Node<K, V>* current = _header;
+    for(int i = _skipListLevel; i >= 0; i--) {
+        while(current->forward[i] != nullptr && current->forward[i]->getKey() < key) {
+            current = current->forward[i];
+        }
+    }
+    current = current->forward[0];
+    if(current != nullptr && current->getKey() == key) {
+        return current;
+    } else {
+        return std::nullopt;
+    }
+}
+```
+-   `std::optional<T>` 是 C++17 引入的"可能为空"的包装类型，比用空指针或 out 参数更安全清晰。
+-   逻辑几乎被[插入节点](#插入节点)和[删除节点](#删除节点)复用
+## 随机算法
+### 抛硬币算法（原项目）
+```cpp
+int get_random_level() {
+    int k = 1;
+    while (rand() % 2) {  // 抛硬币：正面就升一层
+        k++;
+    }
+    return min(k, _max_level);
+}
+```
+- level=1 概率 50%，level=2 概率 25%，level=3 概率 12.5%... 指数递减
+- 保证高层节点少、低层节点多，形成金字塔结构
+- **问题**：每层调一次 `rand()`，层数高时开销大
+### 三种优化方案对比
+| 方案                    | rand() 调用          | 可移植性    | 随机质量        | 推荐场景     |
+| ----------------------- | -------------------- | ----------- | --------------- | ------------ |
+| 原始 `while(rand()%2)`  | 平均 2 次，最坏 N 次 | ✅ 全平台    | `rand()` 低质量 | 教学         |
+| **一次 rand 逐位检查**  | **1 次**             | ✅ 全平台    | `rand()` 低质量 | 简单优化     |
+| **`<random>` 几何分布** | 1 次（mt19937）      | ✅ C++11     | ✅ 高质量        | **生产首选** |
+| `__builtin_ctz`         | 1 次                 | ❌ GCC/Clang | `rand()` 低质量 | 极致性能     |
+
+### int vs size_t 混用
+`_skipListLevel` 是 `int`，`generateRandomLevel()` 返回 `size_t`。比较时需要 `static_cast`，否则产生符号不匹配的编译警告。
+## 注意事项
+### `delete ptr` vs `delete(ptr)` — 完全等价
+`delete` 是运算符（keyword/operator）而非函数。括号只是表达式语法的一部分，可选。与 `sizeof x` / `sizeof(x)`、`return x` / `return(x)` 同理。项目中混用只是**代码风格不统一**，无任何语义区别。
+### 指针 vs 引用作为输出参数
+```cpp
+// 指针风格（Google C++ Style Guide 推荐）
+void getKeyValueFromString(const std::string& str, std::string* key, std::string* value);
+// 调用处：getKeyValueFromString(line, &key, &value);
+// & 明确提示调用者此参数会被修改
+// 引用风格
+void getKeyValueFromString(const std::string& str, std::string& key, std::string& value);
+// 调用处：getKeyValueFromString(line, key, value);
+// 无法区分输入还是输出参数
+```
+### 裸指针 vs 智能指针（链表场景）
+**误区澄清**：`shared_ptr` 在跳表中并**不会产生循环引用**（forward 只指向后面的节点，引用图是有向无环图 DAG，refcount 会正确归零）。真正的问题在于：
+
+| 方案             | 所有权语义                             | 性能               | 析构可预测性                     |
+| -------------- | --------------------------------- | ---------------- | -------------------------- |
+| **裸指针** ✅      | 清晰——SkipList 唯一拥有，forward 不参与生命周期 | 最优               | 显式 delete，完全可控             |
+| `shared_ptr` ❌ | 模糊——每个 forward 都"共享拥有"节点          | 原子操作开销 + 删除时链式析构 | cascading destructors 不可预测 |
+| `unique_ptr` ❌ | `forward[i]` 赋值转移所有权，破坏链表结构       | —                | —                          |
+
+可以使用 `vector<shared_ptr<Node<K,V>*>` 作为 forward 类型，虽然由于其数据结构是单向链表，不会导致循环引用，但增删操作会导致整条链表的多个节点引用计数改变，`shared_ptr` 内部的原子操作实现机制会产生严重的性能问题，而因原子操作的顺序[内存序](#原子操作中的内存序)问题，在 `shared_ptr` 中没有严格规定内存序，多线程下整条链表的引用计数改变这一操作的顺序是未知的，可能引发严重问题
+**结论：裸指针在链表导航中就是最正确的选择。**
+### VLA（变长数组）问题
+```cpp
+Node<K, V>* update[_maxLevel + 1];  // VLA — GCC 扩展，非标准 C++
+```
+VLA 的问题：
+- 不是标准 C++（C99 引入 C，C++ 从未采纳）
+- 栈上分配，`_maxLevel` 过大时栈溢出
+- GCC/Clang 作为扩展支持，MSVC 不支持，不可移植
+    **改进方案**：`std::vector<Node<K, V>*> update(_maxLevel + 1, nullptr);`
+    注意：VLA 和 `_maxLevel` 固定是**两个独立问题**。VLA 担心栈溢出，`_maxLevel` 固定担心大数据量下效率不够——后者可以用"动态增长方案"解决。
+## 优化方向总览
+### 现代 C++ 改造
+- VLA → `std::vector`
+- `forward` 裸指针 → `std::vector<Node<T>*>`
+- `rand()` → `<random>`
+- `memset` → `std::fill` 或 vector 构造
+- 构造函数体赋值 → 初始化列表
+- `NULL` / `0` → 统一 `nullptr`
+### API 设计改进
+- `searchElement` 返回 `std::optional<V>`（而非暴露 Node*）
+- `insertElement` 返回 `bool`
+- 添加 `updateElement`（insert_or_assign）
+- 添加 `rangeScan(from, to)`、迭代器、`empty()`、`clearAll()`
+### 性能优化
+- `_max_level` 动态增长
+- 读写锁 `std::shared_mutex` → 读多写少场景
+- 细粒度锁（只锁受影响节点范围）
+- 内存池减少 malloc 开销
+- `_elementCount` 改为 `std::atomic<size_t>`
+### 功能扩展
+- 泛型 key 支持（自定义比较器、loadFile 传入转换函数）
+- 双向跳表（反向遍历）
+- 序列化格式升级
+### 工程化
+- 单元测试
+- 异常安全
