@@ -160,7 +160,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "内存序",
+                "query": "hua",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -186,8 +186,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -309,7 +308,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "ba262dda311ee672",
+  "active": "129968db299d0d8b",
   "lastOpenFiles": [
     "学习/Language/C C++/模板元编程.md",
     "Files & LongText/ChatLogWithAi/AiQuiz/内存池.md",
