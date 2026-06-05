@@ -1520,10 +1520,9 @@ C++11 在指针对象上对 RAII 的拓展：C 语言内存管理较为复杂，
 **引用计数**：引用计数这种计数是为了防止内存泄露而产生的。基本想法是对于动态分配的对象，进行引用计数，每当增加一次对同一个对象的引用，那么引用对象的引用计数就会增加一次，每删除一次引用，引用计数就会减一，当一个对象的引用计数减为零时，就自动删除指向的堆内存。
 **注意**：引用计数不是垃圾回收——因它无法处理循环引用（可以通过 `weak_ptr` 解决），引用计数能够尽快收回不再被使用的对象，同时在回收的过程中也不会造成长时间的等待，更能够清晰地表明资源的生命周期。
 ## 5.2 std::shared\_ptr
-### 基本用途特点
+### 基本特点
 - 表示多个智能指针共享同一个资源的所有权。
 - 使用引用计数管理资源生命周期
----
 - 支持拷贝构造和赋值
 - 适合多个部分共同拥有资源
 - 有性能开销（控制块 + 原子操作）
@@ -1552,8 +1551,7 @@ cout << "pointer3.use_count() = " << pointer3.use_count() << endl; // 2
 - 调用 `reset` 方法会使：
   - 将`pointer2`指向null，同时**释放其对原资源的所有权**。
   - 这相当于将该控制块的引用计数**减一**。
----
-使用 `std::make_shared<T>(...)` 创建 `shared_ptr` 会一次性分配内存给资源和控制块，比直接使用 `shared_ptr<T>(new T(...))` 更高效。
+使用 `std::make_shared<T>(...)` 创建 `shared_ptr` 会一次性分配内存给资源和控制块，比直接使用 `shared_ptr<T>(new T(...))` 更高效。两者的区别和使用场景可以在 [[AzzatoChat#std shared_ptr 和 std make_shared 区别]]和 [[AzzatoChat#为什么使用 std shared_ptr 构建 instance 对象？]] 中看到有些场景下只能用构造函数而不能用 `make_shared`
 ```cpp
 auto sp1 = std::make_shared<int>(42); // 推荐方式
 auto sp2 = std::shared_ptr<int>(new int(42)); // 效率略低
@@ -1572,6 +1570,19 @@ struct A {
     std::weak_ptr<A> other; // 用 weak_ptr 避免循环
 };
 ```
+
+> [!Warning]
+> C++17 开始支持数组类型析构
+> - C++17 开始 `std::unique_ptr<T[]> ` 的偏特化版本（`T[]` 不是 `T`）的默认删除器是 `default_delete<T[]>`，它调用 `delete[] p`。所以不需要手写删除器。
+> - `std::make_shared ` 和 `std::make_unique` 的数组版本是 C++20 才有的，较早版本中要手动定义**数组删除器**，写法一般为:
+> ```cpp
+> template <class T>
+> void deleteArray(T* v) {
+> 	if(v) {
+> 		delete[] v;
+> 	}
+> }
+> ```
 ## 5.3 std::weak\_ptr
 ### 基本用途特点
 - 观察由 `shared_ptr` 管理的对象，**不参与所有权管理**
