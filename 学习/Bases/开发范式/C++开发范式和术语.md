@@ -1,9 +1,9 @@
 # SFINAE (Substitution Failure Is Not An Error)
 ## 含义解释
-意思是“替换失败并非错误”。
+意思是"替换失败并非错误"。
 - 当编译器在重载决议过程中尝试将模板参数替换到函数模板时，如果这个替换导致了一个无效的代码（比如，一个不存在的类型成员、无效的表达式等），编译器不会立即报错，而是**简单地忽略这个候选模板**，继续尝试其他可用的重载版本。
-- **只有**当没有任何一个可行的重载版本时，编译器才会最终报错，主要体现在 `std::enable_if` 的使用上
-- SFINAE 的主要用途是**在编译期根据类型特性来启用或禁用某些模板函数**。它是实现**编译期多态**和**静态反射**的强大工具。
+- **只有**当没有任何一个可行的重载版本时，编译器才会最终报错
+- SFINAE 的主要用途是**在编译期根据类型特性来启用或禁用某些模板函数**
 ## 代码体现
 ```cpp
 // 这个版本仅当 T 是整数类型时可用
@@ -23,14 +23,15 @@ func(T t) {
 int main() {
     func(42);    // 调用第一个版本，int 是 integral
     func(3.14);  // 调用第二个版本，double 是 floating point
-    // func("hello"); // 编译错误！没有匹配的版本，因 const char* 既不是 integral 也不是 floating point
+    // func("hello"); // 编译错误！没有匹配的版本
 }
 ```
-当调用 `func(42)` 时，编译器尝试第二个版本，`std::is_floating_point<int>` 结果返回为 ` false `，导致 ` std::enable_if<false, void>` 没有 ` type ` 成员，替换失败。于是它被忽略。编译器成功匹配第一个版本。
-这一点可以在[[Sylar Backend Collection#`std enable_if` + `sizeof(T)` 实现重载选择（SFINAE）|字节序零开销选择]]上，是教科书般的 SFINAE 特性使用
+当调用 `func(42)` 时，编译器尝试第二个版本，`std::is_floating_point<int>` 返回 `false`，导致 `std::enable_if<false, void>` 没有 `type` 成员，替换失败被忽略，编译器成功匹配第一个版本。
+这一点在[[Sylar Backend Collection#`std enable_if` + `sizeof(T)` 实现重载选择（SFINAE）|字节序零开销选择]] 上体现，是教科书般的 SFINAE 特性使用。
 现代 C++可以使用条件编译和 Concept 概念在编译时尽量让错误提前暴露，避免给每一种类型都写一个 `std::enable_if` 的模板，同时 `if constexpr` 保证了不损失性能
+### C++17 `if constexpr` 替代方案
 ```cpp
-// c++14
+// C++17 起
 template <typename T>
 void func(T t) {
     if constexpr (std::is_integral_v<T>) {
@@ -38,22 +39,30 @@ void func(T t) {
     } else if constexpr (std::is_floating_point_v<T>) {
         std::cout << "Floating point: " << t << std::endl;
     } else {
-        static_assert(false, "T must be arithmetic"); // C++20 起可以这样用
+        static_assert(false, "T must be arithmetic");                // 这样并不妥当
+        static_assert(dependent_false_v<T>, "T must be arithmetic"); // 见下方说明
     }
 }
-
-// c++17
-template <std::integral T> // 概念约束
+```
+`if constexpr` 的未采用分支在模板实例化时被丢弃，不会生成代码，但**仍会进行基本的语法检查**。因此直接写 `static_assert(false, ...)` 在 else 分支中**总会触发**（不依赖模板参数，不受 `if constexpr` 影响）。正确做法是定义一个依赖模板参数的假值：
+```cpp
+template <typename T> inline constexpr bool dependent_false_v = false;
+// 然后在 static_assert 中使用 dependent_false_v<T>
+```
+### C++20 Concepts 替代方案
+```cpp
+template <std::integral T>
 void func(T t) {
     std::cout << "Integral: " << t << std::endl;
 }
 
-template <std::floating_point T> // 概念约束
+template <std::floating_point T>
 void func(T t) {
     std::cout << "Floating point: " << t << std::endl;
 }
-// 没有匹配 concept 的调用会导致清晰的错误信息
+// 没有匹配 concept 的调用会导致清晰的错误信息，而不是 SFINAE 的深模板错误
 ```
+Concepts 在 C++20 引入，比 SFINAE 更加清晰易读，错误信息更好。
 
 # PImpl (Pointer to Implementation)
 ## 含义解释
@@ -200,32 +209,29 @@ d.interface();  // 实际调用的是 Derived::implementation()
 - 虽然 C++允许多继承，但多继承 CRTP 类**可能会**导致继承关系混乱，代码行为不可预测，如果多个 CRTP 子类中有多个同名函数会导致未定义行为
 - 调试时短点跳转可能难以理解
 - 子类必须实现父类中方法，否则编译报错
-
-# ODR（ One Definition Rule）
- 程序中每个实体（如变量、函数、类、模板，**类型别名**包括 typedef 和using）在整个程序中必须只有**一个定义**
- ### ODR 的基本规则
+# ODR（One Definition Rule）
+程序中每个实体（变量、函数、类、模板、类型别名，包括 typedef 和 using）在整个程序中必须只有一个定义。
 ## ODR 基本原则
 ### ODR-used 定义
-一个实体（变量、函数等）被 ODR-used 通常意味着程序需要知道它的定义。
-例如，调用一个非内联函数、读取或写入一个变量的值（非 decltype 等情况）、需要知道一个类的完整定义来创建对象或访问成员等。
-根据 C++标准，ODR-used 的正式定义包括：
+一个实体被 ODR-used 通常意味着程序需要知道它的定义。例如，调用一个非内联函数、读取或写入一个变量的值（非 decltype 等情况）、需要知道一个类的完整定义来创建对象或访问成员等。
+例如，调用一个非内联函数、读取或写入一个变量的值（非 decltype 等情况）、需要知道一个类的完整定义来创建对象或访问成员等。                                                                         
+根据 C++标准，ODR-used 的正式定义包括:
 - 变量被引用
 - 函数被调用
 - 类被实例化
 - 其他需要知道其完整类型信息的情况（如对象构造、成员访问）
 ### 判断逻辑
-1. 单个翻译单元中（一个 .cpp 文件加上它 `#include` 的头）只能有**一次定义**。重复定义会在编译阶段报错。
-2. 多个翻译单元中（多个 .cpp 文件）可以**多次定义**，但前提是：
-- 它们**内容必须完全相同**（逐字节一致！）
-- 必须是 **允许多定义的实体**：如 `inline` 函数、模板、`inline static` 成员变量等
-- 只有实例化的模板，编译器和链接器要才会把它们“合并成一个”定义
-所以严格意义上说，ODR 保证**所有翻译单元**中一个符号的定义只能有一个
-- **在整个程序中**，ODR式使用**非 `inline` 函数或变量只允许有且仅有一个定义。**编译器不要求对这条规则的违反进行诊断，但违法它的行为是未定义的
-- 对于`inline函数`或`inline 变量 (C++17 起)`来说，在**ODR式**使用了它的每个翻译单元中都需要一个定义
-- 在以需要将类作为**完整类型**的方式给予的每个翻译单元中，要求有且仅有该类的一个定义。
+1. 单个翻译单元中只能有**一次定义**，重复定义在编译阶段报错。
+2. 多个翻译单元中可以有**多次定义**，但前提是：
+   - 它们**内容必须完全相同**（逐字节一致）
+   - 必须是 **允许重复定义的实体**：`inline` 函数/变量、模板、类类型等
+3. 严格意义上说，ODR 保证**整个程序**中一个符号的定义只能有一个。
+   - 非 `inline` 函数或变量在整个程序中只允许有且仅有一个定义。违反是未定义行为（常表现为链接报错）
+   - `inline` 函数或变量（C++17）在 ODR-used 的每个 TU 中都需要一个定义，链接器合并
+   - 类在每个需要完整类型的 TU 中必须有定义
 ### 违反 ODR 的场景
 #### 在头文件中定义非内联函数或变量
-**如果一个头文件中定义了一个函数并且在多个源文件中被 include 且函数非 inline 时**，出现**链接而不是编译**报错，变量的 inline 在 C++17 引入
+头文件被多个源文件 include 且函数非 inline 时，出现**链接**报错（multiple definition）。变量的 inline 在 C++17 引入之前只能在 `.cpp` 中定义。
 #### 类型、模板、内联函数/变量定义不一致
 ```cpp
 // config.h
@@ -241,42 +247,32 @@ struct AppConfig {
 #endif
 
 // a.cpp (编译时定义了 USE_FLAG_X)
-// g++ -D USE_FLAG_X a.cpp ...
-#include "config.h"
-
-void process_a(const AppConfig& config) {
-    std::cout << "A: Version " << config.version;
-    if (config.flag) { // ODR Violation may occur here
-        std::cout << ", Flag X enabled" << std::endl;
-    } else {
-        std::cout << std::endl;
-    }
-}
-
 // b.cpp (编译时未定义 USE_FLAG_X)
-// g++ b.cpp ...
-#include "config.h"
-
-AppConfig global_config_b; // Uses definition without flag
-extern void process_a(const AppConfig& config);
-void func_b() {
-    process_a(global_config_b); // Passing AppConfig defined differently! UB!
-}
+// 名称相同的 AppConfig 符号在不同翻译单元中定义不同->内存布局不同->访问无效内存->UB
 ```
-名称相同的 AppConfig 符号在不同翻译单元中定义不同->内存布局不同->访问无效内存->UB
-**编译器&链接器都无法检测出问题**
-可以用以下方法规避:
-- 给符号添加 inline 关键字
-- 使用 `#pragma once` 或 include guards 保护或条件编译
-- 对于模板，这也是需要将定义写在头文件中的一种原因，参考[[模板元编程#类模板分文件]]
+编译器&链接器都无法检测出问题。规避方法：
+- 永远不要在头文件中使用条件编译改变类型定义
+- 复杂类型避免跨模块传递
 ### 使用原则（规避违反的方法）
-可以总结为:
-- 所有变量定义放在 `.cpp`，声明用 `extern` 放头文件。并在唯一一个源文件 （`.cpp`） 中进行定义。C++17 开始可以使用 inline 变量方法代替
-- 如果是普通函数，那么同上。如果希望函数能够内联，那么定义可以放在头文件中并加上 inline 关键字，不过即使是 `inline` 函数，其定义在所有使用它的 TU 中也必须完全相同
-- 模板定义全部放在 `.h` 文件中。
-- 如果函数会在多个 `.cpp` 中使用，加上 `inline`。
-- 用 `#pragma once` 或 include guard 防止重复包含。
-- 类静态变量推荐用 `inline static`（C++17 起）。
+- 所有变量定义放在 `.cpp`，声明用 `extern` 放头文件。C++17 起可以用 `inline` 变量替代
+- 普通函数定义放 `.cpp`，声明放头文件。需要内联的函数定义放头文件加 `inline`
+- 模板定义全部放在头文件中。如果每个 TU 隐式实例化相同的模板，ODR 规则对模板有专门的豁免
+- 类静态变量推荐用 `inline static`（C++17 起）
+### ODR 的例外实体及其原因
+
+以下实体允许在多个 TU 中重复定义（前提是所有定义相同）：
+
+| 实体 | 允许重复的原因 |
+|------|---------------|
+| 类类型 | 每个 TU 都需要完整定义才能创建对象/计算大小/访问成员。不能每个 TU 单独定义一次——头文件天然被 include 到多个 TU |
+| 函数模板 / 类模板 | 模板需要在头文件中定义才能被各 TU 使用。实例化发生在调用位置，各 TU 各自生成代码。标准专门为模板设立了 ODR 豁免 |
+| `inline` 函数 | 设计目的就是允许在头文件中定义，替代宏。ODR 豁免允许跨 TU 重复 |
+| `inline` 变量 (C++17) | 在头文件中定义全局/静态成员变量，解决 `extern` + `.cpp` 的繁琐模式 |
+| 概念 (C++20) | 类似模板，需要在多个 TU 中可见。定义在头文件中 |
+
+**巧合但不混为一谈：** 模板隐式实例化的结果和 `inline` 都允许重复定义，但机制不同。模板不是隐式 `inline`。
+
+
 # 类型擦除
 ## std::any 中的实现
 
