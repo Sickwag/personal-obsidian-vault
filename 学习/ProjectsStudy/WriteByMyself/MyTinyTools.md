@@ -2322,7 +2322,14 @@ void getKeyValueFromString(const std::string& str, std::string& key, std::string
 | `shared_ptr` ❌ | 模糊——每个 forward 都"共享拥有"节点          | 原子操作开销 + 删除时链式析构 | cascading destructors 不可预测 |
 | `unique_ptr` ❌ | `forward[i]` 赋值转移所有权，破坏链表结构       | —                | —                          |
 
-可以使用 `vector<shared_ptr<Node<K,V>*>` 作为 forward 类型，虽然由于其数据结构是单向链表，不会导致循环引用，但增删操作会导致整条链表的多个节点引用计数改变，`shared_ptr` 内部的原子操作实现机制会产生严重的性能问题，而因原子操作的顺序[内存序](#原子操作中的内存序)问题，在 `shared_ptr` 中没有严格规定内存序，多线程下整条链表的引用计数改变这一操作的顺序是未知的，可能引发严重问题
+- 可以使用 `vector<shared_ptr<Node<K,V>*>` 作为 forward 类型，虽然由于其数据结构是单向链表，不会导致循环引用，但增删操作会导致整条链表的多个节点引用计数改变，`shared_ptr` 内部的原子操作实现机制会产生严重的性能问题
+- 在 `shared_ptr` 中严格规定
+	- 递增使用 memory_order_relaxed（每个线程独立增，不需要同步）
+	- 递减使用 memory_order_acq_rel（确保最后一个释放的线程能看到所有之前的写操作） 
+	- 参考 [[Modern C++#Note：内存序]]
+真正的问题是:
+当一个 `shared_ptr<Node>` 被销毁时，它所指向的 Node 的 refcount 减 1。如果减到 0，那个 Node 的析构函数运行，进而销毁它内部的 forward 数组（里面全是 `shared_ptr<Node>`），导致更多 `shared_ptr` 被释放，触发更多析构，即 cascading destructors（级联析构）连锁反应
+
 **结论：裸指针在链表导航中就是最正确的选择。**
 ### VLA（变长数组）问题
 ```cpp

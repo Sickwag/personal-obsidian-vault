@@ -1949,50 +1949,73 @@ int main() {
     std::cout << "All tasks completed.\n";
 }
 ```
----
-- 前置知识：
-  
-  - `std::condition_variable` 需要与 `std::mutex` 配合使用，通过 `wait` 和 `notify` 实现线程间通信。
-  
-  - 消费者线程在 `cv.wait(lock, predicate)` 处阻塞，等待条件满足（队列非空或生产结束）。
-  
-  - 生产者通过 `cv.notify_one`（唤醒 **一个** 等待的线程（随机选择）） 或 `cv.notify_all` 唤醒**等待**的消费者线程。
-  
-  - 通常在资源解锁之前要使用 notify 通知其他线程等待，然后 unlock 解锁资源
-- 疑问点：
-  
-  - 互斥锁锁定的是什么资源？
-    
-    - 锁定的是在 `unique_lock` 构造函数中传入的互斥量：`mtx`，而这个互斥量是用来保护共享资源的，比如这里的 `data_queue`
-  
-  - 为什么 producer 和 consumer 中每次循环都创建一个 `unique_lock` 对象？
-    
-    - 每次进入循环时都会创建一个新的 RAII 锁对象，它绑定到同一个全局互斥量（`mutex mtx`）上
-  
-  - mutex 和 unique\_lock 是如何工作的？
-### Note：内存模型
-- **内存顺序**：定义多个线程对共享数据的**可见性规则**，避免编译器/CPU 重排序导致问题。
-- **六种内存序**（`std::memory_order`）
-
-| Memory Order           | 使用场景                | 同步机制         |
-| ---------------------- | ------------------- | ------------ |
-| `memory_order_relaxed` | 最小粒度同步，用于计数器        | 无顺序控制        |
-| `memory_order_acquire` | 读取保护出临界区的变量修改       | 读取同步（ARRIER） |
-| `memory_order_release` | 写入用于保护线程之间的共享状态     | 写入存留（ARRIER） |
-| `memory_order_acq_rel` | 两者都有（常用于锁或交换变量）     | 两者结合         |
-| `memory_order_seq_cst` | 默认选项：完全的顺序一致性（强一致性） | 保证严苛内存访问顺序   |
+- 前置知识  
+	- `std::condition_variable` 需要与 `std::mutex` 配合使用，通过 `wait` 和 `notify` 实现线程间通信。
+	- 消费者线程在 `cv.wait(lock, predicate)` 处阻塞，等待条件满足（队列非空或生产结束）。
+	- 生产者通过 `cv.notify_one`（唤醒 **一个** 等待的线程（随机选择）） 或 `cv.notify_all` 唤醒**等待**的消费者线程。
+	- 通常在资源解锁之前要使用 notify 通知其他线程等待，然后 unlock 解锁资源
+- 互斥锁锁定的是什么资源？
+  锁定的是在 `unique_lock` 构造函数中传入的互斥量：`mtx`，而这个互斥量是用来保护共享资源的，比如这里的 `data_queue`
+- 为什么 producer 和 consumer 中每次循环都创建一个 `unique_lock` 对象？
+  每次进入循环时都会创建一个新的 RAII 锁对象，它绑定到同一个全局互斥量（`mutex mtx`）上
+### Note：内存序
+- 内存序定义：
+	- 控制内存操作的顺序保证，定义多个线程对共享数据的**可见性规则**，避免编译器/CPU 重排序导致问题。
+	- 解决编译器和 CPU 的重排序问题
+	- 多线程环境下保证正确的执行顺序
+- 为什么需要内存序：
+   问题场景：
 ```cpp
-std::atomic<int> counter(0);
-void increment() {
-    for (int i = 0; i < 100000; ++i) {
-        counter.fetch_add(1, std::memory_order_relaxed);
-    }
+// 线程 1
+data = 42;           // 1. 写入数据
+ready.store(true);   // 2. 设置标志
+// 线程 2
+while(!ready.load()) { }  // 等待标志
+std::cout << data;        // 期望输出 42
+// 问题：编译器/CPU 可能重排序，导致线程 1 先执行 2 再执行 1
+// 结果：线程 2 可能读到 0 而不是 42
+```
+**六种内存序**（`std::memory_order`）
+
+| 内存顺序 (Memory Order) | 核心特性与重排序规则 (同步机制) | 典型使用场景 | 性能与附加说明 |
+| :--- | :--- | :--- | :--- |
+| **`memory_order_relaxed`** | • 只保证原子性，不保证顺序<br>• 无顺序控制 | • 最小粒度同步<br>• 计数器、统计信息 | • **最宽松**<br>• **性能最好** |
+| **`memory_order_consume`** | • 依赖的数据不会被重排序到前面 | • 依赖数据的读取操作 | • **较少使用** |
+| **`memory_order_acquire`** | • **获取操作**（用于读取端）<br>• 当前操作**之后**的读写不会被重排序到前面<br>• 读取同步屏障 (Barrier) | • 读取保护出临界区的变量修改 | • 常与 `release` 配对使用 |
+| **`memory_order_release`** | • **释放操作**（用于写入端）<br>• 当前操作**之前**的读写不会被重排序到后面<br>• 写入同步屏障 (Barrier) | • 写入用于保护线程之间的共享状态 | • 常与 `acquire` 配对使用 |
+| **`memory_order_acq_rel`** | • **获取-释放操作** (acquire + release)<br>• 读取与写入屏障两者结合 | • 读-改-写 (Read-Modify-Write) 操作<br>• 常用于锁或交换变量 | • 同时具备 acquire 和 release 的语义 |
+| **`memory_order_seq_cst`** | • **顺序一致性**（强一致性）<br>• 最强的保证<br>• 保证严苛的内存访问顺序<br>• 所有线程看到相同的操作顺序 | • 默认的强一致性需求场景 | • **默认选项**<br>• **性能开销最大** |
+
+典型使用模式：
+- 释放 - 获取同步（Release-Acquire）：
+```cpp
+// 线程 1 - 写入者
+data = 42;  // 准备数据
+ready.store(true, std::memory_order_release);  // 释放操作
+
+// 线程 2 - 读取者
+while(!ready.load(std::memory_order_acquire)) {  // 获取操作
+  // 等待
 }
-int main() {
-    std::thread t1(increment);
-    std::thread t2(increment);
-    t1.join();
-    t2.join();
+std::cout << data;  // 保证读到 42
+
+```
+- 自旋锁实现：
+```cpp
+class SpinLock {
+  std::atomic_flag flag = ATOMIC_FLAG_INIT;
+public:
+  void lock() {
+	  // acquire: 获取锁后，临界区操作不会被重排序到前面
+	  while(flag.test_and_set(std::memory_order_acquire)) {
+		  std::this_thread::yield();
+	  }
+  }
+  void unlock() {
+	  // release: 释放锁前，临界区操作已经完成
+	  flag.clear(std::memory_order_release);
+  }
+};
 ```
 ### Note：谓词
 **谓词**（Predicate）是指一个 **返回** `bool` **值的可调用对象**，常见于标准库算法（如 `std::find_if`）或同步原语（如 `condition_variable::wait`）。它是一个广义概念，包含以下形式（任何能通过 `()` 调用的东西，包括：函数指针，**成员函数指针**，lambda 和仿函数） 所以，`conditional_variable` 的谓词部分只能填：
