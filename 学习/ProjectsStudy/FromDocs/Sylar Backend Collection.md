@@ -967,3 +967,4 @@ hmac_sha256("text", "secret_key")  // 输出：不只有 text 的哈希，还混
     *   Cookie 签名
     *   JWT Token 签名
 *   **解决普通哈希问题**：普通 MD5/SHA 任何人可以计算 `md5(data)`，无法判断哈希是谁算的。HMAC 解决了身份认证问题。
+# 线程与同步
