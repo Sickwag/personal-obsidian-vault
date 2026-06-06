@@ -821,3 +821,95 @@ public:
 
 当 API 设计本身就依赖函数名规则来区分类型时，X-Macro 仍然是最佳选择，这里宏对比模板带来的高维护难度，代码膨胀和编译时间增长已经是最佳方法
 
+### dynamic_cast 开销分析与 concepts 替代的陷阱
+#### 问题的起源
+原版 `ReadFixFromStreamWithSpeed` 中用 `dynamic_cast<std::ifstream*>(&is)` 判断是否为文件流——因为只有文件流需要限速（内存流/网络流不限速）：
+```cpp
+SpeedLimit::ptr limit;
+if(dynamic_cast<std::ifstream*>(&is)) {   // 仅在文件流上创建限速器
+    limit.reset(new SpeedLimit(speed));
+}
+while(is && (offset < size)) {
+    uint64_t s = std::min(size - offset, per);
+    is.read(data + offset, s);
+    offset += is.gcount();
+    if(limit) { limit->add(is.gcount()); }  // 非文件流时 limit 为空，不做限速
+}
+```
+#### dynamic_cast 的实际开销
+`dynamic_cast` 走 vtable 查询 RTTI（运行时类型信息）。对简单的单继承链（如 `std::ifstream → std::istream`），编译器实现大致为：
+1. 从对象的 vptr 取出 vtable 指针
+2. 从 vtable 的固定偏移读取类型信息结构体
+3. 在类型继承树中匹配目标类型
+4. 匹配成功则返回调整后的指针，失败返回 nullptr
+整个过程约 **10-20 条指令**，在纳秒级别。而磁盘 IO 操作在**毫秒级别**（高出 6 个数量级）。所以在这个场景中，`dynamic_cast` 的开销完全可以忽略。
+#### reinterpret_cast 的实现方式
+与 `dynamic_cast` 不同，Protobuf 的反射 API 直接用 `reinterpret_cast` 按偏移量读取内存，不做任何类型校验：
+
+```cpp
+// Reflection 内部实现：
+int Reflection::FieldSize(const Message& m, const FieldDescriptor* field) const {
+    // 直接按偏移量计算地址，假设传入的就是正确的类型
+    const uint8_t* base = reinterpret_cast<const uint8_t*>(&m);
+    auto* repeated = reinterpret_cast<const RepeatedField<T>*>(
+        base + field->offset());
+    return repeated->size();
+}
+```
+传错类型的 Message 给 Reflection——编译时报错？不会。运行时抛异常？不会。直接读取到和目标类型无关的内存，导致**越界访问或段错误**。Protobuf 完全放弃运行时类型检查来换取极致性能，类型安全全靠调用者自己保证。
+
+| 方案 | 类型安全 | 运行时开销 | 本质 |
+|------|---------|-----------|------|
+| `reinterpret_cast`（Protobuf） | ❌ | 零 | 假设正确类型，直接按偏移量读 |
+| `dynamic_cast` | ✅ | 10-20 条指令 | 走 vtable 查 RTTI |
+| `typeid` | ✅ | 很小 | 也是走 vtable |
+
+#### Concepts 替代方案的错误尝试
+我尝试用 C++20 Concepts 消除 `dynamic_cast`，写了以下代码：
+```cpp
+template <typename T>
+concept IStream = std::derived_from<T, std::ifstream>;
+
+template <typename T>
+concept OStream = std::derived_from<T, std::ofstream>;
+
+template <IStream IStreamtype>
+bool readFixFromStreamWithSpeed(IStreamtype& is, char* data,
+                                 uint64_t const& size, uint64_t const& speed) {
+    SpeedLimit::ptr limit;
+    limit.reset(new SpeedLimit(speed));  // 无条件创建限速器
+    // ... 读数据 + 限速
+}
+```
+- 原版参数类型是 `std::istream&`，可以传入 `std::ifstream`、`std::istringstream`、`std::cin`、甚至自定义的实现了 `istream` 接口的类型。Concepts 约束 `std::derived_from<T, std::ifstream>` 后，只能接受 `std::ifstream`——`istringstream` 编译报错，`SocketStream` 编译报错。函数的功能范围被缩小了。
+- 原版只在文件流上做限速判断（`dynamic_cast` 失败时 `limit` 为空，不限速）。新版对所有流都无条件创建限速器——`istringstream` 也被限速，但操作内存根本不需要限速。
+所以保持原版原样即可，或提供两个重载：
+```cpp
+// 重载 1：不限速版本（所有流）
+bool readFixFromStream(std::istream& is, char* data, uint64_t size);
+
+// 重载 2：限速版本（仅文件流，通过重载而非 dynamic_cast）
+bool readFixFromStreamWithSpeed(std::ifstream& is, char* data,
+                                 uint64_t size, uint64_t speed);
+```
+通过编译期模板实现的话也还是要在调用时明确自己需要速度/不需要速度，意义不大。
+显式实例化几种基本的能够转换为 `fstream` 类型的模板特化覆盖果情景太小，如果有新的类型能够转化还是得靠编译器隐式实例化，意义不大。并且引入模板实例化带来的编译器时间延长
+
+## 薄封装工具
+### 加密工具
+@crypto_util.h
+```cpp
+static int32_t Crypto(const EVP_CIPHER* cipher,
+					  bool				enc,
+					  const void*		key,
+					  const void*		iv,
+					  const void*		in,
+					  int32_t			in_len,
+					  void*				out,
+					  int32_t*			out_len);
+```
+这个函数是"统一加密接口"。不管你用 AES-128 还是 AES-256，ECB 还是 CBC，加密还是解密，API调用流程一样，区别只在于传入的 cipher 参数控制具体的加密算法，CryptoUtil 中其他函数**只是一层"省得你查 OpenSSL 文档看 `EVP_aes_*` 名字怎么写"的薄封装**
+### Json 工具
+CharReaderBuilder/StreamWriterBuilder 是JsonCpp 的新版 API，通过 builder 模式配置解析/序列化行为（如缩进、转义等）。封装相当于给了一个"默认配置"的标准用法
+NeedEscape 用于检查字符串中是否有需要转义的特殊字符
+Escape 用于把特殊字符替换成转义序列
