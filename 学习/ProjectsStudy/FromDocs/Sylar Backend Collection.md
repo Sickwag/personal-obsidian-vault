@@ -910,6 +910,60 @@ static int32_t Crypto(const EVP_CIPHER* cipher,
 ```
 这个函数是"统一加密接口"。不管你用 AES-128 还是 AES-256，ECB 还是 CBC，加密还是解密，API调用流程一样，区别只在于传入的 cipher 参数控制具体的加密算法，CryptoUtil 中其他函数**只是一层"省得你查 OpenSSL 文档看 `EVP_aes_*` 名字怎么写"的薄封装**
 ### Json 工具
-CharReaderBuilder/StreamWriterBuilder 是JsonCpp 的新版 API，通过 builder 模式配置解析/序列化行为（如缩进、转义等）。封装相当于给了一个"默认配置"的标准用法
-NeedEscape 用于检查字符串中是否有需要转义的特殊字符
-Escape 用于把特殊字符替换成转义序列
+`CharReaderBuilder/StreamWriterBuilder` 是JsonCpp 的新版 API，通过 builder 模式配置解析/序列化行为（如缩进、转义等）。封装相当于给了一个"默认配置"的标准用法
+- NeedEscape 用于检查字符串中是否有需要转义的特殊字符
+- Escape 用于把特殊字符替换成转义序列
+实际上两者多余，JsonCpp 的 StreamWriterBuilder 在序列化时已经自动处理了特殊字符的转义
+所有的 `GetXXX` 函数只做一层简单的类型检查和默认值封装，
+
+### 哈希函数工具
+- `murmur3_hash / murmur3_hash64`：非加密哈希（快，不防碰撞）
+- `quick_hash`：最简单的字符串哈希（Java String.hashCode 算法）
+- `sha0sum / sha1sum / md5sum`：加密哈希返回原始二进制（blob）
+- `md5 / sha1`：加密哈希返回十六进制字符串（hex）
+- `hmac_md5 / hmac_sha1 / hmac_sha256`：带密钥的哈希（HMAC 构造）
+- `base64encode / base64decode`：不是哈希！是二进制→文本编码
+
+#### 非加密哈希 vs 加密哈希对比
+
+| 维度 | 非加密哈希（murmur3） | 加密哈希（MD5/SHA） |
+| :--- | :--- | :--- |
+| **速度** | 极快（~10GB/s） | 慢几百倍 |
+| **安全性** | ❌ 可以轻易构造碰撞 | ✅ 无法（计算上）逆向或碰撞 |
+| **用途** | 哈希表、分片、Bloom filter | 文件完整性、密码存储、数字签名 |
+| **典型场景** | `std::unordered_map` 的 hash 函数 | git 校验文件、md5sum 命令 |
+- 非加密哈希
+	- murmur3_hash
+		*   输入任意数据，输出均匀分布的 32/64 位整数。不是加密。
+		*   **特性**：一个比特的输入变化 → 大约一半输出比特翻转（avalanche 效应）；比 MD5 快一个数量级。
+		*   **用途**：用于哈希表计算桶索引、数据分片决定数据去哪个节点。
+	- quick_hash
+		*   最简单的字符串哈希算法：`h = 31 * h + str[i]`。
+		*   Java 的 `String.hashCode()` 和 Python 早期版本都用这个。
+		*   性能不差，但碰撞率高，只适合小规模的简单场景。
+- 加密哈希
+	*   MD5（128 位b输出）：
+	    *   输出 16 字节（`MD5_DIGEST_LENGTH = 16`）。
+	    *   快，但已被破解（2004 年就有构造碰撞的方法）。
+	    *   现在只用于非安全场景：文件完整性校验（如 `md5sum` 命令）、去重。
+	*   SHA-1（16b0 位输出）：
+	    *   输出 20 字节（`SHA_DIGEST_LENGTH = 20`）。
+	    *   比 MD5 慢一点，也在 2017 年被 Google 攻破碰撞。
+	    *   已不再推荐用于安全场景，但 git 内部还在用。
+	*   SHA-256（256 位输出）：
+	    *   输出 32 字节。
+	    *   当前安全的标准选择。TLS 证书、HTTPS、SSH、区块链都用它。
+	    *   `hmac_sha256` 是 API 鉴权（如 AWS Signature V4）的标准。
+- 加密结果两种呈现形式区别：
+	*   **blob（原始二进制）**：就是哈希计算出来的那 16/20/32 个字节，可以直接在网络协议中传输、比较、存文件（二进制格式，紧凑）。
+	*   **hex（十六进制字符串）**：每个字节转成 2 个 hex 字符（如 `0xAB` → `"ab"`），人类可读，可以当字符串打印、拼接到 URL 中。
+#### HMAC 是什么
+```cpp
+hmac_sha256("text", "secret_key")  // 输出：不只有 text 的哈希，还混入了 key
+```
+*   不是简单地对数据做哈希，而是把"密钥"混合到哈希计算中。只持有 key 的人才能验证 HMAC 是否正确。
+*   用途：
+    *   API 鉴权（你的密钥只有你和服务器知道，HMAC 签名证明请求是你发的）
+    *   Cookie 签名
+    *   JWT Token 签名
+*   **解决普通哈希问题**：普通 MD5/SHA 任何人可以计算 `md5(data)`，无法判断哈希是谁算的。HMAC 解决了身份认证问题。
