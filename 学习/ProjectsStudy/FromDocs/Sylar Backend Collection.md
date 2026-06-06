@@ -3,6 +3,17 @@ created: 2026-06-01
 resource_1: https://github.com/sylar-yin/sylar.git
 ---
 # 基本组件
+## 包含文件
+
+| 文件                                     | 核心知识点                                        |
+| -------------------------------------- | -------------------------------------------- |
+| `include/sylar/noncopyable.h`          | `=delete`, `=default`, 禁止拷贝惯用法               |
+| `include/sylar/singleton.h`            | 模板单例, Tag 参数区分实例, 函数局部 static                |
+| `include/sylar/macro.h`                | `__builtin_expect`, `#x` 字符串化, `__VA_ARGS__` |
+| `include/sylar/endian.h`               | 字节序, 大小端转换                                   |
+| `include/sylar/util.h` + `src/util.cc` | backtrace, demangle, 文件系统操作, `typeid`        |
+| `include/sylar/noncopyable.h`          | RAII 基类                                      |
+
 ## 使用到的知识
 ### 单例模式
 参考: [[设计模式#简单的单例实现]]
@@ -607,25 +618,7 @@ ReadFromStream(file_stream, vertices); // 直接读出 1024 * 4 字节
 - 不可读（二进制文件人看不懂）
 - 不跨平台（字节序、`sizeof` 在不同平台上可能不同）
 - 结构体对齐（padding）可能导致文件不兼容
-### Protobuf 反射序列化
-#### 解决什么问题
-Protobuf 生成的 C++ 类有 `SerializeToOstream`（二进制输出）和 `DebugString`（调试文本），没有 JSON 输出。`serialize_message` 用 Protobuf 反射 API 自动完成 `PB → Json::Value` 的映射，不管消息定义长什么样都能自动转 JSON。
-
-#### 反射机制
-```cpp
-const Descriptor* descriptor = message.GetDescriptor();   // 获取消息结构定义
-const Reflection* reflection = message.GetReflection();     // 获取反射接口
-for(int i = 0; i < descriptor->field_count(); ++i) {
-    auto* field = descriptor->field(i);                    // 遍历每个字段
-    // reflection->GetInt32 / GetString / GetEnum 等
-}
-```
-通过 `Descriptor` + `Reflection` 可以在运行时获取消息的"元信息"：有哪些字段、叫什么名字、什么类型、是否 repeated。写一份通用代码就能处理所有消息类型。
-
-#### serialize_unknowfieldset 的作用
-当新版本 `.proto` 发送含有新字段的消息给旧版本时，旧版本不认识新字段，但 Protobuf 不会丢弃它们——存入 `UnknownFieldSet`。`serialize_unknowfieldset` 把未知字段也序列化到 JSON 中，避免数据丢失。
-
-### iostream 继承体系
+#### iostream 继承体系
 能绑定到 `std::istream&` / `std::ostream&` 的类型包括 `ifstream`（文件）、`istringstream`（string 内存）、`cin/cout`（标准 IO）等。所有流类型继承自 `std::istream` / `std::ostream`，所以 `ReadFixFromStream` 可以接受其中任何一个。
 
 ### C++20 约束 POD / 连续容器
@@ -653,13 +646,172 @@ bool ReadFromStream(std::istream& is, T& v) {
 ```
 如果用 `std::span`（C++20）可以统一为一个接口。
 
-### 文本模式 vs 二进制模式
-计算机中的数据都是二进制的。区分打开模式不是在改存储方式，而是告诉库函数怎么解读和转换这些字节。
-- **Linux**：文本模式和二进制模式完全一样，无区别
-- **Windows**：文本模式自动转换 `\r\n` → `\n`，遇到 `0x1A`（Ctrl-Z）提前终止。处理二进制文件必须用 `std::ios::binary`
+### IO 限速器
+#### 解决什么问题
+从文件流中读取或写入大量数据时，如果不加控制，会瞬间占用全部磁盘 IO 带宽，影响同一台机器上的其他进程。`SpeedLimit` 确保读写速度不超过设定的上限（字节/秒）。
 
-### 部分读取问题
-`istream::read` 不保证一次读完指定数量的字节（原因：socket 数据未到齐、信号中断、管道未写完）。`ReadFixFromStream` 用循环 + `gcount()` 累加解决这个问题。
+#### 算法原理
+设定限速值 `speed`（字节/秒），换算为每毫秒允许的字节数 `m_countPerMS = speed / 1000.0`。每次写入后调用 `add(v)`：
+```cpp
+void SpeedLimit::add(uint32_t v) {
+    m_curCount += v;                            // 累加这一秒的总发送量
+    int usedms  = curms % 1000;                 // 这一秒已经过去多少毫秒
+    int limitms = m_curCount / m_countPerMS;    // 按当前速度理论应花多少毫秒
+    if(usedms < limitms) {                      // 实际用时 < 理论应花时间 → 太快
+        usleep(1000 * (limitms - usedms));      // 睡到理论应花时间
+    }
+}
+```
+核心逻辑：当前秒内已发送 `m_curCount` 字节，按限速值计算这些字节应该占用 `m_curCount / m_countPerMS` 毫秒。如果实际用时比这个值短，说明快了，sleep 补齐。
+进入新的一秒时重置计数器（`m_curSec` 更新，`m_curCount = v`），跨秒时重新计数。
+#### 实际使用（ReadFixFromStreamWithSpeed）
+```cpp
+SpeedLimit::ptr limit;
+if(dynamic_cast<std::ifstream*>(&is)) {          // 只有文件流需要限速
+    limit.reset(new SpeedLimit(speed));
+}
+while(is && (offset < size)) {
+    uint64_t s = std::min(size - offset, per);    // 每次最多读 per 字节
+    is.read(data + offset, s);
+    offset += is.gcount();
+    if(limit) { limit->add(is.gcount()); }        // 检查速度，超速则 sleep
+}
+```
+### Protobuf 反射序列化
+#### 概念映射
+| .proto 中的概念 | C++ 反射 API | 作用 |
+|---------------|-------------|------|
+| 整个消息 `Person` | `Descriptor` | 消息的结构——有哪些字段、各叫什么名字 |
+| 每个字段 `name` / `age` | `FieldDescriptor` | 单个字段——名字、类型、编号、是否 repeated |
+| 字段的值（实际数据） | `Reflection` | 在运行时读取/写入指定字段的值 |
 
-### vector 不能当作 POD 读写
-`vector` 内部有指向堆内存的指针（`_M_start`、`_M_finish` 等），不是 POD。直接覆盖会损坏内部结构，需要特化重载读写 `v[0]` 开始的连续元素存储区（`sizeof(T) * v.size()`）。
+**关键区分：** `Descriptor` 是"说明书"（描述这个类型有什么字段），`Reflection` 是"机械手"（从具体对象中取值），`FieldDescriptor` 是"目录条目"（描述单个字段）。
+
+#### serialize_message 函数详解
+
+```cpp
+static void serialize_message(const google::protobuf::Message& message, Json::Value& jnode) {
+    const Descriptor* descriptor = message.GetDescriptor();     // 获取消息的结构定义
+    const Reflection* reflection = message.GetReflection();     // 获取反射读写接口
+
+    for(int i = 0; i < descriptor->field_count(); ++i) {            // 遍历所有字段
+        const FieldDescriptor* field = descriptor->field(i);
+
+        // 跳过空字段（未设置的 optional、空 repeated），避免json中有过多空字段
+        if(field->is_repeated()) {
+            if(!reflection->FieldSize(message, field)) { continue; }
+        } else {
+            if(!reflection->HasField(message, field)) { continue; }
+        }
+```
+1. `GetDescriptor()` ——知道有哪些字段、各叫什么名字
+2. `GetReflection()` ——从具体对象中读写字段值
+3. 遍历每个字段，通过 `reflection->GetInt32/GetString/GetEnum` 等读取值，写入 `jnode`
+
+**三种字段类型的处理：**
+
+| 字段类型 | 处理方式 | JSON 结果 |
+|---------|---------|----------|
+| 普通字段（INT32/STRING 等） | X-Macro 展开，`GetInt32`/`GetString` 等 | `"name": "Alice"` |
+| repeated 字段 | 循环多次调用 `GetRepeatedInt32`/`GetRepeatedString` 等 | `"tags": ["engineer", "manager"]` |
+| 嵌套 Message | 递归调用 `serialize_message` | `"addr": {"city": "Beijing"}` |
+由于 Jsoncpp 库的 api 设计，如果添加数组需要使用 append，同时获取 protobuf 的 repeated 字段也和获取 singluar 字段的 api 不同，所以放在了**if 分支中，并使用两个类似的宏实现**
+```cpp
+jnode[std::string(field->name())].append((jsontype)reflection->GetRepeated##method(message, field, n));
+// si n g lu r
+jnode[std::string(field->name())] = (jsontype)reflection->Get##method(message, field);
+```
+
+#### serialize_unknowfieldset 函数详解
+
+**解决的问题：** Protobuf **前向兼容**——新版本 `.proto` 增加的字段，旧版本不认识，但解析时不丢弃，存入 `UnknownFieldSet`。这个函数把未知字段保留到 JSON 中，避免数据丢失。
+
+```cpp
+static void serialize_unknowfieldset(const UnknownFieldSet& ufs, Json::Value& jnode) {
+    std::map<int, std::vector<Json::Value>> kvs;   // field number → 值列表（可能有多个同名）
+
+    for(int i = 0; i < ufs.field_count(); ++i) {
+        const auto& uf = ufs.field(i);
+        switch((int)uf.type()) {
+        case UnknownField::TYPE_VARINT:
+            kvs[uf.number()].push_back((Json::Int64)uf.varint());
+            break;
+        case UnknownField::TYPE_FIXED32:
+            kvs[uf.number()].push_back((Json::UInt)uf.fixed32());
+            break;
+        case UnknownField::TYPE_FIXED64:
+            kvs[uf.number()].push_back((Json::UInt64)uf.fixed64());
+            break;
+        case UnknownField::TYPE_LENGTH_DELIMITED: {
+            std::string v(uf.length_delimited());
+            UnknownFieldSet tmp;
+            if(!v.empty() && tmp.ParseFromString(v)) {
+                // 嵌套的 UnknownFieldSet（可能是一个未知的消息类型），递归处理
+                Json::Value vv;
+                serialize_unknowfieldset(tmp, vv);
+                kvs[uf.number()].push_back(vv);
+            } else {
+                kvs[uf.number()].push_back(v);   // 普通字符串
+            }
+            break;
+        }
+        }
+    }
+
+    // 输出：同编号多值 → JSON 数组，单值 → JSON 属性
+    for(auto& i : kvs) {
+        if(i.second.size() > 1) {
+            for(auto& n : i.second) { jnode[std::to_string(i.first)].append(n); }
+        } else {
+            jnode[std::to_string(i.first)] = i.second[0];
+        }
+    }
+}
+```
+
+**关键设计点：**
+
+- `std::map<int, std::vector<Json::Value>> kvs` — 为什么用 `map` + `vector`？同一个 field number 在 repeated 上下文中可能有多个值
+- `TYPE_LENGTH_DELIMITED` 的递归尝试：如果未知字段的二进制数据能被解析为 `UnknownFieldSet`，说明它是一个嵌套消息，递归处理；否则当作普通字符串
+- 输出时：单值存为 `"5": "value"`，多值存为 `"5": ["v1", "v2"]`
+
+通过 X-Macro 减少重复类型处理代码：
+
+```cpp
+#define XX(cpptype, method, valuetype, jsontype)                               \
+    case google::protobuf::FieldDescriptor::CPPTYPE_##cpptype: {               \
+        int size = reflection->FieldSize(message, field);                      \
+        for(int n = 0; n < size; ++n) {                                        \
+            jnode[std::string(field->name())].append(                          \
+                (jsontype)reflection->GetRepeated##method(message, field, n)); \
+        }                                                                      \
+        break;                                                                 \
+    }
+XX(INT32, Int32, int32_t, Json::Int);
+XX(UINT32, UInt32, uint32_t, Json::UInt);
+XX(FLOAT, Float, float, double);
+XX(DOUBLE, Double, double, double);
+XX(BOOL, Bool, bool, bool);
+XX(INT64, Int64, int64_t, Json::Int64);
+XX(UINT64, UInt64, uint64_t, Json::UInt64);
+#undef XX
+```
+
+对于 **repeated Message** 和 **普通非 repeated 字段**（包括嵌套 Message），分别处理。
+
+##### X-Macro 的不可替代性
+
+**问题本质：** Reflection API 的函数名是类型相关的（`GetInt32`、`GetString`、`GetEnum` 是不同函数），X-Macro 用 `##` 把类型名粘接到函数名上。
+
+**为什么模板不能替代：** 把字符串拼起来调用对应名字的函数——C++ 没有任何语言特性能做到。`Get##method` 是宏 `##` 独有的能力。
+
+**替代方案对比：**
+
+| 方案 | 类型安全 | 零开销 | 代码量 | 复杂度 |
+|------|---------|--------|-------|--------|
+| X-Macro | ❌ | ✅ | 少（6行XX） | 低 |
+| 类型特质+折叠表达式(C++17) | ✅ | ✅ | 多（每个类型一个特化） | 高 |
+| 函数指针表 | ❌ | ❌ | 中 | 中 |
+| 代码生成（Python脚本） | ✅ | ✅ | 少 | 需外部工具 |
+
+**结论：** 当 API 设计本身就依赖函数名规则来区分类型时，X-Macro 仍然是最佳选择，不是"妥协"。
