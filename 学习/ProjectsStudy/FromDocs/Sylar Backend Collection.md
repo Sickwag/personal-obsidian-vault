@@ -580,25 +580,14 @@ inline bool ReadFixFromStream(std::istream& is, char* data, const uint64_t& size
 - **文件流被信号中断**：`read` 系统调用返回 `EINTR`，只读了部分数据
 - **管道流**：写端还没写完
 `gcount()` 返回上次 `read` 实际读取的字节数。循环累加 `pos` 直到 `pos == size` 或流出错。
-##### ReadFromStream 的两个重载
-**重载 1：读取单个 POD 类型**
+ReadFromStream 的两个重载分别用来读取单个 POD 类型和连续容器（`vector`），这里只重载了 `vector` 一种类型，并且
 ```cpp
 template <class T>
 bool ReadFromStream(std::istream& is, T& v) {
     return ReadFixFromStream(is, (char*)&v, sizeof(v));
 }
-
-// 使用场景：反序列化一个结构体
-int32_t value;
-ReadFromStream(file_stream, value);     // 读出 4 字节到 value
-
-struct Header { uint32_t magic; uint16_t version; };
-Header h;
-ReadFromStream(file_stream, h);          // 读出整个结构体
 ```
 这里 `T` 必须是 POD 类型（没有虚函数、没有自定义构造/析构），二进制直接拷贝安全。
-
-**重载 2：读取连续容器（`vector`）**
 ```cpp
 template <class T>
 bool ReadFromStream(std::istream& is, std::vector<T>& v) {
@@ -618,3 +607,59 @@ ReadFromStream(file_stream, vertices); // 直接读出 1024 * 4 字节
 - 不可读（二进制文件人看不懂）
 - 不跨平台（字节序、`sizeof` 在不同平台上可能不同）
 - 结构体对齐（padding）可能导致文件不兼容
+### Protobuf 反射序列化
+#### 解决什么问题
+Protobuf 生成的 C++ 类有 `SerializeToOstream`（二进制输出）和 `DebugString`（调试文本），没有 JSON 输出。`serialize_message` 用 Protobuf 反射 API 自动完成 `PB → Json::Value` 的映射，不管消息定义长什么样都能自动转 JSON。
+
+#### 反射机制
+```cpp
+const Descriptor* descriptor = message.GetDescriptor();   // 获取消息结构定义
+const Reflection* reflection = message.GetReflection();     // 获取反射接口
+for(int i = 0; i < descriptor->field_count(); ++i) {
+    auto* field = descriptor->field(i);                    // 遍历每个字段
+    // reflection->GetInt32 / GetString / GetEnum 等
+}
+```
+通过 `Descriptor` + `Reflection` 可以在运行时获取消息的"元信息"：有哪些字段、叫什么名字、什么类型、是否 repeated。写一份通用代码就能处理所有消息类型。
+
+#### serialize_unknowfieldset 的作用
+当新版本 `.proto` 发送含有新字段的消息给旧版本时，旧版本不认识新字段，但 Protobuf 不会丢弃它们——存入 `UnknownFieldSet`。`serialize_unknowfieldset` 把未知字段也序列化到 JSON 中，避免数据丢失。
+
+### iostream 继承体系
+能绑定到 `std::istream&` / `std::ostream&` 的类型包括 `ifstream`（文件）、`istringstream`（string 内存）、`cin/cout`（标准 IO）等。所有流类型继承自 `std::istream` / `std::ostream`，所以 `ReadFixFromStream` 可以接受其中任何一个。
+
+### C++20 约束 POD / 连续容器
+```cpp
+template <typename T>
+concept Pod = std::is_trivially_copyable_v<T> && std::is_standard_layout_v<T>;
+
+template <typename T>
+concept ContiguousContainer = requires(T& t) {
+    { t.data() } -> std::convertible_to<const std::remove_reference_t<decltype(t[0])>*>;
+    { t.size() } -> std::convertible_to<std::size_t>;
+};
+
+template <Pod T>
+bool ReadFromStream(std::istream& is, T& v) {
+    return ReadFixFromStream(is, (char*)&v, sizeof(v));
+}
+
+template <ContiguousContainer T>
+bool ReadFromStream(std::istream& is, T& v) {
+    using Elem = std::remove_reference_t<decltype(*v.data())>;
+    static_assert(std::is_trivially_copyable_v<Elem>, "element type must be trivially copyable");
+    return ReadFixFromStream(is, (char*)v.data(), sizeof(Elem) * v.size());
+}
+```
+如果用 `std::span`（C++20）可以统一为一个接口。
+
+### 文本模式 vs 二进制模式
+计算机中的数据都是二进制的。区分打开模式不是在改存储方式，而是告诉库函数怎么解读和转换这些字节。
+- **Linux**：文本模式和二进制模式完全一样，无区别
+- **Windows**：文本模式自动转换 `\r\n` → `\n`，遇到 `0x1A`（Ctrl-Z）提前终止。处理二进制文件必须用 `std::ios::binary`
+
+### 部分读取问题
+`istream::read` 不保证一次读完指定数量的字节（原因：socket 数据未到齐、信号中断、管道未写完）。`ReadFixFromStream` 用循环 + `gcount()` 累加解决这个问题。
+
+### vector 不能当作 POD 读写
+`vector` 内部有指向堆内存的指针（`_M_start`、`_M_finish` 等），不是 POD。直接覆盖会损坏内部结构，需要特化重载读写 `v[0]` 开始的连续元素存储区（`sizeof(T) * v.size()`）。
