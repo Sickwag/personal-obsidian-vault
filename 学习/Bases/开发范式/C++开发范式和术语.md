@@ -1,3 +1,26 @@
+# POD 类型
+https://zhuanlan.zhihu.com/p/56161728
+## 含义解释
+POD类型是 C++中常见的概念，用来说明类/结构体的属性，具体来说它是指没有使用面相对象的思想来设计的类/结构体。POD 的全称是 Plain Old Data，Plain 表明它是一个普通的类型，没有虚函数虚继承等特性；Old 表明它与 C 兼容。
+POD 类型在 C++中有两个独立的特性：
+### 支持静态初始化（static initialization）
+- trivial classes 支持静态初始化（static initizlization），如果类的
+	- 所有的拷贝构造函数
+	- 所有的移动构造函数
+	- 所有的赋值操作符
+	- 所有的移动赋值操作符
+	- 默认构造函数和析构函
+	都是编译器生成的构造函数，而不是用户自定义的；且它的基类也有这样的特性，那么他就是平凡构造类（trivial class）
+`template <typename T> struct std::is_trivial` 可判断类是否是 trivial
+### 拥有和 C 语言一样的内存布局（memory layout）
+standard 是指可以和其他语言通信，因为 standard-lay 类型的内部布局和 C 结构体一样。Standard layout 定义如下：
+- 所有非静态成员都是 standard-layout
+- 没有虚函数和虚基类
+- 非静态成员访问控制权一样
+- 基类是 standard-layout 的
+- 没有静态成员变量，或者在整个继承树中，只有一个类有静态成员变量。
+- 第一个非静态成员不是基类
+`template <typename T>struct std::is_standard_layout` 判断一个类是否是 standard-layout。
 # SFINAE (Substitution Failure Is Not An Error)
 ## 含义解释
 意思是"替换失败并非错误"。
