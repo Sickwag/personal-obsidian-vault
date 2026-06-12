@@ -9068,6 +9068,8 @@ bool c = vec[0];						// better
 - 不要将任意一个 `vector<bool>` 中元素赋值给一个 auto 类型变量
 - 使用 `[]` 或者 `at()` 时配合 `static_cast<bool>` 转换
 - 将元素显式赋值给 bool 变量使用
+### sizeof 运算符
+### 柔性数组与 POD 类型
 ### RAII 机制
 参考：[RAII机制](https://www.bilibili.com/video/BV1K2FLzTEM4/?spm_id_from=333.788.player.switch&vd_source=876be08bc9c030f4a9ea1fb97e0d0342&p=2)
 #### RAII 解决的问题
