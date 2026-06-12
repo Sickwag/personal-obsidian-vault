@@ -35,5 +35,28 @@ C 字符串和 SDS 之间的区别
 | 只能保存文本数据                   | 可以保存文本或者二进制数据              |
 | 可以使用所有 <string.h> 库中的函数    | 可以使用一部分 <string.h> 库中的函数   |
 ### SDS 操作 API
-源码中的计算长度操作需要前置知识 [[C++ Runoob Tutoral#sizeof 运算符]] 和 [[C++ Runoob Tutoral#柔性数组与 POD 类型]]
-sdsnewlen
+源码中的计算长度操作需要前置知识 [[C++ Runoob Tutoral#sizeof 运算符]] 和 [[C++开发范式和术语#VLA 与 POD 类型]]
+```cpp
+void *zmalloc(size_t size);          // 分配 size 字节，等价于 malloc + 额外统计
+void *zcalloc(size_t size);          // 分配 size 字节并清零，等价于 calloc(1, size)
+void *zrealloc(void *ptr, size_t size); // 调整大小，等价于 realloc
+void zfree(void *ptr);               // 释放，等价于 free（如果支持，会返回已释放的大小）
+```
+与标准版库版本对比:
+
+| 函数         | 对应标准函数    | 附加行为                                                                         |
+| ---------- | --------- | ---------------------------------------------------------------------------- |
+| `zmalloc`  | `malloc`  | 分配内存后更新**内存使用统计计数器**；若分配失败，调用 `zmalloc_oom_handler()`（默认是 `exit(1)`，即直接终止进程） |
+| `zcalloc`  | `calloc`  | 同上，但分配的内存初始化为 0（通过 `calloc` 或手动 `memset`）                                    |
+| `zrealloc` | `realloc` | 调整大小，同时更新统计计数；失败时同样 OOM 终止                                                   |
+| `zfree`    | `free`    | 释放内存，更新统计计数；在某些实现下（如 jemalloc），还能获得实际释放的字节数用于统计                              |
+
+所有 `z*` 函数都内置了：
+1. **全局内存使用量统计**（使用 `atomic` 或锁保护的 `used_memory` 变量）。
+2. **内存分配失败时的统一处理**（不是返回 NULL，而是直接 `abort()` 或 `exit()`）。
+3. 标准 `malloc` 失败时返回 `NULL`，但**调用方通常不检查**，或检查后不知道如何处理（继续运行可能导致更严重的错误）。
+4. 在 Redis 这种高可靠性系统中，**内存耗尽已经是灾难性状态**，最好的做法是**立即终止**，而不是让错误 propagate（传播）导致数据损坏或死锁。
+**解决方案**：`zmalloc` 内部判断返回值，如果为 NULL，则调用 `zmalloc_oom_handler`（默认是 `exit(1)`，可以用户自定义）。这样**分配失败 = 进程退出**，绝不会返回 NULL。
+- Redis 需要知道 **“当前总共用了多少内存”**，用于 `INFO memory`、内存淘汰（eviction）、`maxmemory` 限制等。
+- 标准 `malloc` 家族不提供任何跨平台的可移植接口来获取已分配字节数。`malloc_usable_size()` 或 `malloc_size()` 是平台相关的。
+## 第 3 章链表
