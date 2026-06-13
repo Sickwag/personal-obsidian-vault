@@ -52,7 +52,8 @@
               "title": "C++开发范式和术语"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -233,11 +234,11 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "2514023a01f253c5",
+  "active": "23f86135b628a214",
   "lastOpenFiles": [
+    "学习/其他专业书/Redis 设计与实现.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
-    "学习/其他专业书/Redis 设计与实现.md",
     "Files & LongText/Attachments/Pasted image 20260612165138.png",
     "Files & LongText/Attachments/Pasted image 20260612165108.png",
     "Chores/JobInterviews/面试准备.md",
