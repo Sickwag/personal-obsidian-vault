@@ -21,39 +21,8 @@
               "icon": "lucide-file",
               "title": "Redis 设计与实现"
             }
-          },
-          {
-            "id": "217cd771818d86ef",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Language/C C++/C++ Runoob Tutoral.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "C++ Runoob Tutoral"
-            }
-          },
-          {
-            "id": "23f86135b628a214",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Bases/开发范式/C++开发范式和术语.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "C++开发范式和术语"
-            }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -106,8 +75,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -234,8 +202,18 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "23f86135b628a214",
+  "active": "2514023a01f253c5",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/Pasted image 20260613150858.png",
+    "Files & LongText/Attachments/Pasted image 20260613150852.png",
+    "Files & LongText/Attachments/Pasted image 20260613145529.png",
+    "Files & LongText/Attachments/Pasted image 20260613145457.png",
+    "学习/其他专业书/Redis 设计与实现.md.tmp.327564.08768e088ad5",
+    "Files & LongText/Attachments/Pasted image 20260613141023.png",
+    "学习/algorithm/题型分类.md",
+    "Chores/JobInterviews/八股/中金所面试题整理.md",
+    "Files & LongText/Attachments/Pasted image 20260613134108.png",
+    "学习/algorithm/分析优化.md",
     "学习/其他专业书/Redis 设计与实现.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
@@ -243,7 +221,6 @@
     "Files & LongText/Attachments/Pasted image 20260612165108.png",
     "Chores/JobInterviews/面试准备.md",
     "Chores/JobInterviews/questions.md",
-    "Chores/JobInterviews/八股/中金所面试题整理.md",
     "Chores/JobInterviews/八股/自我介绍.md",
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/Language/C C++/模板元编程.md",
@@ -269,18 +246,10 @@
     "Files & LongText/ChatLogWithAi/数学建模大赛--模型学习.md",
     "Files & LongText/ChatLogWithAi/Linux Concepts.md",
     "Files & LongText/ChatLogWithAi/C++学习对话.md",
-    "Files & LongText/ChatLogWithAi/对AI解释的理解.md",
-    "Files & LongText/ChatLogWithAi/AiQuiz/内存池.md",
     "Files & LongText/Attachments/Pasted image 20260604180927.png",
     "Files & LongText/Attachments/gif 1.gif",
     "Files & LongText/Attachments/gif.gif",
-    "Files & LongText/Attachments/Pasted image 20260603163829.png",
-    "Files & LongText/Attachments/Pasted image 20260603162938.png",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.89718.f6e5135b22ca",
-    "Files & LongText/Attachments/Pasted image 20260530185058.png",
-    "分析优化.pdf",
-    "Files & LongText/Attachments/Pasted image 20260522134724.png",
-    "未命名.canvas",
-    "Files & LongText/Attachments/Pasted image 20260505230524.png"
+    "未命名.canvas"
   ]
 }

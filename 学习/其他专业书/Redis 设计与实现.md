@@ -60,3 +60,85 @@ void zfree(void *ptr);               // 释放，等价于 free（如果支持�
 - Redis 需要知道 **“当前总共用了多少内存”**，用于 `INFO memory`、内存淘汰（eviction）、`maxmemory` 限制等。
 - 标准 `malloc` 家族不提供任何跨平台的可移植接口来获取已分配字节数。`malloc_usable_size()` 或 `malloc_size()` 是平台相关的。
 ## 第 3 章链表
+### 链表的结构
+![[Pasted image 20260613141023.png]]
+- listNode 是经典的 prev+next 双指针+value 值的简单组合
+- dup 函数用于复制链表节点所保存的值;
+- free 函数用于释放链表节点所保存的值;
+- match 函数则用于对比链表节点所保存的值和另一个输入值是否相等。
+总体特点是: 双端，无环（头尾空指针指向 NULL），`O(1)` 访问头尾指针，带有链表长度计数器
+### API 和代码编写
+
+adlist 的接口设计体现了 **C89/99 时代** 函数与宏的明确边界：
+
+| 分类 | 代表操作 | 原因 |
+|------|---------|------|
+| **函数**（adlist.c） | `listCreate`, `listAddNodeHead`, `listDelNode`, `listDup`, `listSearchKey` | 涉及分支、内存分配、指针修改等复杂逻辑，需要类型检查和可调试性 |
+| **宏**（adlist.h 93~128 行） | `listLength`, `listFirst`, `listLast`, `listPrevNode`, `listNodeValue` | 单表达式直接读 struct 字段，O(1) 零开销，常出现在循环热路径中 |
+
+**为什么不用 `inline` 函数**？
+- C89 标准无 `inline` 关键字
+- C99 的 `inline` 语法复杂：要求在恰好一个编译单元中提供外部定义，ODR 原则还没有完善，（多定义，无定义等情况）容易引起链接报错
+- Redis 追求极致的跨平台可移植性，无法依赖编译器对 `inline` 的支持
+**为什么 getter/setter 不用函数而是宏**？
+- `listLength(l)` 展开为 `(l)->len`，完全零开销
+- 在遍历循环等热路径中可省去一次函数调用（栈帧建立+返回）
+- 这些宏只涉及参数 `l` 或 `n` 的一次求值，不存在经典宏副作用问题
+**宏的命名空间污染问题**：
+Redis 是独立应用而非库，不存在污染外部代码的风险；所有宏均有 `list` 前缀，冲突概率极低。这是 2009 年 C 项目的通行做法（Linux 内核、nginx 等均如此）。
+
+**如果用现代 C/C++ 重写**：
+```c
+// 现代 C — static inline
+static inline unsigned long listLength(list *l) { return l->len; }
+
+// C++ — 成员函数
+class List {
+    unsigned long len() const { return len_; }
+};
+```
+Redis 4.0+ 已经开始逐步将热路径宏转为 `static inline` 函数。
+## 第 4 章字典
+### 数据结构
+![[Pasted image 20260613145457.png]] ![[Pasted image 20260613145529.png]]
+哈希表数据结构:
+```cpp
+typedef struct dictht {
+	// 哈希表数组
+	dictEntry** table;
+	// 哈希表大小
+	unsigned long size;
+	// 哈希表大小掩码，用于计算索引值
+	// 总是等于 size - 1
+	unsigned long sizemask;
+	// 该哈希表已有节点的数量
+	unsigned long used;
+} dictht;
+typedef struct dict {
+	// 类型特定函数
+	dictType* type;
+	// 私有数据
+	void* privdata;
+	dictht ht[2];
+	// rehash 索引
+	// 当 rehash 不在进行时，值为 -1
+	int rehashidx; /* rehashing not in progress if rehashidx == -1 */
+	// 目前正在运行的安全迭代器的数量
+	int iterators; /* number of iterators currently running */
+} dict;
+```
+- ht 是哈希表存储数据的位置，一般情况下,字典只使用 ht[0]哈希表,ht[1]哈希表只会在对 ht[0]哈希表进行 rehash 时使用
+- 
+```cpp
+typedef struct dictType {
+	unsigned int (*hashFunction)(const void* key);
+	void* (*keyDup)(void* privdata, const void* key);
+	void* (*valDup)(void* privdata, const void* obj);
+	int (*keyCompare)(void* privdata, const void* key1, const void* key2);
+	void (*keyDestructor)(void* privdata, void* key);
+	void (*valDestructor)(void* privdata, void* obj);
+} dictType;
+```
+dictType 是一个"多态结构体"，用非常细致的粒度，判断两个哈希表中的元素是否相等，如何计算哈希值，决定了一个哈希表中的元素应该放在 `dict::ht[2][0]::table;` 中的什么位置
+一个普通状态下(没有进行 rehash)的字典。
+![[Pasted image 20260613150852.png]]
