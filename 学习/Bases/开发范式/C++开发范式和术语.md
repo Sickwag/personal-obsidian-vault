@@ -1,3 +1,57 @@
+# VLA 和 FAM
+
+## VLA（Variable-Length Array
+C99 引入，C11 降级为可选
+```cpp
+void f(int n) {
+	int arr[n];   // n在运行时才确定
+	// arr在栈上
+}
+```
+- 核心特征：数组长度是运行时变量，不是编译期常量
+- 存储位置：栈。`sizeof(arr) = n * sizeof(int)`，编译器在函数prologue中通过 `alloca` 或等价机制动态调整栈指针
+- 生命周期：函数返回时自动释放
+
+C++中没有VLA。C++标准从没接受过VLA（虽然GCC作为扩展支持了 `int arr[n]`）。你在C++里想写"运行时长度栈数组"只有 `std::array`（编译期固定）或 `std::vector`（堆分配）
+
+为什么Redis几乎不用VLA？因为Redis是长期运行的服务器进程，栈上放动态大小数据是危险的——栈空间有限（通常8MB），一个恶意输入导致 `n` 很大时直接栈溢出 crash。看 Redis 源码里唯一用到 VLA 的地方（`debug.c` 等边缘路径），也是小规模、可控长度的场景
+
+## FAM（Flexible Array Member）
+C99 引入，如果一个结构体**最后一个成员**是**不完整数组类型**（即 `[]` 而不指定大小，即柔性数组（VLA），那么这个结构体就是 FAM struct
+```c
+struct intset {
+	uint32_t encoding;
+	uint32_t length;
+	int8_t contents[];   // FAM：不占sizeof，占位符
+};
+```
+- 核心特征：`struct` 末尾的不定长数组，`sizeof(struct)` 不包含它。分配时手动加上数据区大小
+- 存储位置：堆。跟随父对象的 `malloc` / `zrealloc`，与 header 在同一块内存中连续布局
+
+FAM 对应的 C++等价物：C++没有 FAM。常见替代方案：
+```cpp
+// C的FAM → C++可以用：
+// 方案1: 用一个char[]成员然后reinterpret_cast（不推荐，UB）
+// 方案2: 分离header和data（两次分配）
+// 方案3: 直接用vector<int8_t>（heap独立，但方便）
+struct IntSet {
+	uint32_t encoding;
+	uint32_t length;
+	std::vector<int8_t> contents;  // 但contents的数据在另一个堆块
+};
+```
+FAM相比 `vector` 的优势就是零间接——数据紧接着 header，一次 `zrealloc` 同时调整 header 和 data，不会有额外的指针跳转
+
+C vs C++的一个微妙区别：
+```c
+// C中FAM的典型分配模式：
+struct intset *is = malloc(sizeof(struct intset) + extra_bytes);
+```
+```cpp
+// C++中直接这么做有问题：
+// struct intset不是POD？构造函数存在？
+// 自C++起，FAM不是标准C++特性
+```
 # POD 类型
 https://zhuanlan.zhihu.com/p/56161728
 ## 含义解释
@@ -21,8 +75,9 @@ standard 是指可以和其他语言通信，因为 standard-lay 类型的内部
 - 没有静态成员变量，或者在整个继承树中，只有一个类有静态成员变量。
 - 第一个非静态成员不是基类
 `template <typename T>struct std::is_standard_layout` 判断一个类是否是 standard-layout。
-### VLA 与 POD 类型
-- 如果一个结构体**最后一个成员**是**不完整数组类型**（即 `[]` 而不指定大小，即柔性数组（VLA），那么 `sizeof` 计算结构体大小时**不包含该成员占用的空间**。该成员被认为是一个“占位符”，其实际大小需要在运行时通过 `malloc` 等动态分配决定。
+### FAM 与 POD 类型
+定义参考 [[#VLA 和 FAM#FAM（Flexible Array Member）]]
+- `sizeof` 计算结构体大小时**不包含该成员占用的空间**。该成员被认为是一个“占位符”，其实际大小需要在运行时通过 `malloc` 等动态分配决定。
 - 虽然一个结构体最后一个成员是柔性数组，但是在使用 [[#sizeof 运算符|sizeof]] 计算结构体大小时会被当作占位符，大小为 0，在使用 malloc 时分配超过其中其他成员总和大小的内存后，剩下的内存会被分配到数组中。物理内存分布上他们是连续的
 - 在 C++ 标准中，含有柔性数组的结构体（或类）不是 [[C++开发范式和术语#POD 类型|POD类型]]，违反了标准布局规定（`std::standard_layout` 要求所有非静态数据成员都在同一个地址范围内且布局可预测）。（事实上，在严格的标准 C++ 中，柔性数组甚至不是合法的成员类型）
 由于柔性数组这一特性，含有柔性数组的结构体只能通过 `malloc`（或 `calloc`、`realloc`）等动态内存分配函数分配在堆上。分配在栈上必须在编译期知道明确的大小。但编译器语法上通过，只会给出警告，并且能够访问其中的正常成员，柔性数组大小是 0，且访问操作导致 UB

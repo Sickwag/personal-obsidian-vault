@@ -13,7 +13,7 @@ rules: 每个内容前使用checkbox，每天内容前写下需要复习的日�
 - [ ] () 和{}初始化类的区别-> [[C++ Runoob Tutoral#大括号初始化]]
 - [ ] 折叠表达式触发引用折叠-> [[模板元编程#万能引用与引用折叠]]
 - [ ] static 的语义->[[C++ Runoob Tutoral#各种符号在上下文中语义#static 语义]]
-- [ ] 宏编写超过一行使用 do-while 原因-> [[MyTinyTools#leptjson#宏编写技巧]]
+- [ ] 宏编写超过一行使用 do-while 原因-> [[DevFoundations#leptjson#宏编写技巧]]
 - [ ] 宏和预处理符号 & assert 简单断言-> [[C++ Runoob Tutoral#宏定义符号和预处理标识符]]
 
 
@@ -53,26 +53,26 @@ rules: 每个内容前使用checkbox，每天内容前写下需要复习的日�
 ### 0123
 知识
 - [ ] 互斥锁，条件变量本质-> [[C++ Runoob Tutoral#多线程]]
-- [ ] 消费者生产者模式-> [[设计模式#生产者-消费者模式]] -> [[MyTinyTools#线程同步]]
-- [ ] 线程池基本知识-> [[MyTinyTools#施磊手写线程池#前置知识]]
+- [ ] 消费者生产者模式-> [[设计模式#生产者-消费者模式]] -> [[DevFoundations#线程同步]]
+- [ ] 线程池基本知识-> [[DevFoundations#施磊手写线程池#前置知识]]
 
 ### 0126
 知识
 - [ ] 虚假唤醒-> [[C++ Runoob Tutoral#虚假唤醒]]
 - [ ] shared_ptr 和 unique_ptr 的使用-> [[Modern C++#智能指针 RAII 设计]]
-- [ ] shared_ptr 自定义删除器本质&用法-> [[MyTinyTools#MySQL 连接池#3.2 RAII 与自动归还连接]]
-- [ ] 连接池的基本工作原理-> [[MyTinyTools#2. 连接池的工作机制]]
-- [ ] 连接池中的生产者消费者模型-> [[MyTinyTools#3.3 多线程同步机制]]
-- [ ] 不同条件变量专司其职用法-> [[MyTinyTools#3.3 多线程同步机制]] -> [[C++ Runoob Tutoral#条件变量]]
-- [ ] 连接池基本写法，基于 boost.mysql 实现-> [[MyTinyTools#MySQL 连接池]]
+- [ ] shared_ptr 自定义删除器本质&用法-> [[DevFoundations#MySQL 连接池#3.2 RAII 与自动归还连接]]
+- [ ] 连接池的基本工作原理-> [[DevFoundations#2. 连接池的工作机制]]
+- [ ] 连接池中的生产者消费者模型-> [[DevFoundations#3.3 多线程同步机制]]
+- [ ] 不同条件变量专司其职用法-> [[DevFoundations#3.3 多线程同步机制]] -> [[C++ Runoob Tutoral#条件变量]]
+- [ ] 连接池基本写法，基于 boost.mysql 实现-> [[DevFoundations#MySQL 连接池]]
 - [ ] 线程之间通信的简易方式信号量-> [[C++ Runoob Tutoral#信号量 semaphore]]
-- [ ] 连接池抛出异常设计&构造 nullptr 智能指针对象-> [[MyTinyTools#2. 连接池的工作机制#2.3 设计细节]]
+- [ ] 连接池抛出异常设计&构造 nullptr 智能指针对象-> [[DevFoundations#2. 连接池的工作机制#2.3 设计细节]]
 
 ### 0127
 知识
-- [ ] 线程分离的后果-> [[C++ Runoob Tutoral#多线程#线程管理#线程控制函数、方法]] -> [[MyTinyTools#施磊手写线程池#基本线程池任务架构]]
+- [ ] 线程分离的后果-> [[C++ Runoob Tutoral#多线程#线程管理#线程控制函数、方法]] -> [[DevFoundations#施磊手写线程池#基本线程池任务架构]]
 - [ ] `std::any` 中的类型擦除机制-> [[C++开发范式和术语#类型擦除#std any 中的实现]]
-- [ ] 线程池基本结构和提交任务-> [[MyTinyTools#施磊手写线程池#提交任务实现]]
+- [ ] 线程池基本结构和提交任务-> [[DevFoundations#施磊手写线程池#提交任务实现]]
 
 ### 0128
 知识
@@ -80,6 +80,6 @@ rules: 每个内容前使用checkbox，每天内容前写下需要复习的日�
 
 ### 0209
 知识
-- [ ] 整章都很重要-> [[MyTinyTools#kama 内存池]]
-- [ ] 内存基本知识-> [[MyTinyTools#kama 内存池#基本内存池结构 v1]]
-- [ ] 操作系统内存管理-> [[MyTinyTools#操作系统管理内存块逻辑]]
+- [ ] 整章都很重要-> [[DevFoundations#kama 内存池]]
+- [ ] 内存基本知识-> [[DevFoundations#kama 内存池#基本内存池结构 v1]]
+- [ ] 操作系统内存管理-> [[DevFoundations#操作系统管理内存块逻辑]]
