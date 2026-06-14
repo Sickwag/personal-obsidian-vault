@@ -41,7 +41,16 @@ struct IntSet {
 };
 ```
 FAM相比 `vector` 的优势就是零间接——数据紧接着 header，一次 `zrealloc` 同时调整 header 和 data，不会有额外的指针跳转
-
+### 细节
+维度 | VLA | FAM
+---|---|---
+语法 | int arr[n] | int arr[] 必须是 struct 最后一个成员
+位置 | 栈 | 堆（跟随 malloc）
+大小确定时机 | 每次函数调用 | 每次 malloc/zrealloc
+生命周期 | 自动（函数返回） | 手动（free/zfree）
+C++ 支持 | 否（GCC 扩展） | 否（GCC/Clang 扩展）
+风险 | 栈溢出（n 过大） | 内存泄漏（忘 free）
+Redis 用法 | 几乎不用 | intset.contents, zskiplistNode.level, sds 的 buf
 C vs C++的一个微妙区别：
 ```c
 // C中FAM的典型分配模式：
