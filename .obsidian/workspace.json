@@ -66,9 +66,19 @@
               "icon": "lucide-file",
               "title": "Redis 设计与实现"
             }
+          },
+          {
+            "id": "de2e495c987c2f80",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 3
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -125,8 +135,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -248,8 +257,9 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "d5e86480d8116365",
+  "active": "de2e495c987c2f80",
   "lastOpenFiles": [
+    "学习/其他专业书/Redis 设计与实现.md",
     "Files & LongText/Attachments/Pasted image 20260614120743.png",
     "Files & LongText/Attachments/Pasted image 20260614120711.png",
     "Files & LongText/Attachments/Pasted image 20260614114529.png",
@@ -261,9 +271,7 @@
     "Files & LongText/Attachments/Pasted image 20260614111843.png",
     "学习/其他专业书/Redis 设计与实现.md.tmp.327564.bf6188220fd3",
     "Files & LongText/Attachments/Pasted image 20260614104850.png",
-    "Files & LongText/Attachments/Pasted image 20260614104154.png",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
-    "学习/其他专业书/Redis 设计与实现.md",
     "学习/其他专业书/Modern C++.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
     "学习/其他专业书/Redis 设计与实现.md.tmp.327564.eb7d3e05f9fc",
