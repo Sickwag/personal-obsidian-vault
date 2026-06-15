@@ -121,8 +121,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -251,14 +250,20 @@
   },
   "active": "d5e86480d8116365",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/Pasted image 20260614120743.png",
+    "Files & LongText/Attachments/Pasted image 20260614120711.png",
+    "Files & LongText/Attachments/Pasted image 20260614114529.png",
+    "Files & LongText/Attachments/Pasted image 20260614114033.png",
+    "Files & LongText/Attachments/Pasted image 20260614114023.png",
+    "Files & LongText/Attachments/Pasted image 20260614112408.png",
+    "Files & LongText/Attachments/Pasted image 20260614112204.png",
+    "Files & LongText/Attachments/Pasted image 20260614111857.png",
+    "Files & LongText/Attachments/Pasted image 20260614111843.png",
+    "学习/其他专业书/Redis 设计与实现.md.tmp.327564.bf6188220fd3",
+    "Files & LongText/Attachments/Pasted image 20260614104850.png",
     "Files & LongText/Attachments/Pasted image 20260614104154.png",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
     "学习/其他专业书/Redis 设计与实现.md",
-    "Files & LongText/Attachments/Pasted image 20260614102308.jpg",
-    "Files & LongText/Attachments/Pasted image 20260614102228.jpg",
-    "Files & LongText/Attachments/Pasted image 20260613214253.png",
-    "Files & LongText/Attachments/Pasted image 20260613211755.png",
-    "Files & LongText/Attachments/Pasted image 20260613211539.png",
     "学习/其他专业书/Modern C++.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
     "学习/其他专业书/Redis 设计与实现.md.tmp.327564.eb7d3e05f9fc",
@@ -267,12 +272,7 @@
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/其他专业书/Redis 设计与实现.md.tmp.327564.68065b11bf8b",
     "学习/其他专业书/Redis 设计与实现.md.tmp.327564.0975d51b268a",
-    "Files & LongText/Attachments/Pasted image 20260613163754.png",
-    "Files & LongText/Attachments/Pasted image 20260613163127.png",
-    "Files & LongText/Attachments/Pasted image 20260613154157.png",
-    "Files & LongText/Attachments/Pasted image 20260613154142.png",
     "学习/其他专业书/Redis 设计与实现.md.tmp.327564.eaf14f1dfdb2",
-    "Files & LongText/Attachments/Pasted image 20260613150858.png",
     "学习/其他专业书/Redis 设计与实现.md.tmp.327564.08768e088ad5",
     "学习/algorithm/题型分类.md",
     "Chores/JobInterviews/八股/中金所面试题整理.md",
@@ -287,7 +287,6 @@
     "Chores/JobInterviews/八股/中金所面试题整理.md.tmp.321142.d333b700b31f",
     "Chores/JobInterviews/八股/中金所面试题整理.md.tmp.166571.1b07128f133b",
     "Chores/JobInterviews/八股/中金所面试题.md",
-    "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.775653.6eac6ee00272",
     "C++开发凡是和术语.md",
     "Files & LongText/Long code/C++ Code Snippets.md",
     "学习/ProjectsStudy/FromRemote/FastLog.md",
