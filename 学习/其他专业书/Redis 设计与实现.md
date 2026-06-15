@@ -34,6 +34,16 @@ C 字符串和 SDS 之间的区别
 | 修改字符串长度 N 次必然需要执行 N 次内存重分配 | 修改字符串长度 N 次最多需要执行 N 次内存重分配 |
 | 只能保存文本数据                   | 可以保存文本或者二进制数据              |
 | 可以使用所有 <string.h> 库中的函数    | 可以使用一部分 <string.h> 库中的函数   |
+最关键的差异：SDS 通过 FAM 把 header 和数据放在同一个 malloc 块里，暴露的是 data 指针（`char*`）而不是 `sdshdr*`。这意味着你可以把 SDS 直接传给 strlen()、strcmp() 等 C 标准库函数
+
+```cpp
+sds s = sdsnew("hello");
+strlen(s);  // SDS 的返回值可以直接当 char* 用
+// 内部通过 (s - sizeof(sdshdr)) 回退找到 header
+```
+而 `std::vector<char>` 做不到这一点——它的 data() 返回 char*，但如果你用 strlen(v.data())，vector 不保证空终止（C++11 后 std::string 保证，vector 不保证）。SDS 保 `buf[len] = '\0'` 永远成立。
+
+说"像"也对，但 SDS 在 C 的约束下实现了类似的功能，并且多了二进制安全和 C 字符串兼容这两个 `std::vector<char> `没有的设计目标。
 ### SDS 操作 API
 源码中的计算长度操作需要前置知识 [[C++ Runoob Tutoral#sizeof 运算符]] 和 [[C++开发范式和术语#VLA 与 POD 类型]]
 ```cpp
@@ -59,6 +69,34 @@ void zfree(void *ptr);               // 释放，等价于 free（如果支持�
 **解决方案**：`zmalloc` 内部判断返回值，如果为 NULL，则调用 `zmalloc_oom_handler`（默认是 `exit(1)`，可以用户自定义）。这样**分配失败 = 进程退出**，绝不会返回 NULL。
 - Redis 需要知道 **“当前总共用了多少内存”**，用于 `INFO memory`、内存淘汰（eviction）、`maxmemory` 限制等。
 - 标准 `malloc` 家族不提供任何跨平台的可移植接口来获取已分配字节数。`malloc_usable_size()` 或 `malloc_size()` 是平台相关的。
+### 和 std::vector 的区别
+```cpp
+// std::vector
+template<typename T>
+class vector {
+    T* begin_;       // 三个指针
+    T* end_;
+    T* capacity_;
+    // 所有方法在 vector 命名空间内
+};
+
+// SDS
+struct sdshdr {
+    int len;     // 已用长度
+    int free;    // 剩余空间
+    char buf[];  // 数据
+};
+// API 以 sds 前缀暴露，是自由函数，不是成员函数
+```
+
+| 维度     | std::vector<T>               | SDS                              |
+| :----- | :--------------------------- | :------------------------------- |
+| 存储     | 值语义：直接持有 T 的副本               | 字节语义：存 char[] (二进制数据)            |
+| resize | 自动扩容 + 拷贝/移动元素               | 预分配策略 (len < 1MB 翻倍，>1MB +1MB)   |
+| 接口     | 成员函数 (.push_back(), .size()) | 自由函数 (sdscat(), sdslens())       |
+| 空终止    | 无                            | 有 (兼容 C 字符串 str* 函数)             |
+| 类型     | 模板，编译期确定                     | void* 操作，运行时确定                   |
+| 内存布局   | 数据和 vector对象分离（堆）            | Header 和数据同一次 malloc (FAM, 连续布局) |
 ## 第 3 章链表
 ### 链表的结构
 ![[Pasted image 20260613141023.png]]
@@ -288,9 +326,9 @@ typedef struct intset {
 - **FAM vs VLA**：`int8_t contents[]` 是 C99 **FAM（柔性数组成员）**，非 VLA。数据跟随父对象的 malloc 分配在**堆**上，与 header 连续布局；VLA（`int arr[n]`）在栈上。zskiplistNode 的 `level[]` 同样为 FAM
 
 ### 整数集合升级机制
-要将一个新元素添加到整数集合里面,并且新元素的类型比整数集合现有所有元素的类型都要长时,整数集合需要先进行升级,然后才能将新元素添加到整数集合里面
-1. 根据新元素的类型,扩展整数集合底层数组的空间大小,并为新元素分配空间。
-2. 将底层数组现有的所有元素都转换成与新元素相同的类型,并将类型转换后的元素放置到正确的位上,而且在放置元素的过程中,需要继续维持底层数组的有序性质不变。
+要将一个新元素添加到整数集合里面，并且新元素的类型比整数集合现有所有元素的类型都要长时，整数集合需要先进行升级，然后才能将新元素添加到整数集合里面
+1. 根据新元素的类型，扩展整数集合底层数组的空间大小，并为新元素分配空间。
+2. 将底层数组现有的所有元素都转换成与新元素相同的类型，并将类型转换后的元素放置到正确的位上，而且在放置元素的过程中，需要继续维持底层数组的有序性质不变。
 3. 将新元素添加到底层数组里面。
 ### 为什么没有降级机制？
 **升级只升不降**。
@@ -312,8 +350,8 @@ zrealloc 封装 glibc 的 realloc，是用户态函数。只在 heap 不够时�
 intset 用 O(n) 换来极致的内存紧凑和零碎片；超阈值就切换为 hashtable，两边好处都吃到。
 ## 第 7 章 压缩列表
 ### 数据结构
-当一个哈希键只包含少量键值对,比且每个键值对的键和值，要么就是小整数值,要么就是长度比较短的字符串,那么 Redis 就会使用压缩列表来做哈希键的底层实现。
-压缩列表是 Redis 为了节约内存而开发的,是由一系列特殊编码的**连续内存块**组成的顺序型(sequential)数据结构。
+当一个哈希键只包含少量键值对，比且每个键值对的键和值，要么就是小整数值，要么就是长度比较短的字符串，那么 Redis 就会使用压缩列表来做哈希键的底层实现。
+压缩列表是 Redis 为了节约内存而开发的，是由一系列特殊编码的**连续内存块**组成的顺序型(sequential)数据结构。
 它是一种 [TLV 格式的数据](https://zhuanlan.zhihu.com/p/1950670667100971771)
 ![[Pasted image 20260613211539.png]]
 每一个 entry 存储的是**不同类型的**数据，**长度不一**，所以需要 zltail 和 zllen 标记
@@ -327,7 +365,7 @@ intset 用 O(n) 换来极致的内存紧凑和零碎片；超阈值就切换为 
 | zlend | uint8_t | 1 字节 | 特殊值 0xFF（十进制 255），用于标记压缩列表的末端 |
 每个压缩列表节点都由 previous_entry_length、encoding、content 组成
 ![[Pasted image 20260613211755.png]]
-- previous_entry_length 属性以字节为单位,记录了压缩列表中前一个节点的长度，**范围在 1~5**字节，他的设计思想是**通过当前元素的地址计算出前一元素起始地址**，这也允许了列表反向遍历
+- previous_entry_length 属性以字节为单位，记录了压缩列表中前一个节点的长度，**范围在 1~5**字节，他的设计思想是**通过当前元素的地址计算出前一元素起始地址**，这也允许了列表反向遍历
 	- 这个字段在只有 1 字节时，只能保存 1~254 字节的长度值
 	- 如果超过 254 字节，则 previous_entry_length 长度为 5 字节，的第一字节会被设置为 0xFE(十进制值 254，用于告知 previous_entry_length 长度为 5 bytes)
 - encoding 记录 content 属性所保存数据的类型以及长度，前两位记录 content 存储的是什么类型的数据（单个整数/长度为 1/2/5 字节的数组）从第三位开始后的**不定长位**是 content 长度
@@ -400,15 +438,24 @@ encoding-type 字段
 | `11110101` ~ `11111110` | 未使用。                                     |
 | `11111111`              | 用来表示 listpack 结尾。                        |
 
-element-total-len表示**前两部分**占用的[字节数](https://zhida.zhihu.com/search?content_id=236918071&content_type=Article&match_order=2&q=%E5%AD%97%E8%8A%82%E6%95%B0&zhida_source=entity)，1-5字节不等。每个字节第一位用0或1来表示当前字节是否为最后一字节，0表示是，1表示否，剩余字节逻辑上拼接在一起来存放无符号整数表示字节数，采用的是大端模式，即高字节保存在低地址，低字节保存在高地址，这部分主要是为了是[反向遍历](https://zhida.zhihu.com/search?content_id=236918071&content_type=Article&match_order=1&q=%E5%8F%8D%E5%90%91%E9%81%8D%E5%8E%86&zhida_source=entity)而设计的。
+element-total-len表示**前两部分**占用的[字节数](https://zhida.zhihu.com/search?content_id=236918071&content_type=Article&match_order=2&q=%E5%AD%97%E8%8A%82%E6%95%B0&zhida_source=entity)，1-5字节不等。每个字节第一位用0或1来表示当前字节是否为最后一字节，0表示是，1表示否，剩余字节逻辑上拼接在一起来存放无符号整数表示字节数，采用的是大端模式，即高字节保存在低地址，低字节保存在高地址，这部分主要是为了是[反向遍历](https://zhida.zhihu.com/search?content_id=236918071&content_type=Article&match_order=1&q=%E5%8F%8D%E5%90%91%E9%81%8D%E5%8E%86&zhida_source=entity)而设计的。也就是说，element-total-len 字段字节位读取顺序是反过来的
+![[Pasted image 20260614104850.png]]
+
 ![[Pasted image 20260614104154.png|存放"hello"和整数1024实际案例]]
+## 额外: Redis 2.6 引入 ziplist 替代 zipmap
+zipmap 是历史遗留。它的内存布局是
+```
+<zmlen(1B)><key_len><key_data><val_len><free><val_data>...<ZIPMAP_END(255)>
+```
+每个键值对连续存放，线性扫描 O(n)。ziplist 出现后 zipmap 就被取代了
 ## 第 8 章对象
 包含字符串对象、列表对象、哈希对象、集合对象和有序集合对象这五种类型的对象
 对象机制带来了多个特性:
 - 执行命令前根据对象的类型来判断一个对象是否可以执行给定的命令。
 - 可以针对不同的使用场景，同一个对象可以有多种不同的数据结构实现（[[#第 6 章 整数集合]]就是典型）
-- 对象带有访问时间记录信息,该信息可以用于计算数据库键的空转时长,在服务器启用了 maxmemory 功能的情况下,空转时长较大的那些键可能会优先被服务器删除
+- 对象带有访问时间记录信息，该信息可以用于计算数据库键的空转时长，在服务器启用了 maxmemory 功能的情况下，空转时长较大的那些键可能会优先被服务器删除
 ### 数据结构
+#### 对象类型
 ```cpp
 typedef struct redisObject {
 	// 类型
@@ -425,4 +472,79 @@ typedef struct redisObject {
 ```
 - 任何一个 redis 键值对都是 2 个以上的对象组成的
 - 对一个数据库键执行 TYPE 命令时，返回值对象的类型，而不是键对象的类型
-- 
+#### 对象编码
+- 每种类型的对象都至少使用了两种不同的编码
+- 使用 OBJECT ENCODING 命令可以查看一个数据库键的值对象的编码
+对象编码切换阈值
+```c
+#define REDIS_HASH_MAX_ZIPLIST_ENTRIES  512
+#define REDIS_HASH_MAX_ZIPLIST_VALUE    64
+#define REDIS_LIST_MAX_ZIPLIST_ENTRIES  512
+#define REDIS_LIST_MAX_ZIPLIST_VALUE    64
+#define REDIS_SET_MAX_INTSET_ENTRIES    512
+#define REDIS_ZSET_MAX_ZIPLIST_ENTRIES  128
+#define REDIS_ZSET_MAX_ZIPLIST_VALUE    64
+```
+当数据规模/大小超过阈值时，encoding 自动从紧凑编码切换到高性能编码：
+- hash：ziplist → dict
+- list：ziplist → linkedlist
+- set：intset → hashtable
+- zset：ziplist → skiplist + dict
+
+这是 type/encoding 解耦的核心价值：**命令层只操作 type，不关心底层是 ziplist 还是 dict**，切换对上层透明。
+### 字符串对象
+#### 字符串编码
+字符串对象的编码可以是 int、raw 或者 embstr
+字符串编码分为 long，raw 和 embedstr
+如果使用 SET number 10086，则10086会被保存为一个long类型的"字符串" void* 类型转换为long
+![[Pasted image 20260614111857.png]]
+RAWSTR 适用于长字符串，>=32 字节，使用 [[#第 2 章简单动态字符串|SDS]] 保存
+![[Pasted image 20260614111843.png]]
+EMBSTR 适用于短字符串（Redis 3.0 中 ≤32 字节），不可修改（尝试修改会自动转为 RAW）。
+- 同样使用 redisObject 结构和 sdshdr 结构表示字符串对象，但 raw 编码会调用两次内存分配函数来分别创建 redisObject 结构和sdshdr 结构，而 embstr 编码则通过调用一次内存分配函数来分配一块连续的空间，空间中依次包含 redisObject 和 sdshdr 两个结构。
+- 释放空间时同理也比 RAW 字符串少一次释放
+- 连续内存**缓存友好**
+```cpp
+// RAW：ptr 指向一个独立的 sds（两次 zmalloc）
+robj* o = zmalloc(sizeof(robj));
+o->ptr = sdsnewlen(ptr, len);  // 第二次分配
+
+// EMBSTR：robj + sdshdr + buf 同一次 zmalloc（object.c:64-80）
+robj* o = zmalloc(sizeof(robj) + sizeof(struct sdshdr) + len + 1);
+// [ robj header | sdshdr | buf data ]
+// 省一次分配，省一个指针跳转，但不可修改（无 free 空间）
+```
+![[Pasted image 20260614112204.png]]
+![[Pasted image 20260614112408.png]]
+
+> [!info]
+> 可以用 long double 类型表示的浮点数在 Redis 中也是作为字符串值来保存的。如果我们要保存一个浮点数到字符串对象里面,那么程序会先将这个浮点数转换成字符串值,然后再保存转换所得的字符串值，**使用raw 或者 embstr 保存**
+
+| 值                                                                   | 编码            |
+| ------------------------------------------------------------------- | ------------- |
+| 可以用 long 类型保存的整数                                                    | int           |
+| 可以用 long double 类型保存的浮点数                                            | embstr 或者 raw |
+| 字符串值，或者因为长度太大而没办法用 long 类型表示的整数，又或者因为长度太大而没办法用 long double 类型表示的浮点数 | embstr 或者 raw |
+#### 字符串编码转换
+由于占用空间限制问题，int ，long double 字符串和 embstr 类型在修改或者执行某些操作后超过限制长度就转换成 raw 格式
+由于 embstr 是只读的（redis 没有设置任何对外的 embstr 修改接口），所以对 embstr 的操作返回结果一定是 raw 格式
+### 列表对象
+列表对象的编码可以是 ziplist 或者 linkedlist
+![[Pasted image 20260614114023.png]]
+![[Pasted image 20260614114033.png]]
+![[Pasted image 20260614114529.png]]
+当列表对象可以同时满足以下两个条件时，列表对象使用 ziplist 编码：
+- 列表对象保存的所有字符串元素的长度都小于 64 字节；
+- 列表对象保存的元素数量小于 512 个；不能满足这两个条件的列表对象需要使用 linkedlist 编码。
+可以通过配置文件的 list-max-ziplist-value 和 list-max-ziplist-entries 选项修改，任何一个条件不满足触发转换
+### 哈希对象
+编码可以是 ziplist 或者 hashtable
+ziplist 编码的哈希对象使用压缩列表作为底层实现，插入新的键值对时，会将**键和值分别构成的两个压缩列表节点依次方队队尾**，key-node 和 value-node 挨着，key 在前
+![[Pasted image 20260614120711.png]]
+![[Pasted image 20260614120743.png]]
+#### 编码转换
+- 哈希对象保存的所有键值对的键和值的字符串长度都小于 64 字节;
+- 哈希对象保存的键值对数量小于 512 个;不能满足这两个条件的哈希对象需要使用 hashtable 编码。
+同样可以通过于 hash-max-ziplist-value 选项和 hash-max-ziplist-entries 配置修改，不满足条件触发转换
+### 集合对象
+编码可以是 intset 或者 hashtable
