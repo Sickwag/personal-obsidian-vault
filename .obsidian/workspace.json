@@ -8,22 +8,37 @@
         "type": "tabs",
         "children": [
           {
-            "id": "e68c969fc49251fa",
+            "id": "55d11e9156d21177",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
+                "file": "Chores/JobInterviews/八股/面试题.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "DevFoundations"
+              "title": "面试题"
             }
           },
           {
-            "id": "f81f413ac8d8f694",
+            "id": "8f7a1a9a7b4e1dbc",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chores/JobInterviews/八股/自我介绍.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "自我介绍"
+            }
+          },
+          {
+            "id": "6fa8d00f0a64d326",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -36,49 +51,8 @@
               "icon": "lucide-file",
               "title": "Modern C++"
             }
-          },
-          {
-            "id": "729a3b4435feaba2",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Bases/开发范式/C++开发范式和术语.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "C++开发范式和术语"
-            }
-          },
-          {
-            "id": "d5e86480d8116365",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/其他专业书/Redis 设计与实现.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "Redis 设计与实现"
-            }
-          },
-          {
-            "id": "de2e495c987c2f80",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "新标签页"
-            }
           }
-        ],
-        "currentTab": 4
+        ]
       }
     ],
     "direction": "vertical"
@@ -131,11 +105,13 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -257,8 +233,25 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "de2e495c987c2f80",
+  "active": "55d11e9156d21177",
   "lastOpenFiles": [
+    "Chores/JobInterviews/八股/自我介绍.md",
+    "学习/其他专业书/Modern C++.md",
+    "Chores/JobInterviews/八股/面试题.md",
+    "Chores/JobInterviews/八股/面试题.md.tmp.270727.9aba46710a91",
+    "Chores/JobInterviews/八股/面试题.md.tmp.270727.a768ca1cd378",
+    "Chores/JobInterviews/八股/面试题.md.tmp.270727.248def1b09e7",
+    "Chores/JobInterviews/八股/面试题.md.tmp.270727.bcad64551527",
+    "Chores/JobInterviews/八股/面试题.md.tmp.270727.47b5fae552d6",
+    "Chores/JobInterviews/八股/面试题.md.tmp.270727.9c421928f6c9",
+    "Chores/JobInterviews/八股/反问环节.md",
+    "Chores/JobInterviews/questions精简.md",
+    "Chores/JobInterviews/面试准备.md",
+    "Chores/JobInterviews/questions.md",
+    "学习/Bases/开发范式/C++开发范式和术语.md",
+    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
+    "Chores/JobInterviews/八股/中金所面试题.md",
+    "Chores/JobInterviews/八股/自我介绍.md.tmp.202083.a125f55fd8b1",
     "学习/其他专业书/Redis 设计与实现.md",
     "Files & LongText/Attachments/Pasted image 20260614120743.png",
     "Files & LongText/Attachments/Pasted image 20260614120711.png",
@@ -271,39 +264,22 @@
     "Files & LongText/Attachments/Pasted image 20260614111843.png",
     "学习/其他专业书/Redis 设计与实现.md.tmp.327564.bf6188220fd3",
     "Files & LongText/Attachments/Pasted image 20260614104850.png",
-    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
-    "学习/其他专业书/Modern C++.md",
-    "学习/Bases/开发范式/C++开发范式和术语.md",
     "学习/其他专业书/Redis 设计与实现.md.tmp.327564.eb7d3e05f9fc",
     "学习/Fragments/编程相关/基本知识/零碎但需要知道的.md",
-    "Chores/JobInterviews/questions.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/其他专业书/Redis 设计与实现.md.tmp.327564.68065b11bf8b",
-    "学习/其他专业书/Redis 设计与实现.md.tmp.327564.0975d51b268a",
-    "学习/其他专业书/Redis 设计与实现.md.tmp.327564.eaf14f1dfdb2",
-    "学习/其他专业书/Redis 设计与实现.md.tmp.327564.08768e088ad5",
     "学习/algorithm/题型分类.md",
-    "Chores/JobInterviews/八股/中金所面试题整理.md",
     "学习/algorithm/分析优化.md",
-    "Chores/JobInterviews/面试准备.md",
-    "Chores/JobInterviews/八股/自我介绍.md",
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/Language/C C++/模板元编程.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
-    "Chores/JobInterviews/八股/自我介绍.md.tmp.321142.b488b39d7422",
-    "Chores/JobInterviews/八股/中金所面试题整理.md.tmp.321142.06f0889c5d26",
-    "Chores/JobInterviews/八股/中金所面试题整理.md.tmp.321142.d333b700b31f",
-    "Chores/JobInterviews/八股/中金所面试题整理.md.tmp.166571.1b07128f133b",
-    "Chores/JobInterviews/八股/中金所面试题.md",
     "C++开发凡是和术语.md",
     "Files & LongText/Long code/C++ Code Snippets.md",
     "学习/ProjectsStudy/FromRemote/FastLog.md",
     "学习/Bases/设计模式/设计模式.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
-    "Chores/JobInterviews/questions精简.md",
     "Files & LongText/ChatLogWithAi/算法学习.md",
     "Files & LongText/ChatLogWithAi/数学建模大赛--模型学习.md",
-    "Files & LongText/ChatLogWithAi/Linux Concepts.md",
     "未命名.canvas"
   ]
 }
