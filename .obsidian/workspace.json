@@ -49,7 +49,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "位运算",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -70,8 +70,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -208,7 +207,7 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "988d96f59da338ed",
+  "active": "982f21257484af50",
   "lastOpenFiles": [
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/algorithm/用法导向知识.md",
