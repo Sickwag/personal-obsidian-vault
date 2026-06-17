@@ -968,3 +968,152 @@ hmac_sha256("text", "secret_key")  // 输出：不只有 text 的哈希，还混
     *   JWT Token 签名
 *   **解决普通哈希问题**：普通 MD5/SHA 任何人可以计算 `md5(data)`，无法判断哈希是谁算的。HMAC 解决了身份认证问题。
 # 线程与同步
+## 基本锁类型
+### 手动锁
+直接通过锁类对象（`std::mutex`）的 `lock/unlock` 方法而不是用包装器，加解锁必须要配对，比较麻烦容易死锁。但控制粒度非常细
+### RAII 锁
+不是一种新的锁，只是通过 stl 的锁包装器类，赋予了锁对象 RAII 特性，并提供所有权检查（`std::unique_lock`），读写资源引用计数（`std::shared_lock`），加解锁次数计算（`std::recursive_lock`，尝试加解锁 （`try_lock`）等等功能
+STL 中的标准锁提供了 RAII 和异常安全保证，他们是**自动管理锁生命周期**的对象。当创建这样一个对象时，它会自动获取（锁定）互斥量；
+当这个对象离开作用域，**即使抛出异常、或提前 return时**，析构函数都会自动释放（解锁）互斥量。
+**核心价值**在于将“锁”这个资源的生命周期绑定到一个**栈对象**上
+```cpp
+std::mutex m;                     // 互斥锁
+std::lock_guard<std::mutex> lk(m); // RAII 包装器（构造加锁，析构解锁）
+std::unique_lock<std::mutex> lk(m); // 更灵活的 RAII（可以手动 unlock/lock）
+std::shared_mutex rw;              // 读写锁（C++17）
+std::shared_lock<shared_mutex> lk(rw); // 读锁（C++14）
+```
+谁持有谁释放（不能跨线程解锁），创建锁时（使用包装器初始化对象）就会锁住（lock 状态），用于保护共享数据
+### 条件锁
+配合条件变量使用，通过 `wait_XXX` 方法和锁对象关联起来，通过检是否达到了某种条件，从而执行获取锁/释放锁的操作
+### 原子锁
+本质上不是一种锁，仅仅是在操作系统层面严格保证一个整形变量的增减（IO 操作）不会在中间插入其他操作（即不会被中断）
+
+## 第二阶段：线程与同步
+
+### 线程与锁
+
+### 锁的类型与选择
+
+#### 锁的分类
+| 锁类型 | 等待方式 | 临界区适合长度 | 实现底层 |
+|--------|---------|---------------|---------|
+| `Mutex` | 睡眠（futex） | 任意 | `pthread_mutex_t` |
+| `Spinlock` | 忙等 | 极短（<几微秒） | `pthread_spinlock_t` |
+| `CASLock` | 忙等 | 极短 | `std::atomic_flag`（CAS指令） |
+| `RWMutex` | 睡眠（读写区分） | 读多写少场景 | `pthread_rwlock_t` |
+| `Semaphore` | 睡眠 | 通知/控制并发数 | `sem_t` |
+| `FiberSemaphore` | 协程挂起 | 协程间协作 | 自定义 |
+| `NullMutex` | 无 | 调试用 | 空操作 |
+
+#### 选择指南
+- **Spinlock**：临界区极短（仅几条指令）。sylar 日志系统的 Logger/LogAppender 默认用 Spinlock，因为日志的临界区就是检查级别→拼接字符串→写入缓冲区，非常短
+- **Mutex**：临界区可能有 IO 或较复杂计算，线程睡眠不浪费 CPU
+- **RWMutex**：读多写少场景，如配置表、路由表、缓存。多读线程可以同时进入
+- **CASLock**：不依赖 pthread 的自旋锁，纯 C++11 原子操作，可移植性强于 Spinlock
+- **NullMutex**：单线程调试/性能测试时替换真实锁，观察无锁情况下的行为
+
+### pthread 的薄封装
+除了 `CASLock`（手写基于 `atomic_flag` 的自旋锁），sylar 的所有锁类型都直接封装自 pthread 函数（`pthread_mutex_t`/`pthread_rwlock_t`/`pthread_spinlock_t`/`sem_t`）。pthread 已经在内核实现了完整的锁机制（futex 睡眠/唤醒、rwlock 读写分离、spinlock 忙等），sylar 仅用 C++ RAII 包裹它们。
+
+### ScopedLockImpl —— RAII 锁模板
+ScopedLockImpl 是所有锁类型的 RAII 包装模板，和 std::lock_guard 类似，但有 m_locked 标志支持手动 lock/unlock（两次 unlock 不会出错）。每个锁类通过 `typedef ScopedLockImpl<Mutex>` Lock 暴露出自己的 RAII 锁类型，使用者统一写 `Mutex::Lock lk(m)` 即可。
+
+### ReadScopedLockImpl / WriteScopedLockImpl
+专门为 RWMutex 设计的 RAII 读锁/写锁模板，构造时分别调 rdlock() 和 wrlock()。
+
+### 为什么每个锁都定义 `Lock` 类型？
+1. 调用者不用关心具体 RAII 类型叫什么
+2. 模板代码可以抽象锁行为——`MutexType::Lock lk(m_mutex)` 不管底层是什么锁，写法一致。这是策略模式的体现
+
+### 线程类
+sylar 的 Thread 封装了 pthread_t，支持：
+- 构造时创建线程，通过 Semaphore 同步等待初始化完成（TLS 设置完毕后再返回）
+- TLS（thread_local）存储每个线程的 Thread* 和线程名
+- pthread_setname_np 设置线程名（截断至 15 字符）
+
+### C++ 标准库 RAII 锁包装器对比
+| | lock_guard | scoped_lock | unique_lock | shared_lock |
+|---|---|---|---|---|
+| 锁的数量 | 1 | 多个 | 1 | 1 |
+| 手动 unlock | ❌ | ❌ | ✅ | ✅ |
+| 移动语义 | ❌ | ❌ | ✅ | ❌ |
+| 条件变量配合 | ❌ | ❌ | ✅ | ❌ |
+| 死锁避免 | ❌ | ✅ | 需配合 std::lock | ❌ |
+| C++版本 | C++11 | C++17 | C++11 | C++14(C++17 shared_mutex) |
+
+- lock_guard 设计为最轻量最安全的 RAII，不支持手动 unlock 是为了"绝不让使用者犯错"
+- scoped_lock 和 std::lock 算法解决了同时锁多个 mutex 时的死锁问题（转账场景）
+
+### Semaphore 信号量
+信号量是一个非负整数计数器，提供 wait(P) 和 notify(V) 原子操作。与 mutex 不同，wait/notify 可以是不同线程。sylar Thread 构造中用 Semaphore 确保新线程的 TLS 初始化在构造函数返回前完成。
+
+### FiberSemaphore —— 协程信号量
+TODO：学到协程调度时再补全
+
+### C++ 内存模型与内存序
+
+#### 问题本质：多核 CPU 上写→读的可见性问题
+```cpp
+int data = 0;
+bool ready = false;
+
+// 线程1：              // 线程2：
+data = 42;              while(!ready);
+ready = true;           assert(data == 42);  // 可能失败！
+```
+直觉上 data=42 在 ready=true 之前执行，但实际由于以下原因可能不成立。
+
+#### 三个层面的重排
+1. **编译器重排**：编译器认为 data 和 ready 没有依赖关系，可以交换赋值顺序
+2. **CPU 执行重排**：CPU 在指令窗口中寻找并行机会，store 指令可能因 cache 命中情况而完成顺序不同
+3. **缓存可见性**：一个核心的写入可能还在 L1 cache 中，另一个核心看不到
+
+#### x86 vs ARM 的架构差异
+| 重排类型 | x86 | ARM/Power |
+|---------|-----|-----------|
+| Store-Load | ✅ 会 | ✅ 会 |
+| Store-Store / Load-Load / Load-Store | ❌ 不会 | ✅ 会 |
+
+x86 是**强模型**（只有 Store-Load 重排），ARM 是**弱模型**（所有重排都可能发生）。
+
+#### 六种内存序（实际用的是四种）
+| 内存序 | 作用 | 典型用途 |
+|-------|------|---------|
+| memory_order_relaxed | 无任何顺序保证 | 计数器（只关心最终值） |
+| memory_order_acquire | load 后：后续读/写不能重排到 load 前 | 读锁（配对 release） |
+| memory_order_release | store 前：之前的写不能重排到 store 后 | 写锁（配对 acquire） |
+| memory_order_acq_rel | acquire + release 同时 | CAS / fetch_add |
+| memory_order_seq_cst | 全序，所有线程看到相同的全局顺序 | 默认值，最安全但 ARM 上代价最高 |
+| memory_order_consume | 已废弃 | 不要使用 |
+
+#### Acquire-Release 配对的核心机制
+```
+线程1（Release）：                      线程2（Acquire）：
+data = 42;              ← 写操作       assert(data == 42);  ← 读操作
+                        ── 屏障 ──▶
+flag.store(true, release);              while(!flag.load(acquire));
+                                        ←─ 同步点 ─→
+```
+Release 屏障保证：之前的所有写操作不会被重排到后面
+Acquire 屏障保证：之后的所有读操作不会被重排到前面
+两者配对：线程2看到 flag=true 的那一刻，一定能看到线程1在 Release 之前的所有写入
+
+#### 类比：高速公路收费站
+- **relaxed**：无收费站，所有车自由超车变道
+- **acquire**：收费站之后的车不能插队到收费站之前
+- **release**：收费站之前的车不能插队到收费站之后
+- **seq_cst**：全程交警管制，严格按照代码顺序
+
+#### CASLock 中的内存序
+```cpp
+// lock() = acquire 屏障
+void lock() {
+    while(test_and_set(&flag, memory_order_acquire));
+}
+// unlock() = release 屏障
+void unlock() {
+    clear(&flag, memory_order_release);
+}
+```
+这保证了：如果在 lock() 之前写了什么，其他线程在成功 lock() 之后一定能看到。这是所有锁在底层做的同一件事。
