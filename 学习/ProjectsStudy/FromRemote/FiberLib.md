@@ -87,6 +87,51 @@ int pthread_create(pthread_t *__restrict__ __newthread,
 - 回调函数设置为 `void()` 类型，这种设计有两种原因:
 	- 线程自己的信息通过 Thread 的静态方法获取，不需要参数传递（`Thread::getThis()->getId()/getName()`）
 	- 线程任务需要的外部数据通过 lambda 捕获得到，**不过这就需要手动控制生命周期**长于线程，如果允许回调函数接受参数，同样需要控制参数的生命周期
+### 为什么不使用 atomic 作信号量
+ C++17 中，atomic 只提供了读/写/交换三个原子操作，没有提供"阻塞等待"的原语，如果想让线程 A 等线程 B 把 flag 设为 1，你能做的只有：
+```cpp
+while (flag.load() == 0) {
+    // 除了空转，没有别的办法让线程停下来等
+}
+```
+- 这就是自旋锁实现。atomic 本身不提供"让线程休眠，值变了再唤醒"的能力——它只是一段能保证原子访问的内存，不跟操作系统调度器打交道。
+- 使用自旋锁实现会让 CPU 空转，仅适用于锁持有时间很短的场景
+- 在高优化等级中，**编译器可能会掉这个空循环**，需要 volatile 或者内存屏障实现保护
+Semaphore 的本质是 condition_variable + 互斥锁 + 计数器，而 `condition_variable::wait()` 最终调用的是 Linux 的 futex（fast userspace mutex）系统调用
+C++20 引入 `atomic::wait / notify_one`，底层用 futex 实现，这时 atomic 也可以阻塞等待了
+```cpp
+// C++20
+std::atomic<int> flag{0};
+
+// 线程 A（等待方）
+flag.wait(0);  // 休眠，直到 flag != 0
+
+// 线程 B（通知方）
+flag.store(1);
+flag.notify_one();  // 唤醒等待方
+```
+当前 thread 部分仅仅**对一个 count 变量做保护，确实更适合使用 C++20 的 atomic**实现
+```cpp
+class Semaphore {
+    atomic<int> count{0};
+public:
+    void wait() {
+        // 如果 count 为 0，休眠直到 count 变化
+        while (count.load() == 0) {
+            count.wait(0);
+        }
+        count.fetch_sub(1);
+    }
+    void signal() {
+        count.fetch_add(1);
+        count.notify_one();
+    }
+};
+```
+这是 mutex 作用情景变为了:
+- 需要既保护共享数据，又保证 wait 的原子性
+- 需要同时保护多个变量
+- 又复杂的唤醒条件（通过谓词和条件变量的 `wait_XXX` api 设置）
 # 协程
 参考（主要介绍 ucontext 工具库）
 - https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html
@@ -140,6 +185,7 @@ int pthread_create(pthread_t *__restrict__ __newthread,
 只有主协程可以决定"下一个跑谁"，主协程 = 调度器
 ![[Pasted image 20260617210352.png]]
 非对称协程会出现类似堆栈的调用方与被调用方关系，也就是形成了层级结构，意味着协程拥有一个“隐式的目标”。当它 `yield` 时，控制流必定回到上一层。**C++原生的协程是非对称的**，C++20标准只支持非对称。不过可以通过标准库的 `std::coroutine_handle` 配合调度器，在**用户态模拟**出对称协程的效果，但语言层面没有原生对称关键字。
+这种实现情况下，除了主线程（调度线程）中一般都需要使用栈空间（使不使用是主子线程决定的，而需不需要而外分配是[[#有栈协程|栈分配机制]]决定的）
 #### 对称协程 vs 非对称协程（控制流的视角）
 **对称协程：**
 - 复杂多任务协作：多个任务或子任务需要频繁、直接地相互交互，共同协同完成一个目标。
@@ -423,4 +469,12 @@ int schedule_finished(const schedule_t &schedule) {
 }
 ```
 一个非对称协程经典实现
-
+### 代码架构
+每个协程状态只设置三种：就绪态、运行态和结束态，一个协程要么正在运行(RUNNING)，要么准备(READY)，要运行结束(TERM)。
+代码使用的协程架构是[[#非对称协程]]，在非对称协程架构中，除创建阶段外，协程仅有两种核心控制操作：
+- **Resume（恢复）：** 主协程或调度协程将执行权转移至目标协程，使其从上次挂起点继续运行。
+- **Yield（让出）：** 协程主动挂起自身，将执行权交还给调用者（通常是调度协程）。
+![[Pasted image 20260618170115.png]]
+协程没有专门的“停止”指令。当绑定的执行函数运行结束时，协程即告终止。此时，系统会自动触发一次上下文切换，将控制权返回给关联的调度上下文（即主协程或调度器，即 mainFiber
+或schedulerFiber）
+底层实现的方式是[[#有栈协程]]中的独立栈（实现简单），并且**没有实现嵌套协程**，这也是可优化的
