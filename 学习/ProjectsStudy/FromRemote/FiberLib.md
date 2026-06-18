@@ -4,7 +4,7 @@
 # 线程
 ## 代码架构
 ### 分两类线程
-- 系统主线程：程序启动时由 OS 自动创建，main 函数运行在这上面，没有对应的 Thread 对象
+- 系统主线程：程序启动时 OS 自动创建，main 函数运行在这上面，没有对应的 Thread 对象
 - Thread 类线程：pthread_create 创建，有对应的 Thread 对象
 所以为了之后创建协程时协程调度器需要区分不同的线程，知道自己在哪一个线程中，程序通过 main 函数启动，这个线程会被 OS 接管，所以创建
 ```cpp
@@ -88,6 +88,15 @@ int pthread_create(pthread_t *__restrict__ __newthread,
 	- 线程自己的信息通过 Thread 的静态方法获取，不需要参数传递（`Thread::getThis()->getId()/getName()`）
 	- 线程任务需要的外部数据通过 lambda 捕获得到，**不过这就需要手动控制生命周期**长于线程，如果允许回调函数接受参数，同样需要控制参数的生命周期
 # 协程
+参考（主要介绍 ucontext 工具库）
+- https://www.chiark.greenend.org.uk/~sgtatham/coroutines.html
+- [一个“蝇量级” C 语言协程库 by 左耳朵耗子](http://coolshell.cn/articles/10975.html) 
+- [ucontext-人人都可以实现的简单协程库-阿里云开发者社区 (aliyun.com)](https://developer.aliyun.com/article/52886)
+较为硬核的汇编语言拆解协程机制
+- https://zhuanlan.zhihu.com/p/347445164
+- https://jasonkayzk.github.io/2022/06/03/%E6%B5%85%E8%B0%88%E5%8D%8F%E7%A8%8B/
+- https://mthli.xyz/stackful-stackless/
+- https://mthli.xyz/coroutines-in-c/ 
 ### 协程概念
 协程 = 用户态线程。线程的调度由内核控制（你无法决定它什么时候被切换出去），协程的调度由程序自己控制（切换点在代码中明确写出）。
 协程是一种执行过程中可以 **yield（暂停）** 和 **resume（恢复）** 的子程序。也可以说，**协程就是函数 + 函数运行状态的组合**。普通函数一旦开始执行，就会一直运行到结束，中间不会中断，更不会执行到一半跑去执行别的函数。
@@ -159,7 +168,7 @@ int pthread_create(pthread_t *__restrict__ __newthread,
     - 切换开销较大（需要保存大量寄存器，且涉及内存拷贝/栈切换）。
     - 内存占用较高（每个协程预分配固定栈空间，容易浪费或溢出）。
 - **C++代表库**：`Boost.Context`、`ucontext`（已废弃）、腾讯的 `libco`。
-如何存储这些信息到栈中呢？这就引出一些问题:
+如何存储这些信息到栈中呢？这就引出*独立栈和共享栈*做法
 - 要想暂停协程后还能够恢复过来，那么协程暂停时，整个调用链的栈帧都必须被冻结保存。因为恢复时要精确地从暂停点继续执行——局部变量、函数调用链、返回地址
 - 要想保存这些信息，那么就需要一块专门的内存，这就引出了两种方法:
 	- 每个协程都有独立的栈（必须设置地很小且协程数很少，否则 OS 栈溢出），并在栈底设置哨兵页检测栈溢出（SIGSEGV），触发溢出**能被操作系统检测到但是无法优雅恢复**
@@ -187,6 +196,11 @@ CPU 核心 1: │         空闲                    │  (浪费)
 核心 1: ┌─线程2: 协程C─协程D─协程C─┐
 ```
 本项目第3阶段将调度器与线程池结合，就是这个原因——每个工作线程跑自己的调度循环，OS 分配到不同核心。
+
+> [!note]
+> 一个线程**可能在任何一个 CPU 上运行**，而协程只能在一个线程上运行，线程只有一个入
+> 口，那就是启动函数，**而协程的入口可以是启动函数，也可以是启动函数中任意一个上次被挂起的点**
+> 线程调度还会产生时序上的不确定性。而对于协程来说，“挂起”的概念只不过是转让代码执行权并调用另外的协程，待到转让的协程告一段落后重新得到调用并从挂起点“唤醒”，这种协程间的调用是逻辑上可控的，时序上确定的，可谓一切尽在掌握中
 
 ### ucontext 上下文操作
 `<ucontext.h>` 定义了两个类型和四个函数，用于在用户态实现协程上下文切换。
@@ -225,6 +239,28 @@ void makecontext(ucontext_t *ucp, void (*func)(), int argc, ...);
 int swapcontext(ucontext_t *oucp, ucontext_t *ucp);
 ```
 原子操作：先 `getcontext(oucp)` 保存当前上下文，再 `setcontext(ucp)` 切换到新上下文。
+#### 经典不使用循环实现死循环
+```cpp
+void func1() {
+    puts("In func1");
+}
+
+int main() {
+    ucontext_t context;
+    getcontext(&context);
+    context.uc_stack.ss_sp = malloc(8192);
+    context.uc_stack.ss_size = 8192;
+    context.uc_link = NULL;
+    makecontext(&context, func1, 0);
+    setcontext(&context);
+    puts("This will not be printed");
+    puts("Hello World");
+    return 0;
+}
+```
+- getcontext 给当时线程的工作协程（main）在执行到这里的时刻拍了快照 A，记录着：下一条指令是 puts("This will not...")
+- makecontext 本来是用于[[#简单协程库结构|创建一个新的协程]]，这里用来修改保存的上下文，也就是快照 A
+- setcontext 用于把 `ucp` 保存的上下文恢复到 CPU，本来这里应该恢复到另一个协程的，这里将 getcontext 运行时保存的上下文，所以又回到了 main 第二行，puts 永远不执行
 #### 完整调用链
 对于这样一段代码
 ```cpp
@@ -273,4 +309,118 @@ int main() {
 
 > [!warning] 注意不要在系统栈中分配协程栈空间
 > 这样很快会导致栈空间耗尽，参考[[#有栈协程]]
+
+### 简单协程库结构
+参考 https://github.com/Winnerhust/uthread/blob/master
+```cpp
+#define DEFAULT_STACK_SZIE (1024*128)
+#define MAX_UTHREAD_SIZE   1024
+
+enum ThreadState{FREE,RUNNABLE,RUNNING,SUSPEND};
+
+struct schedule_t;
+typedef void (*Fun)(void *arg);
+typedef struct uthread_t {
+    ucontext_t ctx;
+    Fun func;
+    void *arg;
+    enum ThreadState state;
+    char stack[DEFAULT_STACK_SZIE];
+}uthread_t;
+
+typedef struct schedule_t {
+    ucontext_t main;
+    int running_thread;
+    uthread_t *threads;
+    int max_index; // 曾经使用到的最大的index + 1
+
+    schedule_t():running_thread(-1), max_index(0) {
+        threads = new uthread_t[MAX_UTHREAD_SIZE];
+        for (int i = 0; i < MAX_UTHREAD_SIZE; i++) {
+            threads[i].state = FREE;
+        }
+    }
+    
+    ~schedule_t() {
+        delete [] threads;
+    }
+}schedule_t;
+```
+协程结构体（uthread_t）用 ucontext 保存上下文，func 和 args 用来保存协程要执行的任务，分配栈空间给协程（一般不这么做）
+调度器（schedule_t）包括
+- 主函数的上下文 main
+- 当前调度器拥有的所有协程的 vector 类型的 threads，
+- 指向当前正在执行的协程的编号 running_thread.如果当前没有正在执行的协程时，`running_thread=-1`
+```cpp
+void uthread_resume(schedule_t &schedule , int id) {
+    if(id < 0 || id >= schedule.max_index){
+        return;
+    }
+    uthread_t *t = &(schedule.threads[id]);
+    if (t->state == SUSPEND) {
+        swapcontext(&(schedule.main),&(t->ctx));
+    }
+}
+
+void uthread_yield(schedule_t &schedule) {
+    if(schedule.running_thread != -1 ){
+        uthread_t *t = &(schedule.threads[schedule.running_thread]);
+        t->state = SUSPEND;
+        schedule.running_thread = -1;
+        swapcontext(&(t->ctx),&(schedule.main));
+    }
+}
+
+void uthread_body(schedule_t *ps) {
+    int id = ps->running_thread;
+    if(id != -1){
+        uthread_t *t = &(ps->threads[id]);
+        t->func(t->arg);
+        t->state = FREE;
+        ps->running_thread = -1;
+    }
+}
+
+// 返回创建的线程在schedule中的编号。
+int uthread_create(schedule_t &schedule,Fun func,void *arg) {
+    int id = 0;    
+    for(id = 0; id < schedule.max_index; ++id ){
+        if(schedule.threads[id].state == FREE){
+            break;
+        }
+    }
+    if (id == schedule.max_index) {  // 这里是一个危险设计，因为max_index可能会超过MAX_THREAD_SIZE溢出，需加边界检查
+        schedule.max_index++;
+    }
+    uthread_t *t = &(schedule.threads[id]);
+    t->state = RUNNABLE;
+    t->func = func;
+    t->arg = arg;
+    getcontext(&(t->ctx));
+    t->ctx.uc_stack.ss_sp = t->stack;
+    t->ctx.uc_stack.ss_size = DEFAULT_STACK_SZIE;
+    t->ctx.uc_stack.ss_flags = 0;
+    t->ctx.uc_link = &(schedule.main);
+    schedule.running_thread = id;
+    
+    makecontext(&(t->ctx),(void (*)(void))(uthread_body),1,&schedule);
+    swapcontext(&(schedule.main), &(t->ctx));
+    
+    return id;
+}
+
+int schedule_finished(const schedule_t &schedule) {
+    if (schedule.running_thread != -1){
+        return 0;
+    }else{
+        for(int i = 0; i < schedule.max_index; ++i){
+            if(schedule.threads[i].state != FREE){
+                return 0; // 有协程还在挂起状态，还没与全部执行完
+            }
+        }
+    }
+    return 1; // 全部执行完
+}
+```
+一个非对称协程经典实现
 
