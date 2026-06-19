@@ -145,7 +145,7 @@ public:
 ### 协程概念
 协程 = 用户态线程。线程的调度由内核控制（你无法决定它什么时候被切换出去），协程的调度由程序自己控制（切换点在代码中明确写出）。
 协程是一种执行过程中可以 **yield（暂停）** 和 **resume（恢复）** 的子程序。也可以说，**协程就是函数 + 函数运行状态的组合**。普通函数一旦开始执行，就会一直运行到结束，中间不会中断，更不会执行到一半跑去执行别的函数。
-但协程不同：我们会先为协程绑定一个入口函数，并且可以在函数执行的**任意位置暂停**，转而去执行其他函数，之后再回到暂停点继续执行。因此说协程是函数与其运行状态的结合 —— 协程会绑定入口函数，并完整记录函数的运行状态。
+但协程不同：我们会先为协程绑定一个入口函数，并且可以在函数执行的**任意位置暂停**，转而去执行其他函数，之后再回到暂停点继续执行。因此说协程是函数与其运行状态的结合 —— 协程会绑定入口函数，并完整记录函数的运行状态。 ^c21kde
 ```cpp
 线程：内核调度，抢占式         协程：用户调度，协作式
 ┌──────────────┐             ┌──────────────┐
@@ -235,13 +235,13 @@ public:
 CPU 核心 0: ┌─线程1: 协程A─协程B─协程A─协程C─┐  (串行切换)
 CPU 核心 1: │         空闲                    │  (浪费)
 ```
-协程切换是用户态控制流转移，OS 感知不到协程的存在，也就不会把线程分配到不同核心。单线程永远只在一个核心上跑。
+协程切换是用户态控制流转移，OS 感知不到协程的存在，也就不会把线程分配到不同核心。单线程永远只在一个核心上跑，这样并没有很好地利用资源，只是相较于线程多任务中减少了切换任务时的资源消耗
 **多核利用 = 多线程 + 每个线程内跑协程池：**
 ```
 核心 0: ┌─线程1: 协程A─协程B─协程A─┐
 核心 1: ┌─线程2: 协程C─协程D─协程C─┐
 ```
-本项目第3阶段将调度器与线程池结合，就是这个原因——每个工作线程跑自己的调度循环，OS 分配到不同核心。
+本项目[[#调度器|调度器部分]] 将调度器与线程池结合，就是这个原因——每个工作线程跑自己的调度循环，OS 分配到不同核心。
 
 > [!note]
 > 一个线程**可能在任何一个 CPU 上运行**，而协程只能在一个线程上运行，线程只有一个入
@@ -472,7 +472,8 @@ int schedule_finished(const schedule_t &schedule) {
 ### 代码架构
 每个协程状态只设置三种：就绪态、运行态和结束态，一个协程要么正在运行(RUNNING)，要么准备(READY)，要运行结束(TERM)。
 代码使用的协程架构是[[#非对称协程]]，在非对称协程架构中，除创建阶段外，协程仅有两种核心控制操作：
-- **Resume（恢复）：** 主协程或调度协程将执行权转移至目标协程，使其从上次挂起点继续运行。
+***由于原仓库变量命名和代码风格很难看，这里使用我重写后的代码做示例***
+- **Resume（恢复）：** 主协程或调度协程将执行权转移至目标协程，从上次挂起点继续运行。
 - **Yield（让出）：** 协程主动挂起自身，将执行权交还给调用者（通常是调度协程）。
 ![[Pasted image 20260618170115.png]]
 - ready 表示协程上有任务，但是被挂起（yield ）了，可以继续执行
@@ -480,21 +481,21 @@ int schedule_finished(const schedule_t &schedule) {
 - term 表示协程任务已经执行完成，资源需要回收
 ```cpp
 void Fiber::yield() {
-	assert(m_state == RUNNING || m_state == TERM);
-	if(m_state != TERM) {
-		m_state = READY;
+	assert(_state == State::Running || _state == State::Terminate);
+	if(_state == State::Running) {
+		_state = State::Ready;
 	}
-	if(m_runInScheduler) {
-		SetThis(t_scheduler_fiber);
-		if(swapcontext(&m_ctx, &(t_scheduler_fiber->m_ctx))) {
-			std::cerr << "yield() to to t_scheduler_fiber failed\n";
-			pthread_exit(NULL);
+	if(_runInScheduler) {
+		setCurrentRunningFiber(schedulerFiber);
+		if(swapcontext(&_ctx, &(schedulerFiber->_ctx))) {
+			fastlog::console.error("yield() to to schedulerFiber failed");
+			pthread_exit(nullptr);
 		}
 	} else {
-		SetThis(t_thread_fiber.get());
-		if(swapcontext(&m_ctx, &(t_thread_fiber->m_ctx))) {
-			std::cerr << "yield() to t_thread_fiber failed\n";
-			pthread_exit(NULL);
+		setCurrentRunningFiber(mainFiber.get());
+		if(swapcontext(&_ctx, &(mainFiber->_ctx))) {
+			fastlog::console.error("yield() to to mainFiber failed");
+			pthread_exit(nullptr);
 		}
 	}
 }
@@ -509,7 +510,7 @@ READY ───────────────→ RUNNING
  │                       │
  │                 MainFunc 回调结束
  │                       ↓
- │                     TERM
+ │                    TERMINATE
  │                       │
  │                 MainFunc 末尾 yield
  │←──────────────────────│
@@ -519,68 +520,222 @@ READY ───────────────→ RUNNING
 ```
 协程没有专门的“停止”指令。当绑定的执行函数运行结束时，协程即告终止。此时，系统会自动触发一次上下文切换，将控制权返回给关联的调度上下文（即主协程或调度器，在 `run_in_scheduler == false` 是就是 mainFiber，且此时 `mainFiber == scheduler`，为 true 时时两者不同
 ```cpp
-static thread_local Fiber*              t_fiber           = nullptr;  // 当前正在执行的协程
-static thread_local shared_ptr<Fiber>   t_thread_fiber    = nullptr;  // 主协程
-static thread_local Fiber*              t_scheduler_fiber = nullptr;  // 调度协程
-
-// run_in_scheduler == false
-GetThis() 创建主协程后:
-  t_thread_fiber    = main_fiber          // 主协程
-  t_scheduler_fiber = main_fiber.get()    // 调度协程 = 主协程（同一人）
-
-resume() 时，控制权交给子协程
-  SetThis(this)        → t_fiber(记录当前运行的协程的变量) = 子协程
-  swapcontext(&主协程, &子协程)
-
-yield() 时，控制权回到调度协程
-  SetThis(t_thread_fiber.get()) → t_fiber = 主协程
-  swapcontext(&子协程, &主协程)
+static thread_local Fiber* currentRunningFiber			  = nullptr;  // tell you which coroutine am I running
+static thread_local std::shared_ptr<Fiber> mainFiber	  = nullptr;
+static thread_local Fiber*				   schedulerFiber = nullptr;
+static std::atomic<uint64_t>			   fiberIndex{0};
+static std::atomic<uint64_t>			   fiberCount{0};
 ```
 底层实现的方式是[[#有栈协程]]中的独立栈（实现简单），并且**没有实现嵌套协程**，这也是可优化的
-调用链:
-```md
-main()
-  │
-  ├─ ① Fiber::GetThis()
-  │      → 发现 t_fiber == nullptr
-  │      → 创建主协程（无参构造）
-  │      → 主协程: getcontext(&m_ctx) 保存当前 CPU 状态
-  │      → t_thread_fiber = main_fiber
-  │      → t_scheduler_fiber = main_fiber.get()
-  │      → 返回 shared_ptr<Fiber>
-  │
-  ├─ ② 创建 20 个子协程（有参构造）
-  │      每个子协程:
-  │      → malloc 分配栈空间
-  │      → getcontext(&m_ctx) 获取初始上下文
-  │      → makecontext(&m_ctx,
-  │        修改 RIP → MainFunc, RSP → 刚分配的栈
-  │
-  ├─ ③ Scheduler::run()
-  │      for each task:
-  │      │
-  │      ├─ task->resume()
-  │      │     → SetThis(this)  // t_fiber = 子协程
-  │      │     → swapcontext(&主协程.m_ctx, &子协程.m_ctx)
-  │      │        ┌─────────────────────────────────────┐
-  │      │        │  保存: 主协
-  │      │        │  恢复: 子协程的寄存器（RIP=MainFunc）│
-  │      │        │  CPU 跳到 MainFunc
-  │      │        └────────────
-  │      │                ↓
-  │      │         ④ MainFunc()
-  │      │              → GetTh
-  │      │              → curr->m_cb() 执行回调
-  │      │              → m_sta
-  │      │              → raw_ptr->yield()
-  │      │                ┌──────────────────────────────────────┐
-  │      │                │  swapcontext(&子协程.m_ctx, &主协程.m_ctx│
-  │      │                │
-  │      │                │  CPU 回到主协程 resume 下一行          │
-  │      │                └──────────────────────────────────────
-  │      │                ↓
-  │      ├─ resume() 返回 ←────
-  │      ├─ 下一个 task->resume()
-  │      └─ ...
+时序图
+```mermaid
+sequenceDiagram
+    participant Main as main()
+    participant Sched as Scheduler::run()
+    participant MainFiber as mainFiber (id=0, no stack)
+    participant Child1 as child fiber 1~20 (has stack)
+    participant mainFunc as Fiber::mainFunc()
+    participant cb as test_fiber(i)
+
+    Note over Main: Phase 0: Init
+    Main->>MainFiber: Fiber::getThis() ①
+    activate MainFiber
+    MainFiber-->>Main: mainFiber created, _stack=nullptr
+    deactivate MainFiber
+
+    Note over Main: Phase 1: Create 20 child fibers
+    loop for i = 1 to 20
+        Main->>Child1: make_shared<Fiber>(bind(test_fiber,i), 0, false)
+        activate Child1
+        Note right of Child1: malloc(_stack)<br/>makecontext(mainFunc)
+        Child1-->>Main: child fiber ready, ref=1
+        deactivate Child1
+        Main->>Sched: schedule(fiber)
+    end
+
+    Note over Main,Sched: Phase 2: First resume round
+    Main->>Sched: run()
+    activate Sched
+    Sched->>Sched: print " number 20"
+
+    loop First round: for fiber in _tasks
+        Sched->>Child1: fiber->resume()
+        activate Child1
+        Note right of Child1: setCurrentRunningFiber(this)<br/>swapcontext(mainFiber._ctx, child._ctx)
+        Child1->>mainFunc: jump to mainFunc()
+        activate mainFunc
+        mainFunc->>mainFunc: auto current = getThis()<br/>(shared_from_this, ref=1→2)
+        mainFunc->>cb: current->_callback()
+        activate cb
+        cb->>cb: print "i start"
+        cb->>Child1: getThis()->yield()
+        activate Child1
+        Note right of Child1: state=Ready<br/>swapcontext(child._ctx, mainFiber._ctx)
+        Child1-->>Sched: back to resume() return
+        deactivate Child1
+        deactivate cb
+        deactivate mainFunc
+        deactivate Child1
+    end
+    Note over Sched: All 20 fibers paused at yield()<br/>Output: "1 start\n2 start\n...20 start\n"
+
+    Note over Sched: Phase 3: Second resume round
+    loop Second round: for fiber in _tasks
+        Sched->>Child1: fiber->resume()
+        activate Child1
+        Note right of Child1: swapcontext(mainFiber._ctx, child._ctx)
+        Child1->>mainFunc: return from yield() inside mainFunc
+        activate mainFunc
+        mainFunc->>cb: back from _callback()
+        activate cb
+        cb->>cb: print "i end"
+        cb-->>mainFunc: return
+        deactivate cb
+        Note right of mainFunc: _callback = nullptr<br/>_state = Terminate
+        mainFunc->>mainFunc: auto rawPtr = current.get()<br/>current.reset() (ref=2→1)
+        mainFunc->>Child1: rawPtr->yield()
+        activate Child1
+        Note right of Child1: swapcontext(child._ctx, mainFiber._ctx)
+        Child1-->>Sched: back to resume() return
+        deactivate Child1
+        deactivate mainFunc
+        deactivate Child1
+    end
+    Note over Sched: All 20 fibers completed<br/>Output: "...1 end\n2 end\n...20 end\n"
+
+    Note over Sched: Phase 4: Cleanup
+    Sched->>Sched: _tasks.clear()
+    Note right of Sched: ref=1→0 for each child<br/>~Fiber() called ×20<br/>free(_stack) ×20
+    Sched-->>Main: run() returns
+    deactivate Sched
+
+    Note over Main: Phase 5: mainFiber destructs
+    Main-->>MainFiber: ~Fiber()
+    Note right of MainFiber: _stack=nullptr, no free<br/>print "~Fiber(): id = 0"
 ```
 
+#### Phase 0: Initialization
+`Fiber::getThis()` 必须在创建子协程前被，否则第一次调用 resume 时 `swapcontext(&(mainFiber->_ctx), &_ctx)` 时，`mainFiber->_ctx == nullptr`，引发 segment fault
+1. `currentRunningFiber == nullptr` → 进入默认构造函数分支
+2. `new Fiber()` — 默认构造函数：
+	- `setCurrentRunningFiber(this)` 把自己设为当前协程
+	- `getcontext(&_ctx)` 保存当前线程上下文
+	- **不分配栈**（`_stack = nullptr`），因为 mainFiber 直接运行在线程栈上
+	- `_id = 0`，`fiberCount++`
+#### Phase 1: Create Child Fibers
+循环 20 次调用**参数化构造函数**：
+1. `malloc(_stacksize)` — 每个子协程分配独立栈
+2. `_id` 递增（1~20），`fiberCount++`
+3. 存入 `Scheduler::_tasks`，此时子协程指针被 `_task` 拥有，子协程的 ref count = 1
+#### Phase 2: First Resume Round (the "start" round)
+对每个子协程调用 `resume()`：
+1. `setCurrentRunningFiber(this)` — 当前运行协程标记为子协程
+2. `swapcontext(&mainFiber->_ctx, &child._ctx)` — **保存 mainFiber 的执行位置**（`resume()` 返回处），切换到子协程
+3. 进入 `mainFunc()`：
+	- `getThis()` → `shared_from_this()` → **子协程ref count 从 1 升到 2**
+	- 调用 `_callback()` → `test_fiber(i)` 打印 `"i start"` 后调用 `yield()`，`_callback` 后所有代码暂停执行
+4. `yield()` 切回 mainFiber 回到 `Scheduler::run()` 的 `resume()` 返回处，`it++` 处理下一个子协程
+**结果**：20 个协程全部停在 `yield()` 内部等待被切回，输出 20 行 `"i start"`。
+#### Phase 3: Second Resume Round (the "end" round)
+对每个子协程再次调用 `resume()`：
+1. `swapcontext(&mainFiber->_ctx, &child._ctx)` — 切回子协程
+2. 从 `yield()` 内部返回（之前保存的位置）
+3. `test_fiber` 继续执行 → 打印 `"i end"` → 返回
+4. `mainFunc()` 继续：
+   - `_callback = nullptr`
+   - `_state = Terminate`
+   - `auto rawPtr = current.get()`
+   - `current.reset()` — **ref count 从 2 降到 1**（`_tasks` 还持有 1 个），这里美誉调用析构函数
+   - `rawPtr->yield()` — 再切回 mainFiber
+**注意**：此时 ref count 是 1（被 `_tasks` 持有），析构函数尚未调用。
+#### Phase 4: Cleanup
+1. `_tasks.clear()` — 释放所有 `shared_ptr`，每个子协程的 **ref count 从 1 降到 0**，这里会依次触发 `_task` 中的 Fiber 的析构函数，主协程的析构函数最后触发
+2. `Scheduler::run()` 返回
+#### Phase 5: mainFiber Destructs
+`main()` 返回时 mainFiber 析构：
+- `_stack == nullptr` → 不 `free`
+- 打印 `"~Fiber(): id = 0"`（最后一行输出）
+### 细节问题
+```cpp
+Fiber::Fiber(std::function<void()> callback, size_t stacksize, bool runInScheduler)
+	: _callback(callback)
+	, _runInScheduler(runInScheduler)
+	, _state(State::Ready)
+	, _stacksize(stacksize ? stacksize : 128000) {
+	_stack = malloc(_stacksize); // 最好不要放在初始化列表中
+}
+```
+初始化列表的初始化顺序不是列表中的顺序，而是**类成员的声明顺序**
+```cpp
+void Fiber::mainFunc() {
+	auto current = getThis();
+	assert(current != nullptr);
+	current->_callback();
+	current->_callback = nullptr;
+	current->_state	   = State::Terminate;
+
+	auto rawPtr = current.get();
+	current.reset();
+	rawPtr->yield(); // may cause ptr hang up
+}
+```
+内存安全，rawPtr 是裸指针，**能调用 yield 的前提是 current 引用计数>0**，从 [[#Phase 4 Cleanup]] 看到 `_tasks.clear()` 时引用计数=0，如果误操作将清空 `_tasks` 的操作提前，就会导致这里悬空引用
+```cpp
+#ifdef DEBUG_MESSAGE
+#	define DEBUG(...) fastlog::console.debug(__VA_ARGS__)
+#else
+#	define DEBUG(...) ((void)0)
+#endif
+
+#ifdef ENABLE_MESSAGE
+    #define DEBUG(str, ...) fastlog::console.debug(str, ##__VA_ARGS__)
+#else                                                                          
+    #define DEBUG(str, ...) ((void)0)         
+#endif
+```
+- 宏安全，第一个宏更通用一点，捕获所有参数，第二个（clang/GCC only），通过 `##` 拓展-自动删除了前面的 `,` ，保证 fastlog 的*字符占位符参数列表*为空也能编译
+- 同时，宏不会受到命名空间影响，并在整个编译单元中可见，放哪里都一样
+# 调度器
+## 调度器意义
+有很多协程的时候，如何把这些协程都消耗掉，这就是协程调度。
+[[#协程|fiber 类的模块]]，协程的调度都是由用户进行 resume 或 yield 的，这就好比让用户充当了调度器的工作，显然是不够灵活的。引入了协程调度后，则可以先创建一个协程调度器，然后把这些要调度的协程传递个协程调度器，让其一个个消耗。
+
+**本项目使用的是调度协程的算法是简单的先来先服务**，协程调度器可以看作是[[#协程#代码架构|单线程调度器]]的进阶版本。当调度器配置为仅使用 main 函数所在的线程进行调度时，其工作原理与单线程调度器完全一致
+
+- **调度器任务的定义：**
+    - 对于协程调度器而言，**协程**是原生的调度单位，函数作为调度任务。[[FiberLib#^c21kde|原因参考]]
+    - 在实际实现中，调度器内部会将传入的函数包装成协程后再进行调度，但对外部接口而言，调度器同时支持协程和函数。
+- **多线程调度：**
+    - 由于一个线程在同一时刻只能运行一个协程，[[#协程与多核|资源利用率不高]]。为提升调度器的吞吐量和并发能力需引入**多线程调度**机制。通过维护一个线程池，实现多个线程同时运行多个协程，这种 M:N 的调度模型（M 个协程运行在 N 个线程上）在处理高并发 IO 时效率远高于单线程。
+- **问题：是否可以将调度器所在的线程（Caller 线程）纳入调度范围？**
+    - 答案是肯定的。在 main 函数（或其他线程）中创建调度器时，如果不将该线程纳入调度，则该线程在启动调度器后通常只能处于阻塞等待状态。
+    - 将**Caller 线程**作为调度线程之一，不仅可以充分利用现有线程资源，减少额外创建线程的开销，还能让主协程直接参与任务分发与执行，从而提高整体运行效率。
+- **调度器的运行机制：**
+    - 调度器实例化后，内部会初始化一个线程池。启动调度后，所有调度线程会循环从**任务队列**中获取任务并执行。
+    - 调度线程的数量决定了并行执行任务的能力。当任务队列为空时，调度线程不应退出，而是进入等待（或执行 Idle 协程）状态，直到有新任务进入队列。
+- **添加调度任务：**
+    - 本质是将任务对象（协程或函数）推入调度器的**任务队列**。
+    - 仅靠添加任务是不够的，还需要配套的**通知机制（Tickle）**。因为调度线程在无任务时可能处于挂起或阻塞状态，添加任务后必须通过某种方式（如信号量、管道写入或条件变量）唤醒调度线程，以确保新任务能够被及时处理，避免不必要的轮询导致的 CPU 高占用。
+- **调度器的停止：**
+    - 调度器必须具备优雅停止的能力，以便回收线程资源。只有当任务队列已清空，且所有调度线程都已完成当前任务并安全退出后，调度器才算真正停止。
+### 实现机制
+调度器内部维护一个**任务队列**和一个**调度线程池**。启动调度后，线程池按序从队列中取出任务执行。调度线程池可灵活包含**Caller 线程**。当所有任务执行完毕且无新任务时，线程池进入空闲状态。一旦新任务到达，通过通知机制唤醒线程池重新开始调度。执行停止逻辑时，各调度线程依次退出，最终完成调度器的资源释放。
+***useCall 表示主线程（main 函数所在的线程）是否参与调度（是不是会充当调度线程）***
+#### 主线程不参与调度
+![[Pasted image 20260619140535.png|useCall\=\=false]]
+调度器会创建专门的调度线程池，而创建调度器的线程（通常是 main 函数所在的主线程）不参与执行任务。主线程的角色仅限于向调度器添加任务、发起停止指令，并调用 stop()方法等待所有调度线程执行完毕后退出
+- **切换机制：** 每一个新创建的调度线程（调度线程可能有多个）都会运行一个入口函数（调度协程，即 run 方法）。在调度线程内部，上下文切换发生在**调度协程**与**任务协程（子协程）**之间。主线程及其主协程不参与此过程。
+- **状态判断：** 调度线程会根据调度器的运行状态（ `_stopping`）判断是否继续从任务队列中取任务。此时，新线程的“调度协程”充当了管理者的角色，负责拉起（swapIn）任务协程，并在任务完成后切回（swapOut）调度协程。
+#### 主线程参与调度
+让主线程**除了做初始化工作**也能执行任务，能够调用自身调度协程的 run 方法进行身份转变（主线程->调度线程）
+线程数设置为 1 且 `useCall == true` 则回到[[#协程#代码架构]]做法
+![[Pasted image 20260619141640.png]] 在单线程环境下，若主线程参与调度，线程内会存在三类协程:
+- **主协程**：对应main函数所在的执行上下文。
+- **调度协程**：运行调度器run方法的协程，负责任务分发。
+- **任务协程**：待执行的业务逻辑函数或协程。
+执行逻辑:
+* **主协程**运行，创建调度器。
+* **主协程**向调度器添加任务。
+* **启动调度**：主协程通过调用 stop()或手动切入调度循环，让出执行权给**调度协程**。调度协程开始从任务队列按顺序获取任务。
+* **任务切换**：调度协程取出任务后，切入该**任务协程**。任务执行结束后，必须切回**调度协程**，以便继续调度下一个任务。
+* **调度结束**：所有任务执行完毕且满足停止条件后，**调度协程**让出执行权，切回**主协程**，保证程序正常结束。
