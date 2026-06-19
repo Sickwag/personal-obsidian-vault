@@ -127,13 +127,26 @@ private:
 参考 [[#std shared_ptr 和 std make_shared 区别]]，   `std::make_shared<LogicSystem>() ` 是一个全局函数模板，内部调用 new LogicSystem()。**但 LogicSystem 构造函数是 private 的，make_shared 类不是 LogicSystem 的友元**，所以编译错误。
 
 而 `std::shared_ptr<LogicSystem>(new LogicSystem) `中：
-- new LogicSystem 是在 Singleton::getInstance() 内部执行的
+- new LogicSystem 是在 `Singleton::getInstance()` 内部执行的
 - `Singleton<LogicSystem>` 是 LogicSystem 的友元（`friend class Singleton<LogicSystem>`）
 - 友元可以访问 private 成员，所以 new LogicSystem() 可以成功
 - 然后裸指针交给 shared_ptr 管理
 
-> [!warning] 在 LogicSystem 中生命 make_shared 函数模板特化为他的友元也是错误的
-> singleton 的析构函数必须非private，否则引用计数为 0 时会调用默认删除器 `::operator delete`，private 析构函数因为无法访问到。
+> [!note] 总结经验
+> 总结下来，如果在一个**构造函数为 private 且**继承自 `std::enable_shared_from_this<T>` 的类型 T 中想要创建 T 的   `std::shared_ptr<T>` 对象，**一般使用 `shared_ptr<T>(new T(args))` 构造函数而不用 `std::make_shared<T>`**
+> 
+> 因为 `make_shared` 是一个模板函数，初始化 T 类型对象的操作在 T 类型定义之外，且两者无友元关系，所以 `make_shared<T>` 访问不到 T 的 private 构造。
+> 而如果在 T 类中声明 `friend std::make_shared<T>;` 会导致暴露所有 std::make_shared 的特化（包括其他类型）对 T 的私有成员的访问，扩大了友元范围，如果**严格规定构造函数的参数个数和类型，且确保以后维护中一定不会更改**，那么可以在 T 类中使用
+> ```cpp
+> friend std::shared_ptr<T> std::make_shared<T>();
+> // 回到扩大暴露范围问题
+> // template<typename... Args>
+> // friend std::shared_ptr<T> std::make_shared(Args&&... args);
+> ```
+> 友元联系特化版本的 `std::make_shared`，否则不定长的多参构造又会回到暴露范围问题
+
+> [!warning] 在 LogicSystem 中声明 make_shared 函数模板特化为他的友元也是错误的
+> singleton 的析构函数必须非 private，否则引用计数为 0 时会调用默认删除器 `::operator delete`，private 析构函数因为无法访问到。
 > 这导致了每一个T 类型的析构函数必须放在 public/protect 中，维护困难
 #### 闭包思想
 闭包（Closure） 是一个函数实体，它"捕获"了创建它时的外部环境（变量），使得这个函数可以在之后被调用时，仍然能访问那些变量。

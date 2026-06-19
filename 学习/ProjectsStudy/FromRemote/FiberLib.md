@@ -475,6 +475,112 @@ int schedule_finished(const schedule_t &schedule) {
 - **Resume（恢复）：** 主协程或调度协程将执行权转移至目标协程，使其从上次挂起点继续运行。
 - **Yield（让出）：** 协程主动挂起自身，将执行权交还给调用者（通常是调度协程）。
 ![[Pasted image 20260618170115.png]]
-协程没有专门的“停止”指令。当绑定的执行函数运行结束时，协程即告终止。此时，系统会自动触发一次上下文切换，将控制权返回给关联的调度上下文（即主协程或调度器，即 mainFiber
-或schedulerFiber）
+- ready 表示协程上有任务，但是被挂起（yield ）了，可以继续执行
+- running 表示协程正在执行任务
+- term 表示协程任务已经执行完成，资源需要回收
+```cpp
+void Fiber::yield() {
+	assert(m_state == RUNNING || m_state == TERM);
+	if(m_state != TERM) {
+		m_state = READY;
+	}
+	if(m_runInScheduler) {
+		SetThis(t_scheduler_fiber);
+		if(swapcontext(&m_ctx, &(t_scheduler_fiber->m_ctx))) {
+			std::cerr << "yield() to to t_scheduler_fiber failed\n";
+			pthread_exit(NULL);
+		}
+	} else {
+		SetThis(t_thread_fiber.get());
+		if(swapcontext(&m_ctx, &(t_thread_fiber->m_ctx))) {
+			std::cerr << "yield() to t_thread_fiber failed\n";
+			pthread_exit(NULL);
+		}
+	}
+}
+```
+状态机:
+```
+            resume()
+READY ───────────────→ RUNNING
+ ↑                       │
+ │  yield() (主动让出)     │
+ │←──────────────────────│
+ │                       │
+ │                 MainFunc 回调结束
+ │                       ↓
+ │                     TERM
+ │                       │
+ │                 MainFunc 末尾 yield
+ │←──────────────────────│
+ │                       │
+ └── reset() ────────────┘
+      (重新绑定新回调)
+```
+协程没有专门的“停止”指令。当绑定的执行函数运行结束时，协程即告终止。此时，系统会自动触发一次上下文切换，将控制权返回给关联的调度上下文（即主协程或调度器，在 `run_in_scheduler == false` 是就是 mainFiber，且此时 `mainFiber == scheduler`，为 true 时时两者不同
+```cpp
+static thread_local Fiber*              t_fiber           = nullptr;  // 当前正在执行的协程
+static thread_local shared_ptr<Fiber>   t_thread_fiber    = nullptr;  // 主协程
+static thread_local Fiber*              t_scheduler_fiber = nullptr;  // 调度协程
+
+// run_in_scheduler == false
+GetThis() 创建主协程后:
+  t_thread_fiber    = main_fiber          // 主协程
+  t_scheduler_fiber = main_fiber.get()    // 调度协程 = 主协程（同一人）
+
+resume() 时，控制权交给子协程
+  SetThis(this)        → t_fiber(记录当前运行的协程的变量) = 子协程
+  swapcontext(&主协程, &子协程)
+
+yield() 时，控制权回到调度协程
+  SetThis(t_thread_fiber.get()) → t_fiber = 主协程
+  swapcontext(&子协程, &主协程)
+```
 底层实现的方式是[[#有栈协程]]中的独立栈（实现简单），并且**没有实现嵌套协程**，这也是可优化的
+调用链:
+```md
+main()
+  │
+  ├─ ① Fiber::GetThis()
+  │      → 发现 t_fiber == nullptr
+  │      → 创建主协程（无参构造）
+  │      → 主协程: getcontext(&m_ctx) 保存当前 CPU 状态
+  │      → t_thread_fiber = main_fiber
+  │      → t_scheduler_fiber = main_fiber.get()
+  │      → 返回 shared_ptr<Fiber>
+  │
+  ├─ ② 创建 20 个子协程（有参构造）
+  │      每个子协程:
+  │      → malloc 分配栈空间
+  │      → getcontext(&m_ctx) 获取初始上下文
+  │      → makecontext(&m_ctx,
+  │        修改 RIP → MainFunc, RSP → 刚分配的栈
+  │
+  ├─ ③ Scheduler::run()
+  │      for each task:
+  │      │
+  │      ├─ task->resume()
+  │      │     → SetThis(this)  // t_fiber = 子协程
+  │      │     → swapcontext(&主协程.m_ctx, &子协程.m_ctx)
+  │      │        ┌─────────────────────────────────────┐
+  │      │        │  保存: 主协
+  │      │        │  恢复: 子协程的寄存器（RIP=MainFunc）│
+  │      │        │  CPU 跳到 MainFunc
+  │      │        └────────────
+  │      │                ↓
+  │      │         ④ MainFunc()
+  │      │              → GetTh
+  │      │              → curr->m_cb() 执行回调
+  │      │              → m_sta
+  │      │              → raw_ptr->yield()
+  │      │                ┌──────────────────────────────────────┐
+  │      │                │  swapcontext(&子协程.m_ctx, &主协程.m_ctx│
+  │      │                │
+  │      │                │  CPU 回到主协程 resume 下一行          │
+  │      │                └──────────────────────────────────────
+  │      │                ↓
+  │      ├─ resume() 返回 ←────
+  │      ├─ 下一个 task->resume()
+  │      └─ ...
+```
+
