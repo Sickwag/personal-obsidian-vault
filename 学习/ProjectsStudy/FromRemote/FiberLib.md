@@ -787,7 +787,8 @@ for(auto& i : threads) {
 ```
 `join()` 是阻塞操作，若持有 `_mutex` 时 join，工作线程无法获取锁取任务导致死锁。swap + 解锁后 join 是标准的"持锁时间最小化"模式。
 # 计时器
-## 双向依赖紧耦合
+## 代码实现
+### 双向依赖紧耦合
 Timer 和 TimerManager 互为友元:
 - 首先明确 Timer 离开了 TimerManager 无意义，**关系是 Timer 从属于 TimerManager**
 - `Timer::cancel()` 将 TimerManager 设置为友元来模仿类似 Qt 信号槽的机制，调用 cancel 表示**通知 TimerManager 删除对应的计时器**
@@ -797,3 +798,27 @@ Timer 和 TimerManager 互为友元:
 - Timer 功能无法单独测试，必须配合 TimerManager
 - Timer 内部能够访问 TimerManager 的内部细节，作用域和可见范围太大容易引起危险
 - 封装被破坏，维护上可能需要同时修改两个类
+## 弱引用静默处理生命周期结束问题
+### weak_ptr 特性
+参考 [[Modern C++#5.3 std weak _ptr]]
+### 问题场景
+addConditionTimer 的超时回调在触发前先检查一个条件——如果条件对象还活着，才执行回调；如果条件对象已被销毁，回调静默跳过。
+考虑这个场景：某个网络连接注册了一个 5 秒超时重传定时器。如果连接在 2 秒后就正常关闭了（对应的对象被销毁），5 秒后定时器触发时不应该再执行重传逻辑，也无法执行，因为执行会导致指针访问已经销毁的内存，UB
+weak_ptr 不增加引用计数，只用来判断对象是否存活。
+### 解决方法
+```cpp
+namespace {
+void onTimer(std::weak_ptr<void> weakCond, std::function<void()> callback) {
+	std::shared_ptr<void> tmp = weakCond.lock();
+	if(tmp) {
+		callback();
+	}
+}
+}  // namespace
+```
+将检查对象是否存在（shared_ptr 是否为空）封装在一起，为空也是静默执行
+## 如何实现计时器
+**常见的实现包括**升序链表**、**高性能时间轮 (Time Wheel)** 和 **时间堆 (Min-Heap)**。在《Linux 高性能服务器编程》第 11 章中有详细介绍
+时间超时检测触发方式:
+- **固定周期触发**：传统的升序链表或时间轮方案通常依赖一个固定周期的信号（如每 10ms 触发一次），通过不断轮询检查是否有任务超时。
+- **动态超时触发（Sylar 方案）**：Sylar 采用动态计算超时时间的思路。每次计算出距离堆顶（最早超时）定时器的剩余时间，并将其作为下一次阻塞等待的超时值。一旦被唤醒，至少有一个定时器必然到期。这种方式避免了无意义的周期性轮询，使定时更加精确且节能。
