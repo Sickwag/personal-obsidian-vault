@@ -7,7 +7,7 @@ Redis 数据库里面的每个键值对(key-value pair)都是由对象(object)�
 - 数据库键总是一个字符串对象(string object);
 - 而数据库键的值则可以是字符串对象、列表对象(list object)、
 - 哈希对象(hash object)、集合对象(set object)、有序集合对象(sorted set object)这五种对象中的其中一种。
-## 第 2 章简单动态字符串
+## 第 2 章 简单动态字符串
 ### 数据结构
 ![[Pasted image 20260612165138.png]] 
 - len 只记录字符串长度
@@ -97,7 +97,7 @@ struct sdshdr {
 | 空终止    | 无                            | 有 (兼容 C 字符串 str* 函数)             |
 | 类型     | 模板，编译期确定                     | void* 操作，运行时确定                   |
 | 内存布局   | 数据和 vector对象分离（堆）            | Header 和数据同一次 malloc (FAM, 连续布局) |
-## 第 3 章链表
+## 第 3 章 链表
 ### 链表的结构
 ![[Pasted image 20260613141023.png]]
 - listNode 是经典的 prev+next 双指针+value 值的简单组合
@@ -136,7 +136,7 @@ class List {
 };
 ```
 Redis 4.0+ 已经开始逐步将热路径宏转为 `static inline` 函数。
-## 第 4 章字典
+## 第 4 章 字典
 ### 数据结构
 ![[Pasted image 20260613145457.png]] ![[Pasted image 20260613145529.png]]
 ```cpp
@@ -547,4 +547,23 @@ ziplist 编码的哈希对象使用压缩列表作为底层实现，插入新的
 - 哈希对象保存的键值对数量小于 512 个;不能满足这两个条件的哈希对象需要使用 hashtable 编码。
 同样可以通过于 hash-max-ziplist-value 选项和 hash-max-ziplist-entries 配置修改，不满足条件触发转换
 ### 集合对象
-编码可以是 intset 或者 hashtable
+编码可以是 intset 或者 hashtable，intset 编码的集合对象使用整数集合作为底层实现，hashtable 编码的集合对象使用字典作为底层实现，字典的每个键都是一个字符串对象，每个字符串对象包含了一个集合元素，而字典的值则全部被设置为 NULL。
+当集合对象可以同时满足以下两个条件时,对象使用 intset 编码:
+- 集合对象保存的所有元素都是整数值;
+- 集合对象保存的元素数量不超过 512 个（配置 set-max-intset-entries 可修改）
+### 有序集合对象
+编码可以是 ziplist 或者 skiplist，对于:
+```redis
+ZADD price 8.5 apple 5.0 banana 6.0 cherry
+```
+压缩列表存储:
+![[Pasted image 20260622105405.png]]
+![[Pasted image 20260622105823.png]]
+```c
+typedef struct zset {
+	zskiplist *zsl;
+	dict *dict;
+} zset;
+```
+zset 结构中的 zsl 跳跃表按分值从小到大保存了所有集合元素,每个跳跃表节点都保存了一个集合元素
+跳表节点的 object 属性保存了元素的成员,而跳跃表节点的 score 属性则保存了元素的分值。通过这个跳跃表,程序可以对有序集合进行范围型操作,比如 ZRANK、ZRANGE等命令就是基于跳跃表 API 来实现的。
