@@ -51,9 +51,19 @@
               "icon": "lucide-file",
               "title": "Modern C++"
             }
+          },
+          {
+            "id": "d0f0074c2ee2b183",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -245,10 +255,10 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "6cf113c1bafd02d6",
+  "active": "d0f0074c2ee2b183",
   "lastOpenFiles": [
-    "学习/其他专业书/Modern C++.md",
     "学习/ProjectsStudy/FromRemote/FiberLib.md",
+    "学习/其他专业书/Modern C++.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
     "学习/ProjectsStudy/FromRemote/FiberLib.md.tmp.162501.d655bf5a4021",
     "Files & LongText/Attachments/Pasted image 20260619141640.png",
