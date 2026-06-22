@@ -1,0 +1,24 @@
+{
+  "id": "conv-1782121338527-y13k7xvwn",
+  "providerId": "claude",
+  "title": "Complete poll and epoll mechanisms",
+  "titleGenerationStatus": "success",
+  "createdAt": 1782121338533,
+  "updatedAt": 1782122601010,
+  "lastResponseAt": 1782122601010,
+  "sessionId": "911dfa6f-a2f0-48c3-84ac-93dbdd23ac4b",
+  "providerState": {
+    "providerSessionId": "911dfa6f-a2f0-48c3-84ac-93dbdd23ac4b"
+  },
+  "currentNote": "学习/ProjectsStudy/FromBlogs/架构设计.md",
+  "usage": {
+    "model": "haiku",
+    "inputTokens": 1027,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 111104,
+    "contextWindow": 200000,
+    "contextTokens": 112131,
+    "percentage": 56,
+    "contextWindowIsAuthoritative": true
+  }
+}
