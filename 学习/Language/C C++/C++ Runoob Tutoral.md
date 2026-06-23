@@ -8063,7 +8063,7 @@ print_values<1, 2, 3>();  // 输出：1 2 3
 
 ##### 各作用域下的 inline 和 static+inline
 **1. 全局（命名空间）作用域**
-- `inline` 函数 (C++98)：ODR 豁免，允许在头文件中定义，跨 TU 共享同一实体。编译器可能/可能不真正内联，但语义上允许重复定义
+- `inline` 函数/变量 (C++98)：ODR 豁免，允许在头文件中定义，不用 inline 头文件中变量被多个源文件包含会导致不同 TU 定义相同实体，无法通过编译。编译器可能/可能不真正内联，但语义上允许重复定义
 - `inline` 变量 (C++17)：ODR 豁免，允许在头文件中定义全局变量，不再需要 `.cpp` 中的 `extern` + 定义
 - `static` 函数/变量：内部链接，每个 TU 独立副本，等价于匿名命名空间
 - `static inline`：`static` 的"内部链接"语义优先，`inline` 的 ODR 豁免和跨 TU 共享失效，每个 TU 独立副本。**这和单纯的 `static` 效果完全一样。**
@@ -8082,6 +8082,25 @@ print_values<1, 2, 3>();  // 输出：1 2 3
 - 加 `inline` 不影响——匿名命名空间的内部链接优先级更高，`inline` 被忽略
 - 加 `static` 多余——匿名命名空间已有内部链接
 - `static inline` 在匿名命名空间中双重冗余，无实际效果
+##### inline 用于命名空间
+内联命名空间让某个命名空间的内容 "透明地" 对外层命名空间可见：                                 
+```cpp
+ namespace MyLib {
+     namespace v1 {  // 旧版本 - 非内联
+         void process(int x) { /* 旧实现 */ }
+     }
+     inline namespace v2 {  // 新版本 - inline会让它变成默认
+         void process(int x) { /* 新实现 */ }
+         void newFeature() { /* 新增功能 */ }
+     }
+ }
+// 使用方式：
+MyLib::process(10);      // 自动调用 v2::process (默认)
+MyLib::newFeature();     // 可直接访问 v2 的内容 
+MyLib::v1::process(10);  // 显式使用旧版本
+// MyLib::v1::newFeature();  // ❌ 错误，v1 没有 newFeature
+```
+用于 api 增量更新，老版本命名空间不用改动，只需要在最新版本前面加上 inline，老版本去掉即可
 ##### inline 语义总结
 
 | 作用域 | `inline` 的语义 | 本质作用 |
