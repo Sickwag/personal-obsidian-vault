@@ -1,0 +1,24 @@
+{
+  "id": "conv-1782180219045-g0d3yhkpw",
+  "providerId": "claude",
+  "title": "笔记的8045~8193行记录了inline/static有关的知识点，请你检查是否有问题和遗漏，如...",
+  "titleGenerationStatus": "failed",
+  "createdAt": 1782180219047,
+  "updatedAt": 1782187635538,
+  "lastResponseAt": 1782180615463,
+  "sessionId": "fc0a55ef-64d5-4907-8196-98150d13771a",
+  "providerState": {
+    "providerSessionId": "fc0a55ef-64d5-4907-8196-98150d13771a"
+  },
+  "currentNote": "学习/Language/C C++/C++ Runoob Tutoral.md",
+  "usage": {
+    "model": "sonnet",
+    "inputTokens": 55001,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 53248,
+    "contextWindow": 1000000,
+    "contextTokens": 108249,
+    "percentage": 11,
+    "contextWindowIsAuthoritative": true
+  }
+}
