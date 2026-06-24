@@ -37,8 +37,7 @@
               "title": "小林Coding"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -193,7 +192,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 642.5
+    "width": 254.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -206,8 +205,9 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "6db1a78e1a403bdd",
+  "active": "d00796e39ba8cc35",
   "lastOpenFiles": [
+    "学习/Bases/计算机网络/小林Coding.md",
     "Files & LongText/Attachments/Pasted image 20260623180431.png",
     "Files & LongText/Attachments/23.webp",
     "Files & LongText/Attachments/Pasted image 20260623173741.png",
@@ -218,13 +218,11 @@
     "Files & LongText/Attachments/Pasted image 20260623170822.png",
     "Files & LongText/Attachments/Pasted image 20260623170506.png",
     "Files & LongText/Attachments/Pasted image 20260623165931.png",
-    "Files & LongText/Attachments/Pasted image 20260623165743.png",
     "学习/Bases/计算机网络/小林Coding.md.tmp.773955.4ed13617354e",
     "学习/Bases/计算机网络/小林Coding.md.tmp.773955.97a5e899cdff",
     "学习/Bases/计算机网络/小林Coding.md.tmp.773955.f093fb44a2fe",
     "学习/Bases/计算机网络/小林Coding.md.tmp.773955.3a694a3ffb03",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
-    "学习/Bases/计算机网络/小林Coding.md",
     "学习/Bases/计算机网络/OSI七层模型.md",
     "学习/其他专业书/Linux高性能服务器编程.md",
     "学习/Bases/计算机网络/期末划重点问题.md",
