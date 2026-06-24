@@ -4,8 +4,8 @@
   "title": "OSI网络协议的网络层中，为什么两台不同IP地址的设备通信场景下，通信链路为: 主机1 -> 路由器...",
   "titleGenerationStatus": "failed",
   "createdAt": 1782191380975,
-  "updatedAt": 1782205012992,
-  "lastResponseAt": 1782205012992,
+  "updatedAt": 1782213229741,
+  "lastResponseAt": 1782213229741,
   "sessionId": "2f856962-05c3-4036-9e8c-fc52356178ae",
   "providerState": {
     "providerSessionId": "2f856962-05c3-4036-9e8c-fc52356178ae"
@@ -13,11 +13,11 @@
   "currentNote": "学习/Bases/计算机网络/小林Coding.md",
   "usage": {
     "model": "sonnet",
-    "inputTokens": 459,
+    "inputTokens": 796,
     "cacheCreationInputTokens": 0,
-    "cacheReadInputTokens": 64576,
+    "cacheReadInputTokens": 73408,
     "contextWindow": 1000000,
-    "contextTokens": 65035,
+    "contextTokens": 74204,
     "percentage": 7,
     "contextWindowIsAuthoritative": true
   }
