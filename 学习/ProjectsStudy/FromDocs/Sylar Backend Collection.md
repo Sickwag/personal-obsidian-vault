@@ -1049,7 +1049,7 @@ TODO：学到协程调度时再补全
 `LogEventWrap`: 日志事件包装类，其实就是将日志事件和日志器包装到一起，因为一条日志只会在一个日志器上进行输出。将日志事件和日志器包装到一起后，方便通过宏定义来简化日志模块的使用。另外，LogEventWrap 还负责在构建时指定日志事件和日志器，在析构时调用日志器的 log 方法将日志事件进行输出。
 `LogManager`: 日志器管理类，单例模式，用于统一管理所有的日志器，提供日志器的创建与获取方法。LogManager 自带一个 root Logger，用于为日志模块提供一个初始可用的日志器。
 ## 代码编写
-#### 枚举类型允许位掩码计算
+### 枚举类型允许位掩码计算
 ```cpp
 Logger::Logger(const std::string& name)
 	: _name(name)
@@ -1062,16 +1062,96 @@ Logger::Logger(const std::string& name)
 // main controller
 template <typename EnumClass>
 struct EnableBitMask {
-	static constexpr bool LogModule = false;
+	static constexpr bool LogModule = false;  // 模块控制单元
 };
 
+// 重载 | 操作符
 template <typename EnumClass>
 constexpr auto operator|(EnumClass lhs,
 						 EnumClass rhs) -> std::enable_if_t<EnableBitMask<EnumClass>::LogModule, EnumClass> {
 	using underlying = std::underlying_type_t<EnumClass>;
 	return static_cast<EnumClass>(static_cast<underlying>(lhs) | static_cast<underlying>(rhs));
 }
+// 其他操作符
+```
+- EnableBitMask 中每一个变量控制**一个模块（编译单元）中的枚举值是否可以进行转换**，位掩码开关需要 `|` （打开多个开关）和 `&` （检查某个开关是否打开）的重载，所以只重载两个运算符。参考: [[DevFoundations#位掩码设计开关|位掩码设计]]。
+- 在需要开启位掩码运算的模块中[[模板元编程#显式实例化|显式实例化]]对应模板即可**在某个枚举类的粒度上控制**，还可以细化不同的模块控制单元启用哪些操作符
+```cpp
+// 在日志模块的cpp文件中特化，不用在头文件中特化
+template <>
+struct EnableBitMask<azzato::LogFormat> {
+	static constexpr bool LogModule = true;
+};
+```
+### 模式串解析
+老版使用大量继承自 FormatItem 的类实现一个简单的输入字符串到输出流中的操作
+```cpp
+class MessageFormatItem : public LogFormatter::FormatItem {
+  public:
+	explicit MessageFormatItem(const std::string& /*unused*/) {}
+	void format(std::ostream& os,
+				Logger::ptr /*logger*/,
+				LogLevel::Level /*level*/,
+				LogEvent::ptr event) override {
+		os << event->getContent();
+	}
+};
+```
+在 `init()` 做解析用，解析出所有模式后，通过宏执行对应类内部的 format 函数
+```cpp
+static std::map<std::string, std::function<FormatItem::ptr(const std::string& str)>> s_format_items = {
+#define XX(str, C) { #str, [](const std::string& fmt) { return FormatItem::ptr(new C(fmt)); } }
 
+		XX(m, MessageFormatItem),	  // m:消息
+		XX(p, LevelFormatItem),		  // p:日志级别
+		XX(r, ElapseFormatItem),	  // r:累计毫秒数
+		XX(c, NameFormatItem),		  // c:日志名称
+		XX(t, ThreadIdFormatItem),	  // t:线程id
+		XX(n, NewLineFormatItem),	  // n:换行
+		XX(d, DateTimeFormatItem),	  // d:时间
+		XX(f, FilenameFormatItem),	  // f:文件名
+		XX(l, LineFormatItem),		  // l:行号
+		XX(T, TabFormatItem),		  // T:Tab
+		XX(F, FiberIdFormatItem),	  // F:协程id
+		XX(N, ThreadNameFormatItem),  // N:线程名称
+#undef XX
+	};
+```
+这会导致调用虚函数的开销，但是模式串解析不使用虚函数解析一定会导致分支预测（switch-case 根据不同的模式字符串做出不同的解析规则），但日志模块性能瓶颈在 I/O（写文件/终端），虚函数调用是纳秒级的。spdlog、log4cpp 都用了类似策略。
+并且老版还有 `make_tuple` 的不小构造开销（虽然只有一次，`s_format_items` 是 static 的），所以新版引入位掩码设计方式
+```cpp
+void LogFormatter::init(LogFormat fmt) {
+	auto add = [&](auto&& item) { _items.push_back(std::move(item)); };
+
+	if((fmt & LogFormat::DateTime) != LogFormat::None) {
+		add(std::make_shared<DateTimeFormatItem>());
+		add(std::make_shared<TabFormatItem>(""));
+	}
+	// 其他判断
+}
+```
+### 写入日志的时机
+一个写日志的操作是这样的:
+```cpp
+try {
+	setValue(FromStr()(val));
+} catch(std::exception& e) {
+	SYLAR_LOG_ERROR(SYLAR_LOG_ROOT())
+		<< "ConfigVar::fromString exception " << e.what() << " convert: string to " << TypeToName<T>()
+		<< " name=" << m_name << " - " << val;
+}
+```
+宏展开后:
+```cpp
+1. SYLAR_LOG_ROOT() → LoggerMgr::GetInstance()->getRoot() — 获取 root 日志器
+2. SYLAR_LOG_ERROR(logger) → SYLAR_LOG_LEVEL(logger, ERROR)
+3. SYLAR_LOG_LEVEL 最终展开为：
+if(logger->getLevel() <= ERROR)   // 级别过滤
+    LogEventWrap(                  // 创建临时对象
+        LogEvent(logger, ERROR, __FILE__, __LINE__, 0,
+                 GetThreadId(), GetFiberId(), time(0), Thread::GetName())
+    ).getSS()                      // 返回 stringstream
+    << "message" << e.what();      // 写入内容
 ```
 # 环境变量模块
 ## 概述
@@ -1082,3 +1162,44 @@ constexpr auto operator|(EnumClass lhs,
 3. 命令行参数，main函数的参数，所有参数都被解析成选项-选项值的形式，**选项只能以 `-` 开头**，如果一个参数只有选项没有值，那么值为空字符串。命令行参数保存在程序自定义环境变量中。
 4. 帮助选项与描述。生成程序的命令行帮助信息，`-h` 打印这些帮助信息。帮助选项与描述存储在程序自己的内存空间中，`std::vector<std::pair<std::string, std::string>>` 存储
 5. 与程序运行路径相关的信息，包括记录程序名，程序路径，当前路径，这些由单独的成员变量来存储。
+## 代码实现
+程序的 bin 文件绝对路径是通过 `/proc/$pid/` 目录下 exe 软链接文件指向的路径来确定的，用到了 `readlink(2)` 系统调用。
+通过 setenv/getenv 操作系统环境变量
+getAbsolutePath 方法传入一个相对于 bin 文件的路径，返回这个路径的绝对路径
+
+> [!Info] 小细节
+> - 模板类中的**非模板函数也应该在头文件中定义**，否则编译器生成的类中只有函数声明没有实现
+> - override/final 等关键字只能在函数声明中有，不能在定义位置使用
+
+### 偏特化仿函数重载
+```cpp
+template <class Source, class Target>
+class LexicalCast {
+  public:
+	T operator()(const Source& s) { return boost::lexical_cast<Target>(s); }
+};
+```
+- 用于实现 Source 类型到 Target 类型的字符串之间转换（Source 和 Target 之间有一个是 string 类型），参考[[#字符串和基本类型转换]]
+- 由于这里的底层实现依赖 `boost::lexical_cast` ，其支持多种能和 string 类型发生转换的类型，这里需要的是**不仅仅是转成 string 类型，而是转换成 yamlcpp 库能够接受的 string 类型**，所以对**常用的数据结构进行偏特化**，而没有偏特化的依靠 boost 实现
+- 这是一种策略模式的体现，维护转换类型时，只需要修改对应的偏特化实现即可
+- 调用者想要进行某种类型和字符串的转化时，无论什么类型都只需要调用 `LexicalCast` 并指明原类型和目标类型即可，不用管细节。省去了记住每一种类型转换要调用什么 api 的麻烦，主模板用作一种兜底，特化模板用作 YAML String 和其他类型之间的转换
+```cpp
+// YAML String -> std::unordered_map<std::string, T>
+template <class T>
+class LexicalCast<std::string, std::unordered_map<std::string, T>> {
+  public:
+	std::unordered_map<std::string, T> operator()(const std::string& v) {
+		// ...
+	}
+};
+
+// std::unordered_map<std::string, T> -> YAML String
+template <class T>
+class LexicalCast<std::unordered_map<std::string, T>, std::string> {
+  public:
+	std::string operator()(const std::unordered_map<std::string, T>& v) {
+		// ...
+	}
+};
+```
+注意每种类型之间的转换是相互的，**真正行使转换功能的是 `ConfigVar` 类**中的方法
