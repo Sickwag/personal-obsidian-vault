@@ -1145,13 +1145,66 @@ try {
 ```cpp
 1. SYLAR_LOG_ROOT() → LoggerMgr::GetInstance()->getRoot() — 获取 root 日志器
 2. SYLAR_LOG_ERROR(logger) → SYLAR_LOG_LEVEL(logger, ERROR)
-3. SYLAR_LOG_LEVEL 最终展开为：
-if(logger->getLevel() <= ERROR)   // 级别过滤
-    LogEventWrap(                  // 创建临时对象
-        LogEvent(logger, ERROR, __FILE__, __LINE__, 0,
-                 GetThreadId(), GetFiberId(), time(0), Thread::GetName())
-    ).getSS()                      // 返回 stringstream
-    << "message" << e.what();      // 写入内容
+3. 最终展开为：
+try {
+	setValue(FromStr()(val));
+} catch(std::exception& e) {
+	if(rootLogger->getLevel() <= ERROR)   // 级别过滤
+		// 下面内容是一行内，都在if块中
+	    LogEventWrap(                  // 创建临时对象
+	        LogEvent(logger, ERROR, __FILE__, __LINE__, 0,
+	                 GetThreadId(), GetFiberId(), time(0), Thread::GetName())
+	    ).getSS()                      // 返回 stringstream
+	    << "message" << e.what();      // 写入内容
+}
+```
+以上代码只是创建了 LogEvent （记录行号，文件名，threadId 等等信息）并用 LogEventWrap 包装（指定这各 LogEvent 将要被哪一个日志器输出，日志器管理输出位置），并修改了 LogEvent 内的 `_ss` 成员，真正写日志的操作在析构函数中
+```cpp
+LogEventWrap::~LogEventWrap() { m_event->getLogger()->log(m_event->getLevel(), m_event); }
+```
+因为传入 LogEventWrap 中的 LogEvent 对象是临时对象，其生命周期仅仅在 LogEventWrap 构造函数结束后就结束_，所以析构发生在表达式末尾的 `;` 位置，所以调用宏的位置就是记录日志的位置，不会有之后问题，更不会在 catch 块结束位置才将日志记录，log 函数再调用具体的记录函数**将同一条信息记录到所有的 LogAppender 中**
+```cpp
+void Logger::log(LogLevel::Level level, LogEvent::ptr event) {
+	if(level >= m_level) {
+		auto			self = shared_from_this();
+		MutexType::Lock lock(m_mutex);
+		if(!m_appenders.empty()) {
+			for(auto& i : m_appenders) {
+				i->log(self, level, event);
+			}
+		} else if(m_root) {
+			m_root->log(level, event);
+		}
+	}
+}
+
+// 下面函数/宏同样最终到达log函数，只是将log重要输入的参数通过函数名提前分类好了
+void Logger::debug(LogEvent::ptr event) { log(LogLevel::DEBUG, event); }
+#define SYLAR_LOG_DEBUG(logger) SYLAR_LOG_LEVEL(logger, sylar::LogLevel::DEBUG)
+
+// 添加自定义信息，最后同样调用log
+#define SYLAR_LOG_FMT_DEBUG(logger, fmt, ...) SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::DEBUG, fmt, __VA_ARGS__)
+```
+完整时序图
+```cpp
+用户代码: SYLAR_LOG_ERROR(root) << "msg" << var;
+    │
+    ├─▶ ① 宏展开: if 检查级别 → 创建 LogEvent (存文件名/行号/时间等)
+    ├─▶ ② 创建 LogEventWrap 临时对象
+    ├─▶ ③ .getSS() 返回 LogEvent::m_ss (stringstream)
+    ├─▶ ④ 用户 << "msg" << var 写入 m_ss
+    ├─▶ ⑤ 遇到 ; 临时对象析构
+    │     └─▶ ~LogEventWrap()
+    │           └─▶ Logger::log(ERROR, event)
+    │                 ├─▶ 检查 Logger 级别
+    │                 ├─▶ 遍历所有 Appender
+    │                 │     └─▶ Appender::log()
+    │                 │           ├─▶ LogFormatter::format() 组装格式
+    │                 │           │     (时间|线程|级别|文件:行|消息...)
+    │                 │           └─▶ 写入 std::cout / ofstream
+    │                 └─▶ 无 Appender → 委托 root Logger
+    │
+    └─▶ ⑥ 临时对象销毁完毕
 ```
 # 环境变量模块
 ## 概述
