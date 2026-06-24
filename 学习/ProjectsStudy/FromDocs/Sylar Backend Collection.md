@@ -1038,3 +1038,47 @@ struct ScopedLockImpl {
 2. 模板代码可抽象锁行为：`MutexType::Lock lk(m_mutex)` 不管底层是什么锁，换锁只需改一行 `typedef`——**策略模式**
 ### FiberSemaphore —— 协程信号量
 TODO：学到协程调度时再补全
+
+
+# 日志模块
+## 组件设计
+`LogFormatter`: 日志格式器，与 log4cpp 的 PatternLayout 对应，用于格式化一个日志事件。该类构建时可以指定 pattern，表示如何进行格式化。提供 format 方法，用于将日志事件格式化成字符串。
+`LogAppender`: 日志输出器，用于将一个日志事件输出到对应的输出地（终端，文件）。该类内部包含一个 LogFormatter 成员和一个 log 方法，日志事件先经过 LogFormatter 格式化后再输出到对应的输出地。从这个类可以派生出不同的 Appender 类型，比如 StdoutLogAppender 和 FileLogAppender，分别表示输出到终端和文件。
+`Logger`: 日志器，负责进行日志输出。一个 Logger 包含多个 LogAppender 和一个日志级别，提供 log 方法，传入日志事件，判断该日志事件的级别高于日志器本身的级别之后调用 LogAppender 将日志进行输出，否则该日志被抛弃。
+`LogEvent`: 日志事件，用于记录日志现场，比如该日志的级别，文件名/行号，日志消息，线程/协程号，所属日志器名称等。
+`LogEventWrap`: 日志事件包装类，其实就是将日志事件和日志器包装到一起，因为一条日志只会在一个日志器上进行输出。将日志事件和日志器包装到一起后，方便通过宏定义来简化日志模块的使用。另外，LogEventWrap 还负责在构建时指定日志事件和日志器，在析构时调用日志器的 log 方法将日志事件进行输出。
+`LogManager`: 日志器管理类，单例模式，用于统一管理所有的日志器，提供日志器的创建与获取方法。LogManager 自带一个 root Logger，用于为日志模块提供一个初始可用的日志器。
+## 代码编写
+#### 枚举类型允许位掩码计算
+```cpp
+Logger::Logger(const std::string& name)
+	: _name(name)
+	, _level(LogLevel::Level::Debug) {
+	_formatter = std::make_shared<LogFormatter>("%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%p]%T[%c]%T%f:%l%T%m%n");
+}
+```
+这样通过手写字符串格式化的方法可读性较差，使用一个管理模块控制不同枚举类型的行为:
+```cpp
+// main controller
+template <typename EnumClass>
+struct EnableBitMask {
+	static constexpr bool LogModule = false;
+};
+
+template <typename EnumClass>
+constexpr auto operator|(EnumClass lhs,
+						 EnumClass rhs) -> std::enable_if_t<EnableBitMask<EnumClass>::LogModule, EnumClass> {
+	using underlying = std::underlying_type_t<EnumClass>;
+	return static_cast<EnumClass>(static_cast<underlying>(lhs) | static_cast<underlying>(rhs));
+}
+
+```
+# 环境变量模块
+## 概述
+在程序运行时，可以通过调用 `getenv()/setenv()` 接口来获取/设置系统环境变量，比如 `getenv("PWD")` 来获取当前路径。在 shell 中可以通过 `printenv` 命令来打印当前所有的环境变量
+根据这些内容，项目中提供这几组变量的获取和修改:
+1. 系统环境变量，由 shell 保存，`getEnv()/setEnv()` 方法用于操作系统环境变量。
+2. 程序自定义环境变量，对应 `get()/add()/has()/del()` 接口，保存在程序自己的内存空间中，通过 `std::map<std::string, std::string>` 保存
+3. 命令行参数，main函数的参数，所有参数都被解析成选项-选项值的形式，**选项只能以 `-` 开头**，如果一个参数只有选项没有值，那么值为空字符串。命令行参数保存在程序自定义环境变量中。
+4. 帮助选项与描述。生成程序的命令行帮助信息，`-h` 打印这些帮助信息。帮助选项与描述存储在程序自己的内存空间中，`std::vector<std::pair<std::string, std::string>>` 存储
+5. 与程序运行路径相关的信息，包括记录程序名，程序路径，当前路径，这些由单独的成员变量来存储。
