@@ -16,7 +16,55 @@ resource_1: https://github.com/sylar-yin/sylar.git
 
 ## 使用到的知识
 ### 单例模式
-参考: [[设计模式#简单的单例实现]]
+其他实现和细节参考: [[设计模式#单例模式]]
+```cpp
+template <class T, class X, int N>
+T& getInstanceX() {
+	static T v;
+	return v;
+}
+
+template <class T, class X, int N>
+std::shared_ptr<T> getInstancePtr() {
+	static std::shared_ptr<T> v(new T);
+	return v;
+}
+
+// Singleton — 返回裸指针，调用方不参与生命周期管理，生命周期一定不会有问题放心用
+template <class T, class X = void, int N = 0>
+class Singleton {
+  public:
+	static T* getInstance() {
+		static T v;
+		return &v;
+	}
+};
+
+// SingletonPtr — 返回 shared_ptr，调用方可以持有引用延长生命周期
+template <class T, class X = void, int N = 0>
+class SingletonPtr {
+  public:
+	static std::shared_ptr<T> getInstance() {
+		static std::shared_ptr<T> v(new T);
+		return v;
+	}
+};
+```
+- X，N 模板参数似乎没有使用，但其实是为了创建*多个单例*，这似乎违反单例设计意义？
+- 测试过程中可能需要多个单例并行测试多个功能，但是由于单例模式全局唯一，而模板类/函数可以通过模板参数作为标签生成不同的类/函数代码，两者结合
+```cpp
+// 项目中有一个 ConfigVar 类表示配置变量
+// 你有两套完全独立的配置系统（一套给业务用，一套给框架底层用），X参数一般指向一个空结构体，只用作tag功能
+using BusinessConfig = Singleton<ConfigVar, struct BusinessTag>;
+using SystemConfig   = Singleton<ConfigVar, struct SystemTag>;
+
+BusinessConfig::GetInstance()->set("timeout", 5000);
+SystemConfig::GetInstance()->set("timeout", 1000);   // ← 不同的内存地址！
+// 两套互不干扰，各自有自己的 static ConfigVar v
+// 同一个类型T，但生成不同的类代码->不同的**单例对象**
+```
+N 用于第三维度，即 X 如果还不够区分则用上 N
+实际上项目中 `GetInstanceX()/GetInstancePtr()` 是历史实现（保留了但项目中并没有用到）
 ### 类构造函数/析构函数与访问修饰符 & 虚函数关键字 & 显式 delete 的关系
 参考 [[C++ Runoob Tutoral#类构造函数]]
 ### 分支预测
@@ -1162,7 +1210,7 @@ try {
 ```cpp
 LogEventWrap::~LogEventWrap() { m_event->getLogger()->log(m_event->getLevel(), m_event); }
 ```
-因为传入 LogEventWrap 中的 LogEvent 对象是临时对象，其生命周期仅仅在 LogEventWrap 构造函数结束后就结束_，所以析构发生在表达式末尾的 `;` 位置，所以调用宏的位置就是记录日志的位置，不会有之后问题，更不会在 catch 块结束位置才将日志记录，log 函数再调用具体的记录函数**将同一条信息记录到所有的 LogAppender 中**
+因为 LogEventWrap 是临时对象，其生命周期仅仅在 if 块结束后就结束，所以析构发生在**未展开的宏表达式末尾的 `;` 位置**，所以调用宏的位置就是记录日志的位置，不会有滞后问题，更不会在 catch 块结束位置才将日志记录，log 函数再调用具体的记录函数**将同一条信息记录到所有的 LogAppender 中**
 ```cpp
 void Logger::log(LogLevel::Level level, LogEvent::ptr event) {
 	if(level >= m_level) {
@@ -1173,7 +1221,7 @@ void Logger::log(LogLevel::Level level, LogEvent::ptr event) {
 				i->log(self, level, event);
 			}
 		} else if(m_root) {
-			m_root->log(level, event);
+			m_root->log(level, event); // m_root 在构造函数中 m_root->addAppender(LogAppender::ptr(new StdoutLogAppender));，所以不会无限递归
 		}
 	}
 }
@@ -1234,6 +1282,7 @@ class LexicalCast {
 ```
 - 用于实现 Source 类型到 Target 类型的字符串之间转换（Source 和 Target 之间有一个是 string 类型），参考[[#字符串和基本类型转换]]
 - 由于这里的底层实现依赖 `boost::lexical_cast` ，其支持多种能和 string 类型发生转换的类型，这里需要的是**不仅仅是转成 string 类型，而是转换成 yamlcpp 库能够接受的 string 类型**，所以对**常用的数据结构进行偏特化**，而没有偏特化的依靠 boost 实现
+- 由于[[模板元编程#模板特化|只有类和变量支持偏特化]]，所以以这里使用类模板偏特化实现
 - 这是一种策略模式的体现，维护转换类型时，只需要修改对应的偏特化实现即可
 - 调用者想要进行某种类型和字符串的转化时，无论什么类型都只需要调用 `LexicalCast` 并指明原类型和目标类型即可，不用管细节。省去了记住每一种类型转换要调用什么 api 的麻烦，主模板用作一种兜底，特化模板用作 YAML String 和其他类型之间的转换
 ```cpp
@@ -1256,3 +1305,27 @@ class LexicalCast<std::unordered_map<std::string, T>, std::string> {
 };
 ```
 注意每种类型之间的转换是相互的，**真正行使转换功能的是 `ConfigVar` 类**中的方法
+### 类分工
+- ConfigVarBase 是纯虚类，作为一个接口供给 ConfigVar 使用，强制其实现 ToString 和 FromString 和 getTypeName 方法，并保存一个配置的名称
+- ConfigVar 作用是保存一个配置的值和这个配置的可能触发的回调函数，配置值的类型就是模板类型 T，一个配置项的不同值可能分别对应不同的操作，这些操作为了保证耦合性所以和配置值放在一起方便调用。同时 ConfigVar 提供一组接口用于管理这些回调。Config 和 ConfigVar 分别作为配置项名称和配置值与其回调的组合，共同成为一个配置项
+- Config 类用于管理一系列配置项，提供一组静态方法从文件读取/查找配置，靠 GetDatas 获取所有配置项，Lookup 函数通过函数名查找或者新建配置
+### 实现细节
+####  Meyers Singleton 模式陷阱
+不同翻译单元（.cpp 文件）中的全局/类静态变量，初始化顺序是未定义的。
+参考[[设计模式#懒汉式实现（Meyer Singleton 实现）]]
+#### shared_ptr 版本的 dynamic_cast
+在继承体系里做运行时安全的向下转型，运行时检查对象的实际类型
+```cpp
+Base* p = new Derived();
+Derived* d = dynamic_cast<Derived*>(p);   // OK，d 不为空
+Other*   o = dynamic_cast<Other*>(p);     // 类型不符，返回 nullptr
+
+dynamic_pointer_cast<Derived>(sp) 等价于：
+
+shared_ptr<Derived> dynamic_pointer_cast(const shared_ptr<Base>& sp) {
+    Derived* p = dynamic_cast<Derived*>(sp.get());  // 运行时检查
+    return p ? shared_ptr<Derived>(sp, p)           // 共享所有权，引用计数 +1
+             : nullptr;                              // 类型不符返回空
+}
+```
+- 其中 `shared_ptr<Derived>(sp, p)` 是bie ming
