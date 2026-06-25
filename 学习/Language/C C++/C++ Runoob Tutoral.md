@@ -1967,11 +1967,9 @@ public:
 ```
 - `nonStaticVar` 是一个非静态成员变量，每个 `MyClass` 对象都有自己的 `nonStaticVar` 副本。因此，当 `obj1` 和 `obj2` 分别调用 `setNonStaticVar` 函数时，它们各自修改了自己的 `nonStaticVar` 副本。
 - `staticVar` 是一个静态成员变量，它不属于任何特定的对象，而是属于整个类。通过 `MyClass::setStaticVar` 函数设置 `staticVar` 的值时，这个值被所有对象共享。
-### 类型定义符
-(1) typedef
+### 类型定义符（typedef 和 using）
 typedef 是 C++ 从 C 语言继承的关键字，用于定义类型别名。其语法为：
 `typedef existing_type new_type_name;`
-(2) using
 using 是 C++11 引入的关键字，用于定义类型别名。其语法为：
 `using new_type_name = existing_type;
 
@@ -1983,9 +1981,11 @@ using 是 C++11 引入的关键字，用于定义类型别名。其语法为：
 | 兼容性    | 支持 C 和 C++   | 仅支持 C++11 及以上 |
 | 作用域    | 遵循 C++ 作用域规则 | 遵循 C++ 作用域规则  |
 
-- `typedef` 不支持直接定义模板别名，是 C++ 和 C 语言都支持的关键字，因此在需要兼容 C 代码时，`typedef` 是更好的选择。
+- `typedef` 不支持直接定义模板别名，是 C++ 和 C 语言都支持的关键字
 - `using` 支持定义模板别名，`typedef` 无法实现，是 C++11 引入的特性，不支持 C 语言
-- 两者都有作用域，需要注意的是，再类中使用类型定义作用于**只在对应的[[#访问修饰符|访问修饰符]]中生效**
+- 两者都有作用域，需要注意的是，再类中使用类型定义作用于只在对应的[[#访问修饰符|访问修饰符]]中生效
+- using 可以用来定义别名模板和引入命名空间，typedef 不行
+- using 还可以用来在子类中直接继承使用父类的构造函数
 ### 访问修饰符
 #### 修饰符类型
 1. **public（公有）**:- 成员可以被任何代码访问。
