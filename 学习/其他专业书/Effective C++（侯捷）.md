@@ -95,10 +95,9 @@ class MyClass {    static const int MyStaticConstVar = 10; // 声明并在类中
 ```cpp
 const int MyClass::MyStaticConstVar; // 定义（在实现文件中）
 ```
----
 ### enum hack
 有些编译器不支持 C 风格数组大小由非 const 变量定义，报错：
-
+	
 > 不允许 “static 整数型 class 常量”完成 “in class 初值设定“
 
 可改用所谓的"the enum Hack" 补偿做法。其理论基础是：“一个属于枚举类型 (enumerated Type) 的数值可权充 ints 被使用”
