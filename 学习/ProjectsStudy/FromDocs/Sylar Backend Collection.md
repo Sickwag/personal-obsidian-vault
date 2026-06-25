@@ -1165,7 +1165,7 @@ static std::map<std::string, std::function<FormatItem::ptr(const std::string& st
 #undef XX
 	};
 ```
-这会导致调用虚函数的开销，但是模式串解析不使用虚函数解析一定会导致分支预测（switch-case 根据不同的模式字符串做出不同的解析规则），但日志模块性能瓶颈在 I/O（写文件/终端），虚函数调用是纳秒级的。spdlog、log4cpp 都用了类似策略。
+这会导致调用虚函数的开销，但如果不使用虚函数（多态）而用 switch-case 直接根据模式字符做分支，每个字符都要做分支判断，分支预测失败的开销并不比虚函数跳转小。而日志模块性能瓶颈在 I/O（写文件/终端），虚函数调用是纳秒级的。spdlog、log4cpp 都用了类似策略。
 并且老版还有 `make_tuple` 的不小构造开销（虽然只有一次，`s_format_items` 是 static 的），所以新版引入位掩码设计方式
 ```cpp
 void LogFormatter::init(LogFormat fmt) {
@@ -1335,7 +1335,7 @@ template< class Y >
 shared_ptr( const shared_ptr<Y>& r, element_type* ptr ) noexcept;
 ```
 - 构造 `shared_ptr`，与 r 的初始值共享所有权信息，但保有无关且不管理的指针 ptr。若此 `shared_ptr` 是离开作用域的组中的最后者，则它将调用最初 r 所管理对象的析构函数。(C++20 起)
-- 本质是创建与 other 共享控制块，但指向不同地址的 shared_ptr，返回值 `shared_ptr<Derived>(sp, p)` 管理 p 指向的对象，引用计数由于共享控制块同原 sp 但是增加一次，两者析构时都会减少一次次数
+- 本质是创建与 other 共享控制块，但指向不同地址的 shared_ptr，返回值 `shared_ptr<Derived>(sp, p)` 管理 p 指向的对象，由于共享同一个控制块，ref_count 在原 sp 的控制块上 +1，sp 和返回值析构时都会让该控制块的 ref_count -1
 #### 通过继承实现类型擦除
 - ConfigVar 模板的 T 参数是其中保存的 val 的类型（配置项值的类型）
 - 所有类型的配置项都在 Config 类中接管，并通过 Config 中的 lookup 函数查询
@@ -1350,5 +1350,5 @@ if(it != GetDatas().end()) {
 	GetDatas()[name] = v;
 }
 ```
-- [[#shared_ptr 版本的 dynamic_cast|dynamic_pointer_cast已经实现类型检查]]，确保**从 s_datas 中查询出来的** it->second 也就是 `ConfigVarBase::ptr`，即 `std::shared_ptr<ConfigBase<T>>` 中的 T 和 Lookup 函数的 T 模板参数一致
+- [[#shared_ptr 版本的 dynamic_cast|dynamic_pointer_cast已经实现类型检查]]，确保**从 s_datas 中查询出来的** it->second（类型为 `ConfigVarBase::ptr`，即 `std::shared_ptr<ConfigVarBase>`）实际指向的对象是 `ConfigVar<T>`，且 Lookup 函数的 T 模板参数与原配置项的 T 一致
 - 没有查找则按默认值创建配置项（构造 ConfigVar）并放入 s_datas 中接管
