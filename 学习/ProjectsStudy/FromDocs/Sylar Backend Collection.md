@@ -1309,10 +1309,11 @@ class LexicalCast<std::unordered_map<std::string, T>, std::string> {
 - ConfigVarBase 是纯虚类，作为一个接口供给 ConfigVar 使用，强制其实现 ToString 和 FromString 和 getTypeName 方法，并保存一个配置的名称
 - ConfigVar 作用是保存一个配置的值和这个配置的可能触发的回调函数，配置值的类型就是模板类型 T，一个配置项的不同值可能分别对应不同的操作，这些操作为了保证耦合性所以和配置值放在一起方便调用。同时 ConfigVar 提供一组接口用于管理这些回调。Config 和 ConfigVar 分别作为配置项名称和配置值与其回调的组合，共同成为一个配置项
 - Config 类用于管理一系列配置项，提供一组静态方法从文件读取/查找配置，靠 GetDatas 获取所有配置项，Lookup 函数通过函数名查找或者新建配置
-### 实现细节
-####  Meyers Singleton 模式陷阱
+###  Meyers Singleton 模式陷阱
 不同翻译单元（.cpp 文件）中的全局/类静态变量，初始化顺序是未定义的。
 参考[[设计模式#懒汉式实现（Meyer Singleton 实现）]]
+### lookup 函数设计
+Lookup 函数中的 dynamic_pointer_cast 和为什么 `using ConfigVarMap = std::unordered_map<std::string, sylar::ConfigVarBase::ptr>`？
 #### shared_ptr 版本的 dynamic_cast
 在继承体系里做运行时安全的向下转型，运行时检查对象的实际类型
 ```cpp
@@ -1328,4 +1329,26 @@ shared_ptr<Derived> dynamic_pointer_cast(const shared_ptr<Base>& sp) {
              : nullptr;                              // 类型不符返回空
 }
 ```
-- 其中 `shared_ptr<Derived>(sp, p)` 是bie ming
+其中 `shared_ptr<Derived>(sp, p)` 是别名共享构造函数
+```cpp
+template< class Y >
+shared_ptr( const shared_ptr<Y>& r, element_type* ptr ) noexcept;
+```
+- 构造 `shared_ptr`，与 r 的初始值共享所有权信息，但保有无关且不管理的指针 ptr。若此 `shared_ptr` 是离开作用域的组中的最后者，则它将调用最初 r 所管理对象的析构函数。(C++20 起)
+- 本质是创建与 other 共享控制块，但指向不同地址的 shared_ptr，返回值 `shared_ptr<Derived>(sp, p)` 管理 p 指向的对象，引用计数由于共享控制块同原 sp 但是增加一次，两者析构时都会减少一次次数
+#### 通过继承实现类型擦除
+- ConfigVar 模板的 T 参数是其中保存的 val 的类型（配置项值的类型）
+- 所有类型的配置项都在 Config 类中接管，并通过 Config 中的 lookup 函数查询
+- lookup 函数仅仅提供通过 name 查找配置值并通过模板参数 T 要求配置名为 name 的配置值类型必须为 T 的方法，返回 `ConfigVar<T>::ptr` ，T 即配置值的类型,getValue 函数获取值
+- `ConfigVar*` 和 `ConfigVarBase*` （注意是指针）的**向上转型**是安全的，参考[[C++ Runoob Tutoral#dynamic_cast|多态继承dynamic_cast向上转型]]
+这些前提导致了不能将 `s_datas` 存储为: `std::unordered_map<std::string, ConfigVar<T>::ptr> s_datas`，因为 map 的值类型必须是同一个类型，`ConfigVar<int>` 和 `ConfigVar<string>` typeid 不同，本质是因为编译期需要确定 T 类型确定内存布局，map 并未支持类型擦除
+```cpp
+if(it != GetDatas().end()) {
+	auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+	// ...
+	typename ConfigVar<T>::ptr v(new ConfigVar<T>(name, default_value, description));
+	GetDatas()[name] = v;
+}
+```
+- [[#shared_ptr 版本的 dynamic_cast|dynamic_pointer_cast已经实现类型检查]]，确保**从 s_datas 中查询出来的** it->second 也就是 `ConfigVarBase::ptr`，即 `std::shared_ptr<ConfigBase<T>>` 中的 T 和 Lookup 函数的 T 模板参数一致
+- 没有查找则按默认值创建配置项（构造 ConfigVar）并放入 s_datas 中接管

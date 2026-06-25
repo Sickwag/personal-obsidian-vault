@@ -84,6 +84,7 @@ mainlayout->addWidget(wxQRLabel_, 0, Qt::AlignCenter);
 - 优先用 `make_shared`：大多数情况，性能更好，异常安全
 - 需要用 `shared_ptr<T>(new T)`：当构造函数是 private/protected 时（如单例模式）；或需要自定义删除器时
 - `make_shared_for_overwrite`：当你创建一个即将被立即覆盖的大对象时（如缓冲区），避免不必要的零初始化开销
+- 控制块和实际对象可能在同一块内存（make_shared），也可能分开（new + shared_ptr 构造），但 ref_count 始终在控制块里。
 ##### 工作原理
 ```cpp
 std::shared_ptr<Foo> ptr(new Foo(1, 2));
