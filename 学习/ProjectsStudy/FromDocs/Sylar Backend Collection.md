@@ -1097,7 +1097,8 @@ TODO：学到协程调度时再补全
 `LogEventWrap`: 日志事件包装类，其实就是将日志事件和日志器包装到一起，因为一条日志只会在一个日志器上进行输出。将日志事件和日志器包装到一起后，方便通过宏定义来简化日志模块的使用。另外，LogEventWrap 还负责在构建时指定日志事件和日志器，在析构时调用日志器的 log 方法将日志事件进行输出。
 `LogManager`: 日志器管理类，单例模式，用于统一管理所有的日志器，提供日志器的创建与获取方法。LogManager 自带一个 root Logger，用于为日志模块提供一个初始可用的日志器。
 
-每个
+每个想要使用日志模块的模块 **都要在 cpp 文件中定义** `static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");` 获取日志器，因为不同文件可能想用不同的日志器名称
+如果想要仅仅通过 `#include "log.h"` 就能够使用功能，那么应该在 log.h 文件中使用 `inline` 关键字防止每个编译但单元都有一份自己的日志器，即使他们同名但是地址不同
 ## 代码编写
 ### 枚举类型允许位掩码计算
 ```cpp
@@ -1180,6 +1181,13 @@ void LogFormatter::init(LogFormat fmt) {
 	// 其他判断
 }
 ```
+### 日志文件轮转
+生产环境中，日志文件通常由外部工具（logrotate、cron 等）定期轮转：
+轮转发生时，系统会：
+1. `mv app.log app.log.1` — 原文件被重命名
+2. 创建新的空 app.log — 但 sylar 进程手中的文件描述符仍然指向 app.log.1（inode 没变）
+3. 后续日志全写到 app.log.1 里，新的 app.log 是空的
+reopen() 的作用就是关闭旧的文件描述符，重新打开文件，这就是`FileLogAppender::reopen` 检查的意义
 ### 写入日志的时机
 一个写日志的操作是这样的:
 ```cpp
@@ -1212,7 +1220,7 @@ try {
 ```cpp
 LogEventWrap::~LogEventWrap() { m_event->getLogger()->log(m_event->getLevel(), m_event); }
 ```
-因为 LogEventWrap 是临时对象，其生命周期仅仅在 if 块结束后就结束，所以析构发生在**未展开的宏表达式末尾的 `;` 位置**，所以调用宏的位置就是记录日志的位置，不会有滞后问题，更不会在 catch 块结束位置才将日志记录，log 函数再调用具体的记录函数**将同一条信息记录到所有的 LogAppender 中**
+因为 LogEventWrap 是临时对象，其生命周期仅仅在 在**未展开的宏表达式末尾的 `;` 位置**结束，所以调用宏的位置就是记录日志的位置，不会有滞后问题，更不会在 catch 块结束位置才将日志记录，log 函数再调用具体的记录函数**将同一条信息记录到所有的 LogAppender 中**
 ```cpp
 void Logger::log(LogLevel::Level level, LogEvent::ptr event) {
 	if(level >= m_level) {
@@ -1256,6 +1264,12 @@ void Logger::debug(LogEvent::ptr event) { log(LogLevel::DEBUG, event); }
     │
     └─▶ ⑥ 临时对象销毁完毕
 ```
+### dangling-else 陷阱
+宏代码中如果有 if 块，在 if-else 代码块中调用这个宏**就会导致外部 else 匹配宏内部的 if**
+，常见的解决方法是 `do{}while(0)` 包裹，参考 [[C++ Runoob Tutoral#`do { ... } while(0)` 惯用法]]
+使用宏+流式方法记录日志其实是一种**不够优雅的写法**，可以采用 [[FastLog]] 中的 `std::format` 形式
+### 其他设计
+Logger 和 Appender 都使用自旋锁，因为锁持有时间很短
 # 环境变量模块
 ## 概述
 在程序运行时，可以通过调用 `getenv()/setenv()` 接口来获取/设置系统环境变量，比如 `getenv("PWD")` 来获取当前路径。在 shell 中可以通过 `printenv` 命令来打印当前所有的环境变量
@@ -1286,7 +1300,7 @@ class LexicalCast {
 - 由于这里的底层实现依赖 `boost::lexical_cast` ，其支持多种能和 string 类型发生转换的类型，这里需要的是**不仅仅是转成 string 类型，而是转换成 yamlcpp 库能够接受的 string 类型**，所以对**常用的数据结构进行偏特化**，而没有偏特化的依靠 boost 实现
 - 由于[[模板元编程#模板特化|只有类和变量支持偏特化]]，所以以这里使用类模板偏特化实现
 - 这是一种策略模式的体现，维护转换类型时，只需要修改对应的偏特化实现即可
-- 调用者想要进行某种类型和字符串的转化时，无论什么类型都只需要调用 `LexicalCast` 并指明原类型和目标类型即可，不用管细节。省去了记住每一种类型转换要调用什么 api 的麻烦，主模板用作一种兜底，特化模板用作 YAML String 和其他类型之间的转换
+- 调用者想要进行某种类型和字符串的转化时，无论什么类型都只需要调用 `LexicalCast` 并指明原类型和目标类型即可，不用管细节。省去了记住每一种类型转换要调用什么 api 的麻烦，**主模板用作一种兜底**，特化模板用作 YAML String 和其他类型之间的转换
 ```cpp
 // YAML String -> std::unordered_map<std::string, T>
 template <class T>
@@ -1354,3 +1368,56 @@ if(it != GetDatas().end()) {
 ```
 - [[#shared_ptr 版本的 dynamic_cast|dynamic_pointer_cast已经实现类型检查]]，确保**从 s_datas 中查询出来的** it->second（类型为 `ConfigVarBase::ptr`，即 `std::shared_ptr<ConfigVarBase>`）实际指向的对象是 `ConfigVar<T>`，且 Lookup 函数的 T 模板参数与原配置项的 T 一致
 - 没有查找则按默认值创建配置项（构造 ConfigVar）并放入 s_datas 中接管
+### 两段式读写防止死锁
+```cpp
+void setValue(const T& v) {
+	{
+		RWMutexType::ReadLock lock(m_mutex);
+		if(v == m_val) {
+			return;
+		}
+		for(auto& i : m_cbs) {
+			i.second(m_val, v);
+		}
+	}
+	RWMutexType::WriteLock lock(m_mutex);
+	m_val = v;
+}
+```
+
+> [!note] 可重入 (Reentrant)
+> 可重入指函数或代码段在被多个线程/任务同时调用时能正确工作，即使执行过程中被中断并再次进入也不会破坏数据。关键特征：
+> 
+> 1 不使用静态/全局数据
+> 2 不依赖单例资源
+> 3 不调用不可重入函数
+> 4 通过参数传递状态
+- 通知回调函数，旧配置的值已经被修改，以后再被调用时要返回新值的信息
+ 通知回调函数需要读取 `m_val` 所以要加一个读锁，更改新的值到成员变量要加上读锁，如果**在同一个作用域中同时加读写锁**会导致一旦回调中使用了
+ 调函数是外部代码，你不知道它会干什么。如果回调里又调用了 `getValue()`
+### 其他设计
+listAllMember 函数将 YAML 树形嵌套结构转换为 key-value 列表
+```cpp
+tcp:
+  connect:
+    timeout: 10000
+↓ 拍平
+("tcp", {Map})                    → 跳过（key 为空）
+("tcp.connect", {Map})            → 跳过
+("tcp.connect.timeout", "10000")  → 调 fromString("10000")
+```
+获取可执行文件路径的实现是通过/proc/pid/exe 文件的 readlink 获取程序路径（Linux 特有）。这个设计有一个隐含假设：所有路径操作都基于程序所在目录。所以日志和配置文件**都需要放在 bin 目录下，否则无法运行**
+`/proc/self` 是一个 Linux 内核提供的虚拟符号链接：                                                 
+- 每个进程看到的 /proc/self 都指向自身的进程信息目录                                          
+- 内核在访问时动态解析为当前进程的 PID，无需手动指定                                           
+- 等价于 `/proc/<当前进程PID>` 
+所以可以用 filesystem 重写为:
+```cpp
+bool Env::init(int argc, char** argv) {
+	std::string link	  = "/proc/self/exe";
+	fs::path	fsExePath = fs::read_symlink(link);
+	_exe				  = fsExePath.string();
+	_cwd				  = fsExePath.parent_path().string() + "/";
+	...
+}
+```
