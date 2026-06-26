@@ -1346,7 +1346,11 @@ shared_ptr( Y* ptr, Deleter d );
 ```
 - **第一个参数是裸指针类型**，可以通过智能指针的 `release()` 或者 `get()` 获取
 	- `get()` 不释放所有权，仅仅返回指针，如果源指针对象是 `unique_ptr` 使用其他智能指针封装这个指针（或者[[Modern C++#Note 智能指针的局限性|其他危险操作]]）
-- 第二个参数删除器是一个**指向函数对象的指针**，用于代替 shared_ptr 内部自动删除指针的操作（默认使用 delete 删除指针），删除器会和指针对象一起存储确保正确释放。
+- 第二个参数删除器是一个**指向函数对象的指针**，用于代替 shared_ptr 内部自动删除指针的操作（默认使用 delete 删除内部保存的裸指针），所以自己设计删除器函数时需要将最后一个参数留空
+```cpp
+auto deleter = std::bind(&Class::memberFunc, this, args..., std::placeholders::_1);  // 类成员函数还需要this/对象指针
+auto deleter = std::bind(&func, args..., std::placeholders::_1);
+```
 - 我们转交 conn_ptr 连接池中的最老的一个连接的所有权，但是我们这里不需要释放指针资源，删除指针，**所以将他的存活时间更新**，在不使用时放回连接池
 ```cpp
 // 客户端代码

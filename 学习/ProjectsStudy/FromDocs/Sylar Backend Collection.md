@@ -1484,68 +1484,175 @@ MySQL 和 SQLite3 各自实现这些接口，调用方永远只通过接口指�
 ## MySQL 接口层
 ### 概览
 
-| 类                | 作用                           |
-| ---------------- | ---------------------------- |
-| MySQL            | 一条真实的 MySQL 数据库连接（封装 MYSQL*） |
-| MySQLRes         | 普通查询的结果集（封装 MYSQL_RES*）      |
-| MySQLStmt        | 一条预处理语句（封装 MYSQL_STMT*）      |
-| MySQLStmtRes     | 预处理语句的结果集                    |
-| MySQLTransaction | 事务管理（BEGIN/COMMIT/ROLLBACK）  |
-| MySQLManager     | 连接池，管理多个数据库连接                |
-| MySQLUtil        | 静态工具类，提供全局快捷调用               |
-### 调用链条
-链路 A：普通查询（mysql_query）
+| 类                | 作用                                                                         |
+| ---------------- | -------------------------------------------------------------------------- |
+| MySQL            | 一条真实的 MySQL 数据库连接（封装 MYSQL*），并直接提供普通 sql 和预处理 sql 的查询和执行接口，友元 MySQLManager |
+| MySQLRes         | 存放查询的结果集（封装 MYSQL_RES*）并提供不同值类型接口获取结果集**当前行第 idx 个字段**的值                   |
+| MySQLStmt        | 一条预处理语句（封装 MYSQL_STMT*）                                                    |
+| MySQLStmtRes     | 存放预处理语句的结果集，友元 MySQLStmt                                                   |
+| MySQLTransaction | 事务管理（BEGIN/COMMIT/ROLLBACK）                                                |
+| MySQLManager     | 连接池，管理多个数据库连接                                                              |
+| MySQLUtil        | 静态工具类，提供全局快捷调用                                                             |
+### 代码设计
+比较简单没什么好说的
+- MySQL C API 对普通查询和预处理查询提供了完全不同的两套 API，所以 execute 函数在（MySQL 和 MySQLStmt 中各有一个），查询函数（query 在 MySQLRes 和 MySQLStmtRes 中同理）本质上没什么区别
+- get 函数中使用 `std::bind` 会导致无法内联和编译生成复杂嵌套[[C++ Runoob Tutoral#和 std bind 绑定器的对比|带来多次跳转开销]]，所以使用 lambda 代替了。name 必须值引用，否则生命周期问题可能导致 UB
+## SQLite3 接口层
+架构和 [[#MySQL 接口层]]几乎一致
+
+| 类 | 作用 |
+| ---------------- | -------------------------------------------------------------------------- |
+| SQLite3 | 一条 SQLite3 数据库连接（封装 `sqlite3*`），提供普通/预处理 sql 接口，友元 SQLite3Manager |
+| SQLite3Data | 预处理语句的结果集（封装 `sqlite3_stmt*` 的行读取），通过 `next()` + `getInt32/64/String` 遍历 |
+| SQLite3Stmt | 一条预处理语句（封装 `sqlite3_stmt*`），支持 COPY/REF 两种绑定模式 |
+| SQLite3Transaction | 事务管理，支持 DEFERRED/IMMEDIATE/EXCLUSIVE 三种 SQLite3 特有事务类型 |
+| SQLite3Manager | 连接池，管理与 MySQLManager 相同的池化逻辑 |
+
+### 代码设计
+MySQL 和 SQLite3 都实现了 `IStmt::ptr prepare()` + `execStmt()`/`queryStmt()` 的统一接口，差异在底层 API。末尾的 `MySQLBinder`/`SQLite3Binder` 模板结构（配合 `XX` 宏展开）实现了**编译期递归参数绑定**：`execStmt("INSERT INTO t VALUES(?,?)", 42, "hello")` 自动展开为 `stmt->bind(1, 42)` → `stmt->bind(2, "hello")`，本质是 C++11 变参模板在 C++17 折叠表达式之前的递归替代方案，宏 `XX` 仅用于减少为每种类型手写特化的重复代码。`bindX` 作为统一入口（`bindX(stmt, args...)` 即 `MySQLBinder<1, Args...>::Bind(stmt, args...)`），从 `N=1` 开始递归展开。非默认类型的特化（`struct MySQLBinder<N, Head, Tail...>` 主模板）用 `static_assert(sizeof...(Tail) < 0)` 触发编译错误，阻止不支持的类型通过。
+
+### COPY vs REF（`SQLITE_TRANSIENT` vs `SQLITE_STATIC`）
+通过 `sqlite3_bind_text` / `sqlite3_bind_blob` 等函数向预处理语句传入字符串或二进制数据时，SQLite3 需要知道**怎么处理你传入的指针**。
 ```cpp
-调用方                                MySQLManager              MySQL               MySQLRes
-
-MySQLUtil::Query("userdb",            get("userdb")
-"SELECT * FROM user")               └─ 从连接池取或创建新连接
-									 └─ MySQL::connect()
-										└─ mysql_real_connect()
-
-								  conn->query(sql)
-								  └─ mysql_query(m_mysql, sql)
-								  └─ mysql_store_result(m_mysql)
-								  └─ new MySQLRes(res)
-									 └─ 持有 MYSQL_RES*
-										└─ getInt32(idx)
-										   └─ TypeUtil::Atoi(m_cur[idx])
-										└─ next()
-										   └─ mysql_fetch_row(m_data.get())
+// 场景：临时字符串
+{
+    std::string name = "Alice";
+    sqlite3_bind_text(stmt, 1, name.c_str(), name.size(), ???);
+    // 离开作用域后 name 被销毁，指针悬空
+}
+sqlite3_step(stmt);  // ??? stmt 还要用这个指针
 ```
-关键点： MySQLRes 存储的是 MYSQL_RES*，调用 next() 时通过 mysql_fetch_row 拿到当前行的
-MYSQL_ROW（char**，每列都是字符串），然后 getInt32 之类的函数用 atoi/atof
-把字符串转成目标类型。
-
-链路 B：预处理查询（Prepared Statement）
+#### `SQLITE_STATIC`（REF）
+指针在 stmt 执行完毕前一直有效，直接引用,不用拷贝。
 ```cpp
-调用方                                MySQLManager            MySQL               MySQLStmt
-	  MySQLStmtRes
-
-MySQLUtil::Query("userdb",            get("userdb")
-"SELECT * FROM user WHERE id=?")    └─ 从池取连接
-								  conn->prepare(sql)
-								  └─ MySQLStmt::Create(conn, sql)
-									 └─ mysql_stmt_init()
-									 └─ mysql_stmt_prepare(stmt, sql)
-									 └─ 解析 ? 参数个数
-									 └─ 分配 m_binds 数组
-
-								  stmt->bindInt32(1, id)
-								  └─ 填充 m_binds[idx]
-									 buffer_type = MYSQL_TYPE_LONG
-									 buffer = malloc(4)
-									 memcpy(buffer, &value, 4)
-
-								  stmt->query()
-								  └─ mysql_stmt_bind_param(stmt, m_binds)
-								  └─ MySQLStmtRes::Create(stmt)
-									 └─ mysql_stmt_result_metadata()
-									 └─ 遍历每列，根据类型分配 Data 缓冲区
-									 └─ mysql_stmt_bind_result(stmt, binds)
-									 └─ mysql_stmt_execute(stmt)
-									 └─ mysql_stmt_store_result(stmt)
-
-								  res->getInt32(0)
-								  └─ *(int32_t*)m_datas[0].data
+// 适用场景：数据生命周期 > stmt 生命周期
+static const char* data = "hello";
+sqlite3_bind_text(stmt, 1, data, 5, SQLITE_STATIC);
 ```
+- 性能好（零拷贝）
+- 调用方必须保证指针在 `sqlite3_step()` 之前一直有效
+- 如果指针指向栈/临时变量，可能导致 use-after-free
+#### `SQLITE_TRANSIENT`（COPY）
+告诉 SQLite3："这个指针可能很快失效，你**内部拷贝一份**。"
+```cpp
+// 适用场景：临时字符串
+std::string name = get_name();
+sqlite3_bind_text(stmt, 1, name.c_str(), name.size(), SQLITE_TRANSIENT);
+// SQLite3 内部 malloc + memcpy 复制数据
+// name 离开作用域后，stmt 内部有自己的副本，安全
+```
+- 安全（不依赖外部数据生命周期）
+- 有拷贝开销
+将 `COPY` 设为默认（`Type type = COPY`），因为**安全优于性能**——在大多数场景下，拷贝一个字符串的开销可以忽略，但 use-after-free 是灾难性的。
+### SQLite3 事务模式（vs MySQL）
+```cpp
+class SQLite3Transaction {
+    enum Type { DEFERRED = 0, IMMEDIATE = 1, EXCLUSIVE = 2 };
+};
+```
+SQLite3 有**三种事务模式**，这是由 SQLite3 的锁机制决定的。
+#### SQLite3 的五级锁状态
+SQLite3 在文件级别实现并发控制，有五个锁状态（逐步升级）：
+```
+UNLOCKED  →  SHARED  →  RESERVED  →  PENDING  →  EXCLUSIVE
+  未锁定      可读       预留写      写等待      排他写
+```
+- **UNLOCKED**：没有锁，谁都可以操作
+- **SHARED**：读锁，多个连接可以同时持有 SHARED 锁（并发读）
+- **RESERVED**：准备写，和 SHARED 兼容（可以一边读一边准备写），但同一时间只能有一个 RESERVED
+- **PENDING**：等待排他，阻止新的 SHARED 锁，等已有 SHARED 释放后升级为 EXCLUSIVE
+- **EXCLUSIVE**：排他锁，禁止任何其他读/写
+#### 三种事务模式对应什么锁？
+
+| 事务类型          | 开始时获取的锁        | 第一次读时      | 第一次写时                                       |
+| ------------- | -------------- | ---------- | ------------------------------------------- |
+| **DEFERRED**  | UNLOCKED（不获取锁） | 升级到 SHARED | 从 SHARED 升级到 RESERVED → PENDING → EXCLUSIVE |
+| **IMMEDIATE** | **RESERVED**   | 读直接可用      | 直接升级到 PENDING → EXCLUSIVE（不需要从 SHARED 升级）   |
+| **EXCLUSIVE** | **EXCLUSIVE**  | 允许读        | 已经在 EXCLUSIVE                               |
+#### 行为差异
+```cpp
+// 连接 1：DEFERRED
+SQLite3Transaction txn1(db1, false, SQLite3Transaction::DEFERRED);
+// txn1.begin() → 没获取锁（UNLOCKED）
+txn1.execute("SELECT * FROM user");  // 升级到 SHARED
+txn1.execute("UPDATE user SET ..."); // 升级到 RESERVED → 等待获取 EXCLUSIVE
+
+// 连接 2：也在写
+SQLite3Transaction txn2(db2, false, SQLite3Transaction::IMMEDIATE);
+// txn2.begin() → 获取 RESERVED 锁
+// 如果 txn1 已经是 RESERVED，txn2 的 BEGIN 会失败 → SQLITE_BUSY
+```
+**DEFERRED 的问题：**
+```cpp
+// 连接 1                          // 连接 2
+BEGIN DEFERRED                     BEGIN DEFERRED
+  ← 都处于 UNLOCKED，都成功
+SELECT ...                          SELECT ...
+  ← 都升级到 SHARED，都成功
+UPDATE ...
+  ← 升级到 RESERVED，成功
+                                     UPDATE ...
+                                       ← 升级到 RESERVED → 失败！
+                                         因为已有 RESERVED
+                                       ← SQLITE_BUSY！
+```
+
+两个 DEFERRED 事务都先读后写时，会死锁——互相等待对方释放 RESERVED。
+**IMMEDIATE 解决了这个问题：**
+```cpp
+// 连接 1                          // 连接 2
+BEGIN IMMEDIATE                    BEGIN IMMEDIATE
+  ← 获取 RESERVED，成功              ← 获取 RESERVED → 失败！
+                                     因为连接 1 已有 RESERVED
+                                   ← SQLITE_BUSY，重试
+SELECT ...                          （等待）
+UPDATE ...
+COMMIT
+                                     BEGIN IMMEDIATE → 成功
+```
+IMMEDIATE 让写冲突在 `BEGIN` 时就暴露，而不是在 `UPDATE` 时才暴露。**早点失败比晚点失败好。**
+#### 和 MySQL 事务的对比
+
+|              | MySQL (InnoDB)   | SQLite3                                  |
+| ------------ | ---------------- | ---------------------------------------- |
+| 事务模式         | `autocommit` 开/关 | DEFERRED / IMMEDIATE / EXCLUSIVE         |
+| 写冲突检测        | 行级锁，`BEGIN` 时无锁  | 文件级锁，`BEGIN` 时决定锁级别                      |
+| 死锁           | InnoDB 自动检测回滚    | SQLite3 返回 `SQLITE_BUSY`，调用方重试           |
+| 并发写          | ✅ 多个连接可同时写不同行    | ❌ 同一时间只有一个连接能写                           |
+| `BEGIN` 失败条件 | 几乎不失败            | DEFERRED 从不失败；IMMEDIATE/EXCLUSIVE 可能立即失败 |
+
+**MySQL** 是行级锁，多个连接可以同时写不同的行，事务冲突在提交时检测。**SQLite3** 是文件级锁，整个数据库文件同一时间只能有一个写操作。
+
+**生产中的常见问题：** 多线程/多进程并发写 SQLite3 时，如果用 `DEFERRED`，两个事务先读后写会互相阻塞返回 `SQLITE_BUSY`。解决方案是用 `IMMEDIATE`，让写冲突在 `BEGIN` 时就暴露，然后重试 `BEGIN`。
+```cpp
+// 推荐的并发写模式（伪代码）：
+for (int i = 0; i < 3; ++i) {
+    SQLite3Transaction txn(db, false, SQLite3Transaction::IMMEDIATE);
+    if (txn.begin()) {        // 失败就立即知道
+        txn.execute("UPDATE ...");
+        txn.commit();
+        break;
+    } else {
+        // 等一会儿重试
+        usleep(1000);
+    }
+}
+```
+## Redis 接口层
+
+### 概览
+
+| 类 | 作用 |
+| ---------------- | -------------------------------------------------------------------------- |
+| IRedis | 抽象基类，定义 `cmd()` 接口 + name/passwd/type |
+| ISyncRedis | 同步 Redis 抽象，在 IRedis 上扩展 `connect/reconnect/appendCmd/getReply` |
+| Redis | 单机 Redis（封装 `redisContext`），同步阻塞 |
+| RedisCluster | Redis 集群（封装 `redisClusterContext`），同步阻塞 |
+| FoxRedis | 单机异步 Redis（封装 `redisAsyncContext` + libevent），**协程异步转同步** |
+| FoxRedisCluster | 集群异步 Redis（封装 `redisClusterAsyncContext` + libevent），**协程异步转同步** |
+| RedisManager | 连接池 + 自动初始化 |
+| RedisUtil | 静态工具类，提供全局快捷调用 |
+
+### FoxRedis 异步→协程模式
+
+（待学习）
