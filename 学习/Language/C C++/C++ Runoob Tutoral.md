@@ -7945,7 +7945,7 @@ std::cout << v3 << '\n'; // amp
 ```
 ### 各种符号在上下文中语义
 #### ... 语义
-##### 可变参数函数（Variadic Functions）中 `...`
+##### 可变参数函数（Variadic Functions）中 ...
 ```cpp
 void foo(int count, ...);
 ```
