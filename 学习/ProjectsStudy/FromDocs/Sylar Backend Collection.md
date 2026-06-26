@@ -1368,33 +1368,82 @@ if(it != GetDatas().end()) {
 ```
 - [[#shared_ptr 版本的 dynamic_cast|dynamic_pointer_cast已经实现类型检查]]，确保**从 s_datas 中查询出来的** it->second（类型为 `ConfigVarBase::ptr`，即 `std::shared_ptr<ConfigVarBase>`）实际指向的对象是 `ConfigVar<T>`，且 Lookup 函数的 T 模板参数与原配置项的 T 一致
 - 没有查找则按默认值创建配置项（构造 ConfigVar）并放入 s_datas 中接管
-### 两段式读写防止死锁
+### 配置热重载
+回调签名：`std::function<void(const T& old_value, const T& new_value)>` 应用场景:
+```cpp
+// 场景 1：日志级别热加载
+static auto g_log_level = Config::Lookup("log.level", (int32_t)2, "log level");
+g_log_level->addListener([](int32_t old, int32_t new_val) {
+    // 日志级别变更时，通知所有 Logger 重新加载
+    LoggerMgr::GetInstance()->setLevel((LogLevel::Level)new_val);
+});
+
+// 场景 2：TCP 连接参数变更 → 重建连接池
+static auto g_pool_size = Config::Lookup("tcp.pool_size", (int32_t)10, "tcp pool size");
+g_pool_size->addListener([](int32_t old, int32_t new_val) {
+    ConnectionPool::instance().resize(new_val);
+    SYLAR_LOG_INFO(g_logger) << "connection pool resized from " << old << " to " << new_val;
+});
+
+// 场景 3：服务器端口变更 → 优雅重启 listener
+static auto g_port = Config::Lookup("server.port", (uint16_t)8080, "server port");
+g_port->addListener([](uint16_t old, uint16_t new_val) {
+    // 旧端口停止 accept，新端口开始监听
+    HttpServer::instance()->rebind(new_val);
+});
+
+// 场景 4：阈值触发告警
+static auto g_max_conn = Config::Lookup("server.max_connections", 1000);
+g_max_conn->addListener([](int old, int new_val) {
+    if (new_val > 5000) {
+        alert("connection limit set too high: " + std::to_string(new_val));
+    }
+});
+```
+### 两段式读写锁设计
 ```cpp
 void setValue(const T& v) {
-	{
-		RWMutexType::ReadLock lock(m_mutex);
-		if(v == m_val) {
-			return;
-		}
-		for(auto& i : m_cbs) {
-			i.second(m_val, v);
-		}
-	}
-	RWMutexType::WriteLock lock(m_mutex);
-	m_val = v;
+    {  // 第一阶段：读锁 → 通知回调
+        RWMutexType::ReadLock lock(m_mutex);
+        if(v == m_val) return;
+        for(auto& i : m_cbs) i.second(m_val, v);  // 回调时持有读锁
+    }  // 读锁释放
+    // 第二阶段：写锁 → 赋值
+    RWMutexType::WriteLock lock(m_mutex);
+    m_val = v;
 }
 ```
 
 > [!note] 可重入 (Reentrant)
 > 可重入指函数或代码段在被多个线程/任务同时调用时能正确工作，即使执行过程中被中断并再次进入也不会破坏数据。关键特征：
-> 
-> 1 不使用静态/全局数据
-> 2 不依赖单例资源
-> 3 不调用不可重入函数
-> 4 通过参数传递状态
+> 1. 不使用静态/全局数据
+> 2. 不依赖单例资源
+> 3. 不调用不可重入函数
+> 4. 通过参数传递状态
+- `pthread_lock_t` 是不可重入的（不支持连续加同类型的锁），也不可同时加读锁
+和写锁（读写锁设计自身特性）
+	- 读锁：可被多个线程同时持有
+	- 写锁：只能被一个线程持有，且持有期间其他线程无法获取读锁或写锁
 - 通知回调函数，旧配置的值已经被修改，以后再被调用时要返回新值的信息
- 通知回调函数需要读取 `m_val` 所以要加一个读锁，更改新的值到成员变量要加上读锁，如果**在同一个作用域中同时加读写锁**会导致一旦回调中使用了
- 调函数是外部代码，你不知道它会干什么。如果回调里又调用了 `getValue()`
+- 通知回调函数需要读取 `m_val`，所以要以一个读锁，更改新的值到成员变量要加
+上读锁，而读写锁特性不支持重入，如果只加一个写锁在整个 setValue 作用域会让
+回调函数中调用了 getValue（读锁）会直接导致**死锁**，更安全的替代方案是**延迟回调**：
+```cpp
+void setValue(const T& v) {
+    vector<function<void()>> pending;
+    {
+        WriteLock lock(m_mutex);               // 一把写锁
+        if(v == m_val) return;
+        for(auto& i : m_cbs) {
+            pending.push_back([cb=i.second, old=m_val, new_val=v]() {
+                cb(old, new_val);
+            });
+        }
+        m_val = v;                             // 先赋值
+    }  // 写锁释放
+    for(auto& cb : pending) cb();              // 锁外执行，永不锁重入
+}
+```
 ### 其他设计
 listAllMember 函数将 YAML 树形嵌套结构转换为 key-value 列表
 ```cpp
@@ -1420,4 +1469,83 @@ bool Env::init(int argc, char** argv) {
 	_cwd				  = fsExePath.parent_path().string() + "/";
 	...
 }
+```
+# 数据库模块
+## 纯虚接口层 — db.h
+| ISQLData     | - 查询结果集（行/列遍历、类型安全取值）                                             |
+| ------------ | ----------------------------------------------------------------- |
+| ISQLUpdate   | - 写入操作（`execute + getLastInsertId`）                               |
+| ISQLQuery    | - 查询操作（`query` 返回 `ISQLData::ptr`）                                |
+| IStmt        | - 预处理语句（`bind` 各种类型 + `execute/query`）                            |
+| ITransaction | - 事务（`begin/commit/rollback`，继承 `ISQLUpdate`）                     |
+| IDB          | - 数据库连接（继承 `ISQLUpdate + ISQLQuery`，外加 `prepare/openTransaction`） |
+
+MySQL 和 SQLite3 各自实现这些接口，调用方永远只通过接口指针操作，完全不知道底层
+## MySQL 接口层
+### 概览
+
+| 类                | 作用                           |
+| ---------------- | ---------------------------- |
+| MySQL            | 一条真实的 MySQL 数据库连接（封装 MYSQL*） |
+| MySQLRes         | 普通查询的结果集（封装 MYSQL_RES*）      |
+| MySQLStmt        | 一条预处理语句（封装 MYSQL_STMT*）      |
+| MySQLStmtRes     | 预处理语句的结果集                    |
+| MySQLTransaction | 事务管理（BEGIN/COMMIT/ROLLBACK）  |
+| MySQLManager     | 连接池，管理多个数据库连接                |
+| MySQLUtil        | 静态工具类，提供全局快捷调用               |
+### 调用链条
+链路 A：普通查询（mysql_query）
+```cpp
+调用方                                MySQLManager              MySQL               MySQLRes
+
+MySQLUtil::Query("userdb",            get("userdb")
+"SELECT * FROM user")               └─ 从连接池取或创建新连接
+									 └─ MySQL::connect()
+										└─ mysql_real_connect()
+
+								  conn->query(sql)
+								  └─ mysql_query(m_mysql, sql)
+								  └─ mysql_store_result(m_mysql)
+								  └─ new MySQLRes(res)
+									 └─ 持有 MYSQL_RES*
+										└─ getInt32(idx)
+										   └─ TypeUtil::Atoi(m_cur[idx])
+										└─ next()
+										   └─ mysql_fetch_row(m_data.get())
+```
+关键点： MySQLRes 存储的是 MYSQL_RES*，调用 next() 时通过 mysql_fetch_row 拿到当前行的
+MYSQL_ROW（char**，每列都是字符串），然后 getInt32 之类的函数用 atoi/atof
+把字符串转成目标类型。
+
+链路 B：预处理查询（Prepared Statement）
+```cpp
+调用方                                MySQLManager            MySQL               MySQLStmt
+	  MySQLStmtRes
+
+MySQLUtil::Query("userdb",            get("userdb")
+"SELECT * FROM user WHERE id=?")    └─ 从池取连接
+								  conn->prepare(sql)
+								  └─ MySQLStmt::Create(conn, sql)
+									 └─ mysql_stmt_init()
+									 └─ mysql_stmt_prepare(stmt, sql)
+									 └─ 解析 ? 参数个数
+									 └─ 分配 m_binds 数组
+
+								  stmt->bindInt32(1, id)
+								  └─ 填充 m_binds[idx]
+									 buffer_type = MYSQL_TYPE_LONG
+									 buffer = malloc(4)
+									 memcpy(buffer, &value, 4)
+
+								  stmt->query()
+								  └─ mysql_stmt_bind_param(stmt, m_binds)
+								  └─ MySQLStmtRes::Create(stmt)
+									 └─ mysql_stmt_result_metadata()
+									 └─ 遍历每列，根据类型分配 Data 缓冲区
+									 └─ mysql_stmt_bind_result(stmt, binds)
+									 └─ mysql_stmt_execute(stmt)
+									 └─ mysql_stmt_store_result(stmt)
+
+								  res->getInt32(0)
+								  └─ *(int32_t*)m_datas[0].data
 ```
