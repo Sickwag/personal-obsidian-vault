@@ -725,22 +725,7 @@ static int test_pass = 0;
         }\
     } while(0)
 ```
-正常而言，宏中如果单条语句过长，使用 `\` 换行，如果宏**替换部分有多条语句**，需要使用 `do-while` 包裹，因如果在*因单行而省略 `{}` 的语句*中，会出现这种问题：
-```cpp
-#define M() a(); b()
-// #define M() { a(); b(); }  // 使用{}包裹宏替换部分
-if (cond)
-    M();
-else
-    c();
-
-/* 预处理后 */
-if (cond)
-    a(); b(); /* b(); 在 if 之外，少读一句     */
-    // { a(); b(); }; // 最后的分号代表 if 语句结束，后面的else断开
-else          /* <- else 缺乏对应 if */
-    c();
-```
+正常而言，宏中如果单条语句过长，使用 `\` 换行，如果宏**替换部分有多条语句**，需要使用 `do-while` 包裹，否则引起 [[C++ Runoob Tutoral#`do { ... } while(0)` 惯用法|dangling-else]] 问题
 在宏定义中使用参数时，无论它在哪里被使用，都应该用括号包裹，以保证参数作为一个整体参与表达式运算：
 ```cpp
 #define EXPECT_EQ_INT(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%d")
