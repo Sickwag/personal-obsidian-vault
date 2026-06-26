@@ -68,7 +68,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -100,7 +100,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "死锁",
+                "query": "/^#{1,}\\s.*bind.*/",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -238,19 +238,22 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "89ca8c6558a8f03e",
+  "active": "452f329f5cd1600c",
   "lastOpenFiles": [
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.29139.44930b1908ca",
+    "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.29139.bc65f0b4be03",
+    "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.29139.e1f51e273bf5",
     "学习/Language/C C++/模板元编程.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
+    "学习/Bases/设计模式/设计模式.md",
     "Chores/JobInterviews/八股/面试题.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.104042.a080094f0147",
-    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
     "Chores/JobInterviews/questions精简.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.1199131.011152128a03",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.1199131.d3948dbc8e28",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.1199131.47fc965b8119",
-    "学习/Bases/设计模式/设计模式.md",
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/ProjectsStudy/FromRemote/FiberLib.md",
     "学习/Bases/计算机网络/小林Coding.md",
@@ -277,8 +280,6 @@
     "学习/Bases/计算机网络/王道考研计算机网络.md",
     "学习/Bases/计算机网络/速成版.md",
     "学习/ProjectsStudy/FromBlogs/架构设计.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md.tmp.662852.83cb0de74d8c",
-    "学习/Language/C C++/C++ Runoob Tutoral.md.tmp.662852.73d150e00688",
     "学习/ProjectsStudy/FromBlogs/awesome cpp-backend blogs.md",
     "学习/其他专业书/Redis 设计与实现.md",
     "学习/其他专业书/Linux多线程服务端编程 使用muduo C++网络库.md",
