@@ -4,56 +4,41 @@
     "type": "split",
     "children": [
       {
-        "id": "e719b2b4a917a199",
+        "id": "934a28d90dac33cd",
         "type": "tabs",
         "children": [
           {
-            "id": "c4e397752cb9258a",
+            "id": "a0bb0e2e25344316",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/Bases/设计模式/设计模式.md",
+                "file": "学习/ProjectsStudy/FromBlogs/架构设计.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "设计模式"
+              "title": "架构设计"
             }
           },
           {
-            "id": "452f329f5cd1600c",
+            "id": "d099fcbb41005790",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/Bases/开发范式/常用算法和情景处理.md",
+                "file": "学习/Bases/计算机网络/小林Coding 计算机网络.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "常用算法和情景处理"
+              "title": "小林Coding 计算机网络"
             }
           },
           {
-            "id": "89ca8c6558a8f03e",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Language/C C++/模板元编程.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "模板元编程"
-            }
-          },
-          {
-            "id": "4ef59f98378982f1",
+            "id": "9e6638f34243d428",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -68,12 +53,12 @@
             }
           },
           {
-            "id": "6e02bc296b3b0617",
+            "id": "3244cdfa311005e8",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/Fragments/面试八股/面试题.md",
+                "file": "Chores/JobInterviews/八股/面试题.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
@@ -83,7 +68,7 @@
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -115,7 +100,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "布隆",
+                "query": "内存模型",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -140,8 +125,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -238,7 +222,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 538.5
+    "width": 538.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -251,17 +236,33 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "6db1a78e1a403bdd",
+  "active": "3244cdfa311005e8",
   "lastOpenFiles": [
+    "Chores/JobInterviews/针对简历的知识点复习.md",
+    "Chores/JobInterviews/八股/面试题.md",
+    "Chores/JobInterviews/八股/反问环节.md",
+    "Chores/JobInterviews/八股/自我介绍.md",
+    "学习/Fragments/面试八股/面试题.md",
+    "学习/ProjectsStudy/FromBlogs/架构设计.md",
+    "Files & LongText/Attachments/Pasted image 20260627175339.png",
+    "学习/Bases/计算机网络/小林Coding 计算机网络.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/其他专业书/Modern C++.md",
+    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
+    "学习/其他专业书/C++ prime plus.md",
+    "学习/ProjectsStudy/WriteByMyself/MyTinySTL.md",
+    "学习/ProjectsStudy/FromRemote/Sudoku.md",
+    "学习/ToolChain/Cmake.md",
+    "Files & LongText/Attachments/640.webp",
+    "学习/Bases/开发范式/常用算法和情景处理.md",
+    "学习/Language/C C++/模板元编程.md",
     "学习/Bases/开发范式/常用算法和情景处理.md.tmp.90027.49c7e30f0d42",
     "学习/Bases/开发范式/常用算法和情景处理.md.tmp.90027.8c6eacd5c62e",
     "学习/Bases/开发范式/常用算法和情景处理.md.tmp.90027.b15107113c1c",
     "学习/Bases/开发范式/常用算法和情景处理.md.tmp.90027.4bade9ad40e5",
     "学习/Bases/开发范式/常用算法和情景处理.md.tmp.90027.f1db957f4183",
     "学习/Bases/开发范式/常用算法和情景处理.md.tmp.90027.9f0ccb2041b7",
-    "学习/Fragments/面试八股/面试题.md",
     "学习/Fragments/面试八股/开发情景题.md",
-    "学习/Bases/开发范式/常用算法和情景处理.md",
     "学习/Bases/开发范式/常用算法和情景处理.md.tmp.90027.d1c00f09e96f",
     "学习/Bases/开发范式/常用算法和情景处理.md.tmp.90027.19ca8a4ce3f6",
     "学习/Bases/开发范式/常用算法和情景处理.md.tmp.90027.9bf6ccdacec9",
@@ -272,33 +273,17 @@
     "学习/Bases/开发范式/设计模式.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.29139.44930b1908ca",
-    "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.29139.bc65f0b4be03",
-    "学习/Language/C C++/模板元编程.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
-    "Chores/JobInterviews/八股/面试题.md",
     "Chores/JobInterviews/questions精简.md",
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/ProjectsStudy/FromRemote/FiberLib.md",
-    "学习/Bases/计算机网络/小林Coding.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
-    "学习/其他专业书/Modern C++.md",
     "学习/ProjectsStudy/FromRemote/FiberLib (复制 1).md",
     "Files & LongText/Attachments/Pasted image 20260623180431.png",
     "Files & LongText/Attachments/23.webp",
     "Files & LongText/Attachments/Pasted image 20260623173741.png",
     "Files & LongText/Attachments/Pasted image 20260623173635.png",
-    "Files & LongText/Attachments/Pasted image 20260623172226.png",
-    "Files & LongText/Attachments/Pasted image 20260623172128.png",
     "学习/Bases/计算机网络/OSI七层模型.md",
     "学习/其他专业书/Linux高性能服务器编程.md",
-    "学习/Bases/计算机网络/期末划重点问题.md",
-    "学习/Bases/计算机网络/王道考研计算机网络.md",
-    "学习/Bases/计算机网络/速成版.md",
-    "学习/ProjectsStudy/FromBlogs/架构设计.md",
-    "学习/ProjectsStudy/FromBlogs/awesome cpp-backend blogs.md",
-    "学习/其他专业书/Redis 设计与实现.md",
-    "学习/其他专业书/Linux多线程服务端编程 使用muduo C++网络库.md",
     "未命名.canvas"
   ]
 }
