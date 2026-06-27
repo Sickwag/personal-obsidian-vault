@@ -4,8 +4,8 @@
   "title": "请你补全这篇笔记",
   "titleGenerationStatus": "failed",
   "createdAt": 1782480476175,
-  "updatedAt": 1782480762857,
-  "lastResponseAt": 1782480762857,
+  "updatedAt": 1782532934293,
+  "lastResponseAt": 1782532934293,
   "sessionId": "69898b5c-8210-428d-96b6-6ae1e40f8a7d",
   "providerState": {
     "providerSessionId": "69898b5c-8210-428d-96b6-6ae1e40f8a7d"
@@ -13,12 +13,12 @@
   "currentNote": "学习/Bases/开发范式/常用算法和情景处理.md",
   "usage": {
     "model": "sonnet",
-    "inputTokens": 5067,
+    "inputTokens": 513,
     "cacheCreationInputTokens": 0,
-    "cacheReadInputTokens": 46464,
+    "cacheReadInputTokens": 72256,
     "contextWindow": 1000000,
-    "contextTokens": 51531,
-    "percentage": 5,
+    "contextTokens": 72769,
+    "percentage": 7,
     "contextWindowIsAuthoritative": true
   }
 }
