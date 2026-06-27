@@ -1,10 +1,11 @@
 {
   "cssTheme": "Blue Topaz",
   "accentColor": "#2dcdb2",
-  "interfaceFontFamily": "Cascadia Mono,JetBrains Mono",
+  "interfaceFontFamily": "JetBrains Mono",
   "monospaceFontFamily": "JetBrains Mono",
   "baseFontSizeAction": true,
   "nativeMenus": false,
   "baseFontSize": 21,
-  "enabledCssSnippets": []
+  "enabledCssSnippets": [],
+  "textFontFamily": ""
 }
