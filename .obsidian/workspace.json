@@ -38,7 +38,7 @@
             }
           },
           {
-            "id": "0efa6e7989469a26",
+            "id": "8ea569279c0819b4",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -51,9 +51,24 @@
               "icon": "lucide-file",
               "title": "C++ Runoob Tutoral"
             }
+          },
+          {
+            "id": "7e2c6e019bdd71e2",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chores/JobInterviews/八股/面试题.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "面试题"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -85,7 +100,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "缓存池",
+                "query": "压栈",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -111,8 +126,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -222,12 +236,15 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "ec6eb1d01405b800",
+  "active": "8ea569279c0819b4",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.a34007d2146e",
-    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.e07fd6f6240d",
+    "Chores/JobInterviews/八股/面试题.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
+    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.8d2c6b33ab32",
+    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.b40dd6d1b806",
+    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.a34007d2146e",
+    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.e07fd6f6240d",
     "学习/Bases/开发范式/架构设计.md",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.640056.d14abb9f0716",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.640056.cdc688a61254",
@@ -243,12 +260,8 @@
     "学习/ProjectsStudy/FromBlogs/架构设计.md.tmp.372967.fbe55d7ff183",
     "学习/ProjectsStudy/FromBlogs/架构设计.md.tmp.372967.adff0f0027a4",
     "学习/ProjectsStudy/FromBlogs/架构设计.md.tmp.372967.82264149e7a8",
-    "学习/ProjectsStudy/FromBlogs/架构设计.md.tmp.372967.97062211e2ba",
-    "学习/ProjectsStudy/FromBlogs/架构设计.md.tmp.372967.00288bc05fdb",
-    "学习/ProjectsStudy/FromBlogs/架构设计.md.tmp.372967.7f865c7a8278",
     "Files & LongText/Attachments/Pasted image 20260627205446.png",
     "Files & LongText/Attachments/640 1.webp",
-    "Chores/JobInterviews/八股/面试题.md",
     "Chores/JobInterviews/针对简历的知识点复习.md",
     "Chores/JobInterviews/八股/反问环节.md",
     "Chores/JobInterviews/八股/自我介绍.md",

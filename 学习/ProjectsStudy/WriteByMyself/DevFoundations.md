@@ -2441,76 +2441,34 @@ VLA 的问题：
 参考:
 - https://www.cnblogs.com/jzssuanfa/p/19247528
 - https://www.cnblogs.com/xiaokang-coding/p/18894717
+- https://www.cnblogs.com/jzssuanfa/p/19247528#11-%E4%BB%80%E4%B9%88%E6%98%AF%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B （关于取消异步任务的做法是错误的）
 主要讲解 `future` 标准库
-#### 为什么需要异步？
-同步 vs 异步：
-```cpp
-// 同步方式（阻塞）
-int result = long_running_computation();  // 等待完成
-do_something_else();  // 必须等上面完成后才能执行
-// 异步方式（非阻塞）
-std::future<int> result = std::async(long_running_computation);  // 立即返回
-do_something_else();  // 可以立即执行
-int value = result.get();  // 需要时再获取结果
-```
-**优势：**
-- 提高响应性：主线程不会被长时间阻塞
-- 充分利用多核：多个任务可以并发执行
-- 简化代码：比手动管理线程更简单
-- 异常安全：异常可以通过 future 传递
 #### 四大组件对比
 
-| 组件 | 角色 | 创建方式 | 适用场景 |
-|------|------|---------|---------|
-| `std::future` | 结果接收者 | 从 promise/packaged_task/async 获得 | 获取异步操作的结果 |
-| `std::promise` | 结果提供者 | 直接构造，`.get_future()` 获取关联 future | 手动控制异步结果填充、线程间信号通知 |
-| `std::packaged_task` | 任务包装器 | 包装函数/lambda，调用后自动填充 future | 任务队列、线程池、延迟执行 |
-| `std::async` | 任务启动器 | 传入函数和启动策略，返回 future | 简单异步调用 |
-**关系图：**
+| 组件                   | 角色    | 创建方式                             | 适用场景           |
+| -------------------- | ----- | -------------------------------- | -------------- |
+| `std::future`        | 结果接收者 | 从 promise/packaged_task/async 获得 | 消费异步结果         |
+| `std::promise`       | 结果提供者 | 直接构造，`.get_future()` 获取关联 future | 手动控制结果填充、线程间信号 |
+| `std::packaged_task` | 任务包装器 | 包装可调用对象，调用后自动填充 future           | 任务队列、线程池       |
+| `std::async`         | 任务启动器 | 传入函数和启动策略，返回 future              | 简单异步调用         |
 ```
 std::async → 返回 → std::future
 std::promise → 创建 → std::future
 std::packaged_task → 获取 → std::future
 ```
-#### std::future — 异步结果的接收者
-像一张"提货单"：现在可能还没有结果，将来某个时间点结果会准备好，可以随时查询结果是否就绪，可以等待并获取结果。
-**特性：**
-- 只能移动，不能复制
-- `get()` 只能调用一次（第二次调用抛异常或访问无效状态）
-- 自动等待异步任务完成
-**主要方法：**
+#### std::future
+像一张"提货单"：只能移动不能复制，`get()` 只能调用一次（第二次调用访问无效状态）。
 
 | 方法 | 功能 | 说明 |
 |------|------|------|
-| `get()` | 获取结果 | 阻塞直到结果就绪，只能调用一次 |
-| `wait()` | 等待完成 | 阻塞直到结果就绪，但不获取结果 |
-| `wait_for(duration)` | 超时等待 | 等待指定时间，返回状态 |
-| `wait_until(time_point)` | 等到某时间点 | 等到指定时间点，返回状态 |
-| `valid()` | 检查有效性 | 检查是否有共享状态 |
+| `get()` | 获取结果 | 阻塞直到就绪，只能调用一次 |
+| `wait()` | 等待完成 | 阻塞但不取结果 |
+| `wait_for(duration)` | 超时等待 | 返回 `ready/timeout/deferred` |
+| `valid()` | 检查有效性 | 是否有 shared state |
 `wait_for` 返回值：
 - `std::future_status::ready` — 结果已就绪
 - `std::future_status::timeout` — 超时
 - `std::future_status::deferred` — 任务尚未启动（延迟执行）
-**示例：基本使用**
-```cpp
-#include <iostream>
-#include <future>
-#include <thread>
-#include <chrono>
-int compute_square(int x) {
-    std::cout << "计算 " << x << " 的平方..." << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    return x * x;
-}
-int main() {
-    std::future<int> result = std::async(std::launch::async, compute_square, 10);
-    std::cout << "主线程可以继续做其他事..." << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    int value = result.get();  // 阻塞直到结果就绪
-    std::cout << "结果: " << value << std::endl;
-    return 0;
-}
-```
 **示例：超时等待**
 ```cpp
 std::future<int> result = std::async(std::launch::async, []{
@@ -2526,53 +2484,35 @@ if (status == std::future_status::ready) {
     std::cout << "最终结果: " << value << std::endl;
 }
 ```
-**示例：检查有效性**
-```cpp
-std::future<int> f1;
-std::cout << f1.valid();  // false
-std::future<int> f2 = std::async(std::launch::async, []{ return 42; });
-std::cout << f2.valid();  // true
-int val = f2.get();
-std::cout << f2.valid();  // false — get() 后 future 变为无效
-```
-#### std::promise — 异步结果的提供者
-promise 是"生产者"，future 是"消费者"。promise 允许在一个线程中设置值或异常，另一个线程通过 future 获取。
+#### std::promise
+promise 是"生产者"，future 是"消费者"。通过 shared state 连接：
 ```
 线程A: promise.set_value(42) → shared state → 线程B: future.get() = 42
 ```
 **特性：**
-- 一次性使用：只能设置一次值，重复设置抛 `std::future_error`
-- 配对使用：promise 和 future 配对
-- 异常传递：可以传递异常
-- promise 析构时若未 set_value/set_exception，future 会收到 `std::future_errc::broken_promise`
-**基本步骤：**
-1. 创建 `std::promise<T>` 对象
-2. 通过 `get_future()` 获取关联的 `std::future`
-3. 将 promise 传递给工作线程（使用 `std::ref()`）
-4. 工作线程调用 `set_value()` 或 `set_exception()`
-5. 主线程通过 future 的 `get()` 获取结果
-**示例：基本使用**
+- 只能设置一次值，重复设置抛 `std::future_error`
+- 可传递异常：`prom.set_exception(std::current_exception())`
+- promise 析构时未 set 值，future 收到 `std::future_errc::broken_promise`
+- 设计 `std::promise` 时，**显式删除了它的拷贝构造函数和拷贝赋值运算符**。
+**关键点：promise 是 move-only 类型。** 传递 promise 到线程时用 `std::move()`：
 ```cpp
-void compute(std::promise<int>& prom, int x) {
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    prom.set_value(x * x);
+void producer(std::promise<int> prom) {  // 值传递，但 move-only，实际是移动所有权
+    prom.set_value(42);
 }
 int main() {
     std::promise<int> prom;
-    std::future<int> fut = prom.get_future();
-    std::thread t(compute, std::ref(prom), 10);
-    int result = fut.get();
-    std::cout << "结果 = " << result << std::endl;
+    auto fut = prom.get_future();
+    std::thread t(producer, std::move(prom));  // 移动，不是复制
+    int val = fut.get();
     t.join();
-    return 0;
 }
 ```
+`std::move(prom)` 将 promise 内部指向 shared state 的指针移动到函数参数中，函数内外操作的是**同一个 shared state**。传值而非传引用的原因：promise 的所有权需要转移到工作线程（避免主线程误操作），同时消除对 promise 生命周期的担忧。
 **示例：传递异常**
 ```cpp
 void risky_operation(std::promise<int>& prom, int x) {
     try {
-        if (x < 0) throw std::invalid_argument("参数不能为负数");
-        prom.set_value(x * x);
+        // ...
     } catch (...) {
         prom.set_exception(std::current_exception());
     }
@@ -2582,280 +2522,118 @@ int main() {
     std::future<int> fut = prom.get_future();
     std::thread t(risky_operation, std::ref(prom), -5);
     try {
-        int result = fut.get();
+        int result = fut.get(); // get() 抛出异步任务中抛出的异常
     } catch (const std::exception& e) {
         std::cout << "捕获异常: " << e.what() << std::endl;
     }
     t.join();
 }
 ```
-#### std::packaged_task — 可调用对象的包装器
-包装函数、lambda 或函数对象成一个异步任务，调用后自动将返回值填充到关联的 future。
-**与 promise 的区别：**
-- promise：手动 set_value
-- packaged_task：自动从函数返回值设置
-**示例：基本使用**
-```cpp
-std::packaged_task<int(int, int)> task([](int a, int b) {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    return a + b;
-});
-std::future<int> result = task.get_future();
-std::thread t(std::move(task), 10, 32);
-std::cout << "结果: " << result.get() << std::endl;
-t.join();
-```
-**示例：任务队列（实际应用场景）**
-```cpp
-class TaskQueue {
-    std::queue<std::packaged_task<int()>> tasks_;
-    std::mutex mtx_;
-    std::thread worker_;
-    bool stop_ = false;
-    void worker_thread() {
-        while (true) {
-            std::packaged_task<int()> task;
-            { std::lock_guard<std::mutex> lock(mtx_);
-                if (stop_ && tasks_.empty()) break;
-                if (!tasks_.empty()) {
-                    task = std::move(tasks_.front()); tasks_.pop(); } }
-            if (task.valid()) task();
-            else std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-    }
-public:
-    TaskQueue() : worker_(&TaskQueue::worker_thread, this) {}
-    ~TaskQueue() {
-        { std::lock_guard<std::mutex> lock(mtx_); stop_ = true; }
-        worker_.join();
-    }
-    std::future<int> submit(std::function<int()> func) {
-        std::packaged_task<int()> task(func);
-        std::future<int> result = task.get_future();
-        { std::lock_guard<std::mutex> lock(mtx_); tasks_.push(std::move(task)); }
-        return result;
-    }
-};
-```
-#### std::async — 最简单的异步任务启动
-自动创建线程（或复用线程），并返回 `std::future` 对象。
-**启动策略：**
+#### std::packaged_task vs std::function
 
-| 策略 | 说明 | 何时执行 |
-|------|------|---------|
-| `std::launch::async` | 异步执行 | 立即在新线程中执行 |
-| `std::launch::deferred` | 延迟执行 | 调用 `get()` 或 `wait()` 时在当前线程同步执行 |
-| `std::launch::async \| std::launch::deferred` | 自动选择（默认） | 由实现决定 |
-**示例：启动策略对比**
+| 维度    | `std::function`   | `std::packaged_task` |
+| ----- | ----------------- | -------------------- |
+| 本质    | 类型擦除的可调用对象包装器     | 可调用对象包装器 + 关联 future |
+| 可复制性  | 可复制               | **只可移动**             |
+| 返回值处理 | 调用者自己接收返回值        | 自动填充到关联的 future      |
+| 典型场景  | 回调、策略模式、延迟调用，泛型编程 | 任务队列、线程池             |
+
+`packaged_task` = `function` + 自动管理异步结果投递，更适合需要跨线程获取返回值的场景。
+#### std::async 启动策略
+`std::async` 底层是创建线程执行异步任务，适用于**线程级异步**。不适用于协程（`std::future` 不提供 `operator co_await`）和进程级异步（独立地址空间，需 IPC）。
+```
+std::launch::async 时: 当前线程 decay-copy 参数 → 调用async函数后新线程立刻被创建并执行 → 结果存 shared state
+std::launch::deferred 时: decay-copy 参数存 shared state → 首次 get()/wait() 时在当前线程同步执行
+```
+**decay-copy 含义：** 参数在传递前先退化（数组→指针，去引用，去 cv 限定）再拷贝。保证异步线程拿到的是值的拷贝而非引用。C++23 起改用 `auto(expr)` 实质化，效果相同。
 ```cpp
-void print_thread_id(const std::string& label) {
-    std::cout << label << " 线程ID: " << std::this_thread::get_id() << std::endl;
-}
-int task() { print_thread_id("任务执行在"); return 42; }
-int main() {
-    print_thread_id("主线程");
-    auto f1 = std::async(std::launch::async, task); f1.get();
-    auto f2 = std::async(std::launch::deferred, task);
-    std::cout << "还没有执行任务..." << std::endl;
-    f2.get();  // 这时才在当前线程执行
+// 所以这种写法是合理的，默认值复制方式传递参数给线程对象，不会出现引用悬垂问题
+std::future<int> test() {
+    int local_var = 10;
+    return std::async(std::launch::async, my_func, local_var); // 异步线程中有一份local_var的副本
 }
 ```
-**示例：并发执行多个任务**
+
+| 策略                      | 说明   | 何时执行                           |
+| ----------------------- | ---- | ------------------------------ |
+| `std::launch::async`    | 异步执行 | 立即在新线程中执行                      |
+| `std::launch::deferred` | 延迟执行 | 首次 `get()`/`wait()` 时在当前线程同步执行 |
+| `async \| deferred`（默认） | 自动选择 | 由标准库和操作系统实现决定                  |
+
+**潜在陷阱：** C++ 标准**强制规定**：该 `std::future` 的析构函数**必须阻塞**，直到异步任务执行完毕。这是为了防止产生无法管理的“孤儿线程”，所以**返回将亡值的场景**调用方必须接收这个 future 对象
+如果写 `std::async(my_func).wait();`，程序会先阻塞在 `wait()`，等任务结束后，临时 `future` 对象析构，**再次阻塞**（虽然此时任务已结束，析构很快，但语义上很别扭）。更糟的是，如果你写 `auto f = std::async(my_func);` 然后 `f` 离开了作用域被析构，主线程会死死卡住，直到 `my_func` 跑完，这完全破坏了异步的初衷。
 ```cpp
-int partial_sum(const std::vector<int>& data, size_t start, size_t end) {
-    return std::accumulate(data.begin() + start, data.begin() + end, 0);
-}
-int main() {
-    std::vector<int> data(100000000, 1);
-    std::vector<std::future<long long>> futures;
-    size_t chunk_size = data.size() / 4;
-    for (int i = 0; i < 4; ++i) {
-        size_t start = i * chunk_size;
-        size_t end = (i == 3) ? data.size() : (i + 1) * chunk_size;
-        futures.push_back(std::async(std::launch::async, partial_sum, std::ref(data), start, end));
-    }
-    long long total = 0;
-    for (auto& f : futures) total += f.get();
-    std::cout << "总和: " << total << std::endl;
-}
-```
-**潜在陷阱：** `std::async` 返回的 future 析构时会阻塞等待任务完成（在某些实现中）：
-```cpp
-// 危险 — 析构时阻塞！
+// 危险 — 析构时阻塞等待任务完成
 std::async(std::launch::async, []{ heavy_work(); });
 // 必须保存 future
 auto result = std::async(std::launch::async, []{ heavy_work(); });
 ```
-#### std::shared_future — 允许多次获取的 future
-普通 future 的 `get()` 只能调用一次。`shared_future` 允许多个线程同时 wait/get 同一结果。
-**创建方式：**
-```cpp
-std::promise<int> prom;
-auto fut = prom.get_future().share();  // 转为 shared_future
-```
-**示例：多个线程等待同一个信号**
-```cpp
-void wait_for_signal(std::shared_future<void> fut, int id) {
-    std::cout << "线程 " << id << " 等待信号..." << std::endl;
-    fut.get();
-    std::cout << "线程 " << id << " 收到信号，开始工作！" << std::endl;
-}
-int main() {
-    std::promise<void> signal;
-    std::shared_future<void> ready = signal.get_future().share();
-    std::vector<std::thread> threads;
-    for (int i = 0; i < 5; ++i) threads.emplace_back(wait_for_signal, ready, i);
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    signal.set_value();  // 释放所有等待线程
-    for (auto& t : threads) t.join();
-}
-```
+#### std::shared_future
+- **`std::future<T>::get()`**：返回的是 `T&&`（右值引用）。它会**移动（Move）** 共享状态中的结果。一旦调用，共享状态中的结果就被掏空了，该 `future` 变为无效（`valid() == false`）。
+- **`std::shared_future<T>::get()`**：返回的是 `const T&`（常量左值引用）。所以它允许多个线程、多次读取，但 get 操作**不**把结果移走，如果显式地声明了 `std::shared_future<int&>`，那么这里的 `T` 就是 `int&`。代入公式，返回值类型就是 `int& &`，引用折叠后变成 **`int&`**。在模板参数里明确指定了你要存储和传递的是一个“引用”，C++ 标准库尊重你的意图，允许你通过 `get()` 修改那个被引用的原始变量。
+`shared_future::get()` 返回 `const T&`，不移动值——每次都返回 shared state 内部同一对象的 const 引用。这就是"保存的是拷贝而非移动"的含义：shared state 始终持有值，shared_future 只读不取走。
+**shared_future 不是 condition_variable：**
+- `shared_future` 是**一次性**的：shared state 一旦就绪（set_value），就一直就绪，没有重置机制
+- `condition_variable` 可以 `notify_one`/`notify_all` 多次，配合 `wait` 循环可反复同步
+- `shared_future` 没有虚假唤醒问题
 #### 底层机制：shared state
-所有 future/promise 工具的核心是**共享状态（shared state）**：
 ```
 promise ──set_value──→ [shared state] ──get──→ future
                        ┌──────────────────┐
-                       │  - 是否有值？      │
                        │  - 值/异常        │
                        │  - 等待队列       │
+                       │  - 引用计数       │
                        └──────────────────┘
 ```
 - shared state 是堆上分配的对象，通过引用计数管理生命周期
-- promise 和 future 内部都持有指向 shared state 的指针
-- 当 promise 写入结果后，会通知等待在 shared state 上的所有 future
-- `shared_future` 允许多个读取者，是因为 shared state 中保存的是结果的拷贝而非移动
-#### 异常传递机制
+- promise/future 内部持指向 shared state 的指针
+- promise 写入结果后通知等待的所有 future
+- `shared_future` 允许多个读取者，因为 shared state 保存的是结果的拷贝而非移动
+#### 如何取消异步任务？
+**C++ 标准库不提供取消 future 的机制。** C++20 提供了 `std::stop_token` + `std::jthread` 实现协作式取消：
 ```cpp
-auto future = std::async([]{
-    throw std::runtime_error("出错了！");
-    return 42;
-});
-try {
-    int value = future.get();
-} catch (const std::exception& e) {
-    std::cout << "捕获异常: " << e.what() << std::endl;
-}
-```
-#### 四者选择指南
-```
-需要异步执行任务？
-  ├─ 简单任务，需要返回值 → std::async ⭐ 推荐
-  ├─ 需要在任意时刻设置结果 → std::promise
-  ├─ 需要包装函数，延迟执行 / 任务队列 → std::packaged_task
-  └─ 只需要获取结果 → std::future
-```
-
-| 特性 | std::async | std::promise | std::packaged_task | std::future |
-|------|-----------|-------------|-------------------|------------|
-| 作用 | 启动异步任务 | 手动设置结果 | 包装可调用对象 | 获取结果 |
-| 返回值 | 返回 future | 创建 future | 获取 future | — |
-| 易用性 | ⭐⭐⭐⭐⭐ 最简单 | ⭐⭐⭐ 需要手动设置 | ⭐⭐⭐⭐ 较简单 | ⭐⭐⭐⭐⭐ 透明 |
-| 灵活性 | ⭐⭐⭐ 中等 | ⭐⭐⭐⭐⭐ 最灵活 | ⭐⭐⭐⭐ 灵活 | ⭐⭐ 只读 |
-| 线程管理 | 自动 | 手动 | 手动 | — |
-| 典型用途 | 简单异步任务 | 复杂同步场景 | 任务队列、延迟执行 | 获取异步结果 |
-#### 最佳实践与常见问题
-**检查 future 的有效性：**
-```cpp
-// 好的做法
-std::future<int> result = std::async(task);
-if (result.valid()) { int value = result.get(); }
-// 错误
-std::future<int> result;
-int value = result.get();  // 未定义行为！
-```
-**get() 只能调用一次：**
-```cpp
-// 错误：get() 只能调用一次
-std::future<int> result = std::async(task);
-int v1 = result.get();
-// int v2 = result.get();  // 错误！future 已经无效
-// 需要多次获取用 shared_future
-std::shared_future<int> sf = result.share();
-int v1 = sf.get();
-int v2 = sf.get();
-```
-**传递引用时使用 `std::ref()`：**
-```cpp
-void process(Data& data) { /* ... */ }
-Data data;
-std::async(std::launch::async, process, std::ref(data));
-```
-**std::async vs std::thread：**
-
-| 场景 | 推荐 | 原因 |
-|------|------|------|
-| 需要返回值 | std::async | 自动通过 future 返回结果 |
-| 不需要返回值 | std::thread | 更直接，开销稍小 |
-| 简单任务 | std::async | 代码更简洁 |
-| 需要精确控制线程 | std::thread | 更灵活 |
-| 异常处理 | std::async | 异常自动传递 |
-**如何取消一个异步任务？** 标准库不直接支持，需要自己实现：
-```cpp
-std::atomic<bool> should_stop{false};
-void cancellable_task() {
-    for (int i = 0; i < 1000; ++i) {
-        if (should_stop.load()) return;
+void cancellable_task(std::stop_token st) {
+    while (!st.stop_requested()) {
+        // 做一点工作...
     }
 }
-auto result = std::async(std::launch::async, cancellable_task);
-should_stop.store(true);
-result.wait();
+int main() {
+    std::jthread t(cancellable_task);
+    t.request_stop();  // 请求取消
+}
 ```
+对于 `std::async`，没有任何安全的取消方式。通过 `std::atomic` 标志让循环任务检查退出是唯一的"模拟取消"手段，但非循环结构无效，有限循环会自然结束，死循环空转浪费 CPU。
+#### 注意事项
+`std::async` 和 `std::future` 不能用于协程或进程之间的异步通信，`td::future` 和 `std::promise` 的底层“共享状态”是通过进程内的堆内存（通常由 `std::shared_ptr` 管理）来实现的。指针和内存地址在跨进程时是无效的
+`std::async` 是线程级别的 API，它无法直接“启动”一个协程。协程有自己的异步模型（通过 `co_await`, `co_return` 和自定义的 `promise_type`）。虽然你可以在 `std::async` 的线程里执行一个协程函数，但这属于“大材小用”且破坏了协程无栈切换的优势。现代 C++ 中，协程通常返回自定义的 `Task<T>` 或第三方库（如 `folly::coro`）提供的 `future`，而不是 `std::future`。
 #### 结合项目：KCache 的 SingleFlight
 ```cpp
-// singleflight.h:53-58
 struct Call {
     std::promise<Result>       prom;
     std::shared_future<Result> fut = prom.get_future().share();
 };
 ```
 - `prom` 用来在 Lambda 执行完毕后填充结果
-- `fut` 是 shared_future，允许多个等待者同时 get()
+- `fut` 是 shared_future，允许多个等待者同时 get()（普通 future 只能 get 一次）
 ```cpp
 Result Do(const std::string& key, Func func) {
     std::unique_lock<std::mutex> glock(mtx_);
-    // 已有其他线程在加载这个 key
-    if(map_.find(key) != map_.end()) {
+    if(map_.find(key) != map_.end()) {           // 已有请求在加载此 key
         auto existing_call = map_[key];
-        glock.unlock();
-        auto result = existing_call->fut.get();
-        return result;
+        glock.unlock();                           // ★ 释放锁，让其他 key 的请求也能进来
+        return existing_call->fut.get();          // 等待第一个线程的结果
     }
-    // 我是第一个请求这个 key 的线程
     auto new_call = std::make_shared<Call>();
     map_[key] = new_call;
     glock.unlock();
-    Result val = func();
-    new_call->prom.set_value(val);
+    Result val = func();                          // 执行真正的数据加载
+    new_call->prom.set_value(val);                // 填充结果，所有等待者收到
     std::lock_guard<std::mutex> lock(mtx_);
     map_.erase(key);
     return val;
 }
 ```
-**并发时序：**
-```
-Thread A (key="Tom")         Thread B (key="Tom")         Thread C (key="Jerry")
-────────────────────         ────────────────────         ────────────────────
-lock(mtx_)                    
-map_["Tom"] 不存在           
-创建 Call, map_["Tom"]=Call  
-unlock(mtx_)                 
-func() 执行中...              lock(mtx_)                   lock(mtx_)
-                             map_["Tom"] 存在              map_["Jerry"] 不存在
-                             unlock(mtx_)                  创建 Call
-                             fut.get() → 阻塞              unlock(mtx_)
-                                                           func() 执行中...
-func() 返回结果              
-prom.set_value(val)          
-                             fut.get() 返回！              
-lock(mtx_)                   [收到结果]                    
-map_.erase("Tom")                                          func() 返回
-                                                           prom.set_value(val)
-                                                           lock(mtx_)
-                                                           map_.erase("Jerry")
-```
 **设计要点：**
-- Thread B 没有重复执行 func()，直接复用了 Thread A 的结果
-- Thread C 的 key="Jerry" 与 Thread A/B 不同，完全不受影响
-- 先 unlock 再 wait：如果持有锁等待 future，Thread C 会被阻塞，即使它请求的是不同的 key
-- 用 `shared_future` 而非普通 `future`：因为可能有多个等待者同时 get()
+- **请求合并**：N 个并发请求同一 key，只有第一个执行 func()，其余复用结果
+- **先 unlock 再 wait**：持有锁时 wait future，其他 key 的请求会被阻塞——不同 key 不应互相影响
+- **用 shared_future 而非普通 future**：可能有多个等待者同时 get()
