@@ -4834,33 +4834,6 @@ int main() {
     return 0;
 }
 ```
-#### 异步线程
-异步线程是指独立于主线程执行的线程。异步线程的执行与主线程或其他线程的执行是并发进行的，不会阻塞主线程或其他线程的执行。异步线程通常用于执行耗时的操作，可以理解为**后台**
-**定义**
-```cpp
-template< class Function, class... Args >
-future<typename result_of<Function(Args...)>::type>
-async(Function&& f, Args&&... args);
-```
-- `Function&& f`: 一个可调用对象，可以是函数指针、函数对象或 lambda 表达式。
-- `Args&&... args`: 传递给函数 `f` 的参数。
-**返回值**:
-- 返回一个 `future` 对象，该对象关联到函数 `f` 的返回值。
-**例子**:
-- 可以通过 `async` 创建后台线程
-```cpp
-int main(){
-    future<int> result = async(
-        launch::async, [](){
-            this_thread::sleep_for(chrono::seconds(3));
-            return 0;
-    });
-    int value = result.get();
-    cout << "result = " << value << endl;
-}
-```
-- 其中，future [只能接受一个值或者异常](#线程间通信)，所以将 result 重载为 int 类型接受 lambda 返回值。
-- future 对象的 `. get ()` 方法可以得到返回值
 ### 线程管理
 
 #### 线程控制函数、方法
@@ -5516,43 +5489,6 @@ int main() {
 }
 ```
 每个线程都使用 threadData 变量的副本，不会抢占资源，代价是占用更多空间和内存
-
-### 线程间通信
-`promise` 和 `future` 用于存储线程有关的**结果**，所以**只能存储一个值或者错误**
-[异步线程](#异步线程)
-- promise
-`promise` 对象存储一个值或异常，这个值或异常可以被传递给一个 `future` 对象。`promise` 提供了 `set_value` 和 `set_exception` 方法来设置值或异常，并通过 `future` 对象来检索。
-- future
-`future` 对象从 `promise` 对象获取值或异常。它提供了 `get` 方法来检索存储在 `promise` 中值或异常。`future` 还可以检查值是否已经准备好（通过 `wait` 或 `wait_for` 方法）。
-
-- 参数和返回值
-`promise` 不直接接收参数，但可以使用 `promise::set_value` 和 `promise::set_exception` 方法来设置值或异常。
-`future` 通过 `promise` 对象的 `get_future` 方法获得。`future` 的 `get` 方法返回 `promise` 中设置的值或抛出异常。
-```cpp
-#include <iostream>
-#include <future>
-#include <thread>
-
-using namespace std;
-
-void printMsg(future<int>& fut) {
-	int x = fut.get();//wait for fut obj_value be set
-	cout << "x = " << x << endl;
-}
-
-int main() {
-	promise<int> prom;
-	future<int> fut = prom.get_future(); // initialize fut var
-	thread t(printMsg, ref(fut));
-
-	prom.set_value(10);// this set value operation is in main(main func) "thread" ,once set,printMsg func will work
-	t.join();
-	return 0;
-}
-```
-- C++中 main 函数表示程序的入口，**是主线程**所在
-- 主线程中 `computation_result` 值被存储在 `promise` 对象 `prom` 中，然后通过 `future` 对象 `fut` 传递给 `t` 线程。`t` 线程中 `print_int` 函数等待并检索 `fut` 中值，然后将其打印出来。这样，`computation_result` 值从主线程传递到了 `t` 线程。
-
 ### 线程的其他操作
 #### 线程分离（detach 函数）
 `thread::detach` 是 `thread` 类的一个成员函数，用于将线程对象与它所代表的底层线程分离。一旦线程被分离，它将独立于创建它的线程（通常是主线程）运行，程序的其他部分不需要显式地等待这个线程结束。

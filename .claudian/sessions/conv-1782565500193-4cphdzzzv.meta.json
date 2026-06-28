@@ -4,13 +4,13 @@
   "title": "这篇笔记是我学习IO多路复用时写下的，请你检查其中的内容:",
   "titleGenerationStatus": "failed",
   "createdAt": 1782565500193,
-  "updatedAt": 1782568312186,
+  "updatedAt": 1782623062753,
   "lastResponseAt": 1782568312186,
   "sessionId": "65b1596c-b91d-4532-9e12-050adcc25ed5",
   "providerState": {
     "providerSessionId": "65b1596c-b91d-4532-9e12-050adcc25ed5"
   },
-  "currentNote": "学习/ProjectsStudy/FromBlogs/架构设计.md",
+  "currentNote": "学习/Bases/开发范式/架构设计.md",
   "usage": {
     "model": "sonnet",
     "inputTokens": 134928,

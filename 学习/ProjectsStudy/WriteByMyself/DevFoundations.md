@@ -2356,3 +2356,506 @@ VLA 的问题：
 ### 工程化
 - 单元测试
 - 异常安全
+# 缓存池
+## 一致性哈希算法
+参考: https://developer.aliyun.com/article/1082388
+### 背景
+为什么需要一致性哈希算法？
+
+**当分布式集群移除或者添加一个服务器时，必须尽可能小地改变已存在的服务请求与处理请求服务器之间的映射关系**
+
+假设有这么一种场景：我们有三台缓存服务器分别为：node0、node1、node2，有 3000 万个缓存数据需要存储在这三台服务器组成的集群中，希望可以将这些数据均匀的缓存到三台机器上，常用的方案是：取模算法 hash（key）%N，即：对缓存数据的 key 进行 hash 运算后取模，N 是机器的数量；运算后的结果映射对应集群中的节点。
+
+这就引出一个问题: `hash(Key) % N` **值域**由 N 决定，当 N 动态变化时，会出现错误或有些节点空转没有承载数据
+### 解决方法
+对固定值 2^32 取模，使得一致性算法具备良好的单调性：不管集群中有多少个节点，只要 key 值固定，那所请求的服务器节点也同样是固定的。其算法的工作原理如下：
+- 将整个哈希值空间映射成一个虚拟的圆环，整个哈希空间的取值范围为 0~2^32-1；
+- 计算各服务器节点的哈希值（通常使用 ip 地址计算哈希值），并映射到哈希环上；
+![[cfc28cde8dd64ce5ba3287d2cece6ba1.webp]]
+- 将服务发来的数据请求使用哈希算法算出对应的哈希值；
+- 将计算的哈希值映射到哈希环上，同时沿圆环顺时针方向查找，遇到的第一台服务器就是所对应的处理请求服务器。
+![[ceedff022ca14186b7cab7b0b05e2be4.webp]]
+- 当增加或者删除一台服务器时，受影响的数据仅仅是新添加或删除的服务器到其环空间中前一台的服务器（也就是顺着逆时针方向遇到的第一台服务器）之间的数据，其他都不会受到影响
+![[2d714f20b6964d9aad085f98a3213647.webp|缩容]]
+![[e0201d5aa072406996aaa7395e84bd55.webp|拓容]]
+### 数据倾斜问题
+由于哈希计算的随机性，导致一致性哈希算法存在一个致命问题：数据倾斜，也就是说大多数访问请求都会集中少量几个节点的情况。特别是节点太少情况下，容易因为节点分布不均匀造成数据访问的冷热不均。这就失去了集群和负载均衡的意义。
+![[d03f264c5ea04cee98f77616a6f0e312.webp]]
+解决方法:
+- 使用随机性更好的哈希算法计算节点哈希值，尽可能使服务器分配均匀
+- 虚拟节点机制，即对每一个物理服务节点映射多个虚拟节点，将这些虚拟节点计算哈希值并映射到哈希环上，当请求找到某个虚拟节点后，将被重新映射到具体的物理节点。虚拟节点越多，哈希环上的节点就越多，数据分布就越均匀，从而避免了数据倾斜的问题。
+## 代码实现
+### 数据结构
+**哈希环 `keys_` 中并不存储真实的物理节点，只有虚拟节点**
+
+| 概念             | 数据结构表示                   |
+| -------------- | ------------------------ |
+| 物理节点           | 一个字符串，比如 ip 地址转为字符串，是唯一的 |
+| 虚拟节点           | 格式 `"{物理节点名}-{序号}"` 的字符串，如 `"A-0"`、`"A-1"`，对其计算 CRC32 得到 uint32 哈希值 |
+| 物理节点和虚拟节点的映射关系 | `hash_map_` — `unordered_map<uint32_t, string>`，键是虚拟节点的哈希值，值是物理节点名 |
+| 一个物理节点上有几个虚拟节点 | `node_replicas_` — `unordered_map<string, int>`，键是物理节点名，值是虚拟节点数量 |
+| 一个虚拟节点挂载了几个对象  | `node_counts_`           |
+
+| 行为           | 数据结构变动                                          |
+| ------------ | ----------------------------------------------- |
+| 插入新物理节点      | `keys_` 中插入 `config.replicate` 个虚拟节点哈希值（uint32） |
+| 查找对象属于哪个物理节点 | 二分查找 `key_` 中的虚拟节点，并更新对象挂载情况 `node_counts_[]`   |
+### 节点平衡
+单独使用 balancer 线程以周期为 1s 的频率检查各个节点的平均负载情况，超过 `config_` 配置的负载阈值就触发平衡
+平衡的逻辑是:
+
+1. **采样过滤** — `total_requests_ < 1000` 时跳过，样本太少不调整
+2. **计算平均负载** — `avg_load = total_requests_ / 节点数`
+3. **计算最大偏差** — 遍历所有节点的 `node_counts_`，找出 `|count - avg_load| / avg_load` 的最大值 `max_diff`
+4. **判断是否触发** — 若 `max_diff > config_.load_balance_threshold` (默认 25%)，执行 Rebalance
+
+**RebalanceNodes 调整逻辑:**
+
+```
+对每个节点:
+  load_ratio = node_counts_[node] / avg_load
+
+  若 load_ratio > 1.0 (过载):
+    new_replicas = old_replicas / load_ratio    # 减少虚拟节点
+  若 load_ratio < 1.0 (低载):
+    new_replicas = old_replicas * (2.0 - load_ratio)  # 增加虚拟节点
+
+  钳位到 [min_replicas, max_replicas]
+  若 new_replicas != old_replicas:
+    移除该节点所有旧虚拟节点 (从 hash_map_ 和 keys_ 中删除)
+    按 new_replicas 数量重新添加虚拟节点 (AddNode)
+
+  重置所有计数器为 0
+  重新排序 keys_
+```
+
+**关键设计点:**
+- 调整比例不是线性的，过载节点减少副本，低载节点增加副本 (扩缩系数不对称，低载节点扩得更激进)
+- 调整后计数器重置，下一周期重新统计负载分布
+- 锁策略：CheckAndRebalance 用 `shared_lock` (读锁)，发现不均衡后释放读锁，RebalanceNodes 用 `unique_lock` (写锁)
+## 解决击穿、雪崩、穿透
+* **缓存击穿**：某个热点 key 在缓存过期瞬间，同时有大量请求访问这个 key，导致所有请求都落到数据库上，造成数据库瞬时压力过大；
+* **缓存雪崩**：大量缓存 key 同时失效，导致所有请求都落到数据库上，引起数据库压力激增甚至崩溃；
+* **缓存穿透**：查询不存在的数据，导致每次请求都绕过缓存直接访问数据库。
+### 标准库异步编程
+参考:
+- https://www.cnblogs.com/jzssuanfa/p/19247528
+- https://www.cnblogs.com/xiaokang-coding/p/18894717
+主要讲解 `future` 标准库
+#### 为什么需要异步？
+同步 vs 异步：
+```cpp
+// 同步方式（阻塞）
+int result = long_running_computation();  // 等待完成
+do_something_else();  // 必须等上面完成后才能执行
+// 异步方式（非阻塞）
+std::future<int> result = std::async(long_running_computation);  // 立即返回
+do_something_else();  // 可以立即执行
+int value = result.get();  // 需要时再获取结果
+```
+**优势：**
+- 提高响应性：主线程不会被长时间阻塞
+- 充分利用多核：多个任务可以并发执行
+- 简化代码：比手动管理线程更简单
+- 异常安全：异常可以通过 future 传递
+#### 四大组件对比
+
+| 组件 | 角色 | 创建方式 | 适用场景 |
+|------|------|---------|---------|
+| `std::future` | 结果接收者 | 从 promise/packaged_task/async 获得 | 获取异步操作的结果 |
+| `std::promise` | 结果提供者 | 直接构造，`.get_future()` 获取关联 future | 手动控制异步结果填充、线程间信号通知 |
+| `std::packaged_task` | 任务包装器 | 包装函数/lambda，调用后自动填充 future | 任务队列、线程池、延迟执行 |
+| `std::async` | 任务启动器 | 传入函数和启动策略，返回 future | 简单异步调用 |
+**关系图：**
+```
+std::async → 返回 → std::future
+std::promise → 创建 → std::future
+std::packaged_task → 获取 → std::future
+```
+#### std::future — 异步结果的接收者
+像一张"提货单"：现在可能还没有结果，将来某个时间点结果会准备好，可以随时查询结果是否就绪，可以等待并获取结果。
+**特性：**
+- 只能移动，不能复制
+- `get()` 只能调用一次（第二次调用抛异常或访问无效状态）
+- 自动等待异步任务完成
+**主要方法：**
+
+| 方法 | 功能 | 说明 |
+|------|------|------|
+| `get()` | 获取结果 | 阻塞直到结果就绪，只能调用一次 |
+| `wait()` | 等待完成 | 阻塞直到结果就绪，但不获取结果 |
+| `wait_for(duration)` | 超时等待 | 等待指定时间，返回状态 |
+| `wait_until(time_point)` | 等到某时间点 | 等到指定时间点，返回状态 |
+| `valid()` | 检查有效性 | 检查是否有共享状态 |
+`wait_for` 返回值：
+- `std::future_status::ready` — 结果已就绪
+- `std::future_status::timeout` — 超时
+- `std::future_status::deferred` — 任务尚未启动（延迟执行）
+**示例：基本使用**
+```cpp
+#include <iostream>
+#include <future>
+#include <thread>
+#include <chrono>
+int compute_square(int x) {
+    std::cout << "计算 " << x << " 的平方..." << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    return x * x;
+}
+int main() {
+    std::future<int> result = std::async(std::launch::async, compute_square, 10);
+    std::cout << "主线程可以继续做其他事..." << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    int value = result.get();  // 阻塞直到结果就绪
+    std::cout << "结果: " << value << std::endl;
+    return 0;
+}
+```
+**示例：超时等待**
+```cpp
+std::future<int> result = std::async(std::launch::async, []{
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    return 42;
+});
+auto status = result.wait_for(std::chrono::seconds(2));
+if (status == std::future_status::ready) {
+    std::cout << "结果: " << result.get() << std::endl;
+} else if (status == std::future_status::timeout) {
+    std::cout << "超时，继续等待..." << std::endl;
+    int value = result.get();
+    std::cout << "最终结果: " << value << std::endl;
+}
+```
+**示例：检查有效性**
+```cpp
+std::future<int> f1;
+std::cout << f1.valid();  // false
+std::future<int> f2 = std::async(std::launch::async, []{ return 42; });
+std::cout << f2.valid();  // true
+int val = f2.get();
+std::cout << f2.valid();  // false — get() 后 future 变为无效
+```
+#### std::promise — 异步结果的提供者
+promise 是"生产者"，future 是"消费者"。promise 允许在一个线程中设置值或异常，另一个线程通过 future 获取。
+```
+线程A: promise.set_value(42) → shared state → 线程B: future.get() = 42
+```
+**特性：**
+- 一次性使用：只能设置一次值，重复设置抛 `std::future_error`
+- 配对使用：promise 和 future 配对
+- 异常传递：可以传递异常
+- promise 析构时若未 set_value/set_exception，future 会收到 `std::future_errc::broken_promise`
+**基本步骤：**
+1. 创建 `std::promise<T>` 对象
+2. 通过 `get_future()` 获取关联的 `std::future`
+3. 将 promise 传递给工作线程（使用 `std::ref()`）
+4. 工作线程调用 `set_value()` 或 `set_exception()`
+5. 主线程通过 future 的 `get()` 获取结果
+**示例：基本使用**
+```cpp
+void compute(std::promise<int>& prom, int x) {
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    prom.set_value(x * x);
+}
+int main() {
+    std::promise<int> prom;
+    std::future<int> fut = prom.get_future();
+    std::thread t(compute, std::ref(prom), 10);
+    int result = fut.get();
+    std::cout << "结果 = " << result << std::endl;
+    t.join();
+    return 0;
+}
+```
+**示例：传递异常**
+```cpp
+void risky_operation(std::promise<int>& prom, int x) {
+    try {
+        if (x < 0) throw std::invalid_argument("参数不能为负数");
+        prom.set_value(x * x);
+    } catch (...) {
+        prom.set_exception(std::current_exception());
+    }
+}
+int main() {
+    std::promise<int> prom;
+    std::future<int> fut = prom.get_future();
+    std::thread t(risky_operation, std::ref(prom), -5);
+    try {
+        int result = fut.get();
+    } catch (const std::exception& e) {
+        std::cout << "捕获异常: " << e.what() << std::endl;
+    }
+    t.join();
+}
+```
+#### std::packaged_task — 可调用对象的包装器
+包装函数、lambda 或函数对象成一个异步任务，调用后自动将返回值填充到关联的 future。
+**与 promise 的区别：**
+- promise：手动 set_value
+- packaged_task：自动从函数返回值设置
+**示例：基本使用**
+```cpp
+std::packaged_task<int(int, int)> task([](int a, int b) {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    return a + b;
+});
+std::future<int> result = task.get_future();
+std::thread t(std::move(task), 10, 32);
+std::cout << "结果: " << result.get() << std::endl;
+t.join();
+```
+**示例：任务队列（实际应用场景）**
+```cpp
+class TaskQueue {
+    std::queue<std::packaged_task<int()>> tasks_;
+    std::mutex mtx_;
+    std::thread worker_;
+    bool stop_ = false;
+    void worker_thread() {
+        while (true) {
+            std::packaged_task<int()> task;
+            { std::lock_guard<std::mutex> lock(mtx_);
+                if (stop_ && tasks_.empty()) break;
+                if (!tasks_.empty()) {
+                    task = std::move(tasks_.front()); tasks_.pop(); } }
+            if (task.valid()) task();
+            else std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    }
+public:
+    TaskQueue() : worker_(&TaskQueue::worker_thread, this) {}
+    ~TaskQueue() {
+        { std::lock_guard<std::mutex> lock(mtx_); stop_ = true; }
+        worker_.join();
+    }
+    std::future<int> submit(std::function<int()> func) {
+        std::packaged_task<int()> task(func);
+        std::future<int> result = task.get_future();
+        { std::lock_guard<std::mutex> lock(mtx_); tasks_.push(std::move(task)); }
+        return result;
+    }
+};
+```
+#### std::async — 最简单的异步任务启动
+自动创建线程（或复用线程），并返回 `std::future` 对象。
+**启动策略：**
+
+| 策略 | 说明 | 何时执行 |
+|------|------|---------|
+| `std::launch::async` | 异步执行 | 立即在新线程中执行 |
+| `std::launch::deferred` | 延迟执行 | 调用 `get()` 或 `wait()` 时在当前线程同步执行 |
+| `std::launch::async \| std::launch::deferred` | 自动选择（默认） | 由实现决定 |
+**示例：启动策略对比**
+```cpp
+void print_thread_id(const std::string& label) {
+    std::cout << label << " 线程ID: " << std::this_thread::get_id() << std::endl;
+}
+int task() { print_thread_id("任务执行在"); return 42; }
+int main() {
+    print_thread_id("主线程");
+    auto f1 = std::async(std::launch::async, task); f1.get();
+    auto f2 = std::async(std::launch::deferred, task);
+    std::cout << "还没有执行任务..." << std::endl;
+    f2.get();  // 这时才在当前线程执行
+}
+```
+**示例：并发执行多个任务**
+```cpp
+int partial_sum(const std::vector<int>& data, size_t start, size_t end) {
+    return std::accumulate(data.begin() + start, data.begin() + end, 0);
+}
+int main() {
+    std::vector<int> data(100000000, 1);
+    std::vector<std::future<long long>> futures;
+    size_t chunk_size = data.size() / 4;
+    for (int i = 0; i < 4; ++i) {
+        size_t start = i * chunk_size;
+        size_t end = (i == 3) ? data.size() : (i + 1) * chunk_size;
+        futures.push_back(std::async(std::launch::async, partial_sum, std::ref(data), start, end));
+    }
+    long long total = 0;
+    for (auto& f : futures) total += f.get();
+    std::cout << "总和: " << total << std::endl;
+}
+```
+**潜在陷阱：** `std::async` 返回的 future 析构时会阻塞等待任务完成（在某些实现中）：
+```cpp
+// 危险 — 析构时阻塞！
+std::async(std::launch::async, []{ heavy_work(); });
+// 必须保存 future
+auto result = std::async(std::launch::async, []{ heavy_work(); });
+```
+#### std::shared_future — 允许多次获取的 future
+普通 future 的 `get()` 只能调用一次。`shared_future` 允许多个线程同时 wait/get 同一结果。
+**创建方式：**
+```cpp
+std::promise<int> prom;
+auto fut = prom.get_future().share();  // 转为 shared_future
+```
+**示例：多个线程等待同一个信号**
+```cpp
+void wait_for_signal(std::shared_future<void> fut, int id) {
+    std::cout << "线程 " << id << " 等待信号..." << std::endl;
+    fut.get();
+    std::cout << "线程 " << id << " 收到信号，开始工作！" << std::endl;
+}
+int main() {
+    std::promise<void> signal;
+    std::shared_future<void> ready = signal.get_future().share();
+    std::vector<std::thread> threads;
+    for (int i = 0; i < 5; ++i) threads.emplace_back(wait_for_signal, ready, i);
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    signal.set_value();  // 释放所有等待线程
+    for (auto& t : threads) t.join();
+}
+```
+#### 底层机制：shared state
+所有 future/promise 工具的核心是**共享状态（shared state）**：
+```
+promise ──set_value──→ [shared state] ──get──→ future
+                       ┌──────────────────┐
+                       │  - 是否有值？      │
+                       │  - 值/异常        │
+                       │  - 等待队列       │
+                       └──────────────────┘
+```
+- shared state 是堆上分配的对象，通过引用计数管理生命周期
+- promise 和 future 内部都持有指向 shared state 的指针
+- 当 promise 写入结果后，会通知等待在 shared state 上的所有 future
+- `shared_future` 允许多个读取者，是因为 shared state 中保存的是结果的拷贝而非移动
+#### 异常传递机制
+```cpp
+auto future = std::async([]{
+    throw std::runtime_error("出错了！");
+    return 42;
+});
+try {
+    int value = future.get();
+} catch (const std::exception& e) {
+    std::cout << "捕获异常: " << e.what() << std::endl;
+}
+```
+#### 四者选择指南
+```
+需要异步执行任务？
+  ├─ 简单任务，需要返回值 → std::async ⭐ 推荐
+  ├─ 需要在任意时刻设置结果 → std::promise
+  ├─ 需要包装函数，延迟执行 / 任务队列 → std::packaged_task
+  └─ 只需要获取结果 → std::future
+```
+
+| 特性 | std::async | std::promise | std::packaged_task | std::future |
+|------|-----------|-------------|-------------------|------------|
+| 作用 | 启动异步任务 | 手动设置结果 | 包装可调用对象 | 获取结果 |
+| 返回值 | 返回 future | 创建 future | 获取 future | — |
+| 易用性 | ⭐⭐⭐⭐⭐ 最简单 | ⭐⭐⭐ 需要手动设置 | ⭐⭐⭐⭐ 较简单 | ⭐⭐⭐⭐⭐ 透明 |
+| 灵活性 | ⭐⭐⭐ 中等 | ⭐⭐⭐⭐⭐ 最灵活 | ⭐⭐⭐⭐ 灵活 | ⭐⭐ 只读 |
+| 线程管理 | 自动 | 手动 | 手动 | — |
+| 典型用途 | 简单异步任务 | 复杂同步场景 | 任务队列、延迟执行 | 获取异步结果 |
+#### 最佳实践与常见问题
+**检查 future 的有效性：**
+```cpp
+// 好的做法
+std::future<int> result = std::async(task);
+if (result.valid()) { int value = result.get(); }
+// 错误
+std::future<int> result;
+int value = result.get();  // 未定义行为！
+```
+**get() 只能调用一次：**
+```cpp
+// 错误：get() 只能调用一次
+std::future<int> result = std::async(task);
+int v1 = result.get();
+// int v2 = result.get();  // 错误！future 已经无效
+// 需要多次获取用 shared_future
+std::shared_future<int> sf = result.share();
+int v1 = sf.get();
+int v2 = sf.get();
+```
+**传递引用时使用 `std::ref()`：**
+```cpp
+void process(Data& data) { /* ... */ }
+Data data;
+std::async(std::launch::async, process, std::ref(data));
+```
+**std::async vs std::thread：**
+
+| 场景 | 推荐 | 原因 |
+|------|------|------|
+| 需要返回值 | std::async | 自动通过 future 返回结果 |
+| 不需要返回值 | std::thread | 更直接，开销稍小 |
+| 简单任务 | std::async | 代码更简洁 |
+| 需要精确控制线程 | std::thread | 更灵活 |
+| 异常处理 | std::async | 异常自动传递 |
+**如何取消一个异步任务？** 标准库不直接支持，需要自己实现：
+```cpp
+std::atomic<bool> should_stop{false};
+void cancellable_task() {
+    for (int i = 0; i < 1000; ++i) {
+        if (should_stop.load()) return;
+    }
+}
+auto result = std::async(std::launch::async, cancellable_task);
+should_stop.store(true);
+result.wait();
+```
+#### 结合项目：KCache 的 SingleFlight
+```cpp
+// singleflight.h:53-58
+struct Call {
+    std::promise<Result>       prom;
+    std::shared_future<Result> fut = prom.get_future().share();
+};
+```
+- `prom` 用来在 Lambda 执行完毕后填充结果
+- `fut` 是 shared_future，允许多个等待者同时 get()
+```cpp
+Result Do(const std::string& key, Func func) {
+    std::unique_lock<std::mutex> glock(mtx_);
+    // 已有其他线程在加载这个 key
+    if(map_.find(key) != map_.end()) {
+        auto existing_call = map_[key];
+        glock.unlock();
+        auto result = existing_call->fut.get();
+        return result;
+    }
+    // 我是第一个请求这个 key 的线程
+    auto new_call = std::make_shared<Call>();
+    map_[key] = new_call;
+    glock.unlock();
+    Result val = func();
+    new_call->prom.set_value(val);
+    std::lock_guard<std::mutex> lock(mtx_);
+    map_.erase(key);
+    return val;
+}
+```
+**并发时序：**
+```
+Thread A (key="Tom")         Thread B (key="Tom")         Thread C (key="Jerry")
+────────────────────         ────────────────────         ────────────────────
+lock(mtx_)                    
+map_["Tom"] 不存在           
+创建 Call, map_["Tom"]=Call  
+unlock(mtx_)                 
+func() 执行中...              lock(mtx_)                   lock(mtx_)
+                             map_["Tom"] 存在              map_["Jerry"] 不存在
+                             unlock(mtx_)                  创建 Call
+                             fut.get() → 阻塞              unlock(mtx_)
+                                                           func() 执行中...
+func() 返回结果              
+prom.set_value(val)          
+                             fut.get() 返回！              
+lock(mtx_)                   [收到结果]                    
+map_.erase("Tom")                                          func() 返回
+                                                           prom.set_value(val)
+                                                           lock(mtx_)
+                                                           map_.erase("Jerry")
+```
+**设计要点：**
+- Thread B 没有重复执行 func()，直接复用了 Thread A 的结果
+- Thread C 的 key="Jerry" 与 Thread A/B 不同，完全不受影响
+- 先 unlock 再 wait：如果持有锁等待 future，Thread C 会被阻塞，即使它请求的是不同的 key
+- 用 `shared_future` 而非普通 `future`：因为可能有多个等待者同时 get()
