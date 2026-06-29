@@ -28,28 +28,28 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
+                "file": "学习/Bases/计算机网络/小林Coding 计算机网络.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "DevFoundations"
+              "title": "小林Coding 计算机网络"
             }
           },
           {
-            "id": "8ea569279c0819b4",
+            "id": "58bd1c8e0bf7c91d",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/Language/C C++/C++ Runoob Tutoral.md",
+                "file": "学习/Bases/开发范式/常用算法和情景处理.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "C++ Runoob Tutoral"
+              "title": "常用算法和情景处理"
             }
           }
         ],
@@ -110,7 +110,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -126,7 +127,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
+                "file": "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -136,7 +137,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Qt Official Tutorial 的反向链接列表"
+              "title": "DevFoundations 的反向链接列表"
             }
           },
           {
@@ -145,27 +146,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "学习/其他专业书/QT6开发指南.md",
+                "file": "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "QT6开发指南 的出链列表"
-            }
-          },
-          {
-            "id": "3784e110efbac80c",
-            "type": "leaf",
-            "state": {
-              "type": "tag",
-              "state": {
-                "sortOrder": "frequency",
-                "useHierarchy": true,
-                "showSearch": false,
-                "searchQuery": ""
-              },
-              "icon": "lucide-tags",
-              "title": "标签"
+              "title": "DevFoundations 的出链列表"
             }
           },
           {
@@ -201,14 +187,28 @@
               "icon": "lines-of-text",
               "title": "Quiet Outline"
             }
+          },
+          {
+            "id": "cb84b14da5eec9aa",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
           }
         ],
-        "currentTab": 5
+        "currentTab": 4
       }
     ],
     "direction": "horizontal",
-    "width": 515.5,
-    "collapsed": true
+    "width": 515.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -221,14 +221,15 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "ec6eb1d01405b800",
+  "active": "d06184dd837643b5",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/WriteByMyself/检查.md",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/Bases/开发范式/C++开发范式和术语.md",
-    "学习/其他专业书/Modern C++.md",
     "学习/Bases/开发范式/架构设计.md",
+    "学习/Bases/开发范式/常用算法和情景处理.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/其他专业书/Modern C++.md",
+    "学习/ProjectsStudy/WriteByMyself/检查.md",
+    "学习/Bases/开发范式/C++开发范式和术语.md",
     "Chores/JobInterviews/八股/面试题.md",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.8d2c6b33ab32",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.b40dd6d1b806",
@@ -241,7 +242,6 @@
     "Files & LongText/Attachments/2d714f20b6964d9aad085f98a3213647.webp",
     "Files & LongText/Attachments/ceedff022ca14186b7cab7b0b05e2be4.webp",
     "Files & LongText/Attachments/cfc28cde8dd64ce5ba3287d2cece6ba1.webp",
-    "学习/Bases/开发范式/常用算法和情景处理.md",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "学习/ProjectsStudy/FromBlogs/awesome cpp-backend blogs.md",
     "学习/ProjectsStudy/FromBlogs/架构设计.md.tmp.372967.8bdf37cc6b1f",
