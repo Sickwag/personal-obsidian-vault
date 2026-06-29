@@ -2434,179 +2434,24 @@ new_replicas = old_replicas / load_ratio    # 减少虚拟节点
 - 调整后计数器重置，下一周期重新统计负载分布
 - 锁策略：CheckAndRebalance 用 `shared_lock` (读锁)，发现不均衡后释放读锁，RebalanceNodes 用 `unique_lock` (写锁)
 ## 解决击穿、雪崩、穿透
-* **缓存击穿**：某个热点 key 在缓存过期瞬间，同时有大量请求访问这个 key，导致所有请求都落到数据库上，造成数据库瞬时压力过大；
+详细定义和解决方法参考 
+https://zhuanlan.zhihu.com/p/346651831 （适合面试看）
+https://zhuanlan.zhihu.com/p/1948045072785473971
 * **缓存雪崩**：大量缓存 key 同时失效，导致所有请求都落到数据库上，引起数据库压力激增甚至崩溃；
-* **缓存穿透**：查询不存在的数据，导致每次请求都绕过缓存直接访问数据库。
+	* 在原有的失效时间上加上一个粒度更小的随机时间，这样就避免了因为采用相同的过期时间导致的缓存雪崩。缺点是: 时间粒度是有上限的，并且加大精度需要更高性能
+	* 架构设计上添加 redis 集群，设计上在数据库上分库分表，读写分离，维护成本较高
+	* 交互体验上使用熔断机制，在中间件上设置流量达到阈值时返回**服务器繁忙**等信息，至少保证一部分人能用，交互体验不好
+* **缓存击穿**：某个热点 key 在缓存过期瞬间，同时有大量请求访问这个 key，导致所有请求都落到数据库上，造成数据库瞬时压力过大；
+	* 如果业务允许的话，对于热点的 key 可以设置永不过期的 key。
+	* 使用互斥锁。如果缓存失效的情况，只有拿到锁才可以查询数据库，降低了在同一时刻打在数据库上的请求，防止数据库打死。当然这样会导致系统的性能变差。
+	* 使用 SingleFlight
+* **缓存穿透**：查询不存在的数据，导致每次请求缓存都会询问数据库。相当于所有请求**直连数据库**
+	* 设置空值 key，当查询缓存和数据库都不存在的数据时，记录下 `key=null`，下次查询相同的 key 只会经过缓存。但这种方法面对恶意攻击生成的随即 key 还是会让所有请求都经过数据库，且会导致缓存塞满垃圾 key（如果缓存算法使用的是类似 LRU 机制）。**目前对于随机 key 攻击，只能通过网关/中间件层面的基础参数校验，限制长度做到**
+	* 应用程序到缓存中间设置布隆过滤器，先把所有合法的 ID（如全量用户 ID、商品 ID）提前加载到布隆过滤器中，但[[常用算法和情景处理#40 亿 qq 号去重但限制内存#布隆过滤器|布隆过滤器本质]]决定了迭代维护困难，不适合变更频繁的系统
 ### 标准库异步编程
-参考:
-- https://www.cnblogs.com/jzssuanfa/p/19247528
-- https://www.cnblogs.com/xiaokang-coding/p/18894717
-- https://www.cnblogs.com/jzssuanfa/p/19247528#11-%E4%BB%80%E4%B9%88%E6%98%AF%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B （关于取消异步任务的做法是错误的）
-主要讲解 `future` 标准库
-#### 四大组件对比
-
-| 组件                   | 角色    | 创建方式                             | 适用场景           |
-| -------------------- | ----- | -------------------------------- | -------------- |
-| `std::future`        | 结果接收者 | 从 promise/packaged_task/async 获得 | 消费异步结果         |
-| `std::promise`       | 结果提供者 | 直接构造，`.get_future()` 获取关联 future | 手动控制结果填充、线程间信号 |
-| `std::packaged_task` | 任务包装器 | 包装可调用对象，调用后自动填充 future           | 任务队列、线程池       |
-| `std::async`         | 任务启动器 | 传入函数和启动策略，返回 future              | 简单异步调用         |
-```
-std::async → 返回 → std::future
-std::promise → 创建 → std::future
-std::packaged_task → 获取 → std::future
-```
-#### std::future
-像一张"提货单"：只能移动不能复制，`get()` 只能调用一次（第二次调用访问无效状态）。
-
-| 方法 | 功能 | 说明 |
-|------|------|------|
-| `get()` | 获取结果 | 阻塞直到就绪，只能调用一次 |
-| `wait()` | 等待完成 | 阻塞但不取结果 |
-| `wait_for(duration)` | 超时等待 | 返回 `ready/timeout/deferred` |
-| `valid()` | 检查有效性 | 是否有 shared state |
-`wait_for` 返回值：
-- `std::future_status::ready` — 结果已就绪
-- `std::future_status::timeout` — 超时
-- `std::future_status::deferred` — 任务尚未启动（延迟执行）
-**示例：超时等待**
-```cpp
-std::future<int> result = std::async(std::launch::async, []{
-    std::this_thread::sleep_for(std::chrono::seconds(3));
-    return 42;
-});
-auto status = result.wait_for(std::chrono::seconds(2));
-if (status == std::future_status::ready) {
-    std::cout << "结果: " << result.get() << std::endl;
-} else if (status == std::future_status::timeout) {
-    std::cout << "超时，继续等待..." << std::endl;
-    int value = result.get();
-    std::cout << "最终结果: " << value << std::endl;
-}
-```
-#### std::promise
-promise 是"生产者"，future 是"消费者"。通过 shared state 连接：
-```
-线程A: promise.set_value(42) → shared state → 线程B: future.get() = 42
-```
-**特性：**
-- 只能设置一次值，重复设置抛 `std::future_error`
-- 可传递异常：`prom.set_exception(std::current_exception())`
-- promise 析构时未 set 值，future 收到 `std::future_errc::broken_promise`
-- 设计 `std::promise` 时，**显式删除了它的拷贝构造函数和拷贝赋值运算符**。
-**关键点：promise 是 move-only 类型。** 传递 promise 到线程时用 `std::move()`：
-```cpp
-void producer(std::promise<int> prom) {  // 值传递，但 move-only，实际是移动所有权
-    prom.set_value(42);
-}
-int main() {
-    std::promise<int> prom;
-    auto fut = prom.get_future();
-    std::thread t(producer, std::move(prom));  // 移动，不是复制
-    int val = fut.get();
-    t.join();
-}
-```
-`std::move(prom)` 将 promise 内部指向 shared state 的指针移动到函数参数中，触发移动语义，原 prom 失效：promise 的所有权需要转移到工作线程（避免主线程误操作），同时消除对 promise 生命周期的问题。参考 [[C++ Runoob Tutoral#C++提供的类型转换方式]]
-**示例：传递异常**
-```cpp
-void risky_operation(std::promise<int>& prom, int x) {
-    try {
-        // ...
-    } catch (...) {
-        prom.set_exception(std::current_exception());
-    }
-}
-int main() {
-    std::promise<int> prom;
-    std::future<int> fut = prom.get_future();
-    std::thread t(risky_operation, std::ref(prom), -5);
-    try {
-        int result = fut.get(); // get() 抛出异步任务中抛出的异常
-    } catch (const std::exception& e) {
-        std::cout << "捕获异常: " << e.what() << std::endl;
-    }
-    t.join();
-}
-```
-#### std::packaged_task vs std::function
-
-| 维度    | `std::function`   | `std::packaged_task` |
-| ----- | ----------------- | -------------------- |
-| 本质    | 类型擦除的可调用对象包装器     | 可调用对象包装器 + 关联 future |
-| 可复制性  | 可复制               | **只可移动**             |
-| 返回值处理 | 调用者自己接收返回值        | 自动填充到关联的 future      |
-| 典型场景  | 回调、策略模式、延迟调用，泛型编程 | 任务队列、线程池             |
-
-`packaged_task` = `function` + 自动管理异步结果投递，更适合需要跨线程获取返回值的场景。
-#### std::async 启动策略
-`std::async` 底层是创建线程执行异步任务，适用于**线程级异步**。不适用于协程（`std::future` 不提供 `operator co_await`）和进程级异步（独立地址空间，需 IPC）。
-```
-std::launch::async 时: 当前线程 decay-copy 参数 → 调用async函数后新线程立刻被创建并执行 → 结果存 shared state
-std::launch::deferred 时: decay-copy 参数存 shared state → 首次 get()/wait() 时在当前线程同步执行
-```
-**decay-copy 含义：** 参数在传递前先退化（数组→指针，去引用，去 cv 限定）再拷贝。保证异步线程拿到的是值的拷贝而非引用。C++23 起改用 `auto(expr)` 实质化，效果相同。
-```cpp
-// 所以这种写法是合理的，默认值复制方式传递参数给线程对象，不会出现引用悬垂问题
-std::future<int> test() {
-    int local_var = 10;
-    return std::async(std::launch::async, my_func, local_var); // 异步线程中有一份local_var的副本
-}
-```
-
-| 策略                      | 说明   | 何时执行                           |
-| ----------------------- | ---- | ------------------------------ |
-| `std::launch::async`    | 异步执行 | 立即在新线程中执行                      |
-| `std::launch::deferred` | 延迟执行 | 首次 `get()`/`wait()` 时在当前线程同步执行 |
-| `async \| deferred`（默认） | 自动选择 | 由标准库和操作系统实现决定                  |
-
-**潜在陷阱：** C++ 标准**强制规定**：该 `std::future` 的析构函数**必须阻塞**，直到异步任务执行完毕。这是为了防止产生无法管理的“孤儿线程”，所以**返回将亡值的场景**调用方必须接收这个 future 对象
-如果写 `std::async(my_func).wait();`，程序会先阻塞在 `wait()`，等任务结束后，临时 `future` 对象析构，**再次阻塞**（虽然此时任务已结束，析构很快，但语义上很别扭）。更糟的是，如果你写 `auto f = std::async(my_func);` 然后 `f` 离开了作用域被析构，主线程会死死卡住，直到 `my_func` 跑完，这完全破坏了异步的初衷。
-```cpp
-// 危险 — 析构时阻塞等待任务完成
-std::async(std::launch::async, []{ heavy_work(); });
-// 必须保存 future
-auto result = std::async(std::launch::async, []{ heavy_work(); });
-```
-#### std::shared_future
-- **`std::future<T>::get()`**：返回的是 `T&`（但在编译器实现中，返回共享区域的指针是一个局部变量作为返回值的情景，会触发[[Modern C++#隐式移动语义|隐式移动语义]]）。它会**移动（Move）** 共享状态中的结果。一旦调用，共享状态中的结果就被掏空了，该 `future` 变为无效（`valid() == false`）。
-- **`std::shared_future<T>::get()`**：返回的是 `const T&`（常量左值引用）。所以它允许多个线程、多次读取，但 get 操作**不**把结果移走，如果显式地声明了 `std::shared_future<int&>`，那么这里的 `T` 就是 `int&`。代入公式，返回值类型就是 `int& &`，引用折叠后变成 **`int&`**。在模板参数里明确指定了你要存储和传递的是一个“引用”，C++ 标准库尊重你的意图，允许你通过 `get()` 修改那个被引用的原始变量。
-`shared_future::get()` 返回 `const T&`，不移动值——每次都返回 shared state 内部同一对象的 const 引用。这就是"保存的是拷贝而非移动"的含义：shared state 始终持有值，shared_future 只读不取走。
-**shared_future 不是 condition_variable：**
-- `shared_future` 是**一次性**的：shared state 一旦就绪（set_value），就一直就绪，没有重置机制
-- `condition_variable` 可以 `notify_one`/`notify_all` 多次，配合 `wait` 循环可反复同步
-- `shared_future` 没有虚假唤醒问题
-#### 底层机制：shared state
-```
-promise ──set_value──→ [shared state] ──get──→ future
-                       ┌──────────────────┐
-                       │  - 值/异常        │
-                       │  - 等待队列       │
-                       │  - 引用计数       │
-                       └──────────────────┘
-```
-- shared state 是堆上分配的对象，通过引用计数管理生命周期
-- promise/future 内部持指向 shared state 的指针
-- promise 写入结果后通知等待的所有 future
-- `shared_future` 允许多个读取者，因为 shared state 保存的是结果的拷贝而非移动
-#### 如何取消异步任务？
-**thread 库不提供取消 future 的机制。** C++20 提供了 `std::stop_token` + `std::jthread` 实现协作式取消：
-```cpp
-void cancellable_task(std::stop_token st) {
-    while (!st.stop_requested()) {
-        // 做一点工作...
-    }
-}
-int main() {
-    std::jthread t(cancellable_task);
-    t.request_stop();  // 请求取消
-}
-```
-对于 `std::async`，没有任何安全的取消方式。通过 `std::atomic` 标志让循环任务检查退出是唯一的"模拟取消"手段，但非循环结构无效，有限循环会自然结束，死循环空转浪费 CPU。
-#### 注意事项
-`std::async` 和 `std::future` 不能用于协程或进程之间的异步通信，`td::future` 和 `std::promise` 的底层“共享状态”是通过进程内的堆内存（通常由 `std::shared_ptr` 管理）来实现的。指针和内存地址在跨进程时是无效的
-`std::async` 是线程级别的 API，它无法直接“启动”一个协程。协程有自己的异步模型（通过 `co_await`, `co_return` 和自定义的 `promise_type`）。虽然你可以在 `std::async` 的线程里执行一个协程函数，但这属于“大材小用”且破坏了协程无栈切换的优势。现代 C++ 中，协程通常返回自定义的 `Task<T>` 或第三方库（如 `folly::coro`）提供的 `future`，而不是 `std::future`。
-#### SingleFlight 机制
+参考 [[C++ Runoob Tutoral#标准库异步编程]]
+### SingleFlight 机制
+用于解决缓存击穿，对热点数据的重复请求问题
 ```cpp
 struct Call {
     std::promise<Result>       prom;
@@ -2637,3 +2482,8 @@ Result Do(const std::string& key, Func func) {
 - **请求合并**：N 个并发请求同一 key，只有第一个执行 func()，其余复用结果
 - **先 unlock 再 wait**：持有锁时 wait future，其他 key 的请求会被阻塞——不同 key 不应互相影响
 - **用 shared_future 而非普通 future**：可能有多个等待者同时 get()
+## 数据组问题
+**Group 的概念**：缓存逻辑命名空间，类似数据库的"表"或"命名空间"，不同 group 隔离不同数据源。每个 group 持有独立的 LRUCache、SingleFlight（每个表/命名空间中的热点数据保护） 和 DataGetter
+**Get 调用链**：`Get()` → 本地 cache_->Get() 命中直接返回 → 未命中调用 `Load()` → `SingleFlight::Do()` → `LoadData()` → `getter_(key)` 从数据源加载 → 写入本地缓存后返回
+
+group 模块相当于又是一层在服务器本地的缓存，避免了向真正的**数据源查询（通过 DataGetter 回调实现）**，转发每一条请求的同时，singleFlight 机制保证了某个 group 中出现热点数据请求时只通过向 redis 发送一次获取数据的动作就能给多个满足多个统一短时间内发送给 group 的请求
