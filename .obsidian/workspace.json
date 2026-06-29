@@ -51,24 +51,9 @@
               "icon": "lucide-file",
               "title": "C++ Runoob Tutoral"
             }
-          },
-          {
-            "id": "7e2c6e019bdd71e2",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Chores/JobInterviews/八股/面试题.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "面试题"
-            }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -100,7 +85,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "压栈",
+                "query": "函数重载",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -121,8 +106,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -223,7 +207,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 515.5
+    "width": 515.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -236,16 +221,19 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "8ea569279c0819b4",
+  "active": "ec6eb1d01405b800",
   "lastOpenFiles": [
-    "Chores/JobInterviews/八股/面试题.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/ProjectsStudy/WriteByMyself/检查.md",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/Bases/开发范式/C++开发范式和术语.md",
+    "学习/其他专业书/Modern C++.md",
+    "学习/Bases/开发范式/架构设计.md",
+    "Chores/JobInterviews/八股/面试题.md",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.8d2c6b33ab32",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.b40dd6d1b806",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.a34007d2146e",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.665495.e07fd6f6240d",
-    "学习/Bases/开发范式/架构设计.md",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.640056.d14abb9f0716",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md.tmp.640056.cdc688a61254",
     "Files & LongText/Attachments/d03f264c5ea04cee98f77616a6f0e312.webp",
@@ -267,7 +255,6 @@
     "Chores/JobInterviews/八股/自我介绍.md",
     "学习/Fragments/面试八股/面试题.md",
     "Files & LongText/Attachments/Pasted image 20260627175339.png",
-    "学习/其他专业书/Modern C++.md",
     "学习/其他专业书/C++ prime plus.md",
     "学习/ProjectsStudy/WriteByMyself/MyTinySTL.md",
     "学习/ProjectsStudy/FromRemote/Sudoku.md",
@@ -282,7 +269,6 @@
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/ProjectsStudy/FromRemote/FiberLib.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
-    "学习/ProjectsStudy/FromRemote/FiberLib (复制 1).md",
     "未命名.canvas"
   ]
 }

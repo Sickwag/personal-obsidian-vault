@@ -2416,7 +2416,7 @@ VLA 的问题：
   load_ratio = node_counts_[node] / avg_load
 
   若 load_ratio > 1.0 (过载):
-    new_replicas = old_replicas / load_ratio    # 减少虚拟节点
+new_replicas = old_replicas / load_ratio    # 减少虚拟节点
   若 load_ratio < 1.0 (低载):
     new_replicas = old_replicas * (2.0 - load_ratio)  # 增加虚拟节点
 
@@ -2507,7 +2507,7 @@ int main() {
     t.join();
 }
 ```
-`std::move(prom)` 将 promise 内部指向 shared state 的指针移动到函数参数中，函数内外操作的是**同一个 shared state**。传值而非传引用的原因：promise 的所有权需要转移到工作线程（避免主线程误操作），同时消除对 promise 生命周期的担忧。
+`std::move(prom)` 将 promise 内部指向 shared state 的指针移动到函数参数中，触发移动语义，原 prom 失效：promise 的所有权需要转移到工作线程（避免主线程误操作），同时消除对 promise 生命周期的问题。参考 [[C++ Runoob Tutoral#C++提供的类型转换方式]]
 **示例：传递异常**
 ```cpp
 void risky_operation(std::promise<int>& prom, int x) {
@@ -2569,7 +2569,7 @@ std::async(std::launch::async, []{ heavy_work(); });
 auto result = std::async(std::launch::async, []{ heavy_work(); });
 ```
 #### std::shared_future
-- **`std::future<T>::get()`**：返回的是 `T&&`（右值引用）。它会**移动（Move）** 共享状态中的结果。一旦调用，共享状态中的结果就被掏空了，该 `future` 变为无效（`valid() == false`）。
+- **`std::future<T>::get()`**：返回的是 `T&`（但在编译器实现中，返回共享区域的指针是一个局部变量作为返回值的情景，会触发[[Modern C++#隐式移动语义|隐式移动语义]]）。它会**移动（Move）** 共享状态中的结果。一旦调用，共享状态中的结果就被掏空了，该 `future` 变为无效（`valid() == false`）。
 - **`std::shared_future<T>::get()`**：返回的是 `const T&`（常量左值引用）。所以它允许多个线程、多次读取，但 get 操作**不**把结果移走，如果显式地声明了 `std::shared_future<int&>`，那么这里的 `T` 就是 `int&`。代入公式，返回值类型就是 `int& &`，引用折叠后变成 **`int&`**。在模板参数里明确指定了你要存储和传递的是一个“引用”，C++ 标准库尊重你的意图，允许你通过 `get()` 修改那个被引用的原始变量。
 `shared_future::get()` 返回 `const T&`，不移动值——每次都返回 shared state 内部同一对象的 const 引用。这就是"保存的是拷贝而非移动"的含义：shared state 始终持有值，shared_future 只读不取走。
 **shared_future 不是 condition_variable：**
@@ -2590,7 +2590,7 @@ promise ──set_value──→ [shared state] ──get──→ future
 - promise 写入结果后通知等待的所有 future
 - `shared_future` 允许多个读取者，因为 shared state 保存的是结果的拷贝而非移动
 #### 如何取消异步任务？
-**C++ 标准库不提供取消 future 的机制。** C++20 提供了 `std::stop_token` + `std::jthread` 实现协作式取消：
+**thread 库不提供取消 future 的机制。** C++20 提供了 `std::stop_token` + `std::jthread` 实现协作式取消：
 ```cpp
 void cancellable_task(std::stop_token st) {
     while (!st.stop_requested()) {
@@ -2606,7 +2606,7 @@ int main() {
 #### 注意事项
 `std::async` 和 `std::future` 不能用于协程或进程之间的异步通信，`td::future` 和 `std::promise` 的底层“共享状态”是通过进程内的堆内存（通常由 `std::shared_ptr` 管理）来实现的。指针和内存地址在跨进程时是无效的
 `std::async` 是线程级别的 API，它无法直接“启动”一个协程。协程有自己的异步模型（通过 `co_await`, `co_return` 和自定义的 `promise_type`）。虽然你可以在 `std::async` 的线程里执行一个协程函数，但这属于“大材小用”且破坏了协程无栈切换的优势。现代 C++ 中，协程通常返回自定义的 `Task<T>` 或第三方库（如 `folly::coro`）提供的 `future`，而不是 `std::future`。
-#### 结合项目：KCache 的 SingleFlight
+#### SingleFlight 机制
 ```cpp
 struct Call {
     std::promise<Result>       prom;
@@ -2620,8 +2620,8 @@ Result Do(const std::string& key, Func func) {
     std::unique_lock<std::mutex> glock(mtx_);
     if(map_.find(key) != map_.end()) {           // 已有请求在加载此 key
         auto existing_call = map_[key];
-        glock.unlock();                           // ★ 释放锁，让其他 key 的请求也能进来
-        return existing_call->fut.get();          // 等待第一个线程的结果
+        glock.unlock();                           // ★ 释放锁，让其他请求获取key的异步任务能获取到锁最终也阻塞在他们的fut.get()中
+        return existing_call->fut.get();          // 等待之前就阻塞的get()函数的结果，这样任务一旦结束执行会**唤醒所有**阻塞线程
     }
     auto new_call = std::make_shared<Call>();
     map_[key] = new_call;
