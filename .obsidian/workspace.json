@@ -4,71 +4,20 @@
     "type": "split",
     "children": [
       {
-        "id": "934a28d90dac33cd",
+        "id": "f1b483deaa59c64e",
         "type": "tabs",
         "children": [
           {
-            "id": "a0bb0e2e25344316",
+            "id": "93df0e60d6082600",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Bases/开发范式/架构设计.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "架构设计"
-            }
-          },
-          {
-            "id": "ec6eb1d01405b800",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Bases/计算机网络/小林Coding 计算机网络.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "小林Coding 计算机网络"
-            }
-          },
-          {
-            "id": "58bd1c8e0bf7c91d",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Bases/开发范式/常用算法和情景处理.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "常用算法和情景处理"
-            }
-          },
-          {
-            "id": "7065b1b291477ca3",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Chores/JobInterviews/八股/面试题.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "面试题"
+              "title": "新标签页"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -125,7 +74,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -222,7 +172,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 515.5
+    "width": 515.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -235,8 +186,11 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "ec6eb1d01405b800",
+  "active": "93df0e60d6082600",
   "lastOpenFiles": [
+    "Chores/JobInterviews/八股/面试题.md",
+    "学习/Bases/开发范式/常用算法和情景处理.md",
+    "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "Files & LongText/Attachments/Pasted image 20260630172351.png",
     "Files & LongText/Attachments/Pasted image 20260630172112.png",
     "Files & LongText/Attachments/Pasted image 20260630171213.png",
@@ -248,12 +202,8 @@
     "Files & LongText/Attachments/image.EFUQR3.png",
     "Files & LongText/Attachments/image.1KLMR3.png",
     "学习/Bases/开发范式/架构设计.md",
-    "学习/Bases/开发范式/常用算法和情景处理.md",
-    "Chores/JobInterviews/八股/面试题.md",
     "学习/algorithm/刷题路线.md",
     "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
-    "学习/Bases/计算机网络/小林Coding 计算机网络.md",
-    "Files & LongText/Attachments/image.4Z0SR3.png",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md.tmp.399777.230f3473f9a5",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md.tmp.399777.34108ef2b1ce",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md.tmp.399777.1acb32bd1960",
