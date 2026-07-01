@@ -4,20 +4,20 @@
   "title": "小林coding 图解网络",
   "titleGenerationStatus": "failed",
   "createdAt": 1782191380975,
-  "updatedAt": 1782737383076,
-  "lastResponseAt": 1782737383076,
+  "updatedAt": 1782789251749,
+  "lastResponseAt": 1782789251749,
   "sessionId": "2f856962-05c3-4036-9e8c-fc52356178ae",
   "providerState": {
     "providerSessionId": "2f856962-05c3-4036-9e8c-fc52356178ae"
   },
   "usage": {
     "model": "sonnet",
-    "inputTokens": 72184,
+    "inputTokens": 661,
     "cacheCreationInputTokens": 0,
-    "cacheReadInputTokens": 0,
+    "cacheReadInputTokens": 134976,
     "contextWindow": 1000000,
-    "contextTokens": 72184,
-    "percentage": 7,
+    "contextTokens": 135637,
+    "percentage": 14,
     "contextWindowIsAuthoritative": true
   }
 }
