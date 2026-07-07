@@ -1656,3 +1656,55 @@ for (int i = 0; i < 3; ++i) {
 ### FoxRedis 异步→协程模式
 
 （待学习）
+
+# 数据结构模块
+## array
+exist 函数默认 array 已经排序并使用二分法检查是否存在，实现有问题。浅封装没价值
+## btyearray
+### 数据结构
+ByteArray 的内存是一个单向链表，每个节点是固定大小（m_baseSize，默认 4KB）的内存块。
+```cpp
+  ByteArray 内存结构：
+  m_root → ┌──────────┐    next → ┌──────────┐    next → ┌──────────┐
+           │ ptr      │           │ ptr      │           │ ptr      │
+           │ size=4096│           │ size=4096│           │ size=4096│
+           │ ──────── │           │ ──────── │           │ ──────── │
+           │ data...  │           │ data...  │           │ (空闲)   │
+           └──────────┘           └──────────┘           └──────────┘
+           ↑ m_cur                                    ↑ m_capacity 位置
+```
+- m_root     → 链表头节点，永远指向第一个 Node（构造后不变）
+- m_cur      → 当前操作节点，write/read 时随 m_position 前进，跨节点时跳到 next
+- m_position → 当前读写位置（累计字节偏移量，从 0 开始）
+- m_capacity → 所有 Node 的容量总和（总字节数）
+- m_size     → 已写入的有效数据长度（总字节数）
+### 代码实现
+`iovec` 是 POSIX 标准结构体（`<sys/uio.h>`）：
+```cpp
+struct iovec {
+    void  *iov_base;  // 缓冲区起始地址
+    size_t iov_len;   // 缓冲区长度
+};
+```
+**它是零拷贝系统调用 `readv` / `writev` 的输入参数。** 这两个系统调用可以一次性读写多个不连续的内存块。
+```cpp
+// 普通 write：数据必须在连续内存中
+write(fd, buf, len);    // buf 必须是连续地址
+
+// writev：数据可以分散在多个内存块中
+struct iovec iov[2] = {
+    {.iov_base = header, .iov_len = 4},
+    {.iov_base = body,   .iov_len = 100}
+};
+writev(fd, iov, 2);     // 一次系统调用发送两块不连续内存
+```
+**ByteArray 的数据在链表节点中不连续。** 如果要通过 socket 发送，有两种选择：
+```
+方案 A：先拷贝到连续缓冲区再 send（有拷贝开销），并且是多次调用
+  ByteArray → memcpy → [连续 buf] → send(fd, buf, len, 0)
+方案 B：用 iovec + writev（零拷贝）
+  ByteArray → iovec[] → writev(fd, iovec, n)
+                          ↑ 一次系统调用发送所有节点数据
+```
+
+`getReadBuffers` 把 ByteArray 中 `[m_position, m_position+len)` 区间的数据映射成 `iovec` 数组 `getWriteBuffers` 类似，返回可写入的空闲缓冲区 `iovec`，供外部直接写入（从 socket `readv` 直接读入 ByteArray）。
