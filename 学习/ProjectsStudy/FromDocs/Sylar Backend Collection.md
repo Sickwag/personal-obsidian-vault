@@ -2,6 +2,281 @@
 created: 2026-06-01
 resource_1: https://github.com/sylar-yin/sylar.git
 ---
+# 前置学习：libevent 框架原理
+
+> [!info] 为什么先学 libevent
+> sylar 的 `IOManager`/`Scheduler` 是 Reactor 模式的 C++ 重写。先理解 libevent 的事件循环骨架，再看 sylar 第七阶段（IO 协程调度器）会顺畅很多。项目中 `FoxRedis`/`FoxRedisCluster`（异步 Redis）也直接依赖 libevent。
+
+## 概念分层：内核机制 / 设计模式 / 库实现
+这些名词分属三层，理清层级关系就不会混：
+
+```
+应用代码
+   │
+┌──▼──────────────────────────────────┐
+│ libevent   (库：Reactor 的实现)      │  ← 用户态
+├─────────────────────────────────────┤
+│ Reactor 模式 (设计模式层)            │
+├─────────────────────────────────────┤
+│  就绪通知 (readiness)    完成通知 (completion)
+│  select / poll / epoll    io_uring              │
+└──┬──────────────────────────────────┴──────────┘
+   │
+  Linux 内核
+```
+
+一句话总纲：**select/poll/epoll/io_uring 是内核机制；Reactor 是用它们搭出的设计模式；libevent 是 Reactor 的 C 库实现。**
+
+### select / poll / epoll — 内核就绪通知（readiness）
+解决同一问题：一个线程同时监听很多 fd，谁就绪了告诉我。
+
+| 维度 | select | poll | epoll |
+|---|---|---|---|
+| 接口 | `fd_set` 位图 | `pollfd[]` 数组 | `epoll_create/ctl/wait` |
+| fd 上限 | 1024 (FD_SETSIZE) | 无（受内存） | 无 |
+| 复杂度 | O(n) 全量扫描 | O(n) 全量扫描 | O(ready) |
+| 内核维护就绪表 | 否，每次传全量 | 否 | 是（红黑树+就绪链表） |
+| 每次调用 | 重建 fd_set | 传数组 | 增量 `epoll_ctl` |
+| 触发方式 | LT | LT | LT / ET |
+| 可移植 | POSIX | POSIX | Linux only |
+
+**epoll 为什么快：**
+- `epoll_create` 建 `eventpoll`，内核开红黑树（兴趣表）+ 双向链表（就绪表）
+- `epoll_ctl(ADD)` 把 fd 插红黑树，并向 fd 的等待队列注册回调
+- fd 就绪时回调把它挂到就绪链表
+- `epoll_wait` 只取就绪链表 → O(就绪数)，不随总 fd 数增长
+
+select/poll 每次都要把"我关心哪些 fd"全量传进内核再全扫一遍，fd 一多就线性退化；epoll 把兴趣表常驻内核，只返回就绪的。
+
+### io_uring — 内核完成通知（completion）
+epoll 只告诉你"可读了"，读操作还是你自己调 `read()`。io_uring 更进一步：你提交一个"读这个 fd 到这块 buffer"的请求，**内核做完整个 I/O 才通知你**。
+
+| 维度 | epoll (readiness) | io_uring (completion) |
+|---|---|---|
+| 通知时机 | 就绪时（可以读了） | 完成时（已经读好了） |
+| 谁执行 I/O | 应用（非阻塞 read/write） | 内核 |
+| 系统调用 | 每次操作 `epoll_ctl/wait` | SQ_POLL 模式下可零系统调用 |
+| 数据结构 | 红黑树 + 就绪链表 | 两个共享内存 ring（SQ 提交环 + CQ 完成环） |
+| 天然适配 | Reactor | Proactor |
+| 内核版本 | Linux 2.6 (2002) | Linux 5.1 (2019) |
+
+io_uring 用 SQ/CQ 两个环形队列做用户态↔内核共享内存通信，批量提交 I/O，可避免每次系统调用开销，适合高 IOPS 存储/高速网络。**libevent 经典后端不基于 io_uring**，它是 readiness 派。
+### Reactor vs Proactor — 设计模式
+
+| | Reactor | Proactor |
+|---|---|---|
+| 通知时机 | 就绪 | 完成 |
+| 谁做 I/O | 应用（非阻塞） | 内核（异步） |
+| 后端 | select/poll/epoll/kqueue | io_uring / Windows IOCP |
+| 典型库 | libevent, libev, muduo | Boost.Asio, libuv |
+
+- **Reactor**：注册"fd 可读时回调" → 循环 `epoll_wait` → 就绪 → 调回调 → 回调里 `read()`
+- **Proactor**：发起"读这个 fd" → 内核异步读 → 完成后回调 → 回调里直接拿数据
+Linux 长期只有 readiness 接口（io_uring 之前 aio 不完善），所以 Linux 主流是 Reactor；Windows 的 IOCP 天生是 Proactor。
+### libevent — Reactor 的库实现
+libevent 把 select/poll/epoll/kqueue 统一抽象成**可插拔 backend**：
+```c
+// event-internal.h
+static const struct eventop *eventops[] = {
+    &epollops,    // Linux 首选
+    &pollops,
+    &selectops,
+    ...
+};
+```
+- 每个 backend 实现一个 `eventop` 接口（`add`/`del`/`dispatch`/`recalc`）
+- `event_base_new()` 按优先级挑一个（Linux 选 epoll）
+- 上层只调 `event_add` / `event_base_dispatch`，不感知底下是 epoll 还是 select
+
+所以 **libevent = Reactor 模式 + 可插拔 backend + bufferevent/timer/signal 扩展**，屏蔽内核多路复用差异，一套事件回调代码到处跑。
+
+### 与 sylar 的关系
+sylar 的 `IOManager` 不像 libevent 抽象出 select/poll/epoll 多后端——它**直接绑死 epoll**（只跑 Linux），简化了抽象层。sylar 砍掉了 backend 抽象，裸用 epoll + 协程调度。
+
+```
+内核机制层:  select ─ poll ─ epoll ──── (readiness → Reactor)
+                                     ↘
+                                      io_uring (completion → Proactor)
+设计模式层:  Reactor ─────────────── Proactor
+库实现层:    libevent (Reactor + 可插拔 backend)
+             sylar IOManager = 同思路 C++ 重写，直接绑死 epoll，砍掉 backend 抽象
+```
+
+## libevent 到底做了什么：epoll 的包装层
+> [!important] 关键澄清
+> libevent **不是**多路复用技术，是 epoll 的**包装层**，不和 epoll 并列——它在 epoll 之上。libevent 没造新的多路复用，它底层就调 `epoll_create/ctl/wait`。
+
+**strace 证据**：strace 一个 libevent 程序，看到的系统调用仍是：
+```
+epoll_create1(0) = 3
+epoll_ctl(3, EPOLL_CTL_ADD, 5, {EPOLLIN, ...}) = 0
+epoll_wait(3, ..., -1) = 1
+```
+
+### 类比：stdio 和 read()
+| | 系统调用 | C 库包装 |
+|---|---|---|
+| 文件读写 | `read()` / `write()` | `fread()` / `FILE*` / `std::fstream` |
+| I/O 多路复用 | `epoll_create/ctl/wait` | **libevent** |
+
+- 你可以用 `read()` 直接读文件，但每次要自己处理缓冲、部分读、错误。`stdio` 帮你包了，**底层还是调 `read()`**。
+- 同理：你可以用 `epoll_wait` 直接写事件循环，但每次要自己处理 fd→回调映射、定时器、信号、跨平台。**libevent 帮你包了，底层还是调 `epoll_wait`**。
+
+stdio 没替代 `read()`，libevent 没替代 epoll。
+
+### 那直接用 epoll 不行吗？libevent 解决的 4 个痛点
+
+**痛点 1：跨平台**
+epoll 是 Linux 独占。程序要跑 macOS（kqueue）、老 Unix（select），就得写三套事件循环。libevent 的 `eventops[]` 后端让你一套代码跑所有平台——Linux 选 epoll，Mac 选 kqueue，上层 `event_add` 不变。
+
+**痛点 2：样板代码**
+裸 epoll 每次要手写循环 + 自己维护 fd→回调映射：
+```c
+while (1) {
+    int n = epoll_wait(epfd, events, 64, timeout);
+    for (int i = 0; i < n; i++) {
+        // events[i].data.fd 是几号？读还是写？调哪个函数？自己查表 dispatch
+    }
+}
+```
+libevent 把循环和 dispatch 写好了，你只注册"fd 可读时调这个函数"：
+```c
+event_new(base, fd, EV_READ|EV_PERSIST, on_read, arg);
+event_add(ev, NULL);
+event_base_dispatch(base);   // 循环 libevent 替你跑
+```
+
+**痛点 3：把 fd 事件、定时器、信号塞进同一个循环**
+epoll 只管 fd 就绪。你想要"5 秒后调这个函数"或"收到 SIGINT 时调这个函数"，裸用 epoll 得自己：
+- 维护最小堆算定时器，把堆顶到期时间转成 `epoll_wait` 的 timeout
+- 信号会打断 `epoll_wait`（EINTR），还得用 signalfd 或自管道把信号变 fd 事件
+
+libevent 把这三件事统一成同一个 `event_add` 接口——定时器和信号也当 event 注册，内部帮你算 timeout、处理 EINTR。这是 libevent 最大的价值。
+
+**痛点 4：缓冲 I/O**
+epoll 说"可读了"，但你 `read()` 可能只读到半条消息。你得自己写循环读、自己管缓冲区拼包。libevent 的 `bufferevent` 帮你做带缓冲的读写 + 水位回调。
+
+### 总结
+```
+不用 libevent:
+  应用代码 ──直接调──> epoll_wait (内核)
+  自己写: event loop + fd→回调表 + 定时器堆 + 信号处理 + 缓冲区
+
+用 libevent:
+  应用代码 ──> libevent API (event_add / bufferevent / 定时器)
+                   │
+                   └──内部调──> epoll_wait (内核)
+  libevent 替你写好了中间那一堆
+```
+libevent = epoll 之上加一层：跨平台后端选择 + 现成事件循环 + fd/定时器/信号统一调度 + 缓冲 I/O 抽象。内核干活的还是 epoll。
+
+## Reactor 模式本质
+传统阻塞 I/O：一个连接一个线程，`read()` 阻塞等数据，连接上千时线程切换开销爆炸。Reactor 反过来：**单/少量线程跑一个事件循环，让内核通过 `epoll_wait` 报告哪些 fd 就绪，再对就绪 fd 调回调**。
+
+| 维度 | 阻塞 I/O + 多线程 | Reactor（libevent） |
+|---|---|---|
+| 等待方式 | 每线程 `read()` 阻塞 | 一个循环 `epoll_wait` |
+| 线程数 | ≈ 连接数 | 少量（甚至 1） |
+| 扩展性 | 差（线程切换开销） | 好（fd 开销低） |
+| 编程模型 | 顺序同步 | 事件驱动 + 回调 |
+
+## Reactor 的实现逻辑与高并发原理
+
+### 五个角色（POSA2）
+| Reactor 角色 | 职责 | libevent 对应 | sylar 对应 |
+|---|---|---|---|
+| Handle | I/O 资源标识 | `ev_fd` | fd |
+| 同步事件多路分离器 | 阻塞等就绪 | `eventop->dispatch`(`epoll_wait`) | `epoll_wait` |
+| Event Loop | 驱动循环 | `event_base_loop` | `IOManager::idle` |
+| Dispatcher | 注册表+分发 | `event_base` | `FdContext`+调度队列 |
+| Event Handler | 处理逻辑 | `ev_callback` | Fiber/协程 |
+
+### 核心循环
+```c
+while (running) {
+    // 1. 多路分离：睡到"任意 fd 就绪"或"最近定时器到期"
+    n = epoll_wait(epfd, ready[], MAX, nearest_timer_timeout);
+    // 2. 分发：就绪事件逐个交回调
+    for (i = 0; i < n; i++) {
+        ev = ready[i].data.ptr;
+        ev->callback(ev->fd, ev->events, ev->arg);
+    }
+    // 3. 到期定时器
+    process_expired_timers();
+}
+```
+**关键二分**：`epoll_wait` 阻塞 = productive wait（睡到任意 fd 就绪，不浪费 CPU）；callback 必须**非阻塞+快**（阻塞则整个循环卡住）。
+
+### 如何做到高并发
+一句话：**Reactor 把"连接数"和"线程数"解耦——一个线程靠非阻塞 I/O + `epoll_wait` 同时服务上万连接，线程只在 `epoll_wait` 阻塞（被任意就绪 fd 唤醒），从不在单个 `read()` 阻塞。**
+
+| 模型 | 连接:线程 | 某连接阻塞时 | 10K 连接内存 | 热路径上下文切换 |
+|---|---|---|---|---|
+| 阻塞 IO+线程/连接 | 1:1 | 只影响自己 | 10K×8MB≈80GB | 每次IO都切 |
+| Reactor | N:1 | 卡住所有连接 | 1线程×8MB | 回调背靠背不切 |
+
+四个根因：
+1. **线程数与连接数解耦**：10K 连接不再要 10K 线程，省掉 8MB 栈×10K 的内存和调度实体
+2. **`epoll_wait` O(ready)**：只返回就绪 fd，不随总连接数增长（内核侧使能条件）
+3. **无热路径上下文切换**：阻塞模型每次 IO 切 1-10μs，Reactor 回调背靠背零切换
+4. **缓存友好**：单线程单核热数据常驻 cache，线程/连接模型在线程间蹦
+
+### 边界与变体
+Reactor 的并发是 **I/O 并发，不是 CPU 并行**。单线程单核跑回调，重 CPU 回调会卡住整个循环。变体都围绕"别让回调阻塞"：
+
+| 变体 | 结构 | 代表 |
+|---|---|---|
+| 单线程 Reactor | 1 线程 accept+IO+业务 | libevent 默认 |
+| 主从 Reactor | 1 主 accept，分发 worker 线程池 | Netty |
+| one loop per thread | N 个 Reactor 线程各跑 epoll | muduo |
+| **Reactor + 协程** | N 线程各 epoll，回调=恢复协程，阻塞时 yield | **sylar IOManager** |
+
+sylar 是最后一种：多个调度线程各自在 `idle()` 里 `epoll_wait`，事件回调不是普通函数而是**恢复一个协程**。协程里的"阻塞 read"（被 Hook 拦截）实际 yield 协程而非阻塞 OS 线程——所以能写顺序的阻塞式代码却不卡循环。这正是第八阶段 Hook 机制要解决的。
+
+### 命门：回调不能阻塞
+哪个回调忘设 `O_NONBLOCK`、做磁盘 I/O、或 `sleep(1)`，整个事件循环停滞，几万连接全部卡死。
+- libevent 给 `bufferevent` 帮你包缓冲
+- sylar 更激进：**Hook + 协程**，让你写 `read()` 像阻塞调用，底层自动转"注册事件 + yield 协程"，既不卡循环又保持代码可读
+
+## 两个核心结构
+
+### event_base —— 事件循环引擎
+@libevent event.c / event-internal.h
+- 持有一个 backend（epoll/select/poll 之一）+ 就绪队列
+- `event_base_new()` 创建，`event_base_loop()` / `event_base_dispatch()` 跑循环
+- 结构定义在 `event-internal.h`
+
+### event —— 一次事件注册
+@libevent event.c
+- "我关心 fd X 的某事件，就绪时调 func"的注册项
+- 关键字段：`ev_fd` / `ev_events`(READ|WRITE) / `ev_callback` / `ev_arg`
+- `event_add()` 注册、`event_del()` 注销、`event_assign()` 初始化
+
+## 主循环数据流
+```
+event_add(ev)        →  插入 event_base 注册表 + 通知 backend (epoll_ctl ADD)
+event_base_loop()    →  epoll_wait() 取就绪 fd  →  event 入就绪队列  →  逐个调 ev_callback
+```
+
+## 最小用法
+```c
+struct event_base *base = event_base_new();                               // 建引擎
+struct event *ev = event_new(base, fd, EV_READ|EV_PERSIST, on_read, arg); // 注册
+event_add(ev, NULL);                                                      // 加入 backend
+event_base_dispatch(base);                                                // 跑循环
+```
+`EV_PERSIST` 是关键：默认 event 触发一次后自动失效（需重新 `event_add`），加这个 flag 才会持续监听——sylar 中"事件常驻"的语义即源于此。
+
+## libevent → sylar 对应关系
+
+| libevent | sylar |
+|---|---|
+| epoll backend（`epoll.c`） | `IOManager` 直接用 epoll |
+| timer（最小堆 + `epoll_wait` 超时） | `TimerManager` 同源 |
+| bufferevent / evbuffer | sylar `Socket` / `Stream` |
+| `event_base_loop` 主循环 | `IOManager::idle()` 协程里 `epoll_wait` |
+| `EV_PERSIST` 持续监听 | sylar 事件默认常驻 |
+
 # 基本组件
 ## 包含文件
 
