@@ -23,16 +23,6 @@
             }
           },
           {
-            "id": "37e03cca9369ada6",
-            "type": "leaf",
-            "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "新标签页"
-            }
-          },
-          {
             "id": "99b2e9210cb95aac",
             "type": "leaf",
             "state": {
@@ -46,8 +36,19 @@
               "icon": "lucide-file",
               "title": "Sylar Backend Collection"
             }
+          },
+          {
+            "id": "7fa735bce776e354",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -104,8 +105,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -216,11 +216,11 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "93df0e60d6082600",
+  "active": "7fa735bce776e354",
   "lastOpenFiles": [
+    "学习/Bases/开发范式/架构设计.md",
     "Files & LongText/Attachments/Pasted image 20260707140242.jpg",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
-    "学习/Bases/开发范式/架构设计.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.25612.62d2922955b4",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.25612.005c3a504b74",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.25612.81e42762e198",
@@ -237,7 +237,6 @@
     "Files & LongText/Attachments/image.IW1SR3.png",
     "Files & LongText/Attachments/image.356SR3.png",
     "Files & LongText/Attachments/image.EFUQR3.png",
-    "Files & LongText/Attachments/image.1KLMR3.png",
     "学习/algorithm/刷题路线.md",
     "学习/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md.tmp.399777.230f3473f9a5",
