@@ -51,9 +51,19 @@
               "icon": "lucide-file",
               "title": "小林Coding 计算机网络"
             }
+          },
+          {
+            "id": "58078abe2909c819",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 2
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -222,8 +232,9 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "7fa735bce776e354",
+  "active": "58078abe2909c819",
   "lastOpenFiles": [
+    "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "学习/Bases/开发范式/架构设计.md",
     "Files & LongText/Attachments/Pasted image 20260707140242.jpg",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
@@ -233,7 +244,6 @@
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md.tmp.25612.6abba28a618d",
     "Chores/JobInterviews/八股/面试题.md",
     "学习/Bases/开发范式/常用算法和情景处理.md",
-    "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "Files & LongText/Attachments/Pasted image 20260630172351.png",
     "Files & LongText/Attachments/Pasted image 20260630172112.png",
     "Files & LongText/Attachments/Pasted image 20260630171213.png",
