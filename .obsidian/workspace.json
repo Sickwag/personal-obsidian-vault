@@ -51,8 +51,19 @@
               "icon": "lucide-file",
               "title": "小林Coding 计算机网络"
             }
+          },
+          {
+            "id": "f265fa6adecf9ef5",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -109,8 +120,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -207,7 +217,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 370.5
+    "width": 370.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -220,10 +231,10 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "93df0e60d6082600",
+  "active": "f265fa6adecf9ef5",
   "lastOpenFiles": [
-    "学习/ProjectsStudy/FromRemote/FiberLib.md",
     "学习/ProjectsStudy/FromRemote/Tencent Libco.md",
+    "学习/ProjectsStudy/FromRemote/FiberLib.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
     "学习/Bases/开发范式/常用算法和情景处理.md",
