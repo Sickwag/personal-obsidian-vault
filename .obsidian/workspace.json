@@ -56,10 +56,15 @@
             "id": "f265fa6adecf9ef5",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
               "icon": "lucide-file",
-              "title": "新标签页"
+              "title": "01Star-Punchase-Sale-Inventory"
             }
           }
         ],
@@ -120,7 +125,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -233,6 +239,8 @@
   },
   "active": "f265fa6adecf9ef5",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md.tmp.330571.88ef023c0058",
+    "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
     "学习/ProjectsStudy/FromRemote/Tencent Libco.md",
     "学习/ProjectsStudy/FromRemote/FiberLib.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
@@ -277,8 +285,6 @@
     "学习/ProjectsStudy/FromRemote/Sudoku.md",
     "学习/ToolChain/Cmake.md",
     "学习/Language/C C++/模板元编程.md",
-    "学习/Fragments/面试八股/开发情景题.md",
-    "学习/Bases/开发范式/设计模式.md",
     "未命名.canvas"
   ]
 }
