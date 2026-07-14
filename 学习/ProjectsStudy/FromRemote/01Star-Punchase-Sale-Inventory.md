@@ -208,3 +208,64 @@ file(GLOB_RECURSE SC_FILES src/*.cpp)  # 自动收集所有 .cpp，不用手动�
 | 安全更新 | 需要手动替换文件 | `vcpkg upgrade` 自动更新 |
 
 > 本项目在 Windows 上运行良好（所有预编译库都是为 Windows+VS 编译的），迁移到 Linux 时预编译库不可用，需要逐一替换为系统/vcpkg 版本。
+
+## 第2阶段：lib-oatpp — HTTP 框架封装
+基于 oatpp 框架的项目自有封装：HTTP 服务器启动流程、路由绑定、Swagger 文档生成、JWT 鉴权、统一错误处理、请求拦截器。
+### oatpp 最简 HTTP 服务器模型
+```
+ConnectionProvider (TCP 端口监听)
+       ↓ 接收连接
+ConnectionHandler (HTTP 协议解析 + 路由分发)
+       ↓
+HttpRouter (URL → Handler 查表)
+       ↓
+HttpRequestHandler::handle(request) (业务处理函数)
+       ↓
+ResponseFactory::createResponse(status, body)
+```
+本项目 `HttpServer::startServer` 的本质：实例化以上四个类，用 lambda 回调注入业务路由，然后调 `server.run()` 启动事件循环。
+### IOC 容器：OATPP_CREATE_COMPONENT vs OATPP_COMPONENT
+```
+注册（存入）: OATPP_CREATE_COMPONENT(Type, name)(lambda) → 执行 lambda，将 shared_ptr 存入全局注册表
+获取（取出）: OATPP_COMPONENT(Type, name)              → 从注册表取出 shared_ptr
+```
+**唯一标识**：C++ 类型 RTTI + 字符串标签，同类型无标签只能注册一次。
+**生命周期保证**：首次 OATPP_COMPONENT 请求时执行 lambda 创建实例并缓存，后续请求直接返回缓存的 shared_ptr，最后一个引用销毁时实例自动析构。
+### DO/DTO/VO/DAO 四层对象模型
+**核心问题**：同一个"用户"数据在不同层有不同的形状需求。
+```
+数据库表 t_user:     {id, nickname, age, avatar_file_path}     ← DO
+接口输入:            {pageIndex, pageSize, nickname?}           ← Query
+中间传输:            {id, nickname, age, avatarUrl}             ← DTO
+最终 JSON:           {code: 10000, message: "success", data:…}  ← VO
+```
+**为什么不能只用一个对象？**
+- DO 有 avatar_file_path（服务器内部路径），不能暴露给前端
+- VO 有 avatarUrl（完整 URL），数据库里没有这个字段
+- Query 有 pageIndex，数据库表里没有这列
+- DTO 是"对外契约"——数据库改表时只改 DO→DTO 转换，前端无感
+**数据流**：
+```
+Query  → 进入 Service 时
+DO     → 在 DAO 层进出数据库
+DTO    → 在 Service 层内部流转（DO → DTO 转换）
+VO     → 最终离开 Controller 时（DTO + code + message）
+```
+### MYSQL_SYNTHESIZE vs CC_SYNTHESIZE 的关键差异
+CC_SYNTHESIZE 生成直接存储值的成员变量和 getter/setter。MYSQL_SYNTHESIZE 生成 shared_ptr 包装的成员变量。原因是 DOField 的 ValueGetter lambda 需要返回 void* 指针，shared_ptr<T>.get() 恰好返回 T* 可以安全转为 void*。
+### BaseDAO 自动生成 SQL 的原理
+BaseDAO 的 insert/update/delete 遍历 DO 的 getPrimaryField() + getFields() 集合，用 DOField::getColumn() 拼列名，DOField::get() 取值指针，DOField::getType() 确定参数占位符类型（"s"=string, "i"=int 等），实现动态 SQL 构建。
+### FileViewDO 的设计意图
+继承 FileDO 但不调用 MYSQL_ADD_FIELD_XX。多出的 fileTypeName/saveTypeName 只用于 JOIN 查询的只读字段。BaseDAO 遍历 _fields 时自动忽略这些字段，不参与写操作。
+### ApiHelper.h 宏体系
+- API_DEF_QUERY_PARAM_BUILD：自动遍历 Query 类型的 getPropertiesMap()，根据字段类型向 Swagger queryParams 添加参数描述，实现"写一次 DTO_FIELD，运行时解析 + Swagger 文档两处复用"
+- API_HANDLER_QUERY_PARAM：运行时将 URL query 字符串参数按 Query DTO 的字段类型转换为强类型对象，内部用 getValueType() 判断类型后分支转换
+### Controller/Service/DAO 分层职责
+| 层 | 做什么 | 不做什么 |
+|---|---|---|
+| Controller | HTTP→C++ 翻译、VO 包装 | 不碰数据库、不做业务逻辑 |
+| Service | 业务编排、DO↔DTO 转换、拼 URL | 不写 SQL |
+| DAO | 写 SQL、返回 DO | 不做对象转换 |
+| VO | 定义 JSON 结构 | 不含业务逻辑 |
+| DO | 定义数据库行映射 | 不含业务逻辑 |
+| DTO | 定义接口输入/中间传输对象 | 不含业务逻辑 |
