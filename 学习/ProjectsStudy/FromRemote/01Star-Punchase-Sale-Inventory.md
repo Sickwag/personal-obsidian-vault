@@ -1,15 +1,10 @@
-# 01Star 进销存系统 — 学习笔记
 
 > 项目地址：`zero-one-psi-cpp-sample`
 > 技术栈：C++17 + oatpp Web 框架 + MySQL + Redis + MongoDB + FastDFS
-> 学习方式：读源码 → 理解设计 → 运行测试 → 自己动手改
 
 ## 第1阶段：项目全景 + CMake 构建系统
-
 理解项目的整体结构、各子项目职责、CMake 依赖管理方式，掌握条件编译和 vendored 依赖的权衡。
-
 ### 项目架构图
-
 ```
 CMakeLists.txt (顶层)
 option() 控制 9 个特性开关（USE_REDIS, USE_MONGO, USE_ROCKETMQ...）
@@ -28,14 +23,11 @@ http.a      .a          .a
         link: lib-oatpp + lib-mysql + lib-common
         依赖: oatpp, mysqlcppconn, jsoncpp, yaml-cpp...
 ```
-
 **架构设计要点**：
 - 基础库之间互不依赖，arch-demo 作为上层应用依赖所有基础库，保证编译隔离性
 - 每个子项目输出 `STATIC` 库，最终全部链接为单一可执行文件，部署简单
 - 编译顺序由 `add_subdirectory` 在顶层 CMakeLists.txt 中的出现顺序决定，基础库必须在前
-
 ### 条件编译：option + add_definitions 模式
-
 **解决问题**：项目依赖 11 个外部服务，但不是每个开发者都需要全部安装。通过条件编译，只安装 Redis + MySQL 就能编译运行，Mongo/RocketMQ 的代码被编译器直接跳过。
 
 **完整链路**：
