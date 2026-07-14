@@ -1,4 +1,3 @@
-
 > 项目地址：`zero-one-psi-cpp-sample`
 > 技术栈：C++17 + oatpp Web 框架 + MySQL + Redis + MongoDB + FastDFS
 
