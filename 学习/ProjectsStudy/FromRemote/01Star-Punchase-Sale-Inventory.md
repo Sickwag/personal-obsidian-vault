@@ -428,3 +428,158 @@ router->addController(userController)  ← 路由注册
 controller->getEndpoints()  ← 收集 Swagger 端点信息
 ```
 
+## 第 3 阶段：lib-mysql — 数据库层
+MySQL Connector/C++ 的项目封装：连接池管理、参数化 SQL 执行、ORM 行映射、事务管理。
+### 封装 MySQL Connector/C++ 的生命周期管理
+本项目通过三层类封装了数据库连接的完整生命周期，核心思想是 RAII
+```
+DbInit（静态单例）
+    │ 管理全局唯一的连接池
+    ↓
+ConnPool（连接池）
+    │ 管理一组可复用的 Connection 对象
+    ↓
+SqlSession（会话）
+    │ 从池中获取一个连接，执行 SQL，归还连接
+    ↓
+BaseDAO（DAO 基类）
+    │ 持有 SqlSession 指针，提供 CRUD 模板
+    ↓
+具体 DAO（如 UserDAO）
+    │ 继承 BaseDAO，写具体 SQL
+```
+**DbInit — 连接池的全局生命周期**
+```cpp
+class DbInit {
+    static ConnPool* connPool;   // 类级静态指针，全局唯一
+public:
+    static bool initDbPool(DBConfig config);  // 启动时调用一次
+    static ConnPool* getConnPool();           // 任何地方获取连接池
+    static void releasePool();                // 关闭时释放
+};
+```
+`main.cpp` 启动时调用 `DbInit::initDbPool()`，关闭时调用 `DbInit::releasePool()`。整个程序生命周期中只有一个连接池实例。
+**ConnPool — 连接对象的生命周期**
+ConnPool 内部用 `list<Connection*>` 管理一批可复用的 MySQL 连接对象：
+```
+构造 ConnPool(url, user, pass, maxSize)
+    ↓
+driver = sql::mysql::get_mysql_driver_instance()   ← 获取 MySQL 驱动单例
+    ↓
+InitConnection(maxSize / 2)   ← 预热：创建最大连接数一半的连接放入池中
+    ↓
+运行期间循环：
+    GetConnection()  ← 从池中取出一个（有健康检查：isClosed()/isValid()）
+    使用连接执行 SQL
+    ReleaseConnection(conn)  ← 放回池中，不关闭，下次复用
+    ↓
+~ConnPool()  ← 析构：遍历池中所有连接，逐个 close() + delete
+```
+**GetConnection() 的三种分支**：
+```
+分支 1：connList 非空
+    → 取出第一个 → 检查 isClosed() / isValid()
+    → 有效：直接返回
+    → 失效：delete + CreateConnection() 重建
+
+分支 2：connList 为空，curSize < maxSize
+    → 按需创建新连接 → 返回
+
+分支 3：connList 为空，curSize >= maxSize
+    → 连接池已耗尽，返回 NULL（调用方需处理）
+```
+连接的获取和归还由构造/析构自动管理，无论 SQL 执行是否抛异常，`~SqlSession()` 一定会被调用（C++ 异常安全保证），连接一定归还到池中，不会泄漏。
+内部执行 SQL 时，`Statement`/`ResultSet` 的释放用 `TryFinally` 管理（与 RAII 并用）：
+```
+RAII 管连接（SqlSession 构造/析构）
+    └── TryFinally 管 Statement/ResultSet（每次 SQL 执行的临时资源）
+```
+### executeQuery 模板重载详解
+`SqlSession.h` 中有两组共 6 个 `executeQuery` 模板方法，逻辑相同，区别只在参数传递方式和返回语义：
+**第一组：`executeQuery<T>` — 返回多行结果**
+
+| 签名 | 参数方式 | 使用场景 |
+|---|---|---|
+| `executeQuery<T>(sql, mapper, fmt, ...)` | C 风格格式串 `\"%s%i\"` + va_list | 旧式调用，不推荐 |
+| `executeQuery<T>(sql, mapper)` | 无参数 | 无 WHERE 条件的全表查询 |
+| `executeQuery<T>(sql, mapper, SqlParams)` | 类型安全参数向量 | 新式调用，推荐 |
+
+**第二组：`executeQueryOne<T>` — 返回单行结果**
+
+| 签名 | 参数方式 | 使用场景 |
+|---|---|---|
+| `executeQueryOne<T>(sql, mapper, fmt, ...)` | C 风格格式串 + va_list | 旧式调用 |
+| `executeQueryOne<T>(sql, mapper)` | 无参数 | 按主键查单条记录 |
+| `executeQueryOne<T>(sql, mapper, SqlParams)` | 类型安全参数向量 | 新式调用，推荐 |
+与 `executeQuery` 的唯一区别：**多了行数校验**：
+```cpp
+if(res->rowsCount() > 1) {
+    throw std::runtime_error(\"except 1 but query \" + to_string(res->rowsCount()));
+}
+if(res->next()) {
+    result = mapper.mapper(res);   // 只调一次 Mapper
+}
+```
+**总结**：
+```
+executeQuery     → 多行 → std::list<T>，while 循环，每行调一次 Mapper
+executeQueryOne  → 单行 → T，rowsCount <= 1 检查，只调一次 Mapper
+```
+### Mapper 回调：半自动 ORM
+`Mapper<T>` 是纯虚接口，`mapper(ResultSet*)` 定义"数据库结果集的一行如何转成一个 C++ 对象"。数据库返回的是一个 ResultSet 对象， ResultSet 是一个"行指针"，必须手动调用  `resultSet->getString("id")` 等方法来提取每个字段。Mapper把提取逻辑封装在一个地方，`SqlSession::executeQuery` 循环调用 `mapper.mapper(res)` 逐行转换一般包含表格的一行数据，Mapper 将其解析并将结果存放在一个对象中方便获取
+**调用链**：
+```
+UserDAO::selectAll(query)
+    ↓
+sqlSession->executeQuery<PtrUserDO>(sql, UserMapper(), params)
+    ↓
+while(res->next()) {
+    list.push_back(mapper.mapper(res));   // 每行调一次 UserMapper::mapper()
+}
+```
+**全自动 ORM vs 半自动 ORM 对比**：
+
+| | 全自动 ORM（Hibernate/JPA） | 半自动 ORM（本项目） |
+|---|---|---|
+| 映射规则 | 自动推断：类名=表名，字段名=列名 | 手写：mapper(resultSet) |
+| SQL 生成 | 框架自动生成 | 手写 SQL |
+| 灵活度 | 受框架限制 | 完全控制 |
+| JOIN 查询 | 复杂，需要配置 | 直接写 SQL + Mapper 处理 |
+| 适用场景 | CRUD 为主的标准业务 | 需要复杂 JOIN、聚合查询的场景 |
+### TryFinally Scope Guard 模式
+C++ 没有原生 `finally` 关键字，这个模板用三个 lambda 模拟：
+```cpp
+template <class EXCEPTION = std::exception, class TRY_BLOCK, class CATCH_BLOCK, class FINALLY_BLOCK>
+inline void TryFinally(TRY_BLOCK ___try, CATCH_BLOCK ___catch, FINALLY_BLOCK ___finally) {
+	try {
+		___try();
+	} catch(EXCEPTION& e) {
+		try {
+			___catch(e);
+		} catch(...) {
+			___finally();
+			throw;
+		}
+	} catch(...) {
+		___finally();
+		throw;
+	}
+	___finally();
+}
+
+TryFinally(
+    [&] { /* try: 主逻辑 */ },
+    [](const exception& e) { /* catch: 处理异常 */ },
+    [=] { /* finally: 释放资源，无论成功失败都执行 */ }
+);
+```
+**实现原理**：正常路径执行完 try 后调用 finally；异常路径执行完 catch 后调用 finally；即使 catch 内又抛异常，也会先执行 finally 再继续 throw。
+**与 RAII 的对比**：
+
+| | RAII | TryFinally |
+|---|---|---|
+| 原理 | 析构函数自动释放 | lambda 显式指定释放逻辑 |
+| 灵活性 | 受限于析构顺序 | 可以更精细控制释放顺序 |
+| 使用场景 | 资源生命周期=对象生命周期 | try 块内的临时资源释放 |
+本项目并用两者：`SqlSession` 用 RAII 管理连接（对象级），内部的 `execute()`/`executeInsert()` 用 `TryFinally` 管理 Statement/ResultSet（语句级）。
+
