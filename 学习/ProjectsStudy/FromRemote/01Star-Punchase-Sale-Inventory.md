@@ -26,8 +26,8 @@ http.a      .a          .a
 - 基础库之间互不依赖，arch-demo 作为上层应用依赖所有基础库，保证编译隔离性
 - 每个子项目输出 `STATIC` 库，最终全部链接为单一可执行文件，部署简单
 - 编译顺序由 `add_subdirectory` 在顶层 CMakeLists.txt 中的出现顺序决定，基础库必须在前
-### 条件编译：option + add_definitions 模式
-**解决问题**：项目依赖 11 个外部服务，但不是每个开发者都需要全部安装。通过条件编译，只安装 Redis + MySQL 就能编译运行，Mongo/RocketMQ 的代码被编译器直接跳过。
+### cmake 条件编译
+核心是通过 option + add_definitions ，option 在构建层面控制是否添加某些宏定义开关，代码层面添加了这些宏开关后就会启用 `#ifdef` 分支
 **完整链路**：
 ```
 cmake -DUSE_REDIS=ON
@@ -87,28 +87,6 @@ GCC 的自动检测是独有特性——只要编译目录下存在 `stdafx.h.gc
 
 **典型报错**：`fatal error C1128: number of sections exceeded object file format limit`
 **注意**：`/bigobj` 是 target 级别的编译选项，无法按单个文件开关。只有 arch-demo 需要它（因为包含 Controller 文件），三个基础库不需要。
-### CMake Target 全局可见性
-```cmake
-target_link_libraries(${appName} "lib-common" "lib-oatpp" "lib-mysql")
-```
-这里写的是字符串 `"lib-oatpp"`，不是路径。能工作的原因：`add_subdirectory("lib-oatpp")` 先于 `add_subdirectory("arch-demo")` 执行，`lib-oatpp` 的 `add_library(lib-oatpp STATIC ...)` 已在 CMake 内部目标注册表中登记。CMake 自动将字符串解析为 target 引用，知道：
-- 输出文件在哪：`${PROJECT_BINARY_DIR}/lib-oatpp/liboatpp-http.a`
-- 编译顺序：必须先编译 `lib-oatpp`，再链接 `arch-demo`
-- 传递依赖：若 `lib-oatpp` 用了 `PUBLIC` 声明，依赖会自动带上
-
-| 机制 | 目标来源 | 适用场景 |
-|------|---------|---------|
-| `add_subdirectory` | 同一项目的子目录 | 自己写的库 |
-| `find_package` | 外部安装的库 | 系统/vcpkg 安装的第三方库 |
-
-### `OUTPUT_NAME` — target 名 vs 输出文件名分离
-```cmake
-add_library(lib-oatpp STATIC ${SC_FILES})                    # CMake 内部名
-set_target_properties(lib-oatpp PROPERTIES OUTPUT_NAME oatpp-http)  # 磁盘文件名
-```
-- **内部名**（`lib-oatpp`）：语义清晰，在 `target_link_libraries` 中使用，有 project 作用域保护
-- **输出名**（`oatpp-http`）：简短，避免 `lib` 前缀重复（CMake 自动加 `lib` 前缀 → `liboatpp-http.a`）
-- **目的**：防止 target 名冲突——如果 target 名就是 `common`，其他库也可能起这个名字
 ### 依赖管理方式对比
 
 | 维度        | vendored 方式（本项目原始方案）                    | 包管理器               |
@@ -145,7 +123,7 @@ ResponseFactory::createResponse(status, body)
 ```
 **唯一标识**：C++ 类型 RTTI + 字符串标签，同类型无标签只能注册一次。
 **生命周期保证**：首次 OATPP_COMPONENT 请求时执行 lambda 创建实例并缓存，后续请求直接返回缓存的 shared_ptr，最后一个引用销毁时实例自动析构。
-### DO/DTO/VO/DAO 四层对象模型
+### DO/DTO/VO/DAO 对象模型
 **核心问题**：同一个"用户"数据在不同层有不同的形状需求。
 ```
 数据库表 t_user:     {id, nickname, age, avatar_file_path}     ← DO
@@ -326,7 +304,7 @@ ObjectMapper 拿到 UserDetailJsonVO 实例
 ```
 **核心结论**：`DTO_INIT` 不是"声明继承"（C++ 的 `: public` 已经做了），而是**告诉 ObjectMapper 序列化时要递归查找父类的字段表**。没有它，oatpp 的序列化系统根本不知道继承关系的存在。
 
-### `DTO_FIELD` 宏的字段注册与 offset 访问机制
+### `DTO_FIELD` 字段注册与访问机制
 `DTO_FIELD(Int32, code, "code")` 展开后分为 4 个部分：
 
 **① 计算字段在对象内的内存偏移量**：
@@ -393,7 +371,7 @@ Int32* codePtr = reinterpret_cast<Int32*>(base + 16);
 | 一致性 | 所有字段访问路径统一 | 每个字段 getter 名称可能不统一 |
 | 缺点 | 依赖内存布局，不支持多态访问 | 虚函数调用有额外开销 |
 
-### `API_ACCESS_DECLARE` — Controller 的创建与鉴权挂载
+### Controller 的创建与鉴权挂载
 `ApiHelper.h` 中的定义展开后做了 3 件事：
 ```cpp
 // ① 构造函数：从 IOC 获取 ObjectMapper
@@ -431,7 +409,7 @@ controller->getEndpoints()  ← 收集 Swagger 端点信息
 
 ## 第 3 阶段：lib-mysql — 数据库层
 MySQL Connector/C++ 的项目封装：连接池管理、参数化 SQL 执行、ORM 行映射、事务管理。
-### 封装 MySQL Connector/C++ 的生命周期管理
+### 生命周期管理
 本项目通过三层类封装了数据库连接的完整生命周期，核心思想是 RAII
 ```
 DbInit（静态单例）
@@ -584,8 +562,7 @@ TryFinally(
 | 使用场景 | 资源生命周期=对象生命周期 | try 块内的临时资源释放 |
 本项目并用两者：`SqlSession` 用 RAII 管理连接（对象级），内部的 `execute()`/`executeInsert()` 用 `TryFinally` 管理 Statement/ResultSet（语句级）。
 
-
-### MySQL Connector/C++ 的 JDBC URL 连接方式
+### JDBC URL 连接方式
 MySQL Connector/C++ 使用 JDBC URL 风格连接，而非 libmysqlclient 的逐参数方式：
 ```
 libmysqlclient（MySQL C 官方库）：
@@ -597,3 +574,260 @@ conn = driver->connect("tcp://localhost:3306/mydb", "root", "password");
 //                     JDBC URL 格式的字符串         用户名  密码
 ```
 项目中 `DbInit.cpp` 的拼接逻辑：`tcp:// + host + : + port + / + db`。Connector/C++ 是 Java MySQL Connector/J 的 C++ 移植版，Driver/Connection/PreparedStatement/ResultSet 这些类名继承 JDBC 命名风格。两者底层都走 MySQL 协议，但 API 风格完全不同。
+
+## 第4阶段：lib-common — 公共组件库
+项目自建的 11 个外部服务客户端封装 + 工具类。
+### 封装模式
+所有客户端统一遵循：构造函数初始化底层连接/对象 → 操作方法薄封装底层 API → 析构释放资源。全部用 `#ifdef USE_XXX` 条件编译包裹整个实现，不安装该库时编译器直接跳过。不用虚接口——不需要多态，无 vtable 开销。
+### 使用 typedef 而不是函数指针
+Windows 下 FastDFS 没有 C++ SDK，需要从 DLL 动态获取函数地址：
+```cpp
+typedef                                               ← 声明别名
+    UINT32                                            ← 返回值类型
+    (__stdcall* func_Initialize)                      ← 函数指针类型名（func_Initialize
+是新类型名）
+    (ServerAddress* pAddr, UINT32 nAddrCount, ...)    ← 参数列表
+m_hDll = LoadLibrary("dfs_client_win.dll");
+m_func_Initialize = (func_Initialize)GetProcAddress(m_hDll, "FDFSC_Initialize");
+m_func_Initialize(&addr[0], 1, 0);  // 通过函数指针调用 DLL 中的函数
+```
+`typedef` 定义函数指针类型比 `std::function` 零开销。`__stdcall` 是 Windows API 标准调用约定。
+为什么不直接写函数声明？ 因为这些函数不在这个头文件里实现，它们来自 Windows 上的 DLL 动态库。
+### RedisClient 集中异常处理
+调用方传入 lambda 操作 `Redis*`，内部统一 try-catch。与 MongoClient 的 `execute` 模式相同。
+```cpp
+template <class T>
+T execute(std::function<T(Redis*)> callfun) {
+	try {
+		return callfun(m_redis.get());
+	} catch(const std::exception& e) {
+		cerr << e.what() << endl;
+	}
+	return {};
+}
+```
+由于任何操作都可能会有异常出现，传统写法是为每一种执行语句都写一个错误处理 `try-catch` ，比如:
+```cpp
+struct UserInfoBuffer{ /* 属性 */ };
+struct ProductInfoBuffer{ /* 属性 */ };
+
+template <class T>
+T getUser(const std::string& command) {
+	try{
+		auto result = redis->execute(command);
+	}catch(...) { /**/ }
+}
+
+template <class T>
+T getProduct(const std::string& command) {
+	try{
+		auto result = redis->execute(command);
+	}catch(...) { /**/ }
+}
+
+// 使用时
+getUser<UserInfoBuffer>("command")
+getProduct<ProductInfoBuffer>("command")
+```
+- 有很多冗余 try-catch 代码，并且需要维护多个 api
+- 现使用 lambda 传入 redis 执行逻辑，可以在 lambda 中自定义额外逻辑（比如执行完命令后写入日志等操作，在上述方法中就只能修改对应函数实现），随时使用，并且不用在执行逻辑 lambda 中做错误处理
+### MongoDB 基本概念
+#### 和关系型数据库概念对比
+
+| 概念     | MySQL  | MongoDB        |
+| ------ | ------ | -------------- |
+| 表      | table  | collection（集合） |
+| 行      | row    | document（文档）   |
+| 列      | column | field（字段）      |
+| Schema | 严格定义   | 灵活（不需要预先定义）    |
+
+- MongoDB 中的 Document（文档） 是数据存储的基本单元，对应关系型数据库中的一行（Row）。它以 BSON（Binary JSON）格式存储
+- Document 的**可读形态**是 JSON 对象，可嵌套嵌套文档和数组。必须包含 `_id` 字段（唯一标识），最大尺寸 16MB（BSON 限制），对应关系型数据库中**表中的一行**，但 Document 支持嵌套
+- Collection 是一组文档的容器。BSON（Binary JSON）是二进制存储格式，采用 TLV 变体，对应 MySQL 的 table
+- Element 对应一个键值对，有具体的类型（通过其确定长度）
+
+| 类型编号 | 类型名      | MongoDB Driver cpp 类型    | 含义        |
+| ---- | -------- | ------------------------ | --------- |
+| 0x01 | double   | double                   | 浮点数       |
+| 0x02 | string   | std::string              | UTF-8 字符串 |
+| 0x03 | object   | bsoncxx::document::value | 嵌套文档      |
+| 0x07 | ObjectId | bsoncxx::oid             | 唯一标识符     |
+| 0x08 | bool     | bool                     | 布尔值       |
+| 0x0A | null     | nullptr                  | 空值        |
+| 0x10 | int32    | int32_t                  | 32 位整数    |
+
+#### BSON 数据结构特点
+参考: https://juejin.cn/post/7564996332810043434
+每个字段自带长度前缀，解析时可通过长度跳过不需要的字段（必须从头顺序扫描）。`_id` 自动生成（ObjectId = 4字节时间戳 + 5字节随机值 + 3字节计数器）。
+`bsoncxx::document::view` 就是一个 BSON 文档的视图，`bsoncxx::builder::stream::document` 是构建 BSON 文档的流式 API：
+```cpp
+ // 构建一个 BSON 文档
+ auto doc = document{}
+     << "name" << "张三"
+     << "age" << 25
+     << "address" << open_document
+         << "city" << "北京" ...
+```
+构建之后:
+```json
+{
+    name:"lemo",
+    age:"12",
+    address:{
+        city:"suzhou",
+        country:"china",
+        code:215000
+    } ,
+    scores:[
+        {"name":"english","grade:3.0},
+        {"name":"chinese","grade:2.0}
+    ]
+}
+```
+- 可以认为整个文本是一个bson document，其中的address字段也是一个bson document
+- 这些可读的内容会在存储时将内容转换为二进制存储，并且为每一个document添加一个名为 `_id` 的字段，生成逻辑为: 
+```
+MongoDB 自动为每个文档生成一个 12 字节的 ObjectId：
+ObjectId("507f1f77bcf86cd799439011")
+    ├─ 前 4 字节：Unix 时间戳（秒级）        → 可以从中提取创建时间
+    ├─ 接下来 5 字节：随机值（每个进程一次） → 保证不同机器不重复
+    └─ 最后 3 字节：递增计数器               → 同一秒内的区分
+```
+#### 与 JSON 相比优势
+json 解析需要**全量扫描**，查找操作是**线性复杂度的**，bson 由于类型/长度信息前置，可以*跳读*
+```md
++-----------------+-----------------+
+| 文档总长度 (4字节) |                 |
++-----------------+-----------------+
+| 元素列表...                      |
++-----------------+-----------------+
+| 结束标记 (1字节) |                 |
++-----------------+-----------------+
+```
+这种数据结构被应用于 document，数组和字符串等长度不确定的字符串上，每个元素编译为二进制之后的数据格式为:
+```md
++----------+----------+-----------------+----------+
+| 类型 (1字节) | 键名 (变长) | 值 (变长)         |          |
++----------+----------+-----------------+----------+
+```
+所以，在需要查找 key 时，读取每一个元素的键名进行比对，符合则读取值，不符合根据类型信息直接跳过内容，如果给出路径信息可直接跳过不符合的 Document
+### RocketMQ 消息队列
+#### 基本概念
+消息队列是异步通信机制——生产者发消息到队列，消费者从队列取消息，两者不需要同时在线。
+```md
+同步通信（不用消息队列）：
+    用户下单 → 系统直接调用短信服务发送短信 → 短信服务返回 → 系统返回用户
+    问题：短信服务挂了，用户下单也失败了
+
+ 异步通信（用消息队列）：
+    用户下单 → 系统发一条消息到 MQ → 立即返回用户（0.1s）
+                      ↓
+              MQ 异步投递
+                      ↓
+                短信服务消费消息 → 发送短信
+    优势：用户响应快，短信服务故障不影响下单
+
+Producer → NameServer(查询 Broker 地址) → Broker(存储消息) → Consumer
+```
+
+| 概念           | 对应关系    | 说明                                                                                                                                                                 |
+| ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Producer     | 发消息的人   | 调用 `productMsgAsync()` 或 `productMsgSync()`（项目内的封装 api）                                                                                                            |
+| Consumer     | 收消息的人   | 调用 subscribe() + addListener()                                                                                                                                     |
+| Topic        | 频道      | 消息按 Topic 分类，如 order-topic、sms-topic，producer 和 consumer 在创建时都要制定 topic，然后连接上相同的 nameserver，nameserver 为他们（可以不只有一个 Producer 和 consumer 连接上同一个 nameserver）分配 broker |
+| NameServer   | 路由中心    | Producer/Consumer 连接 NameServer 获取 Broker 地址，作为路由中心，不传输也不存储消息内容，只提供 Broker 地址                                                                                      |
+| Message      | 消息本身    | 包含 Topic + Body（消息内容）                                                                                                                                              |
+| Broker       | 消息存储服务器 | 是 RocketMQ 内部实现并维护的，不需要外部依赖                                                                                                                                        |
+| Group        | 分组      | 同一 Group 的 Producer 是逻辑同一角色（用于事务回查）<br>同一 Group 的消费者会负载均衡，通过 `set` 每条消息只被其中一个消费者消费                                                                                 |
+| instanceName | 身份标识    | Broker 用它区分不同 Producer/Consumer 实例。每次创建新实例时生成唯一名称，一般需要手动指定生成规则，常用`groupname@tag-timestamp`），否则 Broker 会覆盖前一个实例的连接。                                                 |
+
+
+#### 事件驱动模型
+`subscribe()` 后 SDK 在后台线程自动拉取消息 → 回调 `consumeMessage()` → 遍历所有 `RConsumerListener` 通知业务代码。三层结构：SDK 接口 → 适配器（RMessageLisenter）→ 业务 listener（观察者模式）。
+
+```md
+m_consumer->start() 使用者只需要通过subscribe() + addListener() 注册回调，RocketMQ SDK 会自动拉取消息并回调你的 listener。
+    ↓
+RocketMQ SDK 在后台启动一个线程
+    ↓
+后台线程从 Broker 拉取消息（Pull 模式）
+    ↓
+拉到消息后调用 m_msgListener->consumeMessage(msgs)
+    ↓
+RMessageLisenter::consumeMessage 遍历所有注册的 listener
+    ↓
+for(auto listener : client->m_listeners) {
+    listener->receiveMessage(msg.getBody());   // 虚函数调用你的实现
+}
+    ↓
+返回 CONSUME_SUCCESS → 告诉 Broker 消费成功
+```
+其中 listener 是 `RConsumerListener*`，通过 `addListener()` 可以传入其他子类，通过虚函数调用 receiveMessage 作专门的消息处理
+#### 创建 Consumer 的参数
+```cpp
+// 从哪里开始消费：只消费启动后的新消息（不消费历史消息）
+m_consumer->setConsumeFromWhere(CONSUME_FROM_LAST_OFFSET);
+
+// 广播模式：每个消费者都收到所有消息（区别于 CLUSTERING 集群模式，消息只给一个消费者）
+m_consumer->setMessageModel(rocketmq::BROADCASTING);
+
+// 订阅 topic，"*" 表示接受该 topic 下所有 tag 的消息
+// 也可以用 "tagA || tagB" 过滤特定 tag
+m_consumer->subscribe(topic, "*");
+
+// 消费线程数：1 表示单线程顺序消费
+m_consumer->setConsumeThreadCount(1);
+
+// TCP 连接锁超时：1000ms
+m_consumer->setTcpTransportTryLockTimeout(1000);
+
+// TCP 连接超时：400ms
+m_consumer->setTcpTransportConnectTimeout(400);
+
+// 异步拉取模式
+m_consumer->setAsyncPull(true);
+
+// 开启消息追踪（用于调试和监控）
+m_consumer->setMessageTrace(true);
+```
+### 消息队列框架对比
+| 框架 | 路由机制 | 特点 |
+|---|---|---|
+| RocketMQ | NameServer + Topic + Broker | 国内生态好，事务/定时消息 |
+| RabbitMQ | Exchange + Binding + Queue | 灵活路由，多种 Exchange 类型 |
+| Kafka | Partition 顺序写磁盘 | 百万级吞吐，适合日志/大数据流 |
+
+本项目选 RocketMQ 因国内资料多、Spring Cloud 集成好。
+### yaml-cpp 的解析逻辑
+yaml-cpp 把 YAML 文件解析成一棵树形结构，每个节点（key 或 value）都是一个 `YAML::Node` 对象， `NodeType` 枚举包括：
+- Undefined（key 不存在）
+- Null（空值）
+- Scalar（标量值）
+- Sequence（列表）
+- Map（嵌套对象）
+```cpp
+# 以下 YAML 文件
+name: "张三"           ← Scalar（字符串值）
+age: 25               ← Scalar（数字值）
+isStudent: true       ← Scalar（布尔值）
+address: null          ← Null
+phone: ~               ← Null（~ 是 null 的简写）
+hobbies:               ← Sequence（列表）
+  - reading
+  - gaming
+address:               ← Map（嵌套对象）
+  city: "北京"
+  street: "朝阳路"
+scores:                ← Sequence of Map（列表内嵌对象）
+  - name: "math"
+    grade: 95
+  - name: "english"
+    grade: 88
+
+node["name"].Type()     → Scalar
+node["hobbies"].Type()  → Sequence
+node["address"].Type()  → Map
+node["phone"].Type()    → Null
+node["xxx"].Type()      → Undefined（key 不存在）
+```
+`YamlHelper::getString` 函数通过 `std::stack` **模拟递归调用**，实现 Spring 风格点分隔 key 访问（`"spring.datasource.url"`），内部按 `.` 分割 key 后逐层索引 Node，最终返回 Scalar 字符串。最后检查 `NodeType::Scalar` 防止对 Map/Sequence 调用 `as<string>()` 抛异常。
