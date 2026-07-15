@@ -111,14 +111,15 @@ set_target_properties(lib-oatpp PROPERTIES OUTPUT_NAME oatpp-http)  # 磁盘文�
 - **目的**：防止 target 名冲突——如果 target 名就是 `common`，其他库也可能起这个名字
 ### 依赖管理方式对比
 
-| 维度 | vendored 方式（本项目原始方案） | 包管理器方式（vcpkg/apt） |
-|------|------|------|
-| 首次搭建 | 开箱即用（有预编译库） | 需逐个安装 |
-| 跨平台 | 一套预编译库只支持一个平台 | 包管理器自动处理 |
-| 版本锁定 | 固定版本，不会意外升级 | 需显式锁定版本 |
-| 预编译库删除后恢复 | 复杂，需重新找对应版本 | `vcpkg install` 即可 |
-| ABI 兼容性 | 编译环境必须与预编译环境匹配 | 自动匹配当前系统 |
-| 安全更新 | 需要手动替换文件 | `vcpkg upgrade` 自动更新 |
+| 维度        | vendored 方式（本项目原始方案）                    | 包管理器               |
+| --------- | --------------------------------------- | ------------------ |
+| 首次搭建      | 开箱即用（有预编译库）                             | 需逐个安装              |
+| 跨平台       | 一套预编译库只支持一个平台                           | 包管理器自动处理           |
+| 版本锁定      | 固定版本，不会意外升级                             | 需显式锁定版本            |
+| 预编译库删除后恢复 | 复杂，需重新找对应版本                             | `vcpkg install` 即可 |
+| ABI 兼容性   | 编译环境必须与预编译环境匹配                          | 自动匹配当前系统           |
+| 安全更新      | 需要手动替换文件                                | 包管理器自动更新           |
+| 文件管理      | 需要手动将库的头文件和编译后的库文件复制到项目目，通过 cmake 引入并维护 | 包管理器自动处理           |
 
 > 本项目在 Windows 上运行良好（所有预编译库都是为 Windows+VS 编译的），迁移到 Linux 时预编译库不可用，需要逐一替换为系统/vcpkg 版本。
 
@@ -583,3 +584,16 @@ TryFinally(
 | 使用场景 | 资源生命周期=对象生命周期 | try 块内的临时资源释放 |
 本项目并用两者：`SqlSession` 用 RAII 管理连接（对象级），内部的 `execute()`/`executeInsert()` 用 `TryFinally` 管理 Statement/ResultSet（语句级）。
 
+
+### MySQL Connector/C++ 的 JDBC URL 连接方式
+MySQL Connector/C++ 使用 JDBC URL 风格连接，而非 libmysqlclient 的逐参数方式：
+```
+libmysqlclient（MySQL C 官方库）：
+mysql_real_connect(conn, "localhost", "root", "password", "mydb", 3306, NULL, 0);
+//                   主机          用户名    密码           数据库   端口     ...
+
+MySQL Connector/C++（本项目）：
+conn = driver->connect("tcp://localhost:3306/mydb", "root", "password");
+//                     JDBC URL 格式的字符串         用户名  密码
+```
+项目中 `DbInit.cpp` 的拼接逻辑：`tcp:// + host + : + port + / + db`。Connector/C++ 是 Java MySQL Connector/J 的 C++ 移植版，Driver/Connection/PreparedStatement/ResultSet 这些类名继承 JDBC 命名风格。两者底层都走 MySQL 协议，但 API 风格完全不同。
