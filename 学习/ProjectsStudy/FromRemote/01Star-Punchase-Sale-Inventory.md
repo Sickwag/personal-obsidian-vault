@@ -847,3 +847,89 @@ node["phone"].Type()    → Null
 node["xxx"].Type()      → Undefined（key 不存在）
 ```
 `YamlHelper::getString` 函数通过 `std::stack` **模拟递归调用**，实现 Spring 风格点分隔 key 访问（`"spring.datasource.url"`），内部按 `.` 分割 key 后逐层索引 Node，最终返回 Scalar 字符串。最后检查 `NodeType::Scalar` 防止对 Map/Sequence 调用 `as<string>()` 抛异常。
+
+## 第5阶段：arch-demo — 分层架构实战
+
+### 预处理器变参宏的二次展开技巧
+
+arch-demo 的 `Macros.h` 里有一套看似无意义的"恒等宏" `ZO_STAR_EXPAND(x) x`，它真正的职责是**触发预处理器对参数的二次展开**。
+
+C 预处理器有一条标准规则：当宏 A 的实参会被传给另一个使用 `#`（字符串化）或 `##`（粘合）操作的宏 B 时，这个实参在传给 B **之前不会被展开**。要让嵌套宏先展开一轮，就得在中间垫一层"什么都不做但会强制完全展开"的宏——这正是 `ZO_STAR_EXPAND` 的作用。它是 Boost.Preprocessor 里 `BOOST_PP_EXPAND` 的同款技巧，无逻辑、纯语法用途。
+
+典型展开链路：
+```
+ZO_STAR_DOMAIN_DO_TO_DTO_1(target, src, id, Id, name, Name)
+ → ZO_STAR_EXPAND(ZO_STAR_PASTE(target, src, FUNC, id, Id, name, Name))
+ → ZO_STAR_EXPAND(ZO_STAR_GET_MACRO(..., PASTE02)(target, src, FUNC, ...))
+ → ZO_STAR_EXPAND(PASTE02(target, src, FUNC, id, Id, name, Name))
+ → FUNC(target, src, id, Id) FUNC(target, src, name, Name)
+ → target->id = src->getId(); target->name = src->getName();
+```
+若去掉 `ZO_STAR_EXPAND`，`GET_MACRO` 选中的 `PASTE02` 这个宏名出现在 `##` 选择位上不会被二次展开，整条链路就停滞了。
+
+### 用计数选择模拟变参循环
+
+注释里说的"领域模型转换可变参展开"，本质是让一个宏接受**任意对数的字段**，自动为每对生成一行赋值语句，免去手写几十行 `target->f = src->getF();`。预处理器没有真正的 `for` 循环，作者用"计数选择 + 重载特化"伪造：
+
+| 机制 | 作用 |
+|------|------|
+| `ZO_STAR_GET_MACRO(_1.._64, NAME, ...) NAME` | 数实参个数。把参数排成固定槽，最后一个槽位 `NAME` 被对应编号的 `PASTE0X` 宏名占住，从而选中处理"该对数"的特化宏 |
+| `ZO_STAR_PASTE01..PASTE30` | 按字段对数重载的生成器，`PASTE02` 生成 2 行赋值，`PASTE05` 生成 5 行 |
+| `PASTE0N` 内部递归 | `PASTE02 = PASTE01(第1对) PASTE01(第2对)`，避免每个特化都从头展开 |
+
+不可读是因为预处理器必须为**每个可能的参数个数各写一个特化宏**再配一个选择器，无法像 C++11 变参模板那样直接。之所以仍用宏而非折叠表达式，是因为这里生成的是**语句**（要塞进函数体），模板折叠只能生成表达式。
+
+`PASTEXX` 之间穿插的 `PASTE00`（空宏）是占位齐位符——字段成对传入（`id, Id` = 2 个参数），选择器每隔 2 格放一个真实 PASTE、中间垫空宏，对齐"每多一对多 2 参数"的节奏。
+
+### DO↔DTO 转换宏的 `_1` 后缀区分值/指针语义
+
+`ZO_STAR_DOMAIN_DO_TO_DTO` 和 `_DO_TO_DTO_1` 只差一个 `_1`，区分的是**源对象的访问方式**：
+
+```cpp
+// 无 _1：src 是栈上值对象，用 . 访问
+#define ZO_STAR_DOMAIN_FILED_DO_TO_DTO(target, src, f1, f2)    target->f1 = src.get##f2();
+// 带 _1：src 是智能指针/Wrapper，用 -> 访问
+#define ZO_STAR_DOMAIN_FILED_DO_TO_DTO_1(target, src, f1, f2)  target->f1 = src->get##f2();
+```
+
+项目里 DO 基本都用 `shared_ptr` 包装（`PtrUserDO`、`std::list<PtrUserDO>`），所以业务代码几乎只见 `_1` 版本：
+```cpp
+// UserService.cpp —— one 是 list<PtrUserDO> 的元素（shared_ptr），用 ->
+ZO_STAR_DOMAIN_DO_TO_DTO_1(user, one, id, Id, nickname, Nickname, ...);  // user->id = one->getId();
+```
+`DTO_TO_DO` 同理：`target` 是值 DO（`UserDO udo;`）用无 `_1` 版本（`target.set##f1`，且带 `if(src->f2)` 判空保护 `oatpp::Object` 的 nullable），`target` 是指针时用 `_1`。两个宏并存的唯一目的：同时支持"DO 用对象"和"DO 用指针"两种持有方式。
+
+### oatpp 依赖注入：两个宏如何配合
+
+`OATPP_CREATE_COMPONENT` 与 `OATPP_COMPONENT` 的关系不是"先声明后引用"的编译期绑定，而是**运行期通过全局注册表解耦**的依赖注入，类似 Spring 的 `@Bean` / `@Autowired`。
+
+| 宏 | 展开 | 职责 |
+|----|------|------|
+| `OATPP_CREATE_COMPONENT(TYPE, NAME)` | `Component<TYPE> NAME = Component<TYPE>` | 构造时调 `Environment::registerComponent(typeid(T).name(), qualifier, &object)`，把对象指针登记进全局静态 `map` |
+| `OATPP_COMPONENT(TYPE, NAME[, qualifier])` | `TYPE& NAME = *((TYPE*) Environment::getComponent(typeid(TYPE).name()))` | 运行时按 `type_info` 名到注册表查 |
+
+因此 `OATPP_COMPONENT` 执行前**必须**有人 `OATPP_CREATE_COMPONENT` 登记过同类型，否则 `getComponent` 取空抛异常。但二者**不要求编在同一文件、也不要求物理上 CREATE 在前**——只要 `OATPP_COMPONENT` 被**执行**那一刻组件已登记即可。项目靠 `HttpServer::startServer` 的启动顺序保证：先在回调里 `make_shared<OtherComponent>()` 触发组件构造登记，Controller 才在后续被注入。`Environment::Component` 的析构函数对称地调 `unregisterComponent` 注销，所以组件生命周期与该 RAII 对象绑定。
+
+### Component 级双括号构造的语法妥协
+
+`OtherComponent.hpp` 里这段看起来陌生：
+```cpp
+OATPP_CREATE_COMPONENT(std::shared_ptr<ConnectionHandler>, websocketConnectionHandler)
+("websocket", [] { auto h = ConnectionHandler::createShared();
+                   h->setSocketInstanceListener(std::make_shared<WSInstanceListener>());
+                   return h; }());
+```
+代入 `OATPP_CREATE_COMPONENT(TYPE, NAME) = Component<TYPE> NAME = Component<TYPE>`：
+```cpp
+Component<std::shared_ptr<ConnectionHandler>> websocketConnectionHandler = Component<std::shared_ptr<ConnectionHandler>>
+("websocket", []{...}() );
+```
+所以第一行末尾的 `= Component<TYPE>` 是一个**临时对象**，紧接的 `("websocket", lambda())` 是**对这个临时对象调用构造函数**，匹配 `Environment::Component(const std::string& name, const T& object)`：
+- 第1参数 `"websocket"` 是组件 qualifier 名——同名类型存在多个实例时用它区分，对应 `OATPP_COMPONENT(TYPE, NAME, "websocket")` 的第三参数
+- 第2参数 `lambda()()` 是 lambda **立即执行**返回的 `shared_ptr`，即真正注入的对象；在 lambda 内就把 `WSInstanceListener` 挂好，保证任何地方取到的都是同一个配齐监听器的 handler
+
+写成"先默认构造临时对象、下一行再调构造"这种怪样子，是因为 `OATPP_CREATE_COMPONENT` 的宏定义 `NAME = Component<TYPE>` 没有给构造参数留语法槽，作者只能靠"临时对象 + 构造调用"把参数接到下一行。语义等价于：
+```cpp
+Component<std::shared_ptr<ConnectionHandler>> websocketConnectionHandler("websocket", []{...}());
+```
+宏不支持这种带参 `=` 右值，才有此妥协。
