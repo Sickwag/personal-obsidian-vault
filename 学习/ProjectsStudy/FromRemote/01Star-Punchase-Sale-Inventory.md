@@ -5,23 +5,86 @@
 
 ### 多子项目架构
 基础库（lib-oatpp/lib-mysql/lib-common）之间互不依赖，arch-demo 作为上层应用依赖所有基础库。每个子项目输出 `STATIC` 库，最终链接为单一可执行文件。编译顺序由 `add_subdirectory` 的出现顺序决定。
+```
+CMakeLists.txt (顶层)
+option() 控制 9 个特性开关（USE_REDIS, USE_MONGO, USE_ROCKETMQ...）
+add_subdirectory() 引入 4 个子项目
+       /        |         \
+      v         v          v
+lib-oatpp   lib-mysql   lib-common
+(静态库)    (静态库)    (静态库)
+oatpp 封装   MySQL 封装工具+客户端
+OUTPUT:     OUTPUT:     OUTPUT:
+liboatpp-   libmysql    libcommon
+http.a      .a          .a
+       \        |         /
+        v       v        v
+        arch-demo (可执行文件)
+        link: lib-oatpp + lib-mysql + lib-common
+        依赖: oatpp, mysqlcppconn, jsoncpp, yaml-cpp...
+```
+**架构设计要点**：
+- 基础库之间互不依赖，arch-demo 作为上层应用依赖所有基础库，保证编译隔离性
+- 每个子项目输出 `STATIC` 库，最终全部链接为单一可执行文件，部署简单
+- 编译顺序由 `add_subdirectory` 在顶层 CMakeLists.txt 中的出现顺序决定，基础库必须在前
 ### CMake 条件编译
 通过 `option` + `add_definitions` + `#ifdef` 三层联动实现特性开关。用户在构建时通过 `cmake -DUSE_XXX=ON` 控制，代码层面用宏分支跳过未安装库的代码，链接层面用 `if(USE_XXX) target_link_libraries(...)` 条件链接。三层必须同步，缺一即报错。
-
 ### 预编译头
 将体积大、改动少的头文件提前编译为二进制（`.pch`），后续编译直接加载跳过重复解析。MSVC 用 `/Yc`（创建）+ `/Yu`（使用）+ `/FI`（强制包含）；GCC 用 `.gch` 文件自动检测；本项目 Linux 下 `stdafx.h` 被 `#ifndef LINUX` 包裹为空文件，故不启用 PCH。
+**核心思想**：将体积大、改动少的头文件提前编译为二进制，后续编译直接加载
+**MSVC 的两步机制**：
+```
+stdafx.cpp (/Yc 创建)              其他 .cpp (/Yu 使用)
+       |                                  |
+  #include "stdafx.h"              /FI 强制 include "stdafx.h"
+       |                                  |
+       v                                  v
+   stdafx.pch  ───────── 加载 ──────>  跳过解析，直接使用符号表
+```
+- `/Yc"stdafx.h"` — 将 `stdafx.cpp` 编译为 `.pch`（不产生普通 `.obj`）
+- `/Yu"stdafx.h"` — 使用已有 `.pch`，跳过对 `stdafx.h` 的重新解析
+- `/FI"stdafx.h"` — 强制 include（等价于每个文件顶部自动加 `#include "stdafx.h"`）
+- `/Fp"path"` — 指定 `.pch` 输出/查找路径
+**三种编译器 PCH 对比**：
 
+| | MSVC | GCC | Clang |
+|------|------|------|------|
+| 创建 PCH | `/Yc"stdafx.h"` | `g++ -o stdafx.h.gch stdafx.h` | `clang++ -emit-pch -o stdafx.h.pch stdafx.h` |
+| 使用 PCH | `/Yu"stdafx.h"` | 自动（同目录存在 `.gch` 就加载） | `-include-pch stdafx.h.pch` |
+| 强制包含 | `/FI"stdafx.h"` | `-include stdafx.h` | `-include stdafx.h` |
+| PCH 文件名 | `stdafx.pch` | `stdafx.h.gch` | `stdafx.h.pch` |
+| 自动检测 | 否，需显式 `/Yu` | **是**，同目录自动匹配 | 否，需显式 `-include-pch` |
+
+GCC 的自动检测是独有特性——只要编译目录下存在 `stdafx.h.gch`，任何 include 了 `stdafx.h` 的源文件都会自动使用它。
+**为何 Linux 不用 PCH**：`stdafx.h` 被 `#ifndef LINUX` 包裹导致 Linux 下为空文件。这是权衡——Windows 编译慢用 PCH 优化，Linux 编译快且 GCC 自动检测可能有版本兼容问题，故省略。
 ### MSVC /bigobj 段表限制
+问题根因：MSVC 的 COFF `.obj` 文件格式兼容古老规范，section table 条目数用 16 位整数存储，上限 65536。
+为何 oatpp Controller 会超限：
+- `ENDPOINT` 宏为每个路由生成独立函数体
+- `DTO_FIELD` 宏为每个字段生成 getter/setter/序列化代码
+- 一个 UserController（20+ 端点）展开后可达数十万段
 
-COFF `.obj` 格式段表仅 16 位（65536 上限），oatpp 宏展开后段数可达数十万。`/bigobj` 扩展到 32 位。GCC/Clang 的 ELF 格式无此限制。只有包含 Controller 宏的 target 需要。
+| | MSVC COFF (默认) | MSVC COFF (`/bigobj`) | Linux ELF |
+|------|------|------|------|
+| 段表位数 | 16 bit | 32 bit | 动态分配 |
+| 段数上限 | 65536 | ~42 亿 | 无硬限制 |
+| 兼容性 | 全部工具链 | VS 2005+ | 全部工具链 |
 
-### CMake target 可见性
+**典型报错**：`fatal error C1128: number of sections exceeded object file format limit`
+**注意**：`/bigobj` 是 target 级别的编译选项，无法按单个文件开关。只有 arch-demo 需要它（因为包含 Controller 文件），三个基础库不需要。
+### 依赖管理方式对比
 
-`target_link_libraries(app "lib-oatpp")` 中的字符串会被 CMake 解析为同项目内的 target 引用（前提是 `add_subdirectory` 先执行了）。三个基础库用 `PUBLIC` 声明传递依赖，arch-demo 自动获得头文件路径和链接库。
+| 维度        | vendored 方式（本项目原始方案）                    | 包管理器               |
+| --------- | --------------------------------------- | ------------------ |
+| 首次搭建      | 开箱即用（有预编译库）                             | 需逐个安装              |
+| 跨平台       | 一套预编译库只支持一个平台                           | 包管理器自动处理           |
+| 版本锁定      | 固定版本，不会意外升级                             | 需显式锁定版本            |
+| 预编译库删除后恢复 | 复杂，需重新找对应版本                             | `vcpkg install` 即可 |
+| ABI 兼容性   | 编译环境必须与预编译环境匹配                          | 自动匹配当前系统           |
+| 安全更新      | 需要手动替换文件                                | 包管理器自动更新           |
+| 文件管理      | 需要手动将库的头文件和编译后的库文件复制到项目目，通过 cmake 引入并维护 | 包管理器自动处理           |
 
-### 依赖管理
-
-项目原始方案用 vendored 依赖（头文件+预编译库放在项目内），迁移 Linux 时预编译库不可用，需逐一替换为系统/vcpkg 版本。vendored 方式首次搭建简单但维护成本高，ABI 兼容性要求严格。
+> 本项目在 Windows 上运行良好（所有预编译库都是为 Windows+VS 编译的），迁移到 Linux 时预编译库不可用，需要逐一替换为系统/vcpkg 版本。
 
 ## 第2阶段：lib-oatpp — HTTP 框架封装
 
@@ -61,9 +124,12 @@ UserDetailJsonVO 字段表 → 空
 ```
 
 ### IOC 容器
-
-`OATPP_CREATE_COMPONENT` 将实例存入按类型索引的全局注册表，`OATPP_COMPONENT` 取出。首次请求时执行 lambda 创建实例并缓存，后续返回同一个 `shared_ptr`。标识符是 C++ 类型 RTTI + 字符串标签。
-
+```
+注册（存入）: OATPP_CREATE_COMPONENT(Type, name)(lambda) → 执行 lambda，将 shared_ptr 存入全局注册表
+获取（取出）: OATPP_COMPONENT(Type, name) → 从注册表取出 shared_ptr
+```
+**唯一标识**：C++ 类型 RTTI + 字符串标签，同类型无标签只能注册一次。
+**生命周期保证**：首次 OATPP_COMPONENT 请求时执行 lambda 创建实例并缓存，后续请求直接返回缓存的 shared_ptr，最后一个引用销毁时实例自动析构。
 ### 分层架构中的对象模型
 
 同一"用户"数据在不同层有不同的形状：
@@ -92,35 +158,206 @@ DO 和 oatpp DTO 是完全不同的继承链（BaseDO vs oatpp::DTO），Service
 CORS 机制：浏览器的同源策略要求跨域请求先发 OPTIONS 预检，`CrosRequestInterceptor` 拦截 OPTIONS 直接返回 CORS 头，避免每个 Controller 都要处理。
 
 ### JWT 鉴权
-
 `CustomerAuthorizeHandler` 继承 oatpp 的 `BearerAuthorizationHandler`，自动从 `Authorization: Bearer <token>` Header 提取 Token。验证使用 RSA 非对称签名（私钥签名生成 Token，公钥验证），`JU_VERIFY_CATCH` 宏将 5 种 JWT 异常转为业务错误码。
 
 `API_ACCESS_DECLARE` 宏在 Controller 构造时自动调用 `setDefaultAuthorizationHandler`，所有需要鉴权的端点自动经过这个处理器。
 
 ### 统一错误处理
-
 `ErrorHandler` 将所有异常统一为 JSON 格式响应。Token 错误返回 HTTP 200 + `RS_UNAUTHORIZED` 业务码（不返回 401），其他错误返回 HTTP 200 + `RS_SERVER_ERROR`。这样前端只需处理 HTTP 200 状态码。
 
 ### Controller 创建链路
-
 `API_ACCESS_DECLARE` 宏展开后做三件事：构造函数从 IOC 获取 ObjectMapper、生成 `createShared()` 工厂方法、自动挂载 `CustomerAuthorizeHandler`。Router 调用 `createShared()` 创建实例 → `addController` 注册路由 → `getEndpoints` 收集 Swagger 端点信息。
+**参数注入方式**：
 
+| 宏                                   | 用途       | 参数来源                                                       |
+| ----------------------------------- | -------- | ---------------------------------------------------------- |
+| `API_HANDLER_ENDPOINT_QUERY_AUTH`   | 动态可选查询参数 | URL query 全部收入 → `QUERIES(QueryParams)` → 按 Query DTO 类型转换 |
+| `API_HANDLER_ENDPOINT_AUTH`         | 固定参数     | 单个 query 参数，如 `QUERY(String, id)`                          |
+| `API_HANDLER_ENDPOINT_NOPARAM_AUTH` | 无参数      | 通过 `authObject` 获取登录用户信息                                   |
 ### 完整请求生命周期
-
 ```
 浏览器 GET /user/query-all?page=1&size=10
     → ConnectionProvider (TCP) → ConnectionHandler (HTTP解析)
     → RequestInterceptor (CORS → Token校验)
-    → HttpRouter 查表 → ENDPOINT 方法 (自动注入参数)
+    ├─ CrosRequestInterceptor ← OPTIONS → 直接返回 CORS 头
+	└─ CheckRequestInterceptor ← 有 token？没有就拦截
+    → HttpRouter 查表 → ENDPOINT 方法 (自动注入参数) GET + /user/query-all → UserController::queryAllUser
     → Service 层 (业务编排 + DO→DTO)
     → DAO 层 (写SQL + Mapper映射)
     → Controller 返回 VO → ObjectMapper 序列化 JSON
-    → ResponseInterceptor (CORS头) → HTTP 响应
+    → ResponseInterceptor (加CORS头) → HTTP 响应
 ```
 
 ### UUID 与分布式 ID
+128 位全局唯一 ID，格式如 `550e8400-e29b-41d4-a716-446655440000`。
+- **v4（完全随机）**：依赖随机数生成器，本项目使用，`UuidFacade` 封装 `stduuid` 库生成
+- **v7（时间戳+mac 地址）**：新版，可排序，但会暴露 mac 地址
+- **v3/v5（基于符号名称和 MD5/SHA256 等算法计算）**: 实现较为复杂
+- **和自增 ID 的关系**：UUID 在分布式系统中不冲突、不可猜测、离线可生成；代价是无序、128 位占用更多空间
+项目中 `UserQuery.h` 的 Swagger 示例值 `"ae65c714d48d4f34b52479f5482c0edd"` 就是去掉连字符的 UUID。`lib-common` 中 `UuidFacade`（UUID）和 `SnowFlaker`（雪花算法）是两种分布式 ID 方案。
+### SnowFlake 算法
+[参考](https://cloud.tencent.com.cn/developer/article/2185662)，在 [[Sylar Backend Collection|sylar项目]]中也有用到
+**Snowflake（雪花）算法**是 Twitter 开源的一种**分布式 ID 生成算法，它的核心目标是在高并发、分布式的系统环境中，生成**全局唯一**且**趋势递增**的 64 位长整型（Long）ID。
+它生成的 ID 是一个 64 位的整数，其典型结构如下：
+- **1 位符号位**：固定为 0，保证 ID 为正数。
+- **41 位时间戳**：精确到毫秒级，可以使用约 69 年
+- **10 位工作机器 ID**：用于区分不同节点，通常再分为 5 位数据中心 ID 和 5 位机器 ID，共支持最多 1024 个节点
+- **12 位序列号**：在同一毫秒内，为不同 ID 提供序号，支持每节点每毫秒生成 4096 个 ID
 
-UUID（v4，完全随机）和雪花算法（时间戳+机器ID+序号，趋势递增）是两种分布式 ID 方案。UUID 无序但无依赖，雪花有序但依赖机器 ID 分配。本项目用户表用 UUID，`lib-common` 中 `UuidFacade` 和 `SnowFlaker` 分别封装两种方案。
+| 特性        | UUID (如 v4)                                      | Snowflake                                                                              |
+| :-------- | :----------------------------------------------- | :------------------------------------------------------------------------------------- |
+| **ID 长度** | 128 位，通常表示为 36 位字符串                              | 64 位，一个 Long 型整数                                                                       |
+| **是否有序**  | **无序**，插入数据库时可能导致页分裂，影响性能                        | **趋势递增**，对数据库索引非常友好                                                                    |
+| **生成原理**  | 基于随机数或名字空间等，与外界无关                                | 强依赖**时间戳**和**机器 ID**的组合                                                                |
+| **系统依赖**  | **无中心化**，任何机器可独立生成                               | **半中心化**，需提前分配唯一的机器 ID                                                                 |
+| **主要弱点**  | 存储空间大，查询性能较差，无序                                  | **时钟回拨**问题可能导致 ID 重复或系统不可用                                                             |
+| 适用场景      | 小规模系统，对 ID 无顺序要求，无需任何依赖，最为一次性请求的 id 身份验证，有时钟回拨情景 | 大规模分布式系统，性能要求高，ID 将用作**数据库主键**，且你关心**写入性能**和**索引效率**，需要 ID 本身**包含时间信息**，便于按时间排序或进行范围查询 |
+### `DTO_INIT` 宏的继承元数据传播
+每个 oatpp DTO 类内部有一张**自己的字段注册表**（`vector<Property*>`），只记录本类用 `DTO_FIELD` 声明的字段：
+```
+NoDataJsonVO 的字段表:    [{name:"code", type:Int32}, {name:"message", type:String}]
+JsonVO<T> 的字段表:       [{name:"data", type:T}]
+UserDetailJsonVO 的字段表: []  ← 空的
+```
+`DTO_INIT(TYPE_NAME, TYPE_EXTEND)` 展开后生成的关键部分：
+```cpp
+typedef TYPE_EXTEND Z__CLASS_EXTENDED;
+
+// 告诉 ObjectMapper "我的父类的字段也归我管"
+static const oatpp::Type* getParentType() {
+    return oatpp::Object<Z__CLASS_EXTENDED>::Class::getType();
+}
+// 本类的字段注册表
+static oatpp::BaseObject::Properties* Z__CLASS_GET_FIELDS_MAP() {
+    static oatpp::BaseObject::Properties map;
+    return &map;
+}
+// 工厂方法
+template<typename ... Args>
+static Wrapper createShared(Args... args) { ... }
+```
+**ObjectMapper 序列化时的递归查找**：
+```
+ObjectMapper 拿到 UserDetailJsonVO 实例
+    ↓
+查 UserDetailJsonVO 的字段表 → 空
+    ↓
+调 getParentType() → 得到 JsonVO 类型
+    ↓
+查 JsonVO 的字段表 → 找到 "data"
+    ↓
+调 JsonVO 的 getParentType() → 得到 NoDataJsonVO 类型
+    ↓
+查 NoDataJsonVO 的字段表 → 找到 "code", "message"
+    ↓
+调 NoDataJsonVO 的 getParentType() → 得到 oatpp::DTO（根，停止）
+    ↓
+最终收集到 3 个字段：code, message, data
+```
+**核心结论**：`DTO_INIT` 不是"声明继承"（C++ 的 `: public` 已经做了），而是**告诉 ObjectMapper 序列化时要递归查找父类的字段表**。没有它，oatpp 的序列化系统根本不知道继承关系的存在。
+
+### `DTO_FIELD` 字段注册与访问机制
+`DTO_FIELD(Int32, code, "code")` 展开后分为 4 个部分：
+
+**① 计算字段在对象内的内存偏移量**：
+```cpp
+static v_int64 Z__PROPERTY_OFFSET_code() {
+    char buffer[sizeof(Z__CLASS)];
+    auto obj = static_cast<Z__CLASS*>(reinterpret_cast<void*>(buffer));
+    auto ptr = &obj->code;
+    return reinterpret_cast<v_int64>(ptr) - reinterpret_cast<v_int64>(buffer);
+}
+```
+
+**② 创建字段描述符**（Property 单例）：
+```cpp
+static oatpp::BaseObject::Property* Z__PROPERTY_SINGLETON_code() {
+    static oatpp::BaseObject::Property* property =
+        new oatpp::BaseObject::Property(
+            Z__PROPERTY_OFFSET_code(),   // 内存偏移量
+            "code",                       // JSON key 名
+            Int32::Class::getType()       // 类型信息
+        );
+    return property;
+}
+```
+
+**③ 注册到本类字段表**：
+```cpp
+static bool Z__PROPERTY_INIT_code(...) {
+    Z__CLASS_GET_FIELDS_MAP()->pushBack(Z__PROPERTY_SINGLETON_code());
+    return true;
+}
+```
+
+**④ 实际的字段声明**（触发初始化）：
+```cpp
+Int32 code = Z__PROPERTY_INITIALIZER_PROXY_code();
+// ↑ 这是真正的成员变量声明，同时触发静态初始化注册
+//   只在程序第一次创建 MyDTO 实例时执行一次
+```
+
+**ObjectMapper 用 offset 直接访问内存**：
+```
+MyDTO 对象内存布局：
++0  ~ +7:   vtable pointer (8 bytes)
++8  ~ +15:  padding
++16 ~ +19:  code (Int32, 4 bytes)  ← offset = 16
+
+序列化：
+char* base = static_cast<char*>(objPtr);
+Int32* codePtr = reinterpret_cast<Int32*>(base + 16);
+int value = *codePtr;  // 不需要 getter，直接读取
+
+反序列化：
+Int32* codePtr = reinterpret_cast<Int32*>(base + 16);
+*codePtr = 25;  // 不需要 setter，直接写入
+```
+
+**为什么用 offset 而不是 getter/setter？**
+
+| | offset 方式（oatpp） | getter/setter 方式 |
+|---|---|---|
+| 性能 | 直接内存访问，无函数调用开销 | 每次读写都有函数调用 |
+| 代码量 | 宏自动生成，零手写 | 每个字段手写两个函数 |
+| 一致性 | 所有字段访问路径统一 | 每个字段 getter 名称可能不统一 |
+| 缺点 | 依赖内存布局，不支持多态访问 | 虚函数调用有额外开销 |
+
+### Controller 的创建与鉴权挂载
+`ApiHelper.h` 中的定义展开后做了 3 件事：
+```cpp
+// ① 构造函数：从 IOC 获取 ObjectMapper
+__CLASS__(OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper))
+    : ApiController(objectMapper) {
+    // ③ 自动挂载鉴权处理器
+    setDefaultAuthorizationHandler(std::make_shared<CustomerAuthorizeHandler>());
+}
+
+// ② 工厂方法：Router 用这个创建 Controller 实例
+static std::shared_ptr<__CLASS__> createShared(
+    OATPP_COMPONENT(std::shared_ptr<ObjectMapper>, objectMapper)) {
+    return std::make_shared<__CLASS__>(objectMapper);
+}
+```
+**完整的创建链路**：
+```
+Router::initRouter()
+    ↓
+ROUTER_SIMPLE_BIND(UserController)
+    ↓
+docEndpoints->append(
+    router->addController(UserController::createShared())->getEndpoints()
+)
+    ↓
+UserController::createShared()
+    → 从 IOC 获取 ObjectMapper
+    → new UserController(objectMapper)
+    → setDefaultAuthorizationHandler(CustomerAuthorizeHandler)  ← 鉴权挂载
+    ↓
+router->addController(userController)  ← 路由注册
+    ↓
+controller->getEndpoints()  ← 收集 Swagger 端点信息
+```
 
 ## 第 3 阶段：lib-mysql — 数据库层
 MySQL Connector/C++ 的项目封装：连接池管理、参数化 SQL 执行、ORM 行映射、事务管理。
