@@ -54,7 +54,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "va_star",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -75,8 +75,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -191,7 +190,7 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "0650e5db101dd2dd",
+  "active": "982f21257484af50",
   "lastOpenFiles": [
     "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
     "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md.bak",
