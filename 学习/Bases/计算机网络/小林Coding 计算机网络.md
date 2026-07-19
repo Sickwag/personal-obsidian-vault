@@ -729,6 +729,21 @@ HTTP/1.1 相比 HTTP/1.0 性能上的改进:
 
 
 # 补充知识
+## CORS
+### 同源策略与跨域
+跨域指请求的资源与当前页面不同源（协议、域名、端口任一不同）。浏览器为保护用户安全，实行同源策略，默认禁止脚本读取跨域响应的内容。具体限制有三类：
+- 通过 `fetch` 或 `XMLHttpRequest` 发起的请求，脚本无法获取跨域服务器返回的数据；
+- 嵌入跨域页面的 `iframe`，脚本无法操作其 DOM；
+- 脚本无法读取不同源的 Cookie、localStorage 等存储数据。同源策略并不阻止浏览器发送跨域请求本身（如表单提交、加载图片或脚本），仅拦截脚本对响应内容的读取。
+### CORS 的工作原理
+CORS（跨域资源共享）是一种由服务器通过在响应头中添加 `Access-Control-Allow-Origin` 等字段来允许浏览器放行跨域读取的机制。
+当 A 源脚本向 B 源发起跨域请求时，浏览器照常发送请求，B 源服务器正常处理并返回数据，浏览器收到响应后检查是否存在合法的 CORS 头。若响应头明确许可 A 源，浏览器将数据交给脚本；否则浏览器拦截该响应，脚本收不到任何数据并抛出网络错误。因此服务器确实接收请求并返回了完整内容，只是浏览器阻止了脚本的访问，以此防止恶意页面窃取已登录网站的数据。
+### 简单请求与预检请求
+浏览器将跨域请求分为简单请求与非简单请求。
+简单请求（如 GET、POST 且使用标准首部）直接发送，由浏览器根据响应中的 CORS 头决定是否放行。
+非简单请求（如 PUT、DELETE 或携带自定义请求头，Content-Type 为一些特殊文件类型）会先发送一个 OPTIONS 预检请求，向服务器确认允许的源、方法和头部，服务器会返回一个只有相应头部的响应（虽然彼岸准里没有明确要求，但一般是这么做的）来说明服务器能够支持的返回内容信息。只有符合浏览器才发出实际请求，从而避免对不支持 CORS 的传统服务器造成意外影响。
+### CORS 的限制范围
+CORS 是纯粹的浏览器安全策略，其限制仅存在于浏览器环境。任何非浏览器客户端（如 curl、Postman、原生 App、后端服务）均可无视 CORS 直接跨域请求并读取响应。即使在浏览器内，通过 `<img>`、`<script>`、`<form>` 等标签发起的跨域请求可以成功，JavaScript 仍无法读取这些请求返回的内容。CORS 并非服务端的安全防线，而是浏览器隔离不同源脚本读取能力的沙箱机制。正因如此，后端使用 curl 自测跨域接口不会出现问题，前端浏览器调用则必须配置正确的 CORS 响应头。
 ## JWT
 - jwt 只是一个通过将身份验证信息通过 base64url 编码（不是 base64，把标准 Base64 中的 `+` 和 `/` 替换成了 `-` 和 `_`，并且去掉了末尾的 `=` 保证在浏览器地址栏传输）的一段文本内容，他的本质是三段 base64 字符串
     - header 部分描述编码方式/算法等内容（**注意没有加密**）
@@ -742,7 +757,9 @@ HTTP/1.1 相比 HTTP/1.0 性能上的改进:
 	- 以后客户端在任何需要验证的操作中带上 JWT（通过前端 localStorage/SessionStorage/Cookie 中/HTTPS Authoriization 字段存储）
 	- 服务器收到请求，检查 JWT 过期时间和有效性，有效则正常解析 JWT 得到身份标识，过期则通知客户端重新登录
 - jwt 的作用是减少 DB 查询次数，通过定时向服务器请求最新的令牌，因为身份标识已经写在 JWT 中，不需要再次询问数据库
-
+## OAuth 验证方式
+参考:
+- https://blog.csdn.net/fuhanghang/article/details/131394196
 > [!Info] “定时请求令牌”（双 Token 机制）
 > 为了安全，我们通常不会把 JWT 的有效期设置得很长（比如设置 15 分钟）。但双 token 机制进一步减少更新频率并保证安全
 > - Access Token（访问令牌）：有效期短（如 15 分钟），放在 Header 中请求业务接口。
@@ -766,3 +783,116 @@ HTTP/1.1 相比 HTTP/1.0 性能上的改进:
 	- **`HttpOnly`**：禁止 JavaScript 读取该 Cookie。**（防 XSS 攻击，存 JWT 或 Session ID 时必须加上！）**
 	- **`Secure`**：规定该 Cookie 只能通过 HTTPS 协议传输，防在 HTTP 下被明文窃听
 	- **`SameSite`**：限制跨站请求时是否携带 Cookie（设置为 `Strict` 或 `Lax`），**（防 CSRF 攻击的有效手段）**。
+## 重要的通信协议
+### SSE 协议
+参考:
+- https://www.cnblogs.com/openmind-ink/p/18706352
+- https://juejin.cn/post/7504167136328269858
+- https://blog.csdn.net/qq_16242613/article/details/155882646
+#### SSE 概述
+SSE（Server-Sent Events）是 HTML5 标准中定义的一种基于 HTTP 的服务器向客户端单向推送实时数据的协议。是**长连接的**，**一般用于向浏览器**推送数据的单向通信机制。SSE 对应的浏览器端实现是 EventSource 接口，该接口被制定为 HTML5 的一部分。**支持 HTML5 的浏览器都带有 EventSource接口**
+SSE 的核心特性包括：
+- 单向通信（服务器主动推送数据至客户端，客户端无需轮询）
+- 自动重连（连接中断后客户端自动尝试恢复）
+- 文本流式传输（数据格式为 text/event-stream，支持纯文本消息）
+- 事件类型支持（可自定义事件名称）
+#### 数据帧格式
+SSE 使用简单的文本格式，消息的每个字段用"\n"做分割。event-source 必须编码为 UTF-8 格式。以下是 4 个规范定义好的字段：
+1. **Event**：事件类型。若接收消息中存在 event 字段，触发的事件与 event 字段的值相同；若不存在，则触发通用的 message 事件。
+2. **Data**：发送的数据。多行时每行以 data:开头。
+3. **ID**：每一条事件流的 ID，用于断线重连时 Last-Event-ID 头的设置。
+4. **Retry**：告知浏览器在连接丢失之后重新开启新连接等待的时间。在自动重连过程中，之前收到的最后一个事件流 ID 会被发送到服务器。
+
+消息以空行（两个换行符）表示结束。示例格式：
+```
+event: messageType
+data: {
+data: "message content"
+data: }
+id: 123
+retry: 3000
+```
+#### 通信过程
+SSE 通信的底层实现被浏览器封装好，包括数据的处理。
+**客户端**：创建一个 EventSource 实例，对 HTTP 服务器开启一个持久化的连接，以 HTTP 字段设置 text/event-stream 格式接收事件。该连接会一直保持开启（keep-alive）直到调用 `EventSource.close()` 关闭。客户端可以使用 GET 查询参数传递数据给服务器，也可以使用 close 方法关闭连接。
+**服务端**：响应状态码应为 200，响应头必须包含：
+- Content-Type: text/event-stream; charset=utf-8
+- Cache-Control: no-cache
+- Connection: keep-alive
+示例请求：
+```
+Request URL: http://127.0.0.1:3000/sse
+Request Method: GET
+Status Code: 200 OK
+Response Headers:
+  Cache-Control: no-cache
+  Connection: keep-alive
+  Content-Type: text/event-stream; charset=utf-8
+  
+event: messageType\n
+data: {\n
+data: "message content"\n
+data: }\n
+id: 123\n
+retry: 3000\n
+\n
+```
+响应体数据结构为简单文本
+- **event**: 事件类型（可选）
+- **data**: 消息内容（多行时每行以 data: 开头）
+- **id**: 消息 ID，用于断线重连时 Last-Event-ID 头的设置
+- **retry**: 重连时间（毫秒）
+- 空行：表示消息结束
+#### SSE 的特点
+优点
+1. **简单易用**：客户端代码极其简洁，只需 `new EventSource()` 即可，js 原生支持
+2. **天然支持断线重连**：SSE 客户端会自动处理连接断开和重连，并可通过 Last-Event-ID 获取错过的消息。
+3. **基于 HTTP 协议**：它的内容就是它就是一个**标准的 HTTP/1.1 或 HTTP/2 响应报文**。客户端只能发送 GET 请求，响应StatusCode = 200，只有 Content-Type = text/event-stream 告诉客户端这是用的是 SSE 协议，相比 WebSocket，SSE 协议开销更小，特别适合文本数据推送（UTF-8 格式），对于 MIME 数据需要编码传送
+4. **良好的浏览器支持**：现代浏览器基本都支持 SSE（IE 不支持，但可通过 polyfill 解决）。
+不足
+5. **单向通信限制**：只能服务器向客户端推送，客户端不能通过同一连接发送数据。
+6. **连接数限制**：当不使用 HTTP/2 时，浏览器对同一域名的并发连接数有限制（通常 6 个），尤其当打开多个标签页时问题更明显。该问题在 Chrome 和 Firefox 中被标记为"不会解决"。
+#### SSE vs WebSocket vs 长轮询
+
+| 特性   | SSE             | WebSocket                             | 长轮询       |
+| ---- | --------------- | ------------------------------------- | --------- |
+| 协议   | HTTP            | 自定义 TCP 协议                            | HTTP      |
+| 通信方向 | 单向（服务器→客户端）     | 双向（服务器↔客户端）                           | 单向（请求-响应） |
+| 复杂度  | 简单，无需握手         | 复杂，需维护长，连接WebSocket 默认不支持断线重连，需要自己实现。 | 高延迟，频繁请求  |
+| 兼容性  | 主流浏览器支持（IE 不支持） | 广泛支持（含旧版本）                            | 完全兼容      |
+#### SSE 的 CORS 跨域配置
+标准的 EventSource 请求使用 GET 方法且不带自定义请求头，通常不会触发浏览器的 CORS 预检请求（OPTIONS）。但如果服务端对 SSE 端点添加了自定义认证头，则需注意处理 OPTIONS 请求。
+**withCredentials 属性**：withCredentials 是 EventSource 接口的只读属性，返回一个布尔值，指示 EventSource 对象是否使用 CORS 凭据进行实例化（true）或不使用（false，默认值）。withCredentials 为 true 时，SSE 请求可以携带跨域身份验证信息（如 cookies）。
+**跨域配置要点**：
+- 若设置 `Access-Control-Allow-Origin: *` 且同时启用 withCredentials 浏览器会拒绝连接
+- 必须明确指定允许的源（如`https://client.com`）
+- 需设置 `Access-Control-Allow-Credentials: true`
+- 协议/端口/域名必须完全匹配
+**注意事项**：
+- 通过合理配置 CORS 头，即可解决 SSE 的跨域问题
+- 非简单请求（如携带自定义头）会触发预检，而 SSE 不支持预检流程
+- 浏览器仅允许通过 Cookie 或基本认证（withCredentials）传递身份信息
+- 当前端设置 withCredentials: true 时，`Access-Control-Allow-Origin: *`将被浏览器拒绝，必须指定精确域名
+## 各种细节差异（面试可能会问）
+### localhost 和 127.0.0.1 有什么区别？
+参考: https://juejin.cn/post/7552450686349590567
+#### 基本原理
+本质上来说:
+- 127.0.0.1 是一个 IP 地址，直接指向网络接口，是**网络层**的
+- localhost 是一个主机名，需要通过 DNS 解析才能找到对应的 IP，是**应用层**的
+浏览器对两者的解析:
+解析 localhost 时需要经过 DNS 服务
+![[Pasted image 20260719143644.png]]
+解析 127.0.0.1 时
+![[Pasted image 20260719143707.png]]
+所以一般来说直接解析地址，跳过 DNS 要快一点
+#### 两者产生效果与差异的原因
+- hosts 文件被**恶意修改**
+	- 将某个 IP 地址定义别名为 localhost，导致某个域名/ip 地址无法访问，而直接使用 127.0.0.1 就能够访问
+- IPv6 环境
+	- `localhost` 可能解析为 IPv6 地址 `::1`
+	- 如果应用只监听 IPv4，就会连接失败
+	- `127.0.0.1` 强制使用 IPv4，更可靠
+- 容器环境中
+	- 容器内部应用配置监听 127.0.0.1:3000，而运行在容器外部的脚本对这个端口的操作是无效的，容器要和外部交互，一定要监听 0.0.0.0 端口
+	- Docker 容器有自己的网络命名空间，拥有独立的网络栈。`127.0.0.1` 这个地址在每个容器里都是它自己的回环接口，只能接受容器自己发出的连接。当你在宿主机上用 `-p 3000:3000` 做端口映射时，流量会先到达容器的虚拟网卡（如 `eth0`），再由容器网络转发给监听地址。这个地址不是本**宿主机器**的回环地址 `127.0.0.1` ，而是容器的
