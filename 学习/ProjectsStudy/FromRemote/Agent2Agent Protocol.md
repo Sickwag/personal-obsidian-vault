@@ -6,343 +6,265 @@
 
 ## 项目定位
 
-A2A C++ SDK 是 Google A2A 协议的生产级 C++ 实现。A2A 协议定义了一套标准化的 Agent 间通信规范，让不同开发者构建的 AI Agent 能够相互发现、通信和协作。**类比：A2A 之于 Agent 就像 HTTP 之于 Web 服务器。** 这不是一个 LLM 框架，而是一个 Agent 互联协议的具体实现。
+A2A 是 Google 提出的 Agent 间通信协议标准。本项目是它的 C++ SDK 实现，提供 Agent 发现、任务委托、消息交换等能力。类比：A2A 之于 Agent 就像 HTTP 之于 Web 服务器——定义了一套通用交互规范，不绑定具体编程语言或传输技术。
 
 ## 架构总览
 
-### 分层设计
-
 ```
-┌─────────────────────────────────────────────────────┐
-│  应用层 (examples/)                                  │
-│  Orchestrator / Math Agent / Echo Agent / Client    │
-├─────────────────────────────────────────────────────┤
-│  服务端层 (server/)                                  │
-│  TaskManager: 任务生命周期管理 + 回调注册             │
-│  ITaskStore: 可插拔持久化接口                        │
-│    ├── MemoryTaskStore (内存, 开发/测试用)            │
-│    └── RedisTaskStore (生产, 分布式)                  │
-├─────────────────────────────────────────────────────┤
-│  客户端层 (client/)                                  │
-│  A2AClient: JSON-RPC 调用封装 + HTTP 传输            │
-│  CardResolver: Agent 元数据发现                      │
-├─────────────────────────────────────────────────────┤
-│  核心层 (core/)                                      │
-│  JSON-RPC 2.0 请求/响应                              │
-│  基础类型 + 错误码 + 异常                            │
-│  模型层 (models/)                                    │
-│  AgentCard / AgentMessage / AgentTask / Part        │
-└─────────────────────────────────────────────────────┘
+应用层 (Echo Agent / Orchestrator / Math Agent)
+  ┆ 回调注册
+服务端层 — TaskManager (生命周期) + ITaskStore (可插拔存储)
+  ┆ JSON-RPC over HTTP
+客户端层 — A2AClient + CardResolver + HttpClient
+  ┆
+核心层 — JSON-RPC 序列化 / 基础类型 / 错误码
+模型层 — AgentCard / AgentMessage / AgentTask / Part
 ```
 
-### 设计原则
+设计原则：接口优先 (ITaskStore)、Pimpl 隐藏实现、Fluent API、RAII。
 
-1. **接口优先**：每个模块先定义纯虚接口（ITaskStore），再提供具体实现
-2. **Pimpl 隐藏实现**：HttpClient/A2AClient/TaskManager 都用 `unique_ptr<Impl>` 隐藏内部细节
-3. **Fluent API**：AgentCard/AgentTask/Artifact 等模型支持链式调用
-4. **RAII 全覆盖**：资源（libcurl handle、Redis 连接）都在构造函数获取、析构释放
-5. **线程安全**：MemoryTaskStore 用 mutex 保护；TaskManager 的回调设计支持多线程
+## 阶段1：协议基础
 
-## 设计思想在代码中的三层体现
+第一阶段围绕 JSON-RPC 2.0 协议格式、A2A 方法体系、错误码设计和 Pimpl 模式展开。
 
-A2A 协议的核心设计思想是：**Agent 之间通过标准化的 RPC 调用交换结构化消息，完成任务的委托与协作。** 在本 SDK 中，这个思想解耦为三个可独立替换的层次：
+### JSON-RPC 2.0 数据格式
 
-### 第1层：协议层（定义"说什么"）
+A2A 的通信数据是严格 JSON-RPC 2.0 格式的 JSON 字符串，核心字段固定：
 
-`core/` 目录负责协议本身的建模。`JsonRpcRequest`/`JsonRpcResponse` 封装了 JSON-RPC 2.0 的序列化和反序列化，`A2AMethods` 定义了标准化方法名集合。这一层决定了通信内容的 schema 和语义。
-
-代码入口：`jsonrpc_request.cpp:9-24` 的 `to_json()` 将请求对象序列化为标准 JSON-RPC 格式：
-```cpp
-j["jsonrpc"] = "2.0";
-j["id"]      = id_;
-j["method"]  = method_;
-j["params"]  = json::parse(params_json_);
-```
-
-### 第2层：传输层（决定"怎么传"）
-
-当前只有 `HttpClient`（libcurl），但传输层逻辑集中在 `a2a_client.cpp:34-58` 的 `send_rpc_request()` 方法中：
-```
-构建 JSON-RPC 对象 → to_json() 序列化 → HTTP POST → 解析 JSON-RPC 响应
-```
-替换传输层（如支持 gRPC）只需替换这一小段实现逻辑，协议层的 `JsonRpcRequest`/`JsonRpcResponse` 完全不需要改动。
-
-### 第3层：持久化层（决定"怎么存"）
-
-`ITaskStore` 纯虚接口 + 策略模式：
-```
-ITaskStore（接口）         task_store.hpp
-  ├── MemoryTaskStore      memory_task_store.hpp（SDK 自带）
-  ├── RedisTaskStore       redis_task_store.hpp（examples 中）
-  └── 你的实现             只需继承 ITaskStore 实现 7 个方法
-```
-
-> 三层分离的价值：改传输不影响协议，改存储不影响业务逻辑，每层可独立替换。
-
-## 数据传输格式
-
-A2A 通信数据是严格 JSON-RPC 2.0 格式的 JSON 字符串，消息体在 HTTP 层以 `application/json` 传输。核心结构分为两类：
-
-### 请求结构
-
-```
-{
-  "jsonrpc": "2.0",         // 固定值，标识协议版本
-  "id": "req-1",            // 请求 ID，用于匹配请求与响应
-  "method": "message/send", // A2A 方法名
-  "params": {               // 方法参数，具体内容由 method 决定
-    "message": { ... },     // AgentMessage 序列化
-    "context_id": "ctx-1"   // 上下文 ID（可选）
-  }
-}
-```
-
-### 响应结构
-
-成功响应：
-```
+```json
+// 请求
 {
   "jsonrpc": "2.0",
   "id": "req-1",
-  "result": {               // AgentTask 或 AgentMessage 序列化
-    "id": "task-1",
-    "status": { "state": "completed" },
-    "artifacts": [...],
-    "history": [...]
-  }
+  "method": "message/send",
+  "params": { "message": { ... }, "context_id": "..." }
 }
-```
-错误响应：
-```
-{
-  "jsonrpc": "2.0",
-  "id": "req-1",
-  "error": {
-    "code": -32001,
-    "message": "Task not found"
-  }
-}
+
+// 成功响应
+{ "jsonrpc": "2.0", "id": "req-1", "result": { ... } }
+
+// 错误响应
+{ "jsonrpc": "2.0", "id": "req-1", "error": { "code": -32001, "message": "Task not found" } }
 ```
 
-> JSON-RPC 2.0 的 `params` 和 `result` 字段本身不限定内部 schema，但 A2A 协议规范约定了每个 method 的 params/result 必须包含哪些字段。
+关键设计：`params` 和 `result` 的 schema 由每个 method 自己约定而非 JSON-RPC 规范强制，A2A 协议在 method 定义中补充了这一约束。代码体现：`jsonrpc_request.cpp:9-24` 和 `jsonrpc_response.cpp:9-34`。
 
-## 传输载体的可替换性
-当前架构是 HTTP-only 的，Google 规范并不强制定义载体类型，但一般使用 HTTP/RPC 技术实现
-### 不同传输的字段定义方式
+### A2A 方法体系
 
-| 传输方式 | 载体 | 字段表示方式 | 代码改动量 |
-|----------|------|-------------|-----------|
-| HTTP | POST body `application/json` | JSON 字符串直接传递 | 当前实现 |
-| gRPC | `google.protobuf.Struct` | JSON 映射到 Struct 的 `fields` map | 新增 GrpcClient |
-| WebSocket | 每个 frame 一条 JSON 字符串 | 和 HTTP 相同 | 新增 WsClient |
-| Unix Socket | plain text | 与 HTTP 相同 | 新增 UnixClient |
-
-本质结论：**JSON-RPC 2.0 协议的 JSON 文本是规范标准，protobuf、plain TCP frame、WebSocket frame 等都是载体。** 只要载体能完好传递 JSON-RPC 消息的结构化信息，就可以进行 A2A 通信。本项目只实现 HTTP 是简化决定，Google 官方实现同时支持 HTTP 和 gRPC。
-
-## 核心概念体系与代码映射
-
-### 完整概念表
-| 协议概念                    | 代码实体                              | 文件                      |
-| ----------------------- | --------------------------------- | ----------------------- |
-| JSON-RPC Request        | JsonRpcRequest                    | jsonrpc_request.hpp     |
-| JSON-RPC Response       | JsonRpcResponse                   | jsonrpc_response.hpp    |
-| JSON-RPC Error          | JsonRpcError 结构体                  | jsonrpc_response.hpp    |
-| A2A 方法定义                | A2AMethods 常量类                    | a2a_methods.hpp         |
-| 错误码                     | ErrorCode 枚举                      | error_code.hpp          |
-| 异常                      | A2AException 类                    | exception.hpp           |
-| AgentCard（Agent 自描述）    | AgentCard 类                       | agent_card.hpp          |
-| ├── Capabilities        | AgentCapabilities 结构体             | agent_card.hpp          |
-| ├── Skill               | AgentSkill 结构体                    | agent_card.hpp          |
-| └── Provider            | AgentProvider 结构体                 | agent_card.hpp          |
-| Task（工作单元）              | AgentTask 类                       | agent_task.hpp          |
-| TaskStatus（任务状态）        | AgentTaskStatus 类                 | task_status.hpp         |
-| TaskState（状态枚举）         | TaskState 枚举                      | types.hpp               |
-| └── 终态判断                | is_terminal() 方法                  | task_status.hpp         |
-| Message（通信单元）           | AgentMessage 类                    | agent_message.hpp       |
-| MessageRole（消息角色）       | MessageRole 枚举(User/Agent/System) | types.hpp               |
-| Part（原子内容单元）            | Part 抽象基类                         | message_part.hpp        |
-| ├── TextPart            | TextPart                          | message_part.hpp        |
-| ├── FilePart            | FilePart                          | message_part.hpp        |
-| └── DataPart            | DataPart                          | message_part.hpp        |
-| Artifact（Agent 产出物）     | Artifact 类                        | artifact.hpp            |
-| MessageSendParams（发送参数） | MessageSendParams 类               | message_send_params.hpp |
-| TaskQueryParams（查询参数）   | TaskQueryParams 结构体               | message_send_params.hpp |
-| TaskIdParams（ID 参数）     | TaskIdParams 结构体                  | message_send_params.hpp |
-| A2AResponse（响应变体）       | A2AResponse 类（Task\|Message 联合）   | a2a_response.hpp        |
-| TaskStore（持久化接口）        | ITaskStore 纯虚接口                   | task_store.hpp          |
-| MemoryTaskStore（内存实现）   | MemoryTaskStore（mutex 线程安全）       | memory_task_store.hpp   |
-| TaskManager（任务管理器）      | TaskManager（Pimpl + 回调注册）         | task_manager.hpp        |
-| A2AClient（客户端）          | A2AClient（Pimpl）                  | a2a_client.hpp          |
-| CardResolver（Agent 发现）  | CardResolver                      | card_resolver.hpp       |
-| HttpClient（HTTP 传输）     | HttpClient（Pimpl + libcurl）       | http_client.hpp         |
-
-### 本项目对概念的实现程度
-
-- 已实现 7 个 RPC 方法，协议中定义了多少个就实现了多少个的方法名常量
-- `TaskState` 有 6 个值（Submitted/Running/Completed/Failed/Canceled/Rejected），**缺少 `input-required` 状态**（协议规范中有的状态，本 SDK 简化掉了）
-- **`ListTasks` 操作未实现**（`A2AMethods` 中没有 `tasks/list` 常量）
-- **认证机制未实现**：项目仅提供 `HttpClient::add_header()` 接口来手动加 token，没有封装任何认证流程
-- **推送通知未实现**：`tasks/pushNotificationConfig/set` 和 `get` 方法常量已定义，但没有任何调用代码
-
-### 本项目 vs 纯概念封装
-
-项目超越纯概念封装的部分（即一个 Agent 开发框架提供的价值）：
-- `TaskManager` 回调体系：注册 5 种回调（message_received/task_created/task_cancelled/task_updated/agent_card_query），框架管理任务生命周期，用户只需写业务逻辑
-- `ITaskStore` 可插拔存储
-- Echo Agent 示例约 80 行代码即可创建完整 A2A Agent
-
-## 音视频等 MIME 数据传输
-
-`FilePart` 的设计（`message_part.hpp:51-84`）支持 MIME 数据：
-```cpp
-class FilePart : public Part {
-    std::string              filename_;   // 文件名
-    std::string              mime_type_;  // 如 "video/mp4"
-    std::vector<uint8_t>     data_;       // 二进制数据
-};
-```
-
-实际传输策略有两种：
-
-| 策略        | 实现方式                              | 优劣                              |
-| --------- | --------------------------------- | ------------------------------- |
-| 内联 base64 | 二进制数据编码为 base64 放在 JSON 的 data 字段 | 简单，但由于 HTTP 的无状态特性，会加大带宽负担      |
-| URI 引用    | data 字段放 URI，接收方去拉取               | 高效，需额外对象存储服务并通过路由指向对应的url，适合大文件 |
-
-本项目当前仅支持内联方式。生产环境大文件会用 URI 引用：
-
-## 认证机制
-
-认证是本 SDK 的**未实现特性**（框架能力），仅通过 `HttpClient::add_header()` 提供了扩展点。生产级 A2A 支持的三种认证方式：
-
-| 机制                                       | 实现方式                                    | 安全等级 | 适用场景           |
-| ---------------------------------------- | --------------------------------------- | ---- | -------------- |
-| API Key                                  | Header: `X-Api-Key: <key>`              | 低    | 内部服务间，LLM 服务调用 |
-| [[小林Coding 计算机网络#OAuth 验证方式\|OAuth 2.0]] | Client Credentials Grant → Bearer Token | 中    | 跨组织通信          |
-| mTLS                                     | 双向 TLS 证书验证                             | 高    | 金融/医疗等高安全场景    |
-
-## 推送通知
-
-A2A 推送通知和 MCP 通知机制的对比：
-
-```
-A2A Push Notification:
-Agent A（调用方）                   Agent B（被调用方）
-     │── SendMessage（异步）─────►  │
-     │                              │── task submitted
-     │                              │── [processing...]
-     │◄── POST to webhook_url ──────│
-     │    { status: "completed",    │
-     │      artifacts: [...] }      │
-
-MCP SSE Streaming:
-Host（调用方）                      Server（被调用方）
-     │── CallTool ───────────────►  │
-     │◄── event: result ───────────│
-     │◄── event: completion ───────│
-```
-
-| 特性 | A2A Push | MCP SSE |
-|------|---------|---------|
-| 通信方向 | Server → Client（反向调用） | Server → Client（同一连接） |
-| 传输协议 | HTTP POST（独立连接） | SSE（同一长连接） |
-| 适用场景 | 跨服务器异步通知 | 本地/局域网流式响应 |
-| 认证需求 | 高（webhook URL 需验证） | 低（信任网络内） |
-| 可靠性 | 需重试+确认机制 | 连接断开即丢失 |
-
-本项目状态：`A2AMethods` 中定义了 `tasks/pushNotificationConfig/set` 和 `get` 常量，但业务代码中从未调用。
-
-## MCP vs A2A
-|       | MCP                    | A2A                             |
-| :---- | :--------------------- | :------------------------------ |
-| 提出者   | Anthropic              | Google                          |
-| 解决的问题 | Agent → 工具/数据          | Agent ↔ Agent                   |
-| 通信方向  | 单向: CClient → Server   | 双向: 彼此发现、委托                     |
-| 传输    | studio (本地) / SSE (远程) | HTTP / gRPC / WebSocket         |
-| 消息格式  | JSON-RPC 2.0           | JSON-RPC 2.0                    |
-| 核心操作  | ListTools/CallTools    | SendMessage/GetTask/CancelTask  |
-| 生命周期  | 无 (一次调用即结束)            | 有 (Task: submitted → completed) |
-| 持久化   | 无                      | 有 (TaskStore 接口)                |
-| 服务发现  | 无 (URL 写死)             | 有 (AgentCard + 注册中心)            |
-| 认证    | API Key / OAuth        | OAuth2 / mTLS / API Key         |
-| 推送通知  | 无 (SSE 流替代)            | 有 (Webhook Push Notification)   |
-一句话：MCP 给 Agent 装上了手和眼（工具和感知），A2A 让 Agent 之间能说话和协作。
-
-## 本 SDK 的限制和缺失
-
-- `TaskState` 缺少 `input-required` 状态（协议规范 6 + 1 = 7 种，SDK 只实现了 6 种）
-- `ListTasks` 操作未实现
-- 传输层未抽象为接口（当前 HTTP-only，不能直接插拔为 gRPC）
-- 认证机制无封装（只提供最底层的 `add_header` 扩展点）
-- 推送通知只定义了方法常量无实现
-- `uuid` 生成简化：用 `counter + timestamp` 替代真正的 UUID，多进程下有冲突风险
-### 任务生命周期
-
-```
-Submitted ──► Running ──► Completed
-                  │            │
-                  ├────► Failed
-                  ├────► Canceled
-                  └────► Rejected
-```
-
-终端状态：Completed / Failed / Canceled / Rejected（不可变）
-非终端状态：Submitted / Running（可变）
-
-## 学习阶段
-
-### 阶段1: 协议基础 — JSON-RPC 2.0 与 A2A 方法体系
-
-**核心问题：A2A 协议在 JSON-RPC 2.0 之上定义了哪些操作？**
-
-A2A v0.3.0 定义了 7 个 RPC 方法，分为三类：
+定义在 `a2a_methods.hpp`，共 7 个标准化方法：
 
 | 类别 | 方法 | 用途 |
 |------|------|------|
 | 消息 | `message/send` | 发送消息（非流式） |
-| 消息 | `message/stream` | 发送消息（流式响应） |
-| 任务 | `tasks/get` | 查询任务状态 |
+| 消息 | `message/stream` | 发送消息（流式，SSE 响应） |
+| 任务 | `tasks/get` | 查询任务 |
 | 任务 | `tasks/cancel` | 取消任务 |
-| 任务 | `tasks/resubscribe` | 重新订阅任务更新 |
-| 推送 | `tasks/pushNotificationConfig/set` | 配置推送通知 |
-| 推送 | `tasks/pushNotificationConfig/get` | 查询推送通知配置 |
+| 任务 | `tasks/resubscribe` | 重订阅任务更新（流式） |
+| 推送 | `tasks/pushNotificationConfig/set` | 配置推送通知（未实现） |
+| 推送 | `tasks/pushNotificationConfig/get` | 查询推送配置（未实现） |
 
-**JSON-RPC 2.0 请求格式：**
-```json
-{
-  "jsonrpc": "2.0",
-  "id": "str-or-null",
-  "method": "message/send",
-  "params": { ... }
-}
+实现手法：用 `static constexpr const char*` 而非枚举，因为协议方法名天然是字符串，省去枚举↔字符串的映射转换。`is_streaming_method()` / `is_valid_method()` 两个静态方法提供分类校验。
+
+### 错误码体系
+
+定义在 `error_code.hpp`，双层结构：
+
+```
+JSON-RPC 标准错误 (-32700 ~ -32603)
+  ParseError / InvalidRequest / MethodNotFound / InvalidParams / InternalError
+    ┆
+A2A 扩展错误 (-32001 ~ -32005)
+  TaskNotFound / TaskNotCancelable / UnsupportedOperation / ContentTypeNotSupported / PushNotificationNotSupported
 ```
 
-**设计亮点：** `A2AMethods` 用 `static constexpr const char*` 而非枚举来定义方法名，因为协议层面的方法名就是字符串常量，直接用字符串避免了枚举到字符串的映射转换。
+配套的 `error_code_to_string()` 函数做枚举→描述映射。`exception.hpp` 中的 `A2AException` 包装 `ErrorCode` + `what()` 消息，让异常处理层可以直接拿到结构化错误码。
 
-### 阶段2: 数据模型
+### Pimpl 设计模式
+
+```cpp
+// http_client.hpp (public)
+class HttpClient {
+    class Impl;
+    std::unique_ptr<Impl> impl_;
+};
+
+// http_client.cpp (private)
+class HttpClient::Impl {
+    long timeout_;
+    std::map<std::string, std::string> headers_;
+};
+```
+
+核心价值按重要性排序：
+
+| 价值 | 说明 |
+|------|------|
+| 编译防火墙 | `libcurl` 只在 `.cpp` 中 include，所有包含 `http_client.hpp` 的源文件不依赖 curl 头文件。改 `Impl` 成员只编译一个 `.cpp` |
+| ABI 稳定性 | `sizeof(HttpClient) = sizeof(unique_ptr) = 8`，新增字段不改变对象布局，以 `.so`/`.dll` 分发时版本兼容 |
+| move 语义保障 | `unique_ptr` 自身支持 move，`HttpClient` 的移动构造/赋值 = 指针拷贝，noexcept 天然成立 |
+
+代价：每次成员访问多一次指针间接跳转；`clear_headers()` 这种一行操作也得走 `impl_->headers_.clear()`。
+
+> Qt 中叫 **d-pointer**（`Q_D`/`Q_Q` 宏），驱动力同样源自 ABI 稳定性——Qt 以动态库分发，不能因加字段让用户程序 crash。
+
+**fast Pimpl** 变体：用 `std::aligned_storage` 在栈上预留内存，避免堆分配开销，需自行管理生命周期和对齐。仅在性能热点中使用。
+
+### 流式传输的 Accept Header 约定
+
+```cpp
+// post()：攒齐再返回
+curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);  // 写入 string
+
+// post_stream()：边收边抛
+curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, stream_callback); // 每块立刻回调
+header_list = curl_slist_append(header_list, "Accept: text/event-stream");
+```
+
+`Accept: text/event-stream` 不是协议转换，而是 HTTP 内容协商的**约定暗示**，告诉服务端"请按 SSE 格式返回"。服务端可以不理会这个 header（此时 `stream_callback` 只被调用一次，退化为一整块数据），区别仅在于回调解触发时机：
+
+| | write_callback (post) | stream_callback (post_stream) |
+|---|---|---|
+| 触发次数 | 1 次（完整响应到达后） | N 次（每块数据到就触发） |
+| 回调内容 | 追加到 string | 直接抛给用户回调 |
+| 用户感知 | 同步等待完整响应 | 实时接收到每个 chunk |
+
+## 阶段2：数据模型
+
+### A2A 协议概念体系 → C++ 映射
+
+| 协议概念 | 代码实体 | 文件 |
+|----------|---------|------|
+| AgentCard（自描述） | `AgentCard` + `AgentCapabilities` / `AgentSkill` / `AgentProvider` | `agent_card.hpp` |
+| Task（工作单元） | `AgentTask` + `AgentTaskStatus` | `agent_task.hpp` + `task_status.hpp` |
+| TaskState（生命周期枚举） | `TaskState` (6 值，缺 `input-required`) | `types.hpp` |
+| Message（通信单元） | `AgentMessage` + `MessageRole` | `agent_message.hpp` |
+| Part（原子内容） | `Part` 抽象基类 → `TextPart` / `FilePart` / `DataPart` | `message_part.hpp` |
+| Artifact（产出物） | `Artifact`（带可选 uri/content/metadata） | `artifact.hpp` |
+| 响应联合体 | `A2AResponse`（`Task` 或 `Message` 变体） | `a2a_response.hpp` |
+| 持久化接口 | `ITaskStore` 纯虚接口 → `MemoryTaskStore` / `RedisTaskStore` | `task_store.hpp` |
+| 任务管理器 | `TaskManager`（回调 + Pimpl） | `task_manager.hpp` |
+| 客户端 | `A2AClient`（Pimpl，封装 JSON-RPC + HTTP） | `a2a_client.hpp` |
+
+AgentCard 的 `protocol_version` 固定为 `"0.3.0"`——这是 A2A 协议的当前版本号，服务端通过它向客户端声明自己遵循的协议版本。AgentSkill 的 `input_modes` / `output_modes` 数组解决了"这个 Agent 能处理什么格式的输入、输出什么格式的结果"的能力协商问题。
+
+### Message 的 Part 多态体系
+
+```cpp
+class Part {
+    virtual PartKind kind() const = 0;    // Text / File / Data
+    virtual std::string to_json() const = 0;
+    virtual std::unique_ptr<Part> clone() const = 0;
+};
+```
+
+选择 `vector<unique_ptr<Part>>` 而非 `variant<TextPart, FilePart, DataPart>` 的原因：
+
+| 方案 | 优点 | 缺点 |
+|------|------|------|
+| `vector<unique_ptr<Part>>` | 类型可扩展（新增 Part 子类不需改容器） | 堆分配开销，虚函数调用 |
+| `variant<TextPart, FilePart, DataPart>` | 值语义，无堆分配，cache-friendly | 硬编码所有类型，新增子类必须改 variant 定义 |
+
+A2A 协议未来可能扩展 Part 类型（如 `AudioPart`、`VideoPart`），用多态更灵活。代价是 `AgentMessage` 必须手动实现深拷贝（见 `agent_message.hpp:21-48` 的复制构造/赋值）。
+
+### MIME 数据与音视频传输
+
+`FilePart` 设计：
+```cpp
+class FilePart : public Part {
+    std::string              filename_;
+    std::string              mime_type_;  // "video/mp4", "audio/wav" 等
+    std::vector<uint8_t>     data_;       // 二进制载荷
+};
+```
+
+两种传输策略的取舍：
+
+| 策略 | 传输方式 | 优劣 |
+|------|---------|------|
+| 内联 base64 | data 字段直接放二进制（JSON 不直接支持二进制，需编码） | 简单、自包含；data 膨胀 33%，大体积不适用 |
+| URI 引用 | data 中放链接，接收方另请求资源 | 高效、支持大文件；需文件/对象存储服务 |
+
+本项目仅实现内联方式。生产环境大文件用 URI 引用：
+```json
+{ "parts": [{ "kind": "file", "mime_type": "video/mp4",
+              "uri": "https://storage.example.com/videos/demo.mp4" }] }
+```
+
+### 值得一提的设计模式
+
+**Fluent API**：AgentCard/AgentTask/Artifact 等模型提供 `with_xxx()` 方法返回 `*this` 引用，支持链式调用：
+```cpp
+AgentCard::create()
+    .with_name("Echo Agent")
+    .with_version("1.0.0")
+    .with_capabilities(caps);
+```
+意图是构造时免去大量 setter 调用，代码更紧凑。
+
+**策略模式**：`ITaskStore` 纯虚接口，MemoryTaskStore（开发）+ RedisTaskStore（生产）可互换，`TaskManager` 构造时注入：
+```cpp
+TaskManager(std::shared_ptr<ITaskStore> task_store = nullptr);
+// 默认用 MemoryTaskStore
+```
+
+**联合响应 A2AResponse**：同一个方法可以返回 `AgentTask` 或 `AgentMessage`，用枚举 `Type { Task, Message }` + `is_task()` / `is_message()` 查询当前类型。另一种实现方式：`std::variant<AgentTask, AgentMessage>`。本项目选择手写联合体，语义更明确。
+
+## 阶段3：传输层
 
 > 待学习...
 
-### 阶段3: 传输层
+## 阶段4：客户端层
 
 > 待学习...
 
-### 阶段4: 客户端层
+## 阶段5：服务端层
 
 > 待学习...
 
-### 阶段5: 服务端层
+## 阶段6：示例系统
 
 > 待学习...
 
-### 阶段6: 示例系统
+## 附录
 
-> 待学习...
+### MCP vs A2A
 
-## 代码可优化的地方
+| | MCP (Model Context Protocol) | A2A (Agent-to-Agent) |
+|---|---|---|
+| 提出者 | Anthropic | Google |
+| 解决 | Agent → 工具/数据 | Agent ↔ Agent 协作 |
+| 方向 | 单向 (Client → Server) | 双向 (相互发现、委托) |
+| 传输 | stdio / SSE | HTTP / gRPC / WebSocket |
+| 生命周期 | 无（一次调用结束） | 有（Task: submitted → completed） |
+| 持久化 | 无 | TaskStore 可插拔接口 |
+| 服务发现 | 无（URL 写死） | AgentCard + 注册中心 |
+| 推送通知 | SSE 流替代 | Webhook Push |
 
-> 学习过程中发现的问题记录在此
+一句话：**MCP 给 Agent 装上了手和眼，A2A 让 Agent 之间能说话和协作。**
 
-## 对比分析
+### 认证机制
 
-> 设计选择对比记录在此
+（本 SDK 未实现，仅 `HttpClient::add_header()` 提供扩展点）
+
+| 机制 | 实现方式 | 安全等级 | 适用场景 |
+|------|---------|---------|---------|
+| API Key | Header: `X-Api-Key: <key>` | 低 | 内部信任网络 |
+| OAuth 2.0 | Client Credentials → Bearer Token | 中 | 跨组织 |
+| mTLS | 双向 TLS 证书 | 高 | 金融/医疗 |
+
+### 推送通知
+
+（本 SDK 仅定义方法常量，未实现逻辑）
+
+A2A 的 Push 方向与常规 RPC 相反：调用方注册 webhook URL，被调用方在任务完成后反向 POST 通知。区别于 MCP 的 SSE（同一长连接推流），Push 是独立 HTTP 连接，适合跨服务器的异步通知场景。
+
+### 本 SDK 已知缺失
+
+| 缺失 | 影响 |
+|------|------|
+| `TaskState::InputRequired` 缺失 | Agent 请求用户补充输入的场景无法正确表示状态 |
+| `tasks/list` 未实现 | 无法查询 Agent 的任务列表 |
+| 传输层未抽象接口 | HTTP-only，不能直接插拔 gRPC/WebSocket |
+| 认证无封装 | 跨组织需自行实现 OAuth2/mTLS |
+| 推送通知未实现 | 只能轮询查任务状态 |
+| UUID 生成简化 (`counter+timestamp`) | 多进程 ID 冲突风险 |
