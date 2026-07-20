@@ -23,10 +23,7 @@ A2A 是 Google 提出的 Agent 间通信协议标准。本项目是它的 C++ SD
 
 设计原则：接口优先 (ITaskStore)、Pimpl 隐藏实现、Fluent API、RAII。
 
-## 阶段1：协议基础
-
-第一阶段围绕 A2A 基本概念、JSON-RPC 2.0 协议格式、方法体系、错误码设计和 Pimpl 模式展开。
-
+## 协议基础
 ### 基本概念
 
 #### 概念总览与关系图
@@ -75,7 +72,7 @@ A2A 协议的核心概念共 7 个，它们之间的关系如下：
 
 **AgentCard — Agent 的自描述名片**
 
-AgentCard 是 Agent 对外发布的"身份证"，固定在 `/.well-known/agent-card.json` 端点提供。调用方通过它发现 Agent 的能力和通信方式。
+AgentCard 是 Agent 对外发布的"身份证"，固定在 `/.well-known/agent-card.json` 端点提供。调用方通过它发现 Agent 的能力和通信方式。这里需要注意**客户端必须提前知道有 `/.well-known/agent-card.json` 这个 url 可以访问，才能完成后面的内容，而不是用过扫描 `/.well-known/` 得知**
 
 ```
 AgentCard {
@@ -389,7 +386,7 @@ header_list = curl_slist_append(header_list, "Accept: text/event-stream");
 | 回调内容 | 追加到 string | 直接抛给用户回调 |
 | 用户感知 | 同步等待完整响应 | 实时接收到每个 chunk |
 
-## 阶段2：数据模型
+## 数据模型
 
 ### A2A 协议概念体系 → C++ 映射
 
@@ -451,24 +448,8 @@ class FilePart : public Part {
               "uri": "https://storage.example.com/videos/demo.mp4" }] }
 ```
 
-### 值得一提的设计模式
-
-**Fluent API**：AgentCard/AgentTask/Artifact 等模型提供 `with_xxx()` 方法返回 `*this` 引用，支持链式调用：
-```cpp
-AgentCard::create()
-    .with_name("Echo Agent")
-    .with_version("1.0.0")
-    .with_capabilities(caps);
-```
-意图是构造时免去大量 setter 调用，代码更紧凑。
-
-**策略模式**：`ITaskStore` 纯虚接口，MemoryTaskStore（开发）+ RedisTaskStore（生产）可互换，`TaskManager` 构造时注入：
-```cpp
-TaskManager(std::shared_ptr<ITaskStore> task_store = nullptr);
-// 默认用 MemoryTaskStore
-```
-
-**联合响应 A2AResponse**：同一个方法可以返回 `AgentTask` 或 `AgentMessage`，用枚举 `Type { Task, Message }` + `is_task()` / `is_message()` 查询当前类型。另一种实现方式：`std::variant<AgentTask, AgentMessage>`。本项目选择手写联合体，语义更明确。
+### 联合响应
+**A2AResponse**：同一个方法可以返回 `AgentTask` 或 `AgentMessage`，用枚举 `Type { Task, Message }` + `is_task()` / `is_message()` 查询当前类型。另一种实现方式：`std::variant<AgentTask, AgentMessage>`。本项目选择手写联合体，语义更明确。
 
 两种 discriminated union 实现方式对比：
 
@@ -506,52 +487,7 @@ parts_.push_back(TextPart("hello"));
 
 核心矛盾：**A2A 的未来扩展性 vs 当前已知的三种类型。** 项目选择了面向未来的多态方案。代价是 `AgentMessage` 必须手动深拷贝（`agent_message.hpp:21-48`）。如果 A2A 规范引入了 `AudioPart`、`VideoPart`，多态方案只需要加一个子类，`variant` 方案要改所有用到类型列表的地方。
 
-### Message 的深拷贝设计
-
-```cpp
-// agent_message.hpp: 复制构造
-AgentMessage(const AgentMessage& other)
-    : message_id_(other.message_id_)
-    , role_(other.role_) {
-    for(const auto& part : other.parts_) {
-        parts_.push_back(part->clone());  // 多态克隆
-    }
-}
-```
-
-`Part` 基类要求所有子类实现 `clone()`：
-```cpp
-class Part {
-    virtual std::unique_ptr<Part> clone() const = 0;
-};
-class TextPart : public Part {
-    std::unique_ptr<Part> clone() const override {
-        return std::make_unique<TextPart>(text_);
-    }
-};
-```
-
-这是 C++ 多态容器的标准模式——`vector<unique_ptr<Base>>` 必须手动深拷贝，编译器无法自动推导多态类型的拷贝构造。
-
-## 阶段3：传输层
-
-> 待学习...
-
-## 阶段4：客户端层
-
-> 待学习...
-
-## 阶段5：服务端层
-
-> 待学习...
-
-## 阶段6：示例系统
-
-### Echo Agent — 协议栈验证
-
-`examples/echo_agent/main.cpp` 是最简 Agent 实现，约 80 行。它的作用不是产品，而是**验证 A2A 协议栈的基本通路**：JSON-RPC 序列化 → TaskManager 回调 → 响应返回。Echo Agent 退化成了"收到什么返回什么"，没有 AI 调用、没有任务管理。通过它，走通 JSON-RPC 序列化 → TaskManager 回调 → 响应返回的完整路径。
-
-Client Demo（`interactive_client.cpp`）的角色不同——它是**系统用户入口**，负责把终端输入包装成 JSON-RPC 请求发给 Orchestrator，不管后端是谁在处理。这体现了 A2A 的核心思想：**调用方只需要知道跟谁说话（Orchestrator），不需要知道背后是谁在处理。**
+## 示例系统
 
 ### 固定地址多 Agent 系统
 
@@ -583,14 +519,6 @@ Orchestrator 发 POST 给 Math Agent 后必须阻塞等待响应，这期间不�
 | 协作 | 路由到单个子 Agent | 并行分发 + 结果合并 |
 | 状态 | Redis 共享历史 | 每个 Agent 独立 Task 管理 |
 | 扩展 | 加 Agent 需改代码 | 动态发现 + Plan 自动分配 |
-
-#### 固定地址 vs 动态发现
-
-| | 固定地址 | 动态发现 |
-|---|---|---|
-| 地址 | 硬编码 `localhost:5001` | Registry 查 `tag=math` |
-| 负载均衡 | 单实例 | 轮询多实例 |
-| 健康检查 | 无 | 30s 心跳超时自动摘除 |
 
 ### 注册中心如何工作
 
@@ -626,8 +554,6 @@ std::string select_agent_by_tag(const std::string& tag) {
 2. **意图识别太简陋**：`identify_intent()` 用关键词匹配（`+ - * /` 等），不是 LLM 判断（`redis_orchestrator.cpp:136-148`）
 3. **单层路由**：只有 Orchestrator → Math Agent，不支持层次化
 4. **Registry 不可靠**：内存 `std::map` 存储，Registry 进程挂掉全部丢失
-
-**但是这个项目的价值不在于代码质量，而在于展示 A2A 协议如何落地的完整思路。** 跨进程历史共享通过 Redis List 实现的设计、Agent 注册发现机制、固定 vs 动态两套方案的对比，这些架构层面的思考是正确的。
 
 ## 附录
 
