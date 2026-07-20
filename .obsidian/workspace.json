@@ -209,7 +209,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 223.5
+    "width": 223.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -224,6 +225,7 @@
   },
   "active": "2dc6da60514c2e9e",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/FromRemote/Agent2Agent Protocol.md.tmp.557921.87bed3c9e168",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
     "学习/ProjectsStudy/FromRemote/Agent2Agent Protocol.md.tmp.557921.a9ceea149e12",
