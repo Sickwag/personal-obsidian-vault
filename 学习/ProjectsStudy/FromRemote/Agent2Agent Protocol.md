@@ -470,6 +470,69 @@ TaskManager(std::shared_ptr<ITaskStore> task_store = nullptr);
 
 **联合响应 A2AResponse**：同一个方法可以返回 `AgentTask` 或 `AgentMessage`，用枚举 `Type { Task, Message }` + `is_task()` / `is_message()` 查询当前类型。另一种实现方式：`std::variant<AgentTask, AgentMessage>`。本项目选择手写联合体，语义更明确。
 
+两种 discriminated union 实现方式对比：
+
+| | 手写联合体（本项目） | `std::variant` |
+|---|---|---|
+| 访问方式 | `resp.is_task() → resp.as_task()` 语义直接 | `std::holds_alternative<T>(resp)` + `std::get<T>(resp)` |
+| 扩展性 | 新增类型要改 class 定义 | 改 using 别名即可 |
+| 异常安全 | 无异常路径（因只存储两种类型） | `std::bad_variant_access` 可能抛出 |
+| 内存布局 | 两个成员都分配内存，浪费一个对象空间 | 只存最大类型，节省内存 |
+| 代码可读性 | 意图一目了然 | 模板访问稍显啰嗦 |
+
+选择理由：`A2AResponse` 只有 Task/Message 两种可能，手写联合体代码量不多，阅读时 `as_task()` 比 `std::get<AgentTask>` 更直观。
+
+### Part 多态 vs variant 的深层取舍
+
+```cpp
+// 当前方案：多态 + unique_ptr
+vector<unique_ptr<Part>> parts_;    // Part 是抽象基类
+parts_.push_back(make_unique<TextPart>("hello"));
+parts_.push_back(make_unique<FilePart>("img.png", "image/png", data));
+
+// 替代方案：variant
+vector<variant<TextPart, FilePart, DataPart>> parts_;
+parts_.push_back(TextPart("hello"));
+```
+
+| 维度 | `vector<unique_ptr<Part>>` | `variant<TextPart, FilePart, DataPart>` |
+|------|---------------------------|----------------------------------------|
+| 新增子类 | 定义新 class 继承 Part，无需改容器代码 | 必须改 variant 定义 + 所有 visitor |
+| 存储方式 | 堆分配每个 Part 对象，动态分发 | 值语义，栈分配，连续内存 |
+| 拷贝代价 | 虚函数 `clone()`，手动实现深拷贝 | 编译器生成拷贝，值拷贝即可 |
+| 访问开销 | 虚函数调用（运行时） | `std::visit` 编译期生成跳转表 |
+| 删除/插入 | unique_ptr 自动管理 | variant 值语义，vector 自动管理 |
+| 典型场景 | 类型集未知、可能扩展 | 类型集固定、性能敏感 |
+
+核心矛盾：**A2A 的未来扩展性 vs 当前已知的三种类型。** 项目选择了面向未来的多态方案。代价是 `AgentMessage` 必须手动深拷贝（`agent_message.hpp:21-48`）。如果 A2A 规范引入了 `AudioPart`、`VideoPart`，多态方案只需要加一个子类，`variant` 方案要改所有用到类型列表的地方。
+
+### Message 的深拷贝设计
+
+```cpp
+// agent_message.hpp: 复制构造
+AgentMessage(const AgentMessage& other)
+    : message_id_(other.message_id_)
+    , role_(other.role_) {
+    for(const auto& part : other.parts_) {
+        parts_.push_back(part->clone());  // 多态克隆
+    }
+}
+```
+
+`Part` 基类要求所有子类实现 `clone()`：
+```cpp
+class Part {
+    virtual std::unique_ptr<Part> clone() const = 0;
+};
+class TextPart : public Part {
+    std::unique_ptr<Part> clone() const override {
+        return std::make_unique<TextPart>(text_);
+    }
+};
+```
+
+这是 C++ 多态容器的标准模式——`vector<unique_ptr<Base>>` 必须手动深拷贝，编译器无法自动推导多态类型的拷贝构造。
+
 ## 阶段3：传输层
 
 > 待学习...
@@ -484,7 +547,87 @@ TaskManager(std::shared_ptr<ITaskStore> task_store = nullptr);
 
 ## 阶段6：示例系统
 
-> 待学习...
+### Echo Agent — 协议栈验证
+
+`examples/echo_agent/main.cpp` 是最简 Agent 实现，约 80 行。它的作用不是产品，而是**验证 A2A 协议栈的基本通路**：JSON-RPC 序列化 → TaskManager 回调 → 响应返回。Echo Agent 退化成了"收到什么返回什么"，没有 AI 调用、没有任务管理。通过它，走通 JSON-RPC 序列化 → TaskManager 回调 → 响应返回的完整路径。
+
+Client Demo（`interactive_client.cpp`）的角色不同——它是**系统用户入口**，负责把终端输入包装成 JSON-RPC 请求发给 Orchestrator，不管后端是谁在处理。这体现了 A2A 的核心思想：**调用方只需要知道跟谁说话（Orchestrator），不需要知道背后是谁在处理。**
+
+### 固定地址多 Agent 系统
+
+架构示意：
+```
+Orchestrator (5000)
+  ├── 意图 "math" → Math Agent (5001)
+  │                    └── 从 Redis 读历史
+  └── 意图 其他   → LLM 直接回复
+```
+ 
+**这不是真正的 Multi-Agent。** 用户对 "1+1=?" 发起 POST 后，Orchestrator 内部是同步等待的：
+```
+用户 POST / → Orchestrator
+  Orchestrator:
+    1. identify_intent("1+1=?") → "math"
+    2. 保存用户消息到 Redis
+    3. ↓ 同步阻塞 ↓
+    4. POST / → Math Agent 处理 → 等它返回
+    5. 保存回复到 Redis
+    6. 返回给用户
+```
+ 
+Orchestrator 发 POST 给 Math Agent 后必须阻塞等待响应，这期间不能处理其他请求。本质是**意图路由器 + 后端 HTTP 代理**，不是多 Agent 协作。
+
+| 对比 | 本项目 | 真正多 Agent |
+|------|--------|-------------|
+| 通信 | 同步 HTTP 阻塞 | 异步 Task 驱动 |
+| 协作 | 路由到单个子 Agent | 并行分发 + 结果合并 |
+| 状态 | Redis 共享历史 | 每个 Agent 独立 Task 管理 |
+| 扩展 | 加 Agent 需改代码 | 动态发现 + Plan 自动分配 |
+
+#### 固定地址 vs 动态发现
+
+| | 固定地址 | 动态发现 |
+|---|---|---|
+| 地址 | 硬编码 `localhost:5001` | Registry 查 `tag=math` |
+| 负载均衡 | 单实例 | 轮询多实例 |
+| 健康检查 | 无 | 30s 心跳超时自动摘除 |
+
+### 注册中心如何工作
+
+`agent_registry.hpp` 的定义：
+```cpp
+class AgentRegistry {
+    std::map<std::string, AgentRegistration> agents_;       // agent_id → 注册信息
+    std::map<std::string, std::set<std::string>> tags_index_; // tag → agent_id 集合
+    int heartbeat_timeout_;  // 30秒无心跳视为离线
+    int cleanup_interval_;   // 每60秒清理一次
+};
+```
+
+`RegistryClient` 中的轮询负载均衡（`registry_client.hpp:92-108`）：
+```cpp
+std::string select_agent_by_tag(const std::string& tag) {
+    auto agents = find_agents_by_tag(tag);
+    static std::map<std::string, size_t> round_robin_index;
+    size_t& index = round_robin_index[tag];
+    std::string address = agents[index % agents.size()].address;
+    index++;
+    return address;
+}
+```
+
+启动脚本 `start_dynamic_system.sh` 启动 5 个进程：Registry(8500) + Orchestrator(5000) + Math Agent x2(5001/5002) + Redis。每个进程独立、通过 HTTP/Redis 通信。
+
+### 本项目多 Agent 的本质
+
+本质上这是一个**共享历史存储的意图路由系统**，而不是多 Agent 协作系统。存在的问题：
+
+1. **同步代理**：Orchestrator 阻塞等待子 Agent 返回（`redis_orchestrator.cpp:151-177` 的 `call_math_agent`）
+2. **意图识别太简陋**：`identify_intent()` 用关键词匹配（`+ - * /` 等），不是 LLM 判断（`redis_orchestrator.cpp:136-148`）
+3. **单层路由**：只有 Orchestrator → Math Agent，不支持层次化
+4. **Registry 不可靠**：内存 `std::map` 存储，Registry 进程挂掉全部丢失
+
+**但是这个项目的价值不在于代码质量，而在于展示 A2A 协议如何落地的完整思路。** 跨进程历史共享通过 Redis List 实现的设计、Agent 注册发现机制、固定 vs 动态两套方案的对比，这些架构层面的思考是正确的。
 
 ## 附录
 
@@ -529,3 +672,122 @@ A2A 的 Push 方向与常规 RPC 相反：调用方注册 webhook URL，被调�
 | 认证无封装 | 跨组织需自行实现 OAuth2/mTLS |
 | 推送通知未实现 | 只能轮询查任务状态 |
 | UUID 生成简化 (`counter+timestamp`) | 多进程 ID 冲突风险 |
+
+
+## 企业级 Multi-Agent 架构扩展
+
+以上分析基于本项目代码。以下讨论跳出本项目，从企业级视角看 Multi-Agent 系统应该怎么设计。本项目存在的核心问题：**同步代理转发 + 简陋意图识别 + 无状态管理**，企业级方案逐一对应解决。
+
+### Task 路由：同步代理 → 异步 Task 驱动
+
+本项目 Orchestrator 等待子 Agent HTTP 响应的方式违反了 HTTP 请求-响应模型的设计约束。**正确的 A2A 异步模式**：
+
+```
+用户 → SendMessage → Orchestrator
+  Orchestrator:
+    1. 创建顶级 Task (状态: submitted)
+    2. 返回 202 Accepted + task_id
+    3. LLM 生成 Plan → 拆分子任务
+       Plan: [
+         {step: "search", dep: [], agent: "WebSearch"},
+         {step: "analyze", dep: ["search"], agent: "Analysis"},
+         {step: "report", dep: ["analyze"], agent: "Report"}
+       ]
+    4. 创建子 Task → 发布到事件总线 (Kafka)
+    5. WebSearch Agent 消费事件 → 处理 → 发布结果
+    6. Analysis Agent 等依赖满足 → 消费 → 处理
+    7. Report Agent 同上
+    8. 所有子 Task 完成 → 顶级 Task → completed
+    9. 用户可通过 tasks/get 轮询或 Webhook 接收通知
+```
+
+关键区别：Orchestrator 不阻塞。每个 HTTP 调用独立、同步，跨 Agent 协调通过 Task 状态机 + 事件总线完成。
+
+### 四层企业级架构
+
+```
+第1层：网关层 (Gateway Layer)
+  API Gateway (Kong/Envoy)
+  职责：协议转换、认证（OAuth2/mTLS）、限流、路由到 Orchestrator
+  端点：/.well-known/agent-cards → 返回所有 Agent 元数据集合
+
+第2层：编排层 (Orchestration Layer)
+  Orchestrator Agent（管理面 + 控制面）
+  职责：
+  - 接收请求，创建顶级 Task
+  - LLM 生成 Plan → 拆分为子任务（含依赖关系）
+  - 拓扑排序 → 确定并行/串行执行顺序
+  - 分发子任务（事件总线）→ 收集结果 → 合并
+  - 错误处理、超时、重试
+
+第3层：Agent 池 (Agent Pool)
+  每个 Agent 独立进程/容器
+  - 独立 AgentCard（name/skills/capabilities）
+  - 独立 TaskManager + TaskStore
+  - 支持层次化：Agent 内部可以有自己的子 Orchestrator
+  - 注册到 Registry 时声明 tags + capabilities
+
+第4层：基础设施层 (Infrastructure Layer)
+  etcd/Consul: 服务注册与发现（替代内存 std::map）
+  Redis Cluster: 热数据缓存 + 分布式锁
+  PostgreSQL: 全量历史持久化 + SQL 查询
+  Kafka/RabbitMQ: 事件总线（异步任务分发）
+  S3/MinIO: 大文件 Artifact
+```
+
+### Plan-then-Execute 模式
+
+这是 AI Agent 系统最核心的设计模式，也是「LLM 写 plan 拆任务」的正式名称：
+
+```
+输入: "帮我分析 Q3 竞争对手策略，生成报告，发邮件给团队"
+
+Orchestrator 调用 LLM:
+  Plan: [
+    { step: "search",  agent: "WebSearchAgent",
+      params: { query: "competitor Q3 strategy 2025" } },
+    { step: "analyze", agent: "AnalysisAgent",
+      deps: ["search"] },
+    { step: "report",  agent: "ReportAgent",
+      deps: ["analyze"], format: "markdown" },
+    { step: "email",   agent: "EmailAgent",
+      deps: ["report"], to: "team@company.com" }
+  ]
+
+拓扑排序: search(无依赖) → analyze(依赖search) → report(依赖analyze) → email(依赖report)
+执行顺序: search 先开始 → analyze 等 search 结束 → report 等 analyze 结束 → email 等 report 结束
+结果合并返回
+```
+
+Claude Code 的 plan mode、LangChain Plan-and-Execute、AutoGPT 都是同一思想在不同场景的实现。
+
+### 层次化 Agents (Hierarchical Agents)
+
+```
+顶级 Orchestrator
+  ├── ResearchAgent
+  │     ├── WebSearchAgent
+  │     └── DocReaderAgent
+  ├── PPTAgent
+  └── EmailAgent
+```
+
+每个 Sub-Agent 可以有自己的 Sub-Agent。资源级嵌套 ≤ 3 层。Sub-Agent 通过 Registry 暴露自己的 AgentCard，父 Orchestrator 通过 task 类型识别并路由。
+
+### 事件驱动替代 HTTP 同步
+
+```
+企业级方案：Kafka 事件总线
+  Orchestrator → Topic: task.assigned
+    ├── WebSearchAgent 订阅 → 处理 → Topic: task.completed
+    ├── AnalysisAgent 订阅（过滤 deps 满足后）→ Topic: task.completed
+    └── ReportAgent 订阅（过滤 deps 满足后）→ Topic: task.completed
+  Orchestrator 订阅 task.completed → 检查所有子 Task 是否完成 → 完成顶级 Task
+```
+
+### 关键设计要点
+
+1. AgentRegistry 用 etcd/Consul 替代内存 std::map：支持 TTL 自动续约、Leader 选举、配置同步
+2. 分层存储：Redis(热数据当前轮) + PostgreSQL(冷存储全量) + S3(大文件)，异步落库
+3. 这个项目展示了 A2A 落地的完整骨架：AgentCard 发现 → JSON-RPC 通信 → Task 生命周期 → 跨进程存储。骨架是对的，肌肉（工程化）还需填充
+
