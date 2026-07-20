@@ -25,7 +25,268 @@ A2A 是 Google 提出的 Agent 间通信协议标准。本项目是它的 C++ SD
 
 ## 阶段1：协议基础
 
-第一阶段围绕 JSON-RPC 2.0 协议格式、A2A 方法体系、错误码设计和 Pimpl 模式展开。
+第一阶段围绕 A2A 基本概念、JSON-RPC 2.0 协议格式、方法体系、错误码设计和 Pimpl 模式展开。
+
+### 基本概念
+
+#### 概念总览与关系图
+
+A2A 协议的核心概念共 7 个，它们之间的关系如下：
+
+```
+ AgentCard (Agent 自描述名片)
+  ├── 声明：name / description / version / protocol_version
+  ├── 能力：AgentCapabilities (streaming? push? task_management?)
+  ├── 技能列表：AgentSkill[] (每个 skill 有 name + input_modes + output_modes)
+  ├── 认证方式：AgentProvider (谁创建的、联系信息)
+  └── 端点：url (Agent 服务地址)
+       │
+       ▼ 通过 url 访问
+ ┌────────────────────────────────────────────────────┐
+ │  Agent 服务端                                       │
+ │                                                     │
+ │  Task (工作单元)                                     │
+ │   ├── id / context_id                               │
+ │   ├── status: TaskState (生命周期状态机)               │
+ │   ├── history: Message[] (对话历史)                   │
+ │   ├── artifacts: Artifact[] (输出产物)                │
+ │   └── metadata                                      │
+ │       ├── Message (通信单元)                          │
+ │       │   ├── message_id / role (user|agent|system)  │
+ │       │   └── parts: Part[] (原子内容)                │
+ │       │       ├── TextPart (纯文本)                   │
+ │       │       ├── FilePart (文件: 名+类型+数据)        │
+ │       │       └── DataPart (结构化 JSON 数据)          │
+ │       └── Artifact (产出物)                           │
+ │           ├── id / name / description                 │
+ │           ├── mime_type / url / content               │
+ │           └── metadata                                │
+ └────────────────────────────────────────────────────┘
+       │
+       ▼ 场景串起来
+ 1. 调用方读取 AgentCard → 知道 Agent 有什么能力、怎么联系
+ 2. 调用方发送 Message 给 Agent → 创建 Task
+ 3. Task 经历状态机流转 → 产出 Artifact 或要求更多输入
+ 4. 调用方可以随时 GetTask 查状态、CancelTask 终止
+ 5. 整个过程记录在 Task.history 中（Message 序列）
+```
+
+#### 7 个概念逐一说
+
+**AgentCard — Agent 的自描述名片**
+
+AgentCard 是 Agent 对外发布的"身份证"，固定在 `/.well-known/agent-card.json` 端点提供。调用方通过它发现 Agent 的能力和通信方式。
+
+```
+AgentCard {
+  ├── name: "Math Agent"              // 人类可读名称
+  ├── description: "计算数学问题"      // 功能描述
+  ├── url: "http://localhost:5001"    // 服务端点
+  ├── version: "1.0.0"               // Agent 自身版本
+  ├── protocol_version: "0.3.0"      // A2A 协议版本（固定）
+  ├── capabilities: {
+  │     streaming: true,              // 支持流式响应？
+  │     push_notifications: false,    // 支持推送通知？
+  │     task_management: true         // 支持任务管理？
+  │   }
+  ├── skills: [{                      // 技能列表（能力单元）
+  │     name: "math",
+  │     description: "解方程、算术",
+  │     input_modes: ["text"],
+  │     output_modes: ["text"]
+  │   }]
+  └── provider: {                     // 供应商信息
+        name: "阿甘",
+        organization: "cpp-agan",
+        url: "https://..."
+      }
+```
+
+代码体现：`agent_card.hpp` 中 `AgentCard` 类 + `AgentCapabilities` / `AgentSkill` / `AgentProvider` 三个辅助结构体。Fluent API 链式构造。
+
+**Task — 工作单元**
+
+Task 是 A2A 的核心抽象——它代表一次完整的"交给 Agent 去完成的工作"。每一个 Task 有全局唯一 ID、关联的上下文、完整的生命周期状态机：
+
+```
+Task 生命周期状态机：
+
+         ┌─── InputRequired ───┐
+         ▼                      │
+  Submitted ──► Running ──► Completed
+                    │
+                    ├──► Failed
+                    ├──► Canceled
+                    └──► Rejected
+
+  Submitted:   刚创建，等待处理
+  Running:     正在处理中
+  InputRequired: 需要调用方补充信息（本 SDK 未实现）
+  Completed:   成功完成（终端状态）
+  Failed:      处理出错（终端状态）
+  Canceled:    被调用方取消（终端状态）
+  Rejected:    服务端拒绝处理（终端状态）
+```
+
+Task 的组成：
+```
+Task {
+  id: "task-1",           // 全局唯一 ID
+  context_id: "ctx-1",    // 上下文 ID（关联多轮对话）
+  status: {
+    state: "running",
+    timestamp: "...",
+    message: "计算中..."  // 可选状态描述
+  },
+  artifacts: [...],        // 产出物列表
+  history: [...],          // 对话历史（Message 数组）
+  metadata: { ... }        // 自定义元数据
+}
+```
+
+代码体现：`agent_task.hpp` 中 `AgentTask` 类 + `task_status.hpp` 中 `AgentTaskStatus` 类。`is_terminal()` 判断是否已结束（不可变状态）。
+
+**Message — 通信单元**
+
+Message 是 Agent 间对话的载体。每个 Message 有角色归属（谁说的）、内容（Part 列表）和可选的上下文/任务关联。
+
+```
+Message {
+  message_id: "msg-1",
+  role: "user",              // user / agent / system
+  context_id: "ctx-1",       // 可选，关联到上下文
+  task_id: "task-1",         // 可选，关联到任务
+  parts: [                    // 内容部分（至少一个）
+    { type: "text", text: "1+1=?" },
+    { type: "file", mime_type: "image/png", ... }  // 可选附带文件
+  ]
+}
+```
+
+关键设计：Message 不直接包含"答案"，而是通过 `task_id` 字段关联到 Task。Task 的 `artifacts` 才是 Agent 的产出物，Message 只是对话过程中的消息传递。
+
+代码体现：`agent_message.hpp` 中 `AgentMessage` 类，Parts 用 `vector<unique_ptr<Part>>` 实现多态容器。
+
+**Part — 原子内容单元**
+
+Part 是 Message 中不可分割的内容块。三种类型：
+
+| Part 类型 | 内容 | 二进制支持 | 典型用途 |
+|-----------|------|-----------|---------|
+| TextPart | 纯文本字符串 | 否 | 对话文本、问题、答案 |
+| FilePart | 文件名 + MIME 类型 + 二进制数据 | 是 (base64 或 URI) | 图片、音视频、文档 |
+| DataPart | JSON 结构化数据 | 否 | 表单字段、结构化查询结果 |
+
+核心设计原则：**一条 Message 可以包含多个 Part，Part 的类型可以混合。** 例如："把这图片转成文字"（TextPart 描述指令 + FilePart 附带图片）。
+
+代码体现：`message_part.hpp` 中 `Part` 抽象基类 + `TextPart` / `FilePart` / `DataPart` 三个子类。`clone()` 纯虚函数实现多态深拷贝。
+
+**Artifact — Agent 的产出物**
+
+Artifact 代表 Agent 处理完 Task 后产生的"交付物"。与 Part 的区别：Part 是对话过程中的内容片段，Artifact 是最终或有版本的产出。
+
+```
+Artifact {
+  id: "art-1",
+  name: "计算结果",
+  description: "方程 2x+5=15 的解",
+  mime_type: "text/plain",
+  content: "x = 5",
+  metadata: { "steps": "3" }
+}
+```
+
+流式场景下，Artifact 支持增量更新：Agent 先返回一个 `parts: [{text: "正在计算..."}]` 的 Artifact，后续发新版本覆盖。
+
+**AgentCapabilities — 能力声明**
+
+AgentCard 中最关键的字段之一，声明 Agent 支持的操作模式：
+
+| 字段 | 意义 | 影响 |
+|------|------|------|
+| `streaming` | 支持流式响应 | 调用方可以选择 `message/stream` 而非 `message/send` |
+| `push_notifications` | 支持推送通知 | 调用方可以配置 webhook 而非轮询 |
+| `task_management` | 支持任务管理 | 调用方可以调 `tasks/get`、`tasks/cancel` |
+
+**AgentSkill — 能力单元**
+
+Agent 可以声明多个 Skill，每个 Skill 描述一项具体能力及其支持的输入/输出格式。调用方可以通过 `skills` 判断"这个 Agent 能帮我做什么"，而非盲目发送消息。
+
+#### 通信流程
+
+一次完整的 A2A 通信分三步：
+
+```
+ 调用方                           Agent
+   │                                │
+   │ 步骤1：发现 Agent               │
+   │── GET /.well-known/agent-card.json ──►│
+   │◄── AgentCard { name, skills, url } ──│
+   │                                │
+   │ 步骤2：发送消息，创建 Task        │
+   │── POST / (JSON-RPC) ──────────►│
+   │   { method: "message/send",    │
+   │     params: {                  │
+   │       message: {               │
+   │         role: "user",          │
+   │         parts: [{text:"1+1=?"}]│
+   │       }                        │
+   │     }                          │
+   │   }                            │
+   │                                │
+   │  Agent 内部：                   │
+   │  1. 创建 Task (Submitted)       │
+   │  2. 更新 Task → Running         │
+   │  3. 处理消息（LLM 调用等）        │
+   │  4. 收集上一步的结果并序列化，最终产出 Artifact│
+   │  5. 更新 Task → Completed       │
+   │                                │
+   │◄── JSON-RPC Response ──────────│
+   │   { result: {                  │
+   │       id: "task-1",            │
+   │       status: {state:"completed"},│
+   │       artifacts: [{            │
+   │         name: "答案",           │
+   │         content: "2"           │
+   │       }]                       │
+   │   }}                           │
+   │                                │
+   │ 步骤3（可选）：查询/取消任务      │
+   │── POST / (tasks/get task-1) ──►│
+   │◄── Task 当前状态 ──────────────│
+```
+
+#### 方法 ↔ 操作原语对应表
+
+是的，A2A 方法名路由直接对应操作原语，一一映射：
+
+| 原语 | 方法名 | 类别 | 说明 |
+|------|--------|------|------|
+| SendMessage | `message/send` | 消息 | 发送消息，同步等待完整响应 |
+| SendStreamingMessage | `message/stream` | 消息 | 发送消息，SSE 流式接收响应 |
+| GetTask | `tasks/get` | 任务 | 查询指定 Task 的当前状态和输出 |
+| CancelTask | `tasks/cancel` | 任务 | 幂等取消 Task，返回最终状态 |
+| ResubscribeToTask | `tasks/resubscribe` | 任务 | 重新订阅 Task 的流式更新（连接断开后重连） |
+| SetPushNotificationConfig | `tasks/pushNotificationConfig/set` | 推送 | 配置 webhook 接收推送通知（本 SDK 未实现） |
+| GetPushNotificationConfig | `tasks/pushNotificationConfig/get` | 推送 | 查询当前推送通知配置（本 SDK 未实现） |
+
+方法名中的 `message/` 和 `tasks/` 前缀是命名空间划分，避免不同类别的操作产生名称冲突。`is_streaming_method()` 判断哪些方法需要流式传输（`message/stream` 和 `tasks/resubscribe`）。
+
+#### 所有概念之间的关系总结
+
+```
+AgentCard 描述了一个 Agent
+  └── Agent 拥有 Skills（能力单元）
+  └── Agent 处理 Tasks（工作单元）
+
+Task 是工作的核心抽象
+  ├── 包含 Messages（对话历史）
+  │     └── Message 包含 Parts（原子内容）
+  │           ├── TextPart（文本）
+  │           ├── FilePart（文件，支持 MIME）
+  │           └── DataPart（结构化数据）
+  └── 产出 Artifacts（最终交付物）	
+```
 
 ### JSON-RPC 2.0 数据格式
 
@@ -53,15 +314,15 @@ A2A 的通信数据是严格 JSON-RPC 2.0 格式的 JSON 字符串，核心字�
 
 定义在 `a2a_methods.hpp`，共 7 个标准化方法：
 
-| 类别 | 方法 | 用途 |
-|------|------|------|
-| 消息 | `message/send` | 发送消息（非流式） |
-| 消息 | `message/stream` | 发送消息（流式，SSE 响应） |
-| 任务 | `tasks/get` | 查询任务 |
-| 任务 | `tasks/cancel` | 取消任务 |
-| 任务 | `tasks/resubscribe` | 重订阅任务更新（流式） |
-| 推送 | `tasks/pushNotificationConfig/set` | 配置推送通知（未实现） |
-| 推送 | `tasks/pushNotificationConfig/get` | 查询推送配置（未实现） |
+| 类别  | 方法                                 | 用途              |
+| --- | ---------------------------------- | --------------- |
+| 消息  | `message/send`                     | 发送消息（非流式）       |
+| 消息  | `message/stream`                   | 发送消息（流式，SSE 响应） |
+| 任务  | `tasks/get`                        | 查询任务            |
+| 任务  | `tasks/cancel`                     | 取消任务            |
+| 任务  | `tasks/resubscribe`                | 重订阅任务更新（流式）     |
+| 推送  | `tasks/pushNotificationConfig/set` | 配置推送通知（未实现）     |
+| 推送  | `tasks/pushNotificationConfig/get` | 查询推送配置（未实现）     |
 
 实现手法：用 `static constexpr const char*` 而非枚举，因为协议方法名天然是字符串，省去枚举↔字符串的映射转换。`is_streaming_method()` / `is_valid_method()` 两个静态方法提供分类校验。
 
