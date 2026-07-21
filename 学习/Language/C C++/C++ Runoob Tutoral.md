@@ -8735,9 +8735,18 @@ struct FNVHash {
 | static_cast      | 只允许语言定义的“合理”转换（如继承关系、数值类型、void* 等） | 相对安全（编译期检查）   | `int → double`，`Derived* → Base*` |
 | reinterpret_cast | 直接按位重新解释内存，无视类型含义                  | 极度危险（几乎无编译检查） | `int* → char*`，函数指针 ↔ 数据指针        |
 ##### 注意事项
-- 严格别名规则（Strict Aliasing Rule）违规：C++ 标准规定**不能通过不同类型指针访问同一内存**（除非是 `char*` 或 `unsigned char*`）。
+- C++有，严格别名规则（Strict Aliasing Rule）违规：C++ 标准规定**不能通过不同类型指针访问同一内存**，所以一般 reinterpret_cast **只用于转换指针或者引用**，然后通过指针访问对象。如果要*重新解释一个对象*，要使用 [[#bit_cast]]
 - 对不同的类型强行转换可能会因为对象间不同的内存对齐规则导致未定义行为
 - 同一段 `reinterpret_cast` 代码在不同平台/编译器下由于平台架构，字节序，指针大小，编译器定义的结构体内存对齐规则不同可能导致行为完全不同
+#### bit_cast
+##### 用途场景
+`std::bit_cast` 是一个在 `<bit>` 头文件中[定义的函数模板](https://cppref.nykz.org/cpp/utility/bit)，它的核心功能是**将一段内存中的二进制表示“重新解释”为目标类型的值**，让你**可以安全、直接地查看一个对象的底层字节**，就像它是另一种类型一样
+`std::bit_cast` 可以看作是 `memcpy` 的一个更现代、更安全的替代方案。它由编译器提供支持，可以被声明为 `constexpr`（编译期常量）[](https://en.cppreference.com/mwiki/index.php?title=cpp/numeric/bit_cast&diff=144093&oldid=140008)，这是单纯的 `memcpy` 无法做到的[](https://gcc.gnu.org/pipermail/libstdc%2b%2b-cvs/2020q4/035176.html)。
+##### 使用限制
+要使用 `std::bit_cast`，源类型 (`From`) 和目标类型 (`To`) 必须满足以下条件[](https://en.cppreference.com/mwiki/index.php?title=cpp/numeric/bit_cast&diff=144093&oldid=140008)：
+- **大小相同**：`sizeof(To) == sizeof(From)`。
+- **可平凡复制**：两种类型都必须是“可平凡复制类型”（TriviallyCopyable），参考 [[C++开发范式和术语#支持静态初始化（static initialization）]]
+此外，`std::bit_cast` 在编译期执行时也有额外限制（例如，不能包含联合体或指针类型）[](https://en.cppreference.com/mwiki/index.php?title=cpp/numeric/bit_cast&diff=144093&oldid=140008)。
 #### const_cast
 ##### 用途场景
 移除或添加**指针对象**的 const 或 volatile 修饰符，只能用于修改对象的常量性，而不能用于在不同类型之间进行转换
