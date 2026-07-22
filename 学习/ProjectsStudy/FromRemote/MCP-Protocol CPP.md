@@ -3,6 +3,114 @@
 > based on `giuseppemag/mcp-server` v0.8.0
 > 项目路径：`/home/azzato/CodeFiles/remote_push/mcp_server`
 
+## 协议传输内容
+MCP协议的核心确实是基于JSON-RPC 2.0来规范消息格式，它和 A2A 一样，主要是在数据规范化层面做出约定，在 Server 和 Client 之间双向通信
+### 请求内容
+```json
+{
+  // ----- 以下为 MCP/JSON-RPC 协议规定的顶层通用字段 -----
+  "jsonrpc": "2.0", 
+  // 必须（固定值）：表明使用 JSON-RPC 2.0 版本。
+
+  "id": "mcp-req-20260721-001", 
+  // 必须（Request 专用）：请求的唯一标识符。
+  // MCP 强制规定此值不能为 null，且在会话中不可重复。
+
+  "method": "tools/call", 
+  // 必须：要调用的远程方法名称。
+  // 例如 initialize, tools/list, resources/read 等。
+
+  "params": { 
+    // 可选：方法调用所需的参数对象。结构由具体的 method 定义。
+    "name": "calculator",
+    "arguments": {
+      "operation": "add",
+      "a": 10,
+      "b": 20
+    }
+  }
+  // 注意：Request 必须包含 "id"，且绝不能包含 "result" 或 "error"。
+}
+```
+### 响应内容
+分为成功响应（**包含 result**）和错误响应，包含 `error`（含全部子字段）
+```json
+///////// 成功响应 ////////////////
+{
+  "jsonrpc": "2.0", 
+  // 必须（固定值）：协议版本。
+
+  "id": "mcp-req-20260721-001", 
+  // 必须：必须与它所回复的 Request 中的 "id" 值完全一致。
+
+  "result": { 
+    // 条件必须（与 error 互斥）：操作成功时返回的数据对象。
+    // 其内部结构由具体的 method 决定（例如 tools/call 返回 content 数组）。
+    "content": [
+      {
+        "type": "text",
+        "text": "10 + 20 = 30"
+      }
+    ],
+    "isError": false
+  }
+  // 注意：成功响应绝不能包含 "error" 字段。
+}
+///////// 错误响应 ////////////////
+{
+  "jsonrpc": "2.0", 
+  // 必须（固定值）：协议版本。
+
+  "id": "mcp-req-20260721-001", 
+  // 必须：必须与它所回复的 Request 中的 "id" 值完全一致。
+
+  "error": { 
+    // 条件必须（与 result 互斥）：操作失败时返回的错误对象。
+    // ---------- error 对象内部的子字段（全部列出） ----------
+    "code": -32601, 
+    // 必须（number）：整数错误码。
+    // 可使用 JSON-RPC 标准码（如 -32700 解析错误，-32601 方法不存在），
+    // 也允许在 -32000 到 -32099 范围内自定义 MCP 业务错误。
+
+    "message": "Method not found", 
+    // 必须（string）：对错误的简短、可读的描述。
+
+    "data": { 
+      // 可选（任意类型，通常为 object）：携带附加的调试或上下文信息。
+      // 结构完全由服务端自定义，MCP 不做强制限制。
+      "available_methods": ["initialize", "tools/list", "resources/read"],
+      "hint": "请检查 method 拼写是否正确"
+    }
+  }
+  // 注意：错误响应绝不能包含 "result" 字段。
+}
+```
+### 通知内容
+MCP的通知机制，本质上是将传统的“请求-响应”模式扩展为“事件驱动”模式[](https://javarush.com/en/quests/lectures/en.javarush.chatgptapp.next.lecture.level13.lecture01?post=full#discussion)。它主要用于：
+- **状态更新与进度汇报**：对于需要长时间运行的操作（如分析大文件、聚合外部API数据等），服务端可以通过 `notifications/progress` 通知，主动向客户端报告任务进度
+- **请求取消**：当客户端需要终止一个已发出但尚未完成的请求时，可以发送 `notifications/cancelled` 通知。是客户端发送给服务端的
+- 日志记录，初始化完成通知，资源更新，MCP 服务器更新通知，内容比较自由
+```json
+{
+  "jsonrpc": "2.0", 
+  // 必须（固定值）：协议版本。
+
+  "method": "notifications/initialized", 
+  // 必须：通知对应的方法名称。
+  // 通常以 "notifications/" 为前缀，表示这是一条单向消息。
+
+  "params": { 
+    // 可选：携带的通知数据。若无参数，可省略此字段或传空对象 {}。
+    "client_info": {
+      "name": "MyMCPClient",
+      "version": "1.0.0"
+    }
+  }
+  // 核心区别：此处绝对不能包含 "id" 字段。
+  // 因为通知（Notification）不期望对方返回任何响应，所以无需标识符。
+  // 同样，也不能包含 "result" 或 "error"。
+}
+```
 ## 架构全景
 
 ```
