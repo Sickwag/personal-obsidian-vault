@@ -23,37 +23,52 @@
             }
           },
           {
+            "id": "448ba7b100472b44",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chores/JobInterviews/八股/面试题合集.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "面试题合集"
+            }
+          },
+          {
             "id": "955417aef9f27140",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/Language/C C++/C++ Runoob Tutoral.md",
+                "file": "Chores/JobInterviews/八股/收集的面试题.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "C++ Runoob Tutoral"
+              "title": "收集的面试题"
             }
           },
           {
-            "id": "f4f1d25a23d5673c",
+            "id": "63969b665236025d",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/ProjectsStudy/FromDocs/Agent Learning.md",
+                "file": "Chores/JobInterviews/八股/面试题合集.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "Agent Learning"
+              "title": "面试题合集"
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -85,7 +100,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "/T\\* const/",
+                "query": "/的作用是什么/",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -106,8 +121,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -225,10 +239,17 @@
   },
   "active": "955417aef9f27140",
   "lastOpenFiles": [
+    "Chores/JobInterviews/八股/面试题合集.md",
+    "Chores/JobInterviews/八股/面试题知识.md",
+    "Chores/JobInterviews/八股/Knowledge involved in the interview questions.md",
+    "Chores/JobInterviews/八股/收集的面试题.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "Chores/JobInterviews/八股/自我介绍.md",
+    "学习/ProjectsStudy/FromDocs/Agent Learning.md",
+    "Files & LongText/Attachments/cpp-05-pointer-reference-memory-zh-cartoon-38c09b9a.webp",
     "学习/Language/C C++/模板元编程.md",
     "Files & LongText/Long code/C++ Code Snippets.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
-    "学习/ProjectsStudy/FromDocs/Agent Learning.md",
     "Files & LongText/Attachments/image-20260703000153790.webp",
     "Files & LongText/Attachments/image-20260703000129843.webp",
     "Files & LongText/Attachments/image-20260702235747708.webp",
@@ -238,7 +259,6 @@
     "Files & LongText/Attachments/image-20260519220747776.webp",
     "Files & LongText/Attachments/02-claude-md-load-timeline-749f46ae.webp",
     "学习/ProjectsStudy/FromRemote/MCP-Protocol CPP.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/algorithm/用法导向知识.md",
     "学习/ProjectsStudy/FromRemote/Pooling Components.md",
     "学习/ProjectsStudy/FromRemote/Pooling Components.md.tmp.14068.347a74622195",
@@ -250,7 +270,6 @@
     "学习/ProjectsStudy/FromRemote/Agent2Agent Protocol.md.tmp.557921.39805d8a9034",
     "学习/Bases/开发范式/设计模式.md",
     "Files & LongText/Attachments/Pasted image 20260719143707.png",
-    "Files & LongText/Attachments/Pasted image 20260719143644.png",
     "学习/ProjectsStudy/FromRemote/Agent2Agent Protocol.md.tmp.488268.bc657c688c9a",
     "学习/ProjectsStudy/FromRemote/Agent2Agent Protocol.md.tmp.488268.cac72af30497",
     "学习/ToolChain/CICD.md",
@@ -265,11 +284,6 @@
     "学习/ToolChain/IDEs.md",
     "学习/ToolChain/Docker.md",
     "学习/ToolChain/Linux/Linux Command Line.md",
-    "学习/ToolChain/Linux/Linux Basics.md",
-    "学习/ToolChain/Git/Geekhour one hour Git.md",
-    "学习/ToolChain/Git/Git Tutorial.md",
-    "学习/ToolChain/Git/Pro Git.md",
-    "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
     "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md.bak",
     "未命名.canvas"
   ]
