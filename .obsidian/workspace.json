@@ -106,13 +106,11 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -223,7 +221,7 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "f4f1d25a23d5673c",
+  "active": "982f21257484af50",
   "lastOpenFiles": [
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
