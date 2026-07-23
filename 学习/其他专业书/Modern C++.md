@@ -1407,7 +1407,6 @@ std::decay<void(int)>::type    <=> void(*)(int) (函数名退化成指针)
 explicit constructor_name(...);explicit MyClass(int x);
 ```
 它表示：**这个构造函数不允许隐式转换。** 也就是说，**编译器不会用 explicit 构造函数进行自动类型转换**（implicit conversion）。
-## 1\. explicit（隐式构造的陷阱）
 ```cpp
 class MyInt {
 public:
