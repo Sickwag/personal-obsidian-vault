@@ -6825,43 +6825,17 @@ int main(){
 - `iterator end ()`：返回指向列表末尾的迭代器。
 #### deque
 ##### 定义
-双端队列允许在队列**两端**对元素操作，进行插入和删除操作，**允许任意数据类型作为元素**
-`<deque>` 是一个动态数组，它提供了快速的随机访问能力，同时允许在两端进行高效的插入和删除操作。这使得 `<deque>` 成为处理需要频繁插入和删除元素的场景的理想选择。
-需要包含 `deque` 头文件
-语法：`deque<int> myDeque;`
-
+双端队列允许在队列**两端**对元素操作，进行插入和删除操作，deque 没有容量的概念，它是动态地以分段连续空间组合而成，随时可以增加**一点**新的空间并链接起来。不会因为拓容而全量复制数据到新的地址空间
+他的随机访问依赖 `operator++/--` 函数的实现
+数据结构为:
+![[Pasted image 20260723101328.png]]
+![[Pasted image 20260723101337.png]]
+![[Pasted image 20260723102026.jpg]]
 注意事项
-- 无论使用返回迭代器的还是引用的成员函数之前，使用 `empty ()` 成员函数确保双端队列不为空，否则会引发未定义的行为。
+- 无论使用返回迭代器的还是引用的成员函数之前，使用 `empty()` 成员函数确保双端队列不为空，否则会引发未定义的行为。
 - 注意根据需要调整容器成员函数的[容器返回值](#容器返回迭代器和引用)
+- 头尾增删最多只会申请/释放一块花冲去，但在中间插入会引入判断决策，如果前半部分元素少，则对前半部分的元素，进行整体前移拷贝；反之则对后半部分元素，进行整体后移拷贝。
 
-##### 实例
-使用 variant 在 deque 中一次性插入多个数据
-```cpp
-int main() {
-    // 创建一个包含多种数据类型的双端队列
-    deque<variant<int, string, double>> myDeque;
-
-    // 添加元素到双端队列
-    myDeque.push_back(10);          // 添加一个整数
-    myDeque.push_back("Hello");     // 添加一个字符串
-    myDeque.push_back(3.14);        // 添加一个浮点数
-
-    // 遍历双端队列并打印每个元素
-    for (const auto& elem : myDeque) {
-        // 使用 holds_alternative 来检查当前元素的类型
-        if (holds_alternative<int>(elem)) {
-            cout << get<int>(elem) << " ";
-        } else if (holds_alternative<string>(elem)) {
-            cout << get<string>(elem) << " ";
-        } else if (holds_alternative<double>(elem)) {
-            cout << get<double>(elem) << " ";
-        }
-    }
-    cout << endl;
-
-    return 0;
-}
-```
 #### stack
 ##### 定义
 `<stack>` 容器适配器提供了一个栈的接口，它基于其他容器（如 `deque` 或 `vector`）来实现。栈的元素是线性排列的，但**只允许在一端（栈顶）** 进行添加和移除操作。
