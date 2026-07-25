@@ -79,4 +79,15 @@ db.adminCommand({
   dropTarget: <boolean>
 })
 ```
-- 插入文档使用 `insertOne/insertMany`，大量文档插入如果不
+- 插入文档使用 `insertOne/insertMany(document， options)`，大量文档插入如果希望出错不影响后面的操作，不中断插入，在 option 参数中填入 `{ordered: false}`
+- 更新文档使用 `updataOne/updateMany(filter, update, options)`
+- 删除使用 `deleteOne/deleteMany/findOneAndDelete(filter, opitons)`
+- 查找使用 `db.collection.find(query, projection)`，其中 query 使用聚合语句/正则表达式，projection 描述需要投影的字段
+```js
+db.myCollection.find(
+    { age: { $gt: 25 } },
+    { name: 1, age: 1, _id: 0 }
+);
+```
+### 操作符
+参考: https://www.runoob.com/mongodb/mongodb-operators.html
