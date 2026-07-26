@@ -208,8 +208,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 223.5,
-    "collapsed": true
+    "width": 223.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -224,6 +223,7 @@
   },
   "active": "9807eec54f9b0811",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md.tmp.407081.eeaed36f7f6c",
     "学习/ProjectsStudy/FromRemote/FiberLib.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
@@ -269,7 +269,6 @@
     "学习/ProjectsStudy/FromRemote/MCP-Protocol CPP.md",
     "学习/algorithm/用法导向知识.md",
     "学习/ProjectsStudy/FromRemote/Pooling Components.md",
-    "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "未命名.canvas"
   ]
 }

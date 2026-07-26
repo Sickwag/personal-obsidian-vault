@@ -5,7 +5,7 @@ description: 模仿llfc的qt全栈聊天项目
 参考文档: https://www.yuque.com/lianlianfengchen-cvvh2/dz8xhn/cdg06fkzuc7w4els
 ---
 ## 基本 UI 构建
-### LoginDialog
+### LoginDialog/RegisterDialog
 #### 图片按窗口比例缩放
 如果需要让图片按比例大小显示在 QLabel 中
 ![[Pasted image 20260401092221.png]]
@@ -23,7 +23,7 @@ mainlayout->addWidget(wxQRLabel_, 0, Qt::AlignCenter);
 
 > [!note] qt 文档中的描述：
 > Note: QMainWindow takes ownership of the widget pointer and deletes it at the appropriate time.
-
+### 声明
 ### 子窗口和父窗口关系
 #### 大小关系
 > [!question] 为什么子窗口设置了 `setFixedSize()`，还是能够拖动窗口大小？
@@ -508,28 +508,25 @@ int main() {
 ```
 中都用到了回调函数处理，这些回调函数**随时可能被调用**，而调用时上层（这里的"上层"指的是抽象意义的上层，比如 main 函数中try-catch 里看似包裹了 CServer 的 start 函数，但 CServer::start()运行时 main 函数已经在 `ioc.run()` 的事件循环里了，回调函数抛出的异常不会被 main 函数的 try-catch 捕获）
 ```
-实际运行时序（不是代码顺序！）：                                                             
-                                                                                             
-时间轴 →→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→                                    
-                                                                                             
-时刻 1：ioc.run() 检测到有数据到达                                                           
-  调用栈：main → ioc.run() → [asio内部] → handleRequest() → async_write()                    
-                                   ↑                             ↑                           
-                             事件循环派发                    注册回调函数:发起写操作后立即返回          
-                                                                                             
-时刻 2：handleRequest() 返回                                                                 
-  调用栈：main → ioc.run() → [asio内部继续派发其他请求...]                                   
-  此时 handleRequest 的栈帧已销毁。                                                          
-                                                                                             
-时刻 3：写操作完成 ← 这可能是毫秒或秒之后                                                    
-  调用栈：main → ioc.run() → [asio内部] → lambda(ec, n) { shutdown; cancel; }                
-                                  ↑                           ↑                              
-                            事件循环发现写完成，派发回调      回调真正执行                   
-                                                                                             
-注意时刻 1 和时刻 3 的区别：                                                                 
-                                                                                             
-- 时刻 1 的调用栈：main → ioc.run() → handleRequest() → async_write()                        
-- 时刻 3 的调用栈：main → ioc.run() → lambda
+实际运行时序（不是代码顺序！）：
+时间轴 →→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→→
+时刻 1：ioc.run() 检测到有数据到达 
+  调用栈：main → ioc.run() → [asio内部] → handleRequest() → async_write()
+                                   ↑                             ↑
+                             事件循环派发                    注册回调函数:发起写操作后立即返回
+时刻 2：handleRequest() 返回
+  调用栈：main → ioc.run() → [asio内部继续派发其他请求...]
+  此时 handleRequest 的栈帧已销毁。
+
+时刻 3：写操作完成 ← 这可能是毫秒或秒之后
+  调用栈：main → ioc.run() → [asio内部] → lambda(ec, n) { shutdown; cancel; }
+                                  ↑                           ↑
+                            事件循环发现写完成，派发回调      回调真正执行
+
+注意时刻 1 和时刻 3 的区别：
+
+- 时刻 1 的调用栈：main → ioc.run() → handleRequest() → async_write() 
+- 时刻 3 的调用栈：main → ioc.run() → lambd
 ```
 
 > [!QUESTION] 异步回调函数中为什么要用 try-catch？
@@ -585,24 +582,6 @@ asio::awaitable<void> handle() {
 - **调试回归自然**：单步可以沿着顺序代码逐行走，调用栈是连续的
 - **没有回调嵌套**（callback hell）
 - **异常处理同步化**：`try-catch` 包裹整个协程体即可
-
-### 功能模块
-#### 邮箱发送验证码邮件
-使用 javascript 实现，逻辑较为简单
-#### Asio 上下文连接池
-重新听一遍**为什么需要上下文连接池**
-`work_guard` 本质上是一个**"保持活跃"令牌**。它告诉 `io_context`："虽然现在没有任务，但不要停止，因为后续可能有任务进来。" 只要 `work_guard` 对象还存在且没有被 `reset()`，`io_context::run()` **就不会返回**，即使当前没有任何待处理的异步操作。
-
-所以线程不会立刻结束，工作流程是：
-
-```
-线程启动 → io_context::run() → 检查是否有 work_guard → 有 → 等待新的异步操作
-                                                                ↓
-                                             有操作进来 → 执行 handler → 继续等待
-```
-
-换句话说，`work_guard` 把 `io_context::run()` 变成了一个 `不会主动退出的事件循环`。当你需要关闭连接池时，需要销毁所有 `work_guard`（或调用 `reset()`），让 `run()` 因"没有更多工作"而自然返回，线程才能 join。
-
 ## 池封装
 ### RPCConnectionPool 池实现
 整体实现逻辑上和线程/内存池没什么不同，需要注意的是条件变量的使用
@@ -659,6 +638,109 @@ VerifyGrpcClient::VerifyGrpcClient() {
 }
 ```
 - 单例模式的核心是通过 `getInstance()` 获取单例，并且由于其是静态函数，所以它不能有参数，但有参构造必须要传入参数才能初始化，所以改用 `init()` 接受参数，可以的话虽然这**并不安全，因为外部可以通过 init 改变单例内部状态**，但语义上没有问题
-- 由于这里的[[#单例模式]]是通过 `shared_ptr` 构建的，并不是真正意义上的单例，没有任何编译器保护。未实例化就 `getInstance()` 和重复 `init()` 都会带来问题，但这是这种[[设计模式#单例模式#配合 shared_ptr 实现单例模式|伪单例模式]]的通病，为避免代码冗余的折中做法，工程上还是推荐 mayer singleton
+- 由于这里的[[#单例模式]]是通过 `shared_ptr` 构建的，并不是真正意义上的单例，没有任何编译器保护。未实例化就 `getInstance()` 和重复 `init()` 都会带来问题，但这是这种[[设计模式#单例模式#配合 shared_ptr 实现单例模式|伪单例模式]]的通病，为避免代码冗余的折中做法，工程上还是推荐 mayer singleton，在每个单例类中的 `getInstance` 中添加属于他们自己的初始化方法
 ### Redis 连接池
-原理没什么好说的，但由于继承了 `Singleton` 类，所以这里和 [[#RPCConnectionPool 池实现|rpc连接池]]相反，这里不使用 `init` 实现，将 RedisManager（连接，操作实现）和 RedisConPool（池实现）绑定在一起，参考 [[FiberLib#计时器]]中的实现，但没有必要
+原理没什么好说的，但由于继承了 `Singleton` 类，所以这里和 [[#RPCConnectionPool 池实现|rpc连接池]]相反，这里不使用 `init` 实现，将 RedisManager（连接，操作实现）和 RedisConPool（池实现）绑定在一起，参考 [[FiberLib#计时器]]中的实现
+```cpp
+RedisConPool::~RedisConPool() {
+	close();
+	std::lock_guard<std::mutex> lock(_mutex);
+	while(!_connections.empty()) {
+		redisFree(_connections.front());
+		_connections.pop();
+	}
+}
+```
+- hiredis 是 C-style API，需要释放资源
+```cpp
+bool RedisManager::hset(const char* key, const char* hkey, const char* hvalue, size_t hvaluelen) {
+	auto* ctx = _pool->getConnection();
+	if(ctx == nullptr) {
+		return false;
+	}
+
+	const char* argv[4];
+	size_t		argvlen[4];
+	argv[0]		= "HSET";
+	argvlen[0]	= 4;
+	argv[1]		= key;
+	argvlen[1]	= strlen(key);
+	argv[2]		= hkey;
+	argvlen[2]	= strlen(hkey);
+	argv[3]		= hvalue;
+	argvlen[3]	= hvaluelen;
+
+	auto* reply = static_cast<redisReply*>(redisCommandArgv(ctx, 4, argv, argvlen));
+	if(reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+		fastlog::console.error("[HSET binary {} {}] failed", key, hkey);
+		freeReplyObject(reply);
+		_pool->returnConnection(ctx);
+		return false;
+	}
+
+	freeReplyObject(reply);
+	_pool->returnConnection(ctx);
+	fastlog::console.info("[HSET binary {} {}] success", key, hkey);
+	return true;
+}
+```
+- HSET 命令可能插入的是二进制文件，如果使用 `redisCommand()` 构建 redis 命令，需要在字符串中使用占位符 `%s` 将二进制数据嵌入，但是**占位符格式化字符串的本质原理是使用 strlen 计算字符串长度**，strlen 计算长度的方式是**遍历字符串，遇到 `\0` 停止**，在二进制中这可能会导致数据提前截断，所以使用 argvlen 数组手动控制
+- 更好的选择是 redis-plus-plus 库
+redis 连接池设置由配置写死，所以是**零参构造**，不需要使用双重初始化，C-api 的问题就是还需要每个操作（get/set/lpush/hset 等）都通过 `_pool->getConnection()` 获取 `redisContext*`，操作完毕后 `_pool->returnConnection(ctx)` 归还
+### AsioServicePool IO 池
+`work_guard` 本质上是一个**保持活跃令牌**。它告诉 `io_context`："虽然现在没有任务，但不要停止，因为后续可能有任务进来。" 只要 `work_guard` 对象还存在且没有被 `reset()`，`io_context::run()` **就不会返回**，即使当前没有任何待处理的异步操作。
+
+所以线程不会立刻结束，`work_guard` 把 `io_context::run()` 变成了一个 `不会主动退出的事件循环`。当你需要关闭连接池时，需要销毁所有 `work_guard`（或调用 `reset()`），让 `run()` 因"没有更多工作"而自然返回，线程才能 join。
+#### 为什么需要 `_works` 且必须在启动线程前初始化
+```cpp
+AsioIOServicePool::AsioIOServicePool(std::size_t size)
+    : _IOServices(size)
+    , _works(size)
+    , _nextIOService(0) {
+    for(std::size_t i = 0; i < size; ++i) {
+        // 先在 io_context 上注册一个"永久工作"（持久占位符）
+        _works[i] = std::make_unique<work>(
+            asio::make_work_guard(_IOServices[i].get_executor()));
+        // 确保 work_guard 已经绑定到 io_context 之后，再启动线程跑 run()
+        // 这样 run() 检查时发现"有待完成的工作"，被阻塞住，不会立即退出
+    }
+
+    for(std::size_t i = 0; i < _IOServices.size(); ++i) {
+        _threads.emplace_back([this, i]() { _IOServices[i].run(); });
+    }
+}
+```
+- `_works` 数组对应一个 io_context 一个 work_guard 的 1:1 关系
+- 如果先启动线程再创建 work_guard：线程 `run()` 发现空队列 → 立即退出，后续 work_guard 阻止不了已经退出的线程
+#### get_executor() 和 make_work_guard 原理
+
+| 概念                             | 作用                                                         |
+| ------------------------------ | ---------------------------------------------------------- |
+| `io_context::get_executor()`   | 返回 io_context 的执行器句柄（`io_context::executor_type`），指向任务调度队列 |
+| `make_work_guard(executor)`    | 返回 `executor_work_guard<Executor>` RAII 对象                 |
+| `executor_work_guard` 构造       | 调用 `on_work_started()` → io_context 内部待处理计数 +1 → run() 被阻塞 |
+| `executor_work_guard` 析构/reset | 调用 `on_work_finished()` → 计数归零 + 事件队列空 → run() 退出          |
+
+`io_context::run()` 内部逻辑简化：
+```cpp
+while (!stopped() && (has_outstanding_work() || !op_queue_empty())) {
+    dequeue_and_dispatch_one_handler();
+}
+```
+#### 析构（stop）顺序
+```cpp
+void stop() {
+    for(i = 0; i < _works.size(); ++i) {
+        _IOServices[i].stop();   // 1. 停止 io_context（优雅关闭：执行完当前回调，不接受新事件）,这里_works注册的work_guard永久事件还在，不会导致io_context关闭
+        _works[i].reset();       // 2. 释放 work_guard（计数归零）
+    }
+    for(auto& t : _threads) {
+        t.join();                // 3. 等线程退出
+    }
+}
+```
+**不能交换 1 和 2：** 如果先 reset() 再 stop()：
+1. reset() → `on_work_finished()` → run() 检测到计数 == 0 → 可能立即退出
+2. 但此时事件队列里可能还有尚未处理的事件 → 丢失
+必须有 `stop()` 的保护：先让 io_context 标记为停止状态，***确保正在执行的回调完成后不再接收新事件***，这也是 stop 最核心的作用，之后才能释放 guard
+**也不能把 stop() 放在 join() 之后：** 线程卡在 run() 里不退出 → join() 永远阻塞。
