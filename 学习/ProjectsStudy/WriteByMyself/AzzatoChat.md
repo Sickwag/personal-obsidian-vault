@@ -602,3 +602,48 @@ asio::awaitable<void> handle() {
 ```
 
 换句话说，`work_guard` 把 `io_context::run()` 变成了一个 `不会主动退出的事件循环`。当你需要关闭连接池时，需要销毁所有 `work_guard`（或调用 `reset()`），让 `run()` 因"没有更多工作"而自然返回，线程才能 join。
+
+## 池封装
+### RPCConnectionPool 池实现
+整体实现逻辑上和线程/内存池没什么不同
+```cpp
+class RPCConnectionPool : public Singleton<RPCConnectionPool> {
+  public:
+	RPCConnectionPool(size_t poolSize, const std::string& host, unsigned short port);
+	~RPCConnectionPool();
+
+	std::unique_ptr<VerifyService::Stub> getConnection();
+	void								 returnConnection(std::unique_ptr<VerifyService::Stub> connection);
+	void close();
+
+  private:
+	std::atomic<bool>								 _stop;
+	size_t											 _poolSize;
+	std::string										 _host;
+	unsigned short									 _port;
+	std::mutex										 _mutex;  // protect _stop, _poolSize and _connections;
+	std::queue<std::unique_ptr<VerifyService::Stub>> _connections;
+	std::condition_variable							 _cvConnectionAcquire;
+};
+```
+需要注意的是条件变量的使用
+```cpp
+std::unique_ptr<VerifyService::Stub> RPCConnectionPool::getConnection() {
+	std::unique_lock<std::mutex> lock(_mutex);
+	_cvConnectionAcquire.wait(lock, [this]() {
+		if(_stop) {
+			return true;
+		}
+		return !_connections.empty();
+	});
+
+	if(_stop) {
+		fastlog::console.info("acquire a rpc connection after pool was shutdowned");
+		return nullptr;
+	}
+	auto context = std::move(_connections.front());
+	return context;
+}
+```
+- 条件变量谓词返回 true 表示**不需要等待了，停止 wait 的阻塞**，如果池已经被关闭，那么没有任何里有将 `getConnection()` 所在的线程阻塞，只能返回 nullptr 表示获取失败
+- 同理空闲连接不为空，表示可以被 `getConnection`，所以释放锁并不再阻塞
