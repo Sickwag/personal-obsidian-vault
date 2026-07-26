@@ -76,23 +76,6 @@ return 表示函数返回值
 Clion 使用工程管理代码, 每个程序使用一个工程 ,每个工程仅有一个 main 函数表示程序的入口
 这样的管理规则不便于学习, 所以关闭将源代码添加到新目标的选项, 每学习一个知识点使用一个 C 文件. 这样表示新创建的文件不属于下面 learning 工程
 ![Untitled 1 42.png](../../../Files%20&%20LongText/Attachments/Untitled%201%2042.png)
-
-### 函数功能
-#### memset
-`memset` 是 C 语言标准库中一个函数，用于将一块内存区域中每个字节设置为特定的值。它通常用于初始化内存区域，比如将结构体或数组的所有字节设置为 0（即清零）。
-- 原型
-`memset` 的原型定义在 `<string.h>` 头文件中，如下所示：
-
-```c
-void *memset(void *s, int c, size_t n);
-```
-- 参数
-- `s`：指向要填充的内存区域的指针。
-- `c`：要设置的值，它会被转换为 `unsigned char` 类型。
-- `n`：要填充的字节数。
-
-`memset` 函数返回一个指向 `void` 类型的指针，指向填充后的内存区域的起始地址。
-
 ### C++环境设置
 程序 g++ 是将 gcc 默认语言设为 C++ 的一个特殊的版本，链接时它自动使用 C++ 标准库而不用 C 标准库。通过遵循源码的命名规范并指定对应库的名字，用 gcc 来编译链接 C++ 程序是可行的
 在命令行中编译源代码方式是先创建好 cpp 文件
@@ -3766,6 +3749,39 @@ int main ( )
 定义纯虚函数是为了实现一个接口，起到一个规范的作用，规范继承这个类的程序员必须实现这个函数。
 不在子类函数中实现它就无法使用父类和子类创建任何对象
 # 高级教程
+## 不引入第三方库实现的跨平台功能
+### 获取可执行文件所在目录
+```cpp
+namespace fs = std::filesystem;
+
+std::string get_exe_path() {
+#ifdef _WIN32
+    // Windows: 使用 GetModuleFileName
+    char path[MAX_PATH];
+    DWORD len = GetModuleFileNameA(NULL, path, MAX_PATH);
+    if (len == 0) return "";
+    return fs::path(path).make_preferred().string(); // make_preferred 转换为 \ 分隔符
+#else
+    // Linux/macOS: 使用 /proc/self/exe 或 readlink
+    char path[4096];
+    ssize_t count = readlink("/proc/self/exe", path, sizeof(path) - 1);
+    if (count != -1) {
+        path[count] = '\0';
+        return fs::path(path).make_preferred().string();
+    }
+#endif
+    return "";
+}
+```
+获取可执行文件路径的实现是通过 `/proc/pid/exe` 文件的 readlink 获取程序路径（Linux 特有）。这个设计有一个隐含假设：所有路径操作都基于程序所在目录。所以日志和配置文件**都需要放在 bin 目录下，否则无法运行**
+`/proc/self` 是一个 Linux 内核提供的虚拟符号链接：
+- 每个进程看到的 /proc/self 都指向自身的进程信息目录
+- 内核在访问时动态解析为当前进程的 PID，无需手动指定
+- 等价于 `/proc/<当前进程PID>` 
+如果使用 qt，可以通过一行代码解决
+```cpp
+QString exePath = QCoreApplication::applicationFilePath(); 
+```
 ## 文件和流
 **ofstream** 和 **fstream** 对象都可以用来打开文件进行写操作
 open 函数语法 `void open(const char *filename, ios::openmode mode);`
@@ -3782,9 +3798,6 @@ open 函数语法 `void open(const char *filename, ios::openmode mode);`
 `fstream` 提供的 close () 函数用来关闭文件，程序终止时，它会自动关闭刷新所有流，释放所有分配的内存，并关闭所有打开的文件。
 ### 人员信息录入系统
 ```cpp
-#include<iostream>
-#include<fstream>
-#include<cstring>
 int main(){
     using namespace std;
     bool condition = true;
