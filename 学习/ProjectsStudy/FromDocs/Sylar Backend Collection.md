@@ -1730,12 +1730,7 @@ tcp:
 ("tcp.connect", {Map})            → 跳过
 ("tcp.connect.timeout", "10000")  → 调 fromString("10000")
 ```
-获取可执行文件路径的实现是通过/proc/pid/exe 文件的 readlink 获取程序路径（Linux 特有）。这个设计有一个隐含假设：所有路径操作都基于程序所在目录。所以日志和配置文件**都需要放在 bin 目录下，否则无法运行**
-`/proc/self` 是一个 Linux 内核提供的虚拟符号链接：                                                 
-- 每个进程看到的 /proc/self 都指向自身的进程信息目录                                          
-- 内核在访问时动态解析为当前进程的 PID，无需手动指定                                           
-- 等价于 `/proc/<当前进程PID>` 
-所以可以用 filesystem 重写为:
+linux 上获取可执行文件所在目录方法参考[[C++ Runoob Tutoral#不引入第三方库实现的跨平台功能#获取可执行文件所在目录|获取可执行文件目录]]，本项目的实现仅适用于 linux，可以用 filesystem 重写为:
 ```cpp
 bool Env::init(int argc, char** argv) {
 	std::string link	  = "/proc/self/exe";

@@ -605,28 +605,7 @@ asio::awaitable<void> handle() {
 
 ## 池封装
 ### RPCConnectionPool 池实现
-整体实现逻辑上和线程/内存池没什么不同
-```cpp
-class RPCConnectionPool : public Singleton<RPCConnectionPool> {
-  public:
-	RPCConnectionPool(size_t poolSize, const std::string& host, unsigned short port);
-	~RPCConnectionPool();
-
-	std::unique_ptr<VerifyService::Stub> getConnection();
-	void								 returnConnection(std::unique_ptr<VerifyService::Stub> connection);
-	void close();
-
-  private:
-	std::atomic<bool>								 _stop;
-	size_t											 _poolSize;
-	std::string										 _host;
-	unsigned short									 _port;
-	std::mutex										 _mutex;  // protect _stop, _poolSize and _connections;
-	std::queue<std::unique_ptr<VerifyService::Stub>> _connections;
-	std::condition_variable							 _cvConnectionAcquire;
-};
-```
-需要注意的是条件变量的使用
+整体实现逻辑上和线程/内存池没什么不同，需要注意的是条件变量的使用
 ```cpp
 std::unique_ptr<VerifyService::Stub> RPCConnectionPool::getConnection() {
 	std::unique_lock<std::mutex> lock(_mutex);
@@ -647,3 +626,39 @@ std::unique_ptr<VerifyService::Stub> RPCConnectionPool::getConnection() {
 ```
 - 条件变量谓词返回 true 表示**不需要等待了，停止 wait 的阻塞**，如果池已经被关闭，那么没有任何里有将 `getConnection()` 所在的线程阻塞，只能返回 nullptr 表示获取失败
 - 同理空闲连接不为空，表示可以被 `getConnection`，所以释放锁并不再阻塞
+使用双重初始化解决单例类的**有参初始化问题**
+```cpp
+class RPCConnectionPool : public Singleton<RPCConnectionPool> {
+	friend class Singleton<RPCConnectionPool>;
+  public:
+	~RPCConnectionPool();
+
+	void init(size_t poolSize, const std::string& host, unsigned short port);
+	std::unique_ptr<VerifyService::Stub> getConnection();
+	void								 returnConnection(std::unique_ptr<VerifyService::Stub> connection);
+	void								 close();
+
+  private:
+	RPCConnectionPool() = default;
+
+	std::atomic<bool>								 _stop{ false };
+	size_t											 _poolSize{ 0 };
+	std::string										 _host;
+	unsigned short									 _port{ 0 };
+	std::mutex										 _mutex;
+	std::queue<std::unique_ptr<VerifyService::Stub>> _idleConnections;
+	std::condition_variable							 _cvConnectionAcquire;
+};
+
+VerifyGrpcClient::VerifyGrpcClient() {
+	auto&	   cfg		   = ConfigManager::getInstance();
+	const auto host		   = cfg["VerifyServer"]["Host"];
+	const auto port		   = static_cast<unsigned short>(std::stoul(cfg["VerifyServer"]["Port"]));
+	const auto rpcPoolSize = static_cast<unsigned short>(std::stoul(cfg["VerifyServer"]["RPCPoolSize"]));
+	RPCConnectionPool::getInstance()->init(rpcPoolSize, host, port);
+}
+```
+- 单例模式的核心是通过 `getInstance()` 获取单例，并且由于其是静态函数，所以它不能有参数，但有参构造必须要传入参数才能初始化，所以改用 `init()` 接受参数，可以的话虽然这**并不安全，因为外部可以通过 init 改变单例内部状态**，但语义上没有问题
+- 由于这里的[[#单例模式]]是通过 `shared_ptr` 构建的，并不是真正意义上的单例，没有任何编译器保护。未实例化就 `getInstance()` 和重复 `init()` 都会带来问题，但这是这种[[设计模式#单例模式#配合 shared_ptr 实现单例模式|伪单例模式]]的通病，为避免代码冗余的折中做法，工程上还是推荐 mayer singleton
+### Redis 连接池
+原理没什么好说的，但由于继承了 `Singleton` 类，所以这里和 [[#RPCConnectionPool 池实现|rpc连接池]]相反，这里不使用 `init`
