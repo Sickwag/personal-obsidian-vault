@@ -661,4 +661,4 @@ VerifyGrpcClient::VerifyGrpcClient() {
 - 单例模式的核心是通过 `getInstance()` 获取单例，并且由于其是静态函数，所以它不能有参数，但有参构造必须要传入参数才能初始化，所以改用 `init()` 接受参数，可以的话虽然这**并不安全，因为外部可以通过 init 改变单例内部状态**，但语义上没有问题
 - 由于这里的[[#单例模式]]是通过 `shared_ptr` 构建的，并不是真正意义上的单例，没有任何编译器保护。未实例化就 `getInstance()` 和重复 `init()` 都会带来问题，但这是这种[[设计模式#单例模式#配合 shared_ptr 实现单例模式|伪单例模式]]的通病，为避免代码冗余的折中做法，工程上还是推荐 mayer singleton
 ### Redis 连接池
-原理没什么好说的，但由于继承了 `Singleton` 类，所以这里和 [[#RPCConnectionPool 池实现|rpc连接池]]相反，这里不使用 `init`
+原理没什么好说的，但由于继承了 `Singleton` 类，所以这里和 [[#RPCConnectionPool 池实现|rpc连接池]]相反，这里不使用 `init` 实现，将 RedisManager（连接，操作实现）和 RedisConPool（池实现）绑定在一起，参考 [[FiberLib#计时器]]中的实现，但没有必要
