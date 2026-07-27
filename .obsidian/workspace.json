@@ -4,22 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "d5d97610354c1099",
+        "id": "564c194b8a058f3f",
         "type": "tabs",
         "children": [
           {
-            "id": "b83cb5b4215d6e49",
+            "id": "e93f619fd95aebf5",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/ProjectsStudy/FromRemote/FiberLib.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "FiberLib"
+              "title": "新标签页"
             }
           }
         ]
@@ -54,7 +49,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "互为友元",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -75,13 +70,11 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -192,12 +185,12 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "b83cb5b4215d6e49",
+  "active": "982f21257484af50",
   "lastOpenFiles": [
+    "学习/ProjectsStudy/FromRemote/FiberLib.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md.tmp.407081.eeaed36f7f6c",
-    "学习/ProjectsStudy/FromRemote/FiberLib.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
     "学习/其他专业书/QT6开发指南.md",
     "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
