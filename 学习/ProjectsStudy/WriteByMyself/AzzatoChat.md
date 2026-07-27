@@ -23,7 +23,20 @@ mainlayout->addWidget(wxQRLabel_, 0, Qt::AlignCenter);
 
 > [!note] qt 文档中的描述：
 > Note: QMainWindow takes ownership of the widget pointer and deletes it at the appropriate time.
-### 声明
+### 组件定义顺序影响 UI 空间按 tab 跳转顺序
+每个 QWidget 内部维护一个子控件链表。当你 new QWidget(parent) 时，子控件被追加到这个链表的末尾。Qt 的 Tab 焦点链就是按这个链表顺序遍历的。
+```cpp
+struct QWidgetPrivate {
+    QList<QObject*> children;  // 按构造顺序排列
+};
+
+void QWidget::childEvent(QChildEvent* e) {
+    if(e->added()) {
+        children.append(e->child());  // 追加到末尾
+    }
+}
+```
+每个 QWidget 都有**属于自己的对象树来管理自己的子控件**，定义时才决定了一个 QWidget 的父对象是谁，这间接将对象添加到**焦点链**中。`void QWidget::setTabOrder(QWidget *first, QWidget *second)` 可以手动控制焦点链
 ### 子窗口和父窗口关系
 #### 大小关系
 > [!question] 为什么子窗口设置了 `setFixedSize()`，还是能够拖动窗口大小？
