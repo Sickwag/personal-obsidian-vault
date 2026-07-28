@@ -1971,6 +1971,7 @@ int main() {
 - 为什么 producer 和 consumer 中每次循环都创建一个 `unique_lock` 对象？
   每次进入循环时都会创建一个新的 RAII 锁对象，它绑定到同一个全局互斥量（`mutex mtx`）上
 ### Note：内存序
+#### 内存序定义
 - 内存序定义：
 	- 控制内存操作的顺序保证，定义多个线程对共享数据的**可见性规则**，避免编译器/CPU 重排序导致问题。
 	- 解决编译器和 CPU 的重排序问题
@@ -1987,18 +1988,298 @@ std::cout << data;        // 期望输出 42
 // 问题：编译器/CPU 可能重排序，导致线程 1 先执行 2 再执行 1
 // 结果：线程 2 可能读到 0 而不是 42
 ```
-**六种内存序**（`std::memory_order`）
+#### 指令重排
+**CPU 为什么重排指令？—— 为了填满流水线段，避免等待。**
+现代 CPU 是**流水线架构**（如 14 级流水线），一条指令的执行分为多个阶段：取指 → 译码 → 执行 → 访存 → 写回。如果某条指令需要等待数据（如 cache miss，等待 300+ 周期），CPU 不会空转，而是从后续指令中找数据已就绪的执行。
+**CPU 流水线（简化版，14 级流水线实际更长）：**
+```
+┌─────┬─────┬─────┬─────┬─────┐
+│ IF  │ ID  │ EX  │ MEM │ WB  │  取指→译码→执行→访存→写回
+└─────┴─────┴─────┴─────┴─────┘
+     ↑ 每个阶段可以在一个时钟周期完成
+```
+对于代码:
+```cpp
+// segment 1（存在数据依赖链）
+int a = x + 32; // L1  ─┐
+int b = x + a;  // L2  ←─┘ 依赖 a
+int c = a + b;  // L3  ←─── 依赖 a, b
+
+// segment 2（存在数据依赖链）
+int y = x + 54; // L4  ─┐
+int z = y + 64; // L5  ←─┘ 依赖 y
+int w = y + z;  // L6  ←─── 依赖 y, z
+```
+
+| 组内 | 能否重排？ | 原因 |
+| :--- | :--- | :--- |
+| L1->L2->L3 | 不能 | 数据依赖：L2 用 L1 的结果，L3 用 L1、L2 的结果 |
+| L4->L5->L6 | 不能 | 同理 |
+| 组 1 vs 组 2 | 可以 | 两组之间无数据依赖 |
+
+**乱序执行（Out-of-Order Execution）：**
+- 硬件维护一个指令窗口（比如 64-256 条指令）
+- 检查每条指令的操作数是否就绪
+- 就绪的指令先执行，不按原始顺序
+- 提交时按原始顺序写回（保证单线程语义）
+- 所以 1,4,2,5,3,6 是合法的执行顺序。甚至编译器层面可以把它重排成 4,1,5,2,6,3，只要每组内部的依赖关系不变。
+
+**重排的约束：**
+- 数据依赖的指令不能重排（`a=x+1; b=a+1` 中的 `a→b` 依赖）
+- 控制依赖的指令不能随意重排（`if(p) q=1` 中的分支）
+- 无依赖的指令可以任意重排，维持单线程语义
+
+**调试器为什么看不到重排？**
+调试器按源代码执行，编译器 + CPU 保证「好像按顺序执行」的单线程语义。但多线程下，这个保证不跨线程。
+#### Store Buffer 与 Cache 一致性
+**Store Buffer（写缓冲区）：**
+每个核心有自己的 store buffer，写操作先写入 store buffer（1 周期），再异步刷入 L1 cache。读操作可以优先读 store buffer（store forwarding）。
+
+**为什么需要 store buffer？**
+- 写 L1 cache 需要等待（3-10 周期），CPU 不能干等
+- 批量写入再刷入 cache 提高效率
+- 没有 store buffer，CPU 核心每写一次就要停等
+
+**Cache 一致性协议（MESI 简化版）：**
+每个 cache line 有四种状态，通过总线嗅探（snooping）信号同步：
+
+| 状态 | 含义 | 说明 |
+|------|------|------|
+| M (Modified) | 本核心独占，已修改 | 回写时通知其他核心失效 |
+| E (Exclusive) | 本核心独占，未修改 | 其他核心读时转为 S |
+| S (Shared) | 多个核心共享，未修改 | 写前需要发送 Invalidate 请求 |
+| I (Invalid) | 失效，需要重新读取 | 其他核心修改了该 cache line |
+
+**核心 0 写变量、核心 1 读不到最新值的过程：**
+```
+核心0                          核心1
+时间→
+│                               │
+│ a = 1 (直接写入 store buffer)  │
+│ store buffer: [a=1]           │
+│                               │ 读 a → L1 cache 没有 → 读 L3 → 没有
+│                               │ → 读主存 → 读到旧值 0 ❌
+│                               │
+│ (100个周期后，store buffer刷入  │
+│  L1，通过总线通知其他核心无效)    │
+│ L1: a=1 (M)                   │ 收到 Invalidate 消息 → 自己的 a 设为 I
+│ store buffer: []              │
+│                               │ 再次读 a → L1 无效 → 读 L3 → 读到 1
+```
+
+**MESI 协议的完整消息交互：**
+```
+核心0写 a，发现 a 在 L1 中状态为 S（共享，其他核心也可能有副本）
+│
+├── 核心0发送 "Read For Ownership" 总线消息
+│   ├── 核心1收到 → 自己的 a 设为 I（无效）
+│   ├── 核心1发送 "Acknowledge" 应答
+│   └── (可能还有核心2、3，每个都要应答)
+│
+└── 所有核心应答后，核心0才把 a 从 store buffer 写入 L1 cache（状态 M）
+    （这期间核心0不能执行后续的读 a 操作）
+
+整个过程：核心0写了 a，但 200+ 周期后才能执行依赖于 a 的后续操作。
+因此 CPU 会继续执行后面不依赖 a 的指令——这就是指令重排的硬件根源。
+```
+#### 六种内存序详解
+参考: https://zhuanlan.zhihu.com/p/55901945
 
 | 内存顺序 (Memory Order)        | 核心特性与重排序规则 (同步机制)                                                   | 典型使用场景                                        | 性能与附加说明                      |
 | :------------------------- | :------------------------------------------------------------------ | :-------------------------------------------- | :--------------------------- |
-| **`memory_order_relaxed`** | • 只保证原子性，不保证顺序<br>• 无顺序控制                                           | • 最小粒度同步<br>• 计数器、统计信息                        | • **最宽松**<br>• **性能最好**      |
-| **`memory_order_consume`** | • 依赖的数据不会被重排序到前面                                                    | • 依赖数据的读取操作                                   | • **较少使用**                   |
-| **`memory_order_acquire`** | • **获取操作**（用于读取端）<br>• 当前操作**之后**的读写不会被重排序到前面<br>• 读取同步屏障 (Barrier) | • 读取保护出临界区的变量修改                               | • 常与 `release` 配对使用          |
-| **`memory_order_release`** | • **释放操作**（用于写入端）<br>• 当前操作**之前**的读写不会被重排序到后面<br>• 写入同步屏障 (Barrier) | • 写入用于保护线程之间的共享状态                             | • 常与 `acquire` 配对使用          |
-| **`memory_order_acq_rel`** | • **获取-释放操作** (acquire + release)<br>• 读取与写入屏障两者结合                  | • 读-改-写 (Read-Modify-Write) 操作<br>• 常用于锁或交换变量 | • 同时具备 acquire 和 release 的语义 |
-| **`memory_order_seq_cst`** | • **顺序一致性**（强一致性）<br>• 最强的保证<br>• 保证严苛的内存访问顺序<br>• 所有线程看到相同的操作顺序    | • 默认的强一致性需求场景                                 | • **默认选项**<br>• **性能开销最大**   |
+| `memory_order_relaxed` | • 只保证原子性，不保证顺序<br>• 无顺序控制                                           | • 最小粒度同步<br>• 计数器、统计信息                        | • **最宽松**<br>• **性能最好**      |
+| `memory_order_consume` | • 依赖的数据不会被重排序到前面                                                    | • 依赖数据的读取操作                                   | • **较少使用**                   |
+| `memory_order_acquire` | • **获取操作**（用于读取端）<br>• 当前操作**之后**的读写不会被重排序到前面<br>• 读取同步屏障 (Barrier) | • 读取保护出临界区的变量修改                               | • 常与 `release` 配对使用          |
+| `memory_order_release` | • **释放操作**（用于写入端）<br>• 当前操作**之前**的读写不会被重排序到后面<br>• 写入同步屏障 (Barrier) | • 写入用于保护线程之间的共享状态                             | • 常与 `acquire` 配对使用          |
+| `memory_order_acq_rel` | • **获取-释放操作** (acquire + release)<br>• 读取与写入屏障两者结合                  | • 读-改-写 (Read-Modify-Write) 操作<br>• 常用于锁或交换变量 | • 同时具备 acquire 和 release 的语义 |
+| `memory_order_seq_cst` | • **顺序一致性**（强一致性）<br>• 最强的保证<br>• 保证严苛的内存访问顺序<br>• 所有线程看到相同的操作顺序    | • 默认的强一致性需求场景                                 | • **默认选项**<br>• **性能开销最大**   |
+##### 无承诺保证 memory_order_relaxed
+`std::memory_order_relax` 就是一种无承诺的保证。使用这种模式与没有使用这种模式达到的效果是一样的。
+```cpp
+// 两者等价
+int func_relax(void) {
+    a.store(1, std::memory_order_relaxed);
+    b.store(13, std::memory_order_relaxed);
+}
 
-典型使用模式：
+int func_normal(void) {
+    var_a = 1;
+    var_b = 13;
+}
+```
+##### 写顺序保证 memory_order_release
+`std::memory_order_release` 真在本行代码之前，如果有任何写内存的操作，都是不能放到本行语句之后的。简单地说，就是 `写不后`。语义上理解 `release` 可以认为是发布一个版本。也就是说，应该在发布之前做的（开发写入操作），那么不能放到 `release` 之后（发布之后再修改）。
+##### 读操作保证 memory_order_acquire
+用于线程之间通信，`std::memory_order_acquire` 表示的是，后续的读操作都不能放到这条指令之前。简单地可以写成 `读不前`。
+```cpp
+std::atomic<bool> has_release;
+int *data = nullptr;
+
+// thread_1
+void releae_software() {
+    if (!data) {
+        data = new int[100];                            // line 1
+    }
+    has_release.store(true, std::memory_order_release); // line 2
+
+    //.... do something other.
+}
+
+// thread_use
+void use_software() {
+    // 检查是否已经发布了
+    while (!has_release.load(std::memory_order_relaxed));
+    // 即然已经发布，那么就从里面取值
+    int x = *data;
+}
+```
+以上代码看起来逻辑没问题，但是 thread_use 没有进行内存序保护，thread_1 的写操作被保护了，thread_use 的执行顺序可能被重排为:
+```cpp
+void use_software() {
+    int x = *data;
+    while (!has_release.load(std::memory_order_relaxed));
+}
+```
+所以读端也应该被保护，防止 x 的读取操作在获取许可之后
+```cpp
+void acquire_software(void) {
+    while (!has_release.load(std::memory_order_acquire));
+    int x = *data;
+}
+```
+##### acquire/release 配对详解
+写端通过 release 控制保证了线程通信过程中的生产者必须在**得到某些信号/执行某些准备工作之后**（通过原子变量表示这些信号是否到达/准备工作是否做完）才能生产
+读端通过 while 轮询原子变量的状态（一种自旋锁实现，只有读到了内存数据才就执行），然后再将其读取到变量中，再经过 if 判断是为了 load 读到 true 时，另一个线程可能已经抢先消费了数据，导致条件再次变为 false，是一种双重保证。但实际**生产代码获取分短等待和长等待**，并针对两种环境使用 CAS 操作和条件变量。
+无锁操作的经典自旋重试机制:
+```cpp
+while (!atomic_var.compare_exchange_weak(expected, desired)) {
+    // 自旋重试，期望值被更新，继续下一轮
+}
+// 这里 expected 已经被更新为最新值
+```
+
+##### 读顺序的消弱 memory_order_consume
+有时候，`std::memory_order_release` 和 `std::memory_order_acquire` 会波及无辜。
+```cpp
+std::atomic<int> net_con{0};
+std::atomic<int> has_alloc{0};
+char buffer[1024];
+char file_content[1024];
+
+void release_thread(void) {
+    sprintf(buffer, "%s", "something_to_read_tobuffer"); // 写操作
+
+    // net_con表示接收到的链接
+    net_con.store(1, std::memory_order_release);  // "写不后"
+    // 标记alloc memory for connection
+    has_alloc.store(1, std::memory_order_release);
+}
+
+void acquire_thread(void) {
+    // 这个是与两个原子变量完全无关的操作。
+    if (strstr(file_content, "auth_key =")) { // 读操作
+        // fetch user and password
+    }
+
+    while (!has_alloc.load(std::memory_order_acquire));  // "读不前"
+    bool v = has_alloc.load(std::memory_order_acquire);
+    if (v) {
+         net_con.load(std::memory_order_relaxed);
+    }
+}
+```
+- ***写端通过 release 控制保证了线程通信过程中的生产者必须在得到某些信号/执行某些准备工作之后才能生产，读端通过 while 轮询原子变量的状态，然后***
+- 由于 `release` 和 `acquire` 的语义，CPU 确实不重排有数据依赖的指令，但这是硬件层面的寄存器依赖。C++ 代码依赖在抽象机层面，编译器可能把依赖链优化掉。
+```cpp
+// 假设 ptr 是 atomic<int*>
+int* p = ptr.load(memory_order_consume);
+int val = *p;  // 这看起来依赖 p
+
+// 编译器可能优化成：
+// 前提：编译器知道 ptr 指向某个数组的某个位置，这里用 &data[42]表示
+// 于是：
+int val = data[42];  // 直接访问已知地址，p 的依赖链被切断
+// 现在 val 的读可以发生在 ptr.load 之前！
+```
+`std::memory_order_consume`，这个内存序的含义是说，所有后续对**本原子类型**的操作，必须在本操作完成之后才可以执行。简单点就是 `不得前`。是对**读的优化**，release 线程不能使用。但问题在于：
+1. 编译器很难正确追踪依赖链——通过指针、函数调用、复杂表达式后，依赖链难以静态分析
+2. C++ 标准规范 consume 太困难——委员会花了多年也无法精确定义"依赖"的范围
+
+> [!note] 实际落地的结果
+> GCC/Clang 全部把 consume 提升为 acquire（C++20 标准也明确建议不要用）x86 上 acquire 和 consume 没有任何性能差异——因为 x86 的 load 指令本身就自带 acquire 语义，不需要额外插入屏障指令。所以 x86 上 consume 的优化价值本来就为零。但在 ARM 上，如果编译器正确实现了 consume，确实可以省掉一个 dmb 指令（~40 cycles）
+##### 读写的加强 std::memory_order_acq_rel
+
+#### 内存屏障的定义
+内存屏障是一条 CPU 指令，强制 CPU 在屏障点之前的所有内存操作对其他核心可见，并阻止屏障前后的指令重排。
+C++ 里的内存屏障也叫内存栅栏，是限制编译器和 CPU 指令重排序的机制，用来保障多线程下共享数据的顺序和可见性。它会把内存操作分成屏障前和屏障后两部分，确保前面的操作全完成才执行后面的，还能强制刷新 CPU 缓存，让一个线程的修改能被其他线程及时看到。
+#### 为什么需要屏障？
+因为 store buffer 的存在
+```cpp
+// 共享数据
+int data = 0;
+std::atomic<bool> ready{false};
+
+// 线程 A（生产者）
+data = 42;                              // ① 写数据
+ready.store(true, memory_order_release); // ② release 写
+
+// 线程 B（消费者）
+while (!ready.load(memory_order_acquire)) // ③ acquire 读
+	std::cout << data;                       // ④ 读数据 → 一定是 42
+```
+1. 核心0写 `data=42`，值进入 store buffer（还没刷入 cache）
+2. 核心0写 `ready=true`（带 release），强制冲刷 store buffer
+3. 核心1读 `ready=true`（带 acquire），看到核心 0 的写入
+4. 核心1读 `data`，因为核心 0 的 store buffer 已刷入 cache，读到 42
+为什么需要它？ 因为每个 CPU 核心有自己的 store buffer（写缓冲区）：
+```
+  核心 0                     核心 1
+  ┌──────────┐              ┌──────────┐
+  │ Store    │              │ Store    │
+  │ Buffer   │              │ Buffer   │
+  ├──────────┤              ├──────────┤
+  │  L1 Cache│              │  L1 Cache│
+  ├──────────┴──────────────┴──────────┤
+  │           L3 Cache (共享)           │
+  ├────────────────────────────────────┤
+  │              主存 (RAM)             │
+  └────────────────────────────────────┘
+```
+  核心 0 写一个值，先进入自己的 store buffer，还没刷到 cache/主存。核心 1
+  此时读，读到的是旧值。内存屏障强制把 store buffer 刷出去，保证其他核心能看到。
+#### acquire/release 配对原理
+```cpp
+// 线程 A（生产者）
+data = 42;
+ready.store(true, memory_order_release);
+
+// 线程 B（消费者）
+while (!ready.load(memory_order_acquire));
+assert(data == 42);  // 保证为 true
+```
+**release 保证：** 之前的所有写操作不会被重排到 release 之后
+**acquire 保证：** 之后的所有读操作不会被重排到 acquire 之前
+**配对效果：** 当 acquire 读到 release 写入的值时，建立 `happens-before` 关系，acquire 之后的所有读操作一定能看到 release 之前的所有写操作的结果
+
+#### C++ 中体现内存屏障的操作
+**显式屏障：**
+- `atomic::store(val, memory_order_release)` → x86 上 `mov` + `mfence` 或 `xchg`
+- `atomic::load(memory_order_acquire)` → 屏障 + `mov`
+- `atomic_thread_fence(memory_order_release/acquire)` → 独立屏障，不绑定变量
+- `fetch_add/exchange` 带 `memory_order_acq_rel` → RMW + 屏障
+
+**隐式屏障：**
+- `mutex.lock()` → 内部含 acquire 屏障
+- `mutex.unlock()` → 内部含 release 屏障
+- `cv.wait()` → 内部含 acquire + release
+- `cv.notify_one()` → 内部含 release
+
+**编译器屏障（不强制 CPU 屏障）：**
+```cpp
+asm volatile("" ::: "memory");  // 阻止编译器重排，不阻止 CPU 重排
+std::atomic_signal_fence(memory_order_seq_cst);  // 同上
+```
+#### 典型使用模式
 - 释放 - 获取同步（Release-Acquire）：
 ```cpp
 // 线程 1 - 写入者
@@ -2029,6 +2310,14 @@ public:
   }
 };
 ```
+
+| 场景      | 屏障类型                   | 原因           |
+| ------- | ---------------------- | ------------ |
+| 生产者-消费者 | release/acquire 配对     | 确保数据在标志位之前可见 |
+| 自旋锁     | acq_rel                | 确保锁内数据在临界区内外 |
+| 引用计数    | relaxed + acq_rel 在关键点 | 减少不必要的屏障开销   |
+| 单线程计数器  | relaxed                | 只需原子性，不需要同步  |
+| 细粒度锁    | acquire/release        | 精确控制每个操作     |
 ### Note：谓词
 **谓词**（Predicate）是指一个 **返回** `bool` **值的可调用对象**，常见于标准库算法（如 `std::find_if`）或同步原语（如 `condition_variable::wait`）。它是一个广义概念，包含以下形式（任何能通过 `()` 调用的东西，包括：函数指针，**成员函数指针**，lambda 和仿函数） 所以，`conditional_variable` 的谓词部分只能填：
 ```cpp
