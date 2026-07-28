@@ -52,7 +52,8 @@
               "title": "C++ Runoob Tutoral"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -221,14 +222,15 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "e93f619fd95aebf5",
+  "active": "e6bfbd4c0f593141",
   "lastOpenFiles": [
-    "学习/Bases/开发范式/架构设计.md.tmp.133327.cfb1f3a3a1e2",
-    "学习/Bases/开发范式/IO复用模型.md",
     "学习/Bases/开发范式/架构设计.md",
     "学习/其他专业书/Modern C++.md",
-    "学习/Bases/开发范式/架构设计.md.tmp.133327.de3f786de6c0",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/Bases/开发范式/架构设计.md.tmp.24184.98507c0dc0b4",
+    "学习/Bases/开发范式/架构设计.md.tmp.133327.cfb1f3a3a1e2",
+    "学习/Bases/开发范式/IO复用模型.md",
+    "学习/Bases/开发范式/架构设计.md.tmp.133327.de3f786de6c0",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
     "学习/ProjectsStudy/FromRemote/FiberLib.md",
@@ -250,8 +252,6 @@
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.254864.46d47effa87a",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.254864.6ca6bd86ab28",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.254864.6ae6d6b63c07",
-    "Chores/JobInterviews/八股/收集的面试题.md.tmp.254864.ec9711e12bea",
-    "Chores/JobInterviews/八股/收集的面试题.md.tmp.254864.6c63f5c890cc",
     "学习/Bases/操作系统/小林Coding 图解系统.md",
     "Files & LongText/Attachments/Pasted image 20260723102026.jpg",
     "Files & LongText/Attachments/Pasted image 20260723101337.png",
