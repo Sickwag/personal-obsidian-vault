@@ -471,7 +471,7 @@ delete pb; // 仅执行到 ~Base()
 ### 虚函数实现原理
 #### “虚对象”结构
 **虚函数表**：欲实现出 virtual 函数，对象必须携带某些信息用来在运行期决定哪一个 virtual 函数该被调用。这份信息通常是由一个所谓 vptr (virtual table pointer) 指针指出。 vptr 指向一个由函数指针构成的数组，称为 vtbl (virtual table) ；
-**虚函数指针**：每一个带有 virtual 函数的 class 都有一个相应的 vtb| 。当对象调用某一 virtual 函数，实际被调用的函数取决千该对象的 vptr 所指的那个 vtbl 一编译器在其中寻找适当的函数指针。
+**虚函数指针**：每一个带有 virtual 函数的 class 都有一个相应的 vtb 。当对象调用某一 virtual 函数，实际被调用的函数取决千该对象的 vptr 所指的那个 vtbl 一编译器在其中寻找适当的函数指针。
 **虚函数对类对象大小影响**：如果 class 内含 virtual 函数，其对象的体积会增加：在 32-bit 计算机体系结构中将占用 64 bits （为了存放两个 ints) 至 96 bits （两个 ints 加上 vptr) ； 64-bit 中可能占用 64-128 its, 因指针在这样的计算机结构中占 64 bits 。
 **虚析构函数会改变二进制布局**：
 
