@@ -125,7 +125,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "RVO",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -146,13 +146,11 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -263,7 +261,7 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "d40c96872e2d1af2",
+  "active": "982f21257484af50",
   "lastOpenFiles": [
     "学习/Bases/开发范式/C++开发范式和术语.md",
     "学习/其他专业书/Modern C++.md",
