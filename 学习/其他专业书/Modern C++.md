@@ -2650,9 +2650,9 @@ C/C++中，结构体中默认所有数据放在一整块连续的内存中，理
 ![Pasted image 20241021210839.png](Pasted%20image%2020241021210839.png)
 
 ### 为什么需要内存对齐
-- 寄存器只能从内存地址是 4 的倍数的位置开始读取数据（与处理器架构和位数也有关系）
+寄存器只能从内存地址是 4 的倍数的位置开始读取数据（与处理器架构和位数也有关系）
 ![Pasted image 20241021211403.png](Pasted%20image%2020241021211403.png)
-- 对齐的对齐数可以手动指定
+对齐的对齐数可以手动指定
 - 从硬件层面分析
 ![Pasted image 20241021212144.png](Pasted%20image%2020241021212144.png)
 一个主板上插入的内存条中有多个 chip，这些 chip 共同组成一个连续的存储空间
@@ -2660,8 +2660,37 @@ C/C++中，结构体中默认所有数据放在一整块连续的内存中，理
 - 若数据未对齐，可能跨两个读取周期（甚至触发硬件异常）。
 - **对齐后**：一个寄存器周期就能完整读取该数据。
 ### 手动控制内存对齐
-#### 关键字控制
-C++ 11 引入了两个新的关键字 alignof 和 alignas 来支持对内存对齐进行控制。 alignof 关键字能够获得一个与平台相关的 `std:: size_t` 类型的值，用于查询该平台的对齐方式。
+#### pragma pack(n)
+原理：编译器指令，设置最大对齐字节数。每个成员实际对齐为 `min(n, 成员自身对齐)`
+```cpp
+#pragma pack(push, 1)   // 保存当前对齐状态，设置 1 字节对齐
+struct Packed {
+    char a;     // 1 + 0 填充   → 偏移 0
+    int  b;     // 4 + 0 填充   → 偏移 1（无对齐要求）
+    short c;    // 2 + 0 填充   → 偏移 5
+};  // sizeof = 7
+#pragma pack(pop)        // 恢复之前对齐状态
+```
+`push/pop` 用于嵌套场景，避免影响其他结构体。`#pragma pack(1)` 最常用，用于网络协议头、文件格式解析。
+#### \_\_attribute\_\_((packed)) （GCC/Clang）
+原理：告诉编译器对结构体使用最紧凑的布局（1 字节对齐），消除所有填充字节。与 `#pragma pack(1)` 效果类似，但只作用于单个结构体，不影响其他类型。
+```cpp
+struct __attribute__((packed)) Packet {
+    char type;     // 偏移 0
+    int  length;   // 偏移 1（无填充）
+    char data[100]; // 偏移 5
+};  // sizeof = 105
+```
+#### alignas（C++11）
+原理：指定变量或类型的**最小**对齐方式，只能增加不能减少。用于 SIMD 对齐、缓存行对齐等场景。
+```cpp
+alignas(64) int arr[100];     // 数组对齐到 64 字节边界
+struct alignas(32) Aligned {  // 结构体对齐到 32 字节
+    int data[8];
+};
+```
+`alignof` 运算符获取类型的对齐要求：`size_t al = alignof(Aligned);`。
+alignof 关键字能够获得一个与平台相关的 `std:: size_t` 类型的值，用于查询该平台的对齐方式。
 ```cpp
 #include <iostream>
 struct Storage {
@@ -2684,34 +2713,31 @@ int main() {
 ```
 其中 `std::max_align_t` 要求每个标量类型的对齐方式严格一样，因此它几乎是最大标量没有差异，进而大部分平台上得到的结果为 `long double`，因此我们这里得到的 `AlignasStorage` 的对齐要求是 8 或 16。
 alignas 指定值必须是 2 的整数幂且**不能小于默认对齐数**（否则可能被忽略或扩展）。
-#### 预编译头控制
+#### std::align（C++11）
+原理：在给定缓冲区中找到满足对齐要求的指针，不改变已有内存的对齐属性，用于手动内存池中的对齐分配。
 ```cpp
-#pragma pack(1)   // 设置默认对齐数为 1 → 取消对齐（紧凑存储）
-struct B {
-    char c;
-    int i;
-    short s;
-};
-#pragma pack()    // 恢复默认对齐数
-sizeof(B);        // = 7
+void* ptr = malloc(1024);
+size_t space = 1024;
+void* aligned = std::align(64, 256, ptr, space);  // 在 ptr 指向的 1024 字节缓冲区中找 64 字节对齐的 256 字节空间
+if (aligned) { /* 对齐成功，aligned 是对齐后的起始地址，space 是剩余空间 */ }
 ```
-#### 位域结构体控制
+#### 位域（bit-field）
+原理：精确到 bit 级别的布局控制，多个相邻位域成员共享同一个字节，编译器按分配顺序排列。
 ```cpp
-struct BitField {
-    unsigned int a : 1;   // 占 1 位
-    unsigned int b : 3;   // 占 3 位
-    unsigned int   : 2;   // 显式填充 2 位（匿名位域）
-};
+struct Flags {
+    unsigned int a : 1;   // 1 bit
+    unsigned int b : 3;   // 3 bits
+    unsigned int c : 4;   // 4 bits
+};  // 共 8 bits = 1 字节
+struct IPv4Header {
+    unsigned int version  : 4;  // 4 bits
+    unsigned int ihl      : 4;  // 4 bits
+    unsigned int dscp     : 6;  // 6 bits
+    unsigned int ecn      : 2;  // 2 bits
+    unsigned int total_length : 16;
+};  // 共 32 bits = 4 字节
 ```
-#### 编译器控制
-```cpp
-struct __attribute__((packed)) C { // GCC/Clang Only
-    char c;
-    int i;
-    short s;
-};
-sizeof(C); // = 7
-```
+位域的限制：不能取地址、跨平台布局不确定（编译器可能从左到右或从右到左排列）、位域类型必须是整数类型。
 ### 特殊情况
 C 语言中空结构体大小为 0（GCC 扩展允许），但 C++ 标准规定必须至少为 1，保证每个对象有唯一地址
 继承情况下:
