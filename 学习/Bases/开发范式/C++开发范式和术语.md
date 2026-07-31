@@ -406,7 +406,7 @@ struct AppConfig {
 参考: https://www.cnblogs.com/NeonCoding/p/19048765
 https://www.cnblogs.com/NeonCoding/p/19048765
 ## 实现原理
-RVO（Return Value Optimization）是一种编译器优化技术，它避免了从函数返回时创建临时对象。当函数返回一个临时对象（通常是由[构造函数](https://zhida.zhihu.com/search?content_id=236026902&content_type=Article&match_order=1&q=%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0&zhida_source=entity)直接初始化的匿名对象）时，RVO 允许编译器省略创建和销毁临时对象的过程，而是直接在接收对象的位置构造返回值。
+RVO（Return Value Optimization）是一种编译器优化技术，它避免了从函数返回时创建临时对象。函数按值返回匿名临时对象时，编译器直接把对象构造在调用者的目标内存里，跳过临时对象的拷贝 / 移动和析构。
 当编译器确定可以进行 RVO 时，它会：
 1. 在调用者的栈帧上为返回值分配空间，而不是在被调用函数的栈帧上。
 2. 将返回值对象的地址传递给被调用的函数，这样被调用的函数就可以直接在该地址上构造对象。

@@ -81,9 +81,19 @@
               "icon": "lucide-file",
               "title": "C++开发范式和术语"
             }
+          },
+          {
+            "id": "d40c96872e2d1af2",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 5
       }
     ],
     "direction": "vertical"
@@ -115,7 +125,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "RVO",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -253,24 +263,24 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "11d9c2067c60681d",
+  "active": "d40c96872e2d1af2",
   "lastOpenFiles": [
-    "Chores/JobInterviews/八股/面试题合集.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
+    "学习/其他专业书/Modern C++.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "Chores/JobInterviews/八股/面试题合集.md",
     "Chores/JobInterviews/八股/收集的面试题.md",
+    "学习/Bases/开发范式/架构设计.md",
+    "Chores/JobInterviews/八股/面试题知识.md",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.271799.84e84281814f",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.271799.d04b6f0435dd",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.271799.0c28f095f75e",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.271799.423998d64643",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.271799.358e588687d9",
-    "Chores/JobInterviews/八股/面试题知识.md",
-    "学习/Bases/开发范式/架构设计.md",
     "学习/algorithm/用法导向知识.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Language/java/java编程的逻辑.md",
     "Chores/JobInterviews/questions精简.md",
     "学习/其他专业书/Effective C++（侯捷）.md",
-    "学习/其他专业书/Modern C++.md",
     "学习/Bases/开发范式/架构设计.md.tmp.24184.82d7eb275913",
     "学习/Bases/开发范式/架构设计.md.tmp.24184.b4d9f87214a7",
     "学习/Bases/开发范式/架构设计.md.tmp.24184.e3cc3f99e1bc",
