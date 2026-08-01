@@ -8769,15 +8769,6 @@ struct Derived : Base {
 - **语法**：CRTP、模板方法
 - **优点**：零运行时开销、支持内联优化
 - **缺点**：代码复用性差、调试复杂
-```cpp
-template <typename Derived>
-struct Base {
-    void foo() { static_cast<Derived*>(this)->foo_impl(); }
-};
-struct Derived : Base<Derived> {
-    void foo_impl() { cout << "Static polymorphism\n"; }
-};
-```
 #### 函数重载（Overload）
 - **原理**：编译器根据参数类型选择不同函数
 - **优点**：简单、直观

@@ -462,16 +462,9 @@ struct AppConfig {
 参考: https://www.cnblogs.com/NeonCoding/p/19048765
 https://www.cnblogs.com/NeonCoding/p/19048765
 ## 实现原理
-RVO（Return Value Optimization）是一种编译器优化技术，它避免了从函数返回时创建临时对象。函数按值返回匿名临时对象时，编译器直接把对象构造在调用者的目标内存里，跳过临时对象的拷贝 / 移动和析构。
-当编译器确定可以进行 RVO 时，它会：
-1. 在调用者的栈帧上为返回值分配空间，而不是在被调用函数的栈帧上。
-2. 将返回值对象的地址传递给被调用的函数，这样被调用的函数就可以直接在该地址上构造对象。
-3. 允许函数直接在预分配的[内存位置](https://zhida.zhihu.com/search?content_id=236026902&content_type=Article&match_order=1&q=%E5%86%85%E5%AD%98%E4%BD%8D%E7%BD%AE&zhida_source=entity)构造返回值，从而避免了额外的拷贝构造和析构调用。
+RVO（Return Value Optimization）是一种编译器优化技术，它避免了从函数返回时创建临时对象。函数按值返回匿名临时对象时，编译器直接把对象构造在调用者的**栈帧内存**里，跳过临时对象的拷贝 / 移动和析构。
 
-NRVO与RVO类似，但适用于返回函数内部已命名的局部变量。编译器优化这个过程，允许在调用者的栈帧上直接构造[局部变量](https://zhida.zhihu.com/search?content_id=236026902&content_type=Article&match_order=2&q=%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F&zhida_source=entity)，避免了将局部变量拷贝到返回值的过程。在应用 NRVO 时，编译器会：
-4. 识别函数中将被返回的命名局部变量。
-5. 在调用者的栈帧上为该局部变量预留空间。
-6. 直接在该空间上构造局部变量，当函数返回时不需要移动或拷贝对象。
+NRVO与RVO类似，但适用于返回函数内部已命名的局部变量。避免了将局部变量拷贝到返回值的过程。在应用 NRVO 时，编译器会：
 ```cpp
 struct BigObject {
     int data[1000]{};
@@ -489,7 +482,7 @@ BigObject makeObj() {
 1. 在 `makeObj` 里先给 `local` 分配一次内存，并构造一次。
 2. 返回时，再拷贝一份给调用者。
 3. 离开作用域时，`local` 析构一次。
-**“构造 1 次 + 拷贝 1 次 + 析构 1 次”**，又一次重复的构造，开启 RVO 后，编译器会将代码改为
+**“构造 1 次 + 拷贝 1 次 + 析构 1 次”**，有一次重复的拷贝构造，开启 RVO 后，编译器会将代码改为
 ```cpp
 // 伪代码：编译器视角
 void makeObj(void* ret_addr) {   // ret_addr 是调用者预留好的“目的地”
