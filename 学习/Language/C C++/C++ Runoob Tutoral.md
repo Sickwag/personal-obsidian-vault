@@ -7038,50 +7038,32 @@ cout << "Bitwise XOR: " << b_xor << endl;
 bitset<8> b_not = ~b1;
 cout << "Bitwise NOT: " << b_not << endl;
 ```
-#### string
-##### 定义
-C 风格字符串的升级版，C++风格字符串，并提供了一系列方法
-##### 成员函数
-| 函数名                   | 描述                         | 示例代码                                           |
-| --------------------- | -------------------------- | ---------------------------------------------- |
-| `size ()`              | 返回字符串的长度（字符数）。             | `cout << str.size ();`                     |
-| `length ()`            | 与 `size ()` 相同，返回字符串的长度。    | `cout << str.length ();`                   |
-| `empty ()`             | 判断字符串是否为空。                 | `cout << (str.empty () ? "Yes" : "No");`   |
-| `operator[]`          | 访问字符串中指定位置的字符。             | `cout << str[0];`                         |
-| `at ()`                | 访问字符串中指定位置的字符（带边界检查）。      | `cout << str.at (0);`                      |
-| `substr ()`            | 返回从指定位置开始的子字符串。            | `string sub = str.substr (0, 5);`          |
-| `find ()`              | 查找子字符串在字符串中位置。            | `cout << str.find ("sub") << endl;`   |
-| `rfind ()`             | 从字符串末尾开始查找子字符串的位置。         | `cout << str.rfind ("sub") << endl;`  |
-| `replace ()`           | 替换字符串中部分内容。               | `str.replace (pos, length, "new_substring");`   |
-| `append ()`            | 在字符串末尾添加内容。                | `str.append (" more");`                         |
-| `insert ()`            | 在指定位置插入内容。                 | `str.insert (pos, "inserted");`                 |
-| `erase ()`             | 删除指定位置的字符或子字符串。            | `str.erase (pos, length);`                      |
-| `clear ()`             | 清空字符串。                     | `str.clear ();`                                 |
-| `c_str ()`             | 返回 C 风格的字符串（以 null 结尾）。    | `const char* cstr = str. c_str ();`              |
-| `data ()`              | 返回指向字符数据的指针（C++11 及后的版本）。 | `const char* data = str.data ();`               |
-| `compare ()`           | 比较两个字符串。                   | `int result = str.compare ("other");`           |
-| `find_first_of ()`     | 查找第一个匹配任意字符的位置。            | `size_t pos = str. find_first_of ("aeiou");`     |
-| `find_last_of ()`      | 查找最后一个匹配任意字符的位置。           | `size_t pos = str. find_last_of ("aeiou");`      |
-| `find_first_not_of ()` | 查找第一个不匹配任意字符的位置。           | `size_t pos = str. find_first_not_of ("aeiou");` |
-| `find_last_not_of ()`  | 查找最后一个不匹配任意字符的位置。          | `size_t pos = str. find_last_not_of ("aeiou");`  |
-- 用法大同小异，注意 find 和 replace 的用法
-- `find` 如果没有在容器中查找到内容，则返回 `npos`（是一个常量），`size_type` 和 `npos` 是两个与容器大小和索引相关的类型和常量，它们定义在大部分**容器**的头文件中。`size_type` 是一个无符号整数类型，用于表示容器的大小或索引，一般用于存储容器中元素的索引
-- replace 的字符即使和被替换字符长度不一也可以替换，替换后字符串长度相应变化
+#### variant
+内部实现依赖 union，通常使用以下内存布局：
+1. 一个足够大的未命名联合体，用于存储所有可能的类型。
+2. 一个整数索引，用于跟踪当前存储的类型（用来做类型检查）
+性能上: 
+3. `std::variant` 的大小等于最大可能类型的大小加上一些额外的存储（用于类型索引）。
+4. **访问开销**：直接访问当前值通常只有很小的运行时开销。
+与其相关的类:
+- `std::monostate` 是一个空类，没有任何成员，专门用来作为 `variant` 的**第一个替代类型**。
+	- 让 `variant` 能够表示 **“空”或“无效”状态**，因为默认构造的 `variant` 会构造第一个类型；如果第一个类型是可默认构造的，则一切正常；但如果所有类型都不能默认构造，则 `variant` 无法默认构造。`std::monostate` 总是可以构造的
+- `std::holds_alternative<T>(variant)` 用于在**运行时**检查 `variant` 是否当前持有类型 `T` 的值。
+- `std::visit(visitor, variant...)` 用于将**访问者（visitor）** 应用于 `variant` 中当前存储的值。
+	- 是一种访问者模式的实现，不是策略模式
+	- 它是类型安全的，并且通常比 `std::get` 更优雅。
+	- visitor 通常是一个**可调用对象**（lambda、函数对象），它必须对 `variant` 可能持有的每一种类型都提供一个重载（或使用泛型 lambda 配合 `auto`）
+	- `std::variant` 的模板参数个数和 vistor 的个数没有关系，vistor 中 lambda 捕获列表参数列表个数需在**数量上和类型上**都能和 variant 配得上
 ```cpp
-int main(){
-    string greeting = "Hello world";
-    string key_word = "world";
-    string::size_type postion = greeting.find(key_word);
-    int size = key_word.size();
+std::variant<int, double> v1;
+std::variant<char, bool> v2;
 
-    if(postion != string::npos){
-        greeting.replace(postion, size, "C++");
-    }
-    cout << greeting << endl;
-    cout << "after replace size = " << greeting.size() << endl;
-}
+// 传入 2 个 variant
+std::visit(
+    [](auto a, auto b) { ... }, // ✅ lambda 参数个数 = 2（对应 v1 和 v2）
+    v1, v2
+);
 ```
-
 ### 功能类
 #### algorithm
 ##### 定义

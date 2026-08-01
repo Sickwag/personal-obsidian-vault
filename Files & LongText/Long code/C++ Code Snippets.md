@@ -6326,5 +6326,240 @@ int main() {
 	return 0;
 }
 ```
-```
+# 手撕代码系列
+## 智能指针
+```cpp
+template<typename T>
+struct ControlBlock {
+    T*                ptr;
+    std::atomic<int>  strong_count;
+    std::atomic<int>  weak_count;  // 控制块自身也算一个 weak 引用
+
+    ControlBlock(T* p)
+        : ptr(p), strong_count(1), weak_count(1) {}
+
+    void add_strong() { strong_count.fetch_add(1, std::memory_order_relaxed); }
+
+    void add_weak() { weak_count.fetch_add(1, std::memory_order_relaxed); }
+
+    // 释放强引用：strong 归零时销毁对象，然后释放弱引用
+    void release_strong() {
+        if (strong_count.fetch_sub(1, std::memory_order_acq_rel) == 1) {
+            delete ptr;                          // 销毁对象
+            release_weak();                      // 释放控制块自身的 weak 引用
+        }
+    }
+
+    // 释放弱引用：weak 归零时销毁控制块
+    void release_weak() {
+        if (weak_count.fetch_sub(1, std::memory_order_acq_rel) == 1) {
+            delete this;                         // 销毁控制块
+        }
+    }
+};
+
+template<typename T>
+class WeakPtr;
+
+template<typename T>
+class SharedPtr {
+    template<typename U>
+    friend class WeakPtr;
+
+    ControlBlock<T>* ctrl_ = nullptr;
+
+public:
+    SharedPtr() = default;
+    explicit SharedPtr(T* raw) : ctrl_(raw ? new ControlBlock<T>(raw) : nullptr) {}
+
+    SharedPtr(const SharedPtr& other) : ctrl_(other.ctrl_) {
+        if (ctrl_) ctrl_->add_strong();
+    }
+
+    SharedPtr& operator=(const SharedPtr& other) {
+        if (this != &other) {
+            if (ctrl_) ctrl_->release_strong();
+            ctrl_ = other.ctrl_;
+            if (ctrl_) ctrl_->add_strong();
+        }
+        return *this;
+    }
+
+    SharedPtr(SharedPtr&& other) noexcept : ctrl_(other.ctrl_) {
+        other.ctrl_ = nullptr;
+    }
+
+    SharedPtr& operator=(SharedPtr&& other) noexcept {
+        if (this != &other) {
+            if (ctrl_) ctrl_->release_strong();
+            ctrl_ = other.ctrl_;
+            other.ctrl_ = nullptr;
+        }
+        return *this;
+    }
+
+    ~SharedPtr() {
+        if (ctrl_) ctrl_->release_strong();
+    }
+
+    T& operator*()  const noexcept { return *ctrl_->ptr; }
+    T* operator->() const noexcept { return  ctrl_->ptr; }
+    T* get()        const noexcept { return ctrl_ ? ctrl_->ptr : nullptr; }
+    int use_count() const noexcept { return ctrl_ ? ctrl_->strong_count.load() : 0; }
+    explicit operator bool() const noexcept { return ctrl_ != nullptr; }
+
+    void reset(T* raw = nullptr) {
+        if (ctrl_) ctrl_->release_strong();
+        ctrl_ = raw ? new ControlBlock<T>(raw) : nullptr;
+    }
+
+    void swap(SharedPtr& other) noexcept { std::swap(ctrl_, other.ctrl_); }
+};
+
+// ============================================================================
+// WeakPtr
+// ============================================================================
+template<typename T>
+class WeakPtr {
+    template<typename U>
+    friend class SharedPtr;
+
+    ControlBlock<T>* ctrl_ = nullptr;
+
+public:
+    WeakPtr() = default;
+
+    WeakPtr(const SharedPtr<T>& sp) : ctrl_(sp.ctrl_) {
+        if (ctrl_) ctrl_->add_weak();
+    }
+
+    WeakPtr(const WeakPtr& other) : ctrl_(other.ctrl_) {
+        if (ctrl_) ctrl_->add_weak();
+    }
+
+    WeakPtr(WeakPtr&& other) noexcept : ctrl_(other.ctrl_) {
+        other.ctrl_ = nullptr;
+    }
+
+    WeakPtr& operator=(const WeakPtr& other) {
+        if (this != &other) {
+            if (ctrl_) ctrl_->release_weak();
+            ctrl_ = other.ctrl_;
+            if (ctrl_) ctrl_->add_weak();
+        }
+        return *this;
+    }
+
+    WeakPtr& operator=(const SharedPtr<T>& sp) {
+        if (ctrl_) ctrl_->release_weak();
+        ctrl_ = sp.ctrl_;
+        if (ctrl_) ctrl_->add_weak();
+        return *this;
+    }
+
+    WeakPtr& operator=(WeakPtr&& other) noexcept {
+        if (this != &other) {
+            if (ctrl_) ctrl_->release_weak();
+            ctrl_ = other.ctrl_;
+            other.ctrl_ = nullptr;
+        }
+        return *this;
+    }
+
+    ~WeakPtr() {
+        if (ctrl_) ctrl_->release_weak();
+    }
+
+    // lock: 原子检查强引用是否 > 0，是则增加并返回 SharedPtr
+    SharedPtr<T> lock() const {
+        SharedPtr<T> result;
+        if (!ctrl_) return result;
+        // CAS 循环：只有当 strong_count > 0 时才增加
+        int old = ctrl_->strong_count.load(std::memory_order_relaxed);
+        while (old > 0) {
+            if (ctrl_->strong_count.compare_exchange_weak(
+                    old, old + 1,
+                    std::memory_order_acquire,
+                    std::memory_order_relaxed)) {
+                result.ctrl_ = ctrl_;
+                return result;
+            }
+        }
+        return result;  // 对象已销毁，返回空
+    }
+
+    bool expired() const noexcept {
+        return !ctrl_ || ctrl_->strong_count.load(std::memory_order_acquire) == 0;
+    }
+
+    int use_count() const noexcept {
+        return ctrl_ ? ctrl_->strong_count.load(std::memory_order_relaxed) : 0;
+    }
+
+    void swap(WeakPtr& other) noexcept { std::swap(ctrl_, other.ctrl_); }
+};
+
+// ============================================================================
+// 面试手撕版 UniquePtr
+// ============================================================================
+template<typename T, typename Deleter = std::default_delete<T>>
+class UniquePtr {
+    T*      ptr_    = nullptr;
+    Deleter deleter_;
+
+public:
+    UniquePtr() noexcept = default;
+    explicit UniquePtr(T* raw) noexcept : ptr_(raw) {}
+
+    UniquePtr(const UniquePtr&) = delete;
+    UniquePtr& operator=(const UniquePtr&) = delete;
+
+    UniquePtr(UniquePtr&& other) noexcept : ptr_(other.ptr_) {
+        other.ptr_ = nullptr;
+    }
+
+    UniquePtr& operator=(UniquePtr&& other) noexcept {
+        if (this != &other) {
+            reset();
+            ptr_       = other.ptr_;
+            other.ptr_ = nullptr;
+        }
+        return *this;
+    }
+
+    ~UniquePtr() { reset(); }
+
+    T& operator*()  const noexcept { return *ptr_; }
+    T* operator->() const noexcept { return  ptr_; }
+    T* get()        const noexcept { return  ptr_; }
+    explicit operator bool() const noexcept { return ptr_ != nullptr; }
+
+    T* release() noexcept {
+        T* tmp = ptr_;
+        ptr_   = nullptr;
+        return tmp;
+    }
+
+    void reset(T* new_ptr = nullptr) noexcept {
+        T* old = ptr_;
+        ptr_   = new_ptr;
+        if (old) deleter_(old);
+    }
+
+    void swap(UniquePtr& other) noexcept { std::swap(ptr_, other.ptr_); }
+};
+
+// ============================================================================
+// 辅助函数
+// ============================================================================
+template<typename T, typename... Args>
+SharedPtr<T> make_shared(Args&&... args) {
+    return SharedPtr<T>(new T(std::forward<Args>(args)...));
+}
+
+template<typename T, typename... Args>
+UniquePtr<T> make_unique(Args&&... args) {
+    return UniquePtr<T>(new T(std::forward<Args>(args)...));
+}
+
 ```
