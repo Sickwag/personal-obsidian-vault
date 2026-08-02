@@ -179,7 +179,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 223.5,
+    "width": 230.5,
     "collapsed": true
   },
   "left-ribbon": {
@@ -195,6 +195,9 @@
   },
   "active": "011f9fda06a65806",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/证书链.webp",
+    "Files & LongText/Attachments/baidu证书.webp",
+    "Files & LongText/Attachments/证书的校验.webp",
     "Chores/JobInterviews/八股/面试题知识.md",
     "Chores/JobInterviews/八股/收集的面试题.md",
     "Chores/JobInterviews/八股/面试题合集.md",
@@ -238,9 +241,6 @@
     "Files & LongText/Attachments/1717313583226-26095650-4783-41d9-8c7c-460261543294.webp",
     "Files & LongText/Attachments/cpp-29-multiple-inheritance-layout-zh-cartoon-2b54a3be.webp",
     "Files & LongText/Attachments/cpp-28-single-inheritance-layout-zh-cartoon-65270f1b.webp",
-    "Files & LongText/Attachments/cpp-19-compile-pipeline-zh-cartoon-2f0d6663.webp",
-    "Chores/JobInterviews/八股/Knowledge involved in the interview questions.md",
-    "Files & LongText/Attachments/cpp-05-pointer-reference-memory-zh-cartoon-38c09b9a.webp",
     "未命名.canvas"
   ]
 }
