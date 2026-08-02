@@ -179,7 +179,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 230.5
+    "width": 230.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -194,6 +195,9 @@
   },
   "active": "011f9fda06a65806",
   "lastOpenFiles": [
+    "Files & LongText/Attachments/Pasted image 20260802190239.png",
+    "Files & LongText/Attachments/sessionid.webp",
+    "Files & LongText/Attachments/tls性能损耗.webp",
     "Files & LongText/Attachments/ech_encryptedhandshakemessage.webp",
     "Files & LongText/Attachments/ech_schangecipherspec.webp",
     "Files & LongText/Attachments/ech_clientkeyexchange.webp",
@@ -202,9 +206,6 @@
     "Files & LongText/Attachments/ech_serverhello.webp",
     "Files & LongText/Attachments/ech_clinethello.webp",
     "Files & LongText/Attachments/ech_tls握手.webp",
-    "Files & LongText/Attachments/encryptd.webp",
-    "Files & LongText/Attachments/cipherspecmessage.webp",
-    "Files & LongText/Attachments/clietnkeyexchange.webp",
     "Chores/JobInterviews/八股/面试题知识.md",
     "Chores/JobInterviews/八股/收集的面试题.md",
     "Chores/JobInterviews/八股/面试题合集.md",
