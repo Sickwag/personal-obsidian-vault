@@ -179,8 +179,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 230.5,
-    "collapsed": true
+    "width": 230.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -195,9 +194,17 @@
   },
   "active": "011f9fda06a65806",
   "lastOpenFiles": [
-    "Files & LongText/Attachments/证书链.webp",
-    "Files & LongText/Attachments/baidu证书.webp",
-    "Files & LongText/Attachments/证书的校验.webp",
+    "Files & LongText/Attachments/ech_encryptedhandshakemessage.webp",
+    "Files & LongText/Attachments/ech_schangecipherspec.webp",
+    "Files & LongText/Attachments/ech_clientkeyexchange.webp",
+    "Files & LongText/Attachments/ech_serverhellodone.webp",
+    "Files & LongText/Attachments/ech_serverkey.webp",
+    "Files & LongText/Attachments/ech_serverhello.webp",
+    "Files & LongText/Attachments/ech_clinethello.webp",
+    "Files & LongText/Attachments/ech_tls握手.webp",
+    "Files & LongText/Attachments/encryptd.webp",
+    "Files & LongText/Attachments/cipherspecmessage.webp",
+    "Files & LongText/Attachments/clietnkeyexchange.webp",
     "Chores/JobInterviews/八股/面试题知识.md",
     "Chores/JobInterviews/八股/收集的面试题.md",
     "Chores/JobInterviews/八股/面试题合集.md",
@@ -230,17 +237,9 @@
     "学习/其他专业书/QT6开发指南.md",
     "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
     "学习/Language/DB/MongoDB.md",
-    "Files & LongText/Attachments/Pasted image 20260725103541.jpg",
     "学习/Language/HTML/HTML.md",
     "学习/Language/XML/XML.md",
     "学习/Bases/操作系统/小林Coding 图解系统.md",
-    "Files & LongText/Attachments/Pasted image 20260723102026.jpg",
-    "Files & LongText/Attachments/Pasted image 20260723101337.png",
-    "Files & LongText/Attachments/Pasted image 20260723101328.png",
-    "Files & LongText/Attachments/1717313629882-f7f13423-40ac-4847-af38-a9f5d14a5ae4.webp",
-    "Files & LongText/Attachments/1717313583226-26095650-4783-41d9-8c7c-460261543294.webp",
-    "Files & LongText/Attachments/cpp-29-multiple-inheritance-layout-zh-cartoon-2b54a3be.webp",
-    "Files & LongText/Attachments/cpp-28-single-inheritance-layout-zh-cartoon-65270f1b.webp",
     "未命名.canvas"
   ]
 }
