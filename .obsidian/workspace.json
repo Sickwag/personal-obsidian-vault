@@ -8,36 +8,6 @@
         "type": "tabs",
         "children": [
           {
-            "id": "56d42dca1fa4cd97",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Chores/JobInterviews/八股/面试题合集.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "面试题合集"
-            }
-          },
-          {
-            "id": "11d9c2067c60681d",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Chores/JobInterviews/八股/收集的面试题.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "收集的面试题"
-            }
-          },
-          {
             "id": "1a1c87f1091cf030",
             "type": "leaf",
             "state": {
@@ -51,24 +21,8 @@
               "icon": "lucide-file",
               "title": "面试题知识"
             }
-          },
-          {
-            "id": "fe988f597cd36699",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Bases/开发范式/C++开发范式和术语.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "C++开发范式和术语"
-            }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -237,13 +191,15 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "11d9c2067c60681d",
+  "active": "1a1c87f1091cf030",
   "lastOpenFiles": [
-    "学习/Bases/开发范式/C++开发范式和术语.md",
     "Chores/JobInterviews/八股/收集的面试题.md",
-    "Chores/JobInterviews/八股/面试题知识.md",
     "Chores/JobInterviews/八股/面试题合集.md",
+    "Chores/JobInterviews/八股/面试题知识.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
+    "学习/Bases/开发范式/设计模式.md",
+    "学习/Bases/开发范式/C++开发范式和术语.md",
+    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.408633.c3e10efb06ed",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.408633.e7575f5fca1b",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.408633.837759b71d42",
@@ -258,7 +214,6 @@
     "Chores/JobInterviews/八股/面试题知识.md.tmp.342542.c1e37df3dd55",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.342542.a836e9ea3856",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.342542.b1b3b93a075f",
-    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.271799.84e84281814f",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.271799.d04b6f0435dd",
     "Chores/JobInterviews/八股/收集的面试题.md.tmp.271799.0c28f095f75e",
