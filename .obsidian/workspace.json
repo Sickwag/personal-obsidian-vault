@@ -28,13 +28,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Files & LongText/Long code/C++ Code Snippets.md",
+                "file": "Chores/JobInterviews/八股/面试题合集.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "C++ Code Snippets"
+              "title": "面试题合集"
             }
           }
         ],
@@ -72,7 +72,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "LFU",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -93,12 +93,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -211,9 +211,9 @@
   },
   "active": "15b119f7c717c778",
   "lastOpenFiles": [
+    "Files & LongText/Long code/C++ Code Snippets.md",
     "Files & LongText/Long code/scripts.md",
     "Files & LongText/Long code/Mysql Snippets.md",
-    "Files & LongText/Long code/C++ Code Snippets.md",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "Files & LongText/Attachments/socket三次握手.drawio.webp",
     "Files & LongText/Attachments/format,png-20230309230545997.webp",
