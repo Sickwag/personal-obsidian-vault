@@ -6327,6 +6327,149 @@ int main() {
 }
 ```
 # 手撕代码系列
+## LFU 缓存算法
+```cpp
+template <typename Key, typename Value>
+class LFUCache {
+  public:
+	explicit LFUCache(size_t capacity)
+		: _capacity(capacity)
+		, _minFreq(0) {}
+
+	std::optional<Value> get(const Key& key) {
+		auto it = _keyMap.find(key);
+		if(it == _keyMap.end()) {
+			return std::nullopt;
+		}
+		updateFreq(it->second);
+		return it->second->_value;
+	}
+
+	void put(const Key& key, const Value& value) {
+		if(_capacity == 0) {
+			return;
+		}
+		auto it = _keyMap.find(key);
+		if(it != _keyMap.end()) {
+			it->second->_value = value;
+			updateFreq(it->second);
+			return;
+		}
+
+		if(_keyMap.size() >= _capacity) {
+			// 淘汰当前最小频次桶的最后一个元素（该桶非空）
+			List& freqList = _freqMap.at(_minFreq);
+			Node  victim   = freqList.back();
+			_keyMap.erase(victim._key);
+			freqList.pop_back();
+			if(freqList.empty()) {
+				_freqMap.erase(_minFreq);
+			}
+		}
+		// _minFreq 由 updateFreq / 上面的驱逐维护为"最小的非空频次桶"；
+		// 这里在插入新元素后重置为 1
+		_freqMap[1].push_front({key, value, 1});
+		_keyMap[key] = _freqMap[1].begin();
+		_minFreq	 = 1;
+	}
+
+	size_t size() const noexcept { return _keyMap.size(); }
+
+  private:
+	// 每个节点持有键的副本（单一 owner），_keyMap 只存 List::iterator 指向这里。
+	// 这样节点在 _freqMap 的 list 间搬移（erase + push_front）时，迭代器始终指向
+	// 存活的节点本体，_keyMap 自身的 rehash 也不会使迭代器悬空。
+	struct Node {
+		Key	  _key;
+		Value _value;
+		int	  _freq;
+	};
+
+	using List = std::list<Node>;
+
+	std::unordered_map<Key, typename List::iterator> _keyMap;
+	std::unordered_map<int, List>					 _freqMap;
+	size_t											 _capacity;
+	int												 _minFreq;
+
+	void updateFreq(typename List::iterator nodeIt) {
+		int oldFreq = nodeIt->_freq;
+		int newFreq = oldFreq + 1;
+
+		// 必须先用 operator[] 取出 newFreq 桶：若它不存在则先创建。
+		// unordered_map 的插入可能 rehash，但这里拿到的是 std::list 迭代器，
+		// 不受 rehash 影响；且所有 List& 都在该查找之后取得，引用不会悬空。
+		List& oldList = _freqMap.at(oldFreq);
+		List& newList = _freqMap[newFreq];
+
+		// splice 把节点从 oldFreq 桶整体转移到 newFreq 桶头部：
+		// 不拷贝、不销毁节点，nodeIt 保持有效，且避免 allocator 跨 list 问题。
+		oldList.splice(newList.begin(), oldList, nodeIt);
+		nodeIt->_freq = newFreq;
+
+		// 旧桶若空则移除；若它就是最小频次桶，最小频次变为 newFreq
+		if(oldList.empty()) {
+			_freqMap.erase(oldFreq);
+			if(oldFreq == _minFreq) {
+				_minFreq = newFreq;
+			}
+		}
+	}
+};
+
+```
+## LRU 缓存算法
+```cpp
+template <typename Key, typename Value>
+class LRUCache {
+  public:
+	explicit LRUCache(size_t capacity)
+		: _capacity(capacity) {}
+
+	std::optional<Value> get(const Key& key) {
+		auto it = _map.find(key);
+		if(it == _map.end()) {
+			return std::nullopt;
+		}
+		// 命中的元素整体移到链表头部（MRU 端），splice 不拷贝、不失效迭代器
+		_list.splice(_list.begin(), _list, it->second);
+		return it->second->second;
+	}
+
+	void put(const Key& key, const Value& value) {
+		if(_capacity == 0) {
+			return;
+		}
+		auto it = _map.find(key);
+		if(it != _map.end()) {
+			it->second->second = value;
+			_list.splice(_list.begin(), _list, it->second);
+			return;
+		}
+		if(_list.size() >= _capacity) {
+			// 淘汰链表尾部（LRU 端）：先删 _map 条目，再弹出节点
+			const Key& victimKey = _list.back().first;
+			_map.erase(victimKey);
+			_list.pop_back();
+		}
+		_list.push_front({key, value});
+		_map[key] = _list.begin();
+	}
+
+	size_t size() const noexcept { return _list.size(); }
+
+  private:
+	// 链表维护访问顺序：头部 = 最近使用（MRU），尾部 = 最久未使用（LRU）。
+	// 节点持有 key 副本（单一 owner），_map 只存 List::iterator 指向节点本体：
+	// splice 移动节点时迭代器始终有效，_map 自身 rehash 也不使其悬空。
+	using List = std::list<std::pair<Key, Value>>;
+
+	List									  _list;
+	std::unordered_map<Key, typename List::iterator> _map;
+	size_t									  _capacity;
+};
+
+```
 ## 智能指针
 ```cpp
 // ============================================================================
