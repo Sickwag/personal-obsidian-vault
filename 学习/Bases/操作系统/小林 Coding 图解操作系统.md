@@ -61,6 +61,9 @@ MIPS 的指令是一个 32 位的整数，高 6 位代表着操作码，表示�
 CPU Cache 用的是一种叫 **SRAM（_Static Random-Access_ Memory，静态随机存储器）** 的芯片。
 在 SRAM 里面，一个 bit 的数据，通常需要 6 个晶体管，所以 SRAM 的存储密度不高，同样的物理空间下，能存储的数据是有限的，不过也因为 SRAM 的电路简单，所以访问速度非常快。
 ![[CPU-Cache.webp]]
+#### store buffer
+即使写 L1 cache 也要 3-10 周期。如果 CPU 每写一次都要等 cache 完成，流水线就卡死了。所以 CPU 加了一个写缓冲区（store buffer）。写操作先进入 store buffer（只要 1 周期），CPU
+  立刻继续执行后面的指令，store buffer 里的内容再异步刷入 L1 cache。
 #### L1 cache
 L1 高速缓存的访问速度几乎和寄存器一样快，通常只需要 `2~4` 个时钟周期，而大小在几十 KB 到几百 KB 不等
 指令和数据在 L1 是分开存放的，所以 L1 高速缓存通常分成**指令缓存**和**数据缓存**。
