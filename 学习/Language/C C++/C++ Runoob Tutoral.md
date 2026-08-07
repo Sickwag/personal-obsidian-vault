@@ -8733,6 +8733,41 @@ Qt 默认在构建时**禁用 RTTI**（尤其在移动平台如 Android/iOS）�
 - 因为 `QGraphicsItem` 没有 RTTI 且不继承 `QObject`，Qt 为其单独实现。
 **`qstyleoption_cast<T>`**
 - 用于 `QStyleOption` 及其子类的安全转换。
+### 字符串字面量：`const char[]` vs `const char*`
+字符串字面量 `"hello"` 的类型是 `const char[6]`（数组，含结尾 `\0`）。传参时会退化为 `const char*`，但全局定义时可以选择保留数组类型或指针。
+```cpp
+const char arr[] = "hello";   // 数组：6 字节，字符直接存
+const char* ptr  = "hello";   // 指针：8 字节，指向 .rodata 里的字面量
+```
+**内存布局差异：**
+```
+const char arr[] = "hello";
+.data / .rodata：
+  arr:  h  e  l  l  o  \0     ← 6 个字符直接存在符号位置
+
+const char* ptr = "hello";
+.data：
+  ptr:  0x0000555555560000     ← 8 字节指针
+.rodata：
+  0x...60000:  h  e  l  l  o  \0   ← 字面量存在这里
+```
+
+|          | `const char arr[]`  | `const char* ptr`         |
+| -------- | ------------------- | ------------------------- |
+| 类型       | 数组（6 字节）            | 指针（8 字节）                  |
+| `sizeof` | 6（数组长度）             | 8（指针大小）                   |
+| 访问开销     | 1 次访存（`arr[1]` 直接取） | 2 次访存（先读指针值，再访存）          |
+| 能否重绑定    | 不能（数组名不是左值）         | 可以（可指向别的字面量）              |
+| 存放位置     | 字符在符号处              | 指针在 `.data`，字符在 `.rodata` |
+
+**为什么全局字符串推荐用数组：**
+1. 避免指针重定向（1 次 vs 2 次访存）
+2. `sizeof` 编译期可得真实长度，指针版只能运行时 `strlen`
+3. 数组整体进 `.rodata` 保证只读；指针版指针本身在 `.data`（可写段）
+4. 数组名不可重新绑定，消除意外重定向
+
+**现代 C++ 更推荐：** 编译期固定字符串用 `inline constexpr char kStr[]`（头文件避免 ODR 违规）或 `inline constexpr std::string_view`（指针 + 长度，两全其美）。
+
 ### 三路比较运算符
 C++20 开始支持，同时生成所有比较运算符（`<`、`>`、`<=`、`>=`、`==`、`!=`），自动推导比较类型：
 - 返回 `std::strong_ordering`（可替换比较）：`a <=> b` 返回 `< 0` / `== 0` / `> 0`
