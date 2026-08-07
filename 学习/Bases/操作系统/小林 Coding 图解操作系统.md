@@ -61,9 +61,43 @@ MIPS 的指令是一个 32 位的整数，高 6 位代表着操作码，表示�
 CPU Cache 用的是一种叫 **SRAM（_Static Random-Access_ Memory，静态随机存储器）** 的芯片。
 在 SRAM 里面，一个 bit 的数据，通常需要 6 个晶体管，所以 SRAM 的存储密度不高，同样的物理空间下，能存储的数据是有限的，不过也因为 SRAM 的电路简单，所以访问速度非常快。
 ![[CPU-Cache.webp]]
-#### store buffer
+#### store buffer 和 load buffer
 即使写 L1 cache 也要 3-10 周期。如果 CPU 每写一次都要等 cache 完成，流水线就卡死了。所以 CPU 加了一个写缓冲区（store buffer）。写操作先进入 store buffer（只要 1 周期），CPU
   立刻继续执行后面的指令，store buffer 里的内容再异步刷入 L1 cache。
+- 当 CPU 执行 store 指令（将数据写入内存操作）时，数据先写入 store buffer，而非立即写入 L1 缓存
+- 允许 CPU 乱序执行：在等待存储操作完成时继续执行后续指令
+- 实现 store-to-load forwarding（存储转发），加速数据传递
+*条目*的数据结构为:
+```md
+// store buffer
+┌─────────────────────────────────────┐
+│  Entry N                            │
+├─────────────────────────────────────┤
+│  Valid Bit (有效位)                  │
+│  Memory Address (地址)               │
+│  Data (数据，通常 8-64 字节)          │
+│  Size/Length (写入大小)              │
+│  Sequence Number (序列号)            │
+└─────────────────────────────────────┘
+
+// load buffer
+┌──────────────────────────────────────────┐
+│  Valid │ Address │ Waiting Instructions │
+│   ✓    │ 0x5678  │ [load1, load2, ...]  │
+└──────────────────────────────────────────┘
+```
+不同 CPU 的 store buffer 条目容量不同，在 48~72 条之间，store buffer 满时，CPU 必须等待（stall）才能继续执行新的 store，当 CPU 执行
+```asm
+mov [rdi], rax    ; store: 写地址 A，值 X
+mov rbx, [rdi]    ; load: 从地址 A 读数据
+```
+此时 CPU 不需要等待 store 写入 L1 cache，而是直接从 store buffer 中读取最新值，这个过程叫 store-to-load forwarding。没有他的存在就会导致 CPU 与 L1 速度差距过大引起 CPU 空转
+由于指令重排的问题，load buffer 同理
+
+> [!note] buffer 机制和内存序
+> - 两个 buffer 在 CPU 核心与 L1 之间，程序员不可见
+> - Store buffer = "我要写什么"，Load buffer = "我在等什么"。两者结构相似但语义相反。
+> - 两个 lbuffer 的结构在**物理上支持了**内存屏障技术，[[Modern C++#Note：内存序|C++的内存序机制]]就是通过控制两个 buffer 的刷新与否保证内存屏障
 #### L1 cache
 L1 高速缓存的访问速度几乎和寄存器一样快，通常只需要 `2~4` 个时钟周期，而大小在几十 KB 到几百 KB 不等
 指令和数据在 L1 是分开存放的，所以 L1 高速缓存通常分成**指令缓存**和**数据缓存**。
@@ -159,7 +193,13 @@ CPU A 将 `i++`，但这个修改只会存在于 CPU A 的 L1/L2 中并标记为
 ```cpp
 int sched_setaffinity(pid_t pid, size_t cpusetsize, cpu_set_t *mask);
 ```
-### 内存和硬盘
+### CPU 如何执行任务
+#### Cache 伪共享
+因为多个线程同时读写同一个 Cache Line 的不同变量时，而导致 CPU Cache 失效的现象称为**伪共享（False Sharing）**
+注意不是相同变量被缓存在同一个 cache line 中，而是不同的 cache line 中缓存相同变量，而由于 [[#MESI 协议]] 存在，核心 A 修改其中的值导致其他所有核心的 cache line 值失效导致 cache hit miss，每次浪费 100 时钟周期，而本质上两个变量是**不相关的**。从而不断通过总线探测广播，具体过程参考: [小林 Coding 图解](https://xiaolincoding.com/os/1_hardware/how_cpu_deal_task.html#%E5%88%86%E6%9E%90%E4%BC%AA%E5%85%B1%E4%BA%AB%E7%9A%84%E9%97%AE%E9%A2%98)
+产生伪共享的前提是: 2 个以上的变量且连续存储被 CPU 读写，这也就导致了
+
+## 内存和硬盘
 DRAM 存储一个 bit 数据，只需要一个晶体管和一个电容就能存储，但是因为数据会被存储在电容里，电容会不断漏电，所以需要「定时刷新」电容，才能保证数据不会被丢失。内存速度大概在 `200~300` 个时钟周期之间。
 内存的读写速度比 SSD 大概快 `10~1000` 倍，比机械硬盘快 `10w` 倍左右
 

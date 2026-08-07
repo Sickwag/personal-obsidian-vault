@@ -1836,34 +1836,8 @@ int main() {
 3. 原子变量可以**不需要 Mutex** 就能确保线程安全。
 4. 对原子变量（`atomic` 变量）的操作是是原子性（不可中断）的
 5. 性能更高但只能处理单个值（int/bool等）。
-6. **线程安全**：读写不会导致竞态条件；
-```cpp
-std::atomic<int> atomic_count(0);
-int non_atomic_count = 0;
-void atomic_increment() {
-    for (int i = 0; i < 100000; ++i) {
-        ++atomic_count;
-    }
-}
-void non_atomic_increment() {
-    for (int i = 0; i < 100000; ++i) {
-        ++non_atomic_count;
-    }
-}
-int main() {
-    std::thread t1(atomic_increment);
-    std::thread t2(atomic_increment);
-    std::thread t3(non_atomic_increment);
-    std::thread t4(non_atomic_increment);
-    t1.join();
-    t2.join();
-    t3.join();
-    t4.join();
-    std::cout << "atomic_count = " << atomic_count << std::endl;  // 精确为 200000
-    std::cout << "non_atomic_count = " << non_atomic_count << std::endl; // 可能随机更高、更低
-}
-```
-^7wqxo5 普通的变量一般创建在堆（如 vector，array 这些容器的数据）或者程序的数据段上（基本类型数据 int，double），参考 [[C++ Runoob Tutoral#]]，这些部分的数据是线程之间共享的，**只有线程栈中函数，线程信息是每个线程独有的**，改变值需要进入三个步骤：读取，计算，写入
+6. **线程安全**：读写不会导致竞态条件；^7wqxo5
+普通的变量一般创建在堆（如 vector，array 这些容器的数据）或者程序的数据段上（基本类型数据 int，double），这些部分的数据是线程之间共享的，**只有线程栈中函数，线程信息是每个线程独有的**，改变值需要进入三个步骤：读取，计算，写入
 ```assembly
 mov eax, [non_atomic_count]  # 读取当前值
 add eax, 1                     # 加 1
@@ -1881,20 +1855,12 @@ t4.join();
 ```
 就不会出现少加现象，但操作并不是交替进行的
 ##### 原子操作
-`atomic::fetch_add(n)` ：
+`atomic::fetch_add/sub(n)` ：
 - 对原子变量执行原子加法操作，并返回原值。
 - 是线程安全的操作，不会导致数据竞争。
-`atomic::memory_order_relaxed`：
-- 是一种内存序（Memory Order）选项。
-- 表示不关心内存顺序一致性，只保证操作本身的原子性。
-- 性能最高，但语义最弱，适用于不需要同步其他操作的场景。
+`compare_exchange_weak vs strong`
+weak 可能假失败（spurious failure），strong 不会，CAS 循环中一律用 weak（更高效）。单次尝试用 strong。
 
-| 方法               | 作用        |
-| ---------------- | --------- |
-| `store(val)`     | 原子写入      |
-| `load()`         | 原子读取      |
-| `fetch_add(val)` | 原子加法，返回旧值 |
-| `exchange(val)`  | 原子交换，返回旧值 |
 #### 资源锁定和线程执行
 ##### 锁的使用
 可以参考[[C++ Runoob Tutoral#互斥量和互斥锁|互斥量和互斥锁]] ，[[C++ Runoob Tutoral#线程管理|线程管理]] 这里补充：
@@ -2031,14 +1997,8 @@ int w = y + z;  // L6  ←─── 依赖 y, z
 
 **调试器为什么看不到重排？**
 调试器按源代码执行，编译器 + CPU 保证「好像按顺序执行」的单线程语义。但多线程下，这个保证不跨线程。
-#### Store Buffer 与 Cache 一致性
-**Store Buffer（写缓冲区）：**
-每个核心有自己的 store buffer，写操作先写入 store buffer（1 周期），再异步刷入 L1 cache。读操作可以优先读 store buffer（store forwarding）。
-
-**为什么需要 store buffer？**
-- 写 L1 cache 需要等待（3-10 周期），CPU 不能干等
-- 批量写入再刷入 cache 提高效率
-- 没有 store buffer，CPU 核心每写一次就要停等
+#### Load/Store Buffer 与 Cache 一致性
+两者的数据结构参考[[小林 Coding 图解操作系统#store buffer 和 load buffer]]
 
 **Cache 一致性协议（MESI 简化版）：**
 每个 cache line 有四种状态，通过总线嗅探（snooping）信号同步：
@@ -2225,6 +2185,14 @@ release 保证：b 不能重排到 c 之后，不保证：a 不能重排到 c �
 - 合并排序之后，当然可以得到一个有序的数组。  
 - 但是每个线程假设只看原本只属于自己的那些元素，它们仍然是自己原来的顺序。 
 - 至于这个总序本身是怎么样排出来的（不同硬件排序的结果可能不同），这并不是 c++语义所关心的。
+##### 什么时候该用什么
+| 操作               | 内存序     | 原因           |
+| :--------------- | :------ | :----------- |
+| 发布标志位（store）     | release | 确保之前的数据写入可见  |
+| 等待标志位（load）      | acquire | 确保之后的数据读取不提前 |
+| 原子交换/加减，自旋锁（RMW） | acq_rel | 同时需要读同步和写同步  |
+| 计数器（无依赖）         | relaxed | 只需原子性，不需同步   |
+| 通用缺省             | seq_cst | 最强保证，但最慢     |
 #### 内存屏障的定义
 内存屏障是一条 CPU 指令，强制 CPU 在屏障点之前的所有内存操作对其他核心可见，并阻止屏障前后的指令重排。
 C++ 里的内存屏障也叫内存栅栏，是限制编译器和 CPU 指令重排序的机制，用来保障多线程下共享数据的顺序和可见性。它会把内存操作分成屏障前和屏障后两部分，确保前面的操作全完成才执行后面的，还能强制刷新 CPU 缓存，让一个线程的修改能被其他线程及时看到。
@@ -2254,7 +2222,7 @@ while (!ready.load(memory_order_acquire)) // ③ acquire 读
   │ Store    │              │ Store    │
   │ Buffer   │              │ Buffer   │
   ├──────────┤              ├──────────┤
-  │  L1 Cache│              │  L1 Cache│
+  │  L1/L2 Cache│           │  L1/L1 Cache│
   ├──────────┴──────────────┴──────────┤
   │           L3 Cache (共享)           │
   ├────────────────────────────────────┤
@@ -2309,7 +2277,7 @@ public:
 | 单线程计数器  | relaxed                | 只需原子性，不需要同步  |
 | 细粒度锁    | acquire/release        | 精确控制每个操作     |
 #### CAS 的 ABA 问题
-CAS 检查的是"值是否相等"，不是"值是否被修改过"。如果值从 A 变成 B 又变回 A，CAS 认为"没被修改过"，但实际上内存已经被修改过了。
+CAS 检查的是"值是否相等"，不是"值是否被修改过"。如果值从 A 变成 B 又变回 A，CAS 认为"没被修改过"，但实际上内存已经被修改过了。这点在[[架构设计#无锁队列]]中同样存在，因为无锁队列依赖 CAS 操作
 **1. 标记指针（Tagged Pointer）——最常用**
 ```cpp
 // 指针 + 版本号，每次 CAS 递增版本号
