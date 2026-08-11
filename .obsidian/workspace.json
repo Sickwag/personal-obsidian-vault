@@ -4,40 +4,56 @@
     "type": "split",
     "children": [
       {
-        "id": "bf832bc03e9e4a0d",
+        "id": "633704efdea17e04",
         "type": "tabs",
         "children": [
           {
-            "id": "8fb73e3a71a6de57",
+            "id": "04e429fcc7f1010e",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Chores/JobInterviews/简历项目.md",
+                "file": "Chores/JobInterviews/八股/收集的面试题.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "简历项目"
+              "title": "收集的面试题"
             }
           },
           {
-            "id": "727a97b060aacf57",
+            "id": "e344c2766c644dd8",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Chores/JobInterviews/八股/面试题合集.md",
+                "file": "Chores/JobInterviews/具体公司的了解以及面试准备.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "面试题合集"
+              "title": "具体公司的了解以及面试准备"
+            }
+          },
+          {
+            "id": "a97f4185bc5ac7cf",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chores/JobInterviews/八股/收集的面试题.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "收集的面试题"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -71,7 +87,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "/#{1,}\\s.*LRU.*/",
+                "query": "布隆",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -197,15 +213,21 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "8fb73e3a71a6de57",
+  "active": "e344c2766c644dd8",
   "lastOpenFiles": [
-    "Chores/JobInterviews/八股/面试题合集.md",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.670272.5170a020786c",
+    "Chores/JobInterviews/八股/收集的面试题.md",
+    "Chores/JobInterviews/具体公司的了解以及面试准备.md.tmp.133567.7c1f483e283c",
+    "Chores/JobInterviews/具体公司的了解以及面试准备.md",
     "Chores/JobInterviews/简历项目.md",
-    "Chores/JobInterviews/八股/自我介绍.md",
     "Chores/JobInterviews/针对简历的知识点复习.md",
-    "Chores/JobInterviews/八股/面试题知识.md",
+    "Chores/JobInterviews/八股/自我介绍.md",
+    "Chores/JobInterviews/八股/面试题合集.md",
     "学习/Bases/开发范式/常用算法和情景处理.md",
+    "Chores/JobInterviews/简历项目.md.tmp.133567.b63e395f6e0e",
+    "Chores/JobInterviews/简历项目.md.tmp.95550.8e7bb782dc59",
+    "Chores/JobInterviews/简历项目.md.tmp.95550.c37537fdb806",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.670272.5170a020786c",
+    "Chores/JobInterviews/八股/面试题知识.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Bases/操作系统/小林 Coding 图解操作系统.md",
     "Files & LongText/Attachments/600ef23c454d9f3653ece44debaaf3a7.webp",
@@ -219,22 +241,17 @@
     "学习/Bases/操作系统/小林 Coding 图解操作系统.md.tmp.36603.867099f62ee8",
     "学习/Bases/操作系统/小林 Coding 图解操作系统.md.tmp.36603.9aa3e0d7f266",
     "学习/Bases/操作系统/小林 Coding 图解操作系统.md.tmp.36603.dbafc0a48376",
-    "学习/Bases/操作系统/小林 Coding 图解操作系统.md.tmp.36603.87f928919fa9",
     "学习/Bases/开发范式/架构设计.md",
     "学习/其他专业书/Modern C++.md",
     "Files & LongText/Attachments/ae8252378169c8c14b8b9907983f7d8b.webp",
     "Files & LongText/Attachments/提问.webp",
     "Files & LongText/Attachments/166bc9f5b7c545d89f1e36ab8dd772cf.webp",
     "Files & LongText/Attachments/2f61b0822b3c4a359f99770231981b07.webp",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.395316.2f9964a9a1e4",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.395316.a1e63aa25d96",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.395316.62b1064dd221",
     "学习/Fragments/编程相关/基本知识/Prompt Project.md",
     "学习/Fragments/编程相关/基本知识/零碎但需要知道的.md",
     "学习/Bases/操作系统/未命名.md",
     "Chores/JobInterviews/questions精简.md",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
-    "Chores/JobInterviews/八股/收集的面试题.md",
     "Chores/JobInterviews/八股/面试题.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
@@ -243,7 +260,6 @@
     "学习/ProjectsStudy/FromDocs/args库（3000行）.md",
     "学习/ProjectsStudy/FromDocs/Boost库学习.md",
     "学习/ProjectsStudy/FromDocs/Boost库文档学习.md",
-    "学习/ToolChain/Dev Tool.md",
     "未命名.canvas"
   ]
 }
