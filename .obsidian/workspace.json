@@ -23,7 +23,7 @@
             }
           },
           {
-            "id": "1e672ff6e2c9761a",
+            "id": "d38a76e95b714888",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -38,7 +38,22 @@
             }
           },
           {
-            "id": "d38a76e95b714888",
+            "id": "2676099a435a200e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/Bases/开发范式/C++开发范式和术语.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "C++开发范式和术语"
+            }
+          },
+          {
+            "id": "fa826b543a407414",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -53,7 +68,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -87,7 +102,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "布隆",
+                "query": "回拨",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -108,7 +123,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -158,7 +174,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Chores/JobInterviews/八股/收集的面试题.md",
+                "file": "Chores/JobInterviews/八股/面试题合集.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -215,20 +231,24 @@
   },
   "active": "d38a76e95b714888",
   "lastOpenFiles": [
+    "学习/Bases/开发范式/C++开发范式和术语.md",
     "Chores/JobInterviews/八股/面试题合集.md",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.159633.6e6185e96131",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.159633.8bcc2df646d2",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.159633.3c6abb95182c",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.159633.f3aa6a428982",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.159633.1e5e99130e05",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.159633.7c34033bfe24",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.159633.3989226cc17a",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.159633.f52101dc020f",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.159633.8258fbeaca40",
+    "Chores/JobInterviews/八股/收集的面试题.md",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.159633.12783b87bb2f",
+    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
+    "学习/Bases/开发范式/架构设计.md",
+    "学习/Bases/开发范式/设计模式.md",
     "Chores/JobInterviews/简历项目.md",
     "Chores/JobInterviews/具体公司的了解以及面试准备.md",
-    "Chores/JobInterviews/具体公司的了解以及面试准备.md.tmp.133567.0146131083f9",
-    "Chores/JobInterviews/简历项目.md.tmp.182084.308012182bd2",
-    "Chores/JobInterviews/简历项目.md.tmp.182084.3f0c9e87871e",
-    "Chores/JobInterviews/八股/收集的面试题.md",
-    "Chores/JobInterviews/简历项目.md.tmp.182084.de206245a7bc",
-    "Chores/JobInterviews/简历项目.md.tmp.182084.0006f116c5e0",
-    "Chores/JobInterviews/简历项目.md.tmp.182084.dd2781d57d49",
-    "Chores/JobInterviews/简历项目.md.tmp.182084.4add69744a78",
-    "Chores/JobInterviews/简历项目.md.tmp.182084.bfad888c7230",
-    "Chores/JobInterviews/简历项目.md.tmp.182084.1f23367b9dcb",
-    "Chores/JobInterviews/简历项目.md.tmp.182084.7b2e885b8c43",
     "Chores/JobInterviews/未命名.md",
     "Chores/JobInterviews/针对简历的知识点复习.md",
     "Chores/JobInterviews/八股/自我介绍.md",
@@ -242,7 +262,6 @@
     "Files & LongText/Attachments/532e6cdf4899588f8b873b6435cba2d8-20230309233823236.webp",
     "Files & LongText/Attachments/4956918c43e186d49df7b9802f080de8 1.webp",
     "Files & LongText/Attachments/4956918c43e186d49df7b9802f080de8.webp",
-    "学习/Bases/开发范式/架构设计.md",
     "学习/其他专业书/Modern C++.md",
     "Files & LongText/Attachments/ae8252378169c8c14b8b9907983f7d8b.webp",
     "Files & LongText/Attachments/提问.webp",
@@ -252,14 +271,11 @@
     "学习/Fragments/编程相关/基本知识/零碎但需要知道的.md",
     "学习/Bases/操作系统/未命名.md",
     "Chores/JobInterviews/questions精简.md",
-    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
     "Chores/JobInterviews/八股/面试题.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
-    "学习/Bases/开发范式/C++开发范式和术语.md",
     "学习/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
     "学习/ProjectsStudy/FromDocs/OpenCV 官方文档.md",
     "学习/ProjectsStudy/FromDocs/args库（3000行）.md",
-    "学习/ProjectsStudy/FromDocs/Boost库学习.md",
     "未命名.canvas"
   ]
 }
