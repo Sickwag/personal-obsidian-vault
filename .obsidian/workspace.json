@@ -13,13 +13,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Chores/JobInterviews/八股/收集的面试题.md",
+                "file": "Chores/JobInterviews/简历项目.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "收集的面试题"
+              "title": "简历项目"
             }
           },
           {
@@ -38,7 +38,22 @@
             }
           },
           {
-            "id": "a97f4185bc5ac7cf",
+            "id": "1e672ff6e2c9761a",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chores/JobInterviews/八股/面试题合集.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "面试题合集"
+            }
+          },
+          {
+            "id": "510920dcccf3945f",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -199,8 +214,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 230.5,
-    "collapsed": true
+    "width": 230.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -215,18 +229,25 @@
   },
   "active": "e344c2766c644dd8",
   "lastOpenFiles": [
-    "Chores/JobInterviews/八股/收集的面试题.md",
-    "Chores/JobInterviews/具体公司的了解以及面试准备.md.tmp.133567.7c1f483e283c",
-    "Chores/JobInterviews/具体公司的了解以及面试准备.md",
+    "Chores/JobInterviews/简历项目.md.tmp.182084.de206245a7bc",
+    "Chores/JobInterviews/简历项目.md.tmp.182084.0006f116c5e0",
+    "Chores/JobInterviews/简历项目.md.tmp.182084.dd2781d57d49",
+    "Chores/JobInterviews/简历项目.md.tmp.182084.4add69744a78",
+    "Chores/JobInterviews/简历项目.md.tmp.182084.bfad888c7230",
+    "Chores/JobInterviews/简历项目.md.tmp.182084.1f23367b9dcb",
+    "Chores/JobInterviews/简历项目.md.tmp.182084.7b2e885b8c43",
+    "Chores/JobInterviews/简历项目.md.tmp.182084.cd99084b3bf0",
+    "Chores/JobInterviews/简历项目.md.tmp.182084.0fa125773e92",
+    "Chores/JobInterviews/简历项目.md.tmp.182084.a03462ab769b",
+    "Chores/JobInterviews/简历项目.md.tmp.182084.35da297bd402",
+    "Chores/JobInterviews/八股/面试题合集.md",
     "Chores/JobInterviews/简历项目.md",
+    "Chores/JobInterviews/八股/收集的面试题.md",
+    "Chores/JobInterviews/具体公司的了解以及面试准备.md",
+    "Chores/JobInterviews/未命名.md",
     "Chores/JobInterviews/针对简历的知识点复习.md",
     "Chores/JobInterviews/八股/自我介绍.md",
-    "Chores/JobInterviews/八股/面试题合集.md",
     "学习/Bases/开发范式/常用算法和情景处理.md",
-    "Chores/JobInterviews/简历项目.md.tmp.133567.b63e395f6e0e",
-    "Chores/JobInterviews/简历项目.md.tmp.95550.8e7bb782dc59",
-    "Chores/JobInterviews/简历项目.md.tmp.95550.c37537fdb806",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.670272.5170a020786c",
     "Chores/JobInterviews/八股/面试题知识.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Bases/操作系统/小林 Coding 图解操作系统.md",
@@ -236,11 +257,6 @@
     "Files & LongText/Attachments/532e6cdf4899588f8b873b6435cba2d8-20230309233823236.webp",
     "Files & LongText/Attachments/4956918c43e186d49df7b9802f080de8 1.webp",
     "Files & LongText/Attachments/4956918c43e186d49df7b9802f080de8.webp",
-    "学习/Bases/操作系统/小林 Coding 图解操作系统.md.tmp.36603.de03f1781fa1",
-    "学习/Bases/操作系统/小林 Coding 图解操作系统.md.tmp.36603.bc074a9dbaf1",
-    "学习/Bases/操作系统/小林 Coding 图解操作系统.md.tmp.36603.867099f62ee8",
-    "学习/Bases/操作系统/小林 Coding 图解操作系统.md.tmp.36603.9aa3e0d7f266",
-    "学习/Bases/操作系统/小林 Coding 图解操作系统.md.tmp.36603.dbafc0a48376",
     "学习/Bases/开发范式/架构设计.md",
     "学习/其他专业书/Modern C++.md",
     "Files & LongText/Attachments/ae8252378169c8c14b8b9907983f7d8b.webp",
@@ -259,7 +275,6 @@
     "学习/ProjectsStudy/FromDocs/OpenCV 官方文档.md",
     "学习/ProjectsStudy/FromDocs/args库（3000行）.md",
     "学习/ProjectsStudy/FromDocs/Boost库学习.md",
-    "学习/ProjectsStudy/FromDocs/Boost库文档学习.md",
     "未命名.canvas"
   ]
 }
