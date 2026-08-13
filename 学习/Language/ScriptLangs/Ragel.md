@@ -133,7 +133,20 @@ Ragel 与 flex 都生成 DFA，Ragel 额外提供多语言代码生成、嵌入�
 ## 面试要点
 - 高频链：Ragel 和正则的区别 → 为什么生成的状态机快 → DFA 怎么来的 → 用过的场景
 - 回答骨架：Ragel 把正则描述在编译期编译成 DFA，运行时查表匹配，无回溯，适合流式高性能解析
+- 三个必背回答：
+  - 是什么：状态机编译器，正则风格 DSL → 编译期 DFA → 生成 C/C++ 查表代码，运行时逐字符查表无回溯
+  - 和正则区别：正则描述模式、状态机识别模式，一体两面；区别在编译期（Ragel）vs 运行时（std::regex 回溯）
+  - 为什么快：DFA 每字符唯一转移 O(1)，总 O(n)；编译期子集构造把 NFA 的路径探索提前做完，运行时只剩查表
+- 常考九题要点：
+  - DFA/NFA 区别：确定 vs 不确定；子集构造转换，代价状态数最多 2^n
+  - 正则都能编译成状态机吗：标准正则可以；反向引用 `\1` 需随输入增长的记忆，超出 FSM，只能回溯
+  - 流式解析：DFA 只依赖当前状态+下一字符，块间保留 cs 增量走；跨块 token 用 ts/te 保留前缀；缓冲≥最长 token
+  - 现场写词法分析器骨架：enum Token 类型 + scanner 规则表 + 动作 push_back；关键字排前（平局优先）、最长匹配、scanner 需声明 ts/te/act/eof
+  - Ragel vs flex：都生成 DFA；Ragel 多语言、可嵌任意代码、可混用状态图
+  - 手写 vs 生成：状态少手写，状态一多手写难维护（边界多、分支互相影响），用生成工具
 - 语法速查：`%%{ }%%` 嵌入块、`machine` 命名、`main :=` 主状态机、`action` 定义、`write data/init/exec` 插入点
+- 简历话术：用 Ragel 写词法分析器/协议解析器，.rl 定义规则和动作，编译期生成 DFA 查表代码，处理流式增量输入，对比过手写状态机可维护性
+- 本地手册：`/usr/share/doc/ragel/ragel-guide.pdf.gz`
 ## 可运行示例
 - 教程目录：`/home/azzato/CodeFiles/learning/Ragel-LearnWithClaude/code/01-scanner/scanner.rl`
 - 运行：`ragel -C scanner.rl -o scanner.cpp && g++ -std=c++17 -o scanner scanner.cpp && ./scanner`
