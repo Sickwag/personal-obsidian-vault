@@ -8,63 +8,18 @@
         "type": "tabs",
         "children": [
           {
-            "id": "54d2abd15915c8e6",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Language/ScriptLangs/Ragel.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "Ragel"
-            }
-          },
-          {
-            "id": "292f172d1074bec0",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Bases/开发范式/设计模式.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "设计模式"
-            }
-          },
-          {
-            "id": "2506314d40ee031f",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Chores/JobInterviews/八股/面试题合集.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "面试题合集"
-            }
-          },
-          {
             "id": "531f9e6e2be0ba1a",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/Bases/计算机网络/小林Coding 计算机网络.md",
+                "file": "Chores/JobInterviews/八股/收集的面试题.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "小林Coding 计算机网络"
+              "title": "收集的面试题"
             }
           },
           {
@@ -81,9 +36,24 @@
               "icon": "lucide-file",
               "title": "简历项目"
             }
+          },
+          {
+            "id": "e0ac73773db254f6",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chores/JobInterviews/八股/面试题合集.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "面试题合集"
+            }
           }
         ],
-        "currentTab": 4
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -243,28 +213,28 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "0e27d9162b3e1376",
+  "active": "e0ac73773db254f6",
   "lastOpenFiles": [
-    "学习/Bases/计算机网络/小林Coding 计算机网络.md",
+    "Chores/JobInterviews/简历项目.md",
+    "Chores/JobInterviews/简历项目.md.tmp.214725.f243b2eaf4a8",
     "Chores/JobInterviews/八股/面试题合集.md",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.295940.86c8db0dee7a",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.295940.a6b445d56d8d",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.295940.4f88fbbd674d",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.295940.29adae0f9aeb",
+    "Chores/JobInterviews/八股/收集的面试题.md",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.243259.f67d56c4b5c6",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.243259.864b277ec733",
+    "Chores/JobInterviews/简历项目.md.tmp.214725.4ef01dd0701c",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.243259.c8c2b0c00112",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.243259.733126353e1f",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.243259.448582c57cd6",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.243259.b367e12ea94b",
+    "Chores/JobInterviews/简历项目.md.tmp.214725.fa7e5f9bf1c0",
+    "Chores/JobInterviews/八股/面试题合集.md.tmp.243259.13129ee0e15f",
+    "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "学习/Language/ScriptLangs/Ragel.md",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.295940.ba017be63d0c",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.295940.abd3c10a2ec2",
     "学习/Bases/开发范式/设计模式.md",
-    "学习/Language/ScriptLangs/Ragel.md.tmp.295940.313159c5f0e2",
-    "学习/Language/ScriptLangs/Ragel.md.tmp.295940.e5c03a793ba2",
-    "学习/Language/ScriptLangs/Ragel.md.tmp.295940.e42db189afc8",
     "Files & LongText/Attachments/Pasted image 20260813111920.png",
-    "学习/Language/ScriptLangs/Ragel.md.tmp.295940.0decf5938788",
     "学习/Language/HTML/HTML.md",
     "学习/Language/JavaScript/Modern JavaScript.md",
-    "Chores/JobInterviews/简历项目.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
-    "Chores/JobInterviews/八股/收集的面试题.md",
     "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
     "学习/Bases/开发范式/架构设计.md",
     "Chores/JobInterviews/具体公司的了解以及面试准备.md",
@@ -290,7 +260,6 @@
     "学习/Bases/操作系统/未命名.md",
     "Chores/JobInterviews/questions精简.md",
     "Chores/JobInterviews/八股/面试题.md",
-    "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
     "未命名.canvas"
   ]
 }
