@@ -1,0 +1,14 @@
+{
+  "token": "",
+  "refreshToken": "",
+  "auth": {
+    "tokenExpiresAt": 1802261922000,
+    "userInfo": {
+      "sub": "3f7b5196-9140-4829-abc9-dd069a6d1f1f",
+      "name": "Sickwag",
+      "email": "3540825116@qq.com",
+      "avatar": null
+    },
+    "pendingOAuthSession": null
+  }
+}
