@@ -52,8 +52,7 @@
               "title": "面试题合集"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -87,7 +86,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "回拨",
+                "query": "优化器",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -112,8 +111,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -214,8 +212,9 @@
       "pkmer:Open Pkmer Market": false
     }
   },
-  "active": "e0ac73773db254f6",
+  "active": "982f21257484af50",
   "lastOpenFiles": [
+    "Chores/JobInterviews/八股/面试题合集.md",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.c8ded6a58e20",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.a75a0f121b09",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.d3bc92ae416a",
@@ -226,9 +225,7 @@
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.f6ae6b6d3273",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.38e30f6a0a62",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.d4cd8ef0459b",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.243259.876efa3cba9b",
     "Chores/JobInterviews/八股/收集的面试题.md",
-    "Chores/JobInterviews/八股/面试题合集.md",
     "Chores/JobInterviews/简历项目.md",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "学习/Language/ScriptLangs/Ragel.md",
