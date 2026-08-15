@@ -13,13 +13,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Chores/JobInterviews/八股/收集的面试题.md",
+                "file": "Chores/computer learning puzzles.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "收集的面试题"
+              "title": "computer learning puzzles"
             }
           },
           {
@@ -212,8 +212,9 @@
       "pkmer:Open Pkmer Market": false
     }
   },
-  "active": "982f21257484af50",
+  "active": "531f9e6e2be0ba1a",
   "lastOpenFiles": [
+    "Chores/JobInterviews/八股/收集的面试题.md",
     "Chores/JobInterviews/八股/面试题合集.md",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.c8ded6a58e20",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.a75a0f121b09",
@@ -225,7 +226,6 @@
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.f6ae6b6d3273",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.38e30f6a0a62",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.d4cd8ef0459b",
-    "Chores/JobInterviews/八股/收集的面试题.md",
     "Chores/JobInterviews/简历项目.md",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "学习/Language/ScriptLangs/Ragel.md",
