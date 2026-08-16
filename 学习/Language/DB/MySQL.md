@@ -9,119 +9,6 @@
 之前的 python 基础
 [Python Basics \> SQL](Python%20Basics.md#SQL)
 在安装目录中 `my. ini` 文件是配置文件
-## 学校作业总结
-### 学习通实验报告
-- 插入语句使用 `insert into table_name (field_name1,field_name2,......) values(value1,value2,.............)` 注意是 values 不是 value，单条记录之间通过 `()` 包裹内容，通过 `,` 隔开括号
-- 以零开头的数字一般在 sql 中使用字符串类型存储，注意在使用查询语句之前先查看表结构
-- sql server 中使用 `EXEC sp_columns '表名';` 查看表结构，mysql 中使用 `desc 表名` 查看
-- 类型为 `datetime` 的字段可以直接进行日期比较，如
-```sql
-SELECT xs.学号,
-       xs.姓名,
-       xs.出生日期
-FROM   xs
-WHERE  xs.出生日期 >= '1984-9-9'
-       AND xs.出生日期 <= '1985-9-9';
-```
-- `datetime` 类型的书写方式是使用 `-` 分割时间单位
-- 设置[[#级联操作|级联操作]] 和[[#分类：六大约束|外键注意事项]]
-- 为什么使用 `group by` 语句时，`select` 中查询内容需要和 `group by` 中一样
-- 使用多种方法查询多表连接，多表条件判断题
-
-> 查询选修的所有课程成绩都大于等于 60 分的学生的学号、姓名。
-
-**方法一**：使用 `GROUP BY` 和 `HAVING`
-```sql
-SELECT xs.学号, xs.姓名
-FROM xs
-INNER JOIN xk ON xs.学号 = xk.学号
-GROUP BY xs.学号, xs.姓名
-HAVING MIN(xk.成绩) > 60;
-```
-用学号和姓名筛选出唯一值，根据唯一值（每个人）的不同成绩，用 having 对分组后的成绩一栏筛选出最低成绩都大于 60 ，即可
-**方法二**：使用子查询和 `NOT EXISTS`
-```sql
-SELECT distinct xs.学号, xs.姓名
-FROM xs
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM xk
-    WHERE xk.学号 = xs.学号 AND xk.成绩 <= 60
-);
-```
-查询满足 `xk.学号 = xs.学号 AND xk.成绩 <= 60` 的结果，如果有返回值，则通过 `select 1` 返回一个**布尔值 `true` 表示有结果**，这样做比使用 `select *` 要快，因 `select 1` 只返回 `bool`，而 `select *` 需要返回内容
-**方法三**：使用 `ALL` 关键字
-```sql
-SELECT xs.学号, xs.姓名
-FROM xs
-WHERE 60 < ALL (
-    SELECT xk.成绩
-    FROM xk
-    WHERE xk.学号 = xs.学号
-);
-```
-使用操作符 all 表示和子查询的所有值比较，[[#操作符|操作符]]，将每一个子查询返回的*成绩*结果与 60 比较，大于 60 的返回学号和姓名
-- 和 Mysql 的 `limit` 不同，sql server 使用 `TOP` 和 `fetch`，`offset` 限制读取数
-`TOP` 用在 select 语句中，后接一个数字表示限制显示几行
-	- `OFFSET 10 ROWS` 表示跳过前 10 行。
-	- `FETCH NEXT 10 ROWS ONLY` 表示获取接下来的 10 行。
-```sql
-SELECT *
-FROM 表名
-ORDER BY 列名
-OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY;
-```
-- 查询获得“数据库原理”最高成绩的学生的学号和姓名。（**有坑**）
-	- 第一种只能显示一个最高分，如果出现多人同时为最高分，method 1 会出现错误，method 2 通过子查询查找最高分，再通过源数据中筛选出符合最高分和课程名的人。
-	- *较为复杂的问题*首先考虑子查询做法，比较复杂但稳定
-```sql
--- method 1
-SELECT TOP 1 xs.姓名,
-             xs.学号
-FROM   xs
-       INNER JOIN xk
-               ON xk.学号 = xs.学号
-       INNER JOIN kc
-               ON kc.课程编号 = xk.课程号
-WHERE  kc.课程名称 = '数据库原理'
-ORDER  BY xk.成绩 DESC;
--- method 2
-SELECT xs.姓名,
-       xs.学号
-FROM   xs
-       INNER JOIN xk
-               ON xk.学号 = xs.学号
-       INNER JOIN kc
-               ON kc.课程编号 = xk.课程号
-WHERE  kc.课程名称 = '数据库原理'
-       AND xk.成绩 = (SELECT Max(xk.成绩) AS max_grade
-                    FROM   xk
-                    INNER JOIN kc
-                    ON kc.课程编号 = xk.课程号);
-```
-### 学习通章节测验
-- 删除表中字段之前要删除相应字段的约束
-- [[#限定名书写|限定名书写]]
-- 各种约束的使用，修改和删除[[#修改表时添加约束|修改表时添加约束]]，删除有约束的列之前先删除它的约束
-- [[#操作符|操作符]]使用注意事项，不能用在约束中
-- 计算现在年龄的方法 `year(GETDATE())-year(xs.出生日期)`
-- 查看每个专业有多少人（经典题目）
-```sql
-SELECT kc.课程名称,
-       Count(xk.学号) AS num_of_class
-FROM   kc
-       INNER JOIN xk
-		   ON kc.课程编号 = xk.课程号
-GROUP  BY kc.课程名称;
-```
-- 查看执行情况
-![[Pasted image 20241109172412.png|400]]
-- [[#级联操作|级联操作修饰符]] 使用方法
-- [[#check 条件约束|check 条件约束]]
-- 使用各种[[#常见函数|数学，字符、日期函数]]编写 check 条件
-- [[#账户控制|账户控制]]
-- [[#sql server 和 mysql 存储过程和函数的语法区别|sql server 和 mysql 存储过程和函数的语法区别]]和实例应用[[#实例|实例]]
-- 批处理概念 [[#账户控制#调整用户权限|GO的用法]]
 ## 基本结构
 1. 将数据放到表中，表再放到库中
 2. 一个数据库中可以有多个表，每个表都有一个的名字，用来标识自己。表名具有唯一性。
@@ -3258,9 +3145,8 @@ HAVING 非常类似于 WHERE。事实上，目前为止所学过的所有类型�
 3. **减少重复计算**：
 
     - 自连接只需要执行一次连接操作，而子查询需要对外部查询的每一行重复执行，导致重复计算。
-
-# C++数据库编程（mysql-connenctor-cpp）
-## 准备工作
+# 数据库编程
+## mysql-connenctor-cpp
 mysql-connector-cpp 安装步骤 [2025最新版VS2022配置C++ connector连接mysql(保姆级教学)mysql c++ connector-CSDN博客](https://blog.csdn.net/weixin_74027669/article/details/137203874)
 ![[Pasted image 20250620144029.png]]
 随着 mysql 更新，`mysqlcppconnXXXXXXX.dll` 文件数字可能有变化，需要对应地调整
@@ -3268,1114 +3154,8 @@ mysql-connector-cpp 安装步骤 [2025最新版VS2022配置C++ connector连接my
 中第二项 `mysqlcppconn8.lib`
 
 > 记下这里时（2025 年 6 月 20 日14:45:29）已经升级到了 `mysqlcppconnx.dll`（10）所以需要在图片中位置相应改动
-
-### 链接模板
-完整代码实现见[[Mysql Snippets#C++数据库编程#mysql-connector-cpp 链接模板|基本功能实现代码]]
-示例代码中必须要能够登录 root 账户才能 `create database` 操作，如果没有权限可以参考下面代码**操作数据库**
-```cpp
-#include <cppconn/statement.h>
-#include <cppconn/resultset.h>
-#include <cppconn/exception.h>
-#include <cppconn/driver.h>
-#include <iostream>
-
-// 强制使用多字节字符集
-#pragma execution_character_set("utf-8")  // 避免debug和release模式下字符解析问题
-
-int main() {
-    // 统一连接配置
-    const char* host = "mysql2.sqlpub.com";
-    const int port = 3307;
-    const char* user = "sickwag";
-    const char* password = "iyNnmQ6mNSKqSmgF";
-
-    try {
-        sql::Driver* driver = get_driver_instance();
-
-        // 标准连接字符串格式
-        std::string connStr = "tcp://" + std::string(host) + ":" + std::to_string(port);
-
-        // 添加连接参数
-        sql::ConnectOptionsMap options;
-
-        options["hostName"] = host;
-        options["port"] = port;
-        options["userName"] = user;
-        options["password"] = password;
-        options["OPT_RECONNECT"] = true;
-        options["OPT_CHARSET_NAME"] = "utf8mb4";
-
-        sql::Connection* con = driver->connect(options);
-
-        if (con->isValid()) {
-            std::cout << "连接成功!" << std::endl;
-            // 执行SQL...
-            sql::Statement* stmt = con->createStatement();
-            stmt->execute("use sickwag_learing_db");
-            stmt->execute("drop table if exists problems");
-
-        }
-
-        delete con;
-    }
-    catch (sql::SQLException& e) {
-        std::cerr << "error code: " << e.getErrorCode() << std::endl
-            << "SQL statement: " << e.getSQLState() << std::endl
-            << "error info: " << e.what() << std::endl;
-    }
-
-    return 0;
-}
-```
-教程中代码仅仅只能用于 release 中，debug 模式下会出现堆栈异常
-
-> PS：
-> - 代码中 driver，con 和 stmt 对象是指针，需要手动释放资源
-> - **`driver`**：获取驱动实例，用于创建连接。由单例模式函数 `get_driver_instance()` 函数的单例对象控制，不需要手动控制
-- **`con`**：通过驱动实例创建连接对象，使用指针以便后续管理连接的生命周期。多个连接可以共用一个驱动
-- **`stmt`**：通过连接对象创建语句对象，同样使用指针以便执行 SQL 语句和资源管理。生命周期和 con 绑定，连接管理了自然不会有语句对象
-### 连接数据库参数
-#### 使用参数或者纯字符串连接
-连接的各项指标 `options` 字符串参数填写**必须使用 `(const) char*` 字符数组**初始化的变量，**不能使用 `string`**，因会在末尾填上 `\n` 导致
-```sql
-SQL Error: Access denied for user 'sickwag'@'42.97.247.141' (using password: YES)
-Error Code: 1045
-```
-1045 错误**最有可能表示的是**账号密码输入错误，在 sprintboot 或者会自动添加 `\n` 的 `string` 对象代码中出现，也可能是因拼写错误
-正确参考：
-```cpp
-const char* host = "mysql2.sqlpub.com";
-const int port = 3307;
-const char* user = "sickwag";
-const char* password = "iyNnmQ6mNSKqSmgF";
-const char* db_name = "sickwag_learing_db";
-
-MySQLDB db(host, port, user, password, db_name);
-
-MySQLDB::MySQLDB(const std::string& host, int port, const std::string& user, const std::string& password, const std::string& db)
-    : driver(sql::mysql::get_mysql_driver_instance()) {
-
-    std::string connStr = "tcp://" + host + ":" + std::to_string(port);
-    con.reset(driver->connect(connStr, user, password));  // 更稳定，兼容多数认证方式
-
-    if (!db.empty()) {
-        con->setSchema(db);
-    }
-
-    con->setAutoCommit(false);
-}
-```
-
-#### 使用 `ConnectOptionsMap` 连接
-`ConnectOptionsMap` 是 MySQL Connector/C++ 中一种**类型安全的连接配置方式**，可以设置：
-- 主机、端口、用户名、密码
-- 编码、SSL、连接超时
-- 认证方式、连接池、压缩等高级参数
-比传统的 `connect("tcp://host:port", user, password)` 更强大
-
-| 参数名（Key）                                | 示例值                               | 说明                                |
-| --------------------------------------- | --------------------------------- | --------------------------------- |
-| `"hostName"`                            | `"localhost"` 或 `"192.168.1.100"` | 主机地址                              |
-| `"port"`                                | `3306`                            | 端口号                               |
-| `"userName"`                            | `"root"`                          | 登录用户名                             |
-| `"password"`                            | `"your_password"`                 | 登录密码                              |
-| `"password2"`                           | `"failover_password"`             | 主密码失败时使用备用密码（例如主从切换）              |
-| `"password3"`                           | `"secondary_backup_password"`     | 第三密码（高级用法）                        |
-| `"schema"`                              | `"test_db"`                       | 数据库名（相当于 setSchema）               |
-| `"OPT_RECONNECT"`                       | `true`                            | 是否启用连接丢失后自动重连                     |
-| `"OPT_CHARSET_NAME"`                    | `"utf8mb4"`                       | 设置连接字符集                           |
-| `"OPT_CONNECT_TIMEOUT"`                 | `30`（秒）                           | 设置连接超时时间                          |
-| `"OPT_READ_TIMEOUT"`                    | `30`                              | 读取超时时间                            |
-| `"OPT_WRITE_TIMEOUT"`                   | `30`                              | 写入超时时间                            |
-| `"OPT_LOCAL_INFILE"`                    | `true`                            | 是否启用 `LOAD DATA LOCAL INFILE`     |
-| `"OPT_SSL_MODE"`                        | `sql::SSLMode::SSL_MODE_REQUIRED` | 设置 SSL 模式（如必须加密）                  |
-| `"OPT_SSL_CA"`                          | `"path/to/ca.pem"`                | SSL CA 证书路径                       |
-| `"OPT_SSL_FIPS_MODE"`                   | `true`                            | 开启 FIPS 模式（合规加密）                  |
-| `"OPT_PLUGIN_DIR"`                      | `"path/to/plugins"`               | 指定认证插件路径                          |
-| `"OPT_DEFAULT_AUTH"`                    | `"mysql_native_password"`         | 挜定认认证插件                           |
-| `"OPT_COMPRESS"`                        | `true`                            | 启用压缩协议传输数据                        |
-| `"OPT_NAMED_PIPE"`                      | `true`                            | 使用命名管道连接（Windows 下）               |
-| `"OPT_UNIX_SOCKET"`                     | `"/tmp/mysql.sock"`               | 指定 Unix 套接字路径                     |
-| `"OPT_ZSTD_COMPRESSION_LEVEL"`          | `3`                               | ZStandard 压缩等级                    |
-| `"CLIENT_MULTI_STATEMENTS"`             | `true`                            | 执行多语句（如 `SELECT a; SELECT b;`）    |
-| `"CLIENT_MULTI_RESULTS"`                | `true`                            | 支持多个结果集                           |
-| `"CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS"` | `true`                            | 允许处理过期密码                          |
-| `"OPT_REPORT_DATA_TRUNCATION"`          | `true`                            | 是否报告数据截断警告                        |
-| `"OPT_HOST_READ_ONLY"`                  | `true`                            | 只连接到只读实例（用于负载均衡）                  |
-| `"OPT_USE_TLS"`                         | `true`                            | 使用 TLS 加密连接                       |
-| `"OPT_TLS_VERSION"`                     | `"TLSv1.2,TLSv1.3"`               | 指定 TLS 使用版本                       |
-| `"OPT_FIDO_CALLBACK"`                   | FIDO 回调函数                         | 用于 FIDO 认证（如 MySQL 8.0 的 FIDO 认证） |
-
-其中：
-如果没有分行解析 sql 的需求，想要将整个 sql 文件中所有内容转化为纯字符发送到 mysql 数据库一次性执行，就需要开启多语句支持 `CLIENT_MULTI_STATEMENT`，多结果集返回查询需要开启 `CLIENT_MULTI_RESULTS`
-使用 option 作为连接需要获取 options 中参数时，需要通过 `get()` 获取类型
-如options 中存储了数据库名称，现在需要通过  `setSchema` 来设置默认连接的数据库，则需要使用
-```cpp
-on->setSchema(options["schema"].get<sql::SQLString>()->asStdString());
-```
-先获取键值（`sql::ConnectOptionsMap`）的结构为
-```cpp
-typedef std::map< sql::SQLString, ConnectPropertyVal > ConnectOptionsMap;
-typedef sql::Variant ConnectPropertyVal;
-```
-所以需要先 get 获取元数据，然后转化为需要的数据类型，所有的元数据已经支持 bool，int，double 等类型，SQLString 对象有 asStdString 方法可以转化
-### 常用操作分类与常用 API
-
-#### 1️⃣ 连接与初始化
-
-|操作|API 示例|说明|
-|---|---|---|
-|获取驱动实例|`sql::Driver* driver = get_driver_instance();`|获取 MySQL 驱动|
-|连接到数据库|`sql::Connection* con = driver->connect(host, user, pass);`|使用用户名/密码连接|
-|使用连接参数|`con = driver->connect(options);`|`sql::ConnectOptionsMap` 用于更灵活的连接配置|
-|设置数据库|`con->setSchema("test_db");`|选择当前操作的数据库|
-
-#### 2️⃣ SQL 执行操作
-
-|操作|API 示例|说明|
-|---|---|---|
-|创建语句对象|`sql::Statement* stmt = con->createStatement();`|用于执行静态 SQL|
-|执行通用 SQL|`stmt->execute("SQL语句");`|可用于 CREATE、INSERT、UPDATE、DELETE、DROP 等|
-|执行查询 SQL|`sql::ResultSet* res = stmt->executeQuery("SELECT ...");`|用于 SELECT 查询|
-|执行更新 SQL|`int rows = stmt->executeUpdate("UPDATE ...");`|会返回影响行数|
-|预编译语句|`sql::PreparedStatement* pstmt = con->prepareStatement("INSERT INTO ... VALUES (?, ?)");`|用于参数化 SQL|
-|设置参数|`pstmt->setString(1, "value");`|设置预编译参数|
-|执行预编译语句|`pstmt->executeUpdate();`|执行预编译 SQL|
-
-#### 3️⃣ 结果处理（ResultSet）
-
-|操作|API 示例|说明|
-|---|---|---|
-|遍历结果集|`while (res->next())`|从上到下按行读取|
-|获取字段值|`res->getString("name")` 或 `res->getInt(1)`|按字段名或索引获取|
-|获取字段类型|`meta->getColumnTypeName(i)`|从 `ResultSetMetaData` 获取类型|
-|获取字段名|`meta->getColumnName(i)`|获取列名|
-|获取字段数量|`meta->getColumnCount()`|获取结果集字段数|
-|获取下一个结果|`stmt->getMoreResults()`|用于处理多语句查询|
-|获取当前结果集|`stmt->getResultSet()`|多结果集处理中使用|
-
-#### 4️⃣ 元数据（Metadata）
-
-| 操作       | API 示例                                               | 说明             |
-| -------- | ---------------------------------------------------- | -------------- |
-| 获取数据库元信息 | `sql::DatabaseMetaData* meta = con->getMetaData();`  | 包括数据库名、版本、表信息等 |
-| 获取表信息    | `meta->getTables(...)`                               | 获取数据库中所有表      |
-| 获取列信息    | `meta->getColumns(...)`                              | 获取某张表的列信息      |
-| 获取结果集元数据 | `sql::ResultSetMetaData* meta = res->getMetaData();` | 获取查询结果的字段信息    |
-
-#### 5️⃣ 事务控制
-
-|操作|API 示例|说明|
-|---|---|---|
-|设置事务自动提交|`con->setAutoCommit(false);`|关闭自动提交，开启事务|
-|提交事务|`con->commit();`|提交事务|
-|回滚事务|`con->rollback();`|出错时回滚事务|
-
-#### 6️⃣ 资源管理与释放
-
-|操作|API 示例|说明|
-|---|---|---|
-|释放 Statement|`delete stmt;`|手动释放语句资源|
-|释放 ResultSet|`delete res;`|手动释放查询结果|
-|关闭连接|`con->close();`|释放数据库连接资源|
-|释放连接|`delete con;`|手动释放连接对象|
-
-> ✅ 推荐使用 `std::unique_ptr` 或封装类实现资源自动释放，避免内存泄漏
-
----
-
-### 常用编程定式（Best Practices）
-
-#### 1. 使用 `try-catch` 捕获异常
-```cpp
-try {
-    // 所有数据库操作
-}
-catch (sql::SQLException& e) {
-    std::cerr << "SQL Error: " << e.what() << std::endl;
-    std::cerr << "Error Code: " << e.getErrorCode() << std::endl;
-}
-
-```
-
-#### 2. 使用 `unique_ptr` 封装资源（RAII 风格）
-```cpp
-#include <memory>
-
-std::unique_ptr<sql::Statement> stmt(con->createStatement());
-std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT * FROM users"));
-```
-
-#### 3. 使用 `PreparedStatement` 防止 SQL 注入
-```cpp
-std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement("INSERT INTO users (name, age) VALUES (?, ?)"));
-pstmt->setString(1, "Alice");
-pstmt->setInt(2, 25);
-pstmt->executeUpdate();
-```
-
-#### 4. 使用 `ResultSetMetaData` 获取列信息
-```cpp
-sql::ResultSetMetaData* meta = res->getMetaData();
-for (int i = 1; i <= meta->getColumnCount(); ++i) {
-	std::cout << meta->getColumnName(i) << " (" << meta->getColumnTypeName(i) << ") | ";
-}
-// 获取最新创建的一行记录的id值
-std::string sql_string_query = "SELECT id FROM users ORDER BY created_at DESC LIMIT 1;";
-auto result = db.query(sql_string_query);
-
-if (result->next()) {
-    int last_id = result->getInt("id");
-    std::cout << "Latest ID: " << last_id << std::endl;
-    // 使用 last_id 进行后续操作
-} else {
-    std::cerr << "No results found." << std::endl;
-}
-```
-
-#### 5. 多语句查询处理
-```cpp
-stmt->execute("SELECT * FROM table1; SELECT * FROM table2");
-do {
-std::unique_ptr<sql::ResultSet> res(stmt->getResultSet());    // 处理当前结果集
-} while (stmt->getMoreResults());
-```
-
-#### 6. 事务处理定式
-```cpp
-con->setAutoCommit(false);
-try {
-    stmt->executeUpdate("UPDATE ...");
-	stmt->executeUpdate("INSERT ...");
-	con->commit();
-} catch (sql::SQLException&) {
-	    con->rollback();
-		throw;
-}
-```
-
-#### 7. 语句执行情况检查
-| API               | 返回值类型              | 是否成功       | 是否影响行数      | 是否有结果集          |
-| ----------------- | ------------------ | ---------- | ----------- | --------------- |
-| `execute()`       | `bool`             | ✅ 检查是否抛出异常 | ❌           | ✅ `true` 表示有结果集 |
-| `executeQuery()`  | `ResultSet*`       | ✅          | ❌           | ✅               |
-| `executeUpdate()` | `int`              | ✅          | ✅           | ❌               |
-| `executeBatch()`  | `std::vector<int>` | ✅          | ✅（每条语句影响行数） | ❌               |
-##### `execute()`
-```cpp
-bool hasResultSet = stmt->execute("SQL语句");
-```
-
-| 返回值     | 说明                                 |
-| ------- | ---------------------------------- |
-| `true`  | 执行成功并且返回了结果集（如 SELECT）             |
-| `false` | 执行成功但没有结果集（如 INSERT、UPDATE、DELETE） |
-
-> ❗不能通过 `execute()` 判断是否出错，只管结果是否是 ResultSet。
-
-##### `executeQuery()` 
-
-```cpp
-sql::ResultSet* res = stmt->executeQuery("SELECT * FROM table");
-```
-- **成功时**：返回 `ResultSet*` 用于读取数据。
-- **失败时**：抛出 `sql::SQLException` 异常。
-所以使用 c++操控 sql 时一般都放在 try-catch 语句中执行
-
-
-##### `executeUpdate()`
-```cpp
-int affectedRows = stmt->executeUpdate("UPDATE ...");
-```
-
-|返回值|含义|
-|---|---|
-|`>=0`|成功，表示受影响的行数（如 1、2、3）|
-|抛出异常|执行失败，如语法错误或约束冲突|
-
-##### `executeNonQuery()`（Connector/C++ 8.0+）
-```cpp
-sql::SQLString query("DELETE FROM users WHERE id=1");
-sql::SQLExecutionThread safeQuery(con);
-safeQuery.execute(query);
-```
-
-> 特定于线程安全执行，返回 `bool` 表示成功与否。
-
-##### `getWarnings()` 和 `clearWarnings()`
-```cpp
-sql::SQLWarning* warning = con->getWarnings();
-while (warning) {
-	std::cerr << "Warning: " << warning->getMessage() << std::endl;
-	warning = warning->getNextWarning();
-}
-con->clearWarnings();
-```
-
-> 用于获取连接或语句的警告信息（如字段截断、类型转换警告等）。
-
-##### `getErrorCode()` 和 `getSQLState()`
-```cpp
-catch (sql::SQLException& e) {
-	std::cerr << "Error Code: " << e.getErrorCode() << std::endl;
-	std::cerr << "SQL State: " << e.getSQLState() << std::endl;
-	std::cerr << "Message: " << e.what() << std::endl;
-}
-```
-
-```sql
-CREATE TABLE IF NOT EXISTS users (
-	id INT AUTO_INCREMENT PRIMARY KEY,
-	name varchar(255) not null,
-	 age int not null
-);
-```
-#### 8. 直接提交 sql 脚本
-```cpp
-void MySQLDB::executeFromFile(const std::string& filePath) {
-	std::ifstream f(filePath);
-	if (!f.is_open()) {
-		throw std::runtime_error("cannot open this file: " + filePath);
-	}
-	// remove all comments
-	std::string statment, line;
-	while (std::getline(f, line)) {
-		if (line.starts_with("-- ") or line.starts_with("# ")) {
-			continue;
-		} else {
-			statment += line;
-		}
-	}
-	f.close();
-	if (statment.empty()) {
-		throw std::runtime_error("sql file is empty!");
-	}
-	std::unique_ptr<sql::Statement> stmt(con->createStatement());
-	try {
-		stmt->execute(statment);
-	}
-	catch (const sql::SQLException& e) {
-		print_sql_error(e);
-	}
-}
-```
-需要注意：
-提交的 sql 文件编码是 utf-8 格式，否则需要设置额外解码参数给 fstream，调整文件编码格式可以参考 [Visual Studio 设置默认编码格式为 UTF-8 或 GB2312-80 与文件没有高级保存选项怎么显示](https://blog.csdn.net/qq_41868108/article/details/105750175)，不然在会出现
-```bash
-connected!
-sql error code: 1064
-sql statement: 42000
-sql description: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 1
-```
-乍看之下还看不出哪里有问题，语法错误，通过调试会发现，statement 字符串值显示为 `<字符串中字符无效。>`，打开其中内容发现其中有大量 `\0` 无意义字符，判定为文件编码问题，修改为 utf-8 即可解决
-
-## 解析数据库返回内容
-由于[[Mysql Snippets#mysql-connector-cpp 链接模板|链接模板]]预输入代码将所有插入内容视为字符串插入
-```cpp
-int MySQLDB::prepare_execute(const std::string& sql, const std::vector<std::string>& params) {
-	std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement(sql));
-	for (size_t i = 0; i < params.size(); ++i) {
-		pstmt->setString(i + 1, params[i]);
-	}
-	return pstmt->executeUpdate();
-}
-```
-会在表中不为 varchar，char 类型的字段位置报错
-最直接的方式是用 if-else 为每种类型设置对应设置 set 语句
-```cpp
-int MySQLDB::prepare_execute(const std::string& sql, const std::vector<std::variant<int, bool, std::string>>& params) {
-    std::unique_ptr<sql::PreparedStatement> pstmt(con->prepareStatement(sql));
-    for (size_t i = 0; i < params.size(); ++i) {
-        std::visit([&pstmt, i](auto&& value) {
-            using T = std::decay_t<decltype(value)>;
-            if constexpr (std::is_same_v<T, int>) {
-                pstmt->setInt(i + 1, value);
-            } else if constexpr (std::is_same_v<T, bool>) {
-                pstmt->setBoolean(i + 1, value);
-            } else if constexpr (std::is_same_v<T, std::string>) {
-                pstmt->setString(i + 1, value);
-            }
-        }, params[i]);
-    }
-    return pstmt->executeUpdate();
-}
-```
-更有拓展性的方法是：
-# C++数据库编程（qt:qmysql）
-## 准备工作
+## qt:qmysql
 qt 如何连接 mysql 可以参考[[软件使用错误#Qt 缺少 mysql 驱动导致无法连接 mysql]]
-## 代码编写
-### 数据库和查询配置
-```cpp
-QSqlQuery query(db);
-// 设置query对象连接的数据
-QSqlDatabase db1 = QSqlDatabase::addDatabase("QMYSQL" /*驱动名称*/, "conn1");
-db1.setHostName("localhost");
-db1.setDatabaseName("db1");
-db1.setUserName("root");
-db1.setPassword("password1");
-QSqlQuery q (QSqlDatabase::database("conn1"));
-// query.exe()可以直接执行sql语句
-query.exec("create table newUser (id int primary key,username varchar(20))");
-
-// 方法一：命名绑定
-query.prepare("INSERT INTO newUser (id, username) VALUES (:id, :username)");
-query.bindValue(":id", userid);
-query.bindValue(":username", name);
-query.exec();
-
-// 方法二：位置绑定
-query.prepare("INSERT INTO employee (id, name, salary) "
-			  "VALUES (?, ?, ?)");
-query.addBindValue(1001);
-query.addBindValue("Thad Beaumont");
-query.addBindValue(65000);
-query.exec();
-```
-使用预处理语句好处是：
-- 防止 sql 注入
-- 可以**提高多条记录同时插入的性能**
-- 占位符的是可以轻松指定任意值，而不必担心特殊字符的转义。
-[QSqlQuery](https://doc.qt.io/qt-6/zh/qsqlquery.html) 构造函数接受一个可选的 [QSqlDatabase](https://doc.qt.io/qt-6/zh/qsqldatabase.html) 对象，用于指定要使用的数据库连接。在上面的示例中，如果没有指定任何连接（`QSqlQuery query;`）则使用的是默认连接。
-### 查询 api 逻辑
-[QSqlQuery](https://doc.qt.io/qt-6/zh/qsqlquery.html) 提供了对结果集一条记录一条记录的访问。调用 [exec](https://doc.qt.io/qt-6/zh/qsqlquery.html#exec) () 后，[QSqlQuery](https://doc.qt.io/qt-6/zh/qsqlquery.html) 的内部**指针位于第一条记录_之前的一个位置**。我们必须调用一次 [QSqlQuery::next](https://doc.qt.io/qt-6/zh/qsqlquery.html#next) () 来前进到第一条记录，然后重复调用 [next](https://doc.qt.io/qt-6/zh/qsqlquery.html#next) () 来访问其他记录，直到返回 `false` 。
-```cpp
-while(query.next()) {
-    QString name = query.value(0).toString();
-    int salary = query.value(1).toInt();
-    qDebug() << name << salary;
-}
-```
-[QSqlQuery::value](https://doc.qt.io/qt-6/zh/qsqlquery.html#value) () 函数返回当前记录中字段的值。字段指定为基于零的索引。返回一个 [QVariant](https://doc.qt.io/qt-6/zh/qvariant.html) ，该类型可容纳各种 C++ 和 Qt Core 数据类型，不同的数据库类型会自动映射为最接近的 Qt 对应类型。在代码片段中，我们调用 [QVariant::toString](https://doc.qt.io/qt-6/zh/qvariant.html#toString) () 和 [QVariant::toInt](https://doc.qt.io/qt-6/zh/qvariant.html#toInt) () 将变体转换为 [QString](https://doc.qt.io/qt-6/zh/qstring.html) 和 `int` 。
-### 事务执行
-如果底层数据库引擎支持事务，[QSqlDriver::hasFeature](https://doc.qt.io/qt-6/zh/qsqldriver.html#hasFeature) ([QSqlDriver::Transactions](https://doc.qt.io/qt-6/zh/qsqldriver.html#DriverFeature-enum)) 将返回 true。可以使用 [QSqlDatabase::transaction](https://doc.qt.io/qt-6/zh/qsqldatabase.html#transaction) () 启动事务，然后输入要在事务上下文中执行的 SQL 命令，最后使用 [QSqlDatabase::commit](https://doc.qt.io/qt-6/zh/qsqldatabase.html#commit) () 或 [QSqlDatabase::rollback](https://doc.qt.io/qt-6/zh/qsqldatabase.html#rollback) () 启动事务。使用事务时，必须在创建查询之前启动事务。
-
-```cpp
-QSqlDatabase::database().transaction();
-QSqlQuery query;
-query.exec("SELECT id FROM employee WHERE name = 'Torild Halvorsen'");
-if (query.next()) {
-	int employeeId = query.value(0).toInt();
-	query.exec("INSERT INTO project (id, name, ownerid) "
-			   "VALUES (201, 'Manhattan Project', "
-			   + QString::number(employeeId) + ')');
-}
-QSqlDatabase::database().commit();
-```
-### 记录和结果集
-**结果集（result set）** 指的是 **一个 `SELECT` 查询返回的所有行的集合**，和标准 SQL 语义一致。
-一条 sql 语句只能返回一个查询结果，这个结果是以一张表形式呈现的，每一行成为一个 result 结果，整张表成为 result set 结果集。以下所有命令都是以结果集作为参考。
-
-| 区分      | 函数名            | 描述                           |
-| ------- | -------------- | ---------------------------- |
-| 执行命令    | `exec()`       | 执行sql语句                      |
-| 具有的特性判断 | `hasFeature()` | 判断是否有某种特性                    |
-| 定位      | `seek(int n)`  | 指向结果集的第n条记录                  |
-| 定位      | `first()`      | 指向结果集的第一条记录                  |
-| 定位      | `last()`       | 指向结果集的最后一条记录                 |
-| 定位      | `next()`       | 指向下一条记录，每执行一次该函数，便指向相邻的下一条记录 |
-| 定位      | `previous()`   | 指向上一条记录，每执行一次该函数，便指向相邻的上一条记录 |
-| 获取记录    | `record()`     | 获得当前指向的记录                    |
-| 取值      | `value(int n)` | 获得属性的值                       |
-| 获取记录编号  | `at()`         | 获取当前记录在结果集中编号               |
-| 获取总行数   | `size()`       | 返回结果中总行数                    |
-
-如果数据库查询时，**只需要前向查询**，则可以在调用 exec() 之前调用[QSqlQuery::setForwardOnly](https://doc.qt.io/qt-6/zh/qsqlquery.html#setForwardOnly)(true)。这是一种简单的优化方法，在操作大型结果集时，可以显著加快查询速度
-### 数据库支持功能查询
-要确定数据库驱动程序是否支持给定功能，请使用 [QSqlDriver::hasFeature](https://doc.qt.io/qt-6/zh/qsqldriver.html#hasFeature) () 。在下面的示例中，如果底层数据库支持该功能，我们会调用 [QSqlQuery::size](https://doc.qt.io/qt-6/zh/qsqlquery.html#size) () 来确定结果集的大小；否则，我们会导航到最后一条记录，并使用查询的位置来告诉我们有多少条记录。
-```cpp
-QSqlQuery query;
-    int numRows;
-    query.exec("SELECT name, salary FROM employee WHERE salary > 50000");
-
-    QSqlDatabase defaultDB = QSqlDatabase::database();
-    if (defaultDB.driver()->hasFeature(QSqlDriver::QuerySize)) {
-        numRows = query.size();
-    } else {
-        // this can be very slow
-        query.last();
-        numRows = query.at() + 1;
-    }
-```
-### 代码实例
-```cpp
-#ifndef MYSQL_LOGIN_PAGE_H
-#define MYSQL_LOGIN_PAGE_H
-
-#include <QWidget>
-#include <QtSql/QSqlDatabase>
-
-
-QT_BEGIN_NAMESPACE
-namespace Ui {
-class mysql_login_page;
-}
-QT_END_NAMESPACE
-
-class mysql_login_page : public QWidget
-{
-    Q_OBJECT
-
-public:
-    mysql_login_page(QWidget *parent = nullptr);
-    ~mysql_login_page();
-
-private:
-    Ui::mysql_login_page *ui;
-    QSqlDatabase default_db;
-
-
-private slots:
-    void on_button_login_clicked();
-    void on_button_register_clicked();
-};
-#endif // MYSQL_LOGIN_PAGE_H
-```
-具体实现代码可以参考：[[Mysql Snippets#C++数据库编程#qt QSQL 编程|QSql编程]]
-其中还是用了加密技术，关键代码：
-```cpp
-QString password_hash = QString::fromUtf8(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256).toHex());
-```
-`toHex()` 函数返回的是一个 `QByteArray` 对象，但他可以被转换成 `QString`，参考 [[Qt Official Tutorial#QT 中字符串编码|QString字符编码]]，如果只使用了 `QString::fromUtf8(QCryptographicHash::hash(password.toUtf8(), QCryptographicHash::Sha256)`， ：
-1. QCryptographicHash:: hash()返回一个 QByteArray，它包含 32 字节的二进制哈希数据
-2. QString:: fromUtf 8 () 尝试将这些二进制数据解释为 UTF-8 编码的字符串
-这会将**二进制转换为 utf-8 编码字符串**，结果是一串乱码，所以需要在后面添加 `.toHex()` 函数，将这串**本质上还是二进制数据的内容**转换为 16 进制表示的字符串
-代码中采用本地加密密码字符串方式，将 16 进制加密字符串上传到服务器的方式。服务器端永远**不知道明文密码是什么**
-还有一种方式，在 sql 语句中使用 `select * from table where password_hash = SHA256(password)`，在服务器端加密字符串，**服务器也看不到明文，但网络传输截获的数据包中包含的密码是明文**
-
-# C++数据库编程（Boost:mysql）
-参考链接：[Boost 入门 - 1.88.0 - Boost C++ 函数库](https://boost.ac.cn/doc/libs/1_88_0/more/getting_started/index.html)
-## 准备工作
-### 模板
-使用[包含 msvc 编译器的模板配置](E:\file_storage\Files\各种配置和工具\.vscode配置文件\cmake工程通用模板)，只能使用 msvc 编译器+vcpkg 整合 `boost:x64-windows`，要使用 mingw 只能重新安装 mingw 版本的 boost
-连接模板为：
-```cpp
-#include <boost/mysql/any_connection.hpp>
-#include <boost/mysql/connect_params.hpp>
-#include <boost/mysql/error_with_diagnostics.hpp>
-#include <boost/mysql/results.hpp>
-#include <boost/asio/io_context.hpp>
-#include <iostream>
-#include "MySQLDB.h"
-
-namespace mysql = boost::mysql;
-namespace asio = boost::asio;
-
-void main_impl(int argc, char** argv) {
-    if (argc != 4) {
-        std::cerr << "Usage: " << argv[0] << " <username> <password> <server-hostname>\n";
-        exit(1);
-    }
-
-    const char* username = argv[1];
-    const char* password = argv[2];
-    const char* hostname = argv[3];
-
-    // The execution context, required to run I/O operations.
-    asio::io_context ctx;
-
-    // Represents a connection to the MySQL server.
-    mysql::any_connection conn(ctx);
-
-    // The hostname, username and password to use
-    mysql::connect_params params;
-    params.server_address.emplace_host_and_port(hostname, 3307);
-    params.username = username;
-    params.password = password;
-
-    // Connect to the server
-    conn.connect(params);
-
-    // Issue the SQL query to the server
-    const char* sql = "SELECT * from users;";
-    mysql::results result;
-    conn.execute("use sickwag_learning;", result);
-    conn.execute(sql, result);
-
-    // Print the first field in the first row
-    std::cout << result.rows().at(0).at(0) << std::endl;
-
-    // Close the connection
-    conn.close();
-}
-
-int main(int argc, char** argv) {
-    try {
-        main_impl(argc, argv);
-    } catch (const mysql::error_with_diagnostics& err) {
-        std::cerr << "Error: " << err.what() << '\n'
-                  << "Server diagnostics: " << err.get_diagnostics().server_message() << std::endl;
-        return 1;
-    } catch (const std::exception& err) {
-        std::cerr << "Error: " << err.what() << std::endl;
-        return 1;
-    }
-}
-```
-参数可以再 `launch.json` 中设置，也可以 `settings.json` 全局指定
-
-### 前置知识
-#### result 结果集容器
-`boost::mysql::results` 是 Boost.MySQL 提供的 **结果集容器**，用于存储 SQL 查询的返回数据。其中方法支持链式调用，支持显式类型转换，但 **不自动转换**
-`.rows()`
-- 返回一个包含所有 **结果** 的数组。
-- 一个 SQL 查询可能返回多个结果集（如存储过程执行多个 `SELECT`），但  （截至 Boost 1.84，2025年）并不支持多结果集，可能需要调用 C 的一些库才能实现对应的功能
-- **主流的 C++ 高层封装库（包括 Qt 和 Boost.MySQL）都不支持多结果集！**
-`.row().at(0).at(0)`
-**row 表示结果集合数组行**
-- `.rows().at(0).at(0)`：访问第一个结果集（`rows_view`）的第一行（`row_view`）的第一个字段（`field_view`）。
-- `.rows()` 返回一个 `rows_view`，表示一个结果集**的所有行数据部分**，包含多行（`row_view`）。
-
-> [!NOTICE]
->
-> - 注意，`rows (). at (i)` 返回一行内容，可以调用 `as_vector()` 将结果转化为 vector，但其中元素必须是同一类型，否则抛出错误
-> - `rows().at(i).at(j)` 返回一个单元格值，可以调用 `as_type()` 转换为各种类型，不能隐式转换，比如将 int（mysql 数据类型）转化为 string（C++数据类型）会抛出 `bad_value_access` 错误
-#### 常用 api 写法
-##### 处理 null 值
-```cpp
-const mysql::field& field = result.rows().at(0).at(0);
-
-if (field.is_null()) {
-    std::cout << "字段为 NULL" << std::endl;
-} else {
-    std::string value = field.get<std::string>();
-}
-```
-##### 按字段访问
-`Boost.MySQL` 本身不支持直接通过字段名访问，应该在 sql 语句中实现设置好筛选条件
-```cpp
-mysql::results result;
-conn.execute("SELECT id, name FROM users", result);
-
-// 获取列索引
-auto meta = result.rows().meta();
-int name_col_index = -1;
-for (size_t i = 0; i < meta.size(); ++i) {
-    if (meta[i].name() == "name") {
-        name_col_index = i;
-        break;
-    }
-}
-
-// 访问字段值
-if (name_col_index != -1) {
-    for (const auto& row : result.rows()) {
-        std::string name = row.at(name_col_index).get_string();
-        std::cout << "Name: " << name << std::endl;
-    }
-}
-
-// 访问结果集的第n行到m行的某个字段集合
-// 假设字段是 id（第一个列）
-for (size_t i = n; i <= m; ++i) {
-    int64_t id = result.rows().at(i).at(0).get_int64();
-    std::cout << "Row " << i << " ID: " << id << std::endl;
-}
-```
-##### 预处理语句（防止 SQL 注入）
-```cpp
-mysql::statement stmt = conn.prepare_statement("INSERT INTO users (id, name, age) VALUES (?, ?, ?)");
-// 绑定多个参数
-stmt.bind(1, "Alice", 25);
-// 执行插入
-conn.execute(stmt);
-
-// 也可以使用， 注意包含同文件with_params
-const char* sql_string = "select * from users u where u.id = ?;";
-mysql::statement stmt = co_await conn.async_prepare_statement(sql_string);
-short id = 3;
-co_await conn.async_execute(
-    mysql::with_params("SELECT * FROM users u WHERE u.id = {}", id),
-    result
-);
-// 或者
-co_await conn.async_execute(stmt.bind(id), result);
-```
-
-##### 事务操作
-```cpp
-mysql::transaction tx = conn.start_transaction();
-tx.execute("INSERT INTO users (name) VALUES ('Alice')");
-tx.commit();  // 提交事务
-```
-##### 异步查询
-```cpp
-mysql::results result;
-conn.async_execute("SELECT * FROM users", result, [&](mysql::error_code ec) {
-    if (ec) {
-        std::cerr << "异步查询失败: " << ec.message() << std::endl;
-        return;
-    }
-    // 获取结果...
-});
-```
-##### 错误处理
-```cpp
-try {
-    conn.execute("SELECT invalid_column FROM users", result);
-} catch (const mysql::error_with_diagnostics& err) {
-    std::cerr << "SQL 错误: " << err.what() << std::endl;
-    std::cerr << "服务器诊断: " << err.get_diagnostics().server_message() << std::endl;
-}
-```
-#### 协程和异步编程
-协程这一知识点可以参考 [[WebServer-Chat#前置要求#协程]]
-##### 高并发逻辑
-- 同步代码：像流水线工人一样工作
-	- **线性执行**：代码从上到下一行行执行。
-	- **阻塞等待**：每执行一个 I/O 操作（如 `connect()`），线程必须 **停下来等**，不能做其他事。
-	- 一个操作阻塞时，线程无法处理其他任务；**并发能力差**：1000 个用户请求，就需要 1000 个线程，开销大。
-- 异步代码：像快递员扔包裹后继续送下一个
-	- **立即返回**：`async_connect()` 启动后立即返回，不阻塞线程。
-	- **回调处理**：操作完成后，调用传入的回调函数继续处理。
-	- **线程不空转**：即使数据库没响应，线程也可以 **干其他事**（如处理其他连接）。
-	- 操作 **发起后立即返回**，不阻塞线程，操作完成后通过通知（通过回调函数发出通知）。
-	- 协程是实现异步代码的一种方式
-- `co_await`
-	- 当 `co_await` 后的操作（如 async 的 io 操作 `）未完成时，协程会**挂起自身**；
-	- 该操作的后续结果会注册到 `io_context` 的事件循环中；
-	- `co_await async_op(...)` 会自动绑定 `asio::use_awaitable` 调度器；会调用 `async_op(..., asio::use_awaitable)`。
-	- 用其修饰是，当 `async_connect(...)` 等待时，协程暂停，不阻塞线程；
-	- - `co_await` 标记过的操作的执行、挂起和恢复机制 **不由 `co_spawn` 的参数直接决定**，而是由协程内部的 `awaitable` 和 `io_context` 事件循环协同完成。
-- `co_spawn`
-	- `co_spawn`：将协程 **注册到 `io_context` 中**，由它调度；
-```cpp
-asio::co_spawn(
-    ctx, // 事件处理器
-    coro_main(conn, "mysql2.sqlpub.com:3307", "sickwag", "LqX9jBDqvDJYeooE"), // 协程和他的操作内容
-    asio::detached // 事件处理器对协程的处理行为
-);
-```
-阻塞式写法：像写同步代码一样的代码风格和逻辑，实际上执行异步操作。
-```cpp
-	// 同步写法
-	void sync_main(...) {
-	    conn.connect(...);      // 阻塞直到连接成功
-	    conn.execute(...);     // 阻塞直到查询完成
-	    std::cout << result;   // 直接输出
-	    conn.close();          // 阻塞直到关闭
-	}
-	// 异步写法
-	asio::awaitable<void> coro_main(...) {
-	    co_await conn.async_connect(...);  // 挂起等待连接
-	    co_await conn.async_execute(...); // 挂起等待查询
-	    std::cout << result...;           // 查询完成后自动恢复
-	    co_await conn.async_close(...);   // 挂起等待关闭
-	}
-```
-- 其中，`asio::awaitable<void>` 表示不返回任何值
-由于传统同步写法每进行一个同步操作后，需要写一个回调函数告知这个操作执行完毕并且进行错误处理，任务管理器根据回调函数的通知才能进行下一步操作，一旦操作需要多方通知，多层嵌套，代码就含有非常多回调，几乎不可读
-##### 并发事件循环
-`io_context` 是什么？
-- **事件循环（Event Loop）**：就像一个“导演”，管理所有异步操作；
-- 所有 `async_*` 操作（通过 `co_await` 标记的操作）都注册到 `io_context` 的 epoll/kqueue/iocp 等待队列中；
-- **当 I/O 完成，`io_context` 会唤醒对应的协程**。
-- 协程本质是一个 **可挂起/恢复的函数**，内部包含通过 `co_await` 修饰的操作和协程所需的局部变量，资源。
-- 协程的局部变量 **不会因挂起丢失**，因编译器会将其分配在堆内存中（而非普通函数的栈内存）。
-异步连接数据库代码示例：
-```cpp
-asio::awaitable<void> coro_main(
-    mysql::any_connection& conn,
-    std::string_view username,
-    std::string_view password,
-    std::string_view database,
-    std::string_view server_hostname) {
-    mysql::connect_params params;
-    params.username = username;
-    params.password = password;
-    params.server_address.emplace_host_and_port(std::string(server_hostname), 3307);
-
-    co_await conn.async_connect(params);
-    const char* sql_string = "select * from users;";
-    mysql::results result;
-    co_await conn.async_execute("use sickwag_learning;", result);
-    co_await conn.async_execute(sql_string, result);
-    std::cout << result.rows().at(0).at(0) << std::endl;
-    co_await conn.async_close();
-}
-
-void main_impl(int argc, char** argv) {
-    if (argc != 5) {
-        std::cerr << "Usage: " << argv[0] << " <username> <password> <database> <server-hostname>\n";
-        exit(1);
-    }
-
-    asio::io_context ctx;
-    mysql::any_connection conn(ctx);
-    asio::co_spawn(
-        ctx,
-        [&conn, &argv]() {
-            return coro_main(conn, argv[1], argv[2], argv[3], argv[4]);
-        },
-        [](const std::exception_ptr& ptr) {
-            if (ptr) {
-                std::rethrow_exception(ptr);
-            }
-        });
-
-    ctx.run();
-}
-
-int main(int argc, char** argv) {
-    try {
-        main_impl(argc, argv);
-    } catch (const mysql::error_with_diagnostics& err) {
-        std::cerr << "Error: " << err.what() << '\n'
-                  << "Server diagnostics: " << err.get_diagnostics().server_message() << '\n';
-        return 1;
-    } catch (const std::exception& err) {
-        std::cerr << "Error: " << err.what() << std::endl;
-        return 1;
-    }
-}
-```
-#### 执行预处理语句
-千万要注意编译器报错时看看是不是少 include 一些文件，还有创建完协程***一定要记得绑定协程到事件管理器，然后运行***
-```cpp
-asio::awaitable<void> coro_main(
-    mysql::any_connection& conn,
-    std::string_view username,
-    std::string_view password,
-    std::string_view database,
-    std::string_view hostname
-){
-    mysql::connect_params params;
-    params.database = database;
-    params.password = password;
-    params.server_address.emplace_host_and_port(std::string(hostname),3307);
-    params.username = username;
-
-    mysql::results result;
-    co_await conn.async_connect(params);
-    const char* sql_string = "select * from users u where u.id = ?;";
-    mysql::statement stmt = co_await conn.async_prepare_statement(sql_string);
-    short id = 3;
-    co_await conn.async_execute(
-        mysql::with_params("SELECT * FROM users u WHERE u.id = {}", id),
-        result
-    );
-
-    if(result.rows().empty()){
-        std::cerr << "empty query result!";
-    }else{
-        std::cerr << "not empty query result!\n";
-        std::cerr << result.rows().at(0).at(0) << '\n';
-        std::cerr << result.rows().at(0).at(1) << '\n';
-        std::cerr << result.rows().at(0).at(2) << '\n';
-    }
-}
-
-int main(int argc, char** argv) {
-    try {
-        asio::io_context ctx;
-        mysql::any_connection conn(ctx);
-
-        asio::co_spawn(ctx, coro_main(conn, argv[1], argv[2], argv[3], argv[4]), [](const std::exception_ptr& ptr) {
-            if (ptr)
-                std::rethrow_exception(ptr);
-        });
-
-        ctx.run();  // 必须调用，否则协程不会执行
-    } catch (const mysql::error_with_diagnostics& err) {
-        std::cerr << "Error: " << err.what() << '\n'
-                  << "Server diagnostics: " << err.get_diagnostics().server_message() << '\n';
-        return 1;
-    } catch (const std::exception& err) {
-        std::cerr << "Error: " << err.what() << std::endl;
-        return 1;
-    }
-}
-```
-其他方法参考[[#预处理语句（防止 SQL 注入）|预处理语句（防止 SQL 注入）]]
-
-### 静态接口
-Boost 库中“静态接口”是指 **不依赖对象实例** 的***类方法***或自由函数（free function），**通过类名直接调用**，可以是类的静态成员函数，不访问对象内部状态（即不使用 this 指针），常用于封装**异步操作**和**资源管理**的通用逻辑，简化代码结构并提升可维护性
-它不像传统反射（如 Java/Python）那样在运行时动态获取类型信息，而是 **在编译时生成结构体的元数据**，供程序使用。
-你告诉编译器：“这个结构体有哪些字段”，它会 **自动生成一个描述结构体成员的元信息结构**，比如字段名和字段类型。
-#### 结构体元数据解析
-`BOOST_DESCRIBE_STRUCT` 是 Boost.Describe 库中一个宏，用于 **为结构体或类定义成员变量的元数据（metadata）**，以便在编译时或运行时 **访问其字段名、字段类型、字段值**，实现 **静态反射（Static Reflection）**。
-#### 多结果集查询
-使用多结果集查询需要先在单个 `connection::execute` 调用中运行多个分号分隔的文本查询。出于安全考虑，此功能默认禁用。启用它需要在连接之前设置 `handshake_params::multi_queries`
-它的定义为：
-![[Pasted image 20250722152355.png]]
-使用构造函数初始化并将 multi_queries 设置为 true
-像 `DELIMITER` 这样的语句使用此功能 **不起作用**。这是因 `DELIMITER` 是 `mysql` 命令行工具的伪命令，而不是实际的 SQL。
-#### 静态接口结构体解析数据类型
-需要注意的是，使用静态接口解析***行数据结构体*** 需要 mysql 表中字段类型和 C++对应类型字段匹配，`ptr_by_name` 认为**行数据结构体**中成员名称必须和字段名相同。存储的是表的字段名。其实存储的将会是***字段值***
-
-```error
-Error: Incompatible types for field 'id': C++ type 'string' is not compatible with DB type 'MEDIUMINT'
-NULL checks failed for field 'phone': the database type may be NULL, but the C++ type cannot. Use std::optional<T> or boost::optional<T>: The static interface detected a type mismatch between your declared row type and what the server returned. Verify your type definitions. [mysql.client:10]
-Server diagnostics:
-```
-上面错误是由于设置：
-```cpp
-struct Info{
-    std::string id, name, nick_name, priority;
-    std::optional<std::string> phone;
-};
-// 但通过下面代码使用名称解析
-mysql::static_results<mysql::pfr_by_name<Info>> result;
-short id = 3;
-co_await conn.async_execute(
-    mysql::with_params("select id, name, nick_name, priority, phone from users where id = {};", id),
-    result);
-
-// 如果使用boost::mysql::ptr_by_postion，则会按照查询结果字段顺序解析到结构体中
-mysql::static_results<mysql::pfr_by_postion<Info>> result;
-// 按顺序赋值到Info中元素
-```
-最终 mediumint 类型被解析到 `std::string` 类型中导致报错
-`std::int32_t` 与 `TINYINT`（1 字节整数）兼容，但不与 `BIGINT`（8 字节整数）兼容。有关允许的字段类型的完整列表，[请参阅此表](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/static_interface.html#mysql.static_interface.readable_field_reference)。
-
-#### mysql 允许为空字段 C++解析报错
-如果设置了一个字段在 MySQL 中是可以为 `NULL` 的，那么在***行数据结构体***中对应的 C++数据类型可能要转换，比如 `std::string` 类型不能为 NULL（`std::string` 是一个类类型（class type），**它不是指针**，因此**不存在 "NULL" 或 `nullptr` 的概念**。像 C 风格的 `char*` 字符串那样可能指向 `NULL` 或 `nullptr`。）可以通过使用 `std::optional<std::string>` 类型来让变量可以为 `NULL`
-这个字段可以为 `NULL`，可能查询值中字段非空，但为了安全性，代码会选择在编译器报错杜绝运行期类型转换带来的风险，Boost. MySQL 的静态接口无法将 `NULL` 值赋给 `std::string`，于是抛出此异常。
-解决方法是：修改结构体，将可能为 `NULL` 的字段改为 `std::optional<T>`，对封装类 `option<T>` 的解析和操作，需要注意[[#复杂类型误用未定义操作符报错|复杂类型误用未定义操作符报错]]，或者***不使用静态接口映射***，使用 `rows().at().at()` 手动解析
-##### 复杂类型误用未定义操作符报错
-
-对于 `optional<T>` 类型，不能 `<<` 输出值，导致 cmake 大量***近乎不可读的***报错：
-![[Pasted image 20250722003147.png]]
-这些错误来自错误列表（还是可读的😅）
-![[Pasted image 20250722004123.png]] 通过筛选器筛选**输出**关键词，问题列表中也可以筛选从而快速定位
-```bash
-error # 注意error后有空格，一般错误以 字母+数字 编写，可以用筛选器正则表达筛选快速找到错误所在
-warning
-```
-![[Pasted image 20250722004106.png]]
-并通过下面这段代码来输出包装器中值：
-```cpp
-if (info.phone.has_value()) {
-    std::cout << "Phone: " << info.phone.value() << '\n';
-} else {
-    std::cout << "Phone: NULL" << '\n';
-}
-```
-
-##### 反射技术比较
-参考[静态接口 - 1.88.0 - Boost C++ 函数库](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/static_interface.html#mysql.static_interface.meta_checks)比较表格
-
-### UPDATE、事务和分号分隔查询
-#### 简单 update
-执行 update 同样使用 `conn. execute`，只不过一般使用 `with_params` 插入参数
-```cpp
-short id = 3;
-std::string nick_name = "nick";
-co_await conn.async_execute(
-    mysql::with_params("update users u set nick_name = {} where u.id = {};", nick_name, id),
-    result
-);
-```
-对于这样的代码：
-```cpp
-mysql::results result;
-co_await conn.async_execute(
-    mysql::with_params(
-        "START TRANSACTION;"
-        "UPDATE employee SET first_name = {} WHERE id = {};"
-        "SELECT first_name, last_name FROM employee WHERE id = {};"
-        "COMMIT",
-        new_first_name,
-        employee_id,
-        employee_id
-    ),
-    result
-);
-```
-传递给 `with_params` 的参数列表中重复 `employee_id` 违反了 DRY 原则。与 `std::format` 一样，我们可以通过使用手动索引多次引用格式参数
-```cpp
-mysql::results result;
-co_await conn.async_execute(
-    mysql::with_params(
-        "START TRANSACTION;"
-        "UPDATE employee SET first_name = {0} WHERE id = {1};"
-        "SELECT first_name, last_name FROM employee WHERE id = {1};"
-        "COMMIT",
-        new_first_name,
-        employee_id
-    ),
-    result
-);
-```
-#### 将静态接口与多结果集一起使用
-```cpp
-mysql::static_results<
-    std::tuple<>,                  // START TRANSACTION doesn't generate rows
-    std::tuple<>,                  // The UPDATE doesn't generate rows
-    mysql::pfr_by_name<employee>,  // The SELECT generates employees
-    std::tuple<>                   // The COMMIT doesn't generate rows
-> result;
-
-co_await conn.async_execute(
-    mysql::with_params(
-        "START TRANSACTION;"
-        "UPDATE employee SET first_name = {0} WHERE id = {1};"
-        "SELECT first_name, last_name FROM employee WHERE id = {1};"
-        "COMMIT",
-        new_first_name,
-        employee_id
-    ),
-    result
-);
-
-// We've run 4 SQL queries, so MySQL has returned us 4 resultsets.
-// The SELECT is the 3rd resultset. Retrieve the generated rows.
-// employees is a span<const employee>
-auto employees = result.rows<2>(); // 第三个结果集
-if (employees.empty()) {
-    std::cout << "No employee with ID = " << employee_id << std::endl;
-}
-else {
-    const employee& emp = employees[0];
-    std::cout << "Updated: employee is now " << emp.first_name << " " << emp.last_name << std::endl;
-}
-```
-
-### 连接池
-
-创建连接池
-connection_pool 是一个 I/O 对象，包含 any_connection 对象，并且可以从执行上下文和一个 pool_params 配置结构体构建。
-
-```cpp
-// Create an I/O context, required by all I/O objects
-asio:: io_context ctx;
-
-// pool_params contains configuration for the pool.
-// You must specify enough information to establish a connection,
-// including the server address and credentials.
-// You can configure a lot of other things, like pool limits
-mysql:: pool_params params;
-params. server_address. emplace_host_and_port (server_hostname);
-params. username = username;
-params. password = password;
-params. database = "boost_mysql_examples";
-
-// Construct the pool.
-// ctx will be used to create the connections and other I/O objects
-mysql:: connection_pool pool (ctx, std:: move (params));
-```
-通常每个应用程序创建一个连接池。每个连接池应该调用一次 `connection_pool:: async_run。`
-当使用连接池时，我们不需要显式地创建、连接或关闭连接。相反，我们使用 `connection_pool:: async_get_connection` 从池中获取它们。
-```cpp
-mysql::pooled_connection conn = co_await pool.async_get_connection();
-mysql::static_results<mysql::pfr_by_name<employee>> result;
-co_await conn->async_execute(
-    mysql::with_params("SELECT first_name, last_name FROM employee WHERE id = {}", employee_id),
-    result
-);
-```
-当 `pooled_connection` 被销毁时，连接将返回到池中。底层连接将使用轻量级会话重置机制进行清理和回收。后续的 `async_get_connection` 调用可能会检索到相同的连接。这提高了效率，因会话建立的成本很高。
-```cpp
-// This will wait until a healthy connection is ready to be used.
-// pooled_connection grants us exclusive access to the connection until
-// the object is destroyed.
-// Fail the operation if no connection becomes available in the next 20 seconds.
-mysql::pooled_connection conn = co_await pool.async_get_connection(
-    asio::cancel_after(std::chrono::seconds(1))
-);
-```
-### 异步连接数据库
-代码实现参考 [[C++ Code Snippets#MySQL 数据库程序#boost.mysql 异步连接版本]]
 # MySQL 情景设计题
 ### 185. 部门工资前三高的所有员工
 (https://leetcode.cn/problems/department-top-three-salaries/)
@@ -4452,7 +3232,137 @@ on p.player_id=a.player_id and datediff(a.event_date, p.login)=1
 如果使用 where 做筛选，那么和 inner join 没有区别了
 这里需要保留原表 `Activity` 中 `player_id` 做计算，不能保留右边的表（第一次登录表）中信息，所以 left join 的是 Activity，From 的是第一次登录表
 
-# Mysql 机制探究
+# MySQL 架构实现
+参考小林 coding https://xiaolincoding.com/mysql/base
+## SQL 执行流程
+### 总体流程大观
+![[mysql查询流程.webp]]
+
+![[Pasted image 20260815232807.png]]
+
+![[Pasted image 20260815232830.png]]
+**Server 层负责建立连接、分析和执行 SQL**。MySQL 大多数的核心功能模块都在这实现，主要包括连接器，查询缓存、解析器、预处理器、优化器、执行器等。
+**存储引擎层负责数据的存储和提取**。支持 InnoDB、MyISAM、Memory 等多个存储引擎，不同的存储引擎共用一个 Server 层
+### 连接器
+解决用户登录问题，连接器就会获取该用户的权限保存**在内存中**，后续该用户在此连接里的任何操作，都会基于连接开始时读到的权限进行权限逻辑的判断。连接没断更改权限不会影响以
+已连接的用户
+`show processlist` 命令查看已连接用户状态，Sleep 表示idle 连接，默认 8 hours 断开，最大连接数由 `wait_timeout` 参数控制（默认 151），`kill connection + id` 手动断开。
+- 定期断开长连接（短连接是执行一次 SQL 就断开的连接）
+- 客户端主动调用函数重置连接（主要是清除客户端和服务端对当前连接的缓存，仿佛刚刚脸上一样，但 TCP 连接没有断开）
+### 查询缓存（8.0 已废弃）
+***这个阶段发生在解析器解析 SQL 之前的原因是发来 SQL 语句后首先会解析第一个字段判断他是不是查询语句***，如果是才会查询缓存，否则跳过
+解析器解析 SQL 语句后发现是查询，就会进入查询缓存阶段。缓存系统是 key 为 SQL，value 为查询结果的 kv 结构
+对于表的更新，整个 value 结果缓存会即刻失效，而缓存区域有限，导致了:
+- 更新频繁的表会做大量创建缓存而又很快被淘汰的无用功
+- 锁竞争严重：查询缓存使用**全局**互斥锁，并发读取或写入时都会互相阻塞，并发越高问题越严重
+- 内存管理低效：缓存条目大小不一，容易产生内存碎片，并且**以来 LRU 算法**，热点数据可能还没有被使用就被频繁换入换出，这和减少 IO 的初衷背离
+- 匹配规则严格：key 是**纯粹的 sql 语句字符串**
+	- 大小写、空格、注释甚至换行的不同，都会被视作两个完全不同的查询
+	- **非确定性函数**：包含 `NOW()`, `RAND()` 等函数的查询不会被缓存，同样视为不同
+- 哈希开销：即使是完全相同的查询，都需要计算整个字符串的哈希再来匹配缓存
+### 解析器
+1. 词法分析，把每个 token 分为关键字/非关键字
+2. 语法分析，判断是否有语法错误
+3. 构建 SQL 语法树
+注意这里**并不做检测表/存储过程等数据内容是否存在的工作**
+### 预处理器
+1 SQL 重写（Query Rewrite）
+- 展开视图（View Expansion）：将引用的视图替换为定义它的底层查询
+- 子查询展开（Subquery Flattening）：尝试将子查询转换为 JOIN
+- GROUP BY 优化改写
+
+2 语法验证与标准化
+- 表名、列名是否存在
+- 权限初步检查（部分场景）
+- 规范化 SQL 表达式形式
+
+3 宏替换与预处理
+- 处理预处理语句中的占位符
+- SET VAR 类变量的注入处理
+
+4 生成预处理 AST
+- 将解析后的 SQL 构建成抽象语法树（AST）
+- 为后续优化器提供标准化输入
+### 优化器
+**优化器主要负责将 SQL 查询语句的执行方案确定下来**，比如
+- 表里面有多个索引的时候，优化器会基于查询成本的考虑，来决定选择使用哪个索引，或者不使用
+- 多表连接的顺序问题，使用各种连接算法实现最优顺序
+- 决定子查询是否进行物化或半连接优化
+- 进行成本估算
+优化器有一个访问类型字段，检索由快到慢排列为
+
+| 访问类型                | 典型使用场景 / SQL 示例                                            |                                                                                             |
+| :------------------ | :--------------------------------------------------------- | :------------------------------------------------------------------------------------------ |
+| **system**          | 表仅有一行记录（系统表或衍生表），是 `const` 的特例。                            | 极少见，通常只在查询系统表时出现。                                                                           |
+| **const**           | 通过**主键（PRIMARY KEY）** 或**唯一索引（UNIQUE KEY）** 与常量值比较，最多返回一行。 | `SELECT * FROM users WHERE id = 1;`                                                         |
+| **eq_ref**          | 在多表连接（JOIN）中，**对于驱动表的每一行**，被驱动表通过其**主键或唯一索引**进行匹配，且最多返回一行。 | `SELECT * FROM orders o JOIN users u ON o.user_id = u.id;` (假设 `u.id` 是主键)                  |
+| **ref**             | 使用了**非唯一索引**或**唯一索引的前缀**进行等值匹配，可能返回多行。                     | `SELECT * FROM users WHERE name = 'Alice';` (假设 `name` 有普通索引)                               |
+| **ref_or_null**     | 类似于 `ref`，但额外搜索了索引列为 `NULL` 的行。                            | `SELECT * FROM users WHERE referrer_id = 10 OR referrer_id IS NULL;`                        |
+| **index_merge**     | 查询使用了**多个索引**，并将它们的扫描结果合并（取并集或交集）。                         | `SELECT * FROM users WHERE age = 20 OR city = 'Beijing';` (假设 `age` 和 `city` 均有索引)          |
+| **unique_subquery** | 用于优化 `IN` 子查询，且子查询返回的是**唯一索引**的值。                          | `value IN (SELECT primary_key FROM single_table WHERE some_expr)`                           |
+| **index_subquery**  | 类似于 `unique_subquery`，但用于优化 `IN` 子查询中的**非唯一索引**。           | `value IN (SELECT key_column FROM single_table WHERE some_expr)`                            |
+| **range**           | 使用索引进行**范围扫描**，获取一个区间内的行。                                  | `SELECT * FROM users WHERE age BETWEEN 18 AND 30;`<br>`SELECT * FROM users WHERE id > 100;` |
+| **index**           | 扫描了**整个索引树**，通常发生在查询的字段都在某个索引中（覆盖索引），但仍需遍历所有索引条目。          | `SELECT age FROM users;` (假设 `age` 字段有索引)                                                   |
+| **ALL**             | **全表扫描（Full Table Scan）**，没有使用任何索引，性能最差。                   | 表中没有可用索引，或优化器认为全表扫描效率更高时。`WHERE` 条件中对字段进行函数运算（如 `WHERE age + 1 = 20`）常导致索引失效。               |
+
+工作流程： 预处理 AST → CBO（基于成本的优化）→ RBO（规则兜底）→ 生成执行计划 → 执行引擎
+### 执行器
+经历完优化器后，就确定了执行方案，接下来 MySQL 就真正开始执行语句
+按照优化器最终给定的方案做出行动，对于
+```sql
+select * from product where id = 1; # id是主键
+```
+优化器发现是等值查询，同时主键 id 是唯一，不会有 id 相同的记录，所以优化器决定选用访问类型为 const 进行查询给出 `const` 访问类型，所以执行器的工作步骤是：
+1. 源码中调用 `read_first_record()` 只查找一条记录，函数**调用存储引擎接口**，存储引擎到文件系统中检索数据
+2. 存储引擎查找记录
+3. 拿到 innodb 的结果之后判断是否符合用户查询条件（where 子句中的内容），这个"多余"的操作是因为执行器（服务层）并不完全信任存储引擎返回的数据，会多一个质检步骤。并且在 where 子句比较复杂的情况下，`SELECT * FROM product WHERE id = 1 AND name = '苹果'`，且优化器决定使用主键索引。此时，存储引擎只负责按 `id=1` 把整行数据捞出来，但**并不判断 `name` 是否等于“苹果”**（因为索引只建立在 `id` 上）。这个 `name` 的比对，就必须由执行器在拿到记录后进行“后过滤”来判断。
+4. 第一次循环结束，**开启第二次查询**，但由于优化器已经知道了记录最多一条，通过存储引擎查询和"后过滤"的验证，**已经找到了正确答案**，没有必要继续，直接返回 `-1` 停止
+```sql
+select * from product where name = 'iphone';
+```
+1. 这是普通字段查询，没有索引，采用全表扫描
+2. 同样，执行器开始全表扫描找到所有记录中条件符合的记录，但是全表扫描，所以在**没有全表扫描完成都不会返回 `-1` 停止**
+
+执行器是一个无限循环的查询，但是由于优化器给出的方案是 const，就说明这条记录有且只会有一条结果，已经找到了那么就没与必要再继续查询了，所以返回特殊函数告诉执行器没有数据了，应该终止。
+
+### 数据回表和索引下推
+**数据回表**：MySQL 先根据普通索引（二级索引）找到数据的主键 ID，然后再拿着这个 ID 去主键索引（聚簇索引）里把整行数据捞出来。
+InnoDB 的两种索引结构：
+1. **聚簇索引（主键索引）**：叶子节点直接存放了**整行数据**。找到了主键，就等于找到了这行所有字段。
+2. **二级索引（普通索引）**：叶子节点只存放了**索引字段的值**和**对应的主键 ID**。
+回表怎么产生？
+```sql
+-- 对于这样一张表
+CREATE TABLE user (
+    id INT PRIMARY KEY,      -- 主键
+    name VARCHAR(20),
+    age INT,
+    KEY idx_age (age)        -- 在 age 字段上建了一个普通索引
+);
+
+-- 执行
+SELECT * FROM user WHERE age = 25;
+```
+innodb 执行逻辑： 
+1. **查二级索引**：优化器选择使用 `idx_age` 索引。存储引擎在 `age` 的B+树上快速定位到 `age=25` 的叶子节点，发现里面存的是 **`id=10`**（主键值）。
+2. **回表操作**：拿到 `id=10` 后，存储引擎**必须**拿着这个ID，去**主键索引（聚簇索引）** 的B+树上，定位到 `id=10` 的叶子节点。
+3. **获取数据**：在主键索引的叶子节点上，存着 `name='张三'` 和 `age=25` 等**所有字段**的数据。这时，执行器才拿到了完整的记录，返回给客户端。
+存在的问题：
+- 二级索引是按 `age` 顺序存储的，但查出来的主键ID（比如 `1, 100, 2, 99`）是**无序**的。
+- 每次回表去主键索引查数据，都可能跳到磁盘上不同的物理位置。如果回表的行数很多（比如查出了几千条），就要做几千次随机磁盘读取，性能极差。
+这也说明了为什么即使有索引，`select *` 还是会有性能问题，解决方法是使用覆盖索引
+```sql
+-- 只需要 id 和 age，二级索引里刚好全都有，无需回表！
+SELECT id, age FROM user WHERE age = 25; 
+```
+或者建立复合索引，对 age 和 id 作为依据建立新的索引，这样查询就会直接使用 `idx_and_name`
+```sql
+-- 建立 (age, name) 联合索引
+ALTER TABLE user ADD INDEX idx_age_name (age, name);
+
+-- 此时查询 age 和 name，数据都在二级索引里，直接返回，无需回表
+SELECT age, name FROM user WHERE age = 25;
+```
 ## 数据库索引是什么？
 (https://segmentfault.com/a/1190000018153249)
 ### 类比于新华字典
@@ -4494,6 +3404,4 @@ on p.player_id=a.player_id and datediff(a.event_date, p.login)=1
 ### 索引的组织形式
 提高 io 效率的方法：较少 io 次数& 减少 io 访问量（这也是为什么不常使用 `select * ` 的原因
 1、局部性原理
-数据和程序都有聚集成群的倾向，之前被访问过的数据很可能再次被查询，空间局部性，时间局部性
-2、磁盘预读中
-内存跟磁盘在发生数据交互时，一般情况下有一个最小的逻辑单元，称之为页，datapage，页一般由操作系统决定是多大，**一般是 4 k 或者 8 k**，而我们在进行数据交互时，可以取页的整数倍来进行读取，innodb 存储引擎每次读取数据读取 16 k
+2、磁盘预读，innodb 存储引擎每次读取数据读取 16 k
