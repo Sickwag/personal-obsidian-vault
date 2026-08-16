@@ -1,0 +1,11 @@
+{
+	"id": "show-line-number",
+	"name": "显示行号",
+	"version": "1.0.0",
+	"minAppVersion": "1.0.0",
+	"description": "在编辑器中显示光标所在的行号（消息通知），支持自定义快捷键。",
+	"author": "Obsidian",
+	"authorUrl": "https://obsidian.md",
+	"fundingUrl": "https://obsidian.md/pricing",
+	"isDesktopOnly": false
+}

@@ -13,32 +13,17 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Chores/computer learning puzzles.md",
+                "file": "学习/Language/DB/MySQL.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "computer learning puzzles"
+              "title": "MySQL"
             }
           },
           {
-            "id": "0e27d9162b3e1376",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Chores/JobInterviews/简历项目.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "简历项目"
-            }
-          },
-          {
-            "id": "e0ac73773db254f6",
+            "id": "d97954e59f28668d",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -51,8 +36,39 @@
               "icon": "lucide-file",
               "title": "面试题合集"
             }
+          },
+          {
+            "id": "36fb032e6f8c91b4",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chores/JobInterviews/八股/收集的面试题.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "收集的面试题"
+            }
+          },
+          {
+            "id": "35580a682584aa38",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/Bases/操作系统/小林 Coding 图解操作系统.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "小林 Coding 图解操作系统"
+            }
           }
-        ]
+        ],
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -86,7 +102,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "优化器",
+                "query": "重置连接",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -107,11 +123,13 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -197,8 +215,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 230.5,
-    "collapsed": true
+    "width": 230.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -212,10 +229,17 @@
       "pkmer:Open Pkmer Market": false
     }
   },
-  "active": "531f9e6e2be0ba1a",
+  "active": "35580a682584aa38",
   "lastOpenFiles": [
-    "Chores/JobInterviews/八股/收集的面试题.md",
     "Chores/JobInterviews/八股/面试题合集.md",
+    "Chores/JobInterviews/八股/收集的面试题.md",
+    "学习/Language/DB/MySQL.md",
+    "Files & LongText/Attachments/Pasted image 20260815232830.png",
+    "Files & LongText/Attachments/Pasted image 20260815232807.png",
+    "Files & LongText/Attachments/mysql查询流程.webp",
+    "学习/ProjectsStudy/FromDocs/Boost库学习.md",
+    "Chores/JobInterviews/简历项目.md",
+    "Chores/computer learning puzzles.md",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.c8ded6a58e20",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.a75a0f121b09",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.d3bc92ae416a",
@@ -226,7 +250,6 @@
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.f6ae6b6d3273",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.38e30f6a0a62",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.d4cd8ef0459b",
-    "Chores/JobInterviews/简历项目.md",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "学习/Language/ScriptLangs/Ragel.md",
     "学习/Bases/开发范式/设计模式.md",
@@ -251,14 +274,8 @@
     "Files & LongText/Attachments/4956918c43e186d49df7b9802f080de8 1.webp",
     "Files & LongText/Attachments/4956918c43e186d49df7b9802f080de8.webp",
     "学习/其他专业书/Modern C++.md",
-    "Files & LongText/Attachments/ae8252378169c8c14b8b9907983f7d8b.webp",
-    "Files & LongText/Attachments/提问.webp",
-    "Files & LongText/Attachments/166bc9f5b7c545d89f1e36ab8dd772cf.webp",
     "学习/Fragments/编程相关/基本知识/Prompt Project.md",
     "学习/Fragments/编程相关/基本知识/零碎但需要知道的.md",
-    "学习/Bases/操作系统/未命名.md",
-    "Chores/JobInterviews/questions精简.md",
-    "Chores/JobInterviews/八股/面试题.md",
     "未命名.canvas"
   ]
 }

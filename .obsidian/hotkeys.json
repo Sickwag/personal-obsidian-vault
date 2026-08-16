@@ -343,5 +343,14 @@
       "key": "]"
     }
   ],
-  "easy-typing-obsidian:easy-typing-format-switch": []
+  "easy-typing-obsidian:easy-typing-format-switch": [],
+  "show-line-number:show-cursor-line": [
+    {
+      "modifiers": [
+        "Alt",
+        "Shift"
+      ],
+      "key": "="
+    }
+  ]
 }

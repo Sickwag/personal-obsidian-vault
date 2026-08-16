@@ -686,3 +686,361 @@ void bad() {
 - 临时创建的 shared_ptr 没有绑定到名称上，内存中已经为指针指向（分配了）内存区域（这块内存区域被 new 语句分配，是有内容的）。
 - 该内存的唯一持有者是那个刚刚返回的裸指针。
 - 但由于 `shared_ptr` 构造函数没有执行，导致没有创建**接管这块内存的 `shared_ptr` 对象**，但指针存在而应该访问（管理）这个指针的 shared_ptr 对象裸指针丢失，这块内存无法被 delete.
+# Boost.mysql
+## 协程和异步编程
+协程这一知识点可以参考 [[WebServer-Chat#前置要求#协程]]
+### 高并发逻辑
+- 同步代码：像流水线工人一样工作
+	- **线性执行**：代码从上到下一行行执行。
+	- **阻塞等待**：每执行一个 I/O 操作（如 `connect()`），线程必须 **停下来等**，不能做其他事。
+	- 一个操作阻塞时，线程无法处理其他任务；**并发能力差**：1000 个用户请求，就需要 1000 个线程，开销大。
+- 异步代码：像快递员扔包裹后继续送下一个
+	- **立即返回**：`async_connect()` 启动后立即返回，不阻塞线程。
+	- **回调处理**：操作完成后，调用传入的回调函数继续处理。
+	- **线程不空转**：即使数据库没响应，线程也可以 **干其他事**（如处理其他连接）。
+	- 操作 **发起后立即返回**，不阻塞线程，操作完成后通过通知（通过回调函数发出通知）。
+	- 协程是实现异步代码的一种方式
+- `co_await`
+	- 当 `co_await` 后的操作（如 async 的 io 操作 `）未完成时，协程会**挂起自身**；
+	- 该操作的后续结果会注册到 `io_context` 的事件循环中；
+	- `co_await async_op(...)` 会自动绑定 `asio::use_awaitable` 调度器；会调用 `async_op(..., asio::use_awaitable)`。
+	- 用其修饰是，当 `async_connect(...)` 等待时，协程暂停，不阻塞线程；
+	- - `co_await` 标记过的操作的执行、挂起和恢复机制 **不由 `co_spawn` 的参数直接决定**，而是由协程内部的 `awaitable` 和 `io_context` 事件循环协同完成。
+- `co_spawn`
+	- `co_spawn`：将协程 **注册到 `io_context` 中**，由它调度；
+```cpp
+asio::co_spawn(
+    ctx, // 事件处理器
+    coro_main(conn, "mysql2.sqlpub.com:3307", "sickwag", "LqX9jBDqvDJYeooE"), // 协程和他的操作内容
+    asio::detached // 事件处理器对协程的处理行为
+);
+```
+阻塞式写法：像写同步代码一样的代码风格和逻辑，实际上执行异步操作。
+```cpp
+	// 同步写法
+	void sync_main(...) {
+	    conn.connect(...);      // 阻塞直到连接成功
+	    conn.execute(...);     // 阻塞直到查询完成
+	    std::cout << result;   // 直接输出
+	    conn.close();          // 阻塞直到关闭
+	}
+	// 异步写法
+	asio::awaitable<void> coro_main(...) {
+	    co_await conn.async_connect(...);  // 挂起等待连接
+	    co_await conn.async_execute(...); // 挂起等待查询
+	    std::cout << result...;           // 查询完成后自动恢复
+	    co_await conn.async_close(...);   // 挂起等待关闭
+	}
+```
+- 其中，`asio::awaitable<void>` 表示不返回任何值
+由于传统同步写法每进行一个同步操作后，需要写一个回调函数告知这个操作执行完毕并且进行错误处理，任务管理器根据回调函数的通知才能进行下一步操作，一旦操作需要多方通知，多层嵌套，代码就含有非常多回调，几乎不可读
+### 并发事件循环
+`io_context` 是什么？
+- **事件循环（Event Loop）**：就像一个“导演”，管理所有异步操作；
+- 所有 `async_*` 操作（通过 `co_await` 标记的操作）都注册到 `io_context` 的 epoll/kqueue/iocp 等待队列中；
+- **当 I/O 完成，`io_context` 会唤醒对应的协程**。
+- 协程本质是一个 **可挂起/恢复的函数**，内部包含通过 `co_await` 修饰的操作和协程所需的局部变量，资源。
+- 协程的局部变量 **不会因挂起丢失**，因编译器会将其分配在堆内存中（而非普通函数的栈内存）。
+异步连接数据库代码示例：
+```cpp
+asio::awaitable<void> coro_main(
+    mysql::any_connection& conn,
+    std::string_view username,
+    std::string_view password,
+    std::string_view database,
+    std::string_view server_hostname) {
+    mysql::connect_params params;
+    params.username = username;
+    params.password = password;
+    params.server_address.emplace_host_and_port(std::string(server_hostname), 3307);
+
+    co_await conn.async_connect(params);
+    const char* sql_string = "select * from users;";
+    mysql::results result;
+    co_await conn.async_execute("use sickwag_learning;", result);
+    co_await conn.async_execute(sql_string, result);
+    std::cout << result.rows().at(0).at(0) << std::endl;
+    co_await conn.async_close();
+}
+
+void main_impl(int argc, char** argv) {
+    if (argc != 5) {
+        std::cerr << "Usage: " << argv[0] << " <username> <password> <database> <server-hostname>\n";
+        exit(1);
+    }
+
+    asio::io_context ctx;
+    mysql::any_connection conn(ctx);
+    asio::co_spawn(
+        ctx,
+        [&conn, &argv]() {
+            return coro_main(conn, argv[1], argv[2], argv[3], argv[4]);
+        },
+        [](const std::exception_ptr& ptr) {
+            if (ptr) {
+                std::rethrow_exception(ptr);
+            }
+        });
+
+    ctx.run();
+}
+
+int main(int argc, char** argv) {
+    try {
+        main_impl(argc, argv);
+    } catch (const mysql::error_with_diagnostics& err) {
+        std::cerr << "Error: " << err.what() << '\n'
+                  << "Server diagnostics: " << err.get_diagnostics().server_message() << '\n';
+        return 1;
+    } catch (const std::exception& err) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return 1;
+    }
+}
+```
+## 执行预处理语句
+千万要注意编译器报错时看看是不是少 include 一些文件，还有创建完协程***一定要记得绑定协程到事件管理器，然后运行***
+```cpp
+asio::awaitable<void> coro_main(
+    mysql::any_connection& conn,
+    std::string_view username,
+    std::string_view password,
+    std::string_view database,
+    std::string_view hostname
+){
+    mysql::connect_params params;
+    params.database = database;
+    params.password = password;
+    params.server_address.emplace_host_and_port(std::string(hostname),3307);
+    params.username = username;
+
+    mysql::results result;
+    co_await conn.async_connect(params);
+    const char* sql_string = "select * from users u where u.id = ?;";
+    mysql::statement stmt = co_await conn.async_prepare_statement(sql_string);
+    short id = 3;
+    co_await conn.async_execute(
+        mysql::with_params("SELECT * FROM users u WHERE u.id = {}", id),
+        result
+    );
+
+    if(result.rows().empty()){
+        std::cerr << "empty query result!";
+    }else{
+        std::cerr << "not empty query result!\n";
+        std::cerr << result.rows().at(0).at(0) << '\n';
+        std::cerr << result.rows().at(0).at(1) << '\n';
+        std::cerr << result.rows().at(0).at(2) << '\n';
+    }
+}
+
+int main(int argc, char** argv) {
+    try {
+        asio::io_context ctx;
+        mysql::any_connection conn(ctx);
+
+        asio::co_spawn(ctx, coro_main(conn, argv[1], argv[2], argv[3], argv[4]), [](const std::exception_ptr& ptr) {
+            if (ptr)
+                std::rethrow_exception(ptr);
+        });
+
+        ctx.run();  // 必须调用，否则协程不会执行
+    } catch (const mysql::error_with_diagnostics& err) {
+        std::cerr << "Error: " << err.what() << '\n'
+                  << "Server diagnostics: " << err.get_diagnostics().server_message() << '\n';
+        return 1;
+    } catch (const std::exception& err) {
+        std::cerr << "Error: " << err.what() << std::endl;
+        return 1;
+    }
+}
+```
+其他方法参考[[#预处理语句（防止 SQL 注入）|预处理语句（防止 SQL 注入）]]
+
+## 静态接口
+Boost 库中“静态接口”是指 **不依赖对象实例** 的***类方法***或自由函数（free function），**通过类名直接调用**，可以是类的静态成员函数，不访问对象内部状态（即不使用 this 指针），常用于封装**异步操作**和**资源管理**的通用逻辑，简化代码结构并提升可维护性
+它不像传统反射（如 Java/Python）那样在运行时动态获取类型信息，而是 **在编译时生成结构体的元数据**，供程序使用。
+你告诉编译器：“这个结构体有哪些字段”，它会 **自动生成一个描述结构体成员的元信息结构**，比如字段名和字段类型。
+### 结构体元数据解析
+`BOOST_DESCRIBE_STRUCT` 是 Boost.Describe 库中一个宏，用于 **为结构体或类定义成员变量的元数据（metadata）**，以便在编译时或运行时 **访问其字段名、字段类型、字段值**，实现 **静态反射（Static Reflection）**。
+### 多结果集查询
+使用多结果集查询需要先在单个 `connection::execute` 调用中运行多个分号分隔的文本查询。出于安全考虑，此功能默认禁用。启用它需要在连接之前设置 `handshake_params::multi_queries`
+它的定义为：
+![[Pasted image 20250722152355.png]]
+使用构造函数初始化并将 multi_queries 设置为 true
+像 `DELIMITER` 这样的语句使用此功能 **不起作用**。这是因 `DELIMITER` 是 `mysql` 命令行工具的伪命令，而不是实际的 SQL。
+#### 静态接口结构体解析数据类型
+需要注意的是，使用静态接口解析***行数据结构体*** 需要 mysql 表中字段类型和 C++对应类型字段匹配，`ptr_by_name` 认为**行数据结构体**中成员名称必须和字段名相同。存储的是表的字段名。其实存储的将会是***字段值***
+
+```error
+Error: Incompatible types for field 'id': C++ type 'string' is not compatible with DB type 'MEDIUMINT'
+NULL checks failed for field 'phone': the database type may be NULL, but the C++ type cannot. Use std::optional<T> or boost::optional<T>: The static interface detected a type mismatch between your declared row type and what the server returned. Verify your type definitions. [mysql.client:10]
+Server diagnostics:
+```
+上面错误是由于设置：
+```cpp
+struct Info{
+    std::string id, name, nick_name, priority;
+    std::optional<std::string> phone;
+};
+// 但通过下面代码使用名称解析
+mysql::static_results<mysql::pfr_by_name<Info>> result;
+short id = 3;
+co_await conn.async_execute(
+    mysql::with_params("select id, name, nick_name, priority, phone from users where id = {};", id),
+    result);
+
+// 如果使用boost::mysql::ptr_by_postion，则会按照查询结果字段顺序解析到结构体中
+mysql::static_results<mysql::pfr_by_postion<Info>> result;
+// 按顺序赋值到Info中元素
+```
+最终 mediumint 类型被解析到 `std::string` 类型中导致报错
+`std::int32_t` 与 `TINYINT`（1 字节整数）兼容，但不与 `BIGINT`（8 字节整数）兼容。有关允许的字段类型的完整列表，[请参阅此表](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/static_interface.html#mysql.static_interface.readable_field_reference)。
+
+### mysql 允许为空字段 C++解析报错
+如果设置了一个字段在 MySQL 中是可以为 `NULL` 的，那么在***行数据结构体***中对应的 C++数据类型可能要转换，比如 `std::string` 类型不能为 NULL（`std::string` 是一个类类型（class type），**它不是指针**，因此**不存在 "NULL" 或 `nullptr` 的概念**。像 C 风格的 `char*` 字符串那样可能指向 `NULL` 或 `nullptr`。）可以通过使用 `std::optional<std::string>` 类型来让变量可以为 `NULL`
+这个字段可以为 `NULL`，可能查询值中字段非空，但为了安全性，代码会选择在编译器报错杜绝运行期类型转换带来的风险，Boost. MySQL 的静态接口无法将 `NULL` 值赋给 `std::string`，于是抛出此异常。
+解决方法是：修改结构体，将可能为 `NULL` 的字段改为 `std::optional<T>`，对封装类 `option<T>` 的解析和操作，需要注意[[#复杂类型误用未定义操作符报错|复杂类型误用未定义操作符报错]]，或者***不使用静态接口映射***，使用 `rows().at().at()` 手动解析
+##### 复杂类型误用未定义操作符报错
+
+对于 `optional<T>` 类型，不能 `<<` 输出值，导致 cmake 大量***近乎不可读的***报错：
+![[Pasted image 20250722003147.png]]
+这些错误来自错误列表（还是可读的😅）
+![[Pasted image 20250722004123.png]] 通过筛选器筛选**输出**关键词，问题列表中也可以筛选从而快速定位
+```bash
+error # 注意error后有空格，一般错误以 字母+数字 编写，可以用筛选器正则表达筛选快速找到错误所在
+warning
+```
+![[Pasted image 20250722004106.png]]
+并通过下面这段代码来输出包装器中值：
+```cpp
+if (info.phone.has_value()) {
+    std::cout << "Phone: " << info.phone.value() << '\n';
+} else {
+    std::cout << "Phone: NULL" << '\n';
+}
+```
+
+### 反射技术比较
+参考[静态接口 - 1.88.0 - Boost C++ 函数库](https://boost.ac.cn/doc/libs/1_88_0/libs/mysql/doc/html/mysql/static_interface.html#mysql.static_interface.meta_checks)比较表格
+
+## UPDATE、事务和分号分隔查询
+#### 简单 update
+执行 update 同样使用 `conn. execute`，只不过一般使用 `with_params` 插入参数
+```cpp
+short id = 3;
+std::string nick_name = "nick";
+co_await conn.async_execute(
+    mysql::with_params("update users u set nick_name = {} where u.id = {};", nick_name, id),
+    result
+);
+```
+对于这样的代码：
+```cpp
+mysql::results result;
+co_await conn.async_execute(
+    mysql::with_params(
+        "START TRANSACTION;"
+        "UPDATE employee SET first_name = {} WHERE id = {};"
+        "SELECT first_name, last_name FROM employee WHERE id = {};"
+        "COMMIT",
+        new_first_name,
+        employee_id,
+        employee_id
+    ),
+    result
+);
+```
+传递给 `with_params` 的参数列表中重复 `employee_id` 违反了 DRY 原则。与 `std::format` 一样，我们可以通过使用手动索引多次引用格式参数
+```cpp
+mysql::results result;
+co_await conn.async_execute(
+    mysql::with_params(
+        "START TRANSACTION;"
+        "UPDATE employee SET first_name = {0} WHERE id = {1};"
+        "SELECT first_name, last_name FROM employee WHERE id = {1};"
+        "COMMIT",
+        new_first_name,
+        employee_id
+    ),
+    result
+);
+```
+### 将静态接口与多结果集一起使用
+```cpp
+mysql::static_results<
+    std::tuple<>,                  // START TRANSACTION doesn't generate rows
+    std::tuple<>,                  // The UPDATE doesn't generate rows
+    mysql::pfr_by_name<employee>,  // The SELECT generates employees
+    std::tuple<>                   // The COMMIT doesn't generate rows
+> result;
+
+co_await conn.async_execute(
+    mysql::with_params(
+        "START TRANSACTION;"
+        "UPDATE employee SET first_name = {0} WHERE id = {1};"
+        "SELECT first_name, last_name FROM employee WHERE id = {1};"
+        "COMMIT",
+        new_first_name,
+        employee_id
+    ),
+    result
+);
+
+// We've run 4 SQL queries, so MySQL has returned us 4 resultsets.
+// The SELECT is the 3rd resultset. Retrieve the generated rows.
+// employees is a span<const employee>
+auto employees = result.rows<2>(); // 第三个结果集
+if (employees.empty()) {
+    std::cout << "No employee with ID = " << employee_id << std::endl;
+}
+else {
+    const employee& emp = employees[0];
+    std::cout << "Updated: employee is now " << emp.first_name << " " << emp.last_name << std::endl;
+}
+```
+
+## 连接池
+创建连接池
+connection_pool 是一个 I/O 对象，包含 any_connection 对象，并且可以从执行上下文和一个 pool_params 配置结构体构建。
+
+```cpp
+// Create an I/O context, required by all I/O objects
+asio:: io_context ctx;
+
+// pool_params contains configuration for the pool.
+// You must specify enough information to establish a connection,
+// including the server address and credentials.
+// You can configure a lot of other things, like pool limits
+mysql:: pool_params params;
+params. server_address. emplace_host_and_port (server_hostname);
+params. username = username;
+params. password = password;
+params. database = "boost_mysql_examples";
+
+// Construct the pool.
+// ctx will be used to create the connections and other I/O objects
+mysql:: connection_pool pool (ctx, std:: move (params));
+```
+通常每个应用程序创建一个连接池。每个连接池应该调用一次 `connection_pool:: async_run。`
+当使用连接池时，我们不需要显式地创建、连接或关闭连接。相反，我们使用 `connection_pool:: async_get_connection` 从池中获取它们。
+```cpp
+mysql::pooled_connection conn = co_await pool.async_get_connection();
+mysql::static_results<mysql::pfr_by_name<employee>> result;
+co_await conn->async_execute(
+    mysql::with_params("SELECT first_name, last_name FROM employee WHERE id = {}", employee_id),
+    result
+);
+```
+当 `pooled_connection` 被销毁时，连接将返回到池中。底层连接将使用轻量级会话重置机制进行清理和回收。后续的 `async_get_connection` 调用可能会检索到相同的连接。这提高了效率，因会话建立的成本很高。
+```cpp
+// This will wait until a healthy connection is ready to be used.
+// pooled_connection grants us exclusive access to the connection until
+// the object is destroyed.
+// Fail the operation if no connection becomes available in the next 20 seconds.
+mysql::pooled_connection conn = co_await pool.async_get_connection(
+    asio::cancel_after(std::chrono::seconds(1))
+);
+```
+## 异步连接数据库
+代码实现参考 [[C++ Code Snippets#MySQL 数据库程序#boost.mysql 异步连接版本]]
