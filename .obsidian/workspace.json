@@ -67,8 +67,7 @@
               "title": "小林 Coding 图解操作系统"
             }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "vertical"
@@ -215,7 +214,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 230.5
+    "width": 230.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -229,14 +229,27 @@
       "pkmer:Open Pkmer Market": false
     }
   },
-  "active": "35580a682584aa38",
+  "active": "531f9e6e2be0ba1a",
   "lastOpenFiles": [
-    "Chores/JobInterviews/八股/面试题合集.md",
     "Chores/JobInterviews/八股/收集的面试题.md",
     "学习/Language/DB/MySQL.md",
+    "Files & LongText/Attachments/null值列表2.webp",
+    "Files & LongText/Attachments/变长字段长度列表3.webp",
+    "Files & LongText/Attachments/变长字段长度列表2.webp",
+    "Files & LongText/Attachments/变长字段长度列表1.webp",
+    "Files & LongText/Attachments/t_test.webp",
+    "Files & LongText/Attachments/COMPACT.drawio 1.webp",
+    "Files & LongText/Attachments/COMPACT.drawio.webp",
+    "Files & LongText/Attachments/表空间结构.drawio.webp",
+    "Files & LongText/Attachments/database.webp",
+    "Chores/JobInterviews/八股/面试题合集.md",
+    "学习/Language/DB/XXCKDnpn",
+    "学习/Language/DB/XXPoDi5w",
+    "学习/Language/DB/MySQL.md.tmp.603915.cf121e88833e",
+    "学习/Language/DB/MySQL.md.tmp.603915.c01810f06843",
+    "学习/Bases/操作系统/小林 Coding 图解操作系统.md",
+    "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Files & LongText/Attachments/Pasted image 20260815232830.png",
-    "Files & LongText/Attachments/Pasted image 20260815232807.png",
-    "Files & LongText/Attachments/mysql查询流程.webp",
     "学习/ProjectsStudy/FromDocs/Boost库学习.md",
     "Chores/JobInterviews/简历项目.md",
     "Chores/computer learning puzzles.md",
@@ -246,14 +259,9 @@
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.c81453e3e744",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.c45b80c5f109",
     "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.04a40618e0cf",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.5d5e42ca8557",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.f6ae6b6d3273",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.38e30f6a0a62",
-    "Chores/JobInterviews/八股/面试题合集.md.tmp.350251.d4cd8ef0459b",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "学习/Language/ScriptLangs/Ragel.md",
     "学习/Bases/开发范式/设计模式.md",
-    "Files & LongText/Attachments/Pasted image 20260813111920.png",
     "学习/Language/HTML/HTML.md",
     "学习/Language/JavaScript/Modern JavaScript.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
@@ -265,14 +273,6 @@
     "Chores/JobInterviews/八股/自我介绍.md",
     "学习/Bases/开发范式/常用算法和情景处理.md",
     "Chores/JobInterviews/八股/面试题知识.md",
-    "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/Bases/操作系统/小林 Coding 图解操作系统.md",
-    "Files & LongText/Attachments/600ef23c454d9f3653ece44debaaf3a7.webp",
-    "Files & LongText/Attachments/4956390184c51584798be1e5aaabedd1.webp",
-    "Files & LongText/Attachments/2b2dbb2b6ea19871152a3bf6566df205.webp",
-    "Files & LongText/Attachments/532e6cdf4899588f8b873b6435cba2d8-20230309233823236.webp",
-    "Files & LongText/Attachments/4956918c43e186d49df7b9802f080de8 1.webp",
-    "Files & LongText/Attachments/4956918c43e186d49df7b9802f080de8.webp",
     "学习/其他专业书/Modern C++.md",
     "学习/Fragments/编程相关/基本知识/Prompt Project.md",
     "学习/Fragments/编程相关/基本知识/零碎但需要知道的.md",
