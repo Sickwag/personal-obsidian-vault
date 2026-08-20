@@ -71,10 +71,15 @@
             "id": "1f7f6539e9df8d06",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "Chores/JobInterviews/八股/反问环节.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
               "icon": "lucide-file",
-              "title": "新标签页"
+              "title": "反问环节"
             }
           }
         ],
@@ -137,7 +142,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5
+    "width": 248.5,
+    "collapsed": true
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -237,8 +243,10 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "982f21257484af50",
+  "active": "1f7f6539e9df8d06",
   "lastOpenFiles": [
+    "Chores/JobInterviews/八股/面试题知识.md",
+    "Chores/JobInterviews/八股/收集的面试题.md",
     "学习/Language/DB/MySQL.md",
     "Files & LongText/Attachments/f595d13450878acd04affa82731f76c5.webp",
     "Files & LongText/Attachments/readview结构.drawio.webp",
@@ -246,7 +254,6 @@
     "Files & LongText/Attachments/d19a1019dc35dfe8cfe7fbff8cd97e31.webp",
     "Files & LongText/Attachments/f5b4f8f0c0adcf044b34c1f300a95abf.webp",
     "Files & LongText/Attachments/10b513008ea35ee880c592a88adcb12f.webp",
-    "Chores/JobInterviews/八股/收集的面试题.md",
     "Files & LongText/Attachments/null值列表2.webp",
     "Files & LongText/Attachments/变长字段长度列表3.webp",
     "Files & LongText/Attachments/变长字段长度列表2.webp",
@@ -280,7 +287,6 @@
     "Chores/JobInterviews/针对简历的知识点复习.md",
     "Chores/JobInterviews/八股/自我介绍.md",
     "学习/Bases/开发范式/常用算法和情景处理.md",
-    "Chores/JobInterviews/八股/面试题知识.md",
     "学习/其他专业书/Modern C++.md",
     "学习/Fragments/编程相关/基本知识/Prompt Project.md",
     "学习/Fragments/编程相关/基本知识/零碎但需要知道的.md",
