@@ -66,8 +66,19 @@
               "icon": "lucide-file",
               "title": "小林 Coding 图解操作系统"
             }
+          },
+          {
+            "id": "1f7f6539e9df8d06",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -101,7 +112,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "重置连接",
+                "query": "问题",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -122,13 +133,11 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -225,12 +234,12 @@
       "command-palette:打开命令面板": false,
       "workspaces:管理工作区布局": false,
       "obsidian-git:Open Git source control": false,
-      "realclaudian:Open Claudian": false,
-      "pkmer:Open Pkmer Market": false
+      "realclaudian:Open Claudian": false
     }
   },
-  "active": "531f9e6e2be0ba1a",
+  "active": "982f21257484af50",
   "lastOpenFiles": [
+    "学习/Language/DB/MySQL.md",
     "Files & LongText/Attachments/f595d13450878acd04affa82731f76c5.webp",
     "Files & LongText/Attachments/readview结构.drawio.webp",
     "Files & LongText/Attachments/4e98ea2e60923b969790898565b4d643.webp",
@@ -238,12 +247,10 @@
     "Files & LongText/Attachments/f5b4f8f0c0adcf044b34c1f300a95abf.webp",
     "Files & LongText/Attachments/10b513008ea35ee880c592a88adcb12f.webp",
     "Chores/JobInterviews/八股/收集的面试题.md",
-    "学习/Language/DB/MySQL.md",
     "Files & LongText/Attachments/null值列表2.webp",
     "Files & LongText/Attachments/变长字段长度列表3.webp",
     "Files & LongText/Attachments/变长字段长度列表2.webp",
     "Files & LongText/Attachments/变长字段长度列表1.webp",
-    "Files & LongText/Attachments/t_test.webp",
     "Chores/JobInterviews/八股/面试题合集.md",
     "学习/Language/DB/XXCKDnpn",
     "学习/Language/DB/XXPoDi5w",
