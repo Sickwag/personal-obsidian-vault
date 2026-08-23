@@ -53,18 +53,18 @@
             }
           },
           {
-            "id": "84cd8be0ca4c0c3c",
+            "id": "ef91a6fed253627b",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/Bases/操作系统/小林 Coding 图解操作系统.md",
+                "file": "学习/Bases/开发范式/IO复用模型.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "小林 Coding 图解操作系统"
+              "title": "IO复用模型"
             }
           }
         ],
@@ -102,7 +102,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "COW",
+                "query": "",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -231,11 +231,13 @@
   },
   "active": "40ff16ea555bffbc",
   "lastOpenFiles": [
+    "学习/Bases/开发范式/IO复用模型.md",
+    "Chores/JobInterviews/简历项目.md",
+    "学习/Bases/操作系统/小林 Coding 图解操作系统.md",
+    "Chores/JobInterviews/简历项目.md.tmp.367157.76ba96dced15",
     "Chores/JobInterviews/简历项目.md.tmp.367157.1944e0de4edb",
     "Chores/JobInterviews/简历项目.md.tmp.367157.a787f29ac21a",
     "Chores/JobInterviews/简历项目.md.tmp.367157.6f332ef2ff4f",
-    "学习/Bases/操作系统/小林 Coding 图解操作系统.md",
-    "Chores/JobInterviews/简历项目.md",
     "Chores/JobInterviews/未命名.md",
     "Chores/JobInterviews/八股/自我介绍.md",
     "Files & LongText/Attachments/Untitled 6 24.png",
@@ -248,8 +250,6 @@
     "Chores/JobInterviews/简历项目.md.tmp.367157.8f68ba2b7fe1",
     "Chores/JobInterviews/简历项目.md.tmp.367157.78310d0f083b",
     "Chores/JobInterviews/简历项目.md.tmp.367157.69766c7f46c0",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.860010df99f2",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.a5e0e145bc35",
     "Chores/JobInterviews/八股/反问环节.md",
     "Chores/JobInterviews/八股/收集的面试题.md",
     "Chores/JobInterviews/八股/面试题知识.md",
