@@ -36,36 +36,6 @@
               "icon": "lucide-file",
               "title": "简历项目"
             }
-          },
-          {
-            "id": "85da90f7629e7eeb",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/Language/DB/MongoDB.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "MongoDB"
-            }
-          },
-          {
-            "id": "70390e6385e3e7d6",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "01Star-Punchase-Sale-Inventory"
-            }
           }
         ],
         "currentTab": 1
@@ -102,7 +72,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "缓存算法",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -231,22 +201,23 @@
   },
   "active": "40ff16ea555bffbc",
   "lastOpenFiles": [
+    "Chores/JobInterviews/八股/面试题合集.md",
+    "Chores/JobInterviews/简历项目.md",
+    "Chores/JobInterviews/简历项目.md.tmp.367157.b3e80413ff03",
+    "Chores/JobInterviews/简历项目.md.tmp.367157.dc2f015ec012",
+    "Chores/JobInterviews/简历项目.md.tmp.367157.22b76b1f705b",
+    "Chores/JobInterviews/简历项目.md.tmp.367157.6839911d78a1",
+    "Chores/JobInterviews/简历项目.md.tmp.367157.f25779dcd866",
+    "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
+    "学习/Bases/开发范式/常用算法和情景处理.md",
+    "Chores/JobInterviews/简历项目.md.tmp.367157.2c77aaab009a",
+    "Chores/JobInterviews/简历项目.md.tmp.367157.86e2272f90e8",
+    "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
+    "学习/Language/DB/MongoDB.md",
     "Chores/JobInterviews/简历项目.md.tmp.367157.bbacdf825d97",
     "Chores/JobInterviews/简历项目.md.tmp.367157.70db09d099f6",
     "Chores/JobInterviews/简历项目.md.tmp.367157.760c50ef7350",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.5ed608f10027",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.edbc9dfce528",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.bacc0da5bc82",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.58358d8583dc",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.94b2fe2af31a",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.47e45ae1ccde",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.f7b604ae8614",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.c99de417cc66",
-    "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
     "Files & LongText/Attachments/Linux系统软件安装.md",
-    "Chores/JobInterviews/简历项目.md",
-    "学习/Language/DB/MongoDB.md",
-    "Chores/JobInterviews/八股/面试题合集.md",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "Chores/JobInterviews/八股/自我介绍.md",
     "学习/Bases/开发范式/IO复用模型.md",
@@ -275,8 +246,6 @@
     "学习/Language/HTML/HTML.md",
     "学习/Language/JavaScript/Modern JavaScript.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
-    "学习/ProjectsStudy/WriteByMyself/DevFoundations.md",
-    "学习/Bases/开发范式/架构设计.md",
     "未命名.canvas"
   ]
 }
