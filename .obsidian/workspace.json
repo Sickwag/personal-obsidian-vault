@@ -23,21 +23,6 @@
             }
           },
           {
-            "id": "40ff16ea555bffbc",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Chores/JobInterviews/面试复盘.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "面试复盘"
-            }
-          },
-          {
             "id": "0a7c2daf33e57187",
             "type": "leaf",
             "state": {
@@ -51,8 +36,24 @@
               "icon": "lucide-file",
               "title": "反问环节"
             }
+          },
+          {
+            "id": "24c1b3d3abdc8260",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chores/JobInterviews/简历项目.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "简历项目"
+            }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -86,7 +87,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "缓存算法",
+                "query": "浮点数",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -107,7 +108,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -157,48 +159,20 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "学习/Bases/计算机网络/小林Coding 计算机网络.md",
+                "file": "Chores/JobInterviews/简历项目.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
               "title": "出链"
             }
-          },
-          {
-            "id": "262640b74cf47dd5",
-            "type": "leaf",
-            "state": {
-              "type": "tag",
-              "state": {
-                "sortOrder": "frequency",
-                "useHierarchy": true,
-                "showSearch": false,
-                "searchQuery": ""
-              },
-              "icon": "lucide-tags",
-              "title": "标签"
-            }
-          },
-          {
-            "id": "90e50bffa8cacfe6",
-            "type": "leaf",
-            "state": {
-              "type": "all-properties",
-              "state": {
-                "sortOrder": "frequency",
-                "showSearch": false,
-                "searchQuery": ""
-              },
-              "icon": "lucide-archive",
-              "title": "添加笔记属性"
-            }
           }
         ]
       }
     ],
     "direction": "horizontal",
-    "width": 230.5
+    "width": 230.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -211,16 +185,20 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "d97954e59f28668d",
+  "active": "24c1b3d3abdc8260",
   "lastOpenFiles": [
-    "Chores/JobInterviews/面试题知识.md",
+    "Chores/JobInterviews/面试题合集.md",
     "Chores/JobInterviews/简历项目.md",
-    "Chores/JobInterviews/面试复盘.md",
     "Chores/JobInterviews/反问环节.md",
+    "学习/Bases/操作系统/小林 Coding 图解操作系统.md",
+    "Files & LongText/Attachments/v2-cb2ae52724d3d8c4b2d52934ca495f18_720w.webp",
+    "Chores/JobInterviews/面试复盘.md",
+    "Chores/JobInterviews/面试题合集.md.tmp.258455.f4510ab10bb1",
+    "Chores/JobInterviews/面试题合集.md.tmp.258455.cf072da1995d",
+    "Chores/JobInterviews/面试题知识.md",
     "Chores/JobInterviews/面试复盘.md.tmp.367157.44c15a44185f",
     "Chores/JobInterviews/具体公司的了解以及面试准备.md",
     "Chores/JobInterviews/自我介绍.md",
-    "Chores/JobInterviews/面试题合集.md",
     "Chores/JobInterviews/简历项目.md.tmp.367157.b3e80413ff03",
     "Chores/JobInterviews/简历项目.md.tmp.367157.dc2f015ec012",
     "Chores/JobInterviews/简历项目.md.tmp.367157.22b76b1f705b",
@@ -232,12 +210,9 @@
     "Chores/JobInterviews/简历项目.md.tmp.367157.86e2272f90e8",
     "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
     "学习/Language/DB/MongoDB.md",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.bbacdf825d97",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.70db09d099f6",
     "Files & LongText/Attachments/Linux系统软件安装.md",
     "学习/Bases/计算机网络/小林Coding 计算机网络.md",
     "学习/Bases/开发范式/IO复用模型.md",
-    "学习/Bases/操作系统/小林 Coding 图解操作系统.md",
     "Files & LongText/Attachments/Untitled 6 24.png",
     "Files & LongText/Attachments/Pasted image 20251031202354.png",
     "Chores/JobInterviews/收集的面试题.md",
@@ -249,7 +224,6 @@
     "Files & LongText/Attachments/f5b4f8f0c0adcf044b34c1f300a95abf.webp",
     "Files & LongText/Attachments/10b513008ea35ee880c592a88adcb12f.webp",
     "Files & LongText/Attachments/null值列表2.webp",
-    "Files & LongText/Attachments/变长字段长度列表3.webp",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ProjectsStudy/FromDocs/Boost库学习.md",
     "Chores/computer learning puzzles.md",
