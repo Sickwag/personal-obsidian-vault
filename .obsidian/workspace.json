@@ -23,21 +23,6 @@
             }
           },
           {
-            "id": "0a7c2daf33e57187",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Chores/JobInterviews/反问环节.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "反问环节"
-            }
-          },
-          {
             "id": "24c1b3d3abdc8260",
             "type": "leaf",
             "state": {
@@ -50,6 +35,21 @@
               },
               "icon": "lucide-file",
               "title": "简历项目"
+            }
+          },
+          {
+            "id": "44acd229e53f4c28",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chores/JobInterviews/自我介绍.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "自我介绍"
             }
           }
         ],
@@ -108,8 +108,7 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -159,7 +158,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Chores/JobInterviews/简历项目.md",
+                "file": "Chores/JobInterviews/自我介绍.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -185,11 +184,15 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "24c1b3d3abdc8260",
+  "active": "44acd229e53f4c28",
   "lastOpenFiles": [
-    "Chores/JobInterviews/面试题合集.md",
     "Chores/JobInterviews/简历项目.md",
     "Chores/JobInterviews/反问环节.md",
+    "Chores/JobInterviews/自我介绍.md",
+    "Chores/JobInterviews/面试题合集.md",
+    "Chores/JobInterviews/简历项目.md.tmp.266193.1eda92cbf9a9",
+    "Chores/JobInterviews/简历项目.md.tmp.266193.79ff6c25b95f",
+    "Chores/JobInterviews/简历项目.md.tmp.266193.d19095e892a3",
     "学习/Bases/操作系统/小林 Coding 图解操作系统.md",
     "Files & LongText/Attachments/v2-cb2ae52724d3d8c4b2d52934ca495f18_720w.webp",
     "Chores/JobInterviews/面试复盘.md",
@@ -198,16 +201,12 @@
     "Chores/JobInterviews/面试题知识.md",
     "Chores/JobInterviews/面试复盘.md.tmp.367157.44c15a44185f",
     "Chores/JobInterviews/具体公司的了解以及面试准备.md",
-    "Chores/JobInterviews/自我介绍.md",
     "Chores/JobInterviews/简历项目.md.tmp.367157.b3e80413ff03",
     "Chores/JobInterviews/简历项目.md.tmp.367157.dc2f015ec012",
     "Chores/JobInterviews/简历项目.md.tmp.367157.22b76b1f705b",
     "Chores/JobInterviews/简历项目.md.tmp.367157.6839911d78a1",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.f25779dcd866",
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/Bases/开发范式/常用算法和情景处理.md",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.2c77aaab009a",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.86e2272f90e8",
     "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
     "学习/Language/DB/MongoDB.md",
     "Files & LongText/Attachments/Linux系统软件安装.md",
