@@ -8,21 +8,6 @@
         "type": "tabs",
         "children": [
           {
-            "id": "d97954e59f28668d",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Chores/JobInterviews/面试题合集.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "面试题合集"
-            }
-          },
-          {
             "id": "24c1b3d3abdc8260",
             "type": "leaf",
             "state": {
@@ -50,6 +35,21 @@
               },
               "icon": "lucide-file",
               "title": "自我介绍"
+            }
+          },
+          {
+            "id": "49eb1599a5ca29cf",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "文章/哲学/人在苦难中，更像一个人.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "人在苦难中，更像一个人"
             }
           }
         ],
@@ -112,8 +112,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -158,12 +157,41 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Chores/JobInterviews/自我介绍.md",
+                "file": "文章/哲学/人在苦难中，更像一个人.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
               "title": "出链"
+            }
+          },
+          {
+            "id": "213fe7e7d7c3e365",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "50291b7ba3bb9b2e",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
             }
           }
         ]
@@ -184,10 +212,17 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "44acd229e53f4c28",
+  "active": "49eb1599a5ca29cf",
   "lastOpenFiles": [
-    "Chores/JobInterviews/简历项目.md",
+    "文章/哲学/只有在无比沉重的劳动中，人才会活得更为充实.md",
+    "文章/哲学/人在苦难中，更像一个人.md",
+    "文章/哲学/沉思录.md",
+    "学习/其他专业书/现代C++语言核心特性解析.md",
+    "学习/其他专业书/C++并发编程实战（第二版）.md",
+    "学习/其他专业书/Google C++ Style Guide.md",
+    "学习/其他专业书/Modern C++.md",
     "Chores/JobInterviews/反问环节.md",
+    "Chores/JobInterviews/简历项目.md",
     "Chores/JobInterviews/自我介绍.md",
     "Chores/JobInterviews/面试题合集.md",
     "Chores/JobInterviews/简历项目.md.tmp.266193.1eda92cbf9a9",
@@ -225,12 +260,6 @@
     "Files & LongText/Attachments/null值列表2.webp",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/ProjectsStudy/FromDocs/Boost库学习.md",
-    "Chores/computer learning puzzles.md",
-    "学习/Language/ScriptLangs/Ragel.md",
-    "学习/Bases/开发范式/设计模式.md",
-    "学习/Language/HTML/HTML.md",
-    "学习/Language/JavaScript/Modern JavaScript.md",
-    "学习/Bases/开发范式/C++开发范式和术语.md",
     "未命名.canvas"
   ]
 }
