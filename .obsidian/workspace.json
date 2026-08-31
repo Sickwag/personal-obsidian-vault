@@ -8,21 +8,6 @@
         "type": "tabs",
         "children": [
           {
-            "id": "e133b629d70b70e4",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Chores/Liii STEM and mogan first meet.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "Liii STEM and mogan first meet"
-            }
-          },
-          {
             "id": "ea31d3f6e430778e",
             "type": "leaf",
             "state": {
@@ -52,8 +37,7 @@
               "title": "未命名"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -213,11 +197,12 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "3dc70d323dfce910",
+  "active": "ea31d3f6e430778e",
   "lastOpenFiles": [
-    "未命名.md",
     "Chores/Liii STEM and mogan first meet.md",
     "Chores/JobInterviews/面试题合集.md",
+    "未命名.md",
+    "Chores/Liii STEM and mogan first meet.md.tmp.47296.780fbc17427d",
     "Chores/Liii STEM and mogan first meet.md.tmp.303968.affd534a1292",
     "Chores/Liii STEM and mogan first meet.md.tmp.303968.b385c444bad3",
     "文章/哲学/人在苦难中，更像一个人.md",
@@ -242,7 +227,6 @@
     "Chores/JobInterviews/面试复盘.md.tmp.367157.44c15a44185f",
     "Chores/JobInterviews/具体公司的了解以及面试准备.md",
     "Chores/JobInterviews/简历项目.md.tmp.367157.b3e80413ff03",
-    "Chores/JobInterviews/简历项目.md.tmp.367157.dc2f015ec012",
     "学习/ProjectsStudy/WriteByMyself/AzzatoChat.md",
     "学习/Bases/开发范式/常用算法和情景处理.md",
     "学习/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md",
@@ -253,7 +237,6 @@
     "Files & LongText/Attachments/Untitled 6 24.png",
     "Files & LongText/Attachments/Pasted image 20251031202354.png",
     "Chores/JobInterviews/收集的面试题.md",
-    "学习/Language/DB/MySQL.md",
     "Files & LongText/Attachments/f595d13450878acd04affa82731f76c5.webp",
     "Files & LongText/Attachments/readview结构.drawio.webp",
     "Files & LongText/Attachments/4e98ea2e60923b969790898565b4d643.webp",

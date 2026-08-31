@@ -585,6 +585,10 @@ edit_main_rep::print_to_file (url name, string first, string last) {
 4. **熟悉行尾和编码两个坑**：行尾噪声（提交前 `git diff --cached --check`）、Cork vs UTF-8（文本内容 Cork、路径 UTF-8）。这两个是面试官爱问的「你踩过什么坑」好素材。
 5. **Scheme 最小必要语法**：`tm-define`、`(:interactive #t)`、`let` / `let*` / 命名 let 递归、`when` / `if`、`car` / `cdr` / `null?` / `pair?`、`map`、`string=?`、`system->url` / `url->system`。不需要学全，够读懂菜单和分发逻辑即可。
 
+## 正式提交的 PR
+[PR #4457：2084 文件 → 打印 → 选择打印为文件采用 QML 重构](https://github.com/MoganLab/mogan/pull/4457)
+[PR #4456：2085 QML 重构最近打开文档搜索](https://github.com/MoganLab/mogan/pull/4456)
+
 ## 附：两个 PR 的提交序列
 
 2085（分支 `sickwag/2085/qml-recent-documents-search`）：
