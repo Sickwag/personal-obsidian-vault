@@ -461,6 +461,24 @@ edit_main_rep::print_to_file (url name, string first, string last) {
 
 这些是我实际遇到的、花时间定位的问题，按重要性排序。
 
+### 0. `git revert --no-commit` 会把无关的工作区改动带进提交
+
+**现象**：回退菜单接线时用 `git revert --no-commit a9df63d87 && git commit`，结果提交里混进了 `3rdparty/curl/CMakeLists.txt`——那是本地未提交的构建修复，根本不属于这次回退。
+
+**原因**：`--no-commit` 把 revert 结果合进**工作区和暂存区**，此时暂存区里已有的其他改动（curl 的 dl）会被一起 commit。
+
+**处理**：`git reset --soft HEAD~1` 撤销提交（保留暂存），`git restore --staged <curl路径>` 把无关文件退出暂存区，重新 commit。最终提交只含 2 个目标文件。
+
+**教训**：`revert --no-commit` / `cherry-pick --no-commit` 这类「先合并后提交」的操作，动手前先看 `git status`，提交前必须 `git diff --cached --stat` 核对文件清单。
+
+### 0.5 PR 题目可能隐藏在后续评论里：菜单入口接线的教训
+
+**现象**：我按参考 PR 范围只重绑了快捷键，后来用户实测发现菜单没变化；补接菜单后，用户又从 PR 题目原文里发现补充要求：「保留打印为文件菜单入口原有的直接系统保存位置选择，不再弹出 QML 设置窗口」——菜单必须保留旧交互，QML 只上快捷键。
+
+**处理**：`git revert` 掉菜单接线提交（不用 reset+force push，历史保留「接线→按题目回退」轨迹）。
+
+**教训**：做笔试题时把 PR/issue 的**全部评论**读完再动手；题目对「哪些入口要改、哪些保留」的边界描述可能藏在正文细节里。我最初问用户「菜单要不要接」时给的建议方向就错了。
+
 ### 1. 工作区 7638 个文件全是 CRLF 行尾噪声
 
 **现象**：`git status` 显示几千个文件被修改，`git diff` 每个文件都是全量增删。
