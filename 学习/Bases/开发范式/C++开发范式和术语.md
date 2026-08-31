@@ -115,6 +115,15 @@ struct intset *is = malloc(sizeof(struct intset) + extra_bytes);
 // struct intset不是POD？构造函数存在？
 // 自C++起，FAM不是标准C++特性
 ```
+# 可聚合类型（Aggregate Type）
+指可以用列表初始化（brace initialization）进行初始化的类型。 
+一个类型是可聚合的，当且仅当：
+- 不是类类型（用户自定义的类型），或者
+- 是类类型，且满足：
+	1. 没有用户声明的构造函数（user-provided or deleted）
+	2. 没有私有或保护的非静态数据成员
+	3. 没有基类
+	4. 没有虚函数
 # POD 类型
 https://zhuanlan.zhihu.com/p/56161728
 ## 含义解释

@@ -23,21 +23,37 @@
             }
           },
           {
-            "id": "3dc70d323dfce910",
+            "id": "4f0faa36e35cf094",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "未命名.md",
+                "file": "学习/Language/C C++/模板元编程.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "未命名"
+              "title": "模板元编程"
+            }
+          },
+          {
+            "id": "63a83bac6e244cfa",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/Bases/开发范式/C++开发范式和术语.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "C++开发范式和术语"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -71,7 +87,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "浮点数",
+                "query": "",
                 "matchingCase": true,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -183,8 +199,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 230.5,
-    "collapsed": true
+    "width": 230.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -197,11 +212,12 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "ea31d3f6e430778e",
+  "active": "63a83bac6e244cfa",
   "lastOpenFiles": [
-    "Chores/Liii STEM and mogan first meet.md",
+    "学习/Language/C C++/模板元编程.md",
     "Chores/JobInterviews/面试题合集.md",
     "未命名.md",
+    "Chores/Liii STEM and mogan first meet.md",
     "Chores/Liii STEM and mogan first meet.md.tmp.47296.780fbc17427d",
     "Chores/Liii STEM and mogan first meet.md.tmp.303968.affd534a1292",
     "Chores/Liii STEM and mogan first meet.md.tmp.303968.b385c444bad3",
