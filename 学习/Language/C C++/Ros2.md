@@ -278,6 +278,7 @@ rclcpp::QoS qos(10);                                    // history depth = 10
 qos.reliability(RMW_QOS_POLICY_RELIABILITY_RELIABLE);   // 可靠传输（类似 TCP）
 qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL); // 缓存历史给后加入订阅者
 ```
+
 | QoS 维度 | 可选值 | 含义 |
 |---------|--------|------|
 | Reliability | RELIABLE / BEST_EFFORT | 可靠传输（重传，TCP）vs 尽力而为（丢弃，UDP） |
@@ -296,6 +297,7 @@ qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL); // 缓存历史给后
 3. 节点名全局唯一，`ros2 node list` 看到的就是它
 
 **两种创建方式**：
+
 | 方式 | 适用场景 |
 |------|---------|
 | A: `Node::make_shared` | 临时/简单节点，逻辑少 |
@@ -329,3 +331,142 @@ float64 height
 - 验证：`echo $AMENT_PREFIX_PATH | tr ':' '\n'` 看是否含 ws01；`ros2 interface list | grep base_interfaces_demo`
 - 修复：`source /home/azzato/CodeFiles/learning/ros2Learn/ws01_plumbing/install/setup.zsh`
 - **多工作空间 overlay 实战**：`.zshrc` 只常驻 `/opt/ros/jazzy`（本体），**不常驻任何工作空间**（教学项目，避免写死）。用 ws01 干活前手动 source：`source /home/azzato/CodeFiles/learning/ros2Learn/ws01_plumbing/install/setup.zsh`。可临时 alias（不写入文件）：`alias rws1='source .../install/setup.zsh'`。ws00/ws01 包名不冲突可共存，`ros2` 能同时看到已 source 工作区的所有包。
+
+## rclcpp 回调：std::bind vs lambda（易错点）
+`create_subscription` 是模板函数，需从回调推断消息类型，靠 `rclcpp::function_traits` 检查回调的 `operator()` 签名。
+
+**为什么泛型 lambda 报错**：报错 `'decltype' cannot resolve address of overloaded function`。`auto&& PH1` 是模板参数非具体类型；`function_traits` 对泛型 lambda 做 `decltype(&Callback::operator())` 时，`operator()` 是模板，取地址无法确定实例（模板被视为重载集合）。
+
+| 回调写法 | `operator()` | function_traits 能推断？ |
+|---------|-------------|------------------------|
+| `std::bind(&Class::cb, this, _1)` | 具体签名（bind 结果对象，rclcpp 走特化路径） | ✅ |
+| 非泛型 lambda `[this](const Msg &msg){...}` | 普通函数 | ✅ |
+| 泛型 lambda `[this](auto &&msg){...}` | 模板 | ❌ 报错 |
+
+**结论**：
+- 不是"lambda 代替 bind 就错"，而是**泛型 lambda（auto 参数）**才错
+- rclcpp 官方例程大量用非泛型 lambda（具体类型参数），完全没问题
+- 教程用 std::bind 是老写法（绑定成员函数指针）；现代 C++ 推荐 lambda，但**必须写具体类型参数**
+- 教程代码的 `10`（QoS 队列深度）和 `std::bind` 会触发 clang-tidy 风格建议（magic-number / avoid-bind），**保持教程一致即可，不用改**；之前源码损坏疑似与自动应用 clang-tidy 的"lambda 化"建议有关
+
+**顺带教训**：demo01 报 `timer_callback 未声明` 的真实原因是初始化列表被改坏（`count_(0)` 丢失导致 `,  {` 语法错误），编译器解析类结构失败连带成员"看起来未声明"，与 lambda/bind 无关。
+
+## 话题通信底层机制：连接如何建立 / 消息介质
+### 无手动连接配置，靠 DDS 自动发现
+代码里没有 IP/端口/bind/connect，因为连接由 DDS **Discovery（发现协议）**自动完成：
+```
+发布方 create_publisher("chatter") → 注册 DataWriter → SPDP 广播自己存在
+订阅方 create_subscription("chatter") → 注册 DataReader → SPDP 广播自己存在
+   ↓ 互相发现
+匹配阶段：topic 名 + 类型 + QoS 都一致 → 建立逻辑通道（endpoint 配对）
+   ↓
+publish(msg) → DataWriter → DDS 传输 → DataReader → 唤醒 spin → topic_callback
+```
+**唯一要做的 = 把 topic_name 写一致**，它就是"匹配的钥匙"。ROS2 用话题名代替 IP:端口作为寻址，用自动发现代替手动连接，用 pub/sub 代替点对点 socket。
+
+### 消息传递介质（取决于位置）
+| 场景 | 介质 |
+|------|------|
+| 同进程内两节点（intra-process） | 直接指针/共享内存，零拷贝 |
+| 同机不同进程 | 共享内存（FastDDS Shared Memory Transport）或 loopback 网络 |
+| 跨机器 | 网络（DDS 默认 UDP 组播/单播 + QoS 可靠/尽力而为） |
+**没有全局共享的"消息总线"实体**——DDS 去中心化，节点是 peer，靠发现建立的逻辑通道流动，介质由 DDS 自动选。
+
+## 服务通信（2.3）原理
+### 服务端能否自主选择把 response 发给哪个客户端？
+**不能。response 只能发给发出 request 的那个客户端，协议强制**。服务通信底层仍是 DDS，但用 Request/Reply 模式：每个请求带**唯一 request ID（guid/序列号）**，服务端填好 res 后 DDS 按 request ID 自动路由回对应客户端。服务端代码无需指定发给谁：
+```cpp
+void add(const AddInts::Request::SharedPtr req, const AddInts::Response::SharedPtr res) {
+    res->sum = req->num1 + req->num2;  // 自动关联回发来 req 的那个客户端
+}
+```
+多个客户端并发请求 → 服务端收多次回调（取决 executor），每次 res 自动回到对应客户端。类比 HTTP 服务器靠 socket 区分连接，ROS2 服务靠 request ID 区分。
+
+### 服务 vs 话题对比
+| 维度 | 话题通信 | 服务通信 |
+|------|---------|---------|
+| 模式 | 单向流 pub/sub | 双向请求-响应 |
+| 关联 | topic 名（Writer/Reader 配对） | service 名（req/res 通道） |
+| 连接确认 | 无（发了不管有没有人收） | 有 `wait_for_service()` |
+| 响应路由 | N/A | request ID 自动回对应客户端 |
+| 场景 | 持续数据流（传感器） | 偶发、要结果、有逻辑处理 |
+| 底层 | DataWriter/DataReader | requester/replier 模式 |
+服务端 spin：收请求→分发回调→回调填 res→自动发回；客户端 `spin_until_future_complete`：发请求后挂起等待匹配 response。
+
+## rclcpp::spin 到底在做什么
+本质：**永不返回的事件循环 + 回调分发器（reactor）**，三步：
+```
+while (rclcpp::ok()) {
+    wait_for_events();   // 阻塞等待（类似 epoll_wait，无事件睡，不占 CPU）
+    take_ready(ready);   // 事件来了取出
+    exec.callback();     // 调用用户回调（topic_callback/timer_callback/add...）
+}
+```
+**spin 自己不产生数据，只监听事件源并路由到回调**。等价物：Qt `QApplication::exec()`+信号槽、协程框架 epoll 事件循环、gRPC CompletionQueue。
+```
+┌─ 发布方节点 ──────────────┐        ┌─ 订阅方节点 ──────────────┐
+│ Node                       │        │ Node                       │
+│  create_publisher("chatter")│        │  create_subscription("chatter")│
+│  timer_callback()          │        │  topic_callback(msg)       │
+│    publish(msg)            │        │                            │
+└──────────┬─────────────────┘        └───────────┬────────────────┘
+           │                                     │
+           ▼  DataWriter                         ▲  DataReader
+           └─────── DDS 发现 + 匹配 ─────────────┘
+                    (靠 topic 名+类型+QoS)
+           publish ──→ [共享内存/网络] ──→ 唤醒订阅方 spin → topic_callback
+
+┌─ 客户端节点 ───────────────┐        ┌─ 服务端节点 ──────────────┐
+│ Node                       │        │ Node                       │
+│  create_client("add_ints") │        │  create_service("add_ints")│
+│  async_send_request(req)───┼─req───→│  spin 收到 → add(req,res)  │
+│  spin_until_future_complete│←─res───┤  res 自动关联 request_id   │
+└────────────────────────────┘        └────────────────────────────┘
+```
+### 为什么 spin 作用于 node
+node 是回调的容器+上下文：spin 从 node 拿"监听哪些事件源"（publisher/subscriber/timer/service），事件来了调 node 的成员回调。spin(node) = 持续处理该 node 所有事件。
+spin需要知道：
+- 监听哪些事件源？→ 从 node 里拿：node 有哪些 publisher/subscriber/timer/service，spin 就监听这些
+- 事件来了调谁的回调？→ 回调是 node 的成员函数（topic_callback 等），需要 node 对象
+**executor 是 spin 的泛化**：spin(node) 等价于单线程 executor 跑单节点；一个 executor 可管多节点：
+```cpp
+rclcpp::executors::MultiThreadedExecutor exec;
+exec.add_node(node1);
+exec.add_node(node2);
+exec.spin();   // 多线程并行处理多节点事件
+```
+
+### node = 可执行功能的逻辑单元？
+**对但不完整**：node = 通信参与者 + 回调容器（持有 publisher/subscriber/timer/service 事件源 + 回调）。**node 本身不主动执行**，真正驱动是 spin/executor；没有 spin，回调永不触发。类比：node ≈ QObject（持有信号槽），spin ≈ QApplication::exec()（事件循环驱动）。
+
+使用接口前先验证：`ros2 interface show base_interfaces_demo/action/Progress` 输出三段正确。
+**经验**：构建报错先看 `log/latest_build/<pkg>/stderr.log`，找到真实错误再动手，不要盲目重装/清理。
+
+## 动作通信（2.4）原理
+### 三阶段模型与底层封装
+动作通信 = 目标(Goal) + 反馈(Feedback) + 结果(Result)，底层是**服务 + 话题的复合**（教程原话：目标发送/结果获取 = 服务通信封装，连续反馈 = 话题通信封装）：
+```
+.action 三段式: int64 num(Goal) --- int64 sum(Result) --- float64 progress(Feedback)
+```
+任务生命周期：客户端 send_goal → 服务端 handle_goal 决定接受/拒绝 → ACCEPT 后 handle_accepted 起线程 execute() → execute 循环里 publish_feedback() 连续反馈 → 完成 succeed(result)/取消 canceled(result)。
+底层通道：Goal 发送=服务；Feedback=话题（服务端发客户端订阅）；Result=服务；Cancel=另一条服务通道。
+
+### create_server 三个回调的返回值被谁读取
+**三个回调都由 rclcpp_action 框架在合适时机调用，返回值是给框架用的**（框架据此决定协议行为），不是给你的代码：
+| 回调 | 返回值 | 被谁读 | 含义 |
+|------|--------|--------|------|
+| handle_goal | GoalResponse | 框架 | REJECT=拒绝 / ACCEPT_AND_EXECUTE=接受并执行（→触发 handle_accepted）/ ACCEPT_DEFER |
+| handle_cancel | CancelResponse | 框架 | ACCEPT=同意取消 / REJECT=拒绝取消 |
+| handle_accepted | void | 无（框架只通知） | 启动 execute 异步执行 |
+框架收到 REJECT → 自动回客户端"拒绝"（客户端 goal_response_callback 收空指针）；收到 ACCEPT → 回"接受"并调 handle_accepted。
+
+### 为什么 handle_accepted 要开新线程执行 execute
+execute() 是耗时循环，若在 spin 线程跑会**阻塞 spin**（无法响应取消/新任务→假死）。教程用 `std::thread{std::bind(&execute,this,_1),goal_handle}.detach()` 把 execute 丢独立线程，spin 线程保持自由。**这是动作 vs 服务的本质区别**：服务 add() 回调在 spin 线程同步跑完（快）；动作 execute 必须异步（慢）。取消的真正执行：handle_cancel 返回 ACCEPT 只是框架同意，execute 循环里要主动查 `goal_handle->is_canceling()`，为 true 才调 `goal_handle->canceled(result)` 完成取消。
+
+### 客户端三个回调（都在 spin 线程，因为都很短）
+- goal_response_callback：收"接受/拒绝"（空指针=被拒）
+- feedback_callback：收进度 `feedback->progress*100` 打印
+- result_callback：收最终结果，`switch(result.code)` 处理 SUCCEEDED/ABORTED/CANCELED
+客户端 `async_send_goal` 返回的 future 不代表任务完成，只是 goal 已发出；acceptance 和 result 是两个独立回调，中间隔着 feedback 流。
+**服务端 execute 在独立线程，客户端回调在 spin 线程**——因为服务端 execute 耗时不能阻塞，客户端回调都短。用 `rclcpp::Rate loop_rate(10.0)` 控制频率（0.1s 一次）。
+
