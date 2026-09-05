@@ -505,3 +505,102 @@ ROS2 本身是一个分布式通信框架，可以很方便的实现不同设备
 有些场景下需要避免话题重名的情况，但有些场景下又需要将不同的不同的话题名称修改为相同。
 解决方法和 [[#3.4 节点重名]]类似
 当为节点添加命名空间时，节点下的所有非全局话题都会前缀命名空间，而重映射的方式只是修改指定话题
+
+### node_name 填什么
+填**裸名（默认名）**，不含命名空间前缀。完整名是"命名空间前缀 + 重映射结果 + 裸名"合成：
+```
+代码: Node("yyy", "xxx")              ← 裸名 yyy + 命名空间 xxx
+无重映射 → ROS2 图完整名 /xxx/yyy    ← ros2 node list 显示这个
+有重映射 --ros-args -r __node:=zzz → /xxx/zzz  (重映射覆盖裸名 yyy)
+```
+- node_name = 输入（裸名）；ros2 node list 显示的是输出（完整名）
+- 重映射是运行时覆盖裸名，来源优先级：命令行 `--ros-args -r __node:=` > launch `<remap>` > 代码 node_name
+- 不同命名空间用第二构造函数 `Node(name, namespace)` 最清晰（也可 `Node("xxx/yyy")` 但不推荐）
+
+### topic 名称填什么：三类话题
+| 类型 | 写法 | 最终话题名（命名空间 xxx、节点 yyy） |
+|------|------|------|
+| 全局 | `/topic/chatter`（`/` 开头） | `/topic/chatter`（与命名空间/节点名无关） |
+| 相对 | `topic/chatter`（非 `/` 开头） | `/xxx/topic/chatter`（加命名空间前缀） |
+| 私有 | `~/topic/chatter`（`~/` 开头） | `/xxx/yyy/topic/chatter`（加命名空间+节点名） |
+**填相对名不是完整名**：`ros2 topic list` 显示的是合成后完整名（输出），代码里填的是相对名（输入）。规则同样适用于 ros2 run 和 launch 文件。
+
+### ros2 node list 为什么空
+`ros2 node list`/`ros2 topic list` 都是**实时快照**，只列"当前活着"的节点/话题（DDS 发现协议实时探测）。无节点运行 → 空，正常。ros2-daemon 是 CLI 后台守护进程，不是节点。1.3 的 hello world 打印完就 shutdown 退出，所以 list 看不到；2.2 起用 `rclcpp::spin` 保持节点持续运行，才能被 list 看到、接收消息。
+
+## 时间 API：Rate / Timer / Time / Duration / Clock（3.6）
+### Rate 本质：节流器，不是定时器
+`Rate` 不触发任何事，只让**循环以固定频率运行**。两个构造重载参数含义不同：
+
+| 构造 | 参数类型 | 含义 |
+|------|---------|------|
+| `Rate(1.0)` | double | **频率 Hz**（每秒循环次数），如 `Rate(10.0)`=0.1s 一次 |
+| `Rate(1000ms)` | duration | **周期时长**（每次间隔），如 `Rate(100ms)` |
+两者恰都是 1s 所以难察觉，但语义完全不同。action 代码里 `rclcpp::Rate loop_rate(10.0)` = 频率 10Hz。
+
+### 为什么 while 用 rclcpp::ok() 而非 rate.ok()
+`Rate` 没有 `ok()`，它是节拍器不决定循环生死。`rclcpp::ok()` = 全局"ROS2 系统存活"标志：正常 true；收到 SIGINT(Ctrl+C) 或调 `shutdown()` 变 false。循环退出条件应是"系统活着"，不是"定时器还在"。类比协程框架 `while(running_){do_work();sleep(interval);}`。
+
+### Rate vs Timer 对比
+| 机制 | 本质 | 适合 |
+|------|------|------|
+| `Rate` + while | 循环 + 节流（主动轮询，阻塞） | 简单循环固定频率做一件事 |
+| `create_wall_timer` | 定时器 + 回调（事件驱动） | 多频率并行任务、非阻塞 |
+多个 Rate 各自独立（各记各的起始时间+周期），但一个 while 只能跑一个 Rate。多频率任务用 wall_timer 或独立线程各带 Rate。action 的 execute 用 Rate 在独立线程，正因 Rate 阻塞不能占 spin 线程。
+
+### Time / Duration / Clock
+| 类 | 含义 | 类比 chrono |
+|----|------|------------|
+| `rclcpp::Time` | 时间点（时刻） | `time_point` |
+| `rclcpp::Duration` | 时长（两时刻差） | `duration` |
+| `rclcpp::Clock` | 时钟源 | `steady_clock` |
+```cpp
+rclcpp::Time t1(10500000000L);   // 10.5s（纳秒）
+rclcpp::Time t2(2,1000000000L);  // 2s + 1e9 ns = 3s
+rclcpp::Time now = node->now();  // 当前时刻
+t1.seconds(); t1.nanoseconds();  // 读取
+rclcpp::Duration d = t2 - t1;    // Time-Time=Duration
+```
+**时间通过 node 获取**（`node->now()`）而非系统时钟，因为 ROS2 支持仿真时间 use_sim_time——仿真时时间由仿真器驱动，node->now() 尊重仿真时间，std::chrono 不会。
+
+## 用 rqt 控制乌龟
+乌龟订阅 `/turtle1/cmd_vel`（`geometry_msgs/msg/Twist`）接收速度。三种控制方式本质都是往该话题发 Twist：
+- **rqt_publisher**：`rqt --standalone rqt_publisher`，选 topic `/turtle1/cmd_vel` + type Twist，填 `linear.x`(前进)、`angular.z`(转向)，设 frequency，点 + 持续发布
+- **rqt 多插件**：`rqt` → Plugins → Node Graph(计算图) / Message Publisher(发布) / Plot(绘图)
+- **teleop 键盘**：`ros2 run teleop_twist_keyboard teleop_twist_keyboard`，按 i/k/j/l 控制
+rqt_publisher 和 teleop 本质一样（发 Twist），区别是鼠标填值 vs 键盘。`/turtle1/cmd_vel` 是全局话题（`/` 开头不受命名空间影响），`turtle1` 是 turtlesim 节点命名空间前缀。完整链路 = 前面话题通信的实例：控制节点 publish Twist → DDS 匹配 → turtlesim 订阅回调更新位置。
+
+## turtlesim 接口全景与 rqt 交互本质
+### turtlesim 的话题从哪来
+运行 `ros2 run turtlesim turtlesim_node` 后 topic list 出现的名字都是 **turtlesim 源码写死的**（非用户设置）：
+- `/turtle1/cmd_vel`（订阅 Twist，速度输入）、`/turtle1/pose`（发布乌龟位置）、`/turtle1/color_sensor`（模拟颜色传感器）
+- `/parameter_events` + `/rosout` 是**每个 ROS2 节点自动创建**的系统话题：parameter_events 参数变更通知；rosout 日志汇总
+话题分两类：节点自己创建的 + ROS2 系统自动创建的。
+
+### Twist 消息语义（geometry_msgs/msg/Twist）
+`Vector3 linear`（线速度）+ `Vector3 angular`（角速度），各 x/y/z 三维。乌龟是 2D：
+- `linear.x`：前进/后退速度 m/s（正=前）；`angular.z`：转向角速度 rad/s（正=逆时针/左转）
+- 其余 4 个（linear.y/z、angular.x/y）3D 参数乌龟不用，填 0
+`linear.x=5, angular.z=1` = 5m/s 前进 + 1rad/s 左转 → 画偏左圆弧。
+
+### rqt_publisher 四要素
+| 字段 | 含义 |
+|------|------|
+| topic | 发布到哪个话题 |
+| type | 该话题的消息类型（接口，发布订阅双方一致） |
+| rate | 发布频率 Hz（每秒几条） |
+| expression | 动态表达式（Python，如 sin(t) 随时间变化；留空=固定值） |
+默认选中 `/parameter_events` 只是 GUI 初始状态，不是必须连接；控制乌龟要改选 `/turtle1/cmd_vel`。topic 才有 rate/expression（持续流）；service 没有（一次性请求）。
+
+### Service vs Topic（rqt Service Caller 插件）
+`/spawn` 是**服务不是话题**：一问一答（请求→响应），topic 是单向持续流。rqt 点 call = 充当客户端发请求，turtlesim 的 handle_spawn 收到后创建新乌龟并返回 name。
+`.srv` 文件 `---` 分隔请求/响应两组字段。Spawn：x/y/theta/name（请求）→ name（响应）。**theta = 乌龟朝向角度（弧度，0=朝右，π/2=朝上）**。Type=`turtlesim/srv/Spawn` 是服务接口类型固定不可变（像函数签名）；无 rate/expression 因为服务只是一次性请求，而 x/y/theta/name 是请求内容可填值。
+
+### 节点 = 接口集合（高维理解）
+turtlesim_node 暴露三类控制面，全部在源码里定义好：
+- Topics：cmd_vel 控运动（持续流）、pose 输出状态
+- Services：spawn/kill/set_pen/teleport 控数量位置画笔（一次性请求）
+- Parameters：背景颜色（2.5 参数服务）
+rqt/ros2 命令只是**调用这些已定义接口的客户端**——rqt 不知道 turtlesim 内部实现，只需知道接口（名字+类型+数据）。任何节点都能被任何工具控制，一切交互标准化。
+**rqt 本身也是一个 ROS2 节点**（node list 里的 `/rqt_gui_py_node_xxx`，数字自动防重名），订阅/发布/调服务的一等公民。
+`rqt --standalone <plugin>` 与 rqt 主界面 Plugins 菜单加载**完全等价**，只是跳过空界面直接开插件窗口。
