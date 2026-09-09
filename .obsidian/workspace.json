@@ -4,25 +4,41 @@
     "type": "split",
     "children": [
       {
-        "id": "4e35a231ed3a2680",
+        "id": "0d28c340a6f8c2d7",
         "type": "tabs",
         "children": [
           {
-            "id": "00958c5be7d7e5f6",
+            "id": "25d5d10ad8405f68",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "学习/其他专业书/Modern C++.md",
+                "file": "Style.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "Modern C++"
+              "title": "Style"
+            }
+          },
+          {
+            "id": "d0d6058438d4473f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "学习/Language/C C++/Communication protocol.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "Communication protocol"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -182,8 +198,12 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "00958c5be7d7e5f6",
+  "active": "d0d6058438d4473f",
   "lastOpenFiles": [
+    "Style.md",
+    "学习/Language/C C++/Communication protocol.md",
+    "学习/Language/C C++/Ros2.md",
+    "学习/其他专业书/Modern C++.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "学习/Bases/开发范式/设计模式.md",
     "Chores/JobInterviews/面试题合集.md",
@@ -200,7 +220,6 @@
     "学习/Language/java/java编程的逻辑.md",
     "学习/Language/Python/DeepLearning From Scratch.md",
     "学习/Language/java/Java面向对象程序设计考试.md",
-    "学习/Language/C C++/Ros2.md",
     "学习/Language/C C++/C--浙大翁凯.md",
     "学习/Language/C C++/Ros2.md.tmp.137863.97cedb055c60",
     "学习/Language/C C++/Ros2.md.tmp.137863.f93d4cb3134e",
@@ -217,9 +236,6 @@
     "文章/哲学/人在苦难中，更像一个人.md",
     "文章/哲学/只有在无比沉重的劳动中，人才会活得更为充实.md",
     "文章/哲学/沉思录.md",
-    "学习/其他专业书/现代C++语言核心特性解析.md",
-    "学习/其他专业书/C++并发编程实战（第二版）.md",
-    "学习/其他专业书/Google C++ Style Guide.md",
     "Files & LongText/Attachments/v2-cb2ae52724d3d8c4b2d52934ca495f18_720w.webp",
     "Files & LongText/Attachments/Untitled 6 24.png",
     "Files & LongText/Attachments/Pasted image 20251031202354.png",
