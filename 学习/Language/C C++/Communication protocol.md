@@ -158,3 +158,4 @@ vcpkg buildtrees 保留 libmodbus 3.1.12 完整源码：`/home/azzato/Programs/v
 
 协议常量集中在 `src/modbus.h`：`MODBUS_FC_*`（功能码）、`MODBUS_MAX_READ_REGISTERS=125` 等上限、`MODBUS_EXCEPTION_*`（异常码）、`MODBUS_MAX_ADU_LENGTH=260`。注意 libmodbus 用 `MODBUS_ENOBASE` 偏移自定义 errno（`EMBXILADD` 等），从站异常通过负 errno 返回给主站。
 
+
