@@ -21,8 +21,19 @@
               "icon": "lucide-file",
               "title": "设计模式"
             }
+          },
+          {
+            "id": "9ec76a318776db41",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -182,14 +193,14 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "16aeb4f0ff974694",
+  "active": "9ec76a318776db41",
   "lastOpenFiles": [
+    "学习/Bases/开发范式/设计模式.md",
     "Style.md",
     "学习/Language/C C++/Communication protocol.md",
     "学习/Language/C C++/Ros2.md",
     "学习/其他专业书/Modern C++.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
-    "学习/Bases/开发范式/设计模式.md",
     "Chores/JobInterviews/面试题合集.md",
     "Chores/computer learning puzzles.md",
     "Chores/operation in devices.md",
