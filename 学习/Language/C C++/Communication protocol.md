@@ -150,3 +150,12 @@ CONNACK                     <--- 连接成功
 ```
 常见异常断开原因包括设备掉电、网络中断、Keep Alive 超时和 Broker 因协议错误主动断开。MQTT 5.0 还可以使用带有 Will Message 语义的 `DISCONNECT`，显式要求 Broker 发布遗嘱；普通优雅断开通常会撤销遗嘱。
 设备状态同步常用配置是：遗嘱 Topic 为 `device/{id}/status`，Payload 为 `offline`，`Will QoS = 1`，`Will Retain = true`；连接成功后发布 Retained 的 `online` 消息覆盖离线状态。
+
+## Reason Code
+大部分报文都只会包含一个 Reason Code，除了 SUBACK 和 UNSUBACK。因为 SUBSCRIBE 和
+UNSUBSCRIBE 报文可以包含多个主题过滤器，而每个主题过滤器都必须有一个对应的 Reason Code 来
+指示其操作结果，所以 SUBACK 和 UNSUBACK 报文也需要能够包含多个 Reason Codes。这也是为什
+么其他报文中的 Reason Code 都位于可变报头，而 SUBACK 和 UNSUBACK 的 Reason Code 则位
+于载荷部分。
+![[image.04NMV3.png]]
+
