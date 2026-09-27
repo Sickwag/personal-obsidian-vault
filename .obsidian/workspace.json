@@ -36,9 +36,19 @@
               "icon": "lucide-file",
               "title": "Ros2"
             }
+          },
+          {
+            "id": "ceebbfeb6ddc3633",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -198,13 +208,13 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "e8631cd963b27193",
+  "active": "ceebbfeb6ddc3633",
   "lastOpenFiles": [
+    "学习/Language/C C++/Ros2.md",
     "学习/Bases/开发范式/设计模式.md",
     "学习/Language/C C++/Communication protocol.md",
     "Files & LongText/Attachments/image.04NMV3.png",
     "Style.md",
-    "学习/Language/C C++/Ros2.md",
     "学习/其他专业书/Modern C++.md",
     "学习/Language/C C++/C++ Runoob Tutoral.md",
     "Chores/JobInterviews/面试题合集.md",
