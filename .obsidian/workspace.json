@@ -56,8 +56,8 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "/std::ali/",
-                "matchingCase": true,
+                "query": "epoll_create",
+                "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
                 "extraContext": false,
@@ -77,7 +77,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -168,8 +169,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 230.5,
-    "collapsed": true
+    "width": 230.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -184,6 +184,8 @@
   },
   "active": "578eb451e174f8b6",
   "lastOpenFiles": [
+    "学习/Bases/开发范式/IO复用模型.md",
+    "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
     "学习/Bases/开发范式/设计模式.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
     "学习/Language/C C++/Ros2.md",
@@ -219,7 +221,6 @@
     "Chores/Liii STEM and mogan first meet.md.tmp.47296.780fbc17427d",
     "Chores/Liii STEM and mogan first meet.md.tmp.303968.affd534a1292",
     "文章/哲学/人在苦难中，更像一个人.md",
-    "文章/哲学/只有在无比沉重的劳动中，人才会活得更为充实.md",
     "Files & LongText/Attachments/v2-cb2ae52724d3d8c4b2d52934ca495f18_720w.webp",
     "Files & LongText/Attachments/Untitled 6 24.png",
     "Files & LongText/Attachments/Pasted image 20251031202354.png",
