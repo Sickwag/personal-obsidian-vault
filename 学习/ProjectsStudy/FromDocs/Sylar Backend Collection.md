@@ -1978,3 +1978,33 @@ writev(fd, iov, 2);     // 一次系统调用发送两块不连续内存
 ```
 
 `getReadBuffers` 把 ByteArray 中 `[m_position, m_position+len)` 区间的数据映射成 `iovec` 数组 `getWriteBuffers` 类似，返回可写入的空闲缓冲区 `iovec`，供外部直接写入（从 socket `readv` 直接读入 ByteArray）。
+
+# 协程模块
+## Fiber 类
+
+```mermaid
+sequenceDiagram
+    participant M as 调用者线程主 Fiber
+    participant R as root Fiber
+    participant S as Scheduler::run
+    participant B as 业务 Fiber
+    participant I as idleFiber
+
+    M->>R: stop() 调用 rootFiber.call()
+    R->>S: 执行 Scheduler::run()
+    S->>B: swapIn() 执行任务
+    B-->>S: 完成或 yield，swapOut()
+    S->>I: 无任务时 idleFiber.swapIn()
+    I->>I: IOManager::idle() 等待 epoll/Timer
+    I-->>S: 事件处理后 swapOut()
+    S->>B: 重新调度已唤醒任务
+    S-->>R: 调度循环结束
+    R-->>M: callerMainFunc 调用 back()
+```
+
+
+| 函数          | 配对函数        | 主要用途                                       |
+| ----------- | ----------- | ------------------------------------------ |
+| `swapIn()`  | `swapOut()` | 调度器切入普通任务 Fiber                            |
+| `swapOut()` | `swapIn()`  | 普通任务 Fiber 返回调度器                           |
+| `call()`    | `back()`    | 调用者线程切入或退出 caller 模式 Fiber，例如 `_rootFiber` |
