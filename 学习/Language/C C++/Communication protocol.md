@@ -2,21 +2,7 @@
 create: 2026-09-08
 ---
 # Modbus
-## 实验环境
-学习代码位于 `/home/azzato/CodeFiles/learning/modbus-learnWithAI`，使用 CMake Presets 管理构建，依赖由 `/home/azzato/Programs/vcpkg` 提供，目标 triplet 为 `x64-linux`。
-- 编译器：GCC 13.3
-- 构建工具：CMake 3.28.3、Ninja
-- Modbus 库：`libmodbus 3.1.12`，CMake target 为 `modbus`
-- MQTT C++ 主库：Eclipse Paho MQTT C++ `1.6.0`，使用 `<mqtt/async_client.h>` 和 `mqtt::async_client`，CMake target 为 `PahoMqttCpp::paho-mqttpp3`
-- 底层依赖：Paho MQTT C `1.3.16`，由 Paho MQTT C++ 自动链接，不作为课程代码的直接 API
-- MQTT Broker：Mosquitto `2.0.18`，本机临时测试端口为 `18883`
-工程中的 `dependency_smoke` 已完成编译、链接和 `ctest` 验证；Mosquitto 已完成一次发布/订阅链路验证。
-```bash
-cd /home/azzato/CodeFiles/learning/modbus-learnWithAI
-VCPKG_ROOT=/home/azzato/Programs/vcpkg cmake --preset debug
-VCPKG_ROOT=/home/azzato/Programs/vcpkg cmake --build --preset debug
-VCPKG_ROOT=/home/azzato/Programs/vcpkg ctest --preset debug --output-on-failure
-```
+
 # MQTT
 ## QoS 的确定时机
 MQTT 的 QoS 不是连接级属性，而是应用消息投递过程的属性。建立 `CONNECT` 连接时不会为后续所有消息统一设置 QoS。

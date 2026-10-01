@@ -94,3 +94,166 @@ UART 没有唯一适用于所有设备的帧配置。常见配置 8N1 表示 8 �
 起始位让接收端发现新帧；数据位承载一个字符/数据单元；校验位可做简单差错检测；停止位恢复到空闲的逻辑 1，并给接收端一个帧尾。以 8N1 为例，线上每传一个 8 位数据字节要占 10 个位时间。[Analog Devices：UART 帧结构](https://www.analog.com/en/resources/analog-dialogue/articles/2020/11/24/18/10/uart-a-hardware-communication-protocol.html)
 还要区分 UART 字符帧与应用协议的消息帧：UART 的 8N1 只定义一个字节如何通过线；上层协议可把多个字节组合成带地址、长度、命令、校验等字段的完整消息。RS-232/RS-485 则再定义这些逻辑位如何变成线路电压/差分信号。CommStudio 的串口页中的波特率、数据位、校验位、停止位和流控属于串口收发配置；HEX 选项只影响输入内容如何编码为字节，不会改变 UART 帧。
 
+## UART、dist 与学习前置背景
+### UART 是什么
+UART 是 Universal Asynchronous Receiver/Transmitter（通用异步收发器），通常指 MCU、电脑串口控制器或 USB 转串口芯片中的一种硬件功能。发送时，它把 CPU 提供的并行字节组织成起始位、数据位、可选校验位和停止位，再按波特率逐位输出；接收时，它检测帧、采样并把位重新组装成字节。
+UART 定义的是异步收发和字节帧处理，不定义电气电压，也不定义 Modbus 这类应用协议。UART 引脚的逻辑电平可经收发器转换为 RS-232 或 RS-485 信号；使用时需要确认两端电气接口兼容。
+### 项目中的 dist 目录
+dist 通常是 distribution（分发/发布）的缩写，用于暂存准备分发的程序和说明文件。当前 Linux Debug 构建目录下的 dist 是 `build/debug/dist/`。项目的 `CMakeLists.txt` 把主可执行文件生成到 `build/debug/bin/CommStudio`，然后在 POST_BUILD 步骤把它和 `README.md`、`README.zh-CN.md` 复制到 `build/debug/dist/`。
+本轮构建后的 `build/debug/dist/` 确实包含程序和两份 README。这个 Linux 目录当前是同步/暂存目录，不等同于包含全部 Qt 依赖的便携包；Windows 的 `scripts/package.ps1` 会另外调用 `windeployqt` 部署 Qt 运行时。平常从仓库开发启动可用 `./build/debug/bin/CommStudio`；在当前构建目录下，`./build/debug/dist/CommStudio` 是它的一份副本。
+### 开始读这个项目需要的背景
+不需要先学完整套工业自动化理论。这个项目是通信调试上位机，建议边读源码边补概念：
+1. 位、字节、十六进制、文本编码，以及“一个字节怎样在线上传输”。已介绍的 UART/HEX 基础就是这部分。
+2. 通信分层：物理电气接口（TTL/RS-232/RS-485）→ 字节传输方式（UART、TCP、UDP、蓝牙）→ 应用协议（例如 Modbus）。数据传输通道和字节代表的命令/消息不要混为一谈。
+3. 工控设备基本角色：上位机/HMI 负责配置、下发请求和显示状态；PLC、控制板、传感器、仪表等提供状态或执行命令。理解请求、响应、超时、错误和读/写即可开始，不要求先会写 PLC 梯形图。
+4. Qt/QML 基础与项目同步学习：先会辨认 QObject、信号/槽、属性、对象父子关系和事件循环；QML 先学对象树、属性绑定、点击处理器。Qt 官方入门资料也按对象层级和属性绑定介绍 QML，可在阅读 `main.cpp`、`Main.qml` 时同步对照。[Qt：First Steps with QML](https://doc.qt.io/qt-6/qmlfirststeps.html)、[Qt：QObject 信号/槽和对象所有权](https://doc.qt.io/qt-6/qobject.html)
+5. 按模块补专项知识：网络页复习 TCP 是字节流、UDP 是数据报及其消息边界；Modbus 页再学 client/server、功能码、线圈和寄存器；蓝牙页再学 BLE GATT 与经典蓝牙 SPP。Modbus 规范把读写操作定义在离散输入、线圈、输入寄存器和保持寄存器等数据表上。[Modbus Application Protocol Specification](https://www.modbus.org/file/secure/modbusprotocolspecification.pdf)
+用户已有 C++、网络和系统基础，因此优先关注本项目特有的 QML 界面、Qt 信号/属性连接和工业设备协议语义；不用先把所有现场总线、PLC 编程或控制算法学完。
+
+## UART 字节、接口与多设备通信
+### 字节与 UART 帧不是同一个计数
+普通字节仍是 8 bit；UART 不会把“字节”改成 10 bit。以常见 8N1 为例，UART 在字节的 8 个数据位外增加 1 个起始位和 1 个停止位，所以在线上占用 10 个位时间。起始位和停止位是传输边界，不属于那个数据字节。
+```text
+逻辑数据字节：D7 D6 D5 D4 D3 D2 D1 D0    （共 8 bit）
+UART 线帧：   START | D0 D1 D2 D3 D4 D5 D6 D7 | STOP
+              1 bit       8 data bits          1 bit
+```
+UART 一般先发送最低有效位 D0。接收端还原时丢弃起始/停止位，把 8 个数据位组合成一个字节。[Analog Devices：UART 帧结构](https://www.analog.com/en/resources/analog-dialogue/articles/2020/11/24/18/10/uart-a-hardware-communication-protocol.html)
+### 串口、UART 和物理接口
+“串行”描述传输方式：把并行的多位数据变成一位接一位的信号。“串口”在口语中可能指 UART 功能、系统里的端口设备名、连接器或某个物理接口，需看语境。UART 是收发器/外设；它的 TX/RX 逻辑引脚还需要兼容的电气连接方式。TTL/CMOS UART、RS-232、RS-485 不是同一种电平。
+两个直接连接的 TTL UART 设备通常交叉接线：A_TX 接 B_RX，B_TX 接 A_RX，并连接共同参考地；双方匹配波特率、数据位、校验位、停止位和流控。若使用 RS-232 或 RS-485 收发器，则使用相应接口及接线。不能只因接口都标注“串口”就认为可直接相连。
+### RS-232 与 RS-485
+RS-232 使用相对共同地的单端信号，常见点对点、分开的 TX/RX 线，可全双工。RS-485 使用差分信号，抗共模噪声能力较好，可让多个收发器接入同一总线；常见两线半双工，也可用四线实现全双工。
+两者都是电气接口规范，不规定上层消息内容。RS-485 只提供共享物理总线，不自动提供设备地址、访问仲裁或命令协议；多设备共享总线仍要在更高层安排谁何时发送。[TI：RS-485 差分、多点总线与协议边界](https://www.ti.com/lit/pdf/snla049)
+### 上位机、设备与蓝牙
+上位机/HMI 通常运行在人机交互端，用来配置设备、发起请求、显示状态和收发日志；下位设备可能是 PLC、控制板、仪表、传感器或驱动器。此名称表示系统层级，不是 CPU 能力高低。在 CommStudio 的调试场景里，电脑端发测试数据，目标设备接收并按自身协议响应；某些设备也会主动上报状态。
+BLE 的 GATT 把设备提供的数据组织成服务（Service）和特征值（Characteristic）：服务按功能分组，特征值承载具体值并规定可读、可写、可通知等操作。调试软件先发现服务，再选择特征值读取、写入或订阅通知。常见的 Nordic UART Service 是建立在 GATT 特征值之上的“串口风格”自定义服务，并非 BLE 本身的通用串口。[Bluetooth SIG：GATT](https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/Core-61/out/en/host/generic-attribute-profile--gatt-.html)
+经典蓝牙 SPP（Serial Port Profile）通过 RFCOMM 模拟串行电缆连接，应用通常可以像使用虚拟串口那样交换字节流。它与 BLE GATT 的服务/特征值读写方式不同。[Bluetooth SIG：Serial Port Profile](https://www.bluetooth.com/specifications/specs/serial-port-profile-1-2/)
+### 中断、串口日志和 cout
+中断是外设或硬件事件发出的紧急通知；CPU 暂停当前执行，保存现场并进入中断服务程序（ISR）处理。中断响应延迟指事件发生到处理程序开始执行之间的等待时间；一个 ISR 执行太久，会推迟其他不能抢占它的中断和主循环/任务的工作，具体影响还与中断优先级和 MCU 架构有关。[Arm：Cortex-M 中断延迟与优先级](https://developer.arm.com/community/arm-community-blogs/b/architectures-and-processors-blog/posts/beginner-guide-on-interrupt-latency-and-interrupt-latency-of-the-arm-cortex-m-processors)
+嵌入式系统中的 `printf` 常被重定向到 UART。UART 发送速度远低于 CPU 执行速度；若打印函数等 TX 就绪/发送完成，ISR 就会停留很久。比如 115200 baud、8N1 时，20 个字符至少占 20×10/115200 秒，约 1.74 ms，尚未计入格式化开销。格式化输出还可能用较多栈、缓冲区、锁或非可重入库函数。安全做法是在 ISR 里只记录短事件或数据到固定大小环形缓冲区，尽快返回，再由主循环/RTOS 任务格式化并发送；也可使用非阻塞 DMA/异步日志。若缓冲区满，需要规定丢弃、覆盖或计数策略。Zephyr 的 deferred logging 也是把耗时格式化和输出移到调用上下文之外处理的例子。[Zephyr：Deferred logging](https://docs.zephyrproject.org/latest/services/logging/index.html)
+`std::cout` 在桌面程序的普通线程中可以使用；在 MCU 上它可能被重定向到 UART、半主机或其他输出后端，开销和行为依实现而异。它和 `printf` 一样不应默认在 ISR 中安全或非阻塞；“线程安全”也不等于“可在中断上下文调用”。
+### USB 转串口模块
+CH340、CP2102、FT232 是不同厂商的 USB-UART 桥接芯片系列。典型数据路径是：
+```text
+电脑 USB 主机 ⇄ USB-UART 桥接芯片 ⇄ UART TX/RX 逻辑线 ⇄ MCU/设备
+```
+桥接芯片处理 USB 一侧，并把电脑驱动交付的数据转换成 UART 位流，反方向也把 UART 收到的数据交给 USB。电脑通常通过驱动看到 COMx、/dev/ttyUSB* 等端口。小模块可能还包含连接器、稳压器或电平转换；仅有 USB-UART 桥不等于 RS-232 电压输出。真正连接 RS-232 设备通常还需要 RS-232 收发器（如 MAX3232 一类）。[WCH：CH340](https://www.wch-ic.com/downloads/CH340DS1_PDF.html)、[Silicon Labs：CP2102 USB-UART Bridge](https://www.silabs.com/interface/usb-bridges/classic/device.cp2102?tab=techdocs)、[FTDI：FT232R 数据手册](https://ftdichip.com/wp-content/uploads/2020/08/DS_FT232R.pdf)
+### 波特率不一致为何乱码
+接收端发现起始位后，按自己配置的位时间采样。若发送端每位持续约 104 微秒（9600 baud），接收端却按 208 微秒（4800 baud）取样，就会跨过发送端多个位来读；即使只有小幅速率差，每一位的采样偏差也会在一帧中逐步积累，最终可能采到位边沿或相邻位。结果可能是数据错误、校验错误、停止位错误、乱码或收不到有效帧。下一帧开始时接收端可重新同步，但无法修复已错误读取的当前帧。[Analog Devices：UART 时钟误差预算](https://www.analog.com/en/resources/technical-articles/determining-clock-accuracy-requirements-for-uart-communications.html)
+### 多个 UART、DMA 和软串口
+- 多个硬件 UART/USART：芯片有 USART1、USART2 等独立外设时，可以分别配置并连到不同接口。它们是多个通信外设/通道，不等同于同一条多点总线。
+- DMA：直接内存访问控制器可在外设寄存器/FIFO 与内存缓冲区间搬运数据，CPU 不必逐字节读写，通常只处理 DMA 完成、半完成或错误事件。DMA 提高收发处理效率，但不会凭空增加 UART 数量，也不会把一条 UART 线变成多条独立线路。[ST：DMA 在外设与内存间传输数据](https://www.st.com/resource/en/reference_manual/dm00305990.pdf)
+- “DMA + 多路复用”需要看具体芯片文档。它可能指 DMA 请求多路复用器把不同外设的请求路由到 DMA 通道，也可能指用硬件开关选择某个串口设备；这两者不是同一概念。仅配置 DMA 不会自动完成设备寻址或总线仲裁。
+- 软串口（bit-banging）：用定时器安排时间、由 GPIO 软件翻转/采样来模拟 UART。它能在缺少硬件 UART 时补一个低速通道，但占用 CPU，定时抖动会影响收发，高速和并发能力通常较弱。[Microchip：Bit-banged UART 实现](https://www.microchip.com/en-us/application-notes/an2290)
+需要区分两类“多设备”：多个独立 UART 外设对应多条独立链路；RS-485 多点是多个设备共用一条差分总线，必须通过地址和发送时序避免同时驱动总线。硬件 UART、DMA、DMAMUX、软串口是 MCU 实现资源的办法，不是同一层级的通信协议方案。
+
+
+## RS-485 的 A/B 差分信号
+在 RS-485 场景里，A、B 是一对差分线。发送器让两线之间的电压差改变，接收器主要判断两线的差值，而不是只看某一根线相对地的电压：
+```text
+Vdiff = VA - VB
+```
+可以把它想成跷跷板：一个状态下 A 比 B 高，另一个状态下 B 比 A 高。外界噪声若同时耦合到两根线上，两线的共同变化会在相减时大幅抵消，因此差分传输通常比单根信号线更抗共模干扰。
+A/B 命名与逻辑 0/1 的对应在不同厂商资料中可能不一致；接线时按两端收发器手册核对，不能只凭 A、B 字母猜极性。RS-485 两线半双工时，A/B 是同一条共享总线的一对线，不是分别代表发送和接收的 TX/RX。[TI：RS-485 A/B 极性约定](https://e2e.ti.com/cfs-file/__key/telligent-evolution-components-attachments/13-143-00-00-00-26-49-60/RS485-_2D00_-Polarity-Conventions.pdf)
+## UART 数据位与普通字节
+普通程序里的 1 字节仍是 8 bit。UART 配置中的“数据位”表示每个 UART 字符帧的数据字段有几位，不会改变 `char`、`QByteArray` 等软件数据单元的大小。
+例如配置 7 个数据位时，一个 UART 帧只携带 7 个数据位，数值范围通常是 0～127；起始位、可选校验位和停止位仍是额外的帧控制位。若上层用一个 8-bit 字节保存内容，发送时必须决定如何映射到 7-bit 数据字段；最高位为 1 的值无法原样通过单个 7-bit 数据字段传送。8N1 则是在每个帧中传 8 个数据位，所以刚好承载一个普通 8-bit 字节。
+## CommStudio 的 DTR 与 RTS
+DTR（Data Terminal Ready）和 RTS（Request To Send）是传统串行/调制解调器控制线，不是 TX/RX 数据线。DTR 通常表示终端侧已就绪；RTS 原本表示请求发送，在 RTS/CTS 硬件流控中会和对端 CTS 配合，用来控制是否继续发送。
+CommStudio 串口页中的复选框会在端口已打开时调用 Qt 的 DTR/RTS 设置接口；它们控制的是适配器提供的控制信号，不会在收发内容里多加字节。某些开发板会把 DTR 或 RTS 接到复位/启动模式电路，因此改动电平可能让板子复位。具体效果取决于 USB 转串口芯片、驱动和设备接线；使用 RTS/CTS 流控时，不要手动改变 RTS，除非设备设计要求这样做。[项目：DTR/RTS 实现](https://github.com/LocasYang/CommStudio/blob/main/src/managers/serialmanager.cpp)、[串口页复选框](https://github.com/LocasYang/CommStudio/blob/main/qml/pages/SerialPage.qml)
+## HEX+ASCII 显示
+HEX+ASCII 是把同一组收到或发出的字节并排显示为十六进制和字符形式，不会把数据发送两遍，也不会改变线上内容。例如：
+```text
+字节：48 69 0D 0A 00
+字符：H  i  ␍  ␊  ␀
+```
+CommStudio 对二进制收发记录的 HEX+ASCII 视图实际用 `HEX | 字符` 排列；CR、LF、TAB、NUL 显示成可辨认符号，其他低位控制字符显示为中点；状态/提示行仍显示文本。普通文本行按 UTF-8 转换；非纯文本数据的字符栏使用逐字节 Latin-1 风格显示，因此二进制字节或 UTF-8 多字节字符在字符栏可能看起来奇怪，应以左侧 HEX 为准。[项目：HEX/字符转换](https://github.com/LocasYang/CommStudio/blob/main/src/core/trafficmodel.cpp)、[项目：终端显示](https://github.com/LocasYang/CommStudio/blob/main/qml/components/TerminalView.qml)
+## 没有硬件时如何练习
+CommStudio 没有把串口硬件“模拟出来”，但可以先练习界面、字节表示、网络收发和 Modbus 模拟。
+- **练网络收发**：启动两个 CommStudio 实例。实例 A 选择 TCP Server，监听默认端口 6000；实例 B 选择 TCP Client，远端填 `127.0.0.1:6000`。连接后两边都能发送并观察 TX/RX。这个练习验证本机 TCP 和应用收发流程，不等于验证 UART 或 RS-485。
+- **练 Modbus**：实例 A 选择“TCP 从站模拟”，端口可设为 1502；实例 B 选择“TCP 主站”，地址填 `127.0.0.1`、端口填 1502，然后发起手动读请求或配置轮询任务。项目内置 TCP 从站模拟器和寄存器区。使用 1502 可避开 Linux 上绑定 502 这类低端口通常需要额外权限的问题。
+- **练串口**：没有串口设备时，不能验证真实线路收发。可以用虚拟串口对模拟两端，例如系统安装了 `socat` 时运行 `socat -d -d pty,raw,echo=0 pty,raw,echo=0`，它会创建一对伪终端；但当前串口下拉框只显示 Qt 从系统发现的端口，伪终端不一定会被列出，界面也没有手动输入端口名的入口。真正验证前需先确认两个伪终端都出现在列表中。
+- **练蓝牙**：需要有蓝牙设备作为对端；没有设备时可看界面和代码，但无法完成真实发现、连接和数据交互。
+## Linux 的 ttyS0～ttyS31
+`/dev/ttyS0` 到 `/dev/ttyS31` 是 Linux 串口设备名称，常见于 8250/16550 兼容的串口驱动。CommStudio 没有硬编码这 32 个选项：`SerialManager` 调用 `QSerialPortInfo::availablePorts()` 获取系统枚举结果，QML 再把结果放进下拉框。
+“32”通常来自 Linux 内核配置的 8250 UART 支持数量上限；内核选项 `CONFIG_SERIAL_8250_NR_UARTS` 决定驱动可支持的最大端口数，Linux x86_64 默认配置中可见其设为 32。它不是“电脑上有 32 个物理串口”的承诺，也不是所有机器都必须有 32 个可用端口。某个条目是否对应真实可用硬件，要结合 `/dev/ttyS*`、系统设备信息和设备权限确认。[Qt：Linux 串口枚举](https://doc.qt.io/qt-6/qserialportinfo.html)、[Linux 8250 UART 数量配置](https://github.com/torvalds/linux/blob/master/drivers/tty/serial/8250/Kconfig)、[Linux x86_64 默认配置](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig)
+## 文件发送的 4 KB 分块与协议层次
+CommStudio 的文件发送不是一种新的 UART 帧格式。当前 QML 每次调用传入 4096 字节和 0 毫秒间隔；C++ 的每次定时回调从文件读取最多 4096 字节，再调用 `QSerialPort::write()`。回调把定时器重新设为 0 毫秒，尽快安排下一批。代码虽然接收 `chunkSize` 参数，但实际读取长度写死为 4096。
+数据路径可以这样看：
+```text
+文件原始字节
+  → CommStudio 每次读取最多 4096 字节（程序内分批）
+  → QSerialPort::write() 排入 Qt/系统发送队列
+  → UART 按配置把数据位组成字符帧，例如 8N1
+  → TTL/RS-232/RS-485 等电气线路
+  → 对端 UART 还原字节
+  → 对端应用协议（例如 Modbus RTU 或设备自定义协议）
+```
+4 KB 是程序的读写批次大小，不是 UART 标准规定的帧长；批次边界不会自动保留在线路上。对端看到的是连续字节流，UART 再按单字节/字符配置分帧。通用文件发送路径没有为文件增加包头、长度、序号、校验、确认或重传；若接收设备需要这些信息，必须由设备协议另行规定。
+Qt 的 `QSerialPort::write()` 是异步接口：调用成功表示数据被接受/排入发送流程，不代表对端已经收到或校验成功。项目在排队后立即累计进度并安排下一批，没有等待 `bytesWritten` 或对端确认，所以界面进度不能当作设备接收确认；4 KB 分批也不等于严格限制最多只有 4 KB 未发送数据。[项目：文件分批发送](https://github.com/LocasYang/CommStudio/blob/main/src/managers/serialmanager.cpp)、[Qt：异步串口写入](https://doc.qt.io/qt-6/qtserialport-terminal-example.html)
+
+
+## Modbus 数据区与从站模拟
+### 四类数据区
+Modbus 把数据组织成四张逻辑表，不要求设备内部真的用四块独立内存实现。每个数据项有协议地址：
+| 数据区 | 单项宽度 | 典型功能码 | 读写含义 |
+|---|---:|---|---|
+| 线圈（Coils） | 1 bit | 01 读，05/0F 写 | 可读写的开关量输出；“线圈”是历史名称，不表示必须连接实体继电器 |
+| 离散输入（Discrete Inputs） | 1 bit | 02 读 | 只读开关量输入 |
+| 保持寄存器（Holding Registers） | 16 bit | 03 读，06/10 写 | 可读写的数值区 |
+| 输入寄存器（Input Registers） | 16 bit | 04 读 | 只读数值区 |
+这些名字是 Modbus 数据模型与访问权限的分类；设备如何把它们映射到传感器、开关或内部变量由设备固件决定。[Modbus 应用协议规范](https://modbus.org/docs/Modbus_Application_Protocol_V1_1b3.pdf)
+### 数据来源与数字框
+CommStudio 的“寄存器区数据来源”只在从站模拟模式显示，因为模拟器需要预先提供数据，才能对主站的读请求作出响应。RTU 从站和 TCP 从站使用相同的数据生成逻辑，只是底层分别创建串口 RTU server 和网络 TCP server。
+每个区域的下拉框选择生成算法：
+- `static`：不按定时器改写数据。
+- `random`：围绕基准值生成随机值。
+- `counter`：按时间计数并循环。
+- `ramp`：按周期逐步上升后回到起点。
+- `sine`：按正弦曲线往复变化。
+模拟值每秒更新。源码中的基准值和幅度默认分别为 100 和 10，但当前页面没有给它们提供输入框。下拉框旁显示的 `100` 是要配置/更新的地址数量，不是数值本身；生成器最多逐项更新前 1024 个地址。
+位数据区只能表示 0 或 1。Qt 的 Modbus 数据模型把 0 保留为 0、把任何非零数转换为 1；而模拟器默认基准值 100、幅度 10，因此这些算法用于线圈/离散输入时基本都会变成 1，无法呈现有意义的高低跳变。[Qt：QModbusDataUnit 的位数据语义](https://doc.qt.io/qt-6/qmodbusdataunit.html)
+界面说明文字提到可在寄存器表中编辑 `static` 区，但目前 QML 的“寄存器表”显示的是主站最近读取的数据，不是从站模拟器数据；`simulatorRegisters` 和 `writeSimulatorRegister()` 虽由 C++ 暴露，页面没有调用它们。因此这项说明与当前页面实现不一致，静态值没有对应的可见编辑控件。
+### RTU 与串口端口
+Modbus RTU 是 Modbus 的串行传输模式。它不走 TCP，但仍需要串行链路；CommStudio 用 `QModbusRtuSerialClient`，并把所选 `ttyS*`、波特率、数据位、校验位和停止位配置给串口接口。物理电气接口可能是 RS-485，也可能是 RS-232，取决于设备；RTU 是协议传输模式，`ttyS0` 是 Linux 的串口设备名，两者处于不同层次。[Modbus 串行线路规范](https://www.modbus.org/docs/Modbus_over_serial_line_V1.pdf)
+### Unit ID
+在 RTU 请求中，这个字段实际是从站地址，跟在 RTU 帧开头，用来让总线上的设备判断“这是发给谁的”。CommStudio 的主站字段被标为 Unit ID，从站字段被标为从站地址；生成 RTU ADU 时前者作为从站地址写入帧。
+在 Modbus TCP 中，Unit Identifier 位于 MBAP 头。它常用于 TCP/串行网关把请求路由给下游 RTU 从站；若设备直接连接 TCP 网络，具体设备可能忽略该字段或要求固定值。[Modbus TCP/IP 实现指南](https://modbus.org/docs/Modbus_Messaging_Implementation_Guide_V1_0b.pdf)
+### 轮询任务与读写
+轮询任务的用途是定期读取数据并更新监控表，所以任务编辑器只列出读功能码 01～04。周期性重复写入可能反复改变设备状态，因此写操作放在“手动读写”里；该界面支持 05/0F 写线圈、06/10 写寄存器。项目的通用请求路径也包含这些写功能码。
+### 字序
+一个 Modbus 寄存器本身是 16 bit。读取 32 bit 整数或 float 时，需要把两个连续寄存器合起来；不同设备可能先放高 16 bit，也可能先放低 16 bit。页面的 `ABCD`、`BADC`、`CDAB`、`DCBA` 表示四个字节的排列方式：A/B 是第一个寄存器的高/低字节，C/D 是第二个寄存器的高/低字节。16-bit 类型只用一个寄存器，这个选项对它没有影响。CommStudio 的解码路径会按该设置还原 32-bit 整数或 IEEE-754 float。
+### 写前预览
+三个控件分别是工程量、比例系数和字序。例如工程量填 230.5、比例填 0.1，通常按 `工程量 = 原始值 × 比例系数 + 偏移` 理解，反算原始值为 `(230.5 - 偏移) / 0.1`。当前预览调用把偏移固定为 0，字序用于两个寄存器的 32-bit 排列。
+需要留意一个实现不一致：QML 把类型参数写成 `float32`，但 C++ 预览函数先把反算结果四舍五入成整数，再把它拆成两个 16-bit 字；它没有把输入值编码成 IEEE-754 浮点数。以 230.5 和 0.1 为例，预览原始整数为 2305（`0x00000901`），真正的 IEEE-754 float32 230.5 是 `0x43668000`。因此当前预览不能直接当作 float32 设备写入值使用；这是页面/实现不匹配的迹象。
+### Raw Test Center
+Raw Test Center 允许手工输入较底层的请求字节，适合验证自定义 PDU、特殊功能码和响应/异常。RTU 输入为“从站地址 + PDU”；勾选自动 CRC 时由程序计算并追加 CRC16，取消时输入内容应自行包含 CRC。TCP 输入通常是“Unit ID + PDU”，程序补 MBAP 头；代码也能识别一部分已带 MBAP 头的完整 ADU。
+收到响应后，程序累计字节并在 60 ms 没有新数据时尝试解析；没有响应则约 2 秒超时。结果区显示功能码、数据、异常、CRC 检查和耗时。它适合底层调试，不会自动把任意输入补成正确的设备业务命令。[项目：Raw 请求构造和解析](https://github.com/LocasYang/CommStudio/blob/main/src/managers/modbusmanager.cpp)
+### RTU 打开串口时的 Permission denied
+这个错误发生在操作系统打开串口设备阶段，早于 Modbus 请求发送；它与 Unit ID、波特率是否匹配或 CRC 无关。常见原因是 `/dev/ttyS0` 属于 `root:dialout`，当前桌面用户不在 `dialout` 组；也可能是设备节点访问策略限制。
+在运行程序的同一台 Linux 上检查：
+```bash
+ls -l /dev/ttyS0
+id -nG
+```
+若设备确属 `dialout` 组且当前用户不在其中，可把用户加入该组后重新登录，再启动程序；不要用长期 `chmod 666` 暴露串口。若节点不存在，或 `ttyS0` 是系统控制台/并非实际外接端口，应改选真实的设备端口，例如 USB 转串口常见的 `/dev/ttyUSB0` 或 `/dev/ttyACM0`。
+## 蓝牙 BLE UART 与经典 RFCOMM
+### BLE UART 模式与 Nordic UUID
+BLE 本身没有 UART 物理串口。所谓 BLE UART 模式，是设备用 GATT 服务和特征值约定“写入特征接收数据、通知特征发送数据”，让应用看起来像在使用一个字节流终端；底层仍是 BLE GATT。
+Nordic UART Service（NUS）是 Nordic 定义的厂商自定义 GATT 服务，不是蓝牙核心规范里的通用 UART 服务。三个 UUID 是服务和特征值的唯一标识，不是乱码或密码；它们共用一段 128-bit UUID 基础，只在末尾编号不同：
+- `6e400001-b5a3-f393-e0a9-e50e24dcca9e`：NUS 服务。
+- `6e400002-b5a3-f393-e0a9-e50e24dcca9e`：RX 特征，支持 Write/Write Without Response；对 CommStudio 来说是电脑向设备发送的出口。
+- `6e400003-b5a3-f393-e0a9-e50e24dcca9e`：TX 特征，支持 Notify；对 CommStudio 来说是设备向电脑回传的入口。
+“Nordic UART 预置”只是把这三项常见 UUID 填入编辑框，不会让目标设备自动新增 NUS 服务。只有对端实际实现相同服务/特征值时才能工作。[Nordic：NUS 服务与特征值](https://nrfconnectdocs.nordicsemi.com/ncs/latest/nrf/libraries/bluetooth/services/nus.html)
+BLE UART 的“启用 UART”按钮只有在 BLE 状态变为“服务已发现”时才能点击。流程是扫描设备 → 连接 BLE peripheral → 发现 GATT 服务和特征 → 启用 UART。没有真实 BLE 对端、仍未连接，或服务发现尚未完成时，按钮保持禁用；连上不含 NUS 的设备时按钮会启用，但点击后会报 UUID 不存在。
+### GATT 浏览器
+GATT 浏览器连接 BLE 设备并完成服务发现后显示设备实际提供的服务。下拉框选服务；下方列出该服务的特征值、UUID、当前值和属性（Read、Write、Notify、Indicate 等）。这些属性决定对应操作是否可用：Read 读取值，Write 写入，Notify/Indicate 订阅设备主动推送。它不会显示经典蓝牙 SPP 服务；经典服务走另一套 SDP/RFCOMM 流程。[Qt：BLE 服务发现步骤](https://doc.qt.io/qt-6/qlowenergycontroller.html)
+### BLE 页底部发送区的数字框
+右下角发送框旁的大输入框是待发内容，可选 TEXT/HEX，并可配置转义和行尾。下面两个数字框的占位文字分别是 `interval ms` 与 `count`，设计意图是定时发送间隔和发送次数；`count=0` 在串口/网络管理器中表示持续发送。
+但当前 `BluetoothManager` 没有 `timerActive`、`startTimerSend()` 等定时发送接口，而通用面板仍无条件画出这两个数字框。因此蓝牙页上的这两个框目前不控制发送，定时发送按钮也会隐藏；它们是通用面板没有按蓝牙能力收敛的界面残留。
+### Classic RFCOMM（SPP）
+RFCOMM 是经典蓝牙上的可靠、有序字节流连接，Qt 将它描述为模拟 RS-232 串口的 socket；SPP（Serial Port Profile）是使用 RFCOMM 提供串口风格服务的蓝牙 Profile。它不是 BLE，也不使用 GATT。[Qt：RFCOMM socket](https://doc.qt.io/qt-6/qbluetoothsocket.html)
+“服务发现”在这里指经典蓝牙 SDP：查询设备声明提供的服务，得到服务描述、UUID 和连接所需信息。CommStudio 收集其中 RFCOMM 类型的服务并显示设备名与服务名；选中条目只是选择目标，点击“连接”才会创建 RFCOMM socket。连接成功后收发面板把数据送入该字节流，收到的数据出现在终端。某些平台连接前还要求先配对。
+错误 `Missing serviceUuid or Serial Port service class uuid` 是 Qt BlueZ 后端说当前选择的服务记录既没有可用的 Service UUID，也没有标准 Serial Port Profile 的 Service Class UUID，所以它无法确定该连哪个服务。当前项目只按“协议类型是 RFCOMM”筛选服务，未预先剔除 UUID 信息不完整的记录；随便选一个 RFCOMM 服务不保证它就是 SPP。应对真正提供经典蓝牙 SPP 的设备重新做服务发现，并选择有有效服务 UUID/串口服务类 UUID 的记录；BLE-only 设备不能用这里连接。[Qt BlueZ 错误检查](https://codebrowser.dev/qt6/qtconnectivity/src/bluetooth/qbluetoothsocket_bluezdbus.cpp.html)、[Qt：RFCOMM 连接要求](https://doc.qt.io/qt-6/qbluetoothsocket.html)
+
