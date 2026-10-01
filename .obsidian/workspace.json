@@ -67,7 +67,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "epoll_create",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": true,
                 "collapseAll": false,
@@ -88,13 +88,11 @@
               "title": "书签"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -194,7 +192,7 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "c8b12777065a63e2",
+  "active": "982f21257484af50",
   "lastOpenFiles": [
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
     "学习/Bases/开发范式/IO复用模型.md",
