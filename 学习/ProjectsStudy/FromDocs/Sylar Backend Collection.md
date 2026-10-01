@@ -2008,3 +2008,19 @@ sequenceDiagram
 | `swapIn()`  | `swapOut()` | 调度器切入普通任务 Fiber                            |
 | `swapOut()` | `swapIn()`  | 普通任务 Fiber 返回调度器                           |
 | `call()`    | `back()`    | 调用者线程切入或退出 caller 模式 Fiber，例如 `_rootFiber` |
+```mermaid
+flowchart TD
+    A[Scheduler::run 没有可运行任务] --> B[idleFiber.swapIn]
+    B --> C[IOManager::idle 检查停止条件和 Timer]
+    C --> D{可以停止?}
+    D -- 是 --> E[唤醒其他 idle 线程并退出]
+    E --> F[idleFiber 结束]
+    F --> G[Scheduler::run 结束]
+    D -- 否 --> H[epoll_wait]
+    H --> I[收集到期 Timer 并 schedule 回调]
+    I --> J[处理 pipe 和 fd 事件]
+    J --> K[triggerEvent 将等待者 schedule]
+    K --> L[idleFiber.swapOut 回 Scheduler]
+    L --> A
+
+```
