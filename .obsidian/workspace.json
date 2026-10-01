@@ -21,8 +21,19 @@
               "icon": "lucide-file",
               "title": "Sylar Backend Collection"
             }
+          },
+          {
+            "id": "c8b12777065a63e2",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "新标签页"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -169,7 +180,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 230.5
+    "width": 230.5,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -182,10 +194,10 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "578eb451e174f8b6",
+  "active": "c8b12777065a63e2",
   "lastOpenFiles": [
-    "学习/Bases/开发范式/IO复用模型.md",
     "学习/ProjectsStudy/FromDocs/Sylar Backend Collection.md",
+    "学习/Bases/开发范式/IO复用模型.md",
     "学习/Bases/开发范式/设计模式.md",
     "学习/Bases/开发范式/C++开发范式和术语.md",
     "学习/Language/C C++/Ros2.md",
