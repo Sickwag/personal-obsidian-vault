@@ -257,3 +257,127 @@ RFCOMM 是经典蓝牙上的可靠、有序字节流连接，Qt 将它描述为�
 “服务发现”在这里指经典蓝牙 SDP：查询设备声明提供的服务，得到服务描述、UUID 和连接所需信息。CommStudio 收集其中 RFCOMM 类型的服务并显示设备名与服务名；选中条目只是选择目标，点击“连接”才会创建 RFCOMM socket。连接成功后收发面板把数据送入该字节流，收到的数据出现在终端。某些平台连接前还要求先配对。
 错误 `Missing serviceUuid or Serial Port service class uuid` 是 Qt BlueZ 后端说当前选择的服务记录既没有可用的 Service UUID，也没有标准 Serial Port Profile 的 Service Class UUID，所以它无法确定该连哪个服务。当前项目只按“协议类型是 RFCOMM”筛选服务，未预先剔除 UUID 信息不完整的记录；随便选一个 RFCOMM 服务不保证它就是 SPP。应对真正提供经典蓝牙 SPP 的设备重新做服务发现，并选择有有效服务 UUID/串口服务类 UUID 的记录；BLE-only 设备不能用这里连接。[Qt BlueZ 错误检查](https://codebrowser.dev/qt6/qtconnectivity/src/bluetooth/qbluetoothsocket_bluezdbus.cpp.html)、[Qt：RFCOMM 连接要求](https://doc.qt.io/qt-6/qbluetoothsocket.html)
 
+
+## Qt 启动、元对象系统与 QML
+### HEX 格式化辅助函数
+`QString::arg(value, width, base, fillChar)` 将整数格式化为字符串：`width` 是最小字段宽度，`base=16` 表示十六进制，不足宽度时用 `fillChar` 补齐；`toUpper()` 把字母转成大写。因此 `byteHex(0x0A)` 得到 `0A`，`wordHex(0x1234)` 得到 `1234`。`wordHex` 是整数的十六进制写法，不是在读取机器内存的字节顺序。
+当前 `wordHexLe` 的实现先输出高字节，再输出低字节。输入 `0x1234` 会得到 `12 34`，小端字节序应是 `34 12`，所以函数名与实现不一致。`computeAll()` 又把它用于 `sum16le`、`crc16modbusle` 等结果，显示出来的小端字节顺序可能有误。邻近的 `dwordHexLe` 则交换两个 16-bit 字的先后顺序，但每个字仍按高字节在前，也不是完整的逐字节小端序。对比之下，`ModbusCodec::buildRtuAdu()` 追加 Modbus CRC 时明确先追加 CRC 低字节再追加高字节。
+### Modbus PDU 的构造
+PDU（Protocol Data Unit）是 Modbus 应用协议数据单元，通常由功能码和功能数据组成。`buildPdu()` 根据功能码决定地址、数量、字节计数和数据怎样排列；它不负责 RTU 地址/CRC，也不负责 TCP 的 MBAP 头和 Unit ID。外层的 `buildRtuAdu()`、`buildTcpAdu()` 再分别包装为 ADU。
+| 功能码 | 本函数追加到功能码后的字段 | `values` 的含义 |
+|---|---|---|
+| 01、02、03、04 | 起始地址 + 读取数量 | `values.first()` 作为数量 |
+| 05 | 线圈值 `FF00` 或 `0000` | 第一个值的真假 |
+| 06 | 一个 16-bit 寄存器值 | 第一个值 |
+| 0F | 数量 + 字节数 + 打包后的线圈位 | 多个线圈值，每字节低位先装 |
+| 10 | 数量 + 字节数 + 各寄存器值 | 多个 16-bit 寄存器值，每个寄存器高字节先写 |
+这里 `values` 对读请求表示“数量”，对写请求才表示待写入的值；读请求的数量也因此编码在一个名为 `values` 的容器中。完整数据路径是：选择功能码和参数 → `buildPdu()` → RTU/TCP ADU 函数添加各自传输封装 → 发送。
+### Qt 消息处理器
+Qt 的 `qDebug()`、`qInfo()`、`qWarning()`、`qCritical()`、`qFatal()` 都进入 Qt 日志系统，默认由 Qt 的消息处理器输出到终端、调试器或系统日志。`QtMessageHandler` 是接收日志类别、源码上下文和消息文本的回调函数类型；`qInstallMessageHandler()` 把自定义回调安装到整个进程的 Qt 日志路径中，并返回此前的处理器。
+本项目只有在设置 `COMMSTUDIO_MSG_LOG` 环境变量时才安装 `fileMessageHandler`。回调按日志级别添加前缀，把消息追加到指定文件；这便于 GUI 程序在没有终端窗口时留存诊断信息。安装后默认处理器不再自动收到同一条消息；当前代码没有保存或转发旧处理器。若文件打不开，回调直接返回，Qt 原本的日志也会被吞掉。Qt 还要求消息处理器可重入，因为不同线程可能并发调用它；当前实现每条消息都新建 `QFile` 并写文件，没有显式串行化共享文件写入，适用于诊断日志但不是高吞吐日志管线。[Qt 日志处理器文档](https://doc.qt.io/qt-6/qtlogging.html)
+### OpenGL 表面与控件样式
+`QSurfaceFormat` 用来描述 OpenGL 渲染表面的缓冲区和上下文要求，例如颜色、深度、模板缓冲区、OpenGL 版本和每像素采样数。项目复制默认格式后调用 `setSamples(4)`，再设为默认格式，表示请求多重采样抗锯齿（MSAA），让几何边缘看起来更平滑；它不是把窗口分辨率放大四倍。实际可用样本数受图形驱动和平台影响，设置值表达的是请求。
+`QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL)` 指定 Qt Quick 使用 OpenGL 渲染后端。`QQuickStyle::setStyle("Basic")` 则选 Qt Quick Controls 的 Basic 控件样式；它不是设置整张应用界面的主题色。样式须在载入导入 `QtQuick.Controls` 的 QML 前确定，所以放在 `engine.loadFromModule()` 之前。[Qt `QSurfaceFormat`](https://doc.qt.io/qt-6/qsurfaceformat.html)、[Qt `QQuickStyle`](https://doc.qt.io/qt-6/qquickstyle.html)
+### `moc`、信号包装与属性通知
+Qt 元对象系统为 `QObject` 提供信号槽、运行时类型信息和属性系统。`Q_OBJECT` 让类参与该系统；`moc` 扫描头文件并生成元对象数据及必要的 C++ 包装代码，CMake 的 `AUTOMOC` 会自动运行它。源码只声明 `signals: void languageChanged();`，链接时真正的信号函数体来自 `moc_studio.cpp`。
+`emit languageChanged()` 中的 `emit` 是提示含义的宏，不是一次独立的运行时操作；执行效果是调用 moc 生成的 `Studio::languageChanged()` 包装函数。包装函数再调用 Qt 内部的 `QMetaObject::activate(this, &staticMetaObject, 2, nullptr)`，把信号分发给连接的槽、QML 信号处理器和属性绑定系统。参数含义是：`this` 为发信号的对象，`&staticMetaObject` 为 `Studio` 的元对象，`2` 是该类元对象中的本地信号索引，`nullptr` 表示信号没有参数。这里的序号是信号分发索引，不是属性编号；列表中的 `logsChanged`、`statusMessageChanged`、`languageChanged`、`totalsChanged` 依次对应 0、1、2、3。它们由 moc 按声明生成，不应在业务代码中手动调用 `QMetaObject::activate()`。[Qt 元对象系统](https://doc.qt.io/qt-6/metaobjects.html)、[Qt `QMetaObject`](https://doc.qt.io/qt-6/qmetaobject.html)
+`Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)` 告诉 Qt/QML：属性读取走 `language()`，写入走 `setLanguage()`，变化通知走 `languageChanged()`。setter 修改值后发射通知，QML 会重新计算依赖 `Studio.language` 的属性绑定。例如 `text: Studio.language` 会在通知后重新调用 getter 并更新文本。`totalsChanged` 同时通知 `totalRx`、`totalTx`、`activeConnections`，相关绑定收到同一信号后会各自重新读取属性。`NOTIFY` 信号不会自动改写成员变量；真正更新值的仍是 setter 或 C++ 业务代码。Studio setter 先检查值是否变化，避免重复通知；启动构造时直接初始化语言，则因为 QML 尚未读取对象，不需要发变化信号。
+### C++ 对象如何交给 QML
+`qmlRegisterSingletonInstance<T>(uri, major, minor, qmlName, object)` 把一个已经创建的 QObject 实例注册到 QML 类型系统中。在本项目中，`CommStudio.Backend` 是模块 URI，`1, 0` 是模块版本，`"Studio"`、`"SerialManager"` 等是 QML 中使用的名字。`Main.qml` 导入 `CommStudio.Backend 1.0` 后，可以写 `Studio.activeConnections`、`SerialManager.open`，或调用已暴露的槽和 `Q_INVOKABLE` 方法。
+注册只让 QML 能找到对象，并不替业务类自动暴露任意 C++ 成员：属性需进入 Qt 元对象系统，调用方法一般要是槽函数或标记 `Q_INVOKABLE`。这些对象由 C++ 创建和管理；本项目的通信管理器以 `Studio` 为 QObject 父对象，工具和窗口管理器以 `QGuiApplication` 为父对象，利用 QObject 父子关系回收。注册对象必须比 QML 引擎活得久，并与引擎处于同一线程；当前局部变量销毁顺序是先销毁 `engine`，之后才销毁 `app` 和其子对象，满足这一生命周期要求。[Qt `qmlRegisterSingletonInstance`](https://doc.qt.io/qt-6.8/qqml-h.html)
+### QML 基本概念与 Widgets 对照
+QML 是用对象树描述界面的声明式语言；Qt Quick 提供 `Item`、窗口、输入处理、动画、模型和视图等类型，Qt Quick Controls 提供按钮、文本框等控件。[Qt Quick 概览](https://doc.qt.io/qt-6/qtquick-index.html)
+| QML 概念 | 作用 | 可以对照理解为 |
+|---|---|---|
+| `import`、对象层级、组件 | 引入类型并组合界面对象 | C++ include 加 QWidget 子控件/复用控件 |
+| 属性 | 描述控件的状态，如 `width`、`text`、`visible` | QWidget 属性和 getter/setter |
+| 属性绑定 | 用表达式描述属性之间的关系，依赖变化时自动重新计算 | 手工监听信号后调用 `setText()`；QML 会管理依赖 |
+| 信号处理器 | `onClicked` 响应控件信号 | `QObject::connect(button, &QPushButton::clicked, ...)` |
+| `Connections` | 在独立对象上监听一个目标的信号 | `connect()` 到某个槽或 lambda |
+| C++ 集成 | `Q_PROPERTY` 暴露状态，槽/`Q_INVOKABLE` 暴露调用，signal 通知变化 | 元对象系统与脚本接口 |
+| 布局 | `anchors`、`RowLayout`、`ColumnLayout` 安排子对象 | `QLayout`；QML 还常用属性绑定控制位置和大小 |
+| model/view/delegate | 模型提供数据，view 负责呈现，delegate 描述每条数据外观 | Qt Model/View 与 item delegate |
+QML 文档可包含 JavaScript 表达式和函数，但只有已注册类型及其暴露的属性/方法能从 QML 访问。项目例子：`Connections { target: SerialManager; function onToastRequested(text, ok) { ... } }` 接收管理器信号；`Button { onClicked: Studio.clearLogs() }` 调用暴露给 QML 的方法。[Qt：C++ 属性如何暴露给 QML](https://doc.qt.io/qt-6/qtqml-cppintegration-exposecppattributes.html)
+本项目是纯 Qt Quick 程序：使用 `QGuiApplication`、`QQmlApplicationEngine` 和 `QQuickWindow`，没有 `QWidget`。已有 Qt Widgets 界面也能承载 QML，常见方式是把 `QQuickWidget` 放进 QWidget 布局并设置 QML source；它把 Quick 场景作为 QWidget 显示，但使用离屏渲染，可能有渲染性能开销。另一种方式是用 `QQuickView`，再通过 `QWidget::createWindowContainer()` 嵌入窗口。若使用 `QQuickWidget`，CMake 还需查找并链接 `Qt6::QuickWidgets`；当前项目没有这个模块。[Qt Quick Widgets](https://doc.qt.io/qt-6/qtquickwidgets-index.html)、[Qt `QQuickWidget`](https://doc.qt.io/qt-6/qquickwidget.html)
+### QML 加载与应用事件循环
+`engine.loadFromModule("CommStudio", "Main")` 根据模块 URI `CommStudio` 和 QML 类型名 `Main` 查找、载入并创建根 QML 对象。项目用 `qt_add_qml_module` 把 `qml/Main.qml` 纳入 `CommStudio` 模块；根对象是 `ApplicationWindow`，其中 `visible: true` 请求显示窗口。加载成功意味着根对象已创建，不表示 GUI 已经处理事件或完成第一帧绘制。随后 `app.exec()` 才进入事件循环，处理窗口事件、计时器和渲染。QML 创建失败时，项目连接 `objectCreationFailed` 并排队退出。[Qt `QQmlApplicationEngine`](https://doc.qt.io/qt-6/qqmlapplicationengine.html)
+### 环境变量控制的截图流程
+`COMMSTUDIO_SCREENSHOT` 非空时才进入截图分支，它的值是输出图片路径。`COMMSTUDIO_SCREENSHOT_SIZE` 可以提供 `宽x高`，例如 `1280x800`；`COMMSTUDIO_SCREENSHOT_DELAY` 提供等待毫秒数，未提供有效整数时默认 1500 ms，并至少等待 250 ms。代码先加载 QML 和调整窗口尺寸，再通过 `QTimer::singleShot()` 延迟抓取 `QQuickWindow::grabWindow()` 的帧并保存，然后调用 `app.quit()`。
+这里的延迟是为了让应用进入事件循环并完成界面渲染后再抓图；自动设置窗口大小能让截图环境的结果稳定。常见用途是自动化界面检查、生成文档截图或构建流程中的视觉回归。未设置 `COMMSTUDIO_SCREENSHOT` 时不会启用截图定时器，程序照常运行。当前代码没有检查 `save()` 的返回值，因此路径无效时截图保存失败也不会给出专门错误提示。
+### 元对象的动态调用
+Qt 元对象系统可以按名称查询方法，也可以调用通过元对象暴露的槽或 `Q_INVOKABLE` 方法，例如 `QMetaObject::invokeMethod(object, "clearLogs")`。这类动态调用适合方法名运行时才确定、脚本桥接等场景；普通未标记的 C++ 私有/公有成员函数不会因此自动对 QML 可见。项目 QML 一般使用 `Studio.clearLogs()` 这样的直接调用，读源码时先按属性/方法注册关系理解，不必把所有交互都当作字符串反射。
+
+## QML 属性、标识符与函数
+### 主窗口中各个值的类型
+`Main.qml` 的根对象是 `ApplicationWindow`，它继承 Qt Quick `Window`，所以相关属性类型由 `Window` 定义：[Qt Window QML 类型](https://doc.qt.io/qt-6/qml-qtquick-window.html)
+| QML 写法 | 属性类型 | 右侧表达式的结果 |
+|---|---|---|
+| `minimumWidth: 1100` | `int` | 数字，匹配窗口最小宽度属性 |
+| `minimumHeight: 680` | `int` | 数字，匹配窗口最小高度属性 |
+| `visible: true` | `bool` | 布尔值 |
+| `title: I18n.t(...)` | `string` | `t()` 在此处选出一个标题字符串 |
+| `color: Theme.background` | `color` | Theme 中声明为 `color` 的属性 |
+`I18n.t()` 在 `I18n.qml` 中没有写参数或返回类型注解，所以 QML 不会从函数签名得到静态的“返回 string”承诺；函数执行后返回 JavaScript 值。本例 `english` 和 `chineseText` 实参都是字符串，条件分支只返回其中一个，因此实际结果为字符串。这个值仍要赋给 `title` 的 `string` 属性；属性类型并没有变成 `var`。对颜色也类似：Theme 中 `background` 声明为 `color`，并非普通字符串。
+### 内建属性与自定义属性
+QML 对象类型提供一组确定的属性、信号、方法和附加属性；对象还继承基类的属性。`ApplicationWindow` 可以设置 `visible`、`title`、`color` 等，是因为这些属性属于它或继承自 `Window`。不能任意写一个 `foo: 123` 来给对象增加字段；如果该名字没有被对象类型定义，也没有通过有效语法声明为自定义属性，QML 会报不存在的属性。某些对象还提供 `Layout.fillWidth` 这类附加属性或 `font.family` 这类分组属性，它们也有类型定义，不是任意名称空间。
+自定义属性通过 `property <类型> <名称>` 声明，例如 `property int currentPage: 0`、`property color toastAccent: Theme.primary`。常规 `property` 声明需要类型名称；`var` 是可持有不同 JavaScript 值的通用类型，例如 `property var ruleCache: [{}, {}]`。`property alias` 是另一个特殊声明，用来把自定义属性直接关联到已有对象或其属性，因此不用另写类型。可以加 `readonly` 等修饰符，类型约束仍由属性类型决定。[Qt QML 对象属性](https://doc.qt.io/qt-6/qtqml-syntax-objectattributes.html)、[Qt QML `var` 类型](https://doc.qt.io/qt-6/qml-var.html)
+### `id` 与 `objectName`
+`id` 是 QML 语言提供的对象标识符，不是普通属性。`id: root` 中的 `root` 按标识符语法解析，因此不加引号；`id: "root"` 不符合它的语法。标识符可在当前 QML 组件作用域中引用对象的属性、函数、信号等，例如 `root.width`、`root.showToast(...)`。它必须在作用域内唯一，创建后不能改，也不能写 `root.id` 读取它。不同 QML 文件属于不同作用域，可以各自使用 `id: root`。
+`objectName` 则是 QObject 提供的字符串属性，可写成 `objectName: "mainWindow"`，常用于 C++ `findChild()`、调试或自动化查找对象。它与 QML 的 `id` 相互独立：前者是运行时对象的名字属性，后者是 QML 组件内部引用对象的标识符。对象类型名 `ApplicationWindow` 又是第三个概念，表示实例化哪种类型。[Qt QML `id` 属性](https://doc.qt.io/qt-6/qtqml-syntax-objectattributes.html)
+### QML 函数和 JavaScript
+QML 文档不是纯 JavaScript 文件：`import`、`ApplicationWindow { ... }`、`property` 等由 QML 语法组织对象和属性；绑定表达式及 `function` 函数体则使用 QML JavaScript 环境支持的 ECMAScript 语法，由 Qt 的 QML/JavaScript 引擎求值。它不是浏览器里的 JavaScript 环境，没有浏览器 DOM、`window` 等对象；可用能力来自 ECMAScript 内建对象和 Qt/QML 提供的对象。[Qt JavaScript 宿主环境](https://doc.qt.io/qt-6/qtqml-javascript-hostenvironment.html)
+QML 函数可以显式写参数和返回类型注解，但项目中的 `I18n.t(english, chineseText)` 省略了它们，因而函数返回值由执行路径决定。这不意味着 `title` 可以保存任意类型：赋值目标仍有自己的类型，绑定结果必须可赋给目标属性。项目里 `I18n.t()` 的两个分支都是字符串，所以适配 `title: string`。
+### 属性赋值与声明的区别
+`visible: true` 是给 `ApplicationWindow` 已有的内建属性赋值；`property bool chinese: ...` 是在 QML 对象上声明一个新属性并设置初始绑定。冒号右侧可以是常量，也可以是绑定表达式。比如 `color: Theme.background` 会读取 `Theme.background`；当它依赖的属性变化时，QML 引擎会重新求值绑定。[Qt 属性绑定](https://doc.qt.io/qt-6/qtqml-syntax-propertybinding.html)
+
+## QML 模块、类型导出与运行机制
+### `Theme` 和 `I18n` 如何被导入
+`Main.qml` 并没有写 `import I18n.qml` 或 `import Theme.qml`，而是写了 `import CommStudio 1.0`。`CMakeLists.txt` 中的 `qt_add_qml_module(CommStudio URI CommStudio VERSION 1.0 ...)` 将这些 QML 文件组织进 `CommStudio` 模块；`Theme.qml` 和 `I18n.qml` 同时在 `QML_FILES` 列表中，并通过 `QT_QML_SINGLETON_TYPE TRUE` 声明为单例。两个文件还写了 `pragma Singleton`。
+构建生成的 `build/debug/CommStudio/qmldir` 可直接验证导出关系：它包含 `singleton Theme 1.0 qml/Theme.qml`、`singleton I18n 1.0 qml/I18n.qml` 等条目。因此 `Theme` 和 `I18n` 是 QML 单例类型名，`Theme.background`、`I18n.t(...)` 是“单例对象.属性/方法”的调用形式。它们的名字恰好取自 QML 文件名去掉扩展名；语法上不是按文件路径调用，而是通过模块暴露的单例对象访问。`Theme.qml` 自己的 `id: theme` 只在该文件的组件作用域内使用，不会成为外部名称。[Qt QML 模块](https://doc.qt.io/qt-6/qtqml-modules-topic.html)、[Qt qmldir 格式](https://doc.qt.io/qt-6/qtqml-modules-qmldir.html)
+### `CommStudio` URI 的来源和导入范围
+有两个概念名字相同：`project(CommStudio)` 声明 CMake 项目名，`qt_add_executable(CommStudio ...)` 创建可执行目标；`qt_add_qml_module` 的 `URI CommStudio` 才定义 QML 模块标识符。它没有对应一个叫 `CommStudio.qml` 的文件，也不要求项目必须有同名类。
+URI 用来查找模块。QML 引擎根据 import path 和模块目录里的 `qmldir` 解析 `import CommStudio 1.0`，再将模块提供的类型放入**当前 QML 文件**可用的类型命名空间。CMake 会按 URI 生成 `qmldir` 和类型描述文件，并将模块资源编入目标；本项目生成的 `qmldir` 有 `prefer :/qt/qml/CommStudio/`，说明资源系统是首选路径。每个 QML 文件有自己的 imports；`Main.qml` 的 import 不会让所有独立组件文件自动继承它，所以页面和组件里也能看到各自的 `import CommStudio 1.0`。[Qt `qt_add_qml_module`](https://doc.qt.io/qt-6/qt-add-qml-module.html)、[Qt 标识模块与 URI](https://doc.qt.io/qt-6/qtqml-modules-identifiedmodules.html)
+此外，`CommStudio.Backend 1.0` 是另一条独立注册路径。它在 `src/main.cpp` 中通过 `qmlRegisterSingletonInstance()` 注册，提供 `Studio`、`SerialManager`、`ModbusManager`、`BluetoothManager`、`NetworkManager`、`ToolboxManager` 和 `WindowChrome` 等对象；C++ 管理器的属性和可调用方法再由 `Q_PROPERTY`、槽或 `Q_INVOKABLE` 暴露。源码可分别从 `CMakeLists.txt` 的 QML module 声明和 `src/main.cpp` 的 backend 注册处确认。
+### 如何检查模块实际导出了什么
+先看模块生成或手写的 `qmldir`。它列出模块 URI、类型名称、版本、对应 QML 文件，以及是否为 singleton。对于本项目，`build/debug/CommStudio/qmldir` 是已生成的实际清单。
+再打开类型对应的 QML 文件：外部使用者能访问组件根对象的公开属性、信号、方法和继承成员。根对象内部的子对象 `id` 仅供该组件内部引用；想让外部配置内部控件，需要在根对象上显式声明 `property alias` 或其他公开属性。C++ 类型则检查 `Q_PROPERTY`、`signals`、`public slots`、`Q_INVOKABLE` 和对应 URI 下的注册代码。`qmldir` 说明“模块提供哪些类型”，类型声明说明“每种类型有哪些可访问接口”。
+### 从 QML 文件到显示画面
+QML 使用 Qt Declarative 的引擎运行。大体过程是：
+```text
+QML 文件和 import
+  → 按 URI/import path 查找模块、qmldir、资源与类型
+  → 解析/编译 QML 文档和其中的 JavaScript 表达式
+  → 创建 QObject / Qt Quick 对象树，安装信号处理器与属性绑定
+  → app.exec() 进入事件循环，响应输入并重算受影响的绑定
+  → Qt Quick 场景图更新并经图形后端绘制窗口
+```
+属性绑定不是每帧重新解释整份文件；引擎会跟踪表达式依赖，仅在依赖变化时重新求值。例如本项目改变 `Studio.language` 后，`I18n.chinese` 绑定更新，随后引用 `I18n.t(...)` 的界面文字重新计算。
+`qml /path/to/file.qml` 使用 Qt 提供的 `qml` runtime 工具加载 QML 文件；如果文档包含可视对象，它会创建窗口显示场景。它提供运行引擎和 GUI 事件循环，便于快速预览与测试，不是把源文件静态转换为截图，也不表示 QML 只能逐行解释。[Qt `qml` 命令行工具](https://doc.qt.io/qt-6/qtqml-tooling-qml.html)
+### QML 的编译和性能
+“写的是 QML/JavaScript”不等于“每次都由简单解释器逐行执行”。本项目通过 `qt_add_qml_module` 构建；该 CMake 命令默认协调 QML 缓存编译、资源嵌入和类型生成。Qt 的 `qmlcachegen` 会为 QML 文档生成编译单元，其中包含文档结构、JavaScript 表达式/函数的字节码，以及在编译器能完整分析的情况下生成的部分 C++ 代码。项目构建目录中的 `.rcc/qmlcache` 也能看到生成的 QML 缓存源文件。运行时的 QML JavaScript 引擎可以解释字节码或在支持时 JIT 编译；因此它是带动态运行时和编译优化的系统，而非一个纯粹的文本解释器。[Qt `qt_add_qml_module`](https://doc.qt.io/qt-6/qt-add-qml-module.html)、[Qt QML 脚本编译器](https://doc.qt.io/qt-6/qtqml-qml-script-compiler.html)
+QML 负责窗口、布局、属性绑定和用户交互，计算密集的业务逻辑可放在 C++。本项目的 Modbus 编码、串口/网络 I/O 和管理器逻辑主要是 C++；QML 负责界面并调用后端，因此不应仅凭“有 JavaScript 引擎”就推断整个程序会明显变慢。实际性能仍取决于对象数量、绑定开销、JavaScript 计算量、图形后端和渲染负载。`qml` 工具运行单个文件时也依然使用 Qt Quick 场景图和图形后端。
+需要区分 `qml` 工具和本项目的 C++ 启动程序：`qml` 工具不会自动执行 `src/main.cpp` 中的对象构造和 `qmlRegisterSingletonInstance()` 注册。`Main.qml` 依赖 `CommStudio.Backend` 中的 C++ 单例；直接把它交给 `qml` 命令通常缺少这些运行时注册。完整运行本项目应启动 CMake 构建出来的 `CommStudio` 可执行文件；`qml` 命令适合运行不依赖该 C++ backend 的独立 QML 组件/示例。
+
+## QML 模块声明、C++ 单例名与 `qmldir`
+### QML module 是什么
+QML module 是由 URI 标识的一组可导入 QML 类型和资源，也可能包含 C++ 注册类型及插件。它不只是把某个目录里的文件统称起来：模块声明还规定模块标识、版本、可导入类型和资源位置。`qt_add_qml_module(target URI CommStudio VERSION 1.0 ...)` 中，`URI` 是导入标识，`VERSION` 是模块及类型可用的版本信息；文件加入 `QML_FILES` 后通常会作为 QML 类型进入模块，图片等资源通常放在 `RESOURCES`。源文件属性或 `NO_QMLDIR_TYPES` 可以改变单个文件是否作为类型公开。
+### `qmlRegisterSingletonInstance` 的名称参数
+函数大体形式为 `qmlRegisterSingletonInstance<T>(uri, major, minor, typeName, object)`。模板参数 `T` 是 C++ 编译期类型；第四个实参 `typeName` 是注册到 QML 的名称。CommStudio 传入 `"Studio"`，所以 QML 导入 `CommStudio.Backend 1.0` 后写 `Studio.language`、`Studio.clearLogs()`。URI 和版本确定模块命名空间，`typeName` 决定其中可引用的 QML 符号。传入的 `QObject` 实例必须比使用它的 `QQmlEngine` 活得久，并与引擎处在同一线程。[Qt `qmlRegisterSingletonInstance`](https://doc.qt.io/qt-6/qqml-h.html)
+### QML 文件单例的 CMake 标记
+`set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)` 给 CMake 的该源文件设置构建元数据。它本身不创建对象，也不会在 C++ 层创建进程级全局变量；和文件里的 `pragma Singleton` 一起使用时，Qt 的 QML 构建集成会在生成的 `qmldir` 中写入 `singleton Theme ...`。QML 单例在每个 `QQmlEngine` 中最多实例化一次，通常在首次访问时创建。这个源属性要在 `qt_add_qml_module` 添加文件之前设置。[Qt 单例文档](https://doc.qt.io/qt-6/qml-singleton.html)
+### `set_source_files_properties` 可以设置哪些属性
+这是通用 CMake 命令，用键值对为指定源文件设置构建属性，并非 Qt 单例专用。Qt QML 增加了特定的源文件属性，例如：
+| 属性 | 用途 |
+|---|---|
+| `QT_QML_SINGLETON_TYPE` | 将 QML 文件声明为单例类型 |
+| `QT_QML_INTERNAL_TYPE`、`QT_QML_SKIP_QMLDIR_ENTRY` | 标记内部类型，或不把文件登记为模块类型 |
+| `QT_QML_SOURCE_TYPENAME`、`QT_QML_SOURCE_VERSIONS` | 覆盖默认 QML 类型名或类型可用版本 |
+| `QT_QML_SKIP_CACHEGEN`、`QT_QML_SKIP_QMLLINT` | 排除该文件的 QML 字节码缓存生成或自动 lint |
+| `QT_RESOURCE_ALIAS` | 改变文件放入 Qt 资源系统时的相对路径 |
+| `QT_QML_SKIP_TYPE_COMPILER` | 控制是否跳过 qmltc 的 C++ 类型编译（需看 Qt 版本和项目是否启用 qmltc） |
+这些属性及可用项随 Qt 版本变化。普通 CMake 源文件属性还包括 `COMPILE_OPTIONS`、`COMPILE_DEFINITIONS`、`INCLUDE_DIRECTORIES`、`GENERATED`、`HEADER_FILE_ONLY`、`LANGUAGE`、`OBJECT_DEPENDS` 等。`get_source_file_property()` 可查询属性；CMake 命令行帮助和 Qt 的 QML source-file properties 文档分别列出通用与 Qt 专用属性。[CMake `set_source_files_properties`](https://cmake.org/cmake/help/latest/command/set_source_files_properties.html)、[Qt QML 源文件属性](https://doc.qt.io/qt-6/qt-target-qml-sources.html)
+### 如何检查 `qmldir`
+在本项目根目录运行：
+    find build -type f -name qmldir -print
+    sed -n '1,80p' build/debug/CommStudio/qmldir
+当前构建还生成了 `build/release/CommStudio/qmldir` 和 `build/Desktop_Qt_6_11_2_Debug/CommStudio/qmldir`。实际路径会随 preset、构建配置和 `OUTPUT_DIRECTORY` 改变。文件开头的 `module CommStudio` 标记 URI；例如 `singleton Theme 1.0 qml/Theme.qml` 表示该模块导出了 1.0 版的 `Theme` 单例。`qmldir` 是构建生成物时，检查 `CMakeLists.txt` 中的 `qt_add_qml_module`、`QML_FILES` 和源文件属性可以追溯其来源；如果文件被嵌入资源系统，`qmldir` 中也可能有 `prefer :/qt/qml/...` 指令。
