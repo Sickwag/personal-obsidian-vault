@@ -381,3 +381,148 @@ QML module 是由 URI 标识的一组可导入 QML 类型和资源，也可能�
     find build -type f -name qmldir -print
     sed -n '1,80p' build/debug/CommStudio/qmldir
 当前构建还生成了 `build/release/CommStudio/qmldir` 和 `build/Desktop_Qt_6_11_2_Debug/CommStudio/qmldir`。实际路径会随 preset、构建配置和 `OUTPUT_DIRECTORY` 改变。文件开头的 `module CommStudio` 标记 URI；例如 `singleton Theme 1.0 qml/Theme.qml` 表示该模块导出了 1.0 版的 `Theme` 单例。`qmldir` 是构建生成物时，检查 `CMakeLists.txt` 中的 `qt_add_qml_module`、`QML_FILES` 和源文件属性可以追溯其来源；如果文件被嵌入资源系统，`qmldir` 中也可能有 `prefer :/qt/qml/...` 指令。
+
+## QML 组件作用域、信号处理器与 Popup
+### `id` 的作用域与唯一性
+QML 的 `id` 不是按对象树的父子层级决定可见性，而是在组件作用域内引用对象。通常，同一个 `.qml` 文件根组件中的对象，不论处在根对象、孙对象还是不同分支，都能通过 `id` 互相引用。把子对象提取成单独的 QML 类型后，它的内部 `id` 属于该子组件，不应由父组件直接访问；需要通过根对象上的 `property alias`、普通属性、方法或信号定义公开接口。QML 有动态作用域等机制，内层组件在某些实例上下文中可能解析到外层 id，但这会造成隐式耦合，不适合作为组件 API。[Qt 作用域说明](https://doc.qt.io/qt-6/qtqml-documents-scope.html)
+`id` 必须在同一 QML 组件作用域内唯一，而不是只要求同一层兄弟对象互不重复。不同 QML 组件可以各自写 `id: root`；同一组件作用域内重复 id 会被 `qmllint` 标记为重复 ID，属于 QML 禁止的写法，不能依赖前一个或后一个 id 覆盖另一个。[Qt 重复 ID 规则](https://doc.qt.io/qt-6/qmllint-warnings-and-errors-syntax-duplicate-ids.html)
+### `onSignal` 和 `Component.onCompleted`
+在定义了 `signal toastRequested(string text, bool ok)` 的对象上，`onToastRequested: (text, ok) => ...` 是 QML 的信号处理器写法。引擎会把它连接到该对象的 `toastRequested` 信号并在发射时执行；它不是普通自定义属性，也不是需要业务代码查找并手动调用的函数。`Connections` 对象通过 `target` 指定发送者，然后可用 `function onToastRequested(text, ok) { ... }` 处理目标信号。
+`Main.qml` 根对象的 `onVisibilityChanged` 对应继承自 `QWindow` 的 `visibilityChanged` 信号/属性通知，名称中的 Changed 不能省略。`visibility` 表示窗口状态（例如隐藏、最小化、最大化或全屏）；它与布尔属性 `visible` 不同，后者对应 `visibleChanged` 和 `onVisibleChanged`。当前处理器收到窗口状态变化后检查 `visible`，只在窗口仍可见时延迟调用 `syncNativeTitleBar()`。
+`Component.onCompleted` 是附加信号处理器：QML 引擎为对象提供 `Component` 附加对象，并在对象实例化完成时发射 `completed()`。因此 `Main.qml` 的这个处理器在窗口根对象创建完成后进行主题初始化、解析启动参数，并用 `Qt.callLater()` 延后同步原生标题栏。它不是 `ApplicationWindow` 自己声明的属性或信号。[Qt 信号处理器文档](https://doc.qt.io/qt-6/qtqml-syntax-signals.html)
+### `toastText` 为什么能从根函数访问
+`toastText` 声明在 `Main.qml` 的 `Popup.contentItem` 对象树中，但仍属于 `Main.qml` 组件作用域，所以根对象的 `showToast()` 可以直接写 `toastText.text = text`。对象树嵌套本身不会创建 `property alias` 边界。
+`contentItem` 是 `Popup` 已有的属性。`contentItem: Item { ... }` 是为该属性创建并赋值一个 Item；其内部 `Text` 用 `id: toastText` 命名。`property alias` 用于跨组件边界公开子组件的内部属性或对象；这里这些对象都在同一个组件中，无须 alias。
+### Popup 的 Overlay、modal 和 modeless
+这几个名字不是 `parent` 可选值：`Overlay.overlay` 是附加属性，取得当前窗口覆盖层；`modal` 是 `Popup` 的布尔属性；`Overlay.modal` 和 `Overlay.modeless` 是配置覆盖层视觉内容的附加属性。
+| 写法 | 作用 |
+|---|---|
+| `parent: Overlay.overlay` | 将 Popup 放到窗口 Overlay 的视觉层级和坐标参照中，便于覆盖其他内容并按窗口坐标定位 |
+| `modal: true` | 模态 Popup 阻止鼠标按下/释放事件传给它下方的界面；通常可显示背景遮罩 |
+| `modal: false` | 非模态 Popup；底层界面仍可交互 |
+| `Overlay.modal: Rectangle { ... }` | 指定模态 Popup 下方遮罩的组件外观 |
+| `Overlay.modeless: Rectangle { ... }` | 指定启用了背景 dim 的非模态 Popup 的遮罩外观 |
+`Popup.dim` 控制背景是否变暗，默认跟随 `modal`。本项目 toast 写 `parent: Overlay.overlay`、`modal: false`、`closePolicy: Popup.NoAutoClose`，由 Timer 关闭；它覆盖在界面上，但不阻挡底层交互。确认对话框则设置 `modal: true`，并通过 `Overlay.modal` 自定义遮罩。[Qt Overlay 文档](https://doc.qt.io/qt-6/qml-qtquick-controls-overlay.html)、[Qt Popup 文档](https://doc.qt.io/qt-6/qml-qtquick-controls-popup.html)
+### `anchors.fill: parent`
+`anchors.fill: parent` 是四边锚定的简写，等价于把 Item 的 left、right、top、bottom 分别锚定到 parent 的对应边。默认没有 margins 时，子 Item 会随目标 Item 尺寸变化并填满其范围。`parent` 在这里是 QQuickItem 的视觉父对象。Main.qml 中该 Item 填充窗口内容区；同一对象的 `clip: true` 会裁掉超出它边界绘制的子内容。锚点与 `x/y/width/height` 同时约束同一轴时可能冲突，应避免重复指定几何关系。[Qt Anchors 文档](https://doc.qt.io/qt-6/qtquick-positioning-anchors.html)
+### 没有 `id` 的对象和 Connections
+QML 对象定义里的 `id` 是可选项。没有 id 的对象仍会被创建并进入对象树，可以在定义处直接设置属性、作为某个属性的值、通过父对象的属性引用，或让框架按其角色使用。它只是没有一个可在当前 QML 作用域中写出的 id 名称；若后续要从代码引用它，可增加 id，若要让外部组件访问则应定义公开属性或 alias。不要依赖 `children[0]` 这类顺序索引来定位对象。
+`Connections` 也是普通 QML 对象，因此可以写 `id: serialConnections`，之后在同一作用域引用它的属性，例如 `serialConnections.enabled = false`。如果代码不需要启用/禁用连接或访问其属性，省略 id 更简洁。Main.qml 中四个 `Connections` 只需声明 `target` 和处理器，所以没有 id。
+### `WindowChrome::apply` 的职责
+`Main.qml` 在初始化和窗口状态变化时调用 `WindowChrome.apply(root, Theme.dark, Theme.chrome, Theme.textPrimary, Theme.chrome)`。C++ 函数先将 QObject 转为 `QWindow`，失败就返回 false。Windows 分支通过 `winId()` 取得原生 HWND，调用 DWM 设置深色标题栏、标题栏颜色、标题文字颜色和边框颜色，再触发非客户区重绘与 DWM 刷新。属性编号 20 对应深色标题栏，34、35、36 对应边框、标题栏和标题文字颜色；代码也尝试用 19 作为旧系统深色标题栏属性回退。[Microsoft DWM 属性文档](https://learn.microsoft.com/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute)
+在非 Windows 平台，函数只标记参数未使用并返回 false，因此不会改动 Linux/macOS 的系统标题栏。Windows 分支的返回值取决于深色模式属性调用是否成功；标题、文字和边框颜色调用的 HRESULT 没有被检查，所以 true 不代表每一种颜色修改都成功。
+
+
+## QML 函数、属性通知与模型委托
+### QML 内联函数与 JavaScript 文件
+QML 文档中的 JavaScript 有三种常见位置：属性绑定表达式、信号处理器、对象内定义的函数。对象内的 `function name(args) { ... }` 是该对象的方法，常被称为内联 JavaScript 函数，因为实现写在 QML 类型定义里；它可以从同一对象的信号处理器、绑定或其他对象调用。
+独立逻辑可以放进 `.js` 文件，再由 QML 用别名导入。导入路径相对于当前 QML 文件；别名首字母大写，调用时写 `Alias.functionName(...)`：
+```qml
+import "TextUtils.js" as TextUtils
+
+Text {
+    text: TextUtils.formatValue(value)
+}
+```
+普通脚本可使用导入它的 QML 文档所提供的模块上下文；脚本使用 `.pragma library` 后成为共享脚本，不继承导入方的模块导入，因此应在脚本中显式导入依赖。脚本里的变量不等于任意 QML 对象的全局变量；若要操作某个对象，优先把对象或所需值作为参数传入。JavaScript 访问 QML 时可以读取和设置传入对象的属性、调用其方法；QML 调用 C++ 则通过暴露给 QML 的 `QObject` 属性、信号、槽或 `Q_INVOKABLE` 方法完成。
+CommStudio 当前的 `qml/` 目录没有独立的 `.js`/`.mjs` 资源；主题和翻译逻辑主要放在 `Theme.qml`、`I18n.qml` 单例中，组件中也有内联 JavaScript 表达式。
+### 属性变化信号与处理器
+信号处理器按信号名命名为 `on` 加首字母大写的信号名。例如 `clicked` 对应 `onClicked`，自定义信号 `errorOccurred` 对应 `onErrorOccurred`。属性变化处理器的固定格式是 `on<PropertyName>Changed`，例如 `visible` 对应 `onVisibleChanged`。它不是把任意属性名和任意信号名拼接起来。
+QML 中声明的属性（例如 `property int count`）会隐式提供 `countChanged` 变化通知，因此可以写 `onCountChanged`。C++ 的 `Q_PROPERTY` 不会自动生成通知信号；需要声明 `NOTIFY countChanged` 或提供可绑定通知能力 `BINDABLE`，否则 C++ 改值时 QML 绑定没有可靠的变化通知可监听。普通自定义信号则必须先用 `signal xxx(...)` 声明，其处理器才有对应事件。
+### QML 类型继承与对象组合
+QML 文件根对象的类型决定自定义类型的基类，不需要写类似 C++ 的 `extends`。例如 `AppButton.qml` 的根对象是 `Button`，所以 `AppButton` 实例具有 `Button` 的属性、信号和方法，再加上文件根对象声明的 `variant`、`accent` 等自定义属性。根对象中定义的属性、信号和方法构成该 QML 类型对外可用的接口；根对象内部子项的 `id` 仍属于该组件内部。
+把 `Text`、`Rectangle` 等对象嵌在某个对象下面是组合关系，形成对象树；它不会让子对象成为父对象的子类。需要定义可复用类型时，可以把组件放入独立 `.qml` 文件，也可以在支持的 Qt 版本中声明 inline component。
+### Behavior 与颜色动画
+`Behavior on color` 为当前对象的 `color` 属性设置默认动画。颜色目标值变化时，`ColorAnimation` 从当前颜色插值到新颜色；`duration` 是动画时长，单位毫秒。绑定仍然决定最终目标值，Behavior 负责让画面平滑过渡；这不是状态声明。
+```qml
+Behavior on color {
+    ColorAnimation {
+        duration: Theme.durationNormal
+    }
+}
+```
+CommStudio 的 `Main.qml` 在背景矩形上用此写法，所以主题颜色变化时背景渐变过渡；`AppButton.qml` 也对背景颜色和边框颜色添加了短动画。一个属性通常只配置一个 Behavior；若要在行为中并行或顺序运行多段动画，可把它们包在 `ParallelAnimation` 或 `SequentialAnimation` 中。
+### 默认属性
+一个 QML 对象可以有一个 default property。它指定：在对象声明中直接嵌套、但没有写明属性名的子对象，应被赋给哪个属性。
+例如 `FormRow.qml` 声明 `default property alias contentData: contentSlot.data`。调用方可写：
+```qml
+FormRow {
+    label: "端口"
+    ComboBox { }
+}
+```
+这里的 `ComboBox` 没有显式写成 `contentData: ComboBox { }`，QML 会按默认属性把它放进 `contentSlot.data`，也就是内部 `ColumnLayout` 的内容槽。默认属性常用于容器组件简化调用处语法；它不代表“默认值”，也不是对象的默认状态。Qt Quick 的 `Item` 默认属性是 `data`，因此普通子对象可以直接写在 `Item { ... } ` 中。
+### 属性分组
+属性分组只是访问一个属性的子属性的写法，不是另一种属性声明，也没有 `group property` 关键字。例如 `Text.font` 包含 `pixelSize`、`bold` 等子属性，下面两种写法等价：
+```qml
+font.pixelSize: 12
+font.bold: true
+
+font {
+    pixelSize: 12
+    bold: true
+}
+```
+分组也常见于 `anchors.fill`、`border.color` 等。属性组可能基于值类型，也可能基于对象类型；同一个对象定义中，不要既整体替换属性对象又同时设置其子属性。
+### 动态作用域与 ID 查找
+“后加载文档覆盖之前文档的 ID，像全局变量”不是准确的规则。QML 的 `id` 属于组件作用域，不会注册进一个供所有文档共同修改的进程级全局表。同一组件中 ID 必须唯一；分开的 QML 组件有各自作用域，因此都可以有 `id: root`。
+QML 表达式除了普通 JavaScript 局部作用域，还能在组件上下文中解析 ID 和根对象属性。动态作用域意味着：某个组件被放入另一个组件中时，组件内未声明的名称在特定情况下可能继续沿实例化上下文查找到外层属性或 ID。若查找链上存在同名名称，离表达式更近的名称可能遮蔽外层名称；这不是“后加载文件覆盖 ID”，而是名称解析依赖了组件的使用位置。这会让组件单独加载、移到另一个页面或复用时表现改变。
+可复用组件应通过显式属性、属性别名、信号和方法接收外部数据。例如不要让 `TitleText.qml` 偷偷依赖放置它的页面是否有 `title`，而是给 `TitleText` 声明 `property string title`，并在使用处写 `title: page.title`。这样依赖可见、可检查，也不会因外层同名 ID 而改变含义。
+### 属性绑定与绑定移除
+属性绑定用 JavaScript 表达式声明属性之间的关系。引擎在表达式求值时跟踪读到的属性；依赖变化后重新计算绑定，并把新值写到目标属性。例如 `height: parent.height / 2` 会在父对象高度改变后重新计算。
+绑定从对象实例化并建立属性值时开始生效，在绑定被替换、被命令式赋值覆盖，或目标对象销毁时结束。可以通过普通赋值移除当前绑定，也可以用 `Qt.binding(function() { ... })` 从 JavaScript 再安装一个绑定：
+```qml
+height: width * 2
+
+Component.onCompleted: {
+    height = 100                 // 固定赋值，原来的绑定被移除
+    height = Qt.binding(function() { return width * 3 })
+}
+```
+教程里“绑定会被销毁”指的是目标属性上的那条依赖表达式被移除，不是对象或属性本身被销毁。若 `text` 原来由 `text: counter.value` 决定，随后执行 `text = ""`，它会变成普通静态值；之后 `counter.value` 再变化也不会自动更新 `text`。如果需求是用户可清零并继续累计，就应把“当前计数”建模为可变状态，再用另一个绑定属性计算显示内容，不要同时把同一属性既当计算结果又当可直接改写的状态。
+### QML 状态
+基于 `Item` 的对象有 `state` 属性和默认状态。默认状态名为空字符串，保存对象初始属性值。可在 `states` 列表中用 `State` 命名一组配置，再用 `PropertyChanges` 改属性；把对象的 `state` 设成该名称即可切换。也可以用 `State.when` 绑定条件，使条件为真时进入状态、为假时回到默认状态。状态可以改变属性、锚点、父对象或运行状态切换脚本；`Transition` 可以把状态切换动画化。
+```qml
+Rectangle {
+    id: box
+    color: "gray"
+
+    states: [
+        State {
+            name: "warning"
+            PropertyChanges { target: box; color: "orange"; scale: 0.95 }
+        }
+    ]
+    state: "warning"
+}
+```
+状态适合描述同一对象在“正常/警告”“收起/展开”等模式下的一组属性配置；只有一个属性需要随某个值变化时，简单属性绑定通常更直接。当前 CommStudio 的 QML 中暂未发现使用 `states:` 的页面，组件视觉变化主要由普通绑定和 Behavior 完成。
+### 信号处理器、箭头函数与匿名函数
+这三个概念处在不同层面。信号处理器（例如 `onErrorOccurred`）是 QML 引擎连接事件与响应代码的入口；箭头函数 `(x) => ...` 和匿名函数表达式 `function(x) { ... }` 是可放进处理器中的 JavaScript 函数形式。QML 对象内的 `function reset() { ... }` 则是有名字、属于对象的方法。
+箭头函数没有自己的 `this` 和 `arguments`，会沿用外层上下文；普通匿名函数有自己的 `this` 和 `arguments`。处理信号参数时显式写形参最清楚：
+```qml
+onErrorOccurred: (msg, line, col) => {
+    console.log(`${line}:${col}: ${msg}`)
+}
+```
+形参名只负责接收参数位置，不必和信号声明的名字一致。信号参数按位置传入，所以可以省略末尾不需要的参数，例如 `message => ...`；不能只省略开头参数却直接接收第三个，必须用未使用的占位形参占住位置，例如 `(_message, _line, col) => ...`。下划线没有特殊语义，只是变量名。Qt 教程中的例子把形参写成 `mgs` 却在模板字符串里引用 `msg`，这是拼写错误；两处必须统一。
+也可以把一段普通代码块直接赋给处理器，旧式写法会把信号参数名注入代码块作用域。这样读代码时不容易看出变量从哪里来，而且查找成本更高；该方式已弃用，实际使用注入参数时会产生运行时警告。新代码用箭头函数或 `function(params) { ... }` 显式列出参数。
+### 附加属性、附加信号与 Component.onCompleted
+附加属性和附加信号由某个“附加类型”在运行时提供给特定对象，语法以附加类型名称作前缀：`AttachingType.property` 或 `AttachingType.onSignal`。它们不是对象自己声明的普通属性/信号。
+`Component.onCompleted` 是附加信号处理器。QML 引擎为对象关联 `Component` 附加对象，在对象实例化完成时发出 `completed` 信号；因此它不是 `ListModel` 自己的 `completed` 信号。不同对象的完成处理器调用先后不应作为业务依赖。
+给定的 `ListModel` 示例在模型实例化完成后循环调用其 `append()` 方法，逐个追加 10 个对象，每个对象有一个 `Name` 角色，值为 `Item 0` 至 `Item 9`。ListView 监听模型变化并据此生成 delegate。当前 delegate 写的是 `Text { text: index }`，所以画面显示索引 `0` 到 `9`，并没有读取 `Name`；若要显示角色内容，应写 `text: Name`。
+### delegate 与 ListView 附加属性
+`ListView.model` 提供数据项，`delegate` 提供每一项的对象模板。模型有多少项，逻辑上就有多少行；ListView 为可见区域按需创建 delegate，所以 delegate 是重复实例化的模板，不是整个列表只创建一次的对象。delegate 根对象通常可读取模型角色和 `index`。
+示例中的 `model: 3` 是三个整数模型项，delegate 的索引为 0、1、2。每个 delegate 创建一个 100×30 的黄色矩形；若它是当前项，`ListView.isCurrentItem` 为真，颜色改为红色。若要保证第一行当前，可显式设 `currentIndex: 0`；当前索引无效时没有 delegate 会变红。
+`ListView.isCurrentItem` 是 ListView 附加到其 delegate 实例上的只读附加属性，因此写在 delegate 内可直接判断当前项。ListView 还提供 `ListView.view` 等附加属性给 delegate 使用。这种机制让模板知道自己在何种视图中、代表哪条数据，而无需给模板额外传入整个对象树引用。
+### 官方资料
+[Qt：JavaScript Expressions in QML](https://doc.qt.io/qt-6/qtqml-javascript-expressions.html)
+[Qt：Importing JavaScript Resources](https://doc.qt.io/qt-6/qtqml-javascript-imports.html)
+[Qt：Signal and Handler Event System](https://doc.qt.io/qt-6/qtqml-syntax-signals.html)
+[Qt：Property Binding](https://doc.qt.io/qt-6/qtqml-syntax-propertybinding.html)
+[Qt：QML Object Attributes](https://doc.qt.io/qt-6/qtqml-syntax-objectattributes.html)
+[Qt：Scope and Naming Resolution](https://doc.qt.io/qt-6/qtqml-documents-scope.html)
+[Qt：Defining Object Types through QML Documents](https://doc.qt.io/qt-6/qtqml-documents-definetypes.html)
+[Qt：Qt Quick States](https://doc.qt.io/qt-6/qtquick-statesanimations-states.html)
+[Qt：ListView](https://doc.qt.io/qt-6/qml-qtquick-listview.html)
+

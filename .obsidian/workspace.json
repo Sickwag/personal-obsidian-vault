@@ -123,12 +123,12 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 248.5,
-    "collapsed": true
+    "width": 248.5
   },
   "right": {
     "id": "71aa3531bb8d70f2",
@@ -227,7 +227,7 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "c64e2c3ccdfc0f41",
+  "active": "129968db299d0d8b",
   "lastOpenFiles": [
     "学习/Language/C C++/Communication protocol.md",
     "QSimpleScada.md",
