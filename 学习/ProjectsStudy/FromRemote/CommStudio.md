@@ -526,3 +526,135 @@ onErrorOccurred: (msg, line, col) => {
 [Qt：Qt Quick States](https://doc.qt.io/qt-6/qtquick-statesanimations-states.html)
 [Qt：ListView](https://doc.qt.io/qt-6/qml-qtquick-listview.html)
 
+
+
+## QML 类型的模块可见性与目录导入
+### 模块导入提供类型名
+一个 QML module 有自己的 URI 和类型清单。某个 QML 文档写 `import CommStudio 1.0`，表示把该模块在这个版本下导出的类型名加入**当前文档**可用的类型集合，所以可以写 `AppButton { }`、`SerialPage { }`。通常不需要对每个文件逐个写 `import "AppButton.qml"`；被导出的模块类型通过 `qmldir` 清单解析。多个模块可以同时被一个文档导入；若使用 `as CS`，则类型用 `CS.AppButton { }` 这种限定名访问。模块没有因此合并成程序级全局作用域，其他独立 QML 文档仍需要自己的 import 声明。
+### 同目录隐式导入
+QML 文档所在的本地目录会隐式导入，因此同一目录下的 `Sibling.qml` 通常可直接作为 `Sibling { }` 使用，不必再写 `import "."`。这是目录导入规则。另一个目录的类型需要导入那个目录，或者像 CommStudio 一样把文件登记到一个可导入模块中。模块导入按模块类型清单提供类型，目录导入按文件目录提供类型；不要把这两条规则混为一个作用域。
+### CommStudio 的实际注册关系
+`CMakeLists.txt` 把 `qml/Main.qml`、`qml/components/*.qml`、`qml/pages/*.qml` 和 `qml/dialogs/*.qml` 一并列入 `qt_add_qml_module(CommStudio URI CommStudio VERSION 1.0 QML_FILES ...)`。因此这些文件都成为 `CommStudio 1.0` 提供的 QML 类型。生成的 `build/debug/CommStudio/qmldir` 将源文件路径映射为模块类型名，例如 `FormRow 1.0 qml/components/FormRow.qml`、`SerialPage 1.0 qml/pages/SerialPage.qml`；子目录路径没有出现在类型名里，类型名默认取 QML 文件名去掉扩展名。
+`qml/pages/SerialPage.qml` 写了 `import CommStudio 1.0`，所以它能实例化位于另一个源目录 `qml/components/` 的 `FormRow`。`qml/Main.qml` 同样导入该模块，因此能使用 `SerialPage`。导入模块后就无需再为每个页面、控件分别写路径 import。
+`CommStudio.Backend 1.0` 是另一个 URI，对应 C++ 注册出来的后端单例。需要使用其中的 `Studio`、`SerialManager` 等名字的 QML 文档必须导入 `CommStudio.Backend 1.0`；导入 `CommStudio 1.0` 不会自动让后端模块变成同一个全局命名空间。本项目中的 `Main.qml` 和各页面在需要后端对象时分别写了该 import。
+### 类型可见性不等于对象 ID 可见性
+导入模块只让类型名可用于创建对象。例如导入 `CommStudio` 后可以写 `FormRow { }`，但这不会让 `FormRow.qml` 内部的 `id: contentSlot`、`id: labelText` 对调用者直接可见。外部接口由组件根对象公开的属性、信号和方法决定；要开放内部对象的属性，需要在根对象上声明 alias 或转发属性。
+可以把它们分成三层记忆：`import` 决定“当前文档能写哪些类型名”；`qmldir`/模块注册决定“模块导出了哪些类型名”；组件作用域和公开属性决定“实例内部哪些对象和属性可以访问”。
+[Qt：QML import 语句](https://doc.qt.io/qt-6/qtqml-syntax-imports.html)
+[Qt：QML 文档结构与隐式目录导入](https://doc.qt.io/qt-6/qtqml-documents-structure.html)
+[Qt：本地 QML 目录导入](https://doc.qt.io/qt-6/qtqml-syntax-directoryimports.html)
+[Qt：qt_add_qml_module](https://doc.qt.io/qt-6/qt-add-qml-module.html)
+[Qt：qmldir 模块文件](https://doc.qt.io/qt-6/qtqml-modules-qmldir.html)
+
+
+
+## QML 脚本、Q_PROPERTY 与图像输入
+### `.pragma library` 对脚本作用域的影响
+普通 QML JavaScript 资源通常是某个 QML 组件的 code-behind：每个组件实例有自己的脚本实例；没有在脚本中声明独立导入时，脚本可以使用导入它的 QML 文档上下文中的对象和属性，例如该组件内的 `id`。这适合与某个组件紧密绑定的逻辑。
+在 JS 文件开头声明 `.pragma library` 后，该文件成为共享脚本：多个 QML 文档导入的会是共享的脚本环境，文件级变量也因此变成共享状态。它不属于任何一个具体 QML 实例，不能直接读取调用者的 `id`、属性或导入列表。这样做适合纯辅助函数，也要注意文件级可变变量会被所有导入者共享。pragma 必须出现在注释之后、任何 JS 代码之前。
+例如，普通脚本可能直接读某个 QML 实例的属性；共享脚本应改为由 QML 显式传值：
+```qml
+// helpers.js
+.pragma library
+
+function chooseColor(theme) {
+    return theme.primary
+}
+```
+```qml
+import "helpers.js" as Helpers
+Rectangle {
+    color: Helpers.chooseColor(Theme)
+}
+```
+如果共享脚本需要模块类型，应在 JS 文件中用 `.import Module.Uri version as Alias` 显式导入；例如它不能因为调用方写了 `import QtQuick` 就假定自己也能直接使用 `Component`、`Image` 等名字。其原因是一个共享脚本可以被多个导入上下文不同的文档使用，依赖调用者的 imports 会导致解析含义不稳定。[Qt JavaScript 资源说明](https://doc.qt.io/qt-6/qtqml-javascript-resources.html)、[JS 资源导入规则](https://doc.qt.io/qt-6/qtqml-javascript-imports.html)
+### `Q_PROPERTY` 的 `NOTIFY` 与 `BINDABLE`
+`Q_PROPERTY` 是把 C++ 成员以 Qt 元对象属性的形式提供给 Qt/QML。属性 getter 让 QML 能读取；setter（若有）让 QML 能写。若属性变化后需要更新界面，还需要一种让引擎获知变化的机制。
+| 声明机制 | 提供的能力 |
+|---|---|
+| `NOTIFY valueChanged` | 指定一个 Qt 信号作为变化通知。值改变并发出信号后，QML 会重新计算读取该属性的绑定，也能连接 `onValueChanged` 处理器。 |
+| `BINDABLE bindableValue` | 暴露 `QBindable<T>`，让 Qt 属性系统直接追踪属性变化和绑定依赖；可以与 `QProperty<T>` 等可绑定属性实现配合，不依赖手动发射变化信号来通知绑定系统。 |
+| 两者都有 | 同时提供传统信号接口和 bindable 接口。若 QML/C++ 代码需要显式连接变化信号，应保留 `NOTIFY`；具体信号发射由属性实现或相应 bindable helper 负责，避免手动和自动通知重复。 |
+`NOTIFY` 不会替你实现 setter，也不会自动改成员变量。典型 setter 先检查值是否真的改变，再写入成员并发射信号；重复发射会让依赖该属性的绑定做不必要的重算。只有 `READ` 而没有变化通知时，QML 可以读取初值，但 C++ 后续改变它时，绑定无法可靠获知变化；工具或运行时也可能报告绑定通知缺失。
+`BINDABLE` 则需要提供一个返回 `QBindable<T>` 的接口，通常底层用 `QProperty<T>` 或 `QObjectBindableProperty<T>` 保存。这样 C++ 可以为属性建立/观察绑定，QML 引擎也能用 bindable 接口追踪依赖。它不是“给普通 C++ 成员自动加 setter”的宏。
+CommStudio 的 [`Studio` 属性声明](</home/azzato/CodeFiles/remote_push/CommStudio/include/managers/studio.h:14>) 使用 `NOTIFY`，例如 `language` 通过 `languageChanged` 通知 QML；当前源码中没有使用 `BINDABLE`。[Qt C++ 属性集成](https://doc.qt.io/qt-6/qtqml-cppintegration-exposecppattributes.html)、[Qt Bindable Properties](https://doc.qt.io/qt-6/bindableproperties.html)
+### `Image.source` 与 Qt 资源路径
+`Image.source` 的类型是 URL，不局限于本地文件名。它可以是相对于当前 QML 文档的路径、绝对文件 URL、Qt 资源 URL、网络 URL，也可以是 image provider URL。相对 URL 会按使用它的 QML 文档位置解析：
+```qml
+Image { source: "assets/logo.png" }                // 相对 QML 文件
+Image { source: "file:///opt/app/logo.png" }       // 绝对文件 URL
+Image { source: "qrc:/qt/qml/App/assets/logo.svg" } // Qt 资源
+Image { source: "https://example.com/logo.png" }   // 网络
+```
+在 QML 的 URL 属性里，推荐用 `qrc:/...` 表示 Qt 资源系统路径；C++ 的 `QFile`、`QIcon` 等接口常用 `:/...` 形式。本项目的图标资源已编进 QML module，[C++ 读取路径](</home/azzato/CodeFiles/remote_push/CommStudio/src/main.cpp:62>) 是 `:/qt/qml/CommStudio/qml/assets/commstudio-mark.svg`，在 QML 中可对应写 `qrc:/qt/qml/CommStudio/qml/assets/commstudio-mark.svg`，也可按 QML 文件位置使用相对 URL `assets/commstudio-mark.svg`。
+HTTP/HTTPS 图片会由 Qt Quick 从网络异步加载，加载进度可通过 Image 状态属性观察。图片保存在 Qt Quick 的内部图片缓存中，供相同来源的 Image 共享；它不会因为设置了 `source` 就自动变成工作目录下的永久文件。若功能需要下载后保留图片，应用应自行通过网络 API 下载并写入指定文件。网络图片受网络可用性和服务器响应影响。[Qt 网络透明资源加载](https://doc.qt.io/qt-6/qtqml-documents-networktransparency.html)、[Qt Quick Image](https://doc.qt.io/qt-6/qml-qtquick-image.html)
+### C++ 图像提供器
+教程所说的 `QQmlImageProvider` 通常是在泛指 QML 图像提供器接口。Qt Quick 中实现动态图片最常用的是 `QQuickImageProvider`，它继承自 `QQmlImageProviderBase`；需要自行设计异步响应时再考虑 `QQuickAsyncImageProvider`。实现 `requestImage()` 后，C++ 可以根据请求 ID、参数或业务状态返回内存中生成的 `QImage`，无需先把图片存成磁盘文件。
+```cpp
+class StatusImageProvider : public QQuickImageProvider {
+public:
+    StatusImageProvider()
+        : QQuickImageProvider(QQmlImageProviderBase::Image) {}
+
+    QImage requestImage(const QString &id, QSize *size,
+                        const QSize &requestedSize) override {
+        const QSize actual = requestedSize.isValid()
+            ? requestedSize : QSize(128, 128);
+        QImage image(actual, QImage::Format_ARGB32_Premultiplied);
+        image.fill(id == "ok" ? QColor("green") : QColor("red"));
+        if (size)
+            *size = image.size();
+        return image;
+    }
+};
+```
+在创建 QML 引擎后、加载 QML 前注册：
+```cpp
+engine.addImageProvider("status", new StatusImageProvider);
+```
+QML 侧用 `image://提供器名/请求ID`：
+```qml
+Image {
+    source: "image://status/ok"
+    asynchronous: true
+}
+```
+引擎会调用 provider 的 `requestImage()`，这里收到的 ID 是 `ok`。对 `QImage` provider，`asynchronous: true` 会把请求放到低优先级线程；也可用 `ForceAsynchronousImageLoading` 强制异步。由于请求可能在线程中执行且实现可能被并发调用，方法应保持可重入，不要直接操作 GUI 对象或未加保护的共享状态。普通异步请求在一个 engine 内共用有限的工作线程；复杂且需要自己安排并发加载时使用 `QQuickAsyncImageProvider` 与线程池。[Qt `QQuickImageProvider`](https://doc.qt.io/qt-6/qquickimageprovider.html)、[Qt `QQmlImageProviderBase`](https://doc.qt.io/qt-6/qqmlimageproviderbase.html)
+### `id` 命名建议
+QML `id` 必须以小写字母或下划线开头，只能含字母、数字和下划线，并且在同一组件作用域中唯一；它是标识符，不是字符串属性，也不能在对象创建后改写。命名风格属于团队约定，建议使用小驼峰并说明对象用途，例如 `saveButton`、`portSelector`、`statusLabel`、`retryTimer`。根对象可统一用 `root`，可复用控件根对象也常用 `control`。
+避免 `item1`、`rect2` 这类只描述类型和编号的名称；也不必把完整父子路径写进每个 ID，因为拆出的独立组件会有新的作用域。CommStudio 的 `root`、`control`、`labelText`、`contentSlot` 就体现了“根对象用约定名、内部对象按用途命名”的思路。对象数量持续增多时，应把一块有独立职责的界面拆成组件，并用公开属性/信号连接组件，而不是只靠越来越长的 ID。
+### MouseArea 的非矩形命中区域
+`MouseArea` 默认按自己的矩形边界参与鼠标命中；透明图片的圆角、透明像素或复杂轮廓不会自动变成鼠标边界。Qt Quick 的 `Item.containmentMask` 可以改变 `contains()` 的判断，因而改变 Pointer/MouseArea 的命中区域。最简单的圆形可以自定义 `contains(point)`：
+```qml
+MouseArea {
+    id: hitArea
+    anchors.fill: parent
+    containmentMask: QtObject {
+        function contains(point) {
+            const dx = point.x - hitArea.width / 2
+            const dy = point.y - hitArea.height / 2
+            const radius = Math.min(hitArea.width, hitArea.height) / 2
+            return dx * dx + dy * dy <= radius * radius
+        }
+    }
+}
+```
+对于多边形或复杂填充轮廓，可以用 `QtQuick.Shapes` 的 `Shape` 作为 `containmentMask`，并按 `Shape.FillContains` 等模式测试形状。mask 只控制鼠标/指针命中，不负责剪裁图像或改变绘制；视觉形状和 mask 的坐标、缩放需保持一致。仅在 `onClicked` 中判断坐标只能阻止业务动作，MouseArea 的矩形仍可能拦截底层控件的按下事件；希望形状外点击穿透时应改变实际 hit-test 区域。[Qt Quick `Item.containmentMask`](https://doc.qt.io/qt-6/qml-qtquick-item.html)、[Qt Quick `MouseArea`](https://doc.qt.io/qt-6/qml-qtquick-mousearea.html)
+### QML 中“内联”的几种含义
+“内联”指定义直接写在当前 QML 文档或使用位置，具体含义要看修饰的对象：
+- **内联 JavaScript 函数**：写在 QML 对象体中的 `function f() { ... }`，作为该对象的方法；外部脚本则放在 `.js` 文件导入。
+- **内联对象/组件声明**：直接写在属性或对象树中的对象，例如 `delegate: Rectangle { ... }`，而不是另建 `.qml` 文件。
+- **内联组件（inline component）**：在一个 QML 文档中用 `component Badge: Rectangle { ... }` 命名并定义一个可复用类型，它有自己的组件作用域，但仍使用所在文档的 import。
+“内联”本身不表示特殊的对象生命周期或全局作用域。把定义放在同一文件通常更便于就地阅读；独立文件则更适合复用和形成清楚的组件接口。
+### 自定义 `Button.qml` 如何被使用
+一个可被 QML 类型系统发现的 `Button.qml` 会定义名为 `Button` 的自定义 QML 类型。QML 文档所在目录会隐式导入，所以另一个同目录文件通常可直接写 `Button { ... }`。如果文件位于另一个本地目录，可写 `import "../controls" as Controls`，再用 `Controls.Button { ... }`；如果文件加入已注册模块，则导入该模块 URI 后按模块类型名使用。
+调用方示例：
+```qml
+Button {
+    text: "开始"
+    onClicked: console.log("启动")
+}
+```
+`property alias text: label.text` 将自定义组件的公开 `text` 属性映射到内部 `Text` 的 `text`，所以调用方设置 `text` 就能改内部标签。鼠标按下由内部 MouseArea 收到，`root.clicked()` 发射根对象声明的自定义信号；外部 `onClicked` 处理器随后响应。
+CommStudio 也是同一机制的模块化形式：页面与控件加入 `qt_add_qml_module` 的 `QML_FILES` 后登记在 `qmldir` 中；跨 `qml/pages` 和 `qml/components` 使用时，各文件导入 `CommStudio 1.0` 即可。控件命名应避免和同文档导入的 Qt 类型重名，因此项目使用 `AppButton.qml`，避免与 Qt Quick Controls 的 `Button` 混淆。[QML 文档结构](https://doc.qt.io/qt-6/qtqml-documents-structure.html)、[QML 类型定义](https://doc.qt.io/qt-6/qtqml-documents-definetypes.html)
+
