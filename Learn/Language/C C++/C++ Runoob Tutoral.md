@@ -629,10 +629,35 @@ bool compare(const Type& a, const Type& b);
 ```
 如果未显式指定参数类型，编译器会根据传入的参数自动推断类型。如果不符合对应元素的迭代器，则会报错
 #### lambda 实质
-- 每个 lambda 表达式会生成**唯一匿名类型**（参考[[#仿函数|仿函数]]），其 `operator()` 是 const 成员函数，如果想让他变为非 const 成员，可以在 `auto f = [x]() mutable {}`
+- 每个 lambda 表达式会生成**唯一匿名类型**（参考[[#仿函数|仿函数]]），其 `operator()` 是 const 成员函数，这就会导致**按值捕获的变量被存储为 lambda 对象的成员变量**；如果想让他变为非 const 成员，可以在 `auto f = [x]() mutable {}`，对引用捕获的变量美誉影响
+```cpp
+// 通过cpp insight编译可知:
+int main() {
+	int x = 10;
+	auto f = [x]()  mutable { return 0;};  // 1
+	auto f = [x]()  		{ return 0;};  // 2
+}
+// 得到的匿名对象
+class __lambda_6_10
+{
+  public: 
+  inline constexpr int operator()() 	   // 1
+  inline constexpr int operator()() const  // 2
+  {
+    return 0;
+  }
+  
+  // private: 
+  int x;
+};
+
+const auto f = [x]() mutable { x++; };
+f();  // 错误：const 对象不能调用非 const 成员函数
+```
 - 无捕获的 lambda 可隐式转换为函数指针，但有捕获的 lambda 无法转换。（硬性要求）
 - 容器中使用 lambda 定义比较器和函数（方法）中定义二元操作函数区别
 - `lambda` 表达式本质上是一个匿名的函数对象，它会自动生成一个重载了 `()` 运算符的类。因此，`lambda` 表达式可以像普通的函数对象一样传递给需要比较器的函数或容器。
+- lambda 对象本身有状态，多次调用会**累积**修改
 - 其捕获列表中的内容会**在编译期**被转化为仿函数的成员对象，这也导致了如果要进行引用捕获，**必须注意生命周期问题**， C++ 引用绑定到哪个对象是构造时决定的，之后不能重新绑定。所以引用捕获本质上就是在结构体里存了一个 int&。如果 lambda外被引用的对象被销毁（指针被销毁或者对象被RAII 机制回收）都会导致悬空引用，参考 [[AzzatoChat#闭包思想]]
 
 |特性|容器（set/priority_queue）|STL 算法（sort/accumulate）|
@@ -5834,11 +5859,12 @@ const char* const str3 = "hello"; // const指针，指向const char
 #### 修饰成员函数
 ![C++ Runoob Tutoral \> ^0ca58b](#^0ca58b)
 **常函数：**
-* 成员函数后，函数体前加 const 后我们称为这个函数为**常函数**
 * 不能在函数体中修改任何非 `mutable` 成员变量的值
-* 声明对象前加 const 称该对象为常对象
 * **常对象只能调用常函数**
 * 只能在类的成员函数中使用
+* 函数体前面的 `const` 修饰的其实是**隐含的 `this` 指针**，通过对象调用成员函数本质上就是在用 `this` 指针调用，并且成员函数隐式传入的第一个参数就是对象指针本身，
+	* 非 const 成员函数：`A* const this`（指针本身是 const，但指向的对象可修改）可以调用 const 成员函数，因为非 const 对象的 `this` 是 `A*`，可以隐式转换为 `const A*`
+	- const 成员函数：`const A* const this`（指向的对象不可修改），非 const 成员函数期望的 `this` 是 `A*`，而 const 对象只能提供 `const A*`
 
 如果在函数返回类型前加 const 则基本没有意义，因函数返回值是右值（临时值），被变量/对象接受前都是临时副本
 如果函数返回的是**引用或者指针**，加 const 则表示基调用着不得修改返回后对象
@@ -7898,6 +7924,25 @@ std::function<void()> func = [] { std::cout << "Hello\n"; };
 
 # 查缺补漏
 ## 基础语法细节
+### 属性系统
+
+| 性 (Attribute)                 | 引入标准  | 主要作用                                                                                                                                                                                            |
+| ----------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[[noreturn]]`                | C++11 | 指示函数不会正常返回（例如，总是抛出异常或终止程序）。[](https://raw.githubusercontent.com/MicrosoftDocs/cpp-docs/62f453753ad32e3477d609062db660078f10914b/docs/cpp/attributes.md#1)                                       |
+| `[[carries_dependency]]`      | C++11 | 声明函数会传播与线程同步相关的数据依赖顺序，帮助编译器生成更高效的代码。[](https://raw.githubusercontent.com/MicrosoftDocs/cpp-docs/62f453753ad32e3477d609062db660078f10914b/docs/cpp/attributes.md#1)                              |
+| `[[deprecated]]`              | C++14 | 标记某个实体（类、函数、变量等）已弃用。使用它时，编译器会发出警告。[](https://raw.githubusercontent.com/MicrosoftDocs/cpp-docs/62f453753ad32e3477d609062db660078f10914b/docs/cpp/attributes.md#1)                                |
+| `[[deprecated("reason")]]`    | C++14 | 与 `[[deprecated]]` 相同，但允许你提供一段说明弃用原因的文本。                                                                                                                                                        |
+| `[[fallthrough]]`             | C++17 | 在 `switch` 语句中，明确告知编译器（和代码阅读者）此处故意省略了 `break`，以抑制“fallthrough”警告。[](https://raw.githubusercontent.com/MicrosoftDocs/cpp-docs/62f453753ad32e3477d609062db660078f10914b/docs/cpp/attributes.md#1) |
+| `[[maybe_unused]]`            | C++17 | 抑制编译器对未使用变量、参数或函数发出的警告。适用于某些构建配置下有意不使用的代码。                                                                                                                                                      |
+| `[[nodiscard]]`               | C++17 | 如果函数或类的返回值被丢弃，编译器会发出警告，提醒你处理返回值。                                                                                                                                                                |
+| `[[nodiscard("reason")]]`     | C++20 | 与 `[[nodiscard]]` 相同，但允许提供自定义警告信息。                                                                                                                                                              |
+| `[[likely]]` / `[[unlikely]]` | C++20 | 向编译器提供分支预测的提示，表明某个执行路径更可能或更不可能发生，以优化指令布局。                                                                                                                                                       |
+| `[[no_unique_address]]`       | C++20 | 允许一个非静态数据成员与其它成员共享地址，用于优化空基类或空成员的内存占用。                                                                                                                                                          |
+| `[[assume(expression)]]`      | C++23 | 向编译器断言某个表达式在特定点上恒为真。这允许编译器基于此假设进行更激进的优化。                                                                                                                                                        |
+g++ 自实现的一些属性可以通过 `[[gnu::xxx]]` 使用
+属性是给**编译器**看的，它要求编译器改变行为：优化控制流、发出诊断、调整内存布局等。这些行为必须由编译器内部实现。通常可以帮助编译器优化性能，进行更激进的代码控制流优化
+其实可以写任意属性标签，比如 `[[my_attr]]`，编译器不会报错，但会**忽略它**或者**给出警告**
+
 ### `std::bind` 和 `std::placeholder` 使用
 参考 [[Modern C++#3.2 函数对象包装器]]
 ### `std::optional` 使用
