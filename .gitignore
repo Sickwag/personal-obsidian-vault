@@ -4,4 +4,6 @@
 ./Chores/LearningDailyRecord/**
 .obsidian/plugins/remember-cursor-position/cursor-positions.json
 __pycache__/
+.obsidian/workspace.json
+.obsidian/plugins/cursor-navigator/cursor-positions.json
 .obsidian/notes-index/*.bak
