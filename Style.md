@@ -65,17 +65,18 @@
 
 ### 3.1 目录结构（现状即规范）
 ```
-学习/
+Learn/
   Bases/开发范式/ /操作系统/ /数据结构/ /计算机组成原理/ /计算机网络/
   Language/C C++/ /DB/ /ScriptLangs/ ...
-  ToolChain/
-  algorithm/
-  ProjectsStudy/ AI/ Fragments/
-Chores/JobInterviews/
+  Books/                 # 专业书籍笔记（C++ prime plus、Modern C++、QT6 等）
+  ToolChain/ algorithm/ ProjectsStudy/ AI/ Fragments/
+Article/                 # 哲学/ 感悟/
+Chores/JobInterviews/    # 面试题、简历、复盘
 Files & LongText/Attachments/   # 全库附件统一目录（见 .obsidian/app.json）
 Daily/
 ```
-- 新增主题按学科归入 `学习/<一级>/<二级>`，不自创顶级目录。面试题归 `Chores/JobInterviews`。
+- 新增主题按学科归入 `Learn/<一级>/<二级>`，不自创顶级目录。面试题归 `Chores/JobInterviews`。
+- 顶层与各一级目录名用英文（`Learn`/`Article`/`Books`），避免中文目录名在跨平台/工具链下的编码问题。
 - 单篇笔记聚焦单一主题，不做跨领域大杂烩。大主题拆多篇，用 `[[wikilink]]` 串联。
 
 ### 3.2 命名
@@ -130,27 +131,32 @@ source: https://...
 
 ## 5 笔记索引工具（notes-index）
 
-> 工具位置：`~/notes-index/`（Python 模块，随 vault 独立于笔记库）。数据库默认在 `~/.cache/notes-index/index.db`（vault 外，不被 Obsidian 索引）。
+> 工具与数据库随 vault 携带，位于 `.obsidian/notes-index/`：`notes_index.py`（脚本）+ `index.db`（SQLite 索引）。
+> 用 Python 标准库实现（`sqlite3`/`pathlib`/`re`），无第三方依赖；vault 根与数据库路径由脚本位置自动推导，换机器、换挂载盘、换操作系统都无需改配置。
 > 用途：维护全库 md 的 ≤3 级标题索引与精简描述，供 AI 写入前查重、写入后校验。
 
 ### 5.1 命令
 
+在 vault 根目录执行（Windows 将 `python3` 换成 `python`）：
 ```bash
-VAULT="/mnt/windows-e/file_storage/obsidian-vault"
 # 全量扫描并更新索引（updateRecord）
-python3 -m notes_index --vault "$VAULT" update
+python3 .obsidian/notes-index/notes_index.py update
 # 只对比不写库（dry-run）
-python3 -m notes_index --vault "$VAULT" update --no-write
+python3 .obsidian/notes-index/notes_index.py update --no-write
 # 对比单个文件（isUpdate）；ALL 表示全库
-python3 -m notes_index --vault "$VAULT" check <相对路径|ALL>
+python3 .obsidian/notes-index/notes_index.py check <相对路径|ALL>
 # 相似内容检索（lookup）
-python3 -m notes_index --vault "$VAULT" lookup <关键词> [--limit 10]
-# 写入标题/文件描述
-python3 -m notes_index --vault "$VAULT" desc --file <相对路径> [--title <标题>] --desc <精简描述>
+python3 .obsidian/notes-index/notes_index.py lookup <关键词> [--limit 10]
+# 写入单个标题/文件描述
+python3 .obsidian/notes-index/notes_index.py desc --file <相对路径> [--title <标题>] --desc <精简说明>
+# 批量写入描述（JSON：[{file,title,desc}]）
+python3 .obsidian/notes-index/notes_index.py desc --batch <json文件>
 ```
 
 - 输出均为 JSON。`check` 返回 `added` / `renamed` / `deleted` / `need_desc` / `changed_files`；`lookup` 返回相似标题条目（含文件路径、标题、得分）。
+- `--vault` / `--db` 一般无需指定；仅当脚本被移出 `.obsidian/notes-index/` 时才需手动传入。
 - `desc` 的 `--title` 缺省时表示写文件描述；指定 `--title` 则写该标题的 desc。
+- 依赖：Python 3.8+（仅标准库）。Obsidian 不自带 Python，使用者需自备解释器。
 
 ### 5.2 与 AI 写入的协作
 
