@@ -88,4 +88,5 @@ rules: 每个内容前使用checkbox，每天内容前写下需要复习的日�
 - [ ] openresty 的 LuaJIT 很值得看
 - [ ] Nignx 事件系统没听过，感觉值得学习
 - [ ] perf 和 gpreftools 的火焰图和冰柱图读法
-- [ ] 
+- [ ] 上班看了下 pybind11 的文档
+- [ ] FoucsScope 作用，[[QML#图像提供器：QQuickImageProvider]] 用法以及注意事项
