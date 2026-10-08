@@ -83,3 +83,9 @@ rules: 每个内容前使用checkbox，每天内容前写下需要复习的日�
 - [ ] 整章都很重要-> [[DevFoundations#kama 内存池]]
 - [ ] 内存基本知识-> [[DevFoundations#kama 内存池#基本内存池结构 v1]]
 - [ ] 操作系统内存管理-> [[DevFoundations#操作系统管理内存块逻辑]]
+## 10 月
+### 1008
+- [ ] openresty 的 LuaJIT 很值得看
+- [ ] Nignx 事件系统没听过，感觉值得学习
+- [ ] perf 和 gpreftools 的火焰图和冰柱图读法
+- [ ] 
