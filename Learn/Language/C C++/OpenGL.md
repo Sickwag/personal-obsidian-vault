@@ -234,3 +234,160 @@ cmake --build --preset release
 ```
 若选择 Debug，应先运行 `cmake --preset debug`，再运行 `cmake --build --preset debug`；配置 preset 与构建 preset 是不同步骤，尚未生成 `build/debug` 时直接构建会失败。
 后续运行验证应分别检查 `glfwInit`、窗口创建、GLAD 加载、着色器编译和程序链接状态；初始化或着色器失败时应停止后续使用。初始视口可在 GLAD 加载后通过 `glfwGetFramebufferSize` 获取实际帧缓冲尺寸，再调用 `glViewport`；窗口尺寸与帧缓冲尺寸在高 DPI 环境中可能不同。
+## 属性槽位如何连接到着色器
+### 分清槽位、分量和顶点数量
+`layout(location = 0) in vec3 aPos` 是开发者声明的输入接口，不是 `aPos` 自己识别了 CPU 数组结构。这里有三个独立维度：属性槽位、每个属性的分量数、此次绘制的顶点数量。
+
+| 概念 | 示例中对应的代码 | 含义 |
+|---|---|---|
+| 属性槽位 | `location = 0`、`glVertexAttribPointer` 第一个参数 `0` | 当前顶点的位置属性从编号 0 的输入通道读取 |
+| 单个属性的分量数 | `vec3`、`glVertexAttribPointer` 第二个参数 `3` | 一个顶点的位置包含 x、y、z 三个分量 |
+| VBO 的存储大小 | `glBufferData(..., sizeof(vertices), ...)` | 为顶点字节数据提供存储空间 |
+| 本次绘制的顶点数量 | `glDrawArrays(GL_TRIANGLES, 0, 3)` 最后一个参数 | 此次从编号 0 开始处理三个顶点 |
+一个属性槽位不是“一个顶点”或“一个三角形”，也不是装着三个顶点的 `vec3` 数组。对每个被处理的顶点，槽位 0 提供一个属性值。在这个例子里，该值是包含三个浮点分量的 `vec3`。
+顶点着色器中的一次逻辑执行处理一个顶点。GPU 实际可以并行和批量执行；源码中的 `main()` 不接收整个三角形数组，也不能通过 `aPos` 直接看到另外两个顶点。
+### 两端共同约定输入接口
+GLSL 声明告诉着色器编译器：“变量 `aPos` 的类型是 `vec3`，位于属性槽位 0”。C++ 配置告诉顶点属性读取机制：“槽位 0 从这个 VBO 中读取三个 `GL_FLOAT`，步长和偏移按以下规则计算”。这两端的约定由开发者保持一致。
+```cpp
+// 前提：已绑定当前 VAO、对应 VBO，且已上传数据。
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+glEnableVertexAttribArray(0);
+// 第一个 0：属性槽位。
+// 第二个 3：每个顶点在此槽位提供三个分量，不是三个顶点。
+// stride：找到下一个顶点同一属性的位置。
+// nullptr：该属性从 VBO 的第 0 字节开始。
+```
+OpenGL 按 VAO 配置读取和转换字节，向着色器提供属性值；不需要构造一个与 CPU `struct Vertex` 完全相同的 C++ 数据结构。GPU 的寄存器布局和取数实现由驱动/硬件决定，程序依赖的是 API 定义的值与接口。
+着色器编译/链接不要求提前知道 VAO 布局，`glVertexAttribPointer` 也不需要当前程序已有 `aPos`；两套配置在绘制时结合。这解释了为什么它们可以分别初始化，也解释了为什么错配可能链接成功却画出错误图像。
+### 三个顶点的数据如何逐个读取
+对于教程的九个浮点数，假设 `sizeof(float) = 4`，调用 `glDrawArrays(GL_TRIANGLES, 0, 3)` 后，逻辑上的输入为：
+
+| 顶点编号 | VBO 字节起点 | 此次执行的 `aPos` |
+|---|---|---|
+| 0 | `0 + 0 × 12 = 0` | `vec3(-0.5, -0.5, 0.0)` |
+| 1 | `0 + 1 × 12 = 12` | `vec3(0.5, -0.5, 0.0)` |
+| 2 | `0 + 2 × 12 = 24` | `vec3(0.0, 0.5, 0.0)` |
+三个顶点的位置都通过槽位 0 输入，只是在不同顶点的执行中取不同值。`GL_TRIANGLES` 再规定每三个顶点组装为一个三角形。
+`glBufferData` 上传 36 字节并不意味着每次必须画三个顶点，OpenGL 不根据 VBO 大小推断此次绘制数量。同一缓冲可以存多个网格的一部分，程序通过绘制参数选择数据范围；必须确保所请求的读取范围实际存在。
+### 为什么选槽位零
+槽位 0 是教程选择的接口编号，没有“位置必须在槽位 0”的规定。可以改为 `layout(location = 2) in vec3 aPos`，同时将配置和启用函数的属性索引改为 `2`。只改一端，着色器就不能获得原先那份数组数据。
+更复杂的顶点可以约定位置为 0、颜色为 1、法线为 2、纹理坐标为 3；每个顶点通过这些槽位分别获得各属性。槽位数量受 `GL_MAX_VERTEX_ATTRIBS` 限制，矩阵输入可占多个连续槽位。
+也可不写显式 `layout`：在链接前用 `glBindAttribLocation(program, index, "aPos")` 指定，或链接后用 `glGetAttribLocation(program, "aPos")` 查询分配结果。查询未使用、被优化掉的输入可能返回 `-1`；不能把它直接转成无符号属性索引。显式 `layout` 存在时优先采用它的编号。
+### 类型与分量数的匹配边界
+`vec3` 是 GLSL 自己的声明，不是从 `glVertexAttribPointer` 自动推导出来。推荐将两端配置清楚地对应，但 OpenGL 的浮点属性读取也允许分量补齐和丢弃：提供两个分量给 `vec3` 时 z 补为 0；提供三个分量给 `vec4` 时 w 补为 1；多余分量可不被输入使用。这些规则不改变 VBO 的数据布局。
+整数数据通过 `glVertexAttribPointer` 可以转成浮点输入；若 GLSL 输入是 `ivec*` 或 `uvec*`，使用 `glVertexAttribIPointer`。属性未启用时使用当前通用属性值，而不是自动读取 VBO；因此 `glEnableVertexAttribArray` 也是输入链路的一部分。
+[Khronos：顶点输入与属性配置](https://wikis.khronos.org/opengl/Vertex_Specification)
+[Khronos：glDrawArrays](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawArrays.xhtml)
+## 着色器文件、资源与预编译
+### 为什么教程在运行时编译
+C++ 编译器把 GLSL 字符串视为普通字符数据，不会理解或编译其中的着色器。OpenGL 程序运行后，通过当前上下文对应的驱动编译 GLSL，针对实际 GPU、驱动和支持能力生成可执行代码，再链接各阶段接口。
+这种方式允许分发同一份 GLSL 源码，在不同厂商硬件上由各自驱动处理，不要求开发者提前为所有 GPU 提供机器码。通常在初始化或加载材质时编译一次，而不是在每帧循环中重复编译。
+源码不必硬编码。可以放到 `.vert`、`.frag` 文件，用 `std::ifstream` 或 Qt 的文件 API 读取，再交给 `glShaderSource` 或 `QOpenGLShaderProgram`。独立文件便于语法高亮、定位错误、版本管理和开发期间热重载；普通文件部署时需要处理路径和文件分发。
+### Qt 资源打包
+可以使用 qrc 将独立 GLSL 文件打包进可执行文件。资源系统解决文件组织和部署问题；`rcc` 将资源转换为程序可访问的数据，不会把 GLSL 编译成 GPU 着色器。
+例如项目有 `Shaders/Triangle.vert`、`Shaders/Triangle.frag`，同级 `Shaders.qrc` 写为：
+```xml
+<RCC>
+    <qresource prefix="/shaders">
+        <file alias="triangle.vert">Shaders/Triangle.vert</file>
+        <file alias="triangle.frag">Shaders/Triangle.frag</file>
+    </qresource>
+</RCC>
+```
+已有 Qt 可执行目标 `app` 时，可采用以下构建配置接入资源和 OpenGL 模块；这只是 Qt 方案示例，当前 GLFW 项目未引入 Qt：
+```cmake
+find_package(Qt6 REQUIRED COMPONENTS OpenGL)
+set_target_properties(app PROPERTIES AUTORCC ON)
+target_sources(app PRIVATE Shaders.qrc)
+target_link_libraries(app PRIVATE Qt6::OpenGL)
+```
+若使用 `QOpenGLWidget`，还需项目相应的 Widgets/OpenGLWidgets 配置。在已有有效且当前的 OpenGL 上下文中（例如 `initializeGL()`），让作为成员保存的程序对象读取资源：
+```cpp
+// program 是 QOpenGLShaderProgram 成员，后续绘制继续使用它。
+if (!program.addShaderFromSourceFile(QOpenGLShader::Vertex,
+        QStringLiteral(":/shaders/triangle.vert")) ||
+    !program.addShaderFromSourceFile(QOpenGLShader::Fragment,
+        QStringLiteral(":/shaders/triangle.frag")) ||
+    !program.link()) {
+    qWarning().noquote() << program.log();
+    return; // 初始化失败后，后续绘制应检查是否初始化成功。
+}
+```
+此例需要相应 Qt 头文件；它演示资源路径和错误检查，不是完整窗口程序。资源路径 `:/shaders/...` 无需依赖进程工作目录。Qt 封装省去手写编译和日志查询流程，但仍然调用 OpenGL，在运行时完成编译/链接。
+[Qt：资源系统](https://doc.qt.io/qt-6/resources.html)
+[Qt：QOpenGLShaderProgram](https://doc.qt.io/qt-6/qopenglshaderprogram.html)
+### 能否提前编译
+可以提前做部分工作，但要区分资源打包、中间码编译和目标驱动生成最终程序。
+
+| 方案 | 运行前可以完成的工作 | 运行时仍需做什么与限制 |
+|---|---|---|
+| GLSL 文件/qrc | 保存、组织、打包源码 | 在上下文中编译、链接 |
+| 离线 GLSL 检查 | 用工具尽早发现语法/接口错误 | 目标驱动仍要编译；离线检查不能保证所有驱动行为相同 |
+| OpenGL 程序二进制缓存 | 之前运行时保存驱动生成的程序二进制 | 加载并检查成功；二进制依赖实现，驱动或环境变化后可能失效，需要源码回退 |
+| OpenGL SPIR-V 路径 | 用支持 OpenGL 语义的离线工具生成中间码 | 加载、specialize、链接，驱动仍可能生成/优化 GPU 机器码；需要 OpenGL 4.6 或相应扩展 |
+Qt 的 `addCacheableShaderFromSourceFile` 配合 `link()` 可使用程序二进制磁盘缓存：命中有效缓存且上下文支持时，可以跳过源码编译和链接；无缓存或不支持时回退到源码流程。这是跨运行缓存，不代表首次启动前已经完成编译。
+SPIR-V 是中间表示，不是通用于所有显卡的最终机器码。其 OpenGL 路径是 `glShaderBinary(..., GL_SHADER_BINARY_FORMAT_SPIR_V, ...)` → `glSpecializeShader(...)` → `glLinkProgram(...)`；不能直接把按 Vulkan 语义编译的任意 SPIR-V 当作 OpenGL 输入。教程的 3.3 Core 基线不保证支持该方案。
+对当前学习阶段，推荐独立 GLSL 文件或 qrc + 初始化时编译；熟悉完整输入与绘制链路后再研究缓存和 SPIR-V。上述工具方案仅解释可选能力，本次未安装工具或修改项目依赖。
+[Qt：可缓存着色器接口](https://doc.qt.io/qt-6/qopenglshaderprogram.html#addCacheableShaderFromSourceFile)
+[Khronos：OpenGL 4.6 与 SPIR-V](https://www.khronos.org/news/press/khronos-releases-opengl-4.6-with-spir-v-support)
+[Khronos：程序二进制](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramBinary.xhtml)
+## EBO 与索引绘制
+### 顶点表与索引序列
+EBO（Element Buffer Object，元素缓冲对象）是保存顶点索引的缓冲对象，也称索引缓冲。它和 VBO 都是通过 `glGenBuffers` 创建的普通缓冲对象，只是用途不同：VBO 保存属性数据，EBO 保存要按什么编号读取顶点。
+可以类比数组与下标：VBO 是 `vertices` 的数据，EBO 是 `indices` 的数据；读取 `indices[k]` 得到顶点编号 j，再按 VAO 中的属性规则读取顶点 j。索引 j 不是字节地址，也不是属性槽位。
+矩形有四个顶点：0 左下、1 右下、2 右上、3 左上。拆成两个三角形时，使用索引 `{0, 1, 2, 2, 3, 0}`：第一个三角形为 0、1、2，第二个为 2、3、0。位置 0 和 2 被重复引用，不需要在 VBO 中重复存储。
+
+| EBO 中的序号 k | 索引值 j | 位置属性读取起点，假设步长 12 字节 |
+|---|---|---|
+| 0 | 0 | VBO 第 0 字节 |
+| 1 | 1 | VBO 第 12 字节 |
+| 2 | 2 | VBO 第 24 字节 |
+| 3 | 2 | 再次引用第 24 字节 |
+| 4 | 3 | VBO 第 36 字节 |
+| 5 | 0 | 再次引用第 0 字节 |
+这里有四份不同顶点数据、六个索引引用、两个三角形。驱动可能复用重复索引的顶点着色结果，因此不能将六个索引机械理解为六次实际 GPU 着色器执行。
+复用是否节省空间取决于重复率和顶点大小：本例仅位置数据，无索引时为 `6 × 12 = 72` 字节；四个位置加六个 32 位索引也是 `4 × 12 + 6 × 4 = 72` 字节。属性越多、重复引用越多时，索引通常越有价值；并不是加入 EBO 就一定更省内存或更快。
+一个索引选择该顶点的所有逐顶点属性。如果同一空间位置有不同法线或纹理坐标，例如硬边或 UV 接缝，需要拆成不同的完整顶点记录；不能只因位置相同就合并。实例化属性有不同的取数规则，不属于这里的普通逐顶点索引。
+### 解释绘制调用的四个参数
+```cpp
+glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+```
+1. `GL_TRIANGLES`：将取出的顶点引用按每三个一组组成三角形。
+2. `6`：读取六个索引元素，不是 VBO 有六份不同顶点，也不是六个三角形，更不是六字节。教程称“绘制六个顶点”是在描述引用序列，精确说法是六个索引。
+3. `GL_UNSIGNED_INT`：每个索引以 32 位无符号整数解释；不是位置属性的类型。也支持 `GL_UNSIGNED_BYTE` 和 `GL_UNSIGNED_SHORT`，必须与上传数据的实际编码一致。
+4. `nullptr`/`0`：从当前 EBO 第 0 字节读取。参数类型虽为指针，但已绑定 EBO 时含义是字节偏移，不是 CPU 索引数组指针。
+绘制第二个三角形时，可使用 `count = 3`、偏移 `3 * sizeof(GLuint)`：跳过前三个索引，从 `{2, 3, 0}` 开始。对于基本 `glDrawElements`，取得 j 后，以 `属性偏移 + j × 属性步长` 读取该属性；有 base-vertex 的扩展绘制接口另有顶点编号修正规则。
+必须保证 EBO 包含请求读取的索引字节，且各有效索引对应的属性数据范围存在；索引不会自动增加 VBO 存储。若开启 primitive restart，其保留索引会作为重启标记解释，本节普通三角形例子没有启用。
+教程提到“未使用 EBO 时传递 CPU 索引数组”属于旧式/兼容模式用法。在当前 OpenGL 3.3 Core 中，应使用 EBO 和缓冲内偏移，不能把这句话套用于核心模式。
+[Khronos：glDrawElements](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawElements.xhtml)
+### VAO 如何记住 EBO
+教程中的“绑定的最后一个元素缓冲区对象”应理解为：每个 VAO 有一个当前 EBO 绑定记录；当该 VAO 为当前 VAO 时，每次 `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ...)` 都会覆盖这条记录。它不是所有历史 EBO 的列表，也不是全局最后一次绑定的对象永远作用于所有 VAO。
+```cpp
+// 初始化网格 A：非零 VAO 已生成，属性配置步骤省略。
+glBindVertexArray(vao_a);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_a); // vao_a 记住 ebo_a。
+glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_a), indices_a, GL_STATIC_DRAW);
+
+// 初始化网格 B。
+glBindVertexArray(vao_b);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_b); // vao_b 记住 ebo_b。
+glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_b), indices_b, GL_STATIC_DRAW);
+
+// 绘制 A：恢复其属性配置与 ebo_a，无需再显式绑定 EBO。
+glBindVertexArray(vao_a);
+glDrawElements(GL_TRIANGLES, count_a, GL_UNSIGNED_INT, nullptr);
+// 绘制 B：恢复其属性配置与 ebo_b。
+glBindVertexArray(vao_b);
+glDrawElements(GL_TRIANGLES, count_b, GL_UNSIGNED_INT, nullptr);
+```
+这段是状态切换示例，`indices_a/b`、`count_a/b` 等由应用定义。EBO 本身不保存索引类型、要绘制多少个索引、图元模式；这些仍由每次绘制调用提供。
+
+| 调用 | 对当前 VAO 的影响 |
+|---|---|
+| `glBindBuffer(GL_ARRAY_BUFFER, vbo)` | 仅改变当前 ARRAY_BUFFER 选择，本身不记录属性来源 |
+| `glVertexAttribPointer(...)` | 捕获当前 ARRAY_BUFFER 来源与属性读取规则 |
+| `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)` | 直接修改当前 VAO 的 EBO 记录 |
+| `glBindVertexArray(another_vao)` | 恢复另一个 VAO 的属性配置与 EBO 绑定 |
+因此，配置 EBO 后不要在当前 VAO 仍绑定时调用 `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)` 来“清理绑定”，那会真正清除该 VAO 的索引缓冲关联。可以直接切换 VAO，或只取消 VAO 绑定；在 Core 模式没有有效 VAO 时也不要再修改 ELEMENT_ARRAY_BUFFER 绑定。
+最后的完整关系是：VAO 选择属性配置和 EBO → 绘制调用指定索引范围与图元类型 → EBO 给出顶点编号 → VBO 按编号提供各属性 → 顶点着色器处理 → 组装与光栅化。VAO 保存连接规则，VBO 保存属性，EBO 保存索引，三者并不互相复制数据。
+[Khronos：VAO 与元素缓冲绑定](https://wikis.khronos.org/opengl/Vertex_Specification)
