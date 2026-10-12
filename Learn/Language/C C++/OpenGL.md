@@ -204,16 +204,6 @@ VAO 的作用是保存并复用完整的顶点输入配置：初始化时配置�
 #include <iostream>
 ```
 另一个方案是在包含 GLFW 前定义 `GLFW_INCLUDE_NONE`，阻止它引入系统 OpenGL 头文件。当前示例只需将 GLAD 放在最前面，不需要同时采用两种方案。
-### 剩余源码问题
-
-| 位置 | 当前问题 | 修正与原因 |
-|---|---|---|
-| 第 17、23 行 | `constexpr char*` 指向字符串字面量 | 改为 `constexpr const char*`；字面量内容不可修改 |
-| 第 54 行 | `GL_FRAGMENT_SHADER_ARB` | 改为核心枚举 `GL_FRAGMENT_SHADER`；当前 GLAD 生成配置不包含该 ARB 扩展枚举 |
-| 第 59 行 | 曾使用全角逗号 `，` | 已由用户改成 ASCII 逗号 `,`，此项已解决 |
-| 第 37 行，Apple 分支 | `GLFW_OPENGL_FORWARD_COMPACT` 拼写错误 | 正确名称为 `GLFW_OPENGL_FORWARD_COMPAT`；Linux 下该分支未编译，因此不是当前报错原因 |
-`constexpr char*` 中指针是常量表达式，不意味着指向的数据是 `const`。`constexpr const char*` 同时表达编译期指针值与只读字符数据；传给 `glShaderSource` 的 `const GLchar* const*` 参数也需要这种只读来源。
-当前机器支持 OpenGL 4.6，因此请求 4.6 不是此次编译错误原因；为与教程一致，也可以请求 3.3 Core。GLSL `#version 330 core` 可以在支持该版本的 4.6 上下文使用。
 ### 编译、链接与运行期加载
 
 | 阶段 | 典型错误 | 需要检查 |
@@ -224,16 +214,6 @@ VAO 的作用是保存并复用完整的顶点输入配置：初始化时配置�
 | 运行时编译/链接 GLSL | `GL_COMPILE_STATUS`/`GL_LINK_STATUS` 失败 | 着色器源码和阶段接口，读取对应日志 |
 头文件提供声明，链接库提供实现；运行时 `gladLoadGLLoader` 再取得驱动提供的 OpenGL 函数地址。三个步骤各自解决不同问题，不能互相替代。GLSL 程序的链接也不同于 C++ 可执行文件的链接。
 当前 CMake 已有 `find_package(glad CONFIG REQUIRED)`、`find_package(glfw3 CONFIG REQUIRED)`，并链接 `glad::glad` 与 `glfw`；生成的链接命令包含 vcpkg 中的 `libglad.a` 和 `libglfw3.a`，因此已有证据表明此次不是缺少这两个库。
-### 验证结果与构建命令
-保持用户源文件不变，在临时编译输入中修正包含顺序、两处字符串类型和片段着色器枚举后，使用 GCC 的 `-std=c++20 -Wall -Wextra -pedantic-errors` 完成编译及链接，只剩回调中未使用 `window` 参数的警告。该验证未确认窗口显示或渲染结果。
-项目目前已有 `build/release` 配置，修改后在项目目录执行：
-```sh
-cmake --preset release
-cmake --build --preset release
-./build/release/gl
-```
-若选择 Debug，应先运行 `cmake --preset debug`，再运行 `cmake --build --preset debug`；配置 preset 与构建 preset 是不同步骤，尚未生成 `build/debug` 时直接构建会失败。
-后续运行验证应分别检查 `glfwInit`、窗口创建、GLAD 加载、着色器编译和程序链接状态；初始化或着色器失败时应停止后续使用。初始视口可在 GLAD 加载后通过 `glfwGetFramebufferSize` 获取实际帧缓冲尺寸，再调用 `glViewport`；窗口尺寸与帧缓冲尺寸在高 DPI 环境中可能不同。
 ## 属性槽位如何连接到着色器
 ### 分清槽位、分量和顶点数量
 `layout(location = 0) in vec3 aPos` 是开发者声明的输入接口，不是 `aPos` 自己识别了 CPU 数组结构。这里有三个独立维度：属性槽位、每个属性的分量数、此次绘制的顶点数量。
@@ -283,39 +263,6 @@ OpenGL 按 VAO 配置读取和转换字节，向着色器提供属性值；不�
 C++ 编译器把 GLSL 字符串视为普通字符数据，不会理解或编译其中的着色器。OpenGL 程序运行后，通过当前上下文对应的驱动编译 GLSL，针对实际 GPU、驱动和支持能力生成可执行代码，再链接各阶段接口。
 这种方式允许分发同一份 GLSL 源码，在不同厂商硬件上由各自驱动处理，不要求开发者提前为所有 GPU 提供机器码。通常在初始化或加载材质时编译一次，而不是在每帧循环中重复编译。
 源码不必硬编码。可以放到 `.vert`、`.frag` 文件，用 `std::ifstream` 或 Qt 的文件 API 读取，再交给 `glShaderSource` 或 `QOpenGLShaderProgram`。独立文件便于语法高亮、定位错误、版本管理和开发期间热重载；普通文件部署时需要处理路径和文件分发。
-### Qt 资源打包
-可以使用 qrc 将独立 GLSL 文件打包进可执行文件。资源系统解决文件组织和部署问题；`rcc` 将资源转换为程序可访问的数据，不会把 GLSL 编译成 GPU 着色器。
-例如项目有 `Shaders/Triangle.vert`、`Shaders/Triangle.frag`，同级 `Shaders.qrc` 写为：
-```xml
-<RCC>
-    <qresource prefix="/shaders">
-        <file alias="triangle.vert">Shaders/Triangle.vert</file>
-        <file alias="triangle.frag">Shaders/Triangle.frag</file>
-    </qresource>
-</RCC>
-```
-已有 Qt 可执行目标 `app` 时，可采用以下构建配置接入资源和 OpenGL 模块；这只是 Qt 方案示例，当前 GLFW 项目未引入 Qt：
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS OpenGL)
-set_target_properties(app PROPERTIES AUTORCC ON)
-target_sources(app PRIVATE Shaders.qrc)
-target_link_libraries(app PRIVATE Qt6::OpenGL)
-```
-若使用 `QOpenGLWidget`，还需项目相应的 Widgets/OpenGLWidgets 配置。在已有有效且当前的 OpenGL 上下文中（例如 `initializeGL()`），让作为成员保存的程序对象读取资源：
-```cpp
-// program 是 QOpenGLShaderProgram 成员，后续绘制继续使用它。
-if (!program.addShaderFromSourceFile(QOpenGLShader::Vertex,
-        QStringLiteral(":/shaders/triangle.vert")) ||
-    !program.addShaderFromSourceFile(QOpenGLShader::Fragment,
-        QStringLiteral(":/shaders/triangle.frag")) ||
-    !program.link()) {
-    qWarning().noquote() << program.log();
-    return; // 初始化失败后，后续绘制应检查是否初始化成功。
-}
-```
-此例需要相应 Qt 头文件；它演示资源路径和错误检查，不是完整窗口程序。资源路径 `:/shaders/...` 无需依赖进程工作目录。Qt 封装省去手写编译和日志查询流程，但仍然调用 OpenGL，在运行时完成编译/链接。
-[Qt：资源系统](https://doc.qt.io/qt-6/resources.html)
-[Qt：QOpenGLShaderProgram](https://doc.qt.io/qt-6/qopenglshaderprogram.html)
 ### 能否提前编译
 可以提前做部分工作，但要区分资源打包、中间码编译和目标驱动生成最终程序。
 
@@ -391,3 +338,122 @@ glDrawElements(GL_TRIANGLES, count_b, GL_UNSIGNED_INT, nullptr);
 因此，配置 EBO 后不要在当前 VAO 仍绑定时调用 `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)` 来“清理绑定”，那会真正清除该 VAO 的索引缓冲关联。可以直接切换 VAO，或只取消 VAO 绑定；在 Core 模式没有有效 VAO 时也不要再修改 ELEMENT_ARRAY_BUFFER 绑定。
 最后的完整关系是：VAO 选择属性配置和 EBO → 绘制调用指定索引范围与图元类型 → EBO 给出顶点编号 → VBO 按编号提供各属性 → 顶点着色器处理 → 组装与光栅化。VAO 保存连接规则，VBO 保存属性，EBO 保存索引，三者并不互相复制数据。
 [Khronos：VAO 与元素缓冲绑定](https://wikis.khronos.org/opengl/Vertex_Specification)
+# 着色器
+## Uniform 的含义与生命周期
+`uniform` 是应用程序向着色器提供的、着色器内只读的程序参数。它不会像顶点属性一样随顶点编号取不同值，也不会像阶段间输出那样被光栅化插值。普通 uniform 在一次绘制使用的各次着色器执行中具有相同值；应用可以在两次绘制之间更新它。
+常见用途包括变换矩阵、时间、光源参数、统一颜色和纹理采样器配置。`uniform` 不等于 C++ 的编译期常量：CPU 可以更新，GLSL 中不能给它赋值；随时间变化的 uniform 仍然是 uniform。
+
+| 数据形式 | 谁提供值 | 变化范围 |
+|---|---|---|
+| 顶点着色器 `in` 属性 | 顶点属性读取机制 | 通常每个顶点不同 |
+| 阶段间 `out`/`in` | 前一着色器阶段与插值机制 | 可随片段位置变化 |
+| 普通 `uniform` | 应用通过 OpenGL 设置 | 本次绘制共享，应用可在绘制间更新 |
+| GLSL `const` | 源码中的常量表达式 | 编译时确定 |
+### 程序范围与持久性
+uniform 在 GLSL 全局作用域声明，但不是所有程序共享的全局变量。它属于链接后的程序对象：程序 A 和 B 中同名的 `ourColor` 各有自己的值和位置。同一程序的多个阶段若声明同名且兼容的 uniform，链接后共享这个参数；需要使用它的阶段仍须自行声明，不能因片段阶段声明了就直接在顶点阶段访问。
+设置后，值保持到下次更新；切换到另一个程序再切回来，不会自动清空。成功重新链接会重新初始化 uniform 值，也需要重新查询位置；无显式初始化器时，普通 uniform 初始为零。位置可以在成功链接后缓存，不必每帧查询。
+本节讨论的是默认 uniform 块中的普通变量；uniform block/UBO 用缓冲与块绑定管理，不通过 `glGetUniformLocation` 和 `glUniform*` 更新块成员。
+### 未使用的 Uniform 会被优化
+声明但不影响可观察输出的 uniform 可以被编译/链接优化移除，最终不是 active uniform，`glGetUniformLocation(program, "name")` 返回 `-1`。即使源码里出现过它，若相关计算结果未被使用，也可能被移除。
+> [!Warning]
+> 查询结果为 `-1` 不必然是优化：名称拼写错误、查询错误程序，或查询不属于普通 uniform 的对象也可能导致失败。对 `location = -1` 调用 `glUniform*` 会静默忽略该更新，而不是必然报错，这可能掩盖问题。必需参数应检查位置；可选参数可以允许不存在。
+位置类型使用 `GLint`，因为 `-1` 是有效的失败标志。uniform 的 location 是程序参数位置，不是 CPU/GPU 内存地址，也不是顶点属性槽位；两个编号系统彼此独立。
+### 查询与更新为何有不同要求
+`glGetUniformLocation(program, name)` 显式传入程序对象，因此无需先 `glUseProgram`，但程序必须已经成功链接。`glUniform*` 没有程序参数，更新目标来自当前激活的程序，所以教程这套 API 必须先绑定目标程序。
+```cpp
+// 初始化：program 已成功链接，此时无需先 glUseProgram。
+const GLint color_location = glGetUniformLocation(program, "ourColor");
+if (color_location < 0) {
+    throw std::runtime_error("required uniform ourColor is inactive or missing");
+}
+// 绘制：更新目标由当前程序决定，随后绘制使用新值。
+glUseProgram(program);
+glUniform4f(color_location, 0.2f, 0.7f, 0.4f, 1.0f);
+glBindVertexArray(vao);
+glDrawArrays(GL_TRIANGLES, 0, 3);
+```
+不能查询 A 的位置却激活 B 后更新：相同整数位置在不同程序中含义不同，可能写错参数或报错。更新接口也要与类型匹配，例如 `vec4` 使用 `glUniform4f`，普通整数使用 `glUniform1i`。
+扩展能力：OpenGL 4.1 或相应扩展提供 `glProgramUniform*`，显式指定目标程序，无需先激活；因此“更新 uniform 必须 glUseProgram”限定于教程使用的 `glUniform*` 路径，不是所有版本所有接口的绝对规则。
+[Khronos：Uniform](https://wikis.khronos.org/opengl/GLSL_Uniforms)
+[Khronos：glGetUniformLocation](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetUniformLocation.xhtml)
+[Khronos：glUniform](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUniform.xhtml)
+## 片段插值与渐变三角形
+### 插值解决的问题
+三个顶点只定义了三角形边界和顶点处的属性；三角形覆盖屏幕内部大量采样位置，需要为这些位置计算属性。光栅化判断哪些位置被覆盖，并为片段着色器的可插值输入生成值。
+插值是“用已知位置上的值，估计中间位置的值”。在线段两端颜色为 `C_A`、`C_B` 时，从 A 向 B 走过比例 t 的颜色为 `(1-t)C_A + tC_B`。t 为 0 是 A 的颜色，t 为 1 是 B 的颜色，中点为各占一半。
+这里插值的是颜色等属性数值，不是凭空增加 VBO 顶点，也不是将三个顶点之间插入大量新顶点。产生的是供片段处理的输入。
+### 三角形内的重心权重
+三角形上任意内部位置 P 可表示为 `P = λ_A A + λ_B B + λ_C C`，其中三项权重非负且总和为 1，称为重心坐标。它们由片段在三角形中的相对位置决定，不是简单对三个顶点的欧氏距离取倒数。
+教程各顶点裁剪坐标 w 都为 1，此时颜色可以按同一组权重计算：`C_P = λ_A C_A + λ_B C_B + λ_C C_C`。R、G、B 各分量分别参与计算。
+假设 A 为红 `(1,0,0)`，B 为绿 `(0,1,0)`，C 为蓝 `(0,0,1)`：
+
+| 位置 | 权重 `(λ_A, λ_B, λ_C)` | 插值 RGB |
+|---|---|---|
+| A 顶点 | `(1,0,0)` | `(1,0,0)`，红 |
+| AB 边中点 | `(0.5,0.5,0)` | `(0.5,0.5,0)`，黄方向的颜色 |
+| AC 边中点 | `(0.5,0,0.5)` | `(0.5,0,0.5)`，品红方向的颜色 |
+| BC 边中点 | `(0,0.5,0.5)` | `(0,0.5,0.5)`，青方向的颜色 |
+| 三角形重心 | `(1/3,1/3,1/3)` | `(1/3,1/3,1/3)`，灰 |
+屏幕上大量位置对应不同权重，产生大量不同颜色，看起来像调色板。但它不是 RGB 全部颜色的集合：这组三原色的简单插值满足 `R+G+B=1`，无法得到 `(1,1,1)` 的白色或 `(1,1,0)` 的满强度黄色。最终显示还受帧缓冲量化和颜色编码影响。
+### 哪个阶段负责什么
+顶点着色器读取每个顶点的颜色，通过自定义 `out` 写出；光栅化相关的插值机制计算每个片段位置对应的颜色；片段着色器的 `in` 接收已经插值的值，再决定输出颜色。
+```glsl
+// 顶点阶段片段
+layout(location = 1) in vec3 aColor;
+out vec3 vertexColor;
+// 在 main() 中：vertexColor = aColor;
+```
+```glsl
+// 片段阶段片段
+in vec3 vertexColor;
+out vec4 FragColor;
+// 在 main() 中：FragColor = vec4(vertexColor, 1.0);
+```
+上述是接口片段，沿用已有位置计算与 `main()`，不是两个完整着色器文件。普通片段着色器不需要读取三个顶点并自己计算重心权重；它只看到当前位置的插值结果。因此教程称“在片段着色器中插值”并不严谨，应理解为“为片段着色器输入进行插值”。
+如果直接用同一个 uniform 作为所有片段的颜色输出，三角形就是统一颜色；只有三个不同的逐顶点输出经插值后，才出现这种渐变。纹理坐标、用于光照的法线等也可插值；法线插值后通常还要重新归一化。
+### 插值限定符与透视修正
+
+| 限定符 | 行为 |
+|---|---|
+| `smooth`，默认 | 透视正确插值 |
+| `noperspective` | 在屏幕空间按重心权重线性插值 |
+| `flat` | 不插值，取指定 provoking vertex 的值，三角形内部保持一致 |
+三角形各顶点裁剪空间 w 不同时，默认 `smooth` 使用 `C_P = (Σ λ_i C_i/w_i)/(Σ λ_i/w_i)`，λ 是屏幕空间重心权重。这样避免透视投影后纹理等属性扭曲；w 全相同则退化成普通加权和。
+GLSL 330 的阶段间接口应保持相应限定符一致；整数类型的片段输入使用 `flat`。因此“所有片段输入都插值”也不准确，uniform、内建输入与 `flat` 输入有各自规则。MSAA、`centroid` 等还会影响插值采样位置，本节先按普通采样理解。
+[Khronos：GLSL 类型限定符](https://wikis.khronos.org/opengl/Type_Qualifier_%28GLSL%29)
+[Khronos：GLSL 规范](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.pdf)
+## 文件流的异常掩码
+教程的两行 `exceptions` 分别配置顶点和片段着色器文件流的错误处理策略。它们不打开文件、不读取内容、不编译 GLSL，也不主动制造失败；只是要求流在特定错误状态出现时通过异常报告。
+```cpp
+vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+```
+`std::ifstream` 从 `std::basic_ios` 继承该函数。`exceptions()` 无参数版本查询掩码，有参数版本设置掩码；掩码类型为 `std::ios_base::iostate`，这些状态常量可以组合。
+### 状态位与异常策略分开保存
+流的 `rdstate()` 表示“现在发生了什么”；`exceptions()` 表示“哪些状态需要抛异常”。默认异常掩码为 `goodbit`，即 0，因此一般流错误只设置状态位，程序通过 `if (!file)` 等判断，不会因为这些状态自动抛出 `ios_base::failure`。
+
+| 状态 | 含义 | 当前掩码是否覆盖 |
+|---|---|---|
+| `goodbit` | 值为 0，未设置错误状态 | 无需处理 |
+| `failbit` | 操作未成功，例如打开文件失败、格式化读取转换失败 | 是 |
+| `badbit` | 流完整性/底层 I/O 相关的严重失败 | 是 |
+| `eofbit` | 输入操作发现到达末尾 | 单独出现时否 |
+`failbit | badbit` 是按位或，将两个状态加入掩码；不是逻辑或 `||`，也不是要求两个状态同时出现。状态与掩码有任何交集，即 `(rdstate() & exceptions()) != 0`，就触发相应异常机制，通常表现为 `std::ios_base::failure`；底层异常的重抛还取决于具体流操作。
+注意 `fail()` 查询函数检测的是 `failbit` 或 `badbit`，不等于仅检查名字相同的 `failbit`。
+### 着色器加载中的作用
+开启该掩码后，路径错误导致 `open()` 失败时会抛异常，程序进入 `catch`，能及早区分文件加载失败与后续 GLSL 编译失败。否则未检查的文件错误可能导致空源码继续进入编译，产生误导性着色器日志。
+```cpp
+std::ifstream shader_file;
+try {
+    shader_file.exceptions(std::ios::failbit | std::ios::badbit);
+    shader_file.open(shader_path);
+    // 在此读取源码；读法及参与读取的其他流也需要各自检查错误。
+} catch (const std::ios_base::failure& error) {
+    std::cerr << "shader file: " << shader_path << ": " << error.what() << '\n';
+    // 停止该着色器的后续初始化，或将错误继续向上传递。
+}
+```
+设置掩码本身也可能抛异常：如果流已经带有新掩码覆盖的错误位，调用 `exceptions(mask)` 会立即检查当前状态。因此将配置也放进 `try` 更完整；重新尝试操作时还需明确处理既有状态，必要时 `clear()`，它清除状态位，不修复路径或底层故障。
+没有把 `eofbit` 加入掩码并不保证“读到末尾永不抛异常”。例如循环 `getline` 在最后一次未读到任何字符时通常同时设置 `eofbit` 与 `failbit`，后者已经在掩码中。按期望次数读取、循环读到 EOF 与读取整个流缓冲应分别设计错误处理，不要把正常结束误判为加载失败。
+掩码仅作用于该流对象，不会传播给 `std::stringstream`，也不会自动检查 GLSL 语法或保证 `rdbuf()` 转移已成功读取所有内容。文件加载、着色器编译、程序链接仍是三个需要各自检查的步骤。
+[C++ 标准草案：流状态与异常掩码](https://eel.is/c++draft/iostate.flags)
