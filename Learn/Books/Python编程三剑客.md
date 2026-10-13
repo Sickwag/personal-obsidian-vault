@@ -352,7 +352,91 @@ globals:{'animal': 'fruitbat',
 **random**模块中`choice`方法
 `choice(数据容器)`会从数据容器中抽取一个元素作为语句输出
 
-**包**的本质是一个文件夹,但文件中`__init__.py`文件夹会被解释器认为这个文件是包
+**包**通常是包含 `__init__.py` 的目录；`__init__.py` 是文件，不是文件夹。Python 3.3 起也支持不含 `__init__.py` 的命名空间包。
+
+**`import` 导入的是什么**
+`import` 是导入语句，不是把另一个文件的文本复制到当前文件。Python 的模块对象只有一种类型，模块可以由 Python 源码、内置实现、冻结代码或 C 扩展实现。普通 `.py` 文件通常对应一个模块；包是带有子模块搜索路径的模块，用于组织层级名称。
+Python 源码模块首次加载时，其顶层代码会执行并填充模块命名空间；扩展模块则执行初始化入口。加载结果保存在 `sys.modules` 中，后续导入通常复用同一个模块对象。`import module` 将模块对象绑定到当前命名空间；`from module import name` 则把模块中的 `name` 绑定到当前命名空间，`name` 可以是函数、类、变量或子模块。
+```python
+import math
+math.sqrt(9)
+
+from math import sqrt
+sqrt(9)
+```
+
+**对外提供接口与分发库**
+Python 没有类似 C++ 导出符号表的 `export` 关键字。单个模块可直接在模块文件中定义可复用名称；包通常在 `__init__.py` 中显式重导出稳定的公共接口。`__all__` 只指定 `from package import *` 导入的名称，不会禁止调用方显式导入其他名称，也不会自动发现并加载所有子模块。
+```python
+# src/my_library/__init__.py
+from .client import Client
+
+__all__ = ["Client"]
+```
+要让其他工程正常 `import`，需让包位于解释器的导入路径中。可将包安装到目标 Python 环境，或在开发时使用可编辑安装；发布给其他工程时通常构建 wheel（`.whl`）和源码分发包（sdist），再通过文件、代码仓库或私有/公开包索引分发。包的项目分发名和代码导入名可以不同，例如安装 `my-library` 后写 `import my_library`。
+```bash
+python -m pip install -e .       # 本地开发时可编辑安装
+python -m build                  # 需安装 build 工具；生成 wheel 和 sdist
+python -m pip install dist/my_library-0.1.0-py3-none-any.whl
+```
+
+**Python 库工程结构**
+小型可分发库常用 `src` 布局，将需要导入的包与项目配置、脚本隔离。这样需要先安装项目才能从源码目录导入，有助于发现打包遗漏和源码目录意外遮蔽已安装包的问题。
+```text
+my-library/
+├── pyproject.toml
+├── README.md
+├── LICENSE
+├── src/
+│   └── my_library/
+│       ├── __init__.py
+│       ├── client.py
+│       └── _internal.py
+└── tests/
+    └── test_client.py
+```
+`pyproject.toml` 声明构建后端和分发元数据；具体包发现规则会随构建后端略有不同。以下是使用 `setuptools` 的 `src` 布局示例：
+```toml
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "my-library"
+version = "0.1.0"
+requires-python = ">=3.10"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+```
+
+**`import` 的查找与加载流程**
+1. 先按完整模块名查询 `sys.modules`；已加载时直接复用缓存对象。
+2. 未命中时按顺序查询 `sys.meta_path` 中的查找器。内置模块、冻结模块和基于路径的查找器使用不同策略。
+3. 路径查找器对顶层模块搜索 `sys.path`；对子模块搜索父包的 `__path__`。找到后返回描述模块名称、来源和加载器的 `ModuleSpec`。
+4. 导入机制创建模块对象，并在执行模块代码前放入 `sys.modules`，避免循环导入时递归创建多个对象。
+5. 加载器执行初始化：源码加载器编译并执行 `.py` 代码；扩展模块加载器装载本机二进制并初始化模块对象。
+6. 导入语句按语法把结果绑定到当前命名空间；例如 `import a.b` 通常绑定 `a`，`from a import b` 绑定 `b`。
+
+**`.so` 与 Python 扩展模块**
+Python 导入机制统一的是模块查找、加载和模块对象接口；不同文件由不同加载器处理。`.so` 是 Linux 常见的共享库文件格式，但任意 C/C++ `.so` 并不会因此成为可导入的 Python 模块。默认扩展模块加载器要求二进制文件位于导入搜索路径中（顶层模块对应 `sys.path`，子模块对应父包的 `__path__`）、文件名符合 `importlib.machinery.EXTENSION_SUFFIXES`，并导出 CPython 约定的初始化入口，例如模块名为 `mymodule` 时的 `PyInit_mymodule`。
+
+| 文件类型 | 导入时的处理方式 | 导入条件 |
+|---|---|---|
+| `.py` | 源码加载器编译并在模块命名空间中执行 | 文件位于搜索路径，名称可解析 |
+| CPython 扩展 `.so` | 扩展加载器装载本机代码并调用模块初始化入口 | 后缀、初始化符号、Python ABI、平台和依赖库均兼容 |
+| 普通 C/C++ `.so` | 不是 Python 模块，`import` 不会任意调用其中的函数 | 可由 `ctypes.CDLL` 等接口按其 C ABI 加载，但这不同于 `import` |
+C++ 扩展常通过 CPython C API 或 `pybind11` 暴露模块接口；初始化入口需使用 C 链接名，CPython 的 `PyMODINIT_FUNC` 宏会处理包括 C++ `extern "C"` 在内的平台声明。扩展与解释器的版本、ABI、操作系统、处理器架构及其依赖库必须兼容。
+
+参考：
+[Python 导入系统](https://docs.python.org/3.14/reference/import.html)
+[Python 模块与包教程](https://docs.python.org/3/tutorial/modules.html)
+[CPython 扩展模块](https://docs.python.org/3.14/c-api/extension-modules.html)
+[Python 库打包教程](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
+[src 与 flat 布局对比](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/)
 
 ## 标准库中常用函数
 
