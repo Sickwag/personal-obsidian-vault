@@ -10170,9 +10170,33 @@ async function prepareWorkspace(vault, files, contextFiles) {
         await files.write(path, await legacy.read(path), true);
     }
   }
+  if (!await contextFiles.exists("Context.md"))
+    await contextFiles.write("Context.md", contextTemplate, true);
   for (const [name, content] of Object.entries(documents))
     if (!await files.exists(name)) await files.write(name, content, true);
 }
+var contextTemplate = `---
+schema_version: 1
+timezone: Asia/Shanghai
+study_day_start: "04:00"
+daily_review_budget_minutes: 10
+new_card_daily_limit: 3
+desired_retention: 0.9
+---
+# \u5B66\u4E60\u4E0E\u590D\u4E60\u4E0A\u4E0B\u6587
+\u672C\u6587\u4EF6\u4F4D\u4E8E\u77E5\u8BC6\u5E93\u6839\u76EE\u5F55\uFF0C\u4F9B\u672C\u4EBA\u3001FSRS Scheduler \u548C\u5916\u90E8 Agent \u5171\u7528\u3002\u539F\u59CB\u7B14\u8BB0\u4FDD\u7559\u5728 Learn \u7B49\u76EE\u5F55\uFF0C\u590D\u4E60\u5DE5\u4F5C\u533A\u9ED8\u8BA4\u4F4D\u4E8E .obsidian/customDocument/FSRSScheduler/\u3002
+## \u5F53\u524D\u5B66\u4E60
+- \u5B66\u4E60\u4E3B\u9898\uFF1A\u5F85\u672C\u4EBA\u6216 Agent \u6839\u636E\u660E\u786E\u7684\u5B66\u4E60\u76EE\u6807\u8865\u5145\u3002
+- \u5F53\u524D\u6750\u6599\u3001\u7AE0\u8282\u3001\u4EE3\u7801\u8FDB\u5C55\uFF1A\u5F85\u786E\u8BA4\u3002
+- \u5DF2\u9A8C\u8BC1\u7684\u8584\u5F31\u70B9\uFF1A\u4EC5\u6839\u636E\u771F\u5B9E\u4F5C\u7B54\u7EF4\u62A4\uFF0C\u4E0D\u6839\u636E\u63D0\u4EA4\u65E5\u671F\u63A8\u65AD\u638C\u63E1\u7A0B\u5EA6\u3002
+## Agent \u534F\u4F5C
+1. \u5148\u8BFB\u672C\u6587\u4EF6\u548C\u5DE5\u4F5C\u533A UseGuide.md\u3001FileGuide.md\u3001AgentProtocol.md\u3002
+2. \u8BFB\u53D6\u6307\u5B9A Exchange/Requests \u4E0B\u7684 Request.json \u548C\u5173\u8054\u6765\u6E90\uFF0C\u6309\u9700\u6838\u5BF9\u539F\u7B14\u8BB0\u53CA Git \u53D8\u5316\u3002
+3. \u4F18\u5148\u751F\u6210\u5C11\u91CF\u6709\u51FA\u5904\u3001\u53EF\u72EC\u7ACB\u56DE\u7B54\u7684\u95EE\u9898\uFF0C\u9644\u8BC4\u5206\u8981\u70B9\uFF1B\u7EFC\u5408\u7F16\u7A0B\u7528 practice \u4EFB\u52A1\u3002
+4. \u6309\u534F\u8BAE\u5411 Exchange/Imports \u53D1\u5E03\u5019\u9009\u5305\uFF0C\u7531\u672C\u4EBA\u5728\u63D2\u4EF6\u4E2D\u5237\u65B0\u3001\u5BA1\u9605\u5E76\u63A5\u53D7\u3002
+5. \u6839\u636E\u771F\u5B9E\u56DE\u7B54\u7ED9\u51FA\u8BC4\u4F30\u5EFA\u8BAE\uFF0C\u4E0D\u76F4\u63A5\u4FEE\u6539 Data/Events\u3001\u8C03\u5EA6\u72B6\u6001\u6216\u4F2A\u9020\u590D\u4E60\u65E5\u671F\u3002
+6. \u4FDD\u7559\u4EBA\u5DE5\u5185\u5BB9\uFF0C\u7B80\u77ED\u66F4\u65B0\u5F53\u524D\u8FDB\u5EA6\u548C\u4E0B\u4E00\u6B65\uFF0C\u8BE6\u7EC6\u4E3B\u9898\u8D44\u6599\u653E\u5DE5\u4F5C\u533A Topics \u548C Digests\u3002
+`;
 
 // src/core/Runtime.ts
 var import_node_path5 = require("node:path");
@@ -10604,7 +10628,7 @@ var StartupSync = class _StartupSync {
         "Fsrs-Parent-Commit: " + head,
         "Fsrs-Snapshot-Tree: " + tree,
         "Fsrs-Sync-Key: " + digest(head + tree + archive.date),
-        "Fsrs-Plugin-Version: 0.1.2",
+        "Fsrs-Plugin-Version: 0.1.3",
         ""
       ].join("\n");
       const commit = (await this.git.run(["commit-tree", tree, "-p", head], {
@@ -10709,6 +10733,7 @@ var Runtime = class _Runtime {
   repo_id = "";
   writer_id = "";
   sync;
+  historyNotice;
   busy = false;
   pending = Promise.resolve();
   static async open(vault, localRoot2, settings) {
@@ -10882,6 +10907,20 @@ var Runtime = class _Runtime {
   }
   async scanInner(base) {
     await this.checkWriter();
+    const head = await this.git.head();
+    if (!/^[a-f0-9]{40,64}$/.test(base))
+      throw new Error(
+        "\u626B\u63CF\u8D77\u70B9\u65E0\u6548\uFF0C\u8BF7\u6267\u884C\u201C\u767B\u8BB0\u6700\u8FD1 7 \u6B21\u63D0\u4EA4\u4E2D\u7684\u5B66\u4E60\u53D8\u5316\u201D\uFF1B\u539F\u590D\u4E60\u6570\u636E\u4FDD\u7559\u3002"
+      );
+    const common = (await this.git.run(["merge-base", base, head], { optional: true })).trim();
+    if (!/^[a-f0-9]{40,64}$/.test(common))
+      throw new Error(
+        "\u626B\u63CF\u8D77\u70B9\u5DF2\u5931\u6548\u6216\u5386\u53F2\u4E0D\u76F8\u5173\uFF0C\u8BF7\u6267\u884C\u201C\u767B\u8BB0\u6700\u8FD1 7 \u6B21\u63D0\u4EA4\u4E2D\u7684\u5B66\u4E60\u53D8\u5316\u201D\uFF1B\u672A\u8DF3\u8FC7\u5185\u5BB9\uFF0C\u539F\u590D\u4E60\u6570\u636E\u4FDD\u7559\u3002"
+      );
+    if (common !== base) {
+      this.historyNotice = "\u68C0\u6D4B\u5230\u63D0\u4EA4\u64A4\u56DE\u6216\u5386\u53F2\u6539\u5199\uFF0C\u5DF2\u4ECE\u5171\u540C\u7956\u5148 " + common.slice(0, 12) + " \u91CD\u65B0\u626B\u63CF\u5F53\u524D\u5206\u652F\u3002";
+      base = common;
+    }
     const batch = await this.git.changes(
       base,
       this.settings.generated_root,
@@ -11399,6 +11438,7 @@ var ReviewView = class extends import_obsidian.ItemView {
       container.createEl("p", { text: r.sync.status + "\uFF1A" + r.sync.message });
       if (r.sync.commit) container.createEl("code", { text: r.sync.commit });
     }
+    if (r.historyNotice) container.createEl("p", { text: r.historyNotice });
     for (const error of [.../* @__PURE__ */ new Set([...r.errors, ...r.review.errors])])
       container.createEl("p", { text: error, cls: "fsrs-warning" });
     const invalid = [...r.review.cards.values()].filter((c) => c.status === "needs_validation");
