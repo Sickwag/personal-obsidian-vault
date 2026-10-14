@@ -1,0 +1,29 @@
+.fsrs-scheduler .fsrs-actions,
+.fsrs-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.fsrs-row > span {
+    flex: 1 1 250px;
+}
+.fsrs-warning {
+    color: var(--text-warning);
+    white-space: pre-wrap;
+}
+.fsrs-import-item {
+    border: 1px solid var(--background-modifier-border);
+    padding: 12px;
+    margin-bottom: 16px;
+}
+.fsrs-scheduler pre,
+.fsrs-import-item pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.fsrs-scheduler-modal textarea {
+    width: 100%;
+    min-height: 80px;
+}

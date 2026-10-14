@@ -1,0 +1,9 @@
+{
+    "id": "fsrs-scheduler",
+    "name": "FSRS Scheduler",
+    "version": "0.1.2",
+    "minAppVersion": "1.5.0",
+    "description": "Git startup snapshots, offline spaced review and external Agent file exchange.",
+    "author": "sickwag",
+    "isDesktopOnly": true
+}
