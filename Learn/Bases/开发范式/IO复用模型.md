@@ -95,7 +95,10 @@ select 用三张位图（读/写/异常）表达"我关心哪些 fd 的什么事
 ### 数据结构与关键代码
 ```cpp
 #define __FD_SETSIZE 1024
-typedef struct { long int fds_bits[__FD_SETSIZE / (8*sizeof(long))]; } fd_set;
+typedef struct { 
+	long int fds_bits[__FD_SETSIZE / (8*sizeof(long))]; 
+} fd_set;
+
 int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
 ```
 `FD_SET` 的位运算本质——fd 作下标定位 word 与 bit：
@@ -146,11 +149,15 @@ int poll(struct pollfd *fds, nfds_t nfds, int timeout); // nfds 是实际个数,
 使用范式（数组可复用，无需重建）：
 ```cpp
 struct pollfd fds[MAX_CONN];
-fds[0].fd = listen_fd; fds[0].events = POLLIN;          // revents 由内核写
+fds[0].fd = listen_fd;
+fds[0].events = POLLIN;          // revents 由内核写
 while (1) {
     poll(fds, nfds, -1);
-    for (int i = 0; i < nfds; i++)
-        if (fds[i].revents & POLLIN) { /* 处理 */ }
+    for (int i = 0; i < nfds; i++){
+        if (fds[i].revents & POLLIN) {
+        	/* 处理 */ 
+		}
+    }
 }
 ```
 ## epoll 机制
@@ -186,7 +193,7 @@ select/poll 每次把全部 fd 告诉内核，内核用完即忘。epoll 让内�
 - 数据到达链路：网卡中断 → 协议栈 → `sock_def_readable` → 遍历 socket 等待队列 → 调 `ep_poll_callback` → epitem 入 `rdllist` → 唤醒 `epoll_wait`。
 - O(1) 来源：1 万连接 5 个活跃，只有这 5 个触发回调入队，`epoll_wait` 拿走 5 个。复杂度 O(就绪数) 而非 O(总数)。
 - 回调的注册时机：`epoll_ctl(ADD)` 时把 `ep_poll_callback` 挂到目标 socket 的等待队列。这是"状态化"的延伸——不仅记住关注谁，还在每个 fd 上预埋了唤醒钩子。
-#### 三 API 分工：拆解生命周期
+#### API 分工：拆解生命周期
 select 把"建实例/管集合/取事件"揉在一次调用里。epoll 拆成三个函数，各管一阶段：
 - `epoll_create` — 建 epoll 实例（分配 `eventpoll`，初始化红黑树/就绪链表/等待队列），返回 epfd。
 - `epoll_ctl` — 增删改关注集合，每次只传单个 fd，O(log n)。
@@ -288,7 +295,8 @@ epoll_wait → 检查 rdllist → 有则 ep_send_events_proc 拷给用户
 ```cpp
 int epfd = epoll_create1(0);
 struct epoll_event ev, events[128];
-ev.events = EPOLLIN; ev.data.fd = listen_fd;
+ev.events = EPOLLIN;
+ev.data.fd = listen_fd;
 epoll_ctl(epfd, EPOLL_CTL_ADD, listen_fd, &ev);
 while (1) {
     int nfds = epoll_wait(epfd, events, 128, -1);
