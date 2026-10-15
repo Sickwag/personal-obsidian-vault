@@ -2,493 +2,323 @@
 参考: https://learnopengl-cn.github.io/
 crea: 2026-10-09
 ---
-# Hello Triangle
-## VBO 与对象句柄
-`GLuint vbo` 保存的是 OpenGL 缓冲对象的名称（句柄），不是缓冲区的数据，也不是可以解引用的内存地址。`GLuint` 是 OpenGL 定义的无符号整数类型；教程写成 `unsigned int`，更推荐使用 API 对应的 `GLuint`。
-可以类比 Linux 文件描述符：一个 `int fd` 能标识很大的文件，因为文件内容不在 `fd` 中。同样，一个整数句柄可以标识包含数 MB 顶点数据的缓冲对象。
-数据流：CPU 顶点数组 → `glBufferData` 复制数据到 OpenGL 管理的缓冲存储 → VAO 描述读取规则 → 绘制时读取属性 → 顶点着色器。
-缓冲存储的具体物理位置由驱动管理，不保证始终位于独立显存；你的 Intel 核显使用共享内存，但 API 抽象不变。VBO 是缓冲对象被用于顶点数据时的称呼，并不是一种 C++ 容器。
+# 阅读方式
+这份笔记记录阅读 LearnOpenGL 时提出的问题，按教程的章节顺序整理。相同问题的多次追问合在一起，先回答眼前的疑惑，再逐步展开原因。示例沿用教程的 OpenGL 3.3 Core 约定。
+可以直接从当前阅读的章节开始，遇到前面的问题再通过内部链接回看。
+- [[#你好，三角形]]：数据怎样交给 OpenGL，VAO/VBO/EBO 怎样配合。
+- [[#着色器]]：输入输出、uniform、片段与插值，以及源码如何加载。
+- [[#纹理]]：图片怎样贴到物体上，纹理单元与 mipmap 怎样使用。
+- [[#变换]]：四阶矩阵、w、旋转顺序与万向节锁。
+- [[#坐标系统]]：一个点怎样从模型坐标走到屏幕，裁剪和投影在做什么。
+- [[#摄像机]]：LookAt 为什么能让我们从不同位置观看场景。
+- [[#光照]]：正方体角点的多条法线如何存储和使用。
+- [[#环境与构建问题]]：本项目遇到的编译错误、原因与已采用的解决办法。
+# 你好，三角形
+## 一个 VBO 为什么只用一个 unsigned int 保存？
+`unsigned int VBO` 保存的是 OpenGL 给缓冲区分配的编号。顶点数据由 OpenGL 管理，程序用这个编号找到它。
+可以类比打开文件后的 `int fd`：文件可以有几 GB，而 `fd` 只占一个整数。因为整数负责标识文件，文件内容另有存储位置。VBO 的编号起相同作用，OpenGL 中常把这种编号叫作对象名称或句柄。
+假设要上传三个顶点：
 ```cpp
+float vertices[] = {
+    -0.5f, -0.5f, 0.0f,
+     0.5f, -0.5f, 0.0f,
+     0.0f,  0.5f, 0.0f
+};
 GLuint vbo = 0;
-glGenBuffers(1, &vbo); // 生成对象名称，还没有分配顶点数据存储。
-glBindBuffer(GL_ARRAY_BUFFER, vbo); // 首次绑定使名称获得缓冲对象状态。
+glGenBuffers(1, &vbo);
+glBindBuffer(GL_ARRAY_BUFFER, vbo);
 glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-// glBufferData 分配/替换数据存储；vertices 非空时复制其内容。
-// 调用返回后，原 CPU 数组不需要为该副本继续存活。
-glDeleteBuffers(1, &vbo); // 在仍有有效上下文时释放对象；vbo 变量不会自动归零。
-vbo = 0;
 ```
-复制句柄只会得到指向同一对象的另一个整数，不会复制缓冲数据，也不会自动管理生命周期。封装 RAII 时应明确所有权，通常禁止拥有者拷贝、允许移动，且析构时必须有合适的 OpenGL 上下文。
-[Khronos：缓冲对象](https://wikis.khronos.org/opengl/Buffer_Object)
-## 批量生成缓冲对象
-函数签名为 `void glGenBuffers(GLsizei n, GLuint* buffers)`。第一个参数 `n` 表示要生成多少个缓冲对象名称，第二个参数指向能容纳至少 `n` 个 `GLuint` 的输出空间。它不是缓冲区字节大小，也不是顶点数量。
+在当前环境中，九个 float 占 36 字节。`glBufferData` 为这些字节建立缓冲存储并复制数组内容，`vbo` 只保存找到这份存储的编号。`GLuint` 是 OpenGL 提供的无符号整数类型，适合保存该编号。
+复制 `vbo` 这个整数，相当于抄下同一个编号，两者仍指向同一份缓冲数据。使用完毕后，通过 `glDeleteBuffers` 释放对应资源；普通整数变量没有 C++ 容器那样的自动释放能力。
+## glGenBuffers 的第一个参数是什么？
+它表示这次要生成多少个编号。第二个参数提供存放这些编号的空间。
 ```cpp
 GLuint buffers[3]{};
-glGenBuffers(3, buffers); // 分别写入 buffers[0]、buffers[1]、buffers[2]。
+glGenBuffers(3, buffers); // 将三个编号写入数组。
 ```
-`glGenBuffers(3, &vbo)` 若 `vbo` 只是一个独立变量，会越界写入，因为 API 需要三个整数的输出空间。返回的名称非零，不保证连续；删除后的名称可能再次被使用。`n = 0` 不生成名称，`n < 0` 产生 `GL_INVALID_VALUE`。
-需要先创建并激活 OpenGL 上下文、加载函数入口，再调用这些 API。`glGenBuffers` 只生成名称，真正的数据存储由后续 `glBufferData` 分配。
-[Khronos：glGenBuffers](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGenBuffers.xhtml)
-## RGB 的颜色数量
-“超过 1600 万种颜色”来自常见的 24 位 RGB 编码：R、G、B 各使用 8 位，每个通道有 `2^8 = 256` 个取值，因此组合数为 `256^3 = 2^24 = 16,777,216`。如果再加 8 位 Alpha，是 32 位 RGBA；Alpha 表示透明度/覆盖相关信息，不是第四种基础颜色。
-`0.0～1.0` 是常用颜色数值表达范围，不直接决定颜色数量。用浮点数计算颜色后，写入 RGB8/RGBA8 格式的附件时会量化成相应的 8 位通道值；窗口默认帧缓冲的实际格式取决于创建配置，不能仅凭使用 `vec4` 就认定一定有 24 位 RGB。
-例如在线性数值编码下，8 位通道值 `128` 对应约 `128/255 = 0.502`；sRGB 格式还涉及编码/解码，编码值与线性光强不是简单比例。浮点帧缓冲可以保留更高精度，并支持 HDR 中超过 `1.0` 的颜色值。
-RGB 是加色模型：`(1, 0, 0)` 为红色，`(0, 1, 0)` 为绿色，`(1, 1, 0)` 为黄色。这是颜色通道叠加，与颜料的减色混合不同，也不等同于开启 OpenGL 的 Alpha 混合功能。
-[Khronos：图像格式](https://wikis.khronos.org/opengl/Image_Format)
-## 着色器附件与链接顺序
-`glAttachShader(program, shader)` 将着色器加入程序的待链接集合；顶点着色器和片段着色器的挂接顺序没有要求。阶段类型在 `glCreateShader(GL_VERTEX_SHADER)` 或 `glCreateShader(GL_FRAGMENT_SHADER)` 时已经确定，链接器不依靠调用顺序猜测类型。
+因此 `glGenBuffers(1, &vbo)` 表示生成一个编号，写入 `vbo`。如果第一个参数是 3，就必须提供至少三个 `GLuint` 的存储空间。
+编号的数量、缓冲区的字节数、绘制的顶点数分别由不同调用指定。这里仅处理第一件事。
+## gen、bind、BufferData 分别在做什么？
+先从一个缓冲区理解：准备编号 → 选中它 → 存入数据。`glGenBuffers`、`glBindBuffer`、`glBufferData` 分别承担这三步。
+`glBindBuffer` 中的“绑定”，可以先读成“把这个对象选为后续操作的对象”。因为 `glBufferData` 的参数里没有 vbo 编号，它会查找当前选中的缓冲区。OpenGL 把这些选择记下来，后续调用沿用；这些记住的选择就是常说的“状态”。
+回到你问的整段代码：
 ```cpp
-// 与先挂接 vertexShader 再挂接 fragmentShader 等价。
-glAttachShader(shaderProgram, fragmentShader);
-glAttachShader(shaderProgram, vertexShader);
-glLinkProgram(shaderProgram);
-```
-链接器按阶段类型组合程序，并检查阶段间接口是否兼容；执行时按渲染管线规定的阶段顺序运行。挂接不会立即执行着色器，也不会把第一个挂接的着色器“接到”第二个上。
-需要区分 API 顺序与附件顺序：创建对象必须先于使用；本次链接需要的对象必须在 `glLinkProgram` 前挂接并成功编译；链接成功后才能正常使用程序。可以先挂接再编译，但首次学习时推荐“创建 → 源码 → 编译并检查 → 挂接 → 链接并检查 → 使用”。编译成功不保证链接成功，应检查 `GL_LINK_STATUS` 和 `glGetProgramInfoLog`。
-OpenGL 允许同一阶段挂接多个着色器对象来提供不同的函数实现，但该阶段最终必须形成合法程序，不能出现多个 `main` 或冲突定义。重复挂接同一对象到同一程序会产生 `GL_INVALID_OPERATION`。
-[Khronos：glAttachShader](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glAttachShader.xhtml)
-[Khronos：着色器编译与链接](https://wikis.khronos.org/opengl/Shader_Compilation)
-## 顶点属性的归一化
-`glVertexAttribPointer` 的 `normalized` 参数控制整数格式属性如何转换成着色器中的浮点值，不是对整个数组进行 min-max 缩放，也不是将向量长度变为 1，更不是坐标的透视除法。
+glGenVertexArrays(1, &VAO);
+glGenBuffers(1, &VBO);
+glGenBuffers(1, &EBO);
+glBindVertexArray(VAO);
 
-| 输入数据格式 | `GL_FALSE` | `GL_TRUE` |
+glBindBuffer(GL_ARRAY_BUFFER, VBO);
+glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+```
+
+| 调用 | 可以怎样读 |
+|---|---|
+| `glGenVertexArrays` | 给一份顶点读取配置领取编号，稍后用 VAO 找到它 |
+| 两次 `glGenBuffers` | 分别给顶点缓冲、索引缓冲领取编号 |
+| `glBindVertexArray(VAO)` | 接下来配置这份 VAO |
+| `glBindBuffer(GL_ARRAY_BUFFER, VBO)` | 后续针对 ARRAY_BUFFER 的操作使用 VBO |
+| 第一次 `glBufferData` | 为 VBO 建立存储并复制 vertices |
+| `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO)` | 为当前 VAO 选定 EBO，作为索引来源 |
+| 第二次 `glBufferData` | 为这个 EBO 建立存储并复制 indices |
+VBO、EBO 都使用 `glGenBuffers`，因为它们都是缓冲对象，只是装的数据和用途不同。首次绑定时，对象获得相应初始状态；数据存储在随后调用 `glBufferData` 时建立。
+这段代码执行完，只完成了准备工作。后面还要设置顶点读取方式、选好着色器程序，最后调用 `glDraw*` 才开始绘制。
+`GL_STATIC_DRAW` 告诉驱动这份数据预计很少改动、主要用于绘制。以后仍可更新它。上传函数返回后，OpenGL 已经获得副本，原来的 CPU 数组可以结束生命周期。
+## VAO 和 VBO 到底有什么区别？
+VBO 保存数据；VAO 保存如何读取这些数据的配置。
+看刚才的九个 float：你通过换行把它们写成三组，C++ 编译后只剩连续数值。上传到 VBO 后，OpenGL 仍需知道：每次取几个数？它们是什么类型？下一组从哪里开始？
+这正是下面两句补充的信息：
+```cpp
+// 前提：已绑定 VAO，并选中保存 vertices 的 VBO。
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+glEnableVertexAttribArray(0);
+```
+它们让当前 VAO 记住：编号 0 的属性从这个 VBO 读取，每组取三个 float，每隔三个 float 读下一组，从开头开始，并启用这项配置。
+以后绑定该 VAO，就能恢复这些读取规则；顶点数据仍保存在原来的 VBO 中。可以把 VBO 当成一份二进制数据，把 VAO 当成它的读取说明。
+更换 VBO 数据后，VAO 按原规则读到的就是新内容。因此一份配置可以重复使用，而不用每帧重新告诉 OpenGL 每个字段在哪里。
+这里有一个容易混淆的先后关系：`glBindBuffer(GL_ARRAY_BUFFER, vbo)` 选中缓冲；`glVertexAttribPointer` 再把这个来源和读取规则记入当前 VAO。只绑定另一个 ARRAY_BUFFER，已经记录好的属性来源仍保持原样。
+## aPos 怎样知道输入是什么？为什么是槽位零、vec3 和三个顶点？
+这三件事分别来自三处约定。我们逐个看。
+着色器里先声明：
+```glsl
+layout(location = 0) in vec3 aPos;
+```
+这表示“本次处理的顶点，其位置从属性编号 0 输入，变量类型为三个浮点分量”。所谓槽位，就是属性的编号：位置可以约定为 0，颜色约定为 1。
+应用一侧再配置：
+```cpp
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+glEnableVertexAttribArray(0);
+```
+这里的 0 与着色器的 `location = 0` 对上，表示把读取出来的值交给这个输入。三个 `GL_FLOAT` 与 `vec3` 对上，表示每个位置由 x、y、z 三个数构成。
+开发者知道两端格式，是因为数据数组和着色器声明都由自己编写。OpenGL 根据这些设置取出数值，再把它提供给 `aPos`；程序无须把整个 C++ 结构体送进 GLSL。
+还有最后一个问题：要取几个顶点？由绘制调用指定：
+```cpp
+glDrawArrays(GL_TRIANGLES, 0, 3);
+```
+它表示从编号 0 的顶点开始，使用三个顶点，每三个组成一个三角形。顶点着色器逻辑上分别处理这些顶点，每次的 `aPos` 取值如下：
+
+| 处理哪个顶点 | 从 VBO 哪里开始读 | 本次 aPos |
 |---|---|---|
-| `GL_UNSIGNED_BYTE` | `0～255` 直接转为 `0.0～255.0` | 除以 `255`，得到 `0.0～1.0` |
-| `GL_BYTE` | `-128～127` 直接转为浮点值 | OpenGL 3.3 的有符号归一化得到 `-1.0～1.0` |
-| `GL_FLOAT` | 保持原浮点值 | 参数不影响原浮点值 |
-教程使用 `GL_FLOAT`，因此写 `GL_FALSE` 表达“不需要整数归一化转换”；改成 `GL_TRUE`，这里的位置数据不会改变，即使数值超过 `1.0` 也不会因此被压缩或截断。
-> [!Note]
-> 有符号整数归一化的精确映射存在版本差异：OpenGL 3.3 的 `GL_BYTE` 映射为 `(2c + 1)/255`；OpenGL 4.2 起改为 `max(c/127, -1)`。两者端点范围相同，但零值和内部值略有差异。初学颜色压缩优先使用无符号类型。
-典型用途是节省顶点存储与带宽：RGBA 颜色使用四个 `GL_UNSIGNED_BYTE` 只需 4 字节，使用四个 `GL_FLOAT` 需要 16 字节。着色器仍可接收 `vec4`，读取时自动转成 `0～1` 的浮点颜色，代价是量化精度下降。
-如果数据语义是骨骼索引等整数，着色器输入为 `ivec*`/`uvec*`，应使用 `glVertexAttribIPointer` 保持整数语义；它没有 `normalized` 参数。不能用浮点属性读取接口来代替真正的整数输入接口。
-[Khronos：glVertexAttribPointer](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glVertexAttribPointer.xhtml)
-[Khronos：归一化整数](https://wikis.khronos.org/opengl/Normalized_Integer)
-## 顶点布局与空隙
-教程描述的是示例数组的布局，不是所有顶点必须遵守的格式。VBO 本身只有字节数据，不携带“这是位置、颜色、法线”的含义；属性配置决定如何解释这些字节。
-普通属性可使用 1～4 个分量和多种数据类型；位置可以是二维 `vec2`、三维 `vec3` 或齐次 `vec4`。顶点还可包含颜色、法线、纹理坐标等。属性可以交错存储在一个 VBO，也可以分散到多个 VBO。GLSL 矩阵输入需要占用多个属性位置，并分别配置其列。
-读取规则：第 `i` 个顶点的某属性起点 = VBO 起点 + `offset` + `i × stride`。对于教程的非实例化绘制，`stride` 是相邻顶点的同一属性起点之间的字节距离，不是属性内部相邻分量的距离。
-调用 `glVertexAttribPointer(index, size, type, normalized, stride, offset)` 时，`index` 对应着色器输入位置，`size` 指定分量数，`type` 指定分量格式，最后两个参数以字节为单位。绑定 VBO 时，最后一个参数虽然类型是 `const void*`，含义却是缓冲内字节偏移，不是 CPU 数组地址。
-### 顶点之间或属性之间存在空隙
-允许。典型结构是“位置 + 颜色”，以及由 C++ 对齐规则产生的尾部填充；使用 `sizeof(Vertex)` 作步长、`offsetof` 作字段偏移，避免硬编码结构布局。
+| 0 | 第 0 字节 | `(-0.5,-0.5,0)` |
+| 1 | 第 12 字节 | `(0.5,-0.5,0)` |
+| 2 | 第 24 字节 | `(0,0.5,0)` |
+这里按 float 为 4 字节计算。每次都使用属性槽位 0，因为三次读取的都是“位置”这一属性。
+槽位 0 可以换成 2，只要声明、配置和启用三个地方一起改成 2。`vec3` 的 3 是一个位置的分量数；绘制调用的 3 是顶点数量。两个数字恰好相同，承担的工作不同。
+## 顶点必须是三个 float，并且紧密排列吗？
+教程先选择最简单的格式：一个顶点只有 x、y、z。随着需求增加，可以给顶点加入颜色、纹理坐标等属性，也可以用二维位置。
+例如一个顶点由位置和颜色组成：
 ```cpp
-#include <cstddef>
-#include <type_traits>
-
 struct Vertex {
     float position[3];
-    float reserved; // 位置与颜色之间的空隙/其他数据。
-    unsigned char color[4];
+    float color[3];
 };
-static_assert(std::is_standard_layout_v<Vertex>);
-static_assert(sizeof(float) == 4);
-
-// 前提：已绑定非零 VAO 和保存 Vertex 数组的 VBO。
+```
+这时读完位置后，还要跳过颜色才能找到下一个顶点的位置。`stride` 就是相邻顶点同一属性起点间的字节距离，`offset` 是第一个属性在缓冲中的字节偏移。
+```cpp
+// 需要 <cstddef>；假设 VBO 已上传 Vertex 数组、VAO 已绑定。
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
     reinterpret_cast<const void*>(offsetof(Vertex, position)));
 glEnableVertexAttribArray(0);
-glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex),
+glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
     reinterpret_cast<const void*>(offsetof(Vertex, color)));
 glEnableVertexAttribArray(1);
-// 顶点着色器输入：location 0 为 vec3，location 1 为 vec4。
 ```
-旧式 `glVertexAttribPointer` 中 `stride = 0` 表示该属性自身紧密排列：三个 `GL_FLOAT` 时等效步长为 12 字节。对于上述交错结构，不能用 `0` 代替 `sizeof(Vertex)`。不要将该规则套用到其他顶点绑定 API，它们的零步长语义可能不同。
-配置记录在当前 VAO 中，包括属性对应的 VBO、格式、偏移和步长。之后重新绑定 `GL_ARRAY_BUFFER` 不会自动修改已记录的属性来源；`glEnableVertexAttribArray` 是单独的启用操作。
-### 同一位置的分量之间存在空隙
-普通 `glVertexAttribPointer(..., 3, GL_FLOAT, ...)` 假定同一属性的三个分量连续存储；`stride` 不能指定 x、y、z 之间的间隔。
-若数据为 `[x, padding, y, padding, z, padding]`，有两种常见方案：重新打包为连续的三个分量；或将 x、y、z 分别配置成三个 `size = 1` 的属性，设置各自偏移与顶点步长，在顶点着色器中组合成 `vec3`。位置分量也可来自三个独立 VBO。
-[Khronos：顶点属性指定](https://wikis.khronos.org/opengl/Vertex_Specification)
-## 着色器输入输出与内建位置
-`in`/`out` 都是相对于当前着色器阶段而言：`in` 接收输入，`out` 写出输出。顶点着色器的 `in` 通常来自顶点属性读取；片段着色器的 `in` 通常来自前一阶段输出，经光栅化插值。
-`gl_Position` 是内建的 `vec4` 输出变量，已经由 GLSL 预先声明，因此无需自己写 `out vec4 gl_Position`。它不是从外部传入的输入；顶点着色器负责为它赋值，管线随后用它进行裁剪和位置变换。
-```glsl
-// 顶点着色器
-#version 330 core
-layout(location = 0) in vec3 a_position;
-layout(location = 1) in vec4 a_color;
-out vec4 vertex_color;
-void main() {
-    gl_Position = vec4(a_position, 1.0);
-    vertex_color = a_color;
-}
-```
-```glsl
-// 片段着色器：GLSL 330 中以相同名称和兼容类型匹配该阶段间变量。
-#version 330 core
-in vec4 vertex_color;
-layout(location = 0) out vec4 fragment_color;
-void main() {
-    fragment_color = vertex_color;
-}
-```
-`vertex_color` 默认按 `smooth` 规则进行透视正确插值，所以三角形内部的颜色可以连续变化。颜色是自定义输出，因此需要声明；`gl_Position` 是内建输出，因此不需要重复声明。核心模式不使用旧教程中的 `gl_FragColor`，片段颜色输出通常自行命名。
-`gl_Position` 表示裁剪空间位置 `(x_c, y_c, z_c, w_c)`，不是一般意义上的 NDC。默认 OpenGL 裁剪体满足 `-w_c ≤ x_c,y_c,z_c ≤ w_c`；裁剪之后，透视除法得到 NDC：`(x_c/w_c, y_c/w_c, z_c/w_c)`。教程设置 `w_c = 1`，所以两者数值恰好相同，容易掩盖这一步。
-阶段链路：顶点属性 → 顶点着色器 `in` → `gl_Position` 与自定义 `out` → 图元装配、裁剪、光栅化及插值 → 片段着色器 `in` → 颜色 `out` → 深度/模板测试与混合等操作 → 帧缓冲。具体实现允许部分测试提前执行，片段输出也不必然成为最终像素颜色。
-片段着色器颜色输出的 `location = 0` 表示输出槽位，不是“连接到顶点属性 0”；它通过绘制缓冲设置映射到帧缓冲目标。片段也不等于最终像素：同一像素可能对应多个片段，MSAA 下还涉及多个采样点。
-[Khronos：gl_Position](https://registry.khronos.org/OpenGL-Refpages/gl4/html/gl_Position.xhtml)
-[Khronos：着色器阶段接口](https://wikis.khronos.org/opengl/Shader_Compilation)
-## 复杂形状与图元
-`GL_TRIANGLES` 等常量描述如何把顶点序列组装成基础图元，而不是提供“画球”“画人物”等高级形状。`GL_TRIANGLES` 每三个顶点形成一个独立三角形；顶点的位置、索引连接关系和数量决定最终形状。
-复杂模型通常表示为三角网格：建模软件或程序生成顶点与三角形索引 → VBO 保存属性、EBO 保存索引 → `glDrawElements(GL_TRIANGLES, ...)` 绘制所有三角形 → 着色器完成位置变换、光照和材质计算。
-```cpp
-// 四个顶点组成一个矩形，两个三角形共用一条边。
-// 顶点顺序：0 左下，1 右下，2 右上，3 左上。
-unsigned int indices[] = {0, 1, 2, 2, 3, 0};
-// 前提：已设置顶点属性，并在当前 VAO 上绑定/上传 EBO。
-glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-// 6 是索引个数；最后一个参数是 EBO 内的字节偏移。
-```
-圆可通过圆心和圆周采样点组成三角形，球可通过经纬采样或细分多面体形成三角网格；采样越密，轮廓越接近连续曲面，但顶点和图元处理成本越高。三角形必定共面、内部插值规则明确，适合 GPU 统一处理。
-任意凹多边形或带孔多边形需要先三角剖分；简单地使用 `GL_TRIANGLE_FAN` 不能正确覆盖所有这类形状。三角形绕序还会影响正反面判定与背面剔除。
-动态变形通常保持网格连接关系，通过更新顶点、顶点着色器变换、骨骼蒙皮等改变位置。纹理和片段着色器可以增加表面细节，但不会自动改变网格轮廓。
-扩展知识：OpenGL 4.0 起提供细分着色器，可由 `GL_PATCHES` 描述的控制点生成细分图元；你的显卡支持，但教程请求 3.3 Core 时应先按 3.3 能力编写。几何着色器也能生成图元，但有输出限制，不是所有复杂模型的通用生成方案。
-另一种方法是在覆盖屏幕的三角形上运行片段着色器，通过有符号距离场、光线步进等计算复杂形状。此时光栅化的基础图元仍是三角形，复杂形状由着色器决定哪些片段保留以及如何着色。
-[Khronos：图元](https://wikis.khronos.org/opengl/Primitive)
-[Khronos：glDrawElements](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawElements.xhtml)
-## 验证练习
-1. 将位置属性的 `GL_FLOAT` 配置从 `GL_FALSE` 改为 `GL_TRUE`，图像应不变；再将颜色改为 `GL_UNSIGNED_BYTE`，对比开关归一化后的结果。
-2. 在顶点结构中增加一个填充字段，用 `sizeof` 和 `offsetof` 更新布局，验证三角形不变；故意保留旧步长，观察读取错位。
-3. 交换顶点与片段着色器的挂接顺序，检查链接状态和显示结果应相同。
-4. 用四个顶点和六个索引绘制矩形，再生成圆周顶点与三角形索引，观察采样数量对轮廓的影响。
-## VAO 与 VBO 的分工
-VBO 保存顶点的实际字节数据；VAO 保存“从哪些缓冲区、按什么格式读取哪些顶点属性”的配置。VAO 不保存顶点数据副本，也不保存着色器程序。
-可以类比读取二进制文件：VBO 是文件内容，VAO 是解析描述。例如描述规定“属性 0 来自缓冲 B，每次读取三个浮点数，起始偏移 0，相邻记录间隔 12 字节”。只有数据，没有描述，无法知道字节代表位置还是颜色；只有描述，没有数据，也无法取得顶点。
+使用 `sizeof` 和 `offsetof`，结构体里即使有对齐产生的空隙，也能按实际布局读取。一个顶点和下一个顶点之间、位置与颜色之间，都可以有空隙。
+同一个位置的 x、y、z 则有另一条要求：这次 `size=3, type=GL_FLOAT` 的读取会连续取三个 float。若 x、y、z 之间也夹了其他数据，可以重新整理数组，或者分别把三个分量设为三个标量属性，再在着色器里组成 `vec3`。
+最后一个参数虽然写成指针类型，绑定 VBO 后表达的是“相对缓冲开头的偏移”。`nullptr` 表示偏移 0。对这里的 `glVertexAttribPointer` 而言，`stride=0` 表示按该属性自身紧密排列；交错存储位置和颜色时应写实际步长。
+## normalized 有什么用？这里改成 GL_TRUE 会怎样？
+先看适合它的例子：我们把颜色用四个 8 位整数保存，红色是 `(255,0,0,255)`，而片段计算希望拿到 `(1,0,0,1)`。将 `GL_UNSIGNED_BYTE` 属性的 `normalized` 设为 `GL_TRUE`，OpenGL 就会在读取时除以 255。
 
-| 对象 | 保存内容 | 关键操作 |
+| 属性存储格式 | GL_FALSE 读到的值 | GL_TRUE 读到的值 |
 |---|---|---|
-| VBO | 顶点数据的字节存储 | `glBufferData`、`glBufferSubData` |
-| VAO | 属性启用状态、属性来源缓冲、分量数、格式、转换规则、步长、偏移，以及 EBO 绑定等 | `glVertexAttribPointer`、`glEnableVertexAttribArray` |
-| 着色器程序 | 如何计算顶点位置、片段颜色等 | `glUseProgram` |
-### 跟踪自己的三角形代码
-你的 `vertices` 有九个浮点数：三个顶点，每个顶点三个分量。`glBufferData` 上传后，VBO 中保存的仍只是九个浮点数对应的字节，不会自动获得“每三个组成一个位置”的语义。
-```cpp
-glBindVertexArray(VAO); // 选择接下来要配置的 VAO。
-glBindBuffer(GL_ARRAY_BUFFER, VBO); // 选择当前 ARRAY_BUFFER 来源。
-glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-// 这一刻将当前 VBO 和读取规则记录进 VAO 的属性 0。
-glEnableVertexAttribArray(0); // 在当前 VAO 中启用属性 0。
-glBindBuffer(GL_ARRAY_BUFFER, 0); // 不会抹掉此前记录的来源。
-glBindVertexArray(0); // 取消当前 VAO 绑定，不会删除其配置。
+| 无符号字节 128 | 浮点数 `128.0` | 浮点数约 `0.502` |
+| 无符号字节 255 | 浮点数 `255.0` | 浮点数 `1.0` |
+| GL_FLOAT 的 0.5 | `0.5` | `0.5` |
+教程位置本来就存成 float，所以这里用 `GL_FALSE`；改成 `GL_TRUE` 也保持原值。该参数主要用于整数数据转成浮点属性时的范围映射，有符号整数可以映射到 `[-1,1]`。
+“归一化”在这里要结合这项 API 理解。它按整数类型的范围转换，和把一个方向向量的长度变成 1 是两种计算。
+## gl_Position 为什么没有 out，片段颜色却要声明 out？
+顶点着色器负责写出顶点的位置。GLSL 已经预先声明了 `gl_Position` 这个输出，直接赋值即可：
+```glsl
+void main() {
+    gl_Position = vec4(aPos, 1.0);
+}
 ```
-完成配置后，VAO 的属性 0 可理解为下面这条记录：
+片段着色器里常见的 `FragColor` 是开发者取的名字，所以要自行声明 `out vec4 FragColor`，再向它写入颜色。
+`in` 表示当前阶段接收的值，`out` 表示当前阶段交出的值。顶点阶段的 `aPos` 是输入，`gl_Position` 是内建输出；片段阶段的 `FragColor` 是自定义输出。读到 [[#着色器]] 时，我们再把两个阶段连起来。
+## glAttachShader 多次调用有顺序要求吗？
+顶点着色器与片段着色器可以按任意顺序挂接到程序。它们的阶段已经在 `glCreateShader(GL_VERTEX_SHADER)` 等调用中确定，链接时按各自的阶段组合。
+```cpp
+glAttachShader(program, fragment_shader);
+glAttachShader(program, vertex_shader);
+glLinkProgram(program);
+```
+这与交换两次 attach 的顺序效果相同。需要满足的是：对象已创建，参加本次链接的着色器已挂接并成功编译，程序成功链接后再使用。
+顶点阶段先处理、片段阶段后处理，这是渲染流程规定的顺序，和两次 attach 的先后分开理解。编译成功与链接成功也分别检查：前者检查单份代码，后者还要检查各阶段能否配合。
+## 只有几种图元常量，怎样绘制复杂形状？
+`GL_TRIANGLES` 表示每三个顶点组成一个三角形。每个三角形的位置、大小和形状都由顶点决定，所以同一个常量能画出无数不同的三角形。
+复杂物体再由许多三角形拼起来。矩形拆成两个三角形，圆用许多小三角形近似，人物模型则可能包含数万甚至更多三角形。建模软件或应用负责准备这些数据，OpenGL 按同一套规则绘制它们。
+顶点越密，圆弧等轮廓通常越细腻，同时数据量和绘制成本也会增加。先理解“复杂模型是很多简单图元的组合”，就能继续阅读模型加载章节。
+## EBO 是什么？为什么需要一份顶点编号表？
+先画一个矩形。设四个角编号如下：
 ```text
-属性位置 0:
-    enabled = true
-    source_buffer = VBO
-    components = 3
-    component_type = GL_FLOAT
-    normalized = false
-    stride = 12 字节（当前环境 float 为 4 字节）
-    offset = 0 字节
+3 ───── 2
+│     ／│
+│   ／  │
+│ ／    │
+0 ───── 1
 ```
-绘制时：`glBindVertexArray(VAO)` 选择这套配置 → `glDrawArrays(GL_TRIANGLES, 0, 3)` 请求三个顶点 → 从 VBO 偏移 0、12、24 字节各读取三个浮点数 → 分别传给顶点着色器 `layout(location = 0) in vec3 aPos` → 组成三角形。
-`glDrawArrays` 提供图元类型、起始顶点和数量；VAO 不保存这些绘制参数。`glUseProgram` 另外选择计算程序；绑定 VAO 不会自动选择着色器。
-### 绑定与记录的区别
-OpenGL 的绑定可理解为“选择后续特定 API 的操作对象”。它既不复制数据，也不自动执行绘制。
-在教程的旧式属性 API 中，单独 `glBindBuffer(GL_ARRAY_BUFFER, VBO)` 不会把 VBO 记录进 VAO；真正建立属性与缓冲关系的是 `glVertexAttribPointer`。调用时，它读取当前 `GL_ARRAY_BUFFER` 绑定，将该来源和格式保存到当前 VAO。
-例如先绑定 VBO_A 并配置属性 0，再绑定 VBO_B 但不重新调用属性配置函数，属性 0 仍读取 VBO_A。若更新 VBO_A 的内容，下一次绘制读取新数据，因为 VAO 保存来源引用而非数据快照。
-一个 VAO 可以从多个 VBO 读取属性，例如位置来自 VBO_A、颜色来自 VBO_B；多个 VAO 也能引用同一个 VBO，以不同布局或偏移读取。因此 VAO 与 VBO 不是一对一关系，也不是拥有与被拥有的 C++ 对象关系。
-EBO 是一个需要特别记忆的例外：`glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)` 会直接修改当前 VAO 的索引缓冲绑定。在 VAO 仍绑定时将该目标绑定为 0，会解除它的 EBO 关联。
-OpenGL Core 模式配置顶点属性和绘制时需要有效的非零 VAO；`glBindVertexArray(0)` 表示没有绑定 VAO，不能把它当成可配置的默认 VAO。
-VAO 的作用是保存并复用完整的顶点输入配置：初始化时配置一次，绘制不同网格时绑定相应 VAO，而不必每次重新设置所有属性。它不负责复制或上传数据。
-[Khronos：顶点属性与 VAO 状态](https://wikis.khronos.org/opengl/Vertex_Specification)
-## 三角形程序的构建错误
-排查对象：`/home/azzato/CodeFiles/temporal/learnOpenGLPlaygroud`。2026-10-09 使用 `cmake --build --preset release` 复现；实际错误发生在 C++ 编译阶段，尚未到可执行文件链接阶段。
-### 首个错误引发大量后续报错
-当前代码先包含 `<GLFW/glfw3.h>`，后包含 `<glad/glad.h>`。默认情况下，GLFW 头文件会包含系统 OpenGL 头文件；GLAD 检测到它已经被包含，触发 `#error OpenGL header already included`。
-预处理失败以及系统头文件的 include guard 冲突导致所需的现代 OpenGL 声明不可用，随后出现大量 `glCreateShader`、`glGenBuffers` 等 `was not declared in this scope`。这些错误不能通过反复添加链接库解决，需要先修正头文件包含顺序。
+两个三角形可以写成 `0,1,2` 与 `2,3,0`。其中顶点 0 和 2 各用到两次。若直接提交六份顶点数据，共用角点的属性就重复保存了。
+另一种做法是只保存四份顶点数据，再保存六个编号：
 ```cpp
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <cstddef>
-#include <iostream>
+unsigned int indices[] = {0, 1, 2, 2, 3, 0};
 ```
-另一个方案是在包含 GLFW 前定义 `GLFW_INCLUDE_NONE`，阻止它引入系统 OpenGL 头文件。当前示例只需将 GLAD 放在最前面，不需要同时采用两种方案。
-### 编译、链接与运行期加载
-
-| 阶段 | 典型错误 | 需要检查 |
-|---|---|---|
-| C++ 预处理/编译 | `#error`、`not declared`、`cannot convert` | 头文件顺序、宏、名称、语法和类型 |
-| C++ 链接 | `undefined reference to glfwInit` 或 `glad_glCreateShader` | 是否链接 GLFW/GLAD 的实现库 |
-| 运行时加载 OpenGL 函数 | GLAD 初始化失败或函数指针无效 | 上下文是否创建成功并已设为当前上下文 |
-| 运行时编译/链接 GLSL | `GL_COMPILE_STATUS`/`GL_LINK_STATUS` 失败 | 着色器源码和阶段接口，读取对应日志 |
-头文件提供声明，链接库提供实现；运行时 `gladLoadGLLoader` 再取得驱动提供的 OpenGL 函数地址。三个步骤各自解决不同问题，不能互相替代。GLSL 程序的链接也不同于 C++ 可执行文件的链接。
-当前 CMake 已有 `find_package(glad CONFIG REQUIRED)`、`find_package(glfw3 CONFIG REQUIRED)`，并链接 `glad::glad` 与 `glfw`；生成的链接命令包含 vcpkg 中的 `libglad.a` 和 `libglfw3.a`，因此已有证据表明此次不是缺少这两个库。
-## 属性槽位如何连接到着色器
-### 分清槽位、分量和顶点数量
-`layout(location = 0) in vec3 aPos` 是开发者声明的输入接口，不是 `aPos` 自己识别了 CPU 数组结构。这里有三个独立维度：属性槽位、每个属性的分量数、此次绘制的顶点数量。
-
-| 概念 | 示例中对应的代码 | 含义 |
-|---|---|---|
-| 属性槽位 | `location = 0`、`glVertexAttribPointer` 第一个参数 `0` | 当前顶点的位置属性从编号 0 的输入通道读取 |
-| 单个属性的分量数 | `vec3`、`glVertexAttribPointer` 第二个参数 `3` | 一个顶点的位置包含 x、y、z 三个分量 |
-| VBO 的存储大小 | `glBufferData(..., sizeof(vertices), ...)` | 为顶点字节数据提供存储空间 |
-| 本次绘制的顶点数量 | `glDrawArrays(GL_TRIANGLES, 0, 3)` 最后一个参数 | 此次从编号 0 开始处理三个顶点 |
-一个属性槽位不是“一个顶点”或“一个三角形”，也不是装着三个顶点的 `vec3` 数组。对每个被处理的顶点，槽位 0 提供一个属性值。在这个例子里，该值是包含三个浮点分量的 `vec3`。
-顶点着色器中的一次逻辑执行处理一个顶点。GPU 实际可以并行和批量执行；源码中的 `main()` 不接收整个三角形数组，也不能通过 `aPos` 直接看到另外两个顶点。
-### 两端共同约定输入接口
-GLSL 声明告诉着色器编译器：“变量 `aPos` 的类型是 `vec3`，位于属性槽位 0”。C++ 配置告诉顶点属性读取机制：“槽位 0 从这个 VBO 中读取三个 `GL_FLOAT`，步长和偏移按以下规则计算”。这两端的约定由开发者保持一致。
-```cpp
-// 前提：已绑定当前 VAO、对应 VBO，且已上传数据。
-glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-glEnableVertexAttribArray(0);
-// 第一个 0：属性槽位。
-// 第二个 3：每个顶点在此槽位提供三个分量，不是三个顶点。
-// stride：找到下一个顶点同一属性的位置。
-// nullptr：该属性从 VBO 的第 0 字节开始。
-```
-OpenGL 按 VAO 配置读取和转换字节，向着色器提供属性值；不需要构造一个与 CPU `struct Vertex` 完全相同的 C++ 数据结构。GPU 的寄存器布局和取数实现由驱动/硬件决定，程序依赖的是 API 定义的值与接口。
-着色器编译/链接不要求提前知道 VAO 布局，`glVertexAttribPointer` 也不需要当前程序已有 `aPos`；两套配置在绘制时结合。这解释了为什么它们可以分别初始化，也解释了为什么错配可能链接成功却画出错误图像。
-### 三个顶点的数据如何逐个读取
-对于教程的九个浮点数，假设 `sizeof(float) = 4`，调用 `glDrawArrays(GL_TRIANGLES, 0, 3)` 后，逻辑上的输入为：
-
-| 顶点编号 | VBO 字节起点 | 此次执行的 `aPos` |
-|---|---|---|
-| 0 | `0 + 0 × 12 = 0` | `vec3(-0.5, -0.5, 0.0)` |
-| 1 | `0 + 1 × 12 = 12` | `vec3(0.5, -0.5, 0.0)` |
-| 2 | `0 + 2 × 12 = 24` | `vec3(0.0, 0.5, 0.0)` |
-三个顶点的位置都通过槽位 0 输入，只是在不同顶点的执行中取不同值。`GL_TRIANGLES` 再规定每三个顶点组装为一个三角形。
-`glBufferData` 上传 36 字节并不意味着每次必须画三个顶点，OpenGL 不根据 VBO 大小推断此次绘制数量。同一缓冲可以存多个网格的一部分，程序通过绘制参数选择数据范围；必须确保所请求的读取范围实际存在。
-### 为什么选槽位零
-槽位 0 是教程选择的接口编号，没有“位置必须在槽位 0”的规定。可以改为 `layout(location = 2) in vec3 aPos`，同时将配置和启用函数的属性索引改为 `2`。只改一端，着色器就不能获得原先那份数组数据。
-更复杂的顶点可以约定位置为 0、颜色为 1、法线为 2、纹理坐标为 3；每个顶点通过这些槽位分别获得各属性。槽位数量受 `GL_MAX_VERTEX_ATTRIBS` 限制，矩阵输入可占多个连续槽位。
-也可不写显式 `layout`：在链接前用 `glBindAttribLocation(program, index, "aPos")` 指定，或链接后用 `glGetAttribLocation(program, "aPos")` 查询分配结果。查询未使用、被优化掉的输入可能返回 `-1`；不能把它直接转成无符号属性索引。显式 `layout` 存在时优先采用它的编号。
-### 类型与分量数的匹配边界
-`vec3` 是 GLSL 自己的声明，不是从 `glVertexAttribPointer` 自动推导出来。推荐将两端配置清楚地对应，但 OpenGL 的浮点属性读取也允许分量补齐和丢弃：提供两个分量给 `vec3` 时 z 补为 0；提供三个分量给 `vec4` 时 w 补为 1；多余分量可不被输入使用。这些规则不改变 VBO 的数据布局。
-整数数据通过 `glVertexAttribPointer` 可以转成浮点输入；若 GLSL 输入是 `ivec*` 或 `uvec*`，使用 `glVertexAttribIPointer`。属性未启用时使用当前通用属性值，而不是自动读取 VBO；因此 `glEnableVertexAttribArray` 也是输入链路的一部分。
-[Khronos：顶点输入与属性配置](https://wikis.khronos.org/opengl/Vertex_Specification)
-[Khronos：glDrawArrays](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawArrays.xhtml)
-## 着色器文件、资源与预编译
-### 为什么教程在运行时编译
-C++ 编译器把 GLSL 字符串视为普通字符数据，不会理解或编译其中的着色器。OpenGL 程序运行后，通过当前上下文对应的驱动编译 GLSL，针对实际 GPU、驱动和支持能力生成可执行代码，再链接各阶段接口。
-这种方式允许分发同一份 GLSL 源码，在不同厂商硬件上由各自驱动处理，不要求开发者提前为所有 GPU 提供机器码。通常在初始化或加载材质时编译一次，而不是在每帧循环中重复编译。
-源码不必硬编码。可以放到 `.vert`、`.frag` 文件，用 `std::ifstream` 或 Qt 的文件 API 读取，再交给 `glShaderSource` 或 `QOpenGLShaderProgram`。独立文件便于语法高亮、定位错误、版本管理和开发期间热重载；普通文件部署时需要处理路径和文件分发。
-### 能否提前编译
-可以提前做部分工作，但要区分资源打包、中间码编译和目标驱动生成最终程序。
-
-| 方案 | 运行前可以完成的工作 | 运行时仍需做什么与限制 |
-|---|---|---|
-| GLSL 文件/qrc | 保存、组织、打包源码 | 在上下文中编译、链接 |
-| 离线 GLSL 检查 | 用工具尽早发现语法/接口错误 | 目标驱动仍要编译；离线检查不能保证所有驱动行为相同 |
-| OpenGL 程序二进制缓存 | 之前运行时保存驱动生成的程序二进制 | 加载并检查成功；二进制依赖实现，驱动或环境变化后可能失效，需要源码回退 |
-| OpenGL SPIR-V 路径 | 用支持 OpenGL 语义的离线工具生成中间码 | 加载、specialize、链接，驱动仍可能生成/优化 GPU 机器码；需要 OpenGL 4.6 或相应扩展 |
-Qt 的 `addCacheableShaderFromSourceFile` 配合 `link()` 可使用程序二进制磁盘缓存：命中有效缓存且上下文支持时，可以跳过源码编译和链接；无缓存或不支持时回退到源码流程。这是跨运行缓存，不代表首次启动前已经完成编译。
-SPIR-V 是中间表示，不是通用于所有显卡的最终机器码。其 OpenGL 路径是 `glShaderBinary(..., GL_SHADER_BINARY_FORMAT_SPIR_V, ...)` → `glSpecializeShader(...)` → `glLinkProgram(...)`；不能直接把按 Vulkan 语义编译的任意 SPIR-V 当作 OpenGL 输入。教程的 3.3 Core 基线不保证支持该方案。
-对当前学习阶段，推荐独立 GLSL 文件或 qrc + 初始化时编译；熟悉完整输入与绘制链路后再研究缓存和 SPIR-V。上述工具方案仅解释可选能力，本次未安装工具或修改项目依赖。
-[Qt：可缓存着色器接口](https://doc.qt.io/qt-6/qopenglshaderprogram.html#addCacheableShaderFromSourceFile)
-[Khronos：OpenGL 4.6 与 SPIR-V](https://www.khronos.org/news/press/khronos-releases-opengl-4.6-with-spir-v-support)
-[Khronos：程序二进制](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glProgramBinary.xhtml)
-## EBO 与索引绘制
-### 顶点表与索引序列
-EBO（Element Buffer Object，元素缓冲对象）是保存顶点索引的缓冲对象，也称索引缓冲。它和 VBO 都是通过 `glGenBuffers` 创建的普通缓冲对象，只是用途不同：VBO 保存属性数据，EBO 保存要按什么编号读取顶点。
-可以类比数组与下标：VBO 是 `vertices` 的数据，EBO 是 `indices` 的数据；读取 `indices[k]` 得到顶点编号 j，再按 VAO 中的属性规则读取顶点 j。索引 j 不是字节地址，也不是属性槽位。
-矩形有四个顶点：0 左下、1 右下、2 右上、3 左上。拆成两个三角形时，使用索引 `{0, 1, 2, 2, 3, 0}`：第一个三角形为 0、1、2，第二个为 2、3、0。位置 0 和 2 被重复引用，不需要在 VBO 中重复存储。
-
-| EBO 中的序号 k | 索引值 j | 位置属性读取起点，假设步长 12 字节 |
-|---|---|---|
-| 0 | 0 | VBO 第 0 字节 |
-| 1 | 1 | VBO 第 12 字节 |
-| 2 | 2 | VBO 第 24 字节 |
-| 3 | 2 | 再次引用第 24 字节 |
-| 4 | 3 | VBO 第 36 字节 |
-| 5 | 0 | 再次引用第 0 字节 |
-这里有四份不同顶点数据、六个索引引用、两个三角形。驱动可能复用重复索引的顶点着色结果，因此不能将六个索引机械理解为六次实际 GPU 着色器执行。
-复用是否节省空间取决于重复率和顶点大小：本例仅位置数据，无索引时为 `6 × 12 = 72` 字节；四个位置加六个 32 位索引也是 `4 × 12 + 6 × 4 = 72` 字节。属性越多、重复引用越多时，索引通常越有价值；并不是加入 EBO 就一定更省内存或更快。
-一个索引选择该顶点的所有逐顶点属性。如果同一空间位置有不同法线或纹理坐标，例如硬边或 UV 接缝，需要拆成不同的完整顶点记录；不能只因位置相同就合并。实例化属性有不同的取数规则，不属于这里的普通逐顶点索引。
-### 解释绘制调用的四个参数
+EBO（元素缓冲对象）就是保存这份编号表的缓冲。读取编号 2，表示“使用顶点表里的第 2 个顶点”。VBO 保存顶点的属性，EBO 保存使用这些顶点的顺序。
+这种方法让大量三角形可以共用顶点。节省多少空间取决于顶点大小、重复次数和索引大小；这个很小的矩形未必已经省空间，但解释了重复引用的办法。
+## glDrawElements 的 6、索引类型和最后一个 0 分别是什么？
 ```cpp
 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 ```
-1. `GL_TRIANGLES`：将取出的顶点引用按每三个一组组成三角形。
-2. `6`：读取六个索引元素，不是 VBO 有六份不同顶点，也不是六个三角形，更不是六字节。教程称“绘制六个顶点”是在描述引用序列，精确说法是六个索引。
-3. `GL_UNSIGNED_INT`：每个索引以 32 位无符号整数解释；不是位置属性的类型。也支持 `GL_UNSIGNED_BYTE` 和 `GL_UNSIGNED_SHORT`，必须与上传数据的实际编码一致。
-4. `nullptr`/`0`：从当前 EBO 第 0 字节读取。参数类型虽为指针，但已绑定 EBO 时含义是字节偏移，不是 CPU 索引数组指针。
-绘制第二个三角形时，可使用 `count = 3`、偏移 `3 * sizeof(GLuint)`：跳过前三个索引，从 `{2, 3, 0}` 开始。对于基本 `glDrawElements`，取得 j 后，以 `属性偏移 + j × 属性步长` 读取该属性；有 base-vertex 的扩展绘制接口另有顶点编号修正规则。
-必须保证 EBO 包含请求读取的索引字节，且各有效索引对应的属性数据范围存在；索引不会自动增加 VBO 存储。若开启 primitive restart，其保留索引会作为重启标记解释，本节普通三角形例子没有启用。
-教程提到“未使用 EBO 时传递 CPU 索引数组”属于旧式/兼容模式用法。在当前 OpenGL 3.3 Core 中，应使用 EBO 和缓冲内偏移，不能把这句话套用于核心模式。
-[Khronos：glDrawElements](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawElements.xhtml)
-### VAO 如何记住 EBO
-教程中的“绑定的最后一个元素缓冲区对象”应理解为：每个 VAO 有一个当前 EBO 绑定记录；当该 VAO 为当前 VAO 时，每次 `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ...)` 都会覆盖这条记录。它不是所有历史 EBO 的列表，也不是全局最后一次绑定的对象永远作用于所有 VAO。
+按刚才的矩形例子，这句话依次表示：按三角形绘制；读取六个索引；每个索引用无符号整数解释；从 EBO 的开头开始。
+于是读取顺序为 `0→1→2→2→3→0`，得到两个三角形。教程说“绘制六个顶点”，可以理解为使用六次顶点引用，其中只有四份不同的顶点数据。
+第三个参数描述的是编号的格式。位置即使用 float 保存，索引仍可用 `GL_UNSIGNED_INT`；二者各自描述不同数据。
+最后一个参数是 EBO 内的字节偏移。若只画第二个三角形，可以用三个索引，并跳过前三个索引的字节数：
 ```cpp
-// 初始化网格 A：非零 VAO 已生成，属性配置步骤省略。
-glBindVertexArray(vao_a);
-glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_a); // vao_a 记住 ebo_a。
-glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_a), indices_a, GL_STATIC_DRAW);
-
-// 初始化网格 B。
-glBindVertexArray(vao_b);
-glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_b); // vao_b 记住 ebo_b。
-glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_b), indices_b, GL_STATIC_DRAW);
-
-// 绘制 A：恢复其属性配置与 ebo_a，无需再显式绑定 EBO。
-glBindVertexArray(vao_a);
-glDrawElements(GL_TRIANGLES, count_a, GL_UNSIGNED_INT, nullptr);
-// 绘制 B：恢复其属性配置与 ebo_b。
-glBindVertexArray(vao_b);
-glDrawElements(GL_TRIANGLES, count_b, GL_UNSIGNED_INT, nullptr);
+glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT,
+    reinterpret_cast<const void*>(3 * sizeof(unsigned int)));
 ```
-这段是状态切换示例，`indices_a/b`、`count_a/b` 等由应用定义。EBO 本身不保存索引类型、要绘制多少个索引、图元模式；这些仍由每次绘制调用提供。
+教程提到传入 CPU 索引数组的方式属于较旧的用法。当前 3.3 Core 示例使用 EBO，这个参数按缓冲内偏移理解即可。
+## VAO 为什么会记住 EBO？每次绘制都要再绑定吗？
+VAO 除了记住属性读取规则，也记住这份配置使用哪个 EBO。这样选中 VAO 时，顶点读取方式和编号表一起恢复。
+```cpp
+glBindVertexArray(vao_a);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_a); // A 记住自己的编号表。
+glBindVertexArray(vao_b);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_b); // B 记住另一张编号表。
 
-| 调用 | 对当前 VAO 的影响 |
-|---|---|
-| `glBindBuffer(GL_ARRAY_BUFFER, vbo)` | 仅改变当前 ARRAY_BUFFER 选择，本身不记录属性来源 |
-| `glVertexAttribPointer(...)` | 捕获当前 ARRAY_BUFFER 来源与属性读取规则 |
-| `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)` | 直接修改当前 VAO 的 EBO 记录 |
-| `glBindVertexArray(another_vao)` | 恢复另一个 VAO 的属性配置与 EBO 绑定 |
-因此，配置 EBO 后不要在当前 VAO 仍绑定时调用 `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)` 来“清理绑定”，那会真正清除该 VAO 的索引缓冲关联。可以直接切换 VAO，或只取消 VAO 绑定；在 Core 模式没有有效 VAO 时也不要再修改 ELEMENT_ARRAY_BUFFER 绑定。
-最后的完整关系是：VAO 选择属性配置和 EBO → 绘制调用指定索引范围与图元类型 → EBO 给出顶点编号 → VBO 按编号提供各属性 → 顶点着色器处理 → 组装与光栅化。VAO 保存连接规则，VBO 保存属性，EBO 保存索引，三者并不互相复制数据。
-[Khronos：VAO 与元素缓冲绑定](https://wikis.khronos.org/opengl/Vertex_Specification)
+// 画 A 时恢复 A 的配置和 ebo_a。
+glBindVertexArray(vao_a);
+glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+```
+“最后绑定的 EBO”指当前这个 VAO 最近记录的 EBO。每个 VAO 分别记住自己的关联。因此，只要 VAO 的 EBO 关联保持着，绘制前选中 VAO 就足够。
+这里与 VBO 配置有一点区别：EBO 在 `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)` 时就直接记入 VAO；VBO 的属性来源是在调用 `glVertexAttribPointer` 时记录的。
+如果 VAO 还绑定着，就执行 `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)`，会把它记住的 EBO 清掉。可直接切换 VAO，或调用 `glBindVertexArray(0)` 结束当前配置。绑定 0 表示解除相应选择，释放资源另用 `glDelete*`。
+## 可以动手验证什么？
+先把 GLSL 的 location 与属性配置同时从 0 改成 2，图形应保持不变。再用四个顶点、六个索引绘制矩形，尝试只绘制后三个索引。这两次修改分别验证“属性编号怎样连接”和“EBO 怎样选择顶点”。
 # 着色器
-## Uniform 的含义与生命周期
-`uniform` 是应用程序向着色器提供的、着色器内只读的程序参数。它不会像顶点属性一样随顶点编号取不同值，也不会像阶段间输出那样被光栅化插值。普通 uniform 在一次绘制使用的各次着色器执行中具有相同值；应用可以在两次绘制之间更新它。
-常见用途包括变换矩阵、时间、光源参数、统一颜色和纹理采样器配置。`uniform` 不等于 C++ 的编译期常量：CPU 可以更新，GLSL 中不能给它赋值；随时间变化的 uniform 仍然是 uniform。
+## 各个着色器分别负责什么，输入输出是什么？
+先沿着当前的三角形走一遍。应用提供顶点位置和颜色，顶点着色器处理每个顶点；OpenGL 将它们组成三角形，找出覆盖哪些屏幕位置；片段着色器再计算这些位置的颜色。
+其中，“找出图形覆盖的位置”叫作光栅化。它由 OpenGL 的绘制流程完成。顶点着色器交出的位置写入 `gl_Position`；颜色等希望继续传递的数据写入自定义 `out`。
 
-| 数据形式           | 谁提供值           | 变化范围             |
-| -------------- | -------------- | ---------------- |
-| 顶点着色器 `in` 属性  | 顶点属性读取机制       | 通常每个顶点不同         |
-| 阶段间 `out`/`in` | 前一着色器阶段与插值机制   | 可随片段位置变化         |
-| 普通 `uniform`   | 应用通过 OpenGL 设置 | 本次绘制共享，应用可在绘制间更新 |
-| GLSL `const`   | 源码中的常量表达式      | 编译时确定            |
-### 程序范围与持久性
-uniform 在 GLSL 全局作用域声明，但不是所有程序共享的全局变量。它属于链接后的程序对象：程序 A 和 B 中同名的 `ourColor` 各有自己的值和位置。同一程序的多个阶段若声明同名且兼容的 uniform，链接后共享这个参数；需要使用它的阶段仍须自行声明，不能因片段阶段声明了就直接在顶点阶段访问。
-设置后，值保持到下次更新；切换到另一个程序再切回来，不会自动清空。成功重新链接会重新初始化 uniform 值，也需要重新查询位置；无显式初始化器时，普通 uniform 初始为零。位置可以在成功链接后缓存，不必每帧查询。
-本节讨论的是默认 uniform 块中的普通变量；uniform block/UBO 用缓冲与块绑定管理，不通过 `glGetUniformLocation` 和 `glUniform*` 更新块成员。
-### 未使用的 Uniform 会被优化
-声明但不影响可观察输出的 uniform 可以被编译/链接优化移除，最终不是 active uniform，`glGetUniformLocation(program, "name")` 返回 `-1`。即使源码里出现过它，若相关计算结果未被使用，也可能被移除。
-> [!Warning]
-> 查询结果为 `-1` 不必然是优化：名称拼写错误、查询错误程序，或查询不属于普通 uniform 的对象也可能导致失败。对 `location = -1` 调用 `glUniform*` 会静默忽略该更新，而不是必然报错，这可能掩盖问题。必需参数应检查位置；可选参数可以允许不存在。
-位置类型使用 `GLint`，因为 `-1` 是有效的失败标志。uniform 的 location 是程序参数位置，不是 CPU/GPU 内存地址，也不是顶点属性槽位；两个编号系统彼此独立。
-### 查询与更新为何有不同要求
-`glGetUniformLocation(program, name)` 显式传入程序对象，因此无需先 `glUseProgram`，但程序必须已经成功链接。`glUniform*` 没有程序参数，更新目标来自当前激活的程序，所以教程这套 API 必须先绑定目标程序。
-```cpp
-// 初始化：program 已成功链接，此时无需先 glUseProgram。
-const GLint color_location = glGetUniformLocation(program, "ourColor");
-if (color_location < 0) {
-    throw std::runtime_error("required uniform ourColor is inactive or missing");
-}
-// 绘制：更新目标由当前程序决定，随后绘制使用新值。
-glUseProgram(program);
-glUniform4f(color_location, 0.2f, 0.7f, 0.4f, 1.0f);
-glBindVertexArray(vao);
-glDrawArrays(GL_TRIANGLES, 0, 3);
-```
-不能查询 A 的位置却激活 B 后更新：相同整数位置在不同程序中含义不同，可能写错参数或报错。更新接口也要与类型匹配，例如 `vec4` 使用 `glUniform4f`，普通整数使用 `glUniform1i`。
-扩展能力：OpenGL 4.1 或相应扩展提供 `glProgramUniform*`，显式指定目标程序，无需先激活；因此“更新 uniform 必须 glUseProgram”限定于教程使用的 `glUniform*` 路径，不是所有版本所有接口的绝对规则。
-[Khronos：Uniform](https://wikis.khronos.org/opengl/GLSL_Uniforms)
-[Khronos：glGetUniformLocation](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetUniformLocation.xhtml)
-[Khronos：glUniform](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUniform.xhtml)
-## 片段插值与渐变三角形
-### 插值解决的问题
-三个顶点只定义了三角形边界和顶点处的属性；三角形覆盖屏幕内部大量采样位置，需要为这些位置计算属性。光栅化判断哪些位置被覆盖，并为片段着色器的可插值输入生成值。
-插值是“用已知位置上的值，估计中间位置的值”。在线段两端颜色为 `C_A`、`C_B` 时，从 A 向 B 走过比例 t 的颜色为 `(1-t)C_A + tC_B`。t 为 0 是 A 的颜色，t 为 1 是 B 的颜色，中点为各占一半。
-这里插值的是颜色等属性数值，不是凭空增加 VBO 顶点，也不是将三个顶点之间插入大量新顶点。产生的是供片段处理的输入。
-### 三角形内的重心权重
-三角形上任意内部位置 P 可表示为 `P = λ_A A + λ_B B + λ_C C`，其中三项权重非负且总和为 1，称为重心坐标。它们由片段在三角形中的相对位置决定，不是简单对三个顶点的欧氏距离取倒数。
-教程各顶点裁剪坐标 w 都为 1，此时颜色可以按同一组权重计算：`C_P = λ_A C_A + λ_B C_B + λ_C C_C`。R、G、B 各分量分别参与计算。
-假设 A 为红 `(1,0,0)`，B 为绿 `(0,1,0)`，C 为蓝 `(0,0,1)`：
+| 当前会用到的阶段 | 接收什么 | 做什么 | 交出什么 |
+|---|---|---|---|
+| 顶点着色器 | 当前顶点的位置、颜色、纹理坐标等 | 变换位置，准备后续要用的数据 | `gl_Position` 和自定义输出 |
+| 片段着色器 | 当前片段的位置相关信息、插值后的颜色或纹理坐标等 | 决定此处输出什么颜色，后面也会在这里计算光照 | 颜色，必要时还可控制深度或丢弃片段 |
+你要求了解其他着色器，先把它们放在流程中的作用记下来即可：
 
-| 位置     | 权重 `(λ_A, λ_B, λ_C)` | 插值 RGB                |
-| ------ | -------------------- | --------------------- |
-| A 顶点   | `(1,0,0)`            | `(1,0,0)`，红           |
-| AB 边中点 | `(0.5,0.5,0)`        | `(0.5,0.5,0)`，黄方向的颜色  |
-| AC 边中点 | `(0.5,0,0.5)`        | `(0.5,0,0.5)`，品红方向的颜色 |
-| BC 边中点 | `(0,0.5,0.5)`        | `(0,0.5,0.5)`，青方向的颜色  |
-| 三角形重心  | `(1/3,1/3,1/3)`      | `(1/3,1/3,1/3)`，灰     |
-屏幕上大量位置对应不同权重，产生大量不同颜色，看起来像调色板。但它不是 RGB 全部颜色的集合：这组三原色的简单插值满足 `R+G+B=1`，无法得到 `(1,1,1)` 的白色或 `(1,1,0)` 的满强度黄色。最终显示还受帧缓冲量化和颜色编码影响。
-### 哪个阶段负责什么
-顶点着色器读取每个顶点的颜色，通过自定义 `out` 写出；光栅化相关的插值机制计算每个片段位置对应的颜色；片段着色器的 `in` 接收已经插值的值，再决定输出颜色。
+| 后续可能遇到的阶段 | 输入与输出的直观理解 | 当前是否使用 |
+|---|---|---|
+| 几何着色器 | 接收组成一个图元的一组顶点，可以发出新的图元 | 否 |
+| 细分控制着色器 | 接收曲面控制点，决定细分程度并输出控制数据 | 否 |
+| 细分求值着色器 | 接收控制数据及细分生成的参数位置，求出新顶点 | 否 |
+| 计算着色器 | 从缓冲、图像等读取数据，执行通用计算并写回结果 | 否；它通过单独的命令启动 |
+前两个细分阶段主要用于把曲面细化，计算着色器可以做与当前绘制无关的计算。读入门部分时，只跟住顶点着色器、光栅化、片段着色器这条线就足够。
+## 片段是什么？它与像素有什么区别？
+先想象一个三角形覆盖了窗口里的某个位置。要决定这个位置最终显示什么，OpenGL 会准备它的位置、深度、颜色或其他输入，让片段着色器处理。这份待处理的数据，可以先理解成一个“准备给像素上色的候选记录”，称为片段。
+为什么要用“候选”这个词？假设前后两个三角形覆盖同一位置，它们各自产生片段。后续深度比较可能只保留前面的颜色，也可能通过透明混合组合颜色。于是，一个最终像素可以受到多个片段的影响，也可能有片段被丢弃。
+像素是画面中的位置及其颜色结果，片段是产生结果过程中的待处理数据。当前先按普通采样理解这种关系，后面的抗锯齿会再细分像素内部的采样情况。
+## 只给三个点，OpenGL 为什么会填满三角形内部？
+当我们调用 `glDrawArrays(GL_TRIANGLES, 0, 3)` 时，已经要求 OpenGL 把这些点组成一个三角形。默认绘制方式会填充它的内部区域，和画图软件的“填充三角形”工具含义类似。
+如果换成 `GL_POINTS`，就是三个独立点；换成 `GL_LINE_LOOP`，则沿三个点画闭合折线。选择图元类型，是告诉 OpenGL 怎样使用这些点的重要步骤。
+填充首先回答“哪些位置落在三角形里”。接下来还要回答“这些位置用什么颜色”。这两件事可以分别控制：即使内部全部填满，也完全可以统一输出一个红色。
+还有一处职责要分清：GLFW 帮我们创建窗口、建立 OpenGL 运行所需的上下文并处理输入。坐标到画面位置的计算、三角形填充，都由 OpenGL 的流程和我们提供的着色器共同完成。
+## 只给三个顶点颜色，为什么能得到丰富的渐变？插值在做什么？
+先看一条线：左端是红色，右端是蓝色。我们希望中间的颜色逐渐变化，就可以让中点各取一半红、一半蓝；靠左的位置多取红，靠右多取蓝。这种根据两端的值计算中间值的方法，叫作插值。
+三角形使用同样的思路，只是由两个端点扩展到三个顶点。若三个角分别是红、绿、蓝，内部每个位置按自身在三角形中的位置，取不同的组合比例。
+
+| 位置 | 红绿蓝所占比例 | 算出的 RGB |
+|---|---|---|
+| 红色顶点 | 全取红 | `(1,0,0)` |
+| 红绿两点的中点 | 各一半 | `(0.5,0.5,0)` |
+| 红蓝两点的中点 | 各一半 | `(0.5,0,0.5)` |
+| 三角形的重心 | 三种各三分之一 | `(1/3,1/3,1/3)` |
+这就是许多不同颜色的来源。OpenGL 为每个片段算出相应比例，再把组合结果传给片段着色器。三个顶点提供已知值，内部位置决定组合方式。
+这里按教程三个顶点 w 都为 1 的情况说明。后面使用透视投影后，默认插值还会考虑透视关系，继续保证属性在物体表面合理变化；现在先掌握上面的加权混合即可。
+## 代码哪里要求了插值？每次画封闭图形都会这样吗？
+渐变示例中，顶点着色器把颜色交给 `out`，片段着色器用同名、同类型的 `in` 接收。这种普通浮点输入默认采用平滑插值，所以省略插值算法的代码也能得到渐变。
 ```glsl
-// 顶点阶段片段
+// 顶点着色器：每个顶点各自提供一个颜色。
+#version 330 core
+layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aColor;
 out vec3 vertexColor;
-// 在 main() 中：vertexColor = aColor;
-```
-```glsl
-// 片段阶段片段
-in vec3 vertexColor;
-out vec4 FragColor;
-// 在 main() 中：FragColor = vec4(vertexColor, 1.0);
-```
-上述是接口片段，沿用已有位置计算与 `main()`，不是两个完整着色器文件。普通片段着色器不需要读取三个顶点并自己计算重心权重；它只看到当前位置的插值结果。因此教程称“在片段着色器中插值”并不严谨，应理解为“为片段着色器输入进行插值”。
-如果直接用同一个 uniform 作为所有片段的颜色输出，三角形就是统一颜色；只有三个不同的逐顶点输出经插值后，才出现这种渐变。纹理坐标、用于光照的法线等也可插值；法线插值后通常还要重新归一化。
-### 插值限定符与透视修正
-
-| 限定符 | 行为 |
-|---|---|
-| `smooth`，默认 | 透视正确插值 |
-| `noperspective` | 在屏幕空间按重心权重线性插值 |
-| `flat` | 不插值，取指定 provoking vertex 的值，三角形内部保持一致 |
-三角形各顶点裁剪空间 w 不同时，默认 `smooth` 使用 `C_P = (Σ λ_i C_i/w_i)/(Σ λ_i/w_i)`，λ 是屏幕空间重心权重。这样避免透视投影后纹理等属性扭曲；w 全相同则退化成普通加权和。
-GLSL 330 的阶段间接口应保持相应限定符一致；整数类型的片段输入使用 `flat`。因此“所有片段输入都插值”也不准确，uniform、内建输入与 `flat` 输入有各自规则。MSAA、`centroid` 等还会影响插值采样位置，本节先按普通采样理解。
-[Khronos：GLSL 类型限定符](https://wikis.khronos.org/opengl/Type_Qualifier_%28GLSL%29)
-[Khronos：GLSL 规范](https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.4.60.pdf)
-## 文件流的异常掩码
-教程要求流在特定错误状态出现时通过异常报告。
-```cpp
-vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-```
-`std::ifstream` 从 `std::basic_ios` 继承该函数。`exceptions()` 无参数版本查询掩码，有参数版本设置掩码；掩码类型为 `std::ios_base::iostate`，这些状态常量可以组合。
-### 状态位与异常策略分开保存
-流的 `rdstate()` 表示“现在发生了什么”；`exceptions()` 表示“哪些状态需要抛异常”。默认异常掩码为 `goodbit`，即 0，因此一般流错误只设置状态位，程序通过 `if (!file)` 等判断，不会因为这些状态自动抛出 `ios_base::failure`。
-
-| 状态 | 含义 | 当前掩码是否覆盖 |
-|---|---|---|
-| `goodbit` | 值为 0，未设置错误状态 | 无需处理 |
-| `failbit` | 操作未成功，例如打开文件失败、格式化读取转换失败 | 是 |
-| `badbit` | 流完整性/底层 I/O 相关的严重失败 | 是 |
-| `eofbit` | 输入操作发现到达末尾 | 单独出现时否 |
-
-注意 `fail()` 查询函数检测的是 `failbit` 或 `badbit`，不等于仅检查名字相同的 `failbit`。
-### 着色器加载中的作用
-开启该掩码后，路径错误导致 `open()` 失败时会抛异常，程序进入 `catch`，能及早区分文件加载失败与后续 GLSL 编译失败。否则未检查的文件错误可能导致空源码继续进入编译，产生误导性着色器日志。
-```cpp
-std::ifstream shader_file;
-try {
-    shader_file.exceptions(std::ios::failbit | std::ios::badbit);
-    shader_file.open(shader_path);
-    // 在此读取源码；读法及参与读取的其他流也需要各自检查错误。
-} catch (const std::ios_base::failure& error) {
-    std::cerr << "shader file: " << shader_path << ": " << error.what() << '\n';
-    // 停止该着色器的后续初始化，或将错误继续向上传递。
+void main() {
+    gl_Position = vec4(aPos, 1.0);
+    vertexColor = aColor;
 }
 ```
-设置掩码本身也可能抛异常：如果流已经带有新掩码覆盖的错误位，调用 `exceptions(mask)` 会立即检查当前状态。因此将配置也放进 `try` 更完整；重新尝试操作时还需明确处理既有状态，必要时 `clear()`，它清除状态位，不修复路径或底层故障。
-没有把 `eofbit` 加入掩码并不保证“读到末尾永不抛异常”。例如循环 `getline` 在最后一次未读到任何字符时通常同时设置 `eofbit` 与 `failbit`，后者已经在掩码中。按期望次数读取、循环读到 EOF 与读取整个流缓冲应分别设计错误处理，不要把正常结束误判为加载失败。
-掩码仅作用于该流对象，不会传播给 `std::stringstream`，也不会自动检查 GLSL 语法或保证 `rdbuf()` 转移已成功读取所有内容。文件加载、着色器编译、程序链接仍是三个需要各自检查的步骤。
-[C++ 标准草案：流状态与异常掩码](https://eel.is/c++draft/iostate.flags)
-## 片段、填充与插值的关系
-### 片段是什么
-片段是某个图元覆盖某个帧缓冲位置时产生的待处理数据，可以先理解为“这个三角形对某个像素的一次候选贡献”。它包含窗口位置、深度、覆盖信息，以及提供给片段着色器的输入值等，不是最终屏幕像素，也不是切下来的微小几何三角形。
-像素是帧缓冲中的位置/存储单元；片段是处理过程中的候选数据。两个三角形覆盖同一位置会分别产生片段，深度测试可能丢弃其中一个，混合也可能组合多个片段的颜色。因此多个片段可能影响一个像素，某个片段也可能完全不改变像素。
-先按无 MSAA 的简单情况理解：三角形覆盖若干像素中心，光栅化为这些位置生成片段。MSAA 时一个像素有多个采样位置，片段带有采样覆盖信息，不能直接套用“一片段等于一个像素/一个采样”的对应关系。
-[Khronos：Fragment](https://wikis.khronos.org/opengl/Fragment)
-### 为什么三个点会产生内部区域
-只输入三个点并不必然产生填充三角形；关键在于绘制调用选择了 `GL_TRIANGLES`，它明确要求把每组三个顶点解释成具有内部区域的三角形图元。默认多边形模式 `GL_FILL` 要求光栅化其覆盖区域，而不仅绘制三个点或三条边。
-这是 API 对“绘制三角形”的规定，正如调用绘制矩形接口不需要再手写扫描每一行像素的循环。驱动/硬件实现规范定义的覆盖规则，开发者提供图元、坐标、属性和着色器。
-
-| 选择 | 图元含义与典型结果 |
-|---|---|
-| `GL_POINTS` | 三个独立点，各自光栅化为点覆盖区域 |
-| `GL_LINE_LOOP` | 三条首尾连接的边，不填充内部 |
-| `GL_TRIANGLES` + 默认 `GL_FILL` | 一个填充三角形 |
-| `GL_TRIANGLES` + `glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)` | 三角形按线框光栅化；这是桌面 OpenGL 的配置 |
-“填充”与“插值”是两个不同任务：填充确定哪些位置属于三角形；插值计算这些位置处某些着色器输入的数值。绘制填充三角形不一定需要渐变颜色，可以在片段着色器中始终输出固定颜色，或者使用 `flat` 输入。
-### 代码哪里规定了内部属性
-在渐变示例中，顶点着色器的 `out vec3 vertexColor` 和片段着色器匹配的 `in vec3 vertexColor`，构成一个默认 `smooth` 的阶段间接口。这个默认限定符就隐含指定了插值规则，并不是只有显式写权重代码才算描述了内部行为。
-OpenGL 不会扫描 VBO 并自动判断某字段是颜色：位置必须由顶点着色器写入 `gl_Position`，颜色必须由应用的着色器代码传递和使用。插值机制只按数值及限定符处理变量，不知道它在业务中代表颜色、纹理坐标还是其他数据。
-也不会自动插值所有 CPU 顶点属性：某属性若未通过阶段间接口传到片段阶段，就不会仅因存入 VBO 而成为片段输入。片段着色器可以使用插值结果，也可以忽略它，输出固定值、纹理颜色或程序计算的图案。
-整体链路：三个顶点 → `GL_TRIANGLES` 组装图元 → 裁剪、透视除法、视口变换 → 光栅化判断覆盖 → 按接口限定符生成片段输入 → 片段着色器计算颜色 → 测试/混合/写帧缓冲。
-GLFW 负责创建窗口与上下文、交换缓冲、处理事件；将坐标映射到帧缓冲位置的是 OpenGL 的坐标变换与视口规则，不是 GLFW 替三维点计算二维坐标。
-因此可以将你的理解修正为：OpenGL 内建机制为图元的覆盖位置生成片段，并按声明的插值规则计算需要插值的输入；“封闭”不是触发条件，点和线也能产生片段，线的输入也可插值。
-[Khronos：光栅化](https://wikis.khronos.org/opengl/Rasterization)
-[Khronos：插值限定符](https://wikis.khronos.org/opengl/Type_Qualifier_%28GLSL%29)
-### Uniform 的只读边界
-可以把普通 uniform 理解为“CPU 应用通过 OpenGL API 更新、GLSL 着色器中只读的变量”，并补上一个关键特性：其值在本次绘制中供多次着色器执行共享，不随顶点/片段编号自动变化。
-这里的只读是语言接口规则，不表示某块物理内存从硬件层面对整个 GPU 永久只读；CPU 也不是直接解引用它的地址修改，而是调用 `glUniform*` 等接口设置程序参数。以后接触 UBO 等机制时还会有不同的存储与更新方式。
-## 练习：把位置当成颜色
-### 题目要求改变颜色来源
-第三题要求把位置属性作为一个自定义输出传到片段阶段，然后将它的三个分量直接用作 RGB；它不再使用原本的顶点颜色属性。下面是完整的两个着色器，适用于教程没有额外变换的三角形。
+```glsl
+// 片段着色器：读取当前位置已经插值好的颜色。
+#version 330 core
+in vec3 vertexColor;
+out vec4 FragColor;
+void main() {
+    FragColor = vec4(vertexColor, 1.0);
+}
+```
+OpenGL 按声明规则处理 `vertexColor`，变量的名字本身没有特殊意义。把其他浮点数据通过相同方式传递，也能进行相应插值，例如后面贴图时使用的纹理坐标。
+如果将片段中的赋值改成 `FragColor = vec4(1.0, 0.0, 0.0, 1.0)`，内部就统一为红色。图形仍被填充，但最终颜色由这句常量赋值决定。
+因此可以把流程拆开读：图元与填充规则确定片段 → 输入接口规定如何取得各片段的数据 → 片段着色器使用这些数据计算输出。直线也有插值，封闭与否并非关键条件。
+以后看到 `flat`，表示该输入直接取某个指定顶点的值，保持整片一致；看到 `smooth`，就是这里的默认平滑方式。先掌握默认例子，再按需要选择其他方式。
+## uniform 是什么？能理解为 CPU 可改、GLSL 中只读的变量吗？
+可以。它是应用通过 OpenGL 设置、着色器中只读的参数。一次绘制中的所有相关顶点和片段，都可以使用同一个值。
+假设想让整个三角形变绿，就在片段着色器里写 `uniform vec4 ourColor`，再把它赋给 `FragColor`。应用将 `ourColor` 设为绿色，这次绘制就使用该参数。下次改为蓝色，再画一次，就得到蓝色。
+对照刚才的顶点颜色：顶点属性提供“每个顶点各自的值”；uniform 提供“本次绘制共同使用的参数”。后面的变换矩阵、光源位置，也适合这样传入。
+“全局”表示它在 GLSL 的全局作用域声明，并属于这一份链接后的程序。某个阶段要使用它，仍须在该阶段声明；多个阶段的同名、类型兼容声明可以共享这个参数。两个不同程序各自保存自己的 uniform。
+“只需设置一次”表示设置后会保持原值。如果颜色不变，后面可以继续使用；如果时间或摄像机矩阵每帧变化，就每帧更新。重新成功链接程序后，应重新查询并设置需要的参数。
+## 为什么查询 uniform 前不用 use，更新前却需要？
+看两类函数的参数就容易理解：
+```cpp
+GLint location = glGetUniformLocation(program, "ourColor");
+glUseProgram(program);
+glUniform4f(location, 0.0f, 1.0f, 0.0f, 1.0f);
+```
+查询函数显式提供了 program，已经知道去哪个程序找。更新函数只有位置和新数值，要靠当前选择的程序确定目标，所以调用前先 `glUseProgram(program)`。
+程序应先成功链接，再查询位置。某个程序查到的 location 也只能按该程序的规则使用，它是参数编号，类似“在这份程序里找到这个变量的索引”。它与顶点属性的 location 是不同编号体系。
+这里解释的是教程使用的 `glUniform*`。较新版本还有显式指定程序的更新函数，当前先沿用教程的先 use、再更新即可。
+## 为什么声明了 uniform，却查不到位置？
+如果这个变量没有影响最终结果，着色器编译、链接过程可以去掉它。比如声明了 `ourColor`，但最后始终输出常量红色，那么这份程序运行时可能根本用不到 `ourColor`。
+此时 `glGetUniformLocation` 返回 `-1`。名称拼错或查错程序，也会造成查询失败，所以看到 `-1` 时先检查这几件事。
+特别注意：使用 `-1` 位置更新 uniform 时，更新会被忽略。这容易造成“代码执行了，颜色却没变”的现象。应用必须使用的参数，建议查询后检查；固定位置可以在链接成功后保存下来，随后直接更新。
+## glUseProgram 到底做了什么？
+它选择后续绘制使用哪份已链接的着色器程序。可以理解为：顶点数据已经准备好，现在告诉 OpenGL 接下来按哪套处理代码来画。
+```cpp
+glUseProgram(program);       // 选计算位置和颜色的程序。
+glBindVertexArray(vao);      // 选顶点的读取配置。
+glDrawArrays(GL_TRIANGLES, 0, 3); // 提交本次绘制。
+```
+选择程序后，这个选择会保持到下一次改变。教程每帧显式选择，便于在程序稍复杂后仍清楚本次绘制使用什么。你代码里的 `ourShader.use()` 就是对 `glUseProgram(ID)` 的简单封装。
+## 颜色为什么用零到一？一千六百万种颜色怎样算出来？
+先用常见的 8 位颜色理解：红、绿、蓝各有 256 个取值，组合起来有 `256 × 256 × 256 = 16,777,216` 种。这是“一千六百万”的来源。
+OpenGL 的许多浮点接口把每个通道表达为 0～1：0 表示没有该分量，1 表示单位强度。这样做插值和比例计算很方便，例如取一半颜色直接乘 0.5。内部计算也能保留比 8 位整数更细的结果，最终存入颜色缓冲时再按它的格式保存。
+RGBA 说的是四个通道，HEX 说的是十六进制写法，0～1 说的是数字范围。`vec4(1,0,0,1)` 本身也是 RGBA：红色，Alpha 为 1。Alpha 常用于表达透明程度，透明效果还需后续配置。
+红 `(1,0,0)` 加绿 `(0,1,0)` 得到黄 `(1,1,0)`，采用的是光的加色思路。三顶点插值通常使用总和为 1 的比例，所以各占一半得到 `(0.5,0.5,0)`，强度低于两个通道都为 1 的黄色。
+## 怎样把 RGBA 或 HEX 快速换成 OpenGL 的颜色？
+8 位 RGBA 的每个通道除以 `255.0f` 即可。例如 `(255,128,64,255)` 变成约 `(1,0.502,0.251,1)`。
+`#FF8040` 先拆成十六进制 FF、80、40，也就是十进制 255、128、64，再做同样的换算。下面把格式固定成 `0xRRGGBBAA`：
+```cpp
+constexpr unsigned int rgba = 0xFF8040FFu;
+glClearColor(((rgba >> 24) & 0xFFu) / 255.0f,
+             ((rgba >> 16) & 0xFFu) / 255.0f,
+             ((rgba >> 8) & 0xFFu) / 255.0f,
+             (rgba & 0xFFu) / 255.0f);
+```
+应用可以把它封装成辅助函数。八位 HEX 也有 `AARRGGBB` 的排列，先确认来源格式。来自设计工具的颜色通常还涉及 sRGB 编码，后面做颜色空间与正确光照时再处理；眼前的除以 255 只解决数值范围转换。
+## 练习第三题要做什么？为什么左下角是黑色？
+这题让位置数据同时承担颜色的来源。顶点着色器交出位置，片段着色器将插值后的位置的 x、y、z 当作 R、G、B。
 ```glsl
 // 顶点着色器
 #version 330 core
@@ -508,270 +338,456 @@ void main() {
     FragColor = vec4(vertexPosition, 1.0);
 }
 ```
-`gl_Position` 决定图元在哪儿；`vertexPosition` 是自定义数值输入，会插值后进入片段着色器；`FragColor` 将该输入重新解释为颜色。GPU 不要求位置与颜色语义不同，它们在这里都是浮点向量，语义来自程序如何使用值。
-它不是直接把 `gl_FragCoord` 当 RGB：后者是窗口坐标，以像素单位表达；`vertexPosition` 是传出的原始位置数据。本例无额外变换且所有 w 为 1，所以其插值结果数值恰好对应三角形中的原始平面坐标。
-### 负坐标如何变成黑色
-假设正常写入常见的无符号归一化颜色缓冲，且没有额外混合等影响，RGB 写入会被限制在 `[0,1]`。本例因此可按 `R = max(x,0)`、`G = max(y,0)`、`B = 0` 理解，因为坐标最大只有 0.5，无需讨论上界截断。
-负坐标在属性输入与插值时仍保持为负，GLSL 的 `vec4(...)` 也不会自动截断；截断发生在颜色进入相应帧缓冲处理/存储的环节。这与 `glVertexAttribPointer` 的 `normalized` 无关，后者的输入仍为 `GL_FLOAT`。
+沿用教程的三个位置 `(-0.5,-0.5,0)`、`(0.5,-0.5,0)`、`(0,0.5,0)`。左下角附近插值出来的 x、y 都为负，z 始终为 0。
+这时我们输出的是负的红、绿和零蓝色。写入教程常见的普通颜色缓冲时，负颜色被限制为 0，所以左下区域显示黑色。再逐点看：
 
-| 位置/插值值 `(x,y,z)` | 输出 RGB，截断后 | 结果 |
+| 内部某位置的插值坐标 | 当作颜色并限制到零到一后 | 显示倾向 |
 |---|---|---|
-| 左下顶点 `(-0.5,-0.5,0)` | `(0,0,0)` | 黑 |
-| 左下内部 `(-0.2,-0.2,0)` | `(0,0,0)` | 黑 |
-| 右下内部 `(0.2,-0.2,0)` | `(0.2,0,0)` | 红 |
-| 上部内部 `(-0.05,0.2,0)` | `(0,0.2,0)` | 绿 |
-| 上部内部 `(0.05,0.2,0)` | `(0.05,0.2,0)` | 红绿组合，偏绿 |
-| 顶点 `(0,0.5,0)` | `(0,0.5,0)` | 绿 |
-这些是连续几何位置对应的理论值；实际像素采样未必恰好落在顶点或某条边上。z 始终为 0，所以整个图形没有蓝色分量。所有位于三角形内部且 `x ≤ 0、y ≤ 0` 的位置均为黑色；不是整个左半边都黑，上部左侧只要 y 为正仍有绿色。
-题目的英文解释是在说：左下方的 x、y 都为负，作为 R、G 写入普通颜色缓冲后都变为 0；随着位置越过 x=0 或 y=0，对应分量才开始产生正颜色。它不是先把三个顶点的颜色截断再插值。
-顺序可验证：底边中点的插值位置为 `(0,-0.5,0)`，再截断得到黑色；若错误地先把左右端点截成 `(0,0,0)` 与 `(0.5,0,0)` 再插值，中点会得到 `(0.25,0,0)`，与本题真实流程不同。
-上述黑色解释针对常见无符号归一化帧缓冲；浮点颜色附件能够保存负数，不能把它推广为“GLSL 所有负数输出都会变成零”。
-[Khronos：帧缓冲颜色截断](https://wikis.khronos.org/opengl/Draw_Buffer_Blend)
-### 映射坐标以避免负分量
-如果希望将 `[-0.5,0.5]` 的 x、y 映射到 `[0,1]`，可显式使用 `FragColor = vec4(vertexPosition.xy + vec2(0.5), 0.0, 1.0)`。这不同于将通常的 `[-1,1]` 映射到 `[0,1]`，后者需要 `0.5 * position + 0.5`。
-练习的目标是观察“任意浮点属性都可以插值，位置也不例外”，并理解把坐标当颜色时，数值范围与颜色缓冲格式如何影响显示；它不是推荐实际项目用位置代替材质颜色。
-# 纹理
-## S、T 坐标轴与环绕方式
-S、T 是二维纹理坐标的第一、第二个轴，常写成 `(s,t)` 或 `(u,v)`；在 GLSL `vec2` 中也可用 `.x`、`.y` 访问。它们属于纹理空间，不是模型位置或窗口坐标轴。三维纹理还有 R 轴，该 R 是第三个坐标分量
-普通 `sampler2D` 使用归一化坐标：s 从 0 到 1 对应纹理第一维，t 从 0 到 1 对应第二维。可以先把它们理解为图片横向与纵向的比例位置，而不是像素编号。坐标与图像视觉上下方向的对应还取决于加载的行顺序、纹理上传和 UV 约定；OpenGL 不会读取文件格式中的“朝上”语义。
-纹理坐标可以超过 `[0,1]`，因此需要定义超出范围时如何采样。S 与 T 可独立配置，例如横向重复、纵向限制到边缘。配置的目的不是开启两根轴，而是明确每根轴的寻址规则。
+| `(-0.2,-0.2,0)` | `(0,0,0)` | 黑 |
+| `(0.2,-0.2,0)` | `(0.2,0,0)` | 红 |
+| `(-0.05,0.2,0)` | `(0,0.2,0)` | 绿 |
+| `(0.05,0.2,0)` | `(0.05,0.2,0)` | 红绿组合 |
+完整顺序是：顶点位置传出 → 在片段处插值 → 当作颜色输出 → 写入普通颜色缓冲时限制范围。位置在前面仍可保持负值。
+本例三角形内 x、y 同时小于等于 0 的区域为黑色，上部左侧 y 为正时仍有绿色。如果希望把原本的负值也显示为不同颜色，可以先把 `[-0.5,0.5]` 平移到 `[0,1]`，例如对 x、y 加 0.5 后再输出。
+这里的显示解释针对教程常见的颜色缓冲；后面若使用能保存负数的浮点颜色缓冲，需按相应格式重新判断。
+## 着色器为什么运行时编译？源码必须写死在 C++ 中吗？
+C++ 编译器将字符串当作字符数据处理。着色器交给 OpenGL 后，由实际运行机器的显卡驱动编译，才能适配该机器的 GPU 和驱动。
+因此通常在程序初始化时读取 GLSL、编译、链接，再进入绘制循环。初始化一次，后续绘制反复使用即可。
+可以把源码放到 `.vert`、`.frag` 等独立文件里，用文件流读取后传给 `glShaderSource`。这样有语法高亮、便于编辑，也避免长字符串挤在 C++ 源码里。文件后缀本身没有强制要求。
+## Qt 能用 qrc 保存 GLSL 吗？能在运行前编译吗？
+可以通过 qrc 保存，Qt 的 `QOpenGLShaderProgram` 也能直接读取资源路径。qrc 让文件跟着程序一起分发，省去运行时寻找外部文件的麻烦。
+例如在 `.qrc` 中添加两个文件：
+```xml
+<RCC>
+    <qresource prefix="/shaders">
+        <file alias="triangle.vert">Shaders/Triangle.vert</file>
+        <file alias="triangle.frag">Shaders/Triangle.frag</file>
+    </qresource>
+</RCC>
+```
+将 qrc 接入 Qt 项目后，在已有当前 OpenGL 上下文的初始化函数中读取：
 ```cpp
-// 假设 texture_id 已创建并有图像数据。
-glActiveTexture(GL_TEXTURE0);
+// program 为保存下来的 QOpenGLShaderProgram 对象。
+if (!program.addShaderFromSourceFile(QOpenGLShader::Vertex,
+        QStringLiteral(":/shaders/triangle.vert")) ||
+    !program.addShaderFromSourceFile(QOpenGLShader::Fragment,
+        QStringLiteral(":/shaders/triangle.frag")) || !program.link()) {
+    qWarning().noquote() << program.log();
+    return;
+}
+```
+这里展示的是 Qt 方案，当前 GLFW 项目未使用它。qrc 的构建把文件打包为资源；GLSL 仍在运行时交给驱动处理。
+如果目标是减少启动时的编译，可以再考虑两种办法：缓存已经编译好的程序；或先将 GLSL 编译成 SPIR-V 这种中间代码。缓存可能随驱动环境变化而失效；SPIR-V 路径需要 OpenGL 4.6 或相应扩展，并且运行时仍需驱动生成可执行程序。当前先采用“独立文件＋初始化时编译”，就能解决源码写死的问题。
+## ifstream 的 exceptions 与 failbit、badbit 有什么作用？
+读着色器文件时，最先要处理的是路径错误、文件打不开等问题。C++ 文件流默认会记下错误状态，由应用自行检查。下面两句改为：出现指定错误时抛异常，让 `catch` 处理。
+```cpp
+vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+```
+`exceptions(...)` 设置的是“哪些错误要抛异常”的规则，常称异常掩码。`|` 是按位或，表示两种情况都关注，只出现其中一种也符合规则。
+
+| 状态 | 可以怎样理解 |
+|---|---|
+| failbit | 本次操作没完成，例如打开文件失败或读取格式不匹配 |
+| badbit | 底层读写等使流无法正常工作的严重错误 |
+| eofbit | 读取发现已经到达文件末尾 |
+例子中的掩码包含前两项，通常抛出 `std::ios_base::failure`。可以把设置和读取一起放进 `try`：
+```cpp
+std::ifstream file;
+try {
+    file.exceptions(std::ios::failbit | std::ios::badbit);
+    file.open(shader_path);
+    // 继续读取文件内容。
+} catch (const std::ios_base::failure& error) {
+    std::cerr << shader_path << ": " << error.what() << '\n';
+    // 文件加载失败，停止本次着色器初始化。
+}
+```
+如果设置掩码时流已经有对应错误，设置操作本身也可能抛异常。循环读到结尾时，也可能同时出现 eofbit 和 failbit，因此“没有把 eofbit 加进去”仍需配合具体读法判断。
+这里处理文件读写。文件读成功后，GLSL 的编译与链接还要分别检查日志，这样错误才容易定位。
+## 可以动手验证什么？
+先将片段颜色在“固定常量、uniform、顶点输出插值”之间切换，观察统一颜色与渐变的区别。再完成位置当颜色的练习，选择一个内部坐标，先手算它的 RGB，再对照画面。
+# 纹理
+## S、T 轴是什么？为什么分别设置它们？
+先把一张图片想成一张贴纸。我们给物体的每个顶点指定它要对应贴纸的哪个位置，这个位置就是纹理坐标。
+二维纹理坐标有两个数：S 表示第一维，T 表示第二维。通常可以先按图片横向、纵向理解，也常写作 U、V。在 GLSL 里经常用 `vec2` 保存。
+对教程的普通二维纹理，坐标 0～1 覆盖图片的完整范围，例如 `(0.5,0.5)` 在中间。图片上下方向还与加载时的行顺序有关，所以示例会出现翻转图像的设置。
+现在假设 S=1.2，已经越过一张图片的范围。此时可以让图片继续重复，也可以停在边缘。`GL_TEXTURE_WRAP_S` 就是设置沿 S 方向怎样处理，`GL_TEXTURE_WRAP_T` 单独设置 T 方向。
+```cpp
 glBindTexture(GL_TEXTURE_2D, texture_id);
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 ```
-这里修改当前激活纹理单元中绑定到 `GL_TEXTURE_2D` 的纹理对象。环绕参数属于纹理对象，不是整个 OpenGL 的全局模式；切换对象可以使用不同配置。同一个对象绑定到多个单元时共享其对象参数。单独的 sampler object 可提供并覆盖这些采样参数，这是后续扩展能力。
+这可以理解为横向允许重复铺贴，纵向超出后使用边缘。若都设置 `GL_MIRRORED_REPEAT`，相邻的重复图像会交替镜像：S=1.2 大致对应镜像后的 S=0.8。
 
-| 环绕模式 | 超范围时的行为 | 直观用途 |
-|---|---|---|
-| `GL_REPEAT` | 周期重复，沿每段整数区间重复图像 | 平铺地面、墙面 |
-| `GL_MIRRORED_REPEAT` | 相邻周期交替正向、反向 | 镜像平铺 |
-| `GL_CLAMP_TO_EDGE` | 限制在边缘可采样位置 | 防止采到对侧纹理 |
-| `GL_CLAMP_TO_BORDER` | 超范围采样使用边界颜色，边缘过滤可能混合该颜色 | 纹理外的区域使用指定颜色 |
-例如 s=1.2，重复模式近似对应 s=0.2，镜像重复近似对应 s=0.8；t 仍独立处理。实际采样还受过滤方式和纹素中心位置影响。默认环绕模式是 `GL_REPEAT`，可以依赖默认值，但显式设置更清楚。
-环绕方式与过滤方式不同：环绕决定如何处理坐标边界，过滤决定如何从周围纹素计算采样结果。
-[Khronos：glTexParameter](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexParameter.xhtml)
-## 纹理对象、单元与采样器
-### 三层映射
-纹理对象保存图像及相关参数；纹理单元是 OpenGL 上下文中的带编号的绑定槽位；GLSL 的 `sampler2D` 是不透明采样器类型的 uniform，它的值选择要使用的纹理单元。
-可将映射理解为：`sampler uniform → 纹理单元编号 → 该单元的 GL_TEXTURE_2D 绑定 → 纹理对象`。纹理单元不是图像中的纹素，不是 uniform location，也不是顶点属性 location。
-纹理单元在逻辑上有不同纹理目标的绑定；`sampler2D` 使用对应单元的二维纹理绑定。初学阶段推荐每个使用中的单元只安排一种匹配的采样器类型，避免同一单元被不兼容的 active sampler 类型引用。
-### 两张纹理的完整连接
+| 方式 | 超出图片范围后怎样处理 |
+|---|---|
+| GL_REPEAT | 接着重复图片 |
+| GL_MIRRORED_REPEAT | 接着重复，下一份翻转方向 |
+| GL_CLAMP_TO_EDGE | 使用边缘的颜色 |
+| GL_CLAMP_TO_BORDER | 使用设置的边界颜色；边缘过滤也可能混入它 |
+三维纹理还有第三个方向 R，与三维位置用三个分量表达类似。S/T/R 描述取图的位置，和模型位置的 x/y/z 分开使用。
+这些参数设置到当前绑定的纹理对象上，保留供后续使用。物体上的纹理坐标决定去哪里取颜色，环绕规则决定坐标超出时怎么办。
+## 什么是纹理对象、纹理单元和 sampler？
+先考虑片段着色器要同时使用两张图片：箱子图片与笑脸图片。应用里有两个纹理对象编号，着色器怎样知道某个变量对应哪张图？
+OpenGL 用一层带编号的连接位置完成关联，称为纹理单元。我们把箱子纹理绑定到单元 0，把笑脸纹理绑定到单元 1，再告诉着色器两个 sampler 分别使用 0 和 1。
+`sampler2D` 就是 GLSL 中用来查询二维纹理的变量类型。它通过一个整数选择纹理单元，单元里记录了本次要用的纹理对象。
+```text
+着色器的 boxSampler  → 单元 0 → 箱子纹理对象 → 图片数据
+着色器的 faceSampler → 单元 1 → 笑脸纹理对象 → 图片数据
+```
+纹理对象保存图像；纹理单元记录连接；sampler 让着色器沿这个连接取图。这三个名字对应三份不同工作，理解这条链后再读 API 就更容易。
+## “激活纹理”是什么意思？为什么先 Active 再 Bind？
+`glActiveTexture` 选择接下来操作哪个纹理单元。`glBindTexture` 的参数里没有单元编号，所以用这个先前的选择确定要改哪里。
 ```cpp
-// 初始化程序参数：program 已成功链接，location 已确认有效。
-const GLint base_location = glGetUniformLocation(program, "baseTexture");
-const GLint detail_location = glGetUniformLocation(program, "detailTexture");
+glActiveTexture(GL_TEXTURE0);                // 接下来操作单元 0。
+glBindTexture(GL_TEXTURE_2D, texture1);      // 单元 0 的二维纹理是 texture1。
+glActiveTexture(GL_TEXTURE1);                // 接下来操作单元 1。
+glBindTexture(GL_TEXTURE_2D, texture2);      // 单元 1 的二维纹理是 texture2。
+```
+执行完以后，两个单元的连接同时保留。最后选中单元 1，只是决定后续纹理设置操作针对哪里，绘制时仍可访问单元 0 的图片。
+如果从始至终都操作单元 0，然后连续绑定 texture1、texture2，单元 0 的记录就被第二次绑定覆盖，最终只有 texture2 留在这个单元。
+图像上传和参数设置也沿用这个规则：先选单元、绑定对象，再调用 `glTexImage2D`、`glTexParameteri`。已经选对单元时可以省略重复选择，但学习时显式写出来更便于追踪。
+## 为什么 sampler 使用 glUniform1i？它与多张纹理有什么关系？
+因为 sampler 需要的是一个整数纹理单元编号，所以用整数形式的 uniform 更新函数。`glUniform1i` 名字中的 1 表示一个数，i 表示整数。
+```cpp
 glUseProgram(program);
-glUniform1i(base_location, 0);   // sampler 选择单元 0。
-glUniform1i(detail_location, 1); // sampler 选择单元 1。
-
-// 绘制前：把对象绑定到对应单元。
-glActiveTexture(GL_TEXTURE0);
-glBindTexture(GL_TEXTURE_2D, base_texture_id);
-glActiveTexture(GL_TEXTURE1);
-glBindTexture(GL_TEXTURE_2D, detail_texture_id);
-glBindVertexArray(vao);
-glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr);
+glUniform1i(glGetUniformLocation(program, "boxSampler"), 0);
+glUniform1i(glGetUniformLocation(program, "faceSampler"), 1);
 ```
+现在 boxSampler 沿单元 0 取图，faceSampler 沿单元 1 取图。即使只用一张图片，也采用相同的整数设置方式。这里传 0、1，传入的内容是单元编号；纹理对象的编号只在 `glBindTexture` 中使用。
+教程写 `glUniform` 时是在统称一组更新函数。具体调用要按数据类型选择，比如四个浮点数用 `glUniform4f`，一个整数用 `glUniform1i`。C API 用函数名区分这些类型，多纹理则通过多个 sampler 与单元的连接实现。
+`GL_TEXTURE0` 这个枚举用于选择单元，uniform 接收的则是整数 0。避免把 `GL_TEXTURE0` 或 texture1 的对象编号当作 sampler 的值。
+两个连接建好以后，片段着色器可以这样组合它们：
 ```glsl
-#version 330 core
-in vec2 TexCoord;
-uniform sampler2D baseTexture;
-uniform sampler2D detailTexture;
-out vec4 FragColor;
-void main() {
-    vec4 base = texture(baseTexture, TexCoord);
-    vec4 detail = texture(detailTexture, TexCoord);
-    FragColor = mix(base, detail, 0.2);
-}
+uniform sampler2D boxSampler;
+uniform sampler2D faceSampler;
+// 假设 TexCoord 是传入的纹理坐标，在 main() 中：
+FragColor = mix(texture(boxSampler, TexCoord),
+                texture(faceSampler, TexCoord), 0.2);
 ```
-两个采样调用使用相同 UV，但查询不同单元绑定的图像；也可以给它们不同 UV。`texture` 按坐标、环绕和过滤等规则取得颜色，`mix` 是本例手写的组合规则，OpenGL 不会自动混合所有绑定的纹理。
-
-| 名称/数字                      | 含义                             |
-| -------------------------- | ------------------------------ |
-| `base_location`            | 程序中 `baseTexture` 的 uniform 位置 |
-| `glUniform1i(..., 0)` 中的 0 | 纹理单元编号                         |
-| `GL_TEXTURE0`              | 传给 `glActiveTexture` 的枚举       |
-| `base_texture_id`          | 纹理对象句柄                         |
-不能把纹理对象 ID 或 `GL_TEXTURE0` 枚举值传给 `glUniform1i` 作为纹理单元编号。选择单元 i 时，分别使用 `glActiveTexture(GL_TEXTURE0 + i)` 与 `glUniform1i(location, i)`。
-`glActiveTexture` 只选择后续绑定/参数操作针对哪个单元，不表示“绘制时只有该单元激活”。即使最后选择的是单元 1，着色器也可以同时访问单元 0 和 1 中的绑定对象。
-### 为什么是 glUniform1i
-不存在一个名为 `glUniform` 的通用函数可供调用，它是整个 `glUniform*` 函数族的统称。`1` 表示设置一个标量分量，`i` 表示使用有符号整数参数；这里不是“第一个纹理”，也不是额外增加纹理序号参数的特殊函数。
-GLSL sampler 的普通 uniform 值以整数纹理单元编号配置，规范要求使用 `glUniform1i` 或对应的整数数组形式 `glUniform1iv`。即使只用一张纹理，也应使用这个类型对应的接口；这与“片段着色器是否用多张纹理”无关。普通 `uniform int` 同样使用 `glUniform1i`。
-OpenGL 的 C API 用不同函数名表达参数类型和分量数量，不能像 C++ 那样只靠重载区分，这是命名背景；真正决定这里选 `1i` 的原因是 sampler 的整数单元选择语义，而不是多纹理需要函数重载。
-无显式初始化的 sampler uniform 在成功链接后默认值为 0；OpenGL 初始活动纹理单元也是 0。这是初始简单示例只绑一张纹理到单元 0 时可能正常显示的原因，不表示纹理对象自身天然属于单元 0。
-sampler→单元的值保持到更新/重新链接；单元→对象的绑定是上下文状态，可能被后续代码改变。绘制时需确保两层映射正确，不需要每帧重复设置未变化的 sampler uniform。纹理数量的阶段限制可查询 `GL_MAX_TEXTURE_IMAGE_UNITS` 等，组合单元限制查询 `GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS`，不能无限占用。
-[Khronos：GLSL Sampler](https://wikis.khronos.org/opengl/Sampler_%28GLSL%29)
-[Khronos：glActiveTexture](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glActiveTexture.xhtml)
-[Khronos：glUniform](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUniform.xhtml)
-## 着色器阶段职责总览
-着色器是 GPU 执行的程序阶段，不是图像或缓冲区。所有阶段可以读取声明的 uniform 和按能力使用纹理等资源，但其主要输入、执行单位与输出不同。
-
-| 阶段 | 主要输入/执行单位 | 主要职责 | 主要输出 | 版本与本项目关系 |
-|---|---|---|---|---|
-| 顶点着色器 VS | 一个顶点的属性，如位置、颜色、UV，以及 uniform | 位置变换，计算需要传递的属性 | 通常写 `gl_Position`，并写自定义 `out`；有后续顶点处理阶段时位置还可继续处理 | 教程当前使用 |
-| 细分控制着色器 TCS | 一个 patch 的控制点，按输出控制点执行 | 设置细分级别、调整控制点和 patch 数据 | 控制点数组、patch 数据、`gl_TessLevelOuter/Inner` | OpenGL 4.0，当前未使用 |
-| 细分求值着色器 TES | patch 控制点、patch 数据与 `gl_TessCoord` 指定的生成位置 | 根据参数位置求曲面上的顶点 | 顶点位置与自定义属性 | OpenGL 4.0，当前未使用 |
-| 几何着色器 GS | 一个图元的一组顶点，必要时包含邻接顶点 | 可发出零个或多个输出图元 | 通过 `EmitVertex`、`EndPrimitive` 发出位置与属性 | OpenGL 3.2，当前未使用 |
-| 片段着色器 FS | 光栅化生成的片段输入，如插值 UV、颜色和 `gl_FragCoord` | 纹理采样、光照、计算颜色，可丢弃片段 | 颜色附件输出，可写 `gl_FragDepth` 等 | 教程当前使用 |
-| 计算着色器 CS | 工作组/调用编号，以及显式绑定的缓冲、图像等资源 | 通用并行计算 | 缓冲/图像等显式写入结果，没有固定 `gl_Position` 或片段颜色输出链路 | OpenGL 4.3，独立 dispatch，当前未使用 |
-细分中的固定功能生成器根据细分级别生成参数域中的点和图元，TES 再求真实位置；不是 TCS 自己直接把曲面变成最终像素。计算着色器由 `glDispatchCompute` 启动，不插在三角形的顶点到片段链路中。
-可选阶段未使用时会被跳过，不是自动运行一份“默认几何着色器”。也不要将“没有可选阶段”理解为删除了光栅化等固定功能阶段。
-### 当前纹理示例的数据链路
-```text
-CPU: VBO 保存位置和 UV，VAO 描述布局，EBO 指定顶点编号
-    ↓ 顶点属性读取
-VS: aPos → gl_Position；aTexCoord → TexCoord（out）
-    ↓ 图元装配、裁剪、透视除法、视口变换、光栅化与插值
-FS: TexCoord（in）+ sampler uniform 指向的纹理 → texture(...) → 颜色 out
-    ↓ 深度/模板测试、混合等处理
-帧缓冲 → 窗口呈现
-```
-VS 输入的 UV 是逐顶点数据，FS 输入的 UV 是按片段位置计算的插值结果；sampler uniform 的单元编号不被插值。实际测试顺序允许优化，例如提前深度测试。
-顶点着色器不是只负责“3D 转 2D”，其输出首先是裁剪空间位置；片段着色器也不是直接改屏幕像素，其颜色输出还可能被丢弃、混合或量化。图元装配、裁剪、视口和光栅化不是这两个着色器中手写执行的代码。
-GLSL 不会因变量名叫 `color` 就自动显示颜色，也不会因变量名叫 `uv` 就自动采样图像；开发者必须通过接口声明和计算语句明确其用途。
-[Khronos：渲染管线](https://wikis.khronos.org/opengl/Rendering_Pipeline_Overview)
-[Khronos：着色器阶段](https://wikis.khronos.org/opengl/Shader_Resource_Limit)
-# 变换
-## 为什么三维变换通常使用四阶矩阵
-三维旋转与缩放可以用 `3×3` 矩阵表示，但仅用它乘 `(x,y,z)` 无法表示一般平移：任何线性矩阵都把零向量映射到零向量，而平移必须能把原点移动到其他位置。
-解决办法是引入齐次坐标，把位置写成 `(x,y,z,1)`，用 `4×4` 矩阵把旋转、缩放、平移统一起来。多个变换可以先相乘，再对每个顶点做一次组合矩阵乘法；投影也可使用同样的四维接口。
-不使用齐次矩阵也能实现平移，例如显式计算 `A * position + translation`；使用四阶矩阵是统一表示与组合的便利，不是三维世界真的多出一个空间方向。仅处理法线或纯旋转时仍经常使用三阶矩阵；二维齐次变换则通常使用三阶矩阵。
-本章采用列向量与 `p' = M p` 的数学约定；矩阵在内存中按列还是按行存储，是另一个问题，不能仅凭存储顺序判断变换顺序。
-## 第四行、第四列与 w
-### 仿射矩阵的结构
-旋转、缩放、平移组合得到的典型仿射矩阵可以写成：
-```text
-    [ a00 a01 a02 tx ]     [ x ]
-M = [ a10 a11 a12 ty ], p= [ y ]
-    [ a20 a21 a22 tz ]     [ z ]
-    [  0   0   0   1 ]     [ w ]
-```
-左上三阶部分控制旋转、缩放等；第四列的 tx、ty、tz 提供平移；第四行计算新的 w。两者不要混淆。一般第四行 `(a,b,c,d)` 表示 `w' = ax + by + cz + dw`；仿射变换采用 `(0,0,0,1)`，保证 `w'=w`。
-位置通常取 w=1，因此 `x' = a00*x + a01*y + a02*z + tx`；方向取 w=0，因此不会加上 tx、ty、tz。物体移动不会改变“向右”这个方向，齐次表示自然体现了这点。
-对于有限齐次点，w 非零时对应三维位置 `(x/w,y/w,z/w)`；`(x,y,z,w)` 与整体乘上任意非零倍数后的坐标表示同一个点。w=0 表示方向/无穷远点，不能按有限位置直接除以零。
-### 缩放为何保留最后一个一
-普通缩放矩阵为 `diag(sx,sy,sz,1)`，对位置 `(x,y,z,1)` 得到 `(sx*x,sy*y,sz*z,1)`。最后的 1 保持位置表示与齐次尺度不变，使前三项直接对应所需空间缩放。
-教程“缩放 w 无意义”应理解为“w 不是第四条空间轴，因此普通三维缩放不应该把它作为空间分量一起缩放”，而不是“改变 w 永远没有影响”。例如只把最后的 1 改成 2，结果是 `(x,y,z,2)`，除以 w 后位置变成 `(x/2,y/2,z/2)`。
-若将单位矩阵四个对角项都改成 3，得到 `(3x,3y,3z,3)`，除以 w 后仍是 `(x,y,z)`，反而没有完成三维点的放大。这就是通常只缩放前三项的原因。
-投影矩阵会有意改变第四行，例如常见透视投影使 `w'=-z_view`，随后透视除法产生近大远小效果。仿射模型变换保持 w，并不意味着整个渲染链路始终保持 w=1。
-[Khronos：坐标变换](https://www.khronos.org/opengl/wiki_opengl/index.php/Coordinate_Transformations)
-[MIT：齐次坐标](https://visionbook.mit.edu/homogeneous_coordinates.html)
-## 右手坐标系与欧拉角
-右手坐标系是三个坐标轴的方向约定：正 x 与正 y 的叉积指向正 z。常用手势是右手食指指向 x、中指指向 y、拇指指向 z；判断绕轴正旋转时，将右手拇指指向轴的正方向，其余手指弯曲方向为正角度方向。
-教程常用观察空间中 x 向右、y 向上，摄像机朝负 z 看。OpenGL 并不替应用强制所有模型坐标都使用同一种坐标系；空间约定、投影与面绕序需要相互一致，也不能把观察空间与投影后的 NDC 方向混为一谈。
-欧拉角用按指定顺序执行的三个轴旋转描述朝向。游戏中常见 yaw/pitch/roll 分别表达左右转头、抬头低头、侧倾，但对应哪个数学轴取决于引擎坐标约定。
-严格数学术语中，使用三个不同轴的 xyz 等称为 Tait–Bryan 角，重复首尾轴的 zxz 等称为经典欧拉角；图形编程中常统称欧拉角。学习时先记住：三个角本身不够，还必须知道轴顺序、内旋/外旋和正方向约定。
-朝向是“现在面对哪里、上方在哪里”；它不是完整的旋转历史，转过一整圈可能回到同一朝向。
-## 内旋、外旋与顺序
-外旋绕固定的世界轴旋转；内旋绕随物体朝向改变的局部轴旋转。两者的旋转顺序通常都会影响结果，三维旋转一般不满足交换律；绕相同轴或特殊角度等情况可能例外。
-采用右手系、列向量和主动旋转，给方向 `(0,0,1)` 先绕固定 X 轴转 90°，再绕固定 Y 轴转 90°，结果为 `(0,-1,0)`；反过来先 Y 后 X，结果为 `(1,0,0)`。两个合法操作序列得到不同结果，这本身不是万向节锁。
-相同约定下，外旋先 X、再 Y、最后 Z，对应 `R = Rz * Ry * Rx`，最右边的矩阵先作用于向量。内旋依次绕自身 X、Y、Z，则对应 `R = Rx * Ry * Rz`。
-相同角度下，内旋 X→Y→Z 与外旋 Z→Y→X 可以描述同一个最终朝向；这是转换约定时常用的对应关系，不是说任意交换顺序都等价。
-若 R 把局部坐标变成世界坐标，世界轴增量旋转 ΔR 用 `R_new = ΔR * R`，局部轴增量旋转用 `R_new = R * ΔR`。代码中的前乘/后乘需结合这个约定理解。
-## 万向节锁究竟失去了什么
-“万向节死锁”更常称万向节锁（Gimbal Lock），它不是线程互相等待的死锁。可以想象三个套在一起的旋转环：某个姿态下，第一和第三个环的轴对齐，原本三个独立旋转控制中，有两个开始产生同一种方向的旋转效果。
-最直白的解释是：本来有三个不同方向的旋转旋钮，某个姿态下其中两个旋钮变成控制同一个方向，于是无法再用三个独立旋钮稳定控制朝向。
-需要纠正“欧拉角无法描述物体的旋转状态”：欧拉角仍能表示该姿态，也能表示所有朝向；问题是该处表示不唯一、局部控制退化，附近角度反求或插值可能跳变。物体本身没有失去旋转能力，失去的是这种参数化的独立性。
-以 `R = Rz(yaw) * Ry(pitch) * Rx(roll)` 为例，pitch=90° 时，最终姿态只依赖 yaw 与 roll 的差，不再独立依赖两个角。此时 `(yaw,roll)=(0°,0°)` 与 `(30°,30°)` 会得到相同朝向；尝试分别微调它们，效果相互重叠，缺少一个独立的局部旋转控制方向。
-90° 锁点是上述三个不同轴约定的例子；其他欧拉角顺序的锁点可能不同，不能推广为“任何旋转到了 90° 就锁死”。也不是连续相乘旋转矩阵次数多就必然产生锁：直接用旋转矩阵保存、更新朝向可以避免欧拉角参数化的该问题。
-四元数和矩阵转回欧拉角时，锁点的角度不唯一仍然存在，这是转换目标表示的限制。
-## 四元数为什么避免万向节锁
-这里的正确名称是四元数（Quaternion），不是普通四元组。用于旋转的是单位四元数，包含四个数，但有长度为 1 的约束，因此仍表示三个旋转自由度，并不是凭空增加一个空间轴。
-可以先理解为“把整体朝向打包成一个旋转对象”，不再靠三个按固定顺序排列的角度来保存朝向。绕单位轴 `(ax,ay,az)` 旋转 θ 时，常用表示为 `q = (cos(θ/2), ax*sin(θ/2), ay*sin(θ/2), az*sin(θ/2))`；库的分量顺序可能不同。
-单位四元数没有欧拉角那种“两个角度的有效轴在某姿态重合”的参数化锁点。使用四元数乘法积累整体旋转，不需要在每次更新时先拆成 yaw/pitch/roll，因此可以穿过抬头 90° 等朝向而不丢失独立旋转控制。
-它并没有让旋转满足交换律：世界增量与局部增量仍分别涉及前乘与后乘，顺序仍有影响。实际代码通常保持单位长度，绘制时转为旋转矩阵并与模型、视图、投影矩阵组合。
-`q` 与 `-q` 表示同一朝向，所以四元数也不是一一对应的全球唯一坐标；它通过带约束的四参数表示避免欧拉角的奇异控制问题。使用 slerp 插值时通常还要处理符号以选择适当路径。
-若先累计三个欧拉角，再每帧转成四元数，而输入控制仍受欧拉角锁点约束，并不会仅因最终类型叫 quaternion 就自动解决控制问题。相反，直接用单位四元数保存状态并应用增量旋转，才能发挥这种表示的作用。
-轴角/旋转矩阵本身也可以表示锁点姿态，教程将“一系列旋转矩阵复合”直接归因于万向节锁并不严谨；问题应归因于欧拉角顺序参数化，而不是矩阵乘法这项运算。
-[NASA JPL：旋转、欧拉角与四元数](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/rotation.html)
-# 纹理示例的对象与状态追踪
-## 生成、绑定、上传分别做什么
-OpenGL 的对象由驱动管理，C++ 中的 `GLuint` 只是对象名称。生成名称、选择操作对象、分配并上传数据是三个不同步骤。绑定的本质是修改当前上下文中的状态，后续 API 通过该状态确定操作对象，而不是把数据移动到某个位置。
-下面逐行解释当前代码；执行前必须已有有效且当前的上下文，并完成 GLAD 加载。
-
-| 调用 | 完成的工作 | 尚未完成的工作 |
-|---|---|---|
-| `glGenVertexArrays(1, &VAO)` | 生成一个未使用的 VAO 名称并写入变量 | 不上传顶点、不指定属性布局、不绘制 |
-| `glGenBuffers(1, &VBO)` | 生成一个未使用的缓冲名称 | 不分配顶点数据存储 |
-| `glGenBuffers(1, &EBO)` | 再生成一个缓冲名称 | 不生成索引、不上传索引 |
-| `glBindVertexArray(VAO)` | 首次绑定创建该名称对应的 VAO 状态，并选择它作为当前 VAO | 还没有属性来源或有效 EBO 数据 |
-| `glBindBuffer(GL_ARRAY_BUFFER, VBO)` | 首次绑定创建缓冲对象状态，并将其选为当前 ARRAY_BUFFER | 还没有数据存储；此调用不记录 VAO 属性来源 |
-| `glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW)` | 为当前目标上的 VBO 分配/替换字节存储，并复制 CPU 数组内容 | 不知道哪些字段代表位置、颜色、UV |
-| `glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO)` | 创建/选择该缓冲，同时在当前 VAO 记录它作为索引来源 | 还没有索引存储 |
-| `glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW)` | 为该 EBO 分配/替换存储并复制索引字节 | 不自动判断索引类型、数量或图元模式 |
-VBO 与 EBO 都是普通 buffer object，`glGenBuffers` 没有“创建顶点缓冲专用类型”与“创建索引缓冲专用类型”的分支。用途由绑定目标及绘制时如何使用决定；VAO 是另一类对象，保存属性与索引来源状态。不同对象类型有不同名称空间，即使句柄整数恰好相同也不表示同一个对象。
-生成函数中的 1 是名称数量，`&VBO` 是写回名称的 CPU 地址。`glBufferData` 的 `size` 才是存储字节数；数据指针非空时复制源数据，调用返回后不要求原数组为该副本继续存活。存储物理位置由驱动决定，不能把调用直接等同于必然分配独立显卡显存。
-`GL_STATIC_DRAW` 是“数据不频繁修改、主要用于绘制”的使用提示，不是禁止修改的只读约束。再次 `glBufferData` 会替换存储；修改部分内容还可使用 `glBufferSubData`。
-### 初始化完成后的状态
-当前矩形的四个顶点各有八个 float：位置 3、颜色 3、UV 2。当前环境 float 为 4 字节，因此 VBO 上传 128 字节；EBO 六个 32 位索引上传 24 字节。
-之后的 `glVertexAttribPointer` 才将 VBO 读取规则记录到当前 VAO：属性 0 为位置，属性 1 为颜色，属性 2 为 UV；各自步长都是 32 字节，偏移分别为 0、12、24 字节。
-```text
-当前 VAO ── 属性 0/1/2 的来源与布局 ──→ VBO：四份顶点记录
-    └────── 索引来源 ─────────────→ EBO：0,1,3,1,2,3
-当前 ARRAY_BUFFER ──────────────→ VBO（上下文中的操作选择）
-```
-调用 `glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr)` 时，VAO 提供 EBO 与属性布局，绘制参数指定索引类型与范围，EBO 给出顶点编号，VBO 提供对应属性。这些初始化 API 都不会自行绘制。
-绑定不是 C++ 引用赋值，也不是把缓冲复制进 VAO。VAO 保存对象关联，修改 VBO 后绘制读取新内容。绑定关系通常保持到下一次修改；示例循环未再次绑定 VAO 之所以能工作，是因为初始化后没有其他代码切换当前 VAO。多网格场景建议绘制时明确绑定所需 VAO。
-绑定 0 通常表示解除相应绑定，不是删除；删除对象使用 `glDelete*`，且要遵守对象引用与上下文生命周期。尤其在当前 VAO 上解除 EBO 会清除其记录，而解除 ARRAY_BUFFER 不会清除已捕获的属性来源。
-[Khronos：glGenBuffers](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGenBuffers.xhtml)
-[Khronos：glBindBuffer](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindBuffer.xhtml)
-## 每帧清除颜色缓冲
-`glClearColor(r,g,b,a)` 设置清除颜色，不立即改变图像；`glClear(GL_COLOR_BUFFER_BIT)` 将当前绘制帧缓冲中选定的颜色缓冲清为该颜色。窗口默认双缓冲时，通常清除的是接下来要绘制的后缓冲，不是删掉纹理、顶点或着色器。
-每帧先清屏再绘制，相当于为这一帧准备干净背景。否则未被本帧图形覆盖的位置可能保留旧内容或未定义内容，导致残影等；交换缓冲不保证得到已经清好的画布，也不能假定它必定含上一帧内容。
+`texture` 按纹理坐标取颜色，`mix` 在这里取箱子颜色的 80% 与笑脸颜色的 20%。绑定多张图之后，如何组合颜色仍由片段着色器决定。
+初始 sampler 值通常为 0，初始活动单元也是 0，所以单图示例可能省略这一步仍正常显示。显式设置能让对应关系清楚，也便于增加第二张图。
+## 多级渐远纹理是什么？入门教程里怎样用到它？
+想象一张 1024×1024 的砖墙图，墙远离摄像机后在屏幕上只剩几十个像素。一个屏幕像素要代表原图中的大片区域，直接从原图取少量颜色，细节就容易跳动、闪烁。
+可以预先生成 512×512、256×256、128×128 等逐步缩小的版本。小版本提前汇总了较大区域的颜色，显示缩小的物体时使用合适版本，就更稳定。这组缩小图像叫作多级渐远纹理，即 mipmaps，保存在同一个纹理对象的不同层级里。
+教程先上传原图，再生成这些层级：
 ```cpp
-glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // 可在循环外设置，除非希望改变背景。
-// 每帧：
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
+             0, GL_RGB, GL_UNSIGNED_BYTE, data);
+glGenerateMipmap(GL_TEXTURE_2D);
+```
+接下来还要设置缩小时怎样取图：
+```cpp
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+```
+第一句让缩小时使用 mipmap：在合适的相邻两层取颜色并平滑组合。第二句设置放大时的普通线性过滤。着色器仍可调用同一个 `texture(sampler, uv)`。
+“距离远就选小图”是方便理解的说法。实际选择还看图片在屏幕上被压缩了多少，物体的倾斜角度和纹理坐标缩放也会影响它。
+结合本项目：`src/textures/textures_combined.cpp` 中两张图都调用了 `glGenerateMipmap`，但目前缩小过滤使用 `GL_LINEAR`。这会继续从基础层取图；生成的小层级尚未用于普通缩小采样。要观察 mipmap，需要使用带 `MIPMAP` 的缩小过滤设置。
+也就是说，生成层级、选择使用这些层级，是教程中两个分开的步骤。进入三维场景后，拉远或倾斜物体比较效果会更明显。
+## 为什么每帧要调用 glClear？
+当我们绘制一个移动的矩形时，本帧只会覆盖矩形当前所在的区域。其他区域该是什么颜色，需要先确定。
+`glClearColor` 选择背景颜色，`glClear(GL_COLOR_BUFFER_BIT)` 用这个颜色清除当前要绘制的颜色缓冲，相当于为这一帧准备一张干净画布。
+```cpp
+glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // 背景不变时可设置一次。
+// 每一帧：
 glClear(GL_COLOR_BUFFER_BIT);
-// 在此绘制本帧图形。
+// 接着绘制当前帧的物体。
 glfwSwapBuffers(window);
 ```
-只清颜色不会清深度或模板；三维深度测试场景通常使用 `GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT`。清除受裁剪测试和写掩码等状态影响，因此“清整屏”是假设这些状态允许全范围写入；它不靠当前着色器绘制，也不受视口范围直接限制。
-如果每帧保证完整覆盖所有需要的颜色位置，或明确设计累积绘制，可以不清颜色；清屏是帧初始化策略，不是 OpenGL 强制每次绘制的前置条件。
-[Khronos：glClear](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glClear.xhtml)
-## 激活纹理单元与绑定纹理
-`glActiveTexture` 的准确含义是“选择当前纹理单元”，不是激活某张图片，也不是启动采样。旧式绑定 API 的 `glBindTexture` 没有单元参数，所以先用这个状态指定它要修改哪个单元。
+双缓冲通常是一边显示完成的画面，一边准备下一帧。交换后，下一张待绘制画布的内容未必已经清好，因此通常每帧主动清除。
+这一步处理画面的颜色存储，VBO、纹理图像与着色器程序仍保留。进入三维深度测试后，还经常一起清深度：`glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)`。
+如果程序保证每帧完整覆盖画面，或者有意保留累积结果，也可采用其他策略。当前示例先清后画最直观。
+## 可以动手验证什么？
+把两个 sampler 的单元编号互换，观察两张图的角色是否交换；再将 UV 最大值改为 2，分别观察重复与镜像重复。理解连接后，再对比 mipmap 生成前后的过滤设置。
+# 变换
+## 三维物体为什么通常使用四乘四矩阵？
+旋转、缩放可以用三阶矩阵乘三分量位置计算，但平移还要增加一个固定量。例如向右移动 5，需要 `x'=x+5`。
+只靠三阶矩阵乘法，输入 `(0,0,0)` 后，无论矩阵里写什么，结果仍为 `(0,0,0)`。于是它无法单独完成“把原点移到别处”这件事。
+给位置补上一个 1，变为 `(x,y,z,1)`，就能把平移写进矩阵：
+```text
+[ 1 0 0 5 ] [ x ]   [ x+5 ]
+[ 0 1 0 0 ] [ y ] = [  y  ]
+[ 0 0 1 0 ] [ z ]   [  z  ]
+[ 0 0 0 1 ] [ 1 ]   [  1  ]
+```
+这样旋转、缩放、平移都能通过同样的四阶矩阵接口组合。以后投影也使用这套表示。添加 w 后的四分量表示称为齐次坐标，先看它怎样解决平移，名字可以随后记住。
+## 第四行与 w 代表什么？缩放时为什么保留最后的 1？
+矩阵的每一行负责计算输出的一项，所以第四行负责计算新的 w。普通平移、旋转、缩放使用第四行 `(0,0,0,1)`，让原来的 w 保持不变。
+例如缩放两倍，位置从 `(x,y,z,1)` 变成 `(2x,2y,2z,1)`。空间大小由 x、y、z 的变化表达，w 保持 1，后面的坐标处理就能得到预期结果。
+为什么教程说“缩放 w 没意义”？这里可以读成“w 不承担第四个空间方向的大小”。改变它会影响后续坐标换算，因此普通缩放要特意保留它。
+当 w 非零时，四分量位置最终可通过 `(x/w,y/w,z/w)` 还原为三维位置。假如四个分量一起乘 2，变成 `(2x,2y,2z,2)`，还原后又回到 `(x,y,z)`，就失去了想要的空间放大效果。
+位置通常补 w=1；方向向量通常补 w=0。例如“向右”这个方向只应旋转，物体平移时，它的方向保持不变。w=0 可以使平移列不参与方向结果。
+到了透视投影，矩阵会有意改变 w，用它完成近大远小。下一章 [[#什么是透视除法？为什么 xyz 都要除以 w？]] 会继续这个问题。
+## 什么是右手坐标系？怎样判断正旋转方向？
+它是一套坐标方向约定。教程常见的画法是 x 向右、y 向上、z 正方向朝向观察者，于是看向场景内部就是朝负 z。
+判断绕轴的正旋转方向时，用右手拇指指向该轴正方向，其他四指弯曲方向就是正角度方向。绕轴旋转时先明确轴和正方向，就能减少符号混淆。
+后面谈摄像机时，也要说明使用哪个空间的轴。同一个物体在世界空间与摄像机空间中的坐标方向，可以随着摄像机转动而不同。
+## 欧拉角是什么？
+它用按约定顺序进行的三个轴旋转描述朝向。以头部动作为例：左右转头、抬头低头、向肩膀侧倾，可以分别对应 yaw、pitch、roll。
+在代码里，必须同时说明每个角对应哪根轴、旋转顺序，以及轴是固定在世界里还是跟着物体转。三个角的数值加上这些约定，才能唯一解释要做哪些动作。
+读教程时先用这层理解即可。物体转到某个朝向和它此前转了多少整圈，是两个问题；单纯保存朝向通常无法恢复完整转动历史。
+## 内旋、外旋是什么？两者都会受旋转顺序影响吗？
+会，三维旋转一般要考虑顺序。
+外旋沿固定的世界轴旋转，可以想象地面上始终不动的三根箭头；内旋沿物体自身的轴旋转，可以想象三根箭头画在物体上，物体动，箭头也跟着动。
+用右手坐标系，取原本朝正 z 的方向 `(0,0,1)`。按固定世界轴操作：先绕 X 转 90°，方向变成 `(0,-1,0)`，再绕 Y 转 90°，它仍为 `(0,-1,0)`；换成先 Y 后 X，最终方向却是 `(1,0,0)`。
+同样的两个角度，次序不同，结果不同。内旋也有这类顺序影响，因为先前动作还改变了后面要绕的局部轴方向。
+按教程矩阵乘列向量的约定，先 X 后 Y 的固定轴旋转写成 `Ry * Rx * p`，最右边先作用。内旋 X→Y→Z 可以对应外旋按相反顺序 Z→Y→X；比较不同资料时要把约定一起对齐。
+## 万向节锁是什么？为什么两个旋转控制会合并？
+想象物体放在三层套起来的转环中，每层负责绕一根轴转。正常时三根控制轴提供三种独立的微小转动方向。
+某种转角下，最外层与最内层的轴可能对齐。此时转动这两层产生的作用变得重复，原先三个独立的调节方向只剩两个。这就是“锁”的直观来源。
+用最简短的话记：三个旋转旋钮里，有两个在某个姿态开始控制同一个方向。这个问题通常叫万向节锁，与多线程等待的死锁是不同现象。
+它与“先旋转哪个轴会改变结果”也要分开：顺序影响是普遍现象，万向节锁是某些角度下控制方向退化的特殊情况。
+## 万向节锁是不是让欧拉角无法表示某些朝向？
+欧拉角仍能表示这些朝向，问题出在该处的表示与变化方式。
+例如某个常见旋转约定下，抬头到 90° 后，另外两个角的作用重叠，多组角度描述同一朝向。于是，要用小幅角度变化表达任意方向的微小转动就变得困难；从朝向反求角度，也可能突然跳到另一组数值。
+物体仍可在三维空间自由旋转。受限制的是这套三个角度的独立控制方式。换个欧拉角顺序能移动锁点，但无法让一套欧拉角约定在所有朝向都保持这种独立性。
+## 为什么四元数能避开万向节锁？
+四元数把整体旋转作为一个对象保存，再通过乘法与新的旋转组合。这样更新朝向时，可以直接加入某个方向上的增量旋转，无须每次拆成三个顺序角度。
+从直观上看，一次三维旋转可以描述为“绕某根轴转过某个角度”。单位四元数将这种整体旋转编码起来；转到原先欧拉角的锁点时，仍可继续绕任意方向加入小旋转，无须让两个已经重合的角度控制分别承担动作。
+它采用四个有关联的数表示旋转，其中有单位长度约束。可以把它看作选择了另一种保存朝向的方式，避免欧拉角在锁点处“两种角度变化作用重叠”的问题。
+它的名称是四元数（Quaternion）。当前阶段知道“保存整体朝向、组合增量旋转、绘制时转成矩阵”这条使用方式即可，完整推导可以留到有实际需求时。
+四元数仍受旋转先后顺序影响，也需要维持单位长度。若每帧仍先按有问题的欧拉角控制，再转为四元数，输入控制的困难也会跟过来。直接用旋转矩阵维护整体朝向同样能避开欧拉角表示的锁点；产生锁点的原因要联系所用表示理解。
+## 可以动手验证什么？
+先验证缩放矩阵最后一项保持 1 时的结果，再把四个对角项全部乘相同倍数，手算除以 w 后的坐标。旋转顺序用一支笔或一个带方向标记的盒子实际转两次，会比先背公式更直观。
+# 坐标系统
+## 同一个顶点为什么要经过这么多坐标空间？
+先想象一只杯子。说它的把手在杯身右侧，是以杯子自身为参照；说杯子在桌子中央，是以房间里的摆放位置为参照；说杯子在你前方两米，是以你为参照。
+这些描述各有用途。建模时关心物体自己的形状，摆放时关心它在场景中的位置，观看时关心它相对摄像机的位置。OpenGL 教程的几个空间，就在分开处理这些问题。
 
-| 代码 | 状态变化 |
-|---|---|
-| `glActiveTexture(GL_TEXTURE0)` | 当前纹理操作单元设为 0 |
-| `glBindTexture(GL_TEXTURE_2D, texture1)` | 单元 0 的二维纹理绑定设为 texture1 |
-| `glActiveTexture(GL_TEXTURE1)` | 当前操作单元改为 1，单元 0 的记录仍保留 |
-| `glBindTexture(GL_TEXTURE_2D, texture2)` | 单元 1 的二维纹理绑定设为 texture2 |
-若省略两次单元选择而连续绑定两张纹理，就只会覆盖同一单元的二维绑定，最终它指向第二张纹理。真正必须保证的是绑定时当前单元正确；若已经正确，不要求每次再重复激活。
-绘制时 sampler uniform 值为 0 的变量读取单元 0，值为 1 的变量读取单元 1；最后当前操作单元为 1 不会禁止使用单元 0。`glUseProgram`、VAO 绑定与纹理单元状态各有不同职责，不能互相替代。
-参数设置和图像上传也使用当前单元的目标绑定：`glTexParameteri`、`glTexImage2D` 等操作当前单元中绑定到相应目标的纹理对象。`glBindTexture` 本身既不上传图片也不调用片段着色器。
-较新的 OpenGL 4.5 提供 `glBindTextureUnit(unit, texture)`，可以显式指定单元而不先改变当前单元；这是其他接口选择，不是教程 3.3 基线的一部分。
-## glUseProgram 选择什么
-`glUseProgram(program)` 将已成功链接的程序选为当前着色器程序，后续绘制使用其中的阶段代码，后续 `glUniform*` 更新该程序的参数。它不编译源码、不立即执行着色器、不上传顶点、不选择 VAO 或纹理对象。
-当前 `Shader::use()` 仅封装 `glUseProgram(ID)`；`ourShader.use()` 因此选择该对象创建的程序。状态保持到下一次切换，不必因为进入新一帧就强制重复调用，但绘制代码明确选择程序可避免其他代码切换后产生错误。
-完整状态组合：program 决定如何计算；VAO 决定读哪些顶点/索引以及格式；纹理单元决定 sampler 查询哪张图；当前绘制帧缓冲决定结果写到哪里；绘制调用真正提交图元处理。
-[Khronos：glUseProgram](https://registry.khronos.org/OpenGL-Refpages/gl4/html/glUseProgram.xhtml)
-## 当前纹理代码的构建与资源问题
-当前路径 `/home/azzato/CodeFiles/learning/learnOpenGL-cn` 中执行 `cmake --build --preset release`：`triangle` 成功构建，`textures` 在编译阶段失败。没有证据表明失败来自显卡 OpenGL 4.6 与教程 OpenGL 3.3 不兼容；代码明确请求 3.3 Core，高版本驱动支持该教程能力。
-### 实际编译错误
-`src/textures/textures_combined.cpp` 首先包含 `<GL/gl.h>`，再包含 GLFW，最后包含 GLAD，触发 GLAD 的 `OpenGL header already included` 错误，后续现代 OpenGL 函数大量“未声明”。应删除直接的 `<GL/gl.h>`，让 GLAD 先于 GLFW：
+| 空间 | 用一句话理解 | 例子 |
+|---|---|---|
+| 局部空间 | 点在物体自己内部哪里 | 正方体一个角在 `(0.5,0.5,0.5)` |
+| 世界空间 | 把物体摆进场景后，点在哪里 | 将正方体放到桌面右侧 |
+| 观察空间 | 以摄像机的位置和方向重新描述点 | 点在摄像机前方 3 个单位 |
+| 裁剪空间 | 把位置写成方便判断可见范围的四分量形式 | 顶点着色器写入 gl_Position 的结果 |
+| NDC | 除以 w 后，统一到画面使用的比例坐标 | 横向 -1 是左边，1 是右边 |
+| 窗口空间 | 根据窗口中的视口得到具体位置 | 800×600 视口中心为 `(400,300)` |
+前三种主要回答“相对谁测量”。后面几种逐步回答“怎样确定可见内容并画到窗口”。NDC 是标准化设备坐标的缩写，先记作统一的比例坐标即可。
+负责连接前三步的模型、观察、投影矩阵，会出现在顶点着色器里：
+```glsl
+gl_Position = projection * view * model * vec4(aPos, 1.0);
+```
+从右向左读：model 把物体摆进世界；view 改用摄像机视角描述；projection 准备投影和裁剪。接下来 OpenGL 执行裁剪、除以 w 和视口变换。
+同一个模型可以通过不同 model 放在多个位置；移动摄像机只需更新 view。这种分工让物体形状、场景摆放和观看方式可以分别管理。
+## 裁剪空间是什么？投影矩阵怎样确定可见范围？
+可以先把投影想成设置一个“允许看见的空间范围”。正射投影选一个长方体，透视投影选一个近窄远宽的范围，形状类似从眼睛向外展开、切掉尖端的四棱锥。
+投影矩阵把选中的范围换成 OpenGL 统一使用的表达，方便对不同相机设置采用相同裁剪规则。这个中间结果叫裁剪坐标。
+教程用每个方向 `[-1000,1000]` 的例子，是在帮助理解范围映射：某个方向超出可见范围，便会在裁剪时受到处理。具体投影时还要区分长方体和透视范围，不能把两者都当成固定宽高的盒子。
+这里先记住顺序：投影矩阵算出裁剪坐标 → 对图元裁剪 → 除以 w，得到 NDC。透视投影通常要等最后的除法完成后，可见范围才以 `[-1,1]` 表达。
+## 为什么裁剪空间是四维？它与负一到一的范围是什么关系？
+“四维”指使用 `(x_c,y_c,z_c,w_c)` 四个数保存位置，沿用上一章的齐次坐标表示。实际场景仍在三维中。
+默认 OpenGL 的裁剪规则是：x、y、z 分别位于 `-w_c` 与 `w_c` 之间。这样 w 可以随着投影变化，统一规则仍然适用。
+例如裁剪位置 `(2,0,0,4)` 的 x=2，依然满足 `-4≤2≤4`。再除以 w=4，就得到 NDC `(0.5,0,0)`，位于画面内部。
+所以读教程时可以把两个范围配对记：裁剪阶段比较 `[-w,w]`，除法之后的 NDC 比较 `[-1,1]`。早期示例把 w 固定成 1，这两个范围刚好数值相同。
+## 三角形只有一部分越界时，“重建图元”是什么意思？
+想象在纸上画一个大三角形，再把一张有矩形窗口的纸盖上去。窗口外的部分被挡住，窗口里的部分仍然保留。裁剪要得到的就是这个交集。
+因此，三角形有一个顶点越界时，保留的区域可能仍很大。OpenGL 会求三角形的边与可见范围边界在哪里相交，再用交点描述保留下来的形状。
+举一个只考虑 x、y，且 w 都为 1 的例子：A=(-0.5,-0.5)、B=(1.5,-0.5)、C=(-0.5,0.5)。右边界为 x=1，只有 B 在右边界外。
+AB、BC 与边界相交于 D=(1,-0.5)、E=(1,-0.25)。保留的轮廓变为 A→D→E→C，是一个四边形，可以再表示成两个三角形继续绘制。
+```text
+原来：A、B、C 组成一个三角形
+裁剪：去掉靠近 B、位于 x>1 的部分
+留下：A、D、E、C 组成的区域
+继续：例如用 A-D-E 与 A-E-C 两个三角形表达
+```
+“图元”在这里就是当前处理的基本图形，例子中为三角形。重建只是管线内部为了保留可见部分所做的处理，应用的 VBO/EBO 内容保持原样。
+新交点也会取得适当的颜色、纹理坐标等数据，所以图像可以在边界处自然截断。如果整个三角形与可见范围没有交集，就全部丢弃；如果相交，就保留相交区域。
+## 什么是透视除法？为什么 xyz 都要除以 w？
+先从“近大远小”理解它。两根同样长的杆子，一根离你 2 米，一根离你 4 米，远处的杆子看起来大约只有一半长。投影位置需要根据距离按比例缩小。
+以横向为例，核心关系可以写成“横向偏移 ÷ 距离”，再乘视野相关的比例。假如偏移同为 1，距离 2 时得到 0.5，距离 4 时得到 0.25。
+为了让前面的变换保持矩阵乘法形式，常见透视矩阵先把这个距离信息放到 w；之后 OpenGL 再统一执行：
+```text
+x_ndc = x_c / w_c
+y_ndc = y_c / w_c
+z_ndc = z_c / w_c
+```
+这一步叫透视除法。对教程常用的右手透视矩阵，摄像机看向负 z，所以 `w_c=-z_view`。观察坐标 z=-2，w 就为 2；z=-4，w 就为 4。
+x、y 的除法产生距离相关的画面缩放。z 的除法则得到用于后续深度处理的统一坐标；投影矩阵已经调整过 z_c，所以它并非简单的“原来的 z 除以距离”。目前记住：三个分量一起从齐次形式还原成 NDC，z 继续保留远近信息。
+## 透视除法在什么时候执行？要自己写进着色器吗？
+在当前只用顶点、片段着色器的例子中，顶点着色器写出裁剪坐标，随后 OpenGL 完成图元裁剪，再执行透视除法。教程把它概括为“顶点着色器结束后自动执行”。
+因此按教程将 `projection * view * model * position` 的结果写入 `gl_Position` 就可以，保留它的 w 供后面处理。
+正射投影同样经过除法，只是普通位置的 w 保持 1，除法后数值原样保留。这个例子也说明“透视除法”这个名字并不意味着只有透视矩阵才经过该步骤。
+## 正射投影究竟做什么？为什么 glm::ortho 需要六个边界？
+先把它看成用一个长方体框选场景。left、right 决定左右边界，bottom、top 决定上下边界，near、far 决定前后范围。
+然后把这个盒子的左右边界对应到 NDC 的 -1、1，上下边界也对应到 -1、1。框内的坐标按相同比例映射，和缩放一张平面地图到窗口里类似。
+例如横向选 `[0,800]`：
+
+| 原横坐标 | 变换后的 NDC 横坐标 | 直观位置 |
+|---|---|---|
+| 0 | -1 | 左边 |
+| 400 | 0 | 中间 |
+| 800 | 1 | 右边 |
+纵向选 `[0,600]` 同理。把区间中心移到 0，再除以半宽，就能得到这些结果：`x_ndc=(x-400)/400`、`y_ndc=(y-300)/300`。
+对应代码是：
+```cpp
+glm::mat4 projection = glm::ortho(
+    0.0f, 800.0f, // 左、右。
+    0.0f, 600.0f, // 下、上。
+    1.0f, 11.0f   // 近、远距离。
+);
+```
+按教程默认约定，摄像机朝负 z 看，near=1、far=11 表示观察坐标 z=-1 到 z=-11 的范围。取 `(400,300,-6,1)`，投影后得到 `(0,0,0,1)`，正好位于所选范围中心。
+再设置 `glViewport(0,0,800,600)`，NDC 中心映射到窗口的 `(400,300)`。默认深度范围把这个点的 NDC z=0 对应到深度 0.5。
+正射投影还保留 z，后面可以继续判断前后遮挡。它只是让横纵缩放与距离无关：同样宽的盒子，放近或放远，画面中宽度保持相同。
+如果把正射范围的宽从 800 改为 1600，相当于同一窗口装入更宽的场景，所有物体看起来变小。这是调整取景范围产生的变化。
+正射适合界面、工程图和某些三维游戏。透视适合普通相机般的近大远小。二者都是有效的观看方式，按想要的画面选择。
+## 可以动手验证什么？
+先只使用正射投影，手算几个点对应窗口的左、中、右位置。再让一个三角形只有一个角超出右边界，观察它逐渐被截去；理解后再换成透视投影，比较远处物体的大小。
+# 摄像机
+## 为什么创建 LookAt 矩阵？它有什么作用？
+假设桌子在世界原点，摄像机在 `(0,0,3)`。从摄像机看，桌子位于前方 3 个单位。移动摄像机时，桌子在世界里的位置保持原样，但相对摄像机的位置变化了。
+观察矩阵负责计算这种相对位置，LookAt 是构造观察矩阵的一种直观方法：告诉它你在哪里、看向哪里、哪边朝上，它就给出将世界坐标转成摄像机坐标的矩阵。
+这样移动摄像机时，只需更新一份观察矩阵，后续顶点都按新的视角处理。模型数据继续描述物体本身的形状，物体摆放仍由模型矩阵管理。
+## lookAt 为什么只接收三个向量？它们分别表示什么？
+```cpp
+glm::mat4 view = glm::lookAt(
+    glm::vec3(0.0f, 0.0f, 3.0f), // eye：摄像机位置。
+    glm::vec3(0.0f, 0.0f, 0.0f), // center：看向的目标位置。
+    glm::vec3(0.0f, 1.0f, 0.0f)  // up：参考上方向。
+);
+```
+eye 与 center 决定视线。还要提供 up，是因为看向同一个目标时，我们仍可以歪头：视线一样，画面的上下方向却变了。
+三个参数因此提供了描述观看方式所需的信息。第二个参数是目标的世界位置；如果手头只有朝前方向 `front`，就用 `eye + front` 构造一个目标点。
+## 教程需要 R、U、D、P，GLM 怎样从三个参数得到它们？
+教程的 R、U、D 是摄像机的右、上、后方向，P 是摄像机位置。GLM 接收的位置、目标和参考上方向，恰好足以计算这四项。
+先用眼睛位置减去目标位置，就得到从目标指向眼睛的方向；把它变成长度为 1 的向量，作为朝后的 D。再用参考 up 与 D 计算右方向 R，最后由 D 与 R 求出与二者都垂直的 U。
+```cpp
+glm::vec3 P = eye;
+glm::vec3 D = glm::normalize(eye - center);
+glm::vec3 R = glm::normalize(glm::cross(up, D));
+glm::vec3 U = glm::cross(D, R);
+```
+这里 `normalize` 保留方向、把长度变成 1；`cross` 求同时垂直于两个方向的新方向，顺序决定正反。
+在你给出的例子中，得到 D=(0,0,1)、R=(1,0,0)、U=(0,1,0)，P=(0,0,3)。参考 up 与最后求出的 U 在这个例子里刚好一致；摄像机倾斜朝向时，函数会计算适当的 U。
+## 两个四阶矩阵相乘的本质是什么？
+用眼睛看一个世界点，要做两件事：先求它相对眼睛的位置，再量出这个相对位置沿“我的右、上、后方向”各有多远。
+第一件事是 `p-P`，对应负摄像机位置的平移矩阵。第二件事是将结果按 R、U、D 三根轴重新表达，对应教程左侧的轴矩阵：
+```text
+       [ Rx Ry Rz 0 ]   [ 1 0 0 -Px ]
+view = [ Ux Uy Uz 0 ] × [ 0 1 0 -Py ]
+       [ Dx Dy Dz 0 ]   [ 0 0 1 -Pz ]
+       [  0  0  0 1 ]   [ 0 0 0  1  ]
+```
+按列向量约定，从右向左执行，正好是先减去 P，再改变坐标轴描述。GLM 在内部完成这些计算，调用方提供三项输入就够了。
+当 P=(0,0,3) 且轴方向与世界轴一致时，观察矩阵只需沿 z 平移 -3。世界原点变成 `(0,0,-3)`，意思就是在眼前 3 个单位；摄像机自身变成 `(0,0,0)`。
+对摄像机的旋转、平移整体求逆，也会得到观察矩阵：`view=inverse(camera_transform)`。LookAt 用目标和上方向帮我们方便地构造它。
+## LookAt 与投影分别决定什么？使用时要注意什么？
+LookAt 决定从哪里、朝哪个方向看；投影矩阵决定视野、近远范围，以及是否近大远小。可以把同一个 LookAt 与正射或透视投影组合。
+沿同一视线把目标点放得更远，摄像机朝向保持一致。若摄像机或目标运动，需要应用重新计算并上传 view；函数生成的是本次的矩阵。
+eye 与 center 重合时，视线无法确定；参考 up 与视线平行时，也无法确定合适的右轴。初学自由摄像机通常限制抬头角度，避免直接进入这类情况。
+## 可以动手验证什么？
+让 eye 保持 `(0,0,3)`，先看原点，再看世界原点右侧的位置，观察画面怎样转动。接着同时向右移动 eye 和 center，相当于朝向不变、摄像机平移；这两种修改能帮助区分位置与朝向。
+# 光照
+## 正方体一个角属于三个面，顶点法线到底选哪一个？
+先看为什么要有法线：光照计算要知道表面朝向哪里，才能判断光是正对表面还是斜着照来。垂直于表面的方向向量就叫法向量，简称法线。
+正方体的一个角确实连接三个不同方向的面。从不同面的角度看，这个位置应分别带着不同法线。
+解决办法是把同一个位置保存成多份顶点记录，每份对应一个面的用法。我们前面一直把顶点理解为“位置加上颜色、纹理坐标等属性”，现在再加入法线即可。
+
+| 使用在哪个面 | 顶点位置 | 携带的法线 |
+|---|---|---|
+| 右面 | `(0.5,0.5,0.5)` | `(1,0,0)` |
+| 上面 | `(0.5,0.5,0.5)` | `(0,1,0)` |
+| 正 Z 面 | `(0.5,0.5,0.5)` | `(0,0,1)` |
+画右面的三角形时使用第一份，画上面时使用第二份。位置重合，所以几何上仍接在同一个角；各自的表面朝向却可以分别参与计算。
+因此正方体有 8 个不同的位置，却常保存 24 份顶点记录：六个面，每面四份，再用 36 个索引绘制十二个三角形。教程直接提交 36 份顶点的写法也能表达同样的硬边。
+OpenGL 按应用提供的数据读取。模型创建或加载时，应决定哪些地方保留棱角、哪些地方表现为平滑曲面。
+## 一个三角形的三个顶点法线相同，为什么还要逐顶点计算？
+对于正方体这样的平面，你的判断成立：计算一次面法线，再给这个面上的顶点使用同一个方向就可以。教程甚至直接手写六个面的固定法线。
+“每个顶点带一份法线”说的是输入格式。为了让每次读到的顶点都提供正确朝向，三个记录里可以保存相同数值。计算一次与保存三次是分开的事情。
+如果要从三角形位置求面法线，可以取两条边，求它们的叉积，再变成单位长度：`normalize(cross(B-A, C-A))`。顶点顺序会影响方向，应按物体外侧统一安排。
+## 为什么还会存在同一三角形三个顶点法线不同的情况？
+想象用许多小三角形拼成一个球。如果每个三角形都使用自己的平面法线，画面上的明暗会一块一块变化，看得出许多平面。
+如果希望表现光滑球面，可以让每个顶点的法线朝向球面在该位置的外侧，再让它们在片段之间插值。这样三角形内部的光照方向逐渐变化，明暗就更连贯。
+以球为例，某点减去球心就指向它所在位置的外侧，归一化后可以作为该点的球面法线。
+于是两种处理各有用途：正方体希望保留棱角，面与面之间分开法线；球希望连续平滑，顶点之间使用连续变化的方向。三角形几何上仍然是平面，我们通过法线控制它怎样呈现明暗。
+## 同一平面法线相同，为什么光照还放在片段着色器里？
+因为光从一个固定位置发出时，同一面不同位置指向光源的方向可能不同。即使面朝向一致，各处的照射角度仍可能略有区别。
+教程在片段着色器里分别计算当前片段到光源的方向，再与该处法线比较。方向越接近，漫反射越强。核心写法为：
+```glsl
+vec3 N = normalize(Normal);
+vec3 L = normalize(lightPos - FragPos);
+float diffuseStrength = max(dot(N, L), 0.0);
+```
+这里 `dot` 在两者长度都为 1 时给出夹角余弦；`max` 将背向光源的负贡献限制为 0。Normal 来自前面顶点输出的插值，使用前再归一化；FragPos 是当前片段的世界位置。
+光源位置、片段位置和法线必须用同一空间来描述，才能比较方向。当前先沿用教程的世界空间计算方式；模型有非均匀缩放时，法线如何正确变换会在相应小节继续学习。
+## 能否只为每个面保存一个法线？
+可以设计这样的数据组织，例如每次单独画一个面，用 uniform 传入它的法线。但若模型有很多面，逐面设置、逐面绘制就会增加调用数量。
+教程采用每个顶点携带法线的方式，便于一次提交许多三角形，也能自然支持刚才的平滑曲面。现阶段先采用这种通用输入格式，更容易与现有顶点读取流程连接起来。
+## 可以动手验证什么？
+选正方体的一个面，将它所有顶点法线设为同一面朝向，再看边界处明暗。随后尝试让同一角点的三份记录都使用同一个平均方向，观察边角明暗怎样变柔和，而轮廓仍保持原样。
+# 环境与构建问题
+## 我的环境能跟随教程吗？
+此前检查结果为 GCC 13.3、CMake 3.28.3，Ninja、pkg-config 可用；你安装了 GLFW 与 GLAD。你提供的 `glxinfo -B` 显示 Intel Iris Xe 使用硬件加速，支持 OpenGL 4.6 Core，满足教程的 3.3 Core 要求。
+这里有三件不同的事：驱动支持的最高版本、程序请求的上下文版本、GLAD 提供的头文件和函数入口。按教程请求 3.3 Core、使用 `#version 330 core`，可以使用已经支持这些功能的驱动。
+之前代理环境无法访问桌面显示，运行探测在 GLFW 初始化处失败。因此记录中“构建通过”只表示 C++ 编译和链接通过，窗口运行结果仍应在桌面终端验证。
+## 大量“未声明”与“未定义引用”分别怎样排查？
+先看最早出现的错误及所在阶段。后面几十条错误可能都由前面一处错误引起。
+
+| 报错或现象 | 当前在做什么 | 首先检查 |
+|---|---|---|
+| `OpenGL header already included` | 预处理头文件 | GLAD 与系统 OpenGL 头文件是否冲突 |
+| `was not declared in this scope` | 编译 C++ | 声明、头文件顺序、名称与语法 |
+| `undefined reference` | 链接可执行文件 | 实现文件或相应库是否加入目标 |
+| 文件读取失败 | 程序运行后读资源 | 实际路径、文件名与工作目录 |
+| 着色器 compile/link 日志失败 | 驱动处理 GLSL | 着色器源码、版本和阶段输入输出 |
+历史上两次大量 OpenGL 函数“未声明”，首个原因都是系统 OpenGL 头文件先于 GLAD 引入。GLFW 默认可能引入系统头文件，GLAD 又提供自己的完整声明，于是发生冲突。
+常见写法是先包含 GLAD，再包含 GLFW，并省略直接的 `<GL/gl.h>`：
 ```cpp
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <shader_s.h>
-// 在该可执行目标中恰好一个翻译单元定义 stb_image 实现：
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
 ```
-当前两处 `FileSystem::getPath` 也报“未声明”：它是原教程仓库的资源路径辅助类，不是 OpenGL、GLFW 或 C++ 标准组件。本项目没有该类，可直接改用自己的文件路径，例如根目录启动时使用 `stbi_load("resources/textures/container.jpg", ...)`，或建立统一资源根路径。
-[GLFW：GLAD 与头文件顺序](https://www.glfw.org/docs/latest/build_guide.html)
-### 编译修正后还需要检查的缺失项
-1. 当前项目没有 `STB_IMAGE_IMPLEMENTATION` 的定义，也没有链接其他 stb_image 实现。只包含声明会在后续链接阶段出现 `stbi_load` 等未定义引用；按上面示例在一个翻译单元引入实现即可，无需重复安装依赖。
-2. 代码使用 `resources/textures/container.png`，本项目没有该文件；实际有 `container.jpg` 与 `container2.png`。必须选择真实存在且格式/通道匹配的资源；这属于运行时路径问题。
-3. `Shader` 请求 `4.2.texture.vs`、`4.2.texture.fs`，当前项目文件列表中没有这两个文件，需要创建相应着色器文件并配置路径。文件中应包含位置和 UV 接口、`texture1`/`texture2` sampler 及对应采样逻辑。
-4. 相对路径以进程工作目录为基准，不是源文件目录。若保留根目录相对资源路径，从项目根目录运行 `./build/release/textures`；从 build 目录启动要相应调整路径或配置资源复制/绝对资源根路径。
-GLAD 1 和 GLAD 2 的头文件与加载函数名称也可能不同，但当前安装确实提供 `<glad/glad.h>` 和 `gladLoadGLLoader`，与示例一致。本次先解决实际首个错误和项目辅助代码/资源缺失，无需降低驱动版本。
-以上为诊断与修改方案；此次未修改用户源码，也未声称纹理目标已经编译或运行成功。
-### 修复验证
-后续 Debug 构建暴露了格式化重排 include 引入的 GLFW/GLAD 冲突。现为两个 CMake 目标定义 `GLFW_INCLUDE_NONE`，禁止 GLFW 隐式包含系统 OpenGL 头文件，使 include 排序不再引发该冲突；同时将三角形源码的字面量指针改为 `constexpr const char*`。Debug 配置及并行构建、Release 并行构建均已验证通过。此前仅验证 Release 的结论不足以保证后续格式化后的构建状态。
-后续按用户要求完成源码修复：GLAD 先于 GLFW，加入单个 stb_image 实现，去除未引入的 `FileSystem`，使用真实存在的 `container.jpg`，新增 `Texture.vert` 与 `Texture.frag`，通过 CMake 提供源码根路径定位资源。
-图像解码分别强制 RGB/RGBA，使上传格式与输出通道一致；上传期间使用 `GL_UNPACK_ALIGNMENT=1`，避免 RGB 行长度不是 4 字节倍数时被错误解释为带填充行，完成后恢复默认 4。新增初始化失败检查、初始视口设置和正常退出时的纹理/程序释放。
-`cmake --build --preset release` 中 `triangle`、`textures` 均编译链接成功，格式检查通过。运行探测在 GLFW 初始化处失败，当前执行环境未验证窗口显示；桌面终端可运行 `./build/release/textures`。资源路径引用当前源码目录，移动项目后需要重新配置构建，并不是可独立分发的资源打包方案。
+项目后来还为目标加入 `GLFW_INCLUDE_NONE`，让 GLFW 跳过系统 OpenGL 头文件。这能避免格式化工具重排 include 后再次触发同一问题：
+```cmake
+target_compile_definitions(triangle PRIVATE GLFW_INCLUDE_NONE)
+target_compile_definitions(textures PRIVATE GLFW_INCLUDE_NONE)
+```
+如果错误确实发生在链接阶段，再检查 `find_package` 与 `target_link_libraries`。本项目使用 `glad::glad` 和 `glfw`。先有声明才能编译，加入实现才能链接，运行时还须初始化 GLFW、创建并设为当前的上下文，再加载 GLAD 函数。
+## 跟敲的三角形代码还出现过哪些问题？
+下面保留曾经遇到的具体问题，方便再次看到同类报错时定位；它们描述历史原因，并非声称当前源码仍有全部问题。
+
+| 问题 | 原因与处理 |
+|---|---|
+| `GL_COMPILE_STATUS，` 附近报错 | 中文全角逗号与 C++ 的 ASCII 逗号不同；这项已由你自行修正 |
+| 字符串字面量赋给 `constexpr char*` | 字符数据只读，使用 `constexpr const char*` |
+| `GL_FRAGMENT_SHADER_ARB` 未声明 | 当前 GLAD 配置可直接使用核心枚举 `GL_FRAGMENT_SHADER` |
+| Apple 分支的 `GLFW_OPENGL_FORWARD_COMPACT` | 正确拼写为 `GLFW_OPENGL_FORWARD_COMPAT` |
+`constexpr` 约束指针值，并不会单独把指向的字符变成 const，所以字符串声明里仍需 `const char*`。这类问题与显卡版本无关。
+最初另一个练习目录是 `/home/azzato/CodeFiles/temporal/learnOpenGLPlaygroud`；后面的纹理修复在当前 `/home/azzato/CodeFiles/learning/learnOpenGL-cn` 完成，排查时要先确认自己构建的是哪份源码。
+## 纹理示例为什么照教程抄写仍会报错或找不到图片？
+教程仓库里有辅助代码和资源目录，单独复制示例时要把这些依赖关系一起处理。本项目遇到过这些情况：
+
+| 问题 | 已采用的处理方式 |
+|---|---|
+| `FileSystem::getPath` 未声明 | 这是教程的辅助类，项目改为使用自己的资源根路径 |
+| stb_image 函数缺少实现 | 在一个翻译单元中于 include 前定义 `STB_IMAGE_IMPLEMENTATION` |
+| `container.png` 找不到 | 使用实际存在的 `resources/textures/container.jpg` |
+| `.vs`、`.fs` 着色器不存在 | 补充 `src/textures/Texture.vert` 与 `Texture.frag` |
+| 从 build 目录运行后资源丢失 | 通过 CMake 的 `LEARNOPENGL_ROOT` 指向源码根目录 |
+`stb_image.h` 同时提供声明与可选实现，宏让某一个编译单元真正编译出实现。若多个源文件都定义宏并链接进同一程序，又可能重复定义，所以一份可执行目标中采用一处即可。
+资源根路径指向当前源码位置，移动整个项目后要重新配置构建。若将程序分发到其他机器，后续还需要相应的资源复制或打包方案。
+修复中也让 JPEG 输出 RGB、PNG 输出 RGBA，与上传格式一致。RGB 一行的字节数可能不是 4 的倍数，上传时设置 `GL_UNPACK_ALIGNMENT=1` 可以按紧密行读取，随后恢复默认 4。这项说明可以在再次遇到纹理错行时回查。
+## 为什么 Release 曾通过，Debug 又失败？
+当时修复了头文件顺序，但后续格式化再次把 GLFW 放到 GLAD 前，冲突重新出现。Debug 构建暴露的是修改后的源码问题，并非调试优化级别或显卡版本导致。
+现在项目为两个目标定义了 `GLFW_INCLUDE_NONE`，并修正字符串的 const 类型。此前已分别验证 Debug、Release 构建通过；这是那次修复的验证结果，后续改代码仍应重新构建。
+在当前项目根目录，可按以下步骤配置、构建与运行：
+```sh
+cmake --preset debug
+cmake --build --preset debug --parallel
+./build/debug/textures
+```
+配置阶段创建构建目录并确定依赖，构建阶段才编译和链接。仅执行 `cmake --build --preset debug` 时，若还没有生成 Debug 目录，就要先补上配置步骤。
+# 查证资料
+正文以项目中 `docs/` 的教程为学习顺序。下面的官方资料用于查证具体 API 行为，阅读当前问答时可以先跳过。
+[LearnOpenGL 中文教程](https://learnopengl-cn.github.io/)
+[Khronos：顶点输入、VAO 与索引](https://wikis.khronos.org/opengl/Vertex_Specification)
+[Khronos：uniform 的查询与更新](https://wikis.khronos.org/opengl/GLSL_Uniforms)
+[Khronos：片段与像素](https://wikis.khronos.org/opengl/Fragment)
+[Khronos：纹理采样器与单元](https://wikis.khronos.org/opengl/Sampler_%28GLSL%29)
+[Khronos：顶点后处理、裁剪与透视除法](https://wikis.khronos.org/opengl/Vertex_Post-Processing)
+[GLM：LookAt 与变换接口](https://glm.g-truc.net/0.9.9/api/a00668.html)
+[Qt：着色器文件与缓存接口](https://doc.qt.io/qt-6/qopenglshaderprogram.html)
+[Qt：资源系统](https://doc.qt.io/qt-6/resources.html)
+[C++ 标准草案：流状态与异常](https://eel.is/c++draft/iostate.flags)
+[NASA JPL：旋转表示与欧拉角](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/rotation.html)

@@ -7,3 +7,19 @@ __pycache__/
 .obsidian/workspace.json
 .obsidian/plugins/cursor-navigator/cursor-positions.json
 .obsidian/notes-index/*.bak
+
+# Obsidian device-local layout and navigation state.
+# Keep workspaces.json (saved layouts), plugin data.json, themes and settings tracked.
+/.obsidian/workspace-mobile.json
+/.obsidian/workspace-*.json
+/.obsidian/plugins/*/cursor-positions.json
+
+# Rebuildable note-search index; keep notes_index.py and other source/config files.
+/.obsidian/notes-index/*.db
+/.obsidian/notes-index/*.db-wal
+/.obsidian/notes-index/*.db-shm
+/.obsidian/notes-index/*.db-journal
+
+# Obsidian runtime caches.
+/.obsidian/cache/
+/.obsidian/.cache/
