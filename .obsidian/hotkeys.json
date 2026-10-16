@@ -352,5 +352,9 @@
       ],
       "key": "="
     }
-  ]
+  ],
+  "terminal:find-in-terminal": [],
+  "terminal:close-terminal": [],
+  "terminal:toggle-focus-on-last-terminal": [],
+  "terminal:clear-terminal": []
 }
