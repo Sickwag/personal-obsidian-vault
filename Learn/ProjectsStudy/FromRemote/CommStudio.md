@@ -72,28 +72,95 @@ SendPanel.qml 的发送按钮
 
 ## 串口通信基础：时钟、波特率与帧
 ### 异步与同步的区别
-“串行”指一位接一位传输；“异步/同步”主要描述接收端如何确定每一位的采样时刻。异步 UART 并非完全没有时钟：发送端和接收端各有本地时钟，但没有单独的时钟线把发送端时钟送给接收端。两端预先约定相同的波特率；每个字符帧的起始位边沿让接收端重新对齐，然后接收端按本地位时间在位中心附近采样。常见 UART 会过采样，并在每个帧的起始位重新同步，因此时钟误差不会跨帧一直累积，但单帧内误差不能大到让采样点跑到相邻位上。[Analog Devices：UART 时钟精度与帧同步](https://www.analog.com/en/resources/technical-articles/determining-clock-accuracy-requirements-for-uart-communications.html)
-同步串行通常有数据线和时钟线。常见主从方式由主机输出时钟，从机直接观察同一组时钟边沿，不需要两边各自产生完全相同、一直锁相的独立时钟。协议规定在哪个边沿改变数据、在哪个边沿采样数据；SPI 的 CPOL/CPHA 就是相关配置。也有协议不另传时钟线，而从编码后的信号恢复时钟，所以“双方时钟始终一致”只是对部分同步系统的简化说法。[Microchip：同步 USART 主机时钟与数据边沿](https://ww1.microchip.com/downloads/en/DeviceDoc/41250F.pdf)
-### 没有数据时的线路状态
-异步 UART 没有待发数据时，不会持续发送代表“空”的字符帧；发送器处于空闲状态，TX 线保持逻辑 1（mark）。普通 MCU 的 TTL/CMOS UART 引脚通常表现为高电平；RS-232 收发器会反相并转换电压，因此逻辑 1（mark）是负电压。若线路实际断开或输入悬空，电平可能不确定，不能把悬空状态当作可靠的 UART 空闲电平。[TI：RS-232 电平与空闲 mark 状态](https://www.ti.com/lit/pdf/slau319)
-同步串行没有统一的“无数据电平”。例如 SPI 没有数据字时，主机通常停止产生时钟并让片选无效；时钟停止期间数据线可能保持上次电平或由具体硬件决定。某些持续运行的同步链路会发送规定的 idle/control symbol 或填充内容。发送器的逻辑状态可能是发送队列为空、等待触发或暂停；若协议要求连续时钟，则可能仍要发送空闲符号。要知道线路具体发什么，必须看对应协议。
-### 波特率
-波特（Bd）严格来说是每秒传输的信号元素/符号数；ITU 给出的定义也可理解为信号单元持续时间的倒数。UART 每个符号表示一个二进制位，因此在 UART 中波特率的数值通常等于位速率。例如 9600 baud 对应每位约 1/9600 秒，也就是 104.17 微秒。接收端按这个位时间采样，发送端也按它改变 TX 电平，所以两端需要配置相同或误差足够小的波特率；两端不匹配会使采样逐渐偏离位中心。[ITU-R V.607-2：baud 与 bit rate 定义](https://www.itu.int/dms_pubrec/itu-r/rec/v/R-REC-V.607-2-199006-S%21%21PDF-E.pdf)、[Analog Devices：UART 采样误差](https://www.analog.com/en/resources/technical-articles/determining-clock-accuracy-requirements-for-uart-communications.html)
-波特率不是应用有效字节的吞吐量。8N1 每个数据字节要传 1 个起始位、8 个数据位和 1 个停止位，共 10 个位时间；理想连续发送时，9600 baud 最多约 960 个数据字节/秒，实际还可能有帧间空隙和协议开销。
-### COM 口、UART 与电气标准
-COM1、COM2 等是 Windows 给串行设备/驱动提供的传统端口名称，是操作系统访问端口的名字，不是电压标准、连接器或某一种芯片。Windows 文档把 RS-232、RS-422 等列为不同的串行端口类型，说明 COM 名称本身并不意味着电气接口一定是 RS-232。[Microsoft：COMMPROP 端口类型](https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-commprop)
-UART 描述字节怎样按位收发；RS-232、RS-422、RS-485 等描述线路上的电气信号；COM 是操作系统一侧的端口名称。这几个概念相关但不等价。Linux 常见设备名有 /dev/ttyS*、/dev/ttyUSB* 和 /dev/ttyACM*。接线前要查设备手册，不能把 RS-232 正负电压直接接到 3.3V/5V MCU 的 TTL UART 引脚。
-### 为什么常用 TXD、RXD、GND 三线
-在简单的点对点全双工连接中，TXD 发送、RXD 接收、GND 提供共同信号参考，通常把一端 TXD 接到另一端 RXD，再交叉连接反方向的数据线。这样可减少连接器引脚、线束和硬件复杂度。
-RTS/CTS 常用于硬件流控：接收端缓存快满时要求发送端暂停，准备好后再允许发送。DTR/DSR 常表示终端/设备就绪；DCD 常与调制解调器检测到载波有关；RI 常表示电话振铃。直接连接的控制板没有调制解调器时，DCD/RI 通常无用；若设备不支持或未启用硬件流控，RTS/CTS 也可不接。采用三线后接收端不能通过这些线叫停发送端，因此发送速度必须受接收能力约束，或改用软件流控/应用层确认。三线连接是简化方案，不是远距离抗干扰方案；距离和噪声问题要看电气标准、线缆、接地和隔离。[TI：三线 RS-232 连接及其流控限制](https://www.ti.com/lit/an/slla083a/slla083a.pdf)、[TI：RS-232 握手与流控](https://www.ti.com/lit/an/slla544/slla544.pdf)
-### UART 异步帧格式
-UART 没有唯一适用于所有设备的帧配置。常见配置 8N1 表示 8 个数据位、无校验位、1 个停止位；UART 异步字符帧通常如下，数据位一般低位先发：
-```text
-空闲(逻辑1) | 起始位(0) | D0 D1 D2 D3 D4 D5 D6 D7 | 校验位(可选) | 停止位(1) | 空闲(逻辑1)
-```
-起始位让接收端发现新帧；数据位承载一个字符/数据单元；校验位可做简单差错检测；停止位恢复到空闲的逻辑 1，并给接收端一个帧尾。以 8N1 为例，线上每传一个 8 位数据字节要占 10 个位时间。[Analog Devices：UART 帧结构](https://www.analog.com/en/resources/analog-dialogue/articles/2020/11/24/18/10/uart-a-hardware-communication-protocol.html)
-还要区分 UART 字符帧与应用协议的消息帧：UART 的 8N1 只定义一个字节如何通过线；上层协议可把多个字节组合成带地址、长度、命令、校验等字段的完整消息。RS-232/RS-485 则再定义这些逻辑位如何变成线路电压/差分信号。CommStudio 的串口页中的波特率、数据位、校验位、停止位和流控属于串口收发配置；HEX 选项只影响输入内容如何编码为字节，不会改变 UART 帧。
+“串行”表示一位接一位传输；“异步/同步”描述接收端如何确定采样时刻。
 
+| 方式 | 采样时序基准 | 接收端如何对齐 |
+| --- | --- | --- |
+| 异步 UART | 双方约定的波特率，各自使用本地时钟 | 检测每帧起始位，再按本地位时间采样；常见硬件会过采样 |
+| 同步串行 | 共享时钟线，或从编码信号中恢复出的时钟 | 按时钟边沿采样；数据与时钟的关系由协议规定 |
+- **异步 UART**：发送端和接收端各有本地时钟，双方需配置相同或误差足够小的波特率。接收端在每个字符帧的起始位重新对齐，因此误差不会跨帧持续累积；单帧内的误差仍不能大到让采样点跑到相邻位上。
+- **字符间隔不固定**：指一帧结束到下一帧开始之间的空闲时间。发送端可以背靠背连续发送，也可以等待任意时长后再发；帧内每个位仍按波特率定时。这里的“字符”是 UART 的一个数据单元，不要求它是可显示的文字字符。UART 本身不规定应用消息边界，上层协议仍可规定帧间静默时间或其他分帧规则。
+- **同步串行**：常见做法是由主机输出时钟，从机观察同一根时钟线并按规定边沿采样。接收端不需要让自己的独立振荡器与发送端永久保持完全相同的频率和相位。
+    - SPI 的时钟极性（CPOL）决定 SCK 空闲电平，时钟相位（CPHA）决定采样边沿；主从两端必须配置兼容模式。
+    - 不单独传时钟线的链路可能通过时钟数据恢复（CDR）从信号跳变中恢复采样时钟。
+- **时钟频率与相位**：“双方时钟始终保持一致”是简化说法。关键是接收端在采样时刻与发送端保持协议规定的时序关系。
+
+参考：
+- [Analog Devices：UART 时钟精度与帧同步](https://www.analog.com/en/resources/technical-articles/determining-clock-accuracy-requirements-for-uart-communications.html)
+- [Microchip：USART 同步/异步时钟与帧](https://developerhelp.microchip.com/xwiki/bin/view/products/mcu-mpu/8-bit-avr/structure/usart-intro/)
+- [Microchip：SPI 时序](https://onlinedocs.microchip.com/oxy/GUID-6F1B86DC-C230-43D1-A405-0CC2E7EDF7EE-en-US-2/GUID-EAC2D943-F395-4D47-98C8-4EEBC798BFA2.html)
+### 没有数据时的线路状态
+- **异步 UART**：发送器处于空闲状态，不再发送字符帧；TX 线持续保持逻辑 1（mark），空闲时间可以没有上限。
+    - 普通 MCU 的 TTL/CMOS UART 引脚通常为高电平。
+    - RS-232 收发器会反相并转换电压，因此逻辑 1（mark）在线路上对应负电压。
+    - 接收端检测到空闲高电平转为起始位低电平的高到低边沿后，开始判定新帧。线路断开或输入悬空时，电平可能不确定。
+- **同步串行**：没有统一的“空字符”或线路状态，具体由协议和器件决定。
+    - SPI 没有更多数据时，主机通常停止 SCK 并取消片选；SCK 停在 CPOL 指定的空闲电平。
+    - 没有有效时钟边沿时，不会采样新的数据位。MOSI/MISO 保持末位还是变为高阻，取决于器件实现。
+    - 主机只想读取从机数据时，仍要提供时钟，通常发送 dummy byte（填充值）；这些位真实传输，但主机只使用同时收到的数据。
+    - 要求时钟持续运行的链路可能发送规定的 idle/control symbol。
+
+参考：
+- [TI：RS-232 电平与空闲 mark 状态](https://www.ti.com/lit/pdf/slau319)
+- [Microchip：SPI 时钟、空闲状态与 dummy data](https://onlinedocs.microchip.com/oxy/GUID-632C0460-65B2-4F1E-8D1A-B760EB793F79-en-US-4/GUID-CB47F8C8-2873-4863-A147-A65E8A5A7297.html)
+### 波特率
+- **定义**：波特（Bd）是每秒传输的信号元素/符号数，也可理解为信号单元持续时间的倒数。UART 每个符号表示一个二进制位，因此 UART 中波特率的数值通常等于位速率。
+- **作用**：波特率决定位时间。发送端据此改变 TX 电平，接收端据此安排采样；两端配置相同或误差足够小，才能保持采样点位于位中心附近。硬件通常用波特率发生器或时钟分频器产生所需时序。
+- **例子**：`9600 baud` 的位时间约为 `1/9600` 秒，即 `104.17 μs`。
+- **与有效吞吐量的区别**：`8N1` 每个数据字节占 10 个位时间。因此 `9600 baud` 理想连续发送时最多约 960 个数据字节/秒，实际吞吐量还会受帧间空闲和上层协议开销影响。
+- **同步接口**：SPI 等同步接口由 SCK 频率和采样边沿决定位时间。外设配置项可能称波特率或时钟频率，具体含义要按芯片手册确认。
+
+参考：
+- [ITU-R V.607-2：baud 与 bit rate 定义](https://www.itu.int/dms_pubrec/itu-r/rec/v/R-REC-V.607-2-199006-S%21%21PDF-E.pdf)
+- [Analog Devices：UART 采样误差](https://www.analog.com/en/resources/technical-articles/determining-clock-accuracy-requirements-for-uart-communications.html)
+- [Microchip：同步 USART 波特率生成](https://onlinedocs.microchip.com/oxy/GUID-4D282FC5-82FC-4934-8BAD-D4A5D8422E6C-en-US-7/GUID-A6AA5870-8219-4541-989F-F6A40636998E.html)
+### COM 口、UART 与电气标准
+COM、UART 和 RS-232/RS-485 属于不同层次：
+
+| 名称 | 所在层次 | 含义 |
+| --- | --- | --- |
+| COM 口 | Windows 操作系统接口 | Windows 用来访问串行设备或驱动的传统端口名称，例如 `COM1`、`COM2` |
+| UART | 收发功能 | 按波特率将数据组织成串行位流，并从接收位流还原数据 |
+| RS-232、RS-422、RS-485 | 电气接口 | 规定线路信号的电气特性和连接方式 |
+- COM 口不一定是 RS-232。它可以对应主板 UART、USB 转串口设备或虚拟串口驱动。USB 适配器呈现为 COM 口，不代表 USB 信号本身变成了 RS-232 电平；实际接口由收发器和接线决定。
+- Linux 常见串口设备名包括 `/dev/ttyS*`、`/dev/ttyUSB*` 和 `/dev/ttyACM*`。不能只因两端都标为“串口”就认为电气兼容；RS-232 的正负电压不能直接接到 3.3 V/5 V MCU 的 TTL UART 引脚。
+
+参考：
+- [Microsoft：COMMPROP 端口类型](https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-commprop)
+- [Microsoft：COM 端口设备接口](https://learn.microsoft.com/en-us/windows-hardware/drivers/install/guid-devinterface-comport)
+- [Microsoft：USB 转串口设备支持](https://learn.microsoft.com/en-us/uwp/api/windows.devices.serialcommunication?view=winrt-26100)
+### 为什么常用 TXD、RXD、GND 三线
+三线连接的典型场景是简单的点对点全双工通信：一端 TXD 接另一端 RXD，反方向同理，GND 提供共同信号参考。
+
+| 信号 | 用途 | 不接时的影响 |
+| --- | --- | --- |
+| TXD/RXD | 双向数据传输 | 无法收发数据 |
+| GND | 提供共同信号参考 | 电平缺少可靠参考，链路可能异常 |
+| RTS/CTS | 硬件流控；接收端可要求对端暂停发送 | 无法通过硬件控制线即时暂停发送 |
+| DTR/DSR | 典型 DTE/DCE 连接中的终端/数据设备就绪状态 | 无法读取或控制相应就绪状态 |
+| DCD/RI | 调制解调器的载波检测/振铃状态 | 直接连接控制板时通常没有对应功能 |
+- **省去控制线的原因**：链路不需要硬件流控或调制解调器状态信号，可减少连接器引脚、线束和硬件成本。
+- **省去控制线的代价**：接收端无法用 RTS/CTS 及时叫停发送端；若接收缓存跟不上，就需要软件流控或应用层确认，否则可能丢数据。
+- **距离因素**：资料把删线原因归结为“近程/远程”并不准确。通信距离和工业噪声属于电气层问题，通常通过选择合适的电气标准、线缆和隔离方案处理。RS-422/RS-485 等差分接口更适合较长或共模干扰较强的线路。
+
+参考：
+- [TI：三线 RS-232 连接及其流控限制](https://www.ti.com/lit/an/slla083a/slla083a.pdf)
+- [TI：RS-232 握手与流控](https://www.ti.com/lit/an/slla544/slla544.pdf)
+- [TI：RS-485 的工业长距离差分传输](https://www.ti.com/document-viewer/lit/html/SLLA418)
+### UART 异步帧格式
+UART 没有唯一适用于所有设备的帧配置。常见设置 `8N1` 表示 8 个数据位、无校验位、1 个停止位。
+
+| 帧字段 | 常见设置 | 作用 |
+| --- | --- | --- |
+| 起始位 | 1 bit，逻辑 0 | 标记字符帧开始，让接收端重新对齐 |
+| 数据位 | 常见 8 bit；硬件可能支持 5～9 bit | 承载数据，通常低位先发 |
+| 校验位 | 无、奇校验或偶校验 | 提供简单的差错检测 |
+| 停止位 | 常见 1 bit；部分硬件支持 1.5 或 2 bit | 标记帧尾并回到逻辑 1 的空闲状态 |
+- UART 字符帧与应用协议的消息帧不是一回事。`8N1` 定义一个数据单元如何过线；上层协议可把多个数据单元组合成包含地址、长度、命令和校验的完整消息。
+- RS-232/RS-485 再规定逻辑位如何映射为线路电压或差分信号。CommStudio 中的波特率、数据位、校验位、停止位和流控属于串口收发配置；HEX 选项只影响输入内容如何编码为字节。
+
+参考：
+- [Analog Devices：UART 帧结构](https://www.analog.com/en/resources/analog-dialogue/articles/2020/11/24/18/10/uart-a-hardware-communication-protocol.html)
 ## UART、dist 与学习前置背景
 ### UART 是什么
 UART 是 Universal Asynchronous Receiver/Transmitter（通用异步收发器），通常指 MCU、电脑串口控制器或 USB 转串口芯片中的一种硬件功能。发送时，它把 CPU 提供的并行字节组织成起始位、数据位、可选校验位和停止位，再按波特率逐位输出；接收时，它检测帧、采样并把位重新组装成字节。

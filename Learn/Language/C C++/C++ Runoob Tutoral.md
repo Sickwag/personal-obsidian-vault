@@ -3040,7 +3040,7 @@ void test01()
 }
 ```
 ### 类的静态成员
-类外的“静态”用法参考 [[#各种符号在上下文中语义#static 语义]]
+类外的“静态”用法参考 [[#各种符号在上下文中语义#static 语义|各种符号在上下文中语义 > static 语义]]
 #### “静态”一词理解
 - 静态成员是类本身的成员，不为任何类的对象所特有，在内存中只有一份 copy ，所有对象共享（对任何一个静态变量的修改会反映在所有实例上），没有创建对象时仍可以通过 `::` 域解析运算符为**定义，调用**他们。有对象后用 `.` 访问，定义，调用
 - 其他类型的变量在创建对象时对象的属性都通过值传递传递副本给对应变量值[需要注意深浅拷贝问题带来的值传递非法访问错误](C++%20Basics.md#深浅拷贝注意事项)
@@ -3690,8 +3690,8 @@ std::string get_exe_path() {
     DWORD len = GetModuleFileNameA(NULL, path, MAX_PATH);
     if (len == 0) return "";
     return fs::path(path).make_preferred().string(); // make_preferred 转换为 \ 分隔符
-#else
-    // Linux/macOS: 使用 /proc/self/exe 或 readlink
+#elif defined(__linux__)
+    // Linux: 读取 /proc/self/exe 这个 procfs 特殊链接
     char path[4096];
     ssize_t count = readlink("/proc/self/exe", path, sizeof(path) - 1);
     if (count != -1) {
@@ -3702,15 +3702,39 @@ std::string get_exe_path() {
     return "";
 }
 ```
-获取可执行文件路径的实现是通过 `/proc/pid/exe` 文件的 readlink 获取程序路径（Linux 特有）。这个设计有一个隐含假设：所有路径操作都基于程序所在目录。所以日志和配置文件**都需要放在 bin 目录下，否则无法运行**
-`/proc/self` 是一个 Linux 内核提供的虚拟符号链接：
-- 每个进程看到的 /proc/self 都指向自身的进程信息目录
-- 内核在访问时动态解析为当前进程的 PID，无需手动指定
-- 等价于 `/proc/<当前进程PID>` 
-如果使用 qt，可以通过一行代码解决
-```cpp
-QString exePath = QCoreApplication::applicationFilePath(); 
-```
+- Linux 分支调用 `readlink()` 读取 `/proc/self/exe` 的链接目标，取得当前程序的可执行文件路径。
+- 该函数不决定配置或日志的位置。只有应用主动把可执行文件目录作为资源根目录时，这些文件才需要按应用规则放在那里；也可以使用工作目录、用户目录或显式配置路径。
+- `/proc/self` 是 `procfs` 提供的特殊符号链接。内核在解析路径时，将它指向正在访问 `procfs` 的进程对应的 `/proc/<pid>` 目录。
+    - `/proc/self` 等价于当前访问进程的 `/proc/<pid>`。
+    - 外部命令访问时通常指向命令自身，而不是启动它的交互式 Shell。
+    - 程序内部调用 `readlink("/proc/self/exe", ...)` 时，`self` 指当前程序；执行外部命令 `readlink /proc/self/exe` 时，通常指 `readlink` 命令自身。
+- 使用 Qt 时，可通过 `QCoreApplication::applicationFilePath()` 取得应用程序路径：
+    ```cpp
+    QString exePath = QCoreApplication::applicationFilePath();
+    ```
+#### `/proc/self/exe` 的链接与读取
+`/proc/<pid>/exe` 是指向该进程当前执行文件的 `procfs` 特殊链接。`readlink()` 读取的是链接目标的路径文本；普通 `open()`、`cat` 或 `cp` 会跟随链接并访问可执行文件内容。它标识执行文件，不是保存启动命令原样写入的路径字符串，也不等同于 `argv[0]`。
+
+| 操作 | `/proc/self` 对应的进程 | 结果 |
+| --- | --- | --- |
+| `readlink /proc/self/exe` | 外部 `readlink` 进程 | 输出 `readlink` 程序自身的可执行文件路径 |
+| `ls -l /proc/self/exe` | 外部 `ls` 进程 | 显示 `ls` 程序对应的链接目标路径，不读取二进制内容 |
+| `cat /proc/self/exe > copy` | `cat` 进程 | `cat` 读取自己的可执行文件字节并写入 `copy`；重定向由 Shell 创建 |
+| `cp /proc/self/exe copy` | `cp` 进程 | 复制的是 `cp` 程序自身的可执行文件 |
+| 程序内部调用 `readlink("/proc/self/exe", ...)` | 调用函数的程序 | 取得当前程序的可执行文件路径 |
+| `cp /proc/<pid>/exe copy` | `<pid>` 指定的目标进程 | 复制目标进程正在运行的可执行文件，前提是有访问权限 |
+- **原文件已被删除**：删除目录项（unlink）后，只要进程仍持有执行文件引用，链接通常仍可访问。`readlink` 返回的路径会带有 ` (deleted)` 后缀；有权限时，仍可通过该链接读取或复制文件内容。
+- **访问限制**：读取其他进程的链接受 `ptrace` 访问权限检查限制。多线程进程的主线程退出后，`/proc/<pid>/exe` 可能不可用。
+- **自我备份能力**：进程可借此恢复或再次执行仍被持有的二进制文件。是否被 `systemd` 或某个容器运行时采用，需检查对应实现，不能仅由 `procfs` 行为推出。
+- **脚本进程**：`/proc/<pid>/exe` 指向实际运行的解释器二进制，例如 `/bin/sh` 或 Python 解释器，而不是脚本文件。
+    - 脚本路径通常会出现在 `/proc/<pid>/cmdline` 参数中，但进程可以修改该区域，因此它只是线索，不是可靠的脚本路径接口。
+    - 环境变量没有通用的脚本路径约定。
+
+参考：
+- [Linux man-pages：`/proc/<pid>/exe`](https://www.man7.org/linux/man-pages/man5/proc_pid_exe.5.html)
+- [Linux man-pages：`/proc/self`](https://www.man7.org/linux/man-pages/man5/proc_self.5.html)
+- [Linux man-pages：`execve()` 与解释器脚本](https://www.man7.org/linux/man-pages/man2/execve.2.html)
+- [Linux man-pages：`/proc/<pid>/cmdline`](https://man7.org/linux/man-pages/man5/proc_pid_cmdline.5.html)
 ## 文件和流
 **ofstream** 和 **fstream** 对象都可以用来打开文件进行写操作
 open 函数语法 `void open(const char *filename, ios::openmode mode);`
@@ -6122,7 +6146,7 @@ int main() {
     t.join();
 }
 ```
-`std::move(prom)` 将 promise 内部指向 shared state 的指针移动到函数参数中，触发移动语义，原 prom 失效：promise 的所有权需要转移到工作线程（避免主线程误操作），同时消除对 promise 生命周期的问题。参考 [[#C++提供的类型转换方式]]
+`std::move(prom)` 将 promise 内部指向 shared state 的指针移动到函数参数中，触发移动语义，原 prom 失效：promise 的所有权需要转移到工作线程（避免主线程误操作），同时消除对 promise 生命周期的问题。参考 [[#C++提供的类型转换方式|C++提供的类型转换方式]]
 **示例：传递异常**
 ```cpp
 void risky_operation(std::promise<int>& prom, int x) {
@@ -8205,9 +8229,9 @@ MyLib::v1::process(10);  // 显式使用旧版本
 
 #### static 语义
 参考:
-- [[#静态成员和非静态成员]]
-- [[#动静态变量]]
-- [[#类的静态成员]] 
+- [[#静态成员和非静态成员|静态成员和非静态成员]]
+- [[#动静态变量|动静态变量]]
+- [[#类的静态成员|类的静态成员]] 
 ##### 局部作用域
 函数内部定义 static 变量**不影响函数作用域（可见范围）**，但变量生命周期会在**程序运行结束时才结束**
 ##### 全局（文件）作用域中
@@ -8598,7 +8622,7 @@ struct FNVHash {
 ##### 使用场景
 专门用于处理多态类型（即包含虚函数的类层次结构）。dynamic_cast 可以在运行时对类的类型进行检查，确保类型转换的安全性。
 主要用于**有继承关系的父子类指针/引用之间的转换**，不能是对象之间的转换（无法触发多态），他的使用场景两种
-- 上行转换（子->父）：同样，由于 [[#^kkwdkv]]，是安全的但反而引入开销，这样显式转换不如使用 `static_cast`
+- 上行转换（子->父）：同样，由于 [[#^kkwdkv|^kkwdkv]]，是安全的但反而引入开销，这样显式转换不如使用 `static_cast`
 - 下行转换（父->子）：**强制要求父类中至少有一个虚函数（即是多态类）**
 
 | 场景                       | 是否推荐            |
@@ -8886,12 +8910,12 @@ struct Derived : Base {
 - **原理**：编译器根据参数类型选择不同函数
 - **优点**：简单、直观
 - **缺点**：仅限于函数名相同、参数不同
-参考 [[#函数重载]]
+参考 [[#函数重载|函数重载]]
 #### 运算符重载（Operator Overload）
 - **原理**：为类定义运算符行为
 - **优点**：提升可读性和表达力
 - **缺点**：容易滥用导致代码混乱
-参考 [[#运算符重载]]
+参考 [[#运算符重载|运算符重载]]
 #### 模板泛型多态（Generic Polymorphism）
 - **原理**：通过模板参数实现通用逻辑
 - **优点**：高度复用、类型安全

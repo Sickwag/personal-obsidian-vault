@@ -8,12 +8,12 @@
   "typewriter-mode",
   "image-captions",
   "obsidian-git",
-  "consistent-attachments-and-links",
   "obsidian-style-settings",
   "cm-chs-patch",
   "remember-cursor-position",
   "obsidian-auto-pair-chinese-symbol",
   "cursor-navigator",
   "show-line-number",
-  "fsrs-scheduler"
+  "fsrs-scheduler",
+  "consistent-attachments-and-links"
 ]
