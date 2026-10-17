@@ -341,30 +341,56 @@ def is_update(vault: Path, conn: sqlite3.Connection, target: str) -> Diff:
 # --------------------------------------------------------------------------
 
 def lookup(
-    conn: sqlite3.Connection, query: str, limit: int = 10, threshold: float = 0.0
+    conn: sqlite3.Connection,
+    query: str,
+    limit: int = 10,
+    threshold: float = 0.0,
+    regex: bool = False,
 ) -> list[dict]:
-    """按关键词子串（LIKE）检索标题与 desc。标题命中权重高于 desc，按条目聚合取最优。"""
-    tokens = [t for t in re.split(r"[\s,，。;；:：/\\()（）\[\]【】]+", query) if t]
-    if not tokens:
+    """按关键词子串检索；regex=True 时按不区分大小写的 Python 正则搜索标题与 desc。"""
+    if not query.strip():
         return []
+
     rows: list[dict] = []
-    for tok in tokens:
-        like = f"%{tok}%"
-        for r in conn.execute(
-            "SELECT file_path, title, level, desc FROM headings "
-            "WHERE title LIKE ? OR desc LIKE ?",
-            (like, like),
-        ):
-            score, matched = 0.0, []
-            for t in tokens:
-                if t in r["title"]:
-                    score += 2.0
-                    matched.append(t)
-                elif t in (r["desc"] or ""):
-                    score += 1.0
-                    matched.append(t)
-            if score > 0:
-                rows.append({**dict(r), "matched": matched, "score": score})
+    if regex:
+        pattern = re.compile(query, re.IGNORECASE)
+        candidates = conn.execute("SELECT file_path, title, level, desc FROM headings")
+        for r in candidates:
+            title_match = pattern.search(r["title"])
+            desc_match = pattern.search(r["desc"] or "")
+            if title_match or desc_match:
+                match = title_match or desc_match
+                rows.append(
+                    {
+                        **dict(r),
+                        "matched": [match.group(0)],
+                        "score": 2.0 if title_match else 1.0,
+                    }
+                )
+    else:
+        tokens = [
+            t for t in re.split(r"[\s,，。;；:：/\\()（）\[\]【】]+", query) if t
+        ]
+        if not tokens:
+            return []
+        for tok in tokens:
+            like = f"%{tok}%"
+            for r in conn.execute(
+                "SELECT file_path, title, level, desc FROM headings "
+                "WHERE title LIKE ? OR desc LIKE ?",
+                (like, like),
+            ):
+                score, matched = 0.0, []
+                for t in tokens:
+                    if t in r["title"]:
+                        score += 2.0
+                        matched.append(t)
+                    elif t in (r["desc"] or ""):
+                        score += 1.0
+                        matched.append(t)
+                if score > 0:
+                    rows.append({**dict(r), "matched": matched, "score": score})
+
     best: dict[tuple[str, str], dict] = {}
     for r in rows:
         k = (r["file_path"], r["title"])
@@ -412,10 +438,15 @@ def main(argv: Optional[list[str]] = None) -> int:
     p_chk = sub.add_parser("check", help="对比指定文件标题是否有更新（isUpdate）")
     p_chk.add_argument("target", help="相对路径，或 ALL 表示全库")
 
-    p_lk = sub.add_parser("lookup", help="相似内容检索（lookup）")
-    p_lk.add_argument("query", help="检索关键词")
+    p_lk = sub.add_parser("lookup", help="检索标题与描述（lookup）")
+    p_lk.add_argument("query", help="检索关键词；配合 --regex 时为 Python 正则表达式")
     p_lk.add_argument("--limit", type=int, default=10)
     p_lk.add_argument("--threshold", type=float, default=0.0)
+    p_lk.add_argument(
+        "--regex",
+        action="store_true",
+        help="使用不区分大小写的 Python 正则表达式搜索",
+    )
 
     p_desc = sub.add_parser("desc", help="写入标题/文件描述（upsertDesc）")
     p_desc.add_argument("--file", default=None, help="相对路径（--batch 时忽略）")
@@ -443,7 +474,13 @@ def main(argv: Optional[list[str]] = None) -> int:
     elif args.cmd == "check":
         _print_json(is_update(vault, conn, args.target).__dict__)
     elif args.cmd == "lookup":
-        _print_json(lookup(conn, args.query, args.limit, args.threshold))
+        try:
+            result = lookup(conn, args.query, args.limit, args.threshold, args.regex)
+        except re.error as error:
+            _print_json({"error": f"无效正则表达式: {error}"})
+            conn.close()
+            return 2
+        _print_json(result)
     elif args.cmd == "desc":
         if args.batch:
             with open(args.batch, encoding="utf-8") as f:

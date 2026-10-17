@@ -9,7 +9,7 @@
 ## 推荐的 AI 工作流程
 1. 明确任务属于新知识学习、已有笔记编辑、求职材料、日常记录还是 Obsidian/插件配置。
 2. 涉及当前学习目标或复习工作流时先读 `Context.md`；按下方主题入口和文件地图选出候选笔记。
-3. 从问题中提炼 2–3 个关键词，分别使用 notes-index 的 `lookup` 搜索；打开命中笔记核对语义，再用 `rg` 搜索正文中的术语或 wikilink 补齐关联文件。索引候选不等于内容已核实。
+3. 从问题中提炼 2–3 个关键词，分别使用 notes-index 的 `lookup` 搜索；需要模式匹配时使用 `--regex`（Python 正则，不区分大小写）。打开命中笔记核对语义，再用 `rg` 搜索正文中的术语或 wikilink 补齐关联文件。索引候选不等于内容已核实。
 4. 写入前完整读取目标笔记。优先沿用原章节、术语、目录和链接；重复内容并入已有笔记，复杂主题才拆成新笔记并建立 `[[wikilink]]`。
 5. 写入后检查标题层级、链接、附件引用和局部 diff。需要索引校验时运行单文件 `check`；不要自行运行会写库的全量索引更新。
 6. 对外部资料或时效性结论标明来源与版本；不确定的推断标成“待验证”，不要把笔记最后修改时间当作掌握或验证证据。
@@ -231,7 +231,7 @@
 - `Files & LongText/Attachments/开发常用正则表达式.md`：常用业务正则表达式集合。
 ## Obsidian 与索引命令
 在知识库根目录执行。索引脚本使用 Python 3.8+ 标准库，不需要安装第三方包。
-- `python3 .obsidian/notes-index/notes_index.py lookup "关键词"`：查找可能相关的标题与笔记。
+- `python3 .obsidian/notes-index/notes_index.py lookup "关键词"`：按关键词查找可能相关的标题与笔记；传入 `--regex` 可用 Python 正则匹配标题和描述，例如 `lookup '协程|线程' --regex`。
 - `python3 .obsidian/notes-index/notes_index.py check "相对路径.md"`：核对单篇笔记标题索引。
 - `python3 .obsidian/notes-index/notes_index.py update --no-write`：预览全库索引变化，不写入数据库。
 - `python3 .obsidian/notes-index/notes_index.py update` 会写入索引；只在用户明确要求时执行。新标题的描述按 `Style.md` 要求处理。

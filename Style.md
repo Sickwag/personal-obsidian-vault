@@ -147,6 +147,9 @@ python3 .obsidian/notes-index/notes_index.py update --no-write
 python3 .obsidian/notes-index/notes_index.py check <相对路径|ALL>
 # 相似内容检索（lookup）
 python3 .obsidian/notes-index/notes_index.py lookup <关键词> [--limit 10]
+# Python 正则表达式搜索（不区分大小写）
+python3 .obsidian/notes-index/notes_index.py lookup '协程|线程' --regex
+python3 .obsidian/notes-index/notes_index.py lookup '^C[+][+].*(并发|内存)$' --regex --limit 20
 # 写入单个标题/文件描述
 python3 .obsidian/notes-index/notes_index.py desc --file <相对路径> [--title <标题>] --desc <精简说明>
 # 批量写入描述（JSON：[{file,title,desc}]）
@@ -154,6 +157,7 @@ python3 .obsidian/notes-index/notes_index.py desc --batch <json文件>
 ```
 
 - 输出均为 JSON。`check` 返回 `added` / `renamed` / `deleted` / `need_desc` / `changed_files`；`lookup` 返回相似标题条目（含文件路径、标题、得分）。
+- `lookup` 默认按关键词子串搜索；传入 `--regex` 时将整个查询作为 Python 正则表达式，通过 `re.search` 匹配标题或描述并忽略大小写。标题匹配得分为 2，描述匹配得分为 1；正则语法错误会返回 JSON 错误并以状态码 2 退出。
 - `--vault` / `--db` 一般无需指定；仅当脚本被移出 `.obsidian/notes-index/` 时才需手动传入。
 - `desc` 的 `--title` 缺省时表示写文件描述；指定 `--title` 则写该标题的 desc。
 - 依赖：Python 3.8+（仅标准库）。Obsidian 不自带 Python，使用者需自备解释器。
