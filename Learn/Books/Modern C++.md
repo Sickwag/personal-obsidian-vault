@@ -1856,7 +1856,194 @@ t4.join();
 - 对原子变量执行原子加法操作，并返回原值。
 - 是线程安全的操作，不会导致数据竞争。
 `compare_exchange_weak vs strong`
-weak 可能假失败（spurious failure），strong 不会，CAS 循环中一律用 weak（更高效）。单次尝试用 strong。
+weak 可能假失败（spurious failure），strong 不会；循环重试时通常用 weak（某些平台可能更高效），单次尝试可用 strong 避免伪失败。
+##### 原子类型与操作边界
+通用 `std::atomic<T>` 要求 `T` 满足标准规定的可复制和 trivially-copyable 条件；原子对象自身不可复制。通用类型支持 `load()`、`store()`、`exchange()` 和 CAS，算术及位运算由特化类型提供。
+
+| 类型 | 常见读改写操作 | 说明 |
+| --- | --- | --- |
+| 非 `bool` 整数 | `fetch_add/sub/and/or/xor` | 原子读改写，返回修改前的值 |
+| 对象指针 | `fetch_add/sub` | 按指向类型的元素大小移动，不是按字节数移动 |
+| 浮点数（C++20） | `fetch_add/sub` | 原子更新，但并发累加的顺序不固定，浮点舍入结果可能随交错顺序变化 |
+| 其他可用的 `T` | `load/store/exchange/compare_exchange_*` | 通用模板不定义 `fetch_add` 等算术操作 |
+
+`load()` 可使用 `relaxed`、`consume`、`acquire` 或 `seq_cst`；`store()` 可使用 `relaxed`、`release` 或 `seq_cst`。`exchange()` 是原子读改写，并返回被替换前的值。原子操作保证的是对该原子对象的单次操作，不会自动保护多个字段组成的不变量；`volatile` 也不建立线程间同步关系。
+##### compare_exchange 与无锁栈的 push
+CAS 把“检查当前值”和“条件更新”合成一个原子操作。`compare_exchange_weak(expected, desired, success, failure)` 在原子值等于 `expected` 时写入 `desired` 并返回 `true`；不相等时返回 `false`，并把比较时观察到的当前值写回 `expected`。`weak` 还允许伪失败，因此通常放在重试循环中。
+
+```cpp
+#include <atomic>
+
+struct Node {
+    int data;
+    Node* next;
+};
+
+std::atomic<Node*> head{nullptr};
+
+void push(int value)
+{
+    Node* new_node = new Node{value, nullptr};
+    Node* expected = head.load(std::memory_order_relaxed);
+
+    do {
+        new_node->next = expected;
+    } while (!head.compare_exchange_weak(
+        expected, new_node,
+        std::memory_order_release,
+        std::memory_order_relaxed));
+}
+```
+每轮循环先让私有的新节点指向本轮观察到的栈顶，再尝试把 `head` 从 `expected` 改成 `new_node`。如果两个线程都读到 `A`，线程 1 成功令 `head = N1` 后，线程 2 用旧值 `A` 的 CAS 会失败，且 `expected` 被更新为 `N1`；线程 2 随后改写 `new_node->next = N1` 并重试。这样不会把线程 1 刚压入的节点覆盖掉。
+- CAS 成功是本次 `push` 在线程间生效的线性化点。竞争失败后，`expected` 会带回新栈顶；`weak` 的伪失败也会进入下一轮。
+- 初始 `load(relaxed)` 和失败序 `relaxed` 只需取得/更新栈顶指针值；本函数不解引用旧节点。成功序 `release` 发布新节点在 CAS 前完成的 `data`、`next` 初始化。读取该节点的 `pop` 端仍须用能与之配对的 acquire 操作。
+- 失败序不能是 `release` 或 `acq_rel`，且不得强于成功序；可用 `relaxed`、`consume`、`acquire` 或 `seq_cst`，但具体组合须满足成功/失败序的约束。本例的 `release` / `relaxed` 配对合法。
+- 这属于 Treiber 栈的入栈模式。完整栈还要处理 `pop` 与节点释放的并发安全、内存回收和 ABA；该片段只实现 `push`，没有展示这些部分。相关的内存池 free-list 入链示例见 [[/Learn/ProjectsStudy/WriteByMyself/DevFoundations.md|compare_exchange_weak 的实际入链用法]]。
+##### Lock-free 属性与 atomic_flag
+“不使用 `mutex`”不等于标准保证该操作一定 lock-free。`std::atomic<T>` 的底层实现取决于类型、平台和实现；可用 `is_lock_free()` 查询对象，或用 `is_always_lock_free` 在编译期查询类型属性。CAS 循环能让竞争线程通过重试共同推进，但不能保证每个特定线程在有限步内成功（不是 wait-free）。此外，`new` 的分配器可能使用锁，所以仅凭 CAS 不能证明整个 `push()` 调用严格 lock-free。
+
+`std::atomic_flag` 是标准保证 lock-free 的标志类型：`test_and_set()` 原子地设为 `true` 并返回旧状态，`clear()` 设为 `false`。C++20 增加了 `test()`、`wait()` 和通知操作；已有的自旋锁示例见 [[#Note：内存序]]。
+##### 浮点原子操作
+C++20 起，浮点原子特化提供 `fetch_add()` 和 `fetch_sub()`。它们保证对原子对象的更新不可分割，但不保证多个线程的累加次序；浮点加法存在舍入且不满足结合律，因此不同交错顺序可能得到不同结果。是否 lock-free 由实现决定，不能仅凭类型是 `float` 就推断其硬件实现或性能。
+##### 练习题解析
+教材练习 1 只给了思路，没有附完整代码；练习 2 的 `MaxTracker::update()` 代码就在题目后。源码链接的 `code/volumn_codes/vol5/ch03-atomic-memory-model/` 目录包含基础原子操作和汇编示例，不包含这两题的完整测试实现。
+
+练习 1：两种实现都应得到 `8 * 100000 = 800000`。计数器独立使用时，`relaxed` 足够；CAS 失败时 `expected` 被更新，下一轮会基于新值重新计算期望的加一结果。
+```cpp
+#include <atomic>
+#include <chrono>
+#include <functional>
+#include <iostream>
+#include <stdexcept>
+#include <thread>
+#include <vector>
+
+constexpr int kThreadCount = 8;
+constexpr int kIterations = 100000;
+
+void increment_with_fetch_add(std::atomic<int>& counter)
+{
+    for (int i = 0; i < kIterations; ++i) {
+        counter.fetch_add(1, std::memory_order_relaxed);
+    }
+}
+
+void increment_with_cas(std::atomic<int>& counter)
+{
+    for (int i = 0; i < kIterations; ++i) {
+        int expected = counter.load(std::memory_order_relaxed);
+        while (!counter.compare_exchange_weak(
+            expected, expected + 1,
+            std::memory_order_relaxed,
+            std::memory_order_relaxed)) {
+        }
+    }
+}
+
+void run_counter_test(
+    const char* name,
+    void (*increment)(std::atomic<int>&))
+{
+    std::atomic<int> counter{0};
+    std::vector<std::thread> workers;
+    const auto begin = std::chrono::steady_clock::now();
+
+    for (int i = 0; i < kThreadCount; ++i) {
+        workers.emplace_back(increment, std::ref(counter));
+    }
+    for (auto& worker : workers) {
+        worker.join();
+    }
+
+    const auto elapsed = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - begin).count();
+    const int result = counter.load(std::memory_order_relaxed);
+    if (result != kThreadCount * kIterations) {
+        throw std::runtime_error("counter result is incorrect");
+    }
+    std::cout << name << ": " << result << " in " << elapsed << " ms\n";
+}
+
+int main()
+{
+    run_counter_test("fetch_add", increment_with_fetch_add);
+    run_counter_test("CAS loop", increment_with_cas);
+}
+```
+`fetch_add()` 通常能直接映射为原子读改写指令；CAS 循环在竞争时可能重试更多次，但具体耗时依赖编译器、CPU 和调度。上面的计时包含线程创建与回收，比较时应以 Release 构建、多轮结果的中位数为参考，不把单次结果当作普遍结论。
+
+练习 2：只在候选值大于当前最大值时尝试 CAS。CAS 失败后 `current` 已更新为最新值；若另一个线程写入了更大的值，循环条件随即变为假，无需继续写入。
+```cpp
+#include <algorithm>
+#include <array>
+#include <atomic>
+#include <iostream>
+#include <limits>
+#include <random>
+#include <thread>
+#include <vector>
+
+class MaxTracker {
+public:
+    void update(int candidate)
+    {
+        int current = max_.load(std::memory_order_relaxed);
+        while (candidate > current &&
+               !max_.compare_exchange_strong(
+                   current, candidate,
+                   std::memory_order_relaxed,
+                   std::memory_order_relaxed)) {
+        }
+    }
+
+    int get() const
+    {
+        return max_.load(std::memory_order_relaxed);
+    }
+
+private:
+    std::atomic<int> max_{std::numeric_limits<int>::min()};
+};
+
+int main()
+{
+    constexpr int kThreadCount = 8;
+    constexpr int kSamplesPerThread = 100000;
+    MaxTracker tracker;
+    std::array<int, kThreadCount> local_max{};
+    std::vector<std::thread> workers;
+
+    for (int i = 0; i < kThreadCount; ++i) {
+        workers.emplace_back([&tracker, &local_max, i] {
+            std::mt19937 engine(static_cast<unsigned>(i + 1));
+            std::uniform_int_distribution<int> distribution(-1000000, 1000000);
+            int thread_max = std::numeric_limits<int>::min();
+            for (int j = 0; j < kSamplesPerThread; ++j) {
+                const int value = distribution(engine);
+                thread_max = std::max(thread_max, value);
+                tracker.update(value);
+            }
+            local_max[i] = thread_max;
+        });
+    }
+    for (auto& worker : workers) {
+        worker.join();
+    }
+
+    const int expected = *std::max_element(local_max.begin(), local_max.end());
+    const int actual = tracker.get();
+    std::cout << "expected=" << expected << ", actual=" << actual << '\n';
+    return actual == expected ? 0 : 1;
+}
+```
+练习 2 的 `relaxed` 足够，因为原子对象只承载最大值本身，没有借它发布或读取其他非原子数据。
+参考：
+- 课程原文：[Tutorial_AwesomeModernCPP](https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeModernCPP)，`documents/vol5-concurrency/ch03-atomic-memory-model/01-atomic-operations.md`
+- [C++20 draft：通用原子操作与 CAS](https://timsong-cpp.github.io/cppwp/n4861/atomics.types.operations)
+- [C++20 draft：原子类型约束](https://timsong-cpp.github.io/cppwp/n4861/atomics.types.generic)
+- [C++20 draft：lock-free 属性](https://timsong-cpp.github.io/cppwp/n4861/atomics.lockfree)
+- [C++20 draft：浮点原子特化](https://timsong-cpp.github.io/cppwp/n4861/atomics.types.float)
+- [C++20 draft：`atomic_flag`](https://timsong-cpp.github.io/cppwp/n4861/atomics.flag)
 
 #### 资源锁定和线程执行
 ##### 锁的使用

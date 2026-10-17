@@ -1685,6 +1685,96 @@ set_target_properties(MyApp
 ### 背景
 构建过程中任何步骤通常都可以用其输入和输出来描述。CMake 假定代码生成器和其他自定义过程遵循相同的原则。这样，代码生成器就与编译器、链接器和其他工具链元素一样运行；当输入比输出新（或输出不存在）时，将运行用户指定的命令来更新输出。
 核心是 **通过 `add_custom_command()` 和 `add_custom_target()` 实现代码生成**，并将其集成到项目构建流程中
+### 交叉编译下的 gRPC 代码生成
+[[/Chores/JobInterviews/简历项目.md|项目中的 protoc 构建期代码生成实践]]
+`CMAKE_FIND_ROOT_PATH_MODE_PROGRAM` 控制 `find_program()` 是否把 `CMAKE_FIND_ROOT_PATH` 和 `CMAKE_SYSROOT` 当作程序查找根目录。它只改变查找位置，不负责运行生成器，也不会自动生成或加入缺失的源文件。
+
+| 模式 | 查找范围 | 交叉编译中的含义 |
+| --- | --- | --- |
+| `ONLY` | 仅查找目标根目录 | 适合目标库、头文件和包；通常不能在主机上运行目标架构的 `protoc` |
+| `NEVER` | 不使用目标根目录重定位程序搜索路径 | 适合构建时要运行的 `protoc`、`grpc_cpp_plugin` 等主机工具 |
+| `BOTH` | 查找目标根目录和主机路径 | 可能找到目标架构的同名程序，造成主机无法执行 |
+
+CMake 官方交叉编译工具链示例把程序设为 `NEVER`，把库、头文件和包设为 `ONLY`。这些模式通常写在 toolchain file 中，且应在项目配置和 `find_program()` 执行前生效。
+```cmake
+# toolchain-aarch64.cmake：这里只列出与查找路径有关的设置
+set(CMAKE_SYSROOT "/opt/sysroots/aarch64-linux-gnu")
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+```
+`PROGRAM` 与 `PACKAGE` 控制不同命令：`find_program()` 受 `CMAKE_FIND_ROOT_PATH_MODE_PROGRAM` 控制；`find_package()` 受 `CMAKE_FIND_ROOT_PATH_MODE_PACKAGE` 控制。前者寻找可在构建主机执行的程序，后者通常寻找目标架构的 gRPC/Protobuf 库配置。
+gRPC 代码生成跨越主机和目标两个环境：
+
+| 阶段 | 工具与输入 | 产物 |
+| --- | --- | --- |
+| 配置 | `find_package()` 查目标库；`find_program()` 查主机工具 | 目标库导入目标、主机工具路径 |
+| 生成 | 主机 `protoc` 读取 `.proto`，并调用主机 `grpc_cpp_plugin` | `.pb.cc/.pb.h` 与 `.grpc.pb.cc/.grpc.pb.h` |
+| 编译链接 | 目标交叉编译器和目标架构库 | 目标架构应用程序 |
+
+CMake 上游 gRPC 示例也按 `CMAKE_CROSSCOMPILING` 分支处理：交叉编译时用 `find_program()` 查找主机 `protoc` 与 `grpc_cpp_plugin`；原生构建时使用 `$<TARGET_FILE:...>` 获取包提供的可执行目标路径。
+```cmake
+find_package(Protobuf CONFIG REQUIRED)
+find_package(gRPC CONFIG REQUIRED)
+
+if(CMAKE_CROSSCOMPILING)
+    find_program(PROTOC_EXECUTABLE NAMES protoc)
+    find_program(GRPC_CPP_PLUGIN_EXECUTABLE NAMES grpc_cpp_plugin)
+    if(NOT PROTOC_EXECUTABLE OR NOT GRPC_CPP_PLUGIN_EXECUTABLE)
+        message(FATAL_ERROR "Install host protoc and grpc_cpp_plugin first")
+    endif()
+else()
+    set(PROTOC_EXECUTABLE "$<TARGET_FILE:protobuf::protoc>")
+    set(GRPC_CPP_PLUGIN_EXECUTABLE "$<TARGET_FILE:gRPC::grpc_cpp_plugin>")
+endif()
+```
+`NEVER` 不会检查候选程序是否能在主机运行；它只关闭 root-path 重定位。`PATH`、`HINTS`、`CMAKE_PROGRAM_PATH` 等候选路径仍需指向主机工具。如果主机工具不在 `PATH` 中，可用 `HINTS`、`CMAKE_PROGRAM_PATH` 或包管理器指定的主机工具前缀。目标架构的库包与主机工具应分开管理；不要因为 `find_package(gRPC)` 找到了 `gRPC::grpc_cpp_plugin`，就假设该程序能在构建主机运行。
+```cmake
+set(PROTO_FILE "${CMAKE_CURRENT_SOURCE_DIR}/proto/hello.proto")
+get_filename_component(PROTO_DIR "${PROTO_FILE}" DIRECTORY)
+set(GEN_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+set(GEN_FILES
+    "${GEN_DIR}/hello.pb.cc"
+    "${GEN_DIR}/hello.pb.h"
+    "${GEN_DIR}/hello.grpc.pb.cc"
+    "${GEN_DIR}/hello.grpc.pb.h"
+)
+
+add_custom_command(
+    OUTPUT ${GEN_FILES}
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${GEN_DIR}"
+    COMMAND "${PROTOC_EXECUTABLE}"
+        "--proto_path=${PROTO_DIR}"
+        "--cpp_out=${GEN_DIR}"
+        "--grpc_out=${GEN_DIR}"
+        "--plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN_EXECUTABLE}"
+        "${PROTO_FILE}"
+    DEPENDS "${PROTO_FILE}"
+    COMMENT "Generate C++ sources from hello.proto"
+    VERBATIM
+)
+
+add_library(hello_proto ${GEN_FILES})
+target_include_directories(hello_proto PUBLIC "${GEN_DIR}")
+target_link_libraries(hello_proto PUBLIC
+    protobuf::libprotobuf
+    gRPC::grpc++
+)
+add_executable(client client.cpp)
+target_link_libraries(client PRIVATE hello_proto)
+```
+`add_custom_command(OUTPUT ...)` 把四个生成文件登记为构建图的输出；这些文件在 CMake 配置阶段可以尚不存在。构建时若输出缺失或 `.proto` 更新，CMake 先运行主机生成器，再把生成的 C++ 文件交给目标编译器。生成文件放在 `CMAKE_CURRENT_BINARY_DIR`，不需要预先提交到源码树。
+- `.proto` 中有 `import` 时，应把被导入的 `.proto` 也加入 `DEPENDS`，并配置对应的 `--proto_path`。
+- `find_program()` 的结果会缓存。若之前缓存了目标架构的 `protoc` 路径，改成 `NEVER` 后仍可能沿用旧值；清理对应缓存变量或使用新的构建目录重新配置。
+- Protobuf C++ 生成代码与运行库要求版本精确匹配；主机 `protoc` 版本应与目标 `protobuf::libprotobuf` 对齐。`grpc_cpp_plugin` 也应来自与目标 gRPC 运行库兼容的版本。
+参考：
+- [CMake：`CMAKE_FIND_ROOT_PATH_MODE_PROGRAM`](https://cmake.org/cmake/help/latest/variable/CMAKE_FIND_ROOT_PATH_MODE_PROGRAM.html)
+- [CMake：交叉编译工具链](https://cmake.org/cmake/help/latest/manual/cmake-toolchains.7.html#cross-compiling)
+- [CMake：`find_program()`](https://cmake.org/cmake/help/latest/command/find_program.html)
+- [gRPC：CMake 交叉编译说明](https://github.com/grpc/grpc/blob/master/BUILDING.md#cross-compiling)
+- [gRPC：C++ CMake 示例中的工具查找](https://github.com/grpc/grpc/blob/master/examples/cpp/cmake/common.cmake)
+- [Protocol Buffers：C++ 运行库与生成代码版本兼容](https://protobuf.dev/support/cross-version-runtime-guarantee/)
 
 ## 第 8 步：测试与 CTest
 ### 背景
@@ -2190,18 +2280,18 @@ add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 SET(QT_SDK_DIR "D:/OtherProgram/QT/6.8.0/msvc2022_64" CACHE PATH "QT SDK DIR" FORCE)
 list(APPEND CMAKE_PREFIX_PATH ${QT_SDK_DIR})
 ```
-在非 windows 平台上设定 runtimepath，即使用安装命令后将二进制文件放在 `${CMAKE_INSTALL_RPATH}` 位置
+在非 Windows 平台上设置安装后程序的 `RPATH`（运行时共享库搜索路径）。它不是安装二进制文件的目录；安装目录由 `CMAKE_INSTALL_PREFIX` 和 `install()` 规则决定。
 ```cmake
 if (NOT WIN32)
     add_link_options(-Wl,--disable-new-dtags)
     set(CMAKE_SKIP_INSTALL_RPATH FALSE)
-    set(CMAKE_INSTALL_RPATH "${QT_SDK_DIR}/lib:${CMAKE_INSTALL_PREFIX}/ElaWidgetTools/lib")
+    set(CMAKE_INSTALL_RPATH "${QT_SDK_DIR}/lib;${CMAKE_INSTALL_PREFIX}/ElaWidgetTools/lib")
 endif ()
 ```
 跨平台**运行时**设置，由于不同平台运行时查找动态链接库的方法不一致，需要设置
 - Linux/macOS：使用动态链接，需要在运行时找到共享库
 - Windows：使用导入库(.lib)和 DLL，路径查找机制不同
-- CMAKE_INSTALL_RPATH：设置安装后二进制文件的运行时库搜索路径，**这些信息会被写入二进制文件头部**，在执行这些二进制文件时自动查找，所以叫做 runtimepath
+- `CMAKE_INSTALL_RPATH`：设置安装后二进制文件的运行时库搜索路径。在 ELF 上，路径记录在动态信息（`DT_RPATH` / `DT_RUNPATH`）中，供动态加载器查找共享库；它不是 ELF 文件头字段。
 #### 库配置
 默认编译动态库，并且如果是 debug 模式编译，在二进制文件后添加 d 后缀（mingw 会自动添加。msvc 不会）
 ```cmake

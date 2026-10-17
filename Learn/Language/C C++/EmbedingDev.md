@@ -9,6 +9,29 @@ created: 2026-10-15
 [CMAKE_CROSSCOMPILING_EMULATOR（CMake 4.4.3 文档，访问于 2026-10-17）](https://cmake.org/cmake/help/latest/variable/CMAKE_CROSSCOMPILING_EMULATOR.html)
 [[CMake|CMake 交叉编译相关记录]]
 [[questions精简|面试口径：CMake 交叉工具编译方法（问题 68）]]
+[ELF 通用 ABI 规范](https://refspecs.linuxfoundation.org/elf/gabi41.pdf)
+[Linux `elf(5)` 格式说明](https://man7.org/linux/man-pages/man5/elf.5.html)
+[Linux ELF 架构编号](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf-em.h)
+[`file(1)` 手册](https://man7.org/linux/man-pages/man1/file.1.html)
+[Arm AArch32 ABI 属性](https://github.com/ARM-software/abi-aa/blob/main/addenda32/addenda32.rst)
+[Arm C 语言扩展与预定义宏](https://documentation-service.arm.com/static/5f205c08bb903e39c84de126)
+[GCC Arm 编译选项](https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html)
+[GCC 预定义宏](https://gcc.gnu.org/onlinedocs/cpp/Predefined-Macros.html)
+[GCC C 标准支持状态](https://gcc.gnu.org/projects/c-status.html)
+[GCC C++ 标准支持状态](https://gcc.gnu.org/projects/cxx-status.html)
+[GNU Autotools 入门](https://www.gnu.org/software/automake/manual/html_node/Creating-amhello.html)
+[Autoconf 系统类型与交叉编译](https://www.gnu.org/software/autoconf/manual/autoconf-2.71/html_node/Specifying-Target-Triplets.html)
+[GNU `readelf` 文档](https://www.sourceware.org/binutils/docs/binutils/readelf.html)
+[CMake 生成器与构建流程](https://cmake.org/cmake/help/latest/guide/user-interaction/index.html)
+[CMake `CMAKE_PREFIX_PATH`](https://cmake.org/cmake/help/latest/variable/CMAKE_PREFIX_PATH.html)
+[CMake `BUILD_RPATH`](https://cmake.org/cmake/help/latest/prop_tgt/BUILD_RPATH.html)
+[GNU `uname` 命令](https://www.gnu.org/software/coreutils/manual/html_node/uname-invocation.html)
+[Linux `execve` 错误](https://man7.org/linux/man-pages/man2/execve.2.html)
+[Linux `getauxval(3)` 手册](https://man7.org/linux/man-pages/man3/getauxval.3.html)
+[Linux `sysconf(3)` 手册](https://man7.org/linux/man-pages/man3/sysconf.3.html)
+[Linux `mmap(2)` 手册](https://man7.org/linux/man-pages/man2/mmap.2.html)
+[Linux ARM64 ELF HWCAP 文档](https://www.kernel.org/doc/html/latest/arch/arm64/elf_hwcaps.html)
+
 ## 本文范围
 
 > [!Info] 本文范围
@@ -26,28 +49,28 @@ created: 2026-10-15
 > 微控制器（Microcontroller Unit，MCU）把处理器、存储器和外设控制电路集成在一颗芯片中，常用于只需完成特定任务的设备。
 
 > [!Note] 宿主机与目标机
-> 宿主机（host）是开发时运行编译器和 CMake 的电脑。目标机（target）是最后运行程序的设备。二者可以使用不同的 CPU，也可以运行不同的操作系统。
+> 宿主机（host）是开发时运行编译器和 CMake 等编译工具的电脑。目标机（target）是最后运行程序的设备。二者可以使用不同的 CPU，也可以运行不同的操作系统。
 
 > [!Note] CPU 架构与 ARM64
 > CPU 架构规定处理器能理解的机器指令。ARM64（也称 AArch64）和 x86-64 是不同的 CPU 架构，彼此生成的指令不能直接互换。指令集架构（Instruction Set Architecture，ISA）是描述这些指令和程序可见寄存器规则的规范。
 
 > [!Note] 交叉编译
-> 交叉编译是“用宿主机上的工具，生成给目标机运行的程序”。例如，在一种 CPU 架构的 Linux 电脑上生成 ARM64 Linux 程序。这样可以利用电脑上成熟的编辑、构建工具，也能在没有目标设备或设备性能较弱时先完成构建。
+> 交叉编译是用一台机器上运行的工具，为另一种目标平台生成程序。目标平台不一定只是在 CPU 架构上不同；即使指令集相同，操作系统或 ABI 不同，也可能需要不同工具链。产物不一定是 ELF：裸机固件常从 ELF 转换为 `.bin` 或 `.hex`。产物通常不能在宿主机原生运行，但可由模拟器或兼容层运行。使用交叉编译可以在开发电脑或 CI 上构建，不必依赖目标设备的性能。
 
 > [!Note] 编译、链接与运行
 > 编译器把源代码转换成目标文件（常见后缀为 `.o`）。链接器把目标文件和所需库组合成可执行文件。运行时，操作系统加载可执行文件并提供它需要的库和系统服务。交叉编译的三个阶段都要面向同一个目标平台。
 
 > [!Note] ELF 文件与关键字段
-> ELF（Executable and Linkable Format）是 Linux 常用的目标文件、可执行文件和共享库格式。共享库（常见后缀为 `.so`）保存已编译代码，供程序在运行时加载。ELF 头部的 `e_machine` 记录目标 CPU；`PT_INTERP` 记录程序需要的动态加载器路径；`DT_NEEDED` 记录运行时需要加载的共享库，例如 `libc.so.6`。动态加载器会在程序启动时查找这些库。
+> ELF（Executable and Linkable Format）是 Linux 常用的目标文件、可执行文件和共享库格式。ELF 开头固定的 4 个字节 `7F 45 4C 46` 称为 ELF 魔数，用于识别文件格式；魔数匹配不等于整份文件有效。头部的 `e_machine` 标记处理器架构大类。`PT_INTERP` 是程序头表中的动态加载器路径；`DT_NEEDED` 是动态信息中的共享库依赖，例如 `libc.so.6`。动态加载器在启动时根据这些信息装载依赖库。
 
 ## 交叉编译要对齐什么
 程序能在目标机运行，需要构建结果与目标机的 CPU、操作系统和运行库相匹配。
 
-| 阶段 | 主要工作 | 初学时可以检查什么 |
-| --- | --- | --- |
-| 编译 | 生成目标 CPU 能执行的指令 | 目标文件中的 CPU 架构 |
-| 链接 | 找到目标机的启动文件和库，并记录运行依赖 | 是否链接到目标机的库、需要哪个动态加载器 |
-| 运行 | 操作系统加载程序并找到它依赖的库 | 目标机是否支持该架构、加载器和库是否存在 |
+| 阶段  | 主要工作                 | 初学时可以检查什么            |
+| --- | -------------------- | -------------------- |
+| 编译  | 生成目标 CPU 能执行的指令      | 目标文件中的 CPU 架构        |
+| 链接  | 找到目标机的启动文件和库，并记录运行依赖 | 是否链接到目标机的库、需要哪个动态加载器 |
+| 运行  | 操作系统加载程序并找到它依赖的库     | 目标机是否支持该架构、加载器和库是否存在 |
 
 > [!Note] 为什么还要匹配运行库
 > 运行库提供程序使用的常用函数和启动支持。Linux 程序通常依赖 Linux 的程序格式、系统接口和目标机上的运行库，因此生成了正确 CPU 的指令之后，还要确保程序能找到目标机的运行环境。
@@ -55,21 +78,23 @@ created: 2026-10-15
 ## 学习路线
 按顺序推进；后续阶段的术语暂时不需要背。
 
-| 阶段 | 学什么 | 完成标志 |
-| --- | --- | --- |
-| 0 | 宿主机、目标机、编译器、链接器和运行库 | 能用自己的话描述程序从源代码到运行的过程 |
-| 1 | 生成给 ARM64 Linux 设备运行的程序，并检查程序文件信息 | 同一份简单程序分别生成宿主和目标版本，能辨认两者的 CPU 架构 |
-| 2 | 用 CMake 配置交叉编译，并为目标机查找依赖 | 能说明每项设置负责什么，以及怎样避免误用宿主机的文件 |
-| 3 | 在目标环境运行程序，并检查部署、调试问题 | 能区分架构不匹配、动态加载器缺失和库缺失 |
-| 4 | 学习 Linux 以外的嵌入式运行环境 | 能说明不同环境的启动方式、系统服务和运行库有什么区别 |
+| 阶段  | 学什么                               | 完成标志                             |
+| --- | --------------------------------- | -------------------------------- |
+| 0   | 宿主机、目标机、编译器、链接器和运行库               | 能用自己的话描述程序从源代码到运行的过程             |
+| 1   | 生成给 ARM64 Linux 设备运行的程序，并检查程序文件信息 | 同一份简单程序分别生成宿主和目标版本，能辨认两者的 CPU 架构 |
+| 2   | 用 CMake 配置交叉编译，并为目标机查找依赖          | 能说明每项设置负责什么，以及怎样避免误用宿主机的文件       |
+| 3   | 在目标环境运行程序，并检查部署、调试问题              | 能区分架构不匹配、动态加载器缺失和库缺失             |
+| 4   | 学习 Linux 以外的嵌入式运行环境               | 能说明不同环境的启动方式、系统服务和运行库有什么区别       |
 
-> [!Note] 工具链文件与 CMake Preset
-> 工具链文件是 CMake 配置文件，告诉 CMake 目标系统、编译器和查找路径等信息。CMake Preset（预设）可以保存常用配置，让同一组设置能够重复使用。前者描述如何面向目标构建，后者保存一套可重复调用的配置。
+工具链文件是 CMake 配置文件，告诉 CMake 目标系统、编译器和查找路径等信息。
 
 ## 目标三元组
 
 > [!Note] 目标三元组与 ABI
 > 目标三元组是编译器用于标识目标平台的名称，常见形式包含 CPU、厂商、操作系统和 ABI 信息。ABI（Application Binary Interface，应用二进制接口）规定已经编译好的程序如何彼此配合，例如函数参数怎样传递、数据怎样布局、目标文件怎样链接。EABI 是面向嵌入式目标的 ABI 命名之一。GNU 工具链的字段数可能变化，厂商字段也可能省略。
+
+> [!Note] build、host 与 target
+> 日常开发中常把开发电脑叫宿主机、把运行程序的设备叫目标机。GNU 构建工具中这几个名称有更严格的语境：`build` 是执行构建流程的机器，Autoconf 的 `host` 是最终程序运行的机器，`target` 通常用于正在构建的编译器将来生成代码的机器。构建普通应用时通常不需要指定 Autoconf 的 `target`。阅读工具链文档时要先确认术语采用哪套语境。
 
 > [!Note] libc 与常见实现
 > libc 是 C 语言运行库，提供内存、文件等常用函数。glibc、musl 和 newlib 都是 libc 的实现：glibc 常见于 GNU/Linux 系统，musl 是另一种 C 运行库，newlib 常用于嵌入式环境。工具链要提供与目标环境匹配的头文件和库。
@@ -82,10 +107,18 @@ created: 2026-10-15
 | ABI / 运行库 | `gnu`、`eabi`（嵌入式 ABI 命名） | 函数调用约定和二进制兼容规则 | 目标程序及其依赖库需要遵循兼容规则 |
 
 > [!Note] 硬浮点、软浮点与 VFP
-> VFP 是 ARM 上的浮点运算硬件扩展名称之一。硬浮点约定会使用浮点寄存器传递浮点参数；软浮点约定使用通用寄存器或栈传递。`hf` 表示硬浮点调用约定，`soft-float` 表示软浮点调用约定。它们属于 ABI 的一部分，即使芯片都支持浮点运算，按不同约定构建的库也不能直接混用。
+> VFP（Vector Floating Point）是 Arm 的浮点指令和寄存器扩展之一。处理器是否实现 VFP 是硬件能力；编译器是否生成 VFP 指令由目标架构和编译选项决定。ABI（应用二进制接口）则规定函数调用等二进制协作方式。芯片不会自行选择 `soft` 或 `hard` ABI，实际约定由编译器参数、工具链和配套库共同决定。
+> PCS（Procedure Call Standard，过程调用标准）是 ABI 的一部分，规定函数参数、返回值和寄存器保存等规则。
 
-> [!Note] MinGW-w64 与 Windows 目标
-> MinGW-w64 是一套可用于构建 Windows 程序的工具链。目标三元组 `x86_64-w64-mingw32` 表示程序面向 64 位 Windows；名字里的 `x86_64` 表示 CPU 架构。
+| AArch32 编译选项 | 浮点运算代码 | 函数传递浮点参数 |
+| --- | --- | --- |
+| `-mfloat-abi=soft` | 使用软件浮点辅助代码 | 基础 PCS：通用寄存器或栈 |
+| `-mfloat-abi=softfp` | 允许使用目标支持的浮点指令 | 基础 PCS：通用寄存器或栈 |
+| `-mfloat-abi=hard` | 允许使用目标支持的浮点指令 | VFP 浮点寄存器 PCS |
+
+`softfp` 的关键点是“可以用硬件算浮点，但仍按基础约定传参”。因此，`__ARM_PCS` 表示基础 PCS，不等于处理器没有 FPU；`__ARM_PCS_VFP` 表示默认用 VFP 寄存器传浮点参数。硬件调用约定与基础调用约定不兼容，相关目标文件和库必须使用兼容 ABI。`-mfpu` 负责描述允许使用的浮点硬件指令，和 `-mfloat-abi` 不是同一个设置。
+
+AArch64 的常规 AAPCS 使用浮点/向量寄存器传递浮点参数，但把它简称为 AArch32 `hard-float` 并不严谨。项目中的 `floatAbiFromMacros()` 若仅凭 `__aarch64__` 返回 `hard-float`，应视为简化显示标签，不能代替对实际 ABI、编译选项和库的检查。
 
 > [!Note] 链接脚本
 > 链接脚本是给链接器的配置文件，描述程序代码和数据应放在目标芯片内存的哪些位置。它让链接器按板卡的内存布局放置程序各部分。
@@ -101,10 +134,8 @@ created: 2026-10-15
 | `x86_64-w64-mingw32` | 在其他系统上构建 Windows 程序的目标名 | 目标操作系统是 Windows，不是 Linux |
 
 Debian 系的包管理工具 `dpkg` 使用 `arm64`、`armhf` 等架构名；编译器工具链和 CMake 常使用 `aarch64`、`arm` 等名称。它们是不同工具采用的命名方式，不能只看字符串是否相同来判断目标是否相同。交叉开发包可能使用类似 `libc6-arm64-cross` 的包名。
-## 工具链由哪些部分组成
 
-> [!Note] 工具链
-> 工具链是一组协同工作的程序、头文件和库。编译器负责生成代码，汇编器和链接器负责生成最终文件，目标机的运行库和启动文件负责支持程序运行。只有编译器时，通常还无法完成完整的构建。
+## 工具链由哪些部分组成
 
 > [!Note] 宿主工具与目标文件
 > 交叉编译器本身是运行在宿主机上的程序；它生成的目标文件、库和可执行文件属于目标机。构建时执行的代码生成工具应能在宿主机运行，程序最终链接的库则应属于目标机。
@@ -115,15 +146,15 @@ Debian 系的包管理工具 `dpkg` 使用 `arm64`、`armhf` 等架构名；编�
 > [!Note] C 和 C++ 运行库
 > `libc` 提供 C 常用函数；`libstdc++` 提供 GCC 的 C++ 标准库；`libgcc` 提供某些整数运算、软浮点和异常处理等底层支持。它们都要与目标机的 CPU 和 ABI 匹配。
 
-| 组件 | 作用 | 阅读时怎么理解 |
-| --- | --- | --- |
-| GCC 驱动程序 | 接收命令并调度内部编译器、汇编器和链接器 | `aarch64-linux-gnu-g++` 在宿主机上运行，默认面向 ARM64 Linux |
-| `cc1` / `cc1plus` | GCC 内部的 C / C++ 编译器 | `g++` 会调用它们；初学时知道它们是内部步骤即可 |
-| Binutils | GNU 二进制工具集合，包含 `as`、`ld`、`ar`、`objcopy`、`objdump`、`readelf`、`strip`、`nm` 等 | 汇编、链接、查看和处理目标文件 |
-| `libgcc` | GCC 提供的底层支持代码 | 为某些整数运算、软浮点和异常处理等提供支持 |
-| `libc`（如 glibc） | C 运行库、目标机头文件和相关启动文件 | 必须使用适合目标机的版本 |
-| `libstdc++` | GCC 的 C++ 标准库及其 ABI 支持 | 使用 C++ 标准库的程序需要与目标机版本兼容 |
-| 动态加载器 | 程序启动时加载它依赖的共享库 | 路径记录在 ELF 的 `PT_INTERP` 字段中 |
+| 组件                | 作用                                                                         | 阅读时怎么理解                                          |
+| ----------------- | -------------------------------------------------------------------------- | ------------------------------------------------ |
+| GCC 驱动程序          | 接收命令并调度内部编译器、汇编器和链接器                                                       | `aarch64-linux-gnu-g++` 在宿主机上运行，默认面向 ARM64 Linux |
+| `cc1` / `cc1plus` | GCC 内部的 C / C++ 编译器                                                        | `g++` 会调用它们；初学时知道它们是内部步骤即可                       |
+| Binutils          | GNU 二进制工具集合，包含 `as`、`ld`、`ar`、`objcopy`、`objdump`、`readelf`、`strip`、`nm` 等 | 汇编、链接、查看和处理目标文件                                  |
+| `libgcc`          | GCC 提供的底层支持代码                                                              | 为某些整数运算、软浮点和异常处理等提供支持                            |
+| `libc`（如 glibc）   | C 运行库、目标机头文件和相关启动文件                                                        | 必须使用适合目标机的版本                                     |
+| `libstdc++`       | GCC 的 C++ 标准库及其 ABI 支持                                                     | 使用 C++ 标准库的程序需要与目标机版本兼容                          |
+| 动态加载器             | 程序启动时加载它依赖的共享库                                                             | 路径记录在 ELF 的 `PT_INTERP` 字段中                      |
 
 > [!Note] 启动文件与动态加载器
 > `crt1.o`、`crti.o`、`crtn.o` 等启动文件会在 `main()` 前后参与程序启动和结束流程。动态加载器在程序启动时寻找并加载 `.so` 共享库。它们都需要面向目标机；不依赖通用操作系统的程序通常使用另一套启动代码，不会依赖 Linux 的动态加载器。
@@ -144,6 +175,7 @@ Debian 系的包管理工具 `dpkg` 使用 `arm64`、`armhf` 等架构名；编�
 ```
 
 `readelf -h main.o` 中的 `Machine` 应显示 AArch64。链接完成后，`readelf -l` 中的 `INTERP` 项会显示运行时需要的加载器路径。
+
 ## 为什么交叉编译产物可能无法在宿主机运行
 
 > [!Note] QEMU 用户态模拟
@@ -166,8 +198,8 @@ Debian 系的包管理工具 `dpkg` 使用 `arm64`、`armhf` 等架构名；编�
 > [!Note] sysroot
 > sysroot 是交叉工具链查找“目标系统文件”时使用的根目录，通常包含目标机的头文件、库和启动文件。编译器使用它避免误用宿主机文件。它可以是目标文件系统的精简副本，不一定包含设备上的全部文件。
 
-> [!Note] CMake 配置阶段与构建阶段
-> 配置阶段由 CMake 读取项目设置、查找依赖并生成构建文件。构建阶段才调用编译器和链接器。配置阶段找到库，不能单独证明之后编译和链接也会使用正确的目标文件。
+> [!Note] rootfs
+> rootfs（root filesystem，根文件系统）是目标系统运行时所见的根目录树。sysroot 通常是从目标系统或 SDK 准备的开发用目录树，可能只包含编译、链接所需的头文件和库，不等于设备上的完整 rootfs。
 
 | 机制 | 谁使用 | 主要作用 | 关键设置 |
 | --- | --- | --- | --- |
@@ -176,26 +208,39 @@ Debian 系的包管理工具 `dpkg` 使用 `arm64`、`armhf` 等架构名；编�
 
 `CMAKE_SYSROOT` 与 `CMAKE_FIND_ROOT_PATH` 有联系，但作用方式不同。前者会传给编译器，并可作为 CMake 查找路径的前缀；后者用于控制 CMake 自己的查找根路径。排查问题时先确认失败发生在 CMake 配置阶段，还是编译、链接阶段。
 
-> [!Note] `find_package` 与 `find_library`
-> `find_package` 通常用于查找一个库或工具提供的 CMake 配置；`find_library` 用于查找库文件。它们由 CMake 在配置阶段执行。查找成功只说明 CMake 找到了某个路径，仍要确认它属于目标机。
+### `CMAKE_PREFIX_PATH` 与 sysroot 的区别
+> [!Note] `CMAKE_PREFIX_PATH`
+> `CMAKE_PREFIX_PATH` 是给 CMake `find_package()`、`find_library()`、`find_path()` 等查找命令增加的安装前缀列表。CMake 会按具体查找命令补充 `lib`、`include` 等子目录。它不会传给编译器作为 `--sysroot`，也不会单独改变编译器的目标架构。
+
+CMake 变量 `CMAKE_PREFIX_PATH` 使用分号分隔的目录列表；环境变量 `CMAKE_PREFIX_PATH` 则按平台路径列表习惯使用分隔符。它会影响配置阶段的 CMake 查找，不代表这些路径里的库一定能在目标设备运行。
+
+| 设置 | 主要使用者 | 解决的问题 |
+| --- | --- | --- |
+| `CMAKE_SYSROOT` | 编译器/链接器，以及 CMake 的 `find_*` | 指定目标系统根目录；支持的编译器会收到 `--sysroot` |
+| `CMAKE_FIND_ROOT_PATH` | CMake 的 `find_*` | 为 CMake 查找增加目标根目录，可配合 `CMAKE_FIND_ROOT_PATH_MODE_*` 限制查找对象 |
+| `CMAKE_PREFIX_PATH` | CMake 的 `find_*` | 在若干安装前缀中找包、头文件和库，不是编译器 sysroot |
+| `CMAKE_INSTALL_PREFIX` | `cmake --install` | 描述软件最终安装到目标文件系统的哪个前缀 |
+| `CMAKE_STAGING_PREFIX` | 交叉构建时的安装步骤 | 在宿主机上暂存本应安装到目标文件系统的文件 |
+
+`CMAKE_SYSROOT_COMPILE` 和 `CMAKE_SYSROOT_LINK` 可在工具链需要时分别指定编译阶段和链接阶段的 sysroot。sysroot、查找根路径和前缀路径可以配合使用，但职责不同；配置时应确认 CMake 找到的包和编译器实际用到的头文件、库都来自目标 SDK。
 
 ## CMake 交叉编译设置
 
 > [!Note] CMake 工具链文件
 > 工具链文件通常通过 `CMAKE_TOOLCHAIN_FILE` 指定，并在项目配置早期读取。它告诉 CMake 目标系统、目标架构、编译器和相关搜索规则；`CMAKE_SYSROOT` 通常也在工具链文件中设置。
 
-| 设置项 | 常见值 | 它告诉 CMake 什么 | 为什么要设置 |
-| --- | --- | --- | --- |
-| `CMAKE_SYSTEM_NAME` | `Linux` | 目标操作系统 | 让 CMake 按 Linux 目标配置；交叉工具链中据此进入交叉编译模式 |
-| `CMAKE_SYSTEM_PROCESSOR` | `aarch64` | 目标 CPU 架构名称 | 供项目和依赖包根据架构选择配置 |
-| `CMAKE_C_COMPILER` / `CMAKE_CXX_COMPILER` | 交叉 GCC / G++ 路径 | 用哪个程序编译 C / C++ | 避免误用宿主机的 `cc` / `c++` |
-| `CMAKE_C_COMPILER_TARGET` / `CMAKE_CXX_COMPILER_TARGET` | 目标三元组 | 给支持目标参数的编译器指定目标 | 常用于 Clang 等编译器；GNU 交叉 GCC 通常使用带目标前缀的驱动程序 |
-| `CMAKE_FIND_ROOT_PATH_MODE_PROGRAM` | `NEVER` | 构建时要运行的程序从宿主机查找 | 代码生成器等工具要在宿主机执行 |
-| `CMAKE_FIND_ROOT_PATH_MODE_LIBRARY` | `ONLY` | 目标库只从目标搜索路径查找 | 避免链接到宿主机的库 |
-| `CMAKE_FIND_ROOT_PATH_MODE_INCLUDE` | `ONLY` | 目标头文件只从目标搜索路径查找 | 避免混用宿主机头文件 |
-| `CMAKE_FIND_ROOT_PATH_MODE_PACKAGE` | `ONLY` | CMake 包配置只从目标搜索路径查找 | 避免包配置导向宿主机依赖 |
-| `CMAKE_SYSROOT` | 目标 sysroot 路径；没有时可不设 | 编译器的目标系统根目录 | 工具链需要指定 sysroot 时，让头文件与库来自目标环境 |
-| `CMAKE_CROSSCOMPILING_EMULATOR` | `qemu-aarch64;-L;/usr/aarch64-linux-gnu` | 如何在宿主机运行目标程序 | 让 CMake 借助模拟器运行目标程序检查；部分检查也可改为手工提供结果 |
+| 设置项                                                     | 常见值                                      | 它告诉 CMake 什么        | 为什么要设置                                   |
+| ------------------------------------------------------- | ---------------------------------------- | ------------------- | ---------------------------------------- |
+| `CMAKE_SYSTEM_NAME`                                     | `Linux`                                  | 目标操作系统              | 让 CMake 按 Linux 目标配置；交叉工具链中据此进入交叉编译模式    |
+| `CMAKE_SYSTEM_PROCESSOR`                                | `aarch64`                                | 目标 CPU 架构名称         | 供项目和依赖包根据架构选择配置                          |
+| `CMAKE_C_COMPILER` / `CMAKE_CXX_COMPILER`               | 交叉 GCC / G++ 路径                          | 用哪个程序编译 C / C++     | 避免误用宿主机的 `cc` / `c++`                    |
+| `CMAKE_C_COMPILER_TARGET` / `CMAKE_CXX_COMPILER_TARGET` | 目标三元组                                    | 给支持目标参数的编译器指定目标     | 常用于 Clang 等编译器；GNU 交叉 GCC 通常使用带目标前缀的驱动程序 |
+| `CMAKE_FIND_ROOT_PATH_MODE_PROGRAM`                     | `NEVER`                                  | 构建时要运行的程序从宿主机查找     | 代码生成器等工具要在宿主机执行                          |
+| `CMAKE_FIND_ROOT_PATH_MODE_LIBRARY`                     | `ONLY`                                   | 目标库只从目标搜索路径查找       | 避免链接到宿主机的库                               |
+| `CMAKE_FIND_ROOT_PATH_MODE_INCLUDE`                     | `ONLY`                                   | 目标头文件只从目标搜索路径查找     | 避免混用宿主机头文件                               |
+| `CMAKE_FIND_ROOT_PATH_MODE_PACKAGE`                     | `ONLY`                                   | CMake 包配置只从目标搜索路径查找 | 避免包配置导向宿主机依赖                             |
+| `CMAKE_SYSROOT`                                         | 目标 sysroot 路径；没有时可不设                     | 编译器的目标系统根目录         | 工具链需要指定 sysroot 时，让头文件与库来自目标环境           |
+| `CMAKE_CROSSCOMPILING_EMULATOR`                         | `qemu-aarch64;-L;/usr/aarch64-linux-gnu` | 如何在宿主机运行目标程序        | 让 CMake 借助模拟器运行目标程序检查；部分检查也可改为手工提供结果     |
 
 > [!Note] 构建工具与目标库
 > `protoc` 是 Protocol Buffers 的代码生成工具，Qt `moc` 会生成 Qt 元对象相关代码。它们需要在构建过程中运行，所以通常使用宿主机版本。程序链接的 `libc.so`、`libstdc++.so` 等运行库则要与目标机匹配。
@@ -222,10 +267,104 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 ```
 
 这段配置只说明变量的分工。编译器实际路径、sysroot 和依赖目录要按安装的工具链填写。
+
+### CMake 中的目标平台与机器码设置
+> [!Note] CMake 与目标架构
+> CMake 把目标平台信息交给编译器和查找系统，并选择相应的平台规则。ELF 架构、ISA 和浮点调用约定最终由工具链及编译参数决定；CMake 没有通用变量可以直接把任意程序指定为某个 ELF `e_machine` 或某种浮点 ABI。
+
+| 变量/选项 | 它表示什么 | 配置边界 |
+| --- | --- | --- |
+| `CMAKE_SYSTEM_NAME` | 目标操作系统或运行环境，如 `Linux`、`Generic` | 平台识别信息；交叉编译时通常在工具链文件设置 |
+| `CMAKE_SYSTEM_VERSION` | 目标系统版本 | 平台版本信息，不等同于 CPU 架构版本 |
+| `CMAKE_SYSTEM_PROCESSOR` | 目标处理器/架构名称，如 `aarch64`、`arm` | 提供架构提示，不会单独替编译器选择完整 ISA |
+| `CMAKE_<LANG>_COMPILER` | C、C++ 或汇编使用的编译器 | 应指向目标交叉工具链，或配合编译器目标选项 |
+| `CMAKE_<LANG>_COMPILER_TARGET` | 支持该功能的编译器所用目标三元组 | 常用于 Clang 等编译器；不替代目标 sysroot 和目标库 |
+| `CMAKE_C_FLAGS_INIT` / `CMAKE_CXX_FLAGS_INIT` | 工具链文件中初始化 C / C++ 编译器默认参数 | 可传递编译器特定的目标选项；按目标配置时通常优先使用 `target_compile_options()` |
+| `CMAKE_<LANG>_BYTE_ORDER` | CMake 已知的目标字节序 | 编译语言启用后由工具链信息推导，是检测结果而非修改字节序的选项 |
+| `CMAKE_SIZEOF_VOID_P` | 目标指针大小 | CMake 启用语言后探测得到；不是手工选择 32/64 位的开关 |
+| `CMAKE_CROSSCOMPILING` | CMake 是否按交叉编译处理 | CMake 根据目标系统设置和工具链状态得出 |
+| `CMAKE_TRY_COMPILE_TARGET_TYPE` | CMake 能力探测时构建可执行文件还是静态库 | 裸机工具链不能直接链接完整可执行文件时可设为 `STATIC_LIBRARY` |
+| `CMAKE_C_STANDARD` / `CMAKE_CXX_STANDARD` | C / C++ 语言模式，如 C11、C++20 | 选择语言标准，不代表芯片的 ISA、FPU 或 ABI |
+
+`-march`、`-mcpu`、`-mfpu`、`-mfloat-abi`、`-mabi` 是具体编译器的选项，不是统一的 CMake 硬件变量。可在工具链文件设置编译器初始化参数，也可用 `target_compile_options()` 对指定目标设置。CMake 的 Android、Apple 等平台另有专用变量，例如 `CMAKE_ANDROID_ARCH_ABI`、`CMAKE_OSX_ARCHITECTURES`，不能当作所有嵌入式平台通用变量。
+
+链接脚本也没有通用的 `CMAKE_LINKER_SCRIPT` 变量。使用 GNU 工具链时通常通过 `target_link_options()` 或工具链文件传递链接器的 `-T` 选项，并保证脚本与芯片内存布局一致。
+
+> [!Note] C / C++ 标准支持
+> C 或 C++ 标准由编译器选项选择，支持程度由编译器、标准库和运行时版本共同决定，与 CPU 架构无关。嵌入式项目没有统一适用的“最高标准”：旧工具链常见 C99/C11、C++11/14，较新的 GCC/Clang 工具链可支持 C++17/20，但厂商工具链、标准库和目标运行环境要分别核对。CMake 的 `CMAKE_CXX_STANDARD` 只请求语言模式，不保证所有标准库功能可用。本 Playground 将 C++ 标准设为 C++20，最终仍以实际交叉编译器为准。
+> C17 主要是对 C11 的技术修正；C23 较新，旧版厂商工具链和库未必支持。C11/C17、C++17/20 的具体功能仍应查对应工具链版本说明。
+
+`CMAKE_SYSTEM_PROCESSOR` 和 `CMAKE_<LANG>_BYTE_ORDER` 是 CMake 对目标的描述或探测结果；它们不替代编译器目标参数。检查实际选项应看工具链文件、CMake 构建详细输出和生成的编译命令。
+
+## `RPATH` 与运行期共享库搜索
+> [!Note] `RPATH`
+> `RPATH`（runtime search path，运行时搜索路径）是写进可执行文件或共享库动态信息中的路径提示，供动态加载器查找 `.so`。在 ELF 中相关条目是动态区段信息（例如 `DT_RPATH` 或 `DT_RUNPATH`），不是 ELF 头字段。它发生在程序运行阶段，和 CMake 配置阶段的 `CMAKE_PREFIX_PATH` 不是一回事。
+
+`DT_RPATH` 和 `DT_RUNPATH` 都记录运行时库搜索路径，但动态加载器对它们的搜索顺序和适用范围可能不同。
+
+| CMake 变量 | 作用 |
+| --- | --- |
+| `CMAKE_BUILD_RPATH` | 设置构建目录中程序使用的 RPATH；CMake 也会自动加入它已知的构建目录依赖路径 |
+| `CMAKE_INSTALL_RPATH` | 设置安装后程序使用的 RPATH |
+| `CMAKE_INSTALL_RPATH_USE_LINK_PATH` | 把链接搜索路径中的外部目录追加到安装 RPATH；交叉编译时需防止把宿主机目录写进目标文件 |
+| `CMAKE_BUILD_WITH_INSTALL_RPATH` | 构建时就使用安装阶段的 RPATH，避免安装时重写或重新链接 |
+| `CMAKE_BUILD_RPATH_USE_ORIGIN` | 支持的系统上让构建目录 RPATH 使用 `$ORIGIN` 等相对路径 |
+| `CMAKE_SKIP_RPATH` | 同时关闭构建和安装产物的 RPATH |
+| `CMAKE_SKIP_BUILD_RPATH` / `CMAKE_SKIP_INSTALL_RPATH` | 分别跳过构建目录或安装目录的 RPATH |
+
+`CMAKE_BUILD_RPATH` 和 `CMAKE_INSTALL_RPATH` 会在创建目标时初始化对应的 `BUILD_RPATH`、`INSTALL_RPATH` 目标属性；需要时可对单个目标单独设置。安装 RPATH 应指向目标设备运行时真实存在的目录，不能把宿主机 sysroot 中的构建路径当成目标机路径。
+
+## Make、Autotools 与 CMake 生成器
+> [!Note] Make 与 Makefile
+> `make` 是读取 `Makefile` 中目标、依赖和命令的构建执行器。它按依赖关系决定哪些命令需要重新执行；它本身不判断目标芯片，也不提供交叉编译器或目标库。
+
+> [!Note] Autotools
+> GNU Autotools 是一组用于生成可移植构建配置的工具，常见核心是 Autoconf 和 Automake。Autoconf 生成 `configure`，Automake 生成 `Makefile.in`；最终仍由 `make` 执行编译规则。
+
+| 文件 | 由谁维护或生成 | 用途 |
+| --- | --- | --- |
+| `Makefile` | 手写、`configure` 生成，或 CMake 的 Makefiles 生成器生成 | 交给 `make` 执行的具体构建规则 |
+| `Makefile.am` | 项目维护者编写 | Automake 的高层构建描述 |
+| `Makefile.in` | Automake 根据 `Makefile.am` 生成；也可能由项目手写 | 带有 `@CC@` 等待替换占位符的 Makefile 模板 |
+| `configure.ac` | 项目维护者编写 | Autoconf 输入，描述系统探测和输出文件配置 |
+| `configure` | Autoconf 根据 `configure.ac` 生成的可移植 Shell 脚本 | 在实际构建环境探测工具、头文件和能力，再实例化 Makefile |
+| `config.h.in` / `config.h` | 通常由 Autoheader 生成模板，再由 `configure` 生成结果 | 保存系统能力探测产生的宏定义 |
+
+Autotools 的常见生成和构建链路如下：
+
+```text
+Makefile.am --automake--> Makefile.in
+configure.ac --autoconf--> configure
+configure + Makefile.in --运行探测并替换变量--> Makefile
+Makefile --make--> 目标文件和程序
+```
+
+维护 Autotools 工程的一方常用 `autoreconf -fi` 调用 `aclocal`、`autoconf`、`autoheader`、`automake` 等工具重新生成文件。源码发布包通常预先带有 `configure` 和 `Makefile.in`，普通使用者运行 `./configure`、`make` 即可，不一定要安装 Autotools 生成工具。
+
+Autotools 交叉编译应用时常用 `--build` 指定执行构建的机器、`--host` 指定程序运行的机器；`--target` 主要用于正在构建交叉编译器的情况。交叉构建时，`configure` 无法直接运行目标程序探测能力，会使用已知规则、缓存或用户指定值。工具链和库仍要由用户正确提供。
+
+```bash
+CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ ./configure --build=x86_64-pc-linux-gnu --host=aarch64-linux-gnu
+make
+```
+
+> [!Note] CMake 生成器
+> CMake 读取 `CMakeLists.txt` 和工具链配置，再按所选生成器生成 Makefile、Ninja 文件或 IDE 工程。它可以生成供 `make` 使用的 Makefile，但不会原生生成 Autotools 的 `configure`、`Makefile.am` 或 `Makefile.in`。
+
+```bash
+cmake -S . -B build -G "Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=cmake/aarch64-linux-gnu.toolchain.cmake
+cmake --build build
+```
+
+生成的 Makefile 只适用于本次配置的构建目录、工具链和路径，不适合作为跨机器通用的预生成发布文件。目标设备性能弱并不意味着必须在设备上构建：常见做法是在开发电脑或 CI 上交叉编译，再把程序部署到设备。若确实要求在设备本机从源码构建，才需要设备上有可用构建工具、原生编译器、依赖库和相应构建系统。
+
 ## 验证交叉编译结果
 
 > [!Note] `readelf` 与 `objdump`
 > `readelf` 读取 ELF 结构信息，例如架构、加载器和库依赖。`objdump` 可以反汇编机器码，显示 CPU 指令。它们用于检查文件，不负责运行程序。
+
+> [!Note] `file`
+> `file` 根据魔数和格式元数据识别文件，不会执行程序。它给出的是格式摘要，不是目标兼容性的完整证明。
 
 | 命令 | 可以回答的问题 | 初学时看哪里 |
 | --- | --- | --- |
@@ -240,6 +379,190 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 | `aarch64-linux-gnu-gcc -print-search-dirs` | 编译器默认到哪里找程序和库 | 搜索路径是否混入宿主目录 |
 
 建议先看 `file`、`readelf -h` 和 `readelf -l`。它们能回答“这是什么文件、给谁运行、启动时要找什么”，其余检查等遇到对应问题再学。
+
+### ELF 魔数、文件头与 `e_machine`
+ELF 魔数是文件开头固定的 4 个字节：`0x7f`、`E`、`L`、`F`。它像文件格式的签名，供系统和分析工具快速识别 ELF；它不是校验和，也不能证明其余文件结构有效。
+
+ELF 文件头是文件开头的索引信息。`e_ident` 包含魔数、32/64 位类别、字节序、版本和 ABI 标识；其他字段包括文件类型、机器架构、入口地址、程序头表和节头表位置、架构标志，以及表项大小和数量。程序头表描述加载器需要映射的段；节头表主要供链接器和分析工具定位代码、数据、符号等节。[ELF gABI](https://refspecs.linuxfoundation.org/elf/gabi41.pdf)
+
+| 字段/偏移 | 含义 |
+| --- | --- |
+| `e_ident[0..3]` | ELF 魔数 `7F 45 4C 46` |
+| `e_ident[4]` / `EI_CLASS` | `1` 表示 ELF32，`2` 表示 ELF64 |
+| `e_ident[5]` / `EI_DATA` | `1` 表示小端，`2` 表示大端 |
+| `e_ident[6]` / `EI_VERSION` | ELF 版本 |
+| `e_ident[7]` / `EI_OSABI` | ABI 标识 |
+| `e_ident[8]` / `EI_ABIVERSION` | ABI 版本 |
+| `e_ident[9..15]` | 保留填充字节 |
+| `e_type`，偏移 `16` | 可重定位文件、可执行文件或共享对象等类型 |
+| `e_machine`，偏移 `18..19` | 处理器架构编号，字段宽度为 16 位 |
+| `e_entry` | 程序入口地址 |
+| `e_phoff` / `e_shoff` | 程序头表/节头表在文件中的偏移 |
+| `e_flags` | 处理器或 ABI 相关标志 |
+
+`e_machine` 说明架构大类，不说明 CPU 型号、完整 ISA 扩展、浮点调用约定或操作系统版本。下面的数值是 ELF ABI 为架构分配的标识：
+> [!Note] Arm Build Attributes
+> Arm Build Attributes 是目标文件携带的架构和 ABI 属性，可记录 CPU 架构、浮点指令能力、浮点参数传递约定等信息。`readelf -A` 可查看这些属性；属性缺失时不能据此断言目标没有相应硬件能力。
+
+| 常量 | 值 | 架构 |
+| --- | ---: | --- |
+| `EM_ARM` | `40` | 32 位 Arm |
+| `EM_X86_64` | `62` | x86-64 |
+| `EM_AARCH64` | `183` | 64 位 Arm |
+| `EM_RISCV` | `243` | RISC-V |
+
+在 C++ 中将这些编号定义为 `inline constexpr std::uint16_t`，是为了在解析文件时比较数值并显示可读名称；它们不设置处理器行为。`inline` 允许常量定义放在被多个源文件包含的头文件中，`constexpr` 允许编译期使用。
+
+### `file` 输出的含义
+> [!Note] PIE
+> PIE（Position-Independent Executable，位置无关可执行文件）允许系统在不同虚拟地址加载程序，Linux 常用于支持地址随机化。
+
+不同系统和 `file` 版本输出可能不同，下面是常见形式：
+
+```text
+ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV),
+dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, not stripped
+```
+
+| 输出片段 | 含义 |
+| --- | --- |
+| `ELF 64-bit` | ELF 格式，文件类别为 64 位 |
+| `LSB` | Little Endian，小端字节序 |
+| `pie executable` | PIE 可在不同虚拟地址加载；Linux 常用它支持地址随机化 |
+| `ARM aarch64` | 文件面向 AArch64 架构，对应 `EM_AARCH64` |
+| `version 1 (SYSV)` | ELF 版本和 ABI 标识，不是当前 Linux 内核版本 |
+| `dynamically linked` | 运行时需要动态加载器和共享库 |
+| `interpreter ...` | 动态加载器路径；目标系统必须提供兼容文件 |
+| `not stripped` | 符号等信息尚未全部剥除；不代表一定包含完整调试信息 |
+
+`file` 的摘要只能用于初步筛查。还要用 `readelf` 查看 ELF 属性、加载器、库依赖和架构特征。
+
+### 读取 ELF 头时的字节序与“宿主”
+
+> [!Note] 读取 ELF 文件的字节缓冲区
+> `std::array<unsigned char, 20>` 保存文件开头 20 个原始字节，足以检查魔数并取到 `e_machine`，但不是完整 ELF 头。`std::istream::read()` 的参数类型是 `char*`，所以 `reinterpret_cast<char*>(header.data())` 让输入流把字节写进同一块缓冲区；它不改变字节内容。`!self` 用来检查读取是否失败或是否没有读到所需字节数。
+
+> [!Note] ELF 字节序与宿主字节序
+> `EI_DATA` 说明 ELF 文件自身的字节序：`1` 是小端，`2` 是大端。“宿主字节序”指执行解析代码的本机字节序。解析器应该按文件的 `EI_DATA` 解释字段，而不能假定文件字节序和宿主相同。
+
+代码中的 `header[0..3]` 检查魔数；`header[5]` 是 `EI_DATA`，必须用文件自己的字节序解释 `e_machine`。`e_machine` 位于偏移 `18..19`：
+
+```cpp
+const auto e_machine = static_cast<std::uint16_t>(
+    bigEndian
+        ? (std::uint16_t{header[18]} << 8) | header[19]
+        : (std::uint16_t{header[19]} << 8) | header[18]);
+```
+
+大端文件的高字节在前，小端文件的低字节在前。实际解析还应只接受 `EI_DATA == 1` 或 `EI_DATA == 2`；如果代码只写 `header[5] == 2`，其他非法值会被误当成小端。
+
+按字节读取并依据 `EI_DATA` 组合字段后，解析不需要假定宿主字节序。交叉编译术语中的 GNU Autoconf `host` 另有含义，见 [[#目标三元组]]。
+
+### 编译期宏与运行期事实
+预定义宏由编译器前端在预处理时提供，不需要项目头文件定义。目标三元组和编译选项会影响目标相关宏；`-std` 影响语言版本宏。常见宏包括：
+
+| 宏 | 表示什么 |
+| --- | --- |
+| `__arm__` / `__aarch64__` | 编译器当前使用的 Arm 目标大类 |
+| `__x86_64__` / `__i386__` | 编译器当前使用的 x86 目标大类 |
+| `__riscv` / `__riscv_xlen` | RISC-V 目标及其寄存器宽度，如 `32` 或 `64` |
+| `__ARM_PCS` | 默认函数调用遵循 AAPCS 基础 PCS |
+| `__ARM_PCS_VFP` | 默认函数调用使用 VFP 寄存器传递浮点参数 |
+| `__cplusplus` | 当前 C++ 语言模式对应的标准版本值 |
+| `__VERSION__` | GCC 编译器版本字符串 |
+
+> [!Note] `uname`
+> `uname` 输出当前内核报告的系统信息。
+
+> [!Note] `AT_HWCAP` 与 CPU 能力位
+> Linux 在启动进程时会通过辅助向量（auxiliary vector，一组键值信息）把运行环境信息交给程序。`AT_HWCAP` 是其中一个键；`getauxval(AT_HWCAP)` 读取与它对应的值。该值是依架构和 ABI 定义的位掩码（每一位可单独表示一项能力）：各个 `HWCAP_*` 标志代表内核向用户态报告的可用 CPU 功能。它不是 CPU 型号，也不保证把芯片的所有物理能力都列出来；内核配置或兼容环境也会影响哪些能力被报告。ARM64 上还可能用 `AT_HWCAP2`、`AT_HWCAP3` 表示更多特性。
+
+程序可检查某个标志，再选择是否调用使用该指令扩展的优化实现。具体标志和值要查目标架构的内核头文件和文档，不能把某一架构的位定义套到另一架构。例如 ARM64 的 `HWCAP_ASIMD` 表示可用 Advanced SIMD（常称 NEON，即 Arm 的向量指令扩展）功能。运行期检查只决定是否调用对应实现；该实现仍须用合适的编译选项生成，检测本身不会让编译器生成扩展指令。`getauxval()` 返回 `unsigned long`，因此这里的 `static_cast<unsigned long>` 不改变值，只是显式标出类型；`facts._hwcap` 保存的是原始位掩码，打印成十六进制并没有自动解码其中每一位。若要区分“值恰好为 0”和“辅助向量中没有这个键”，应先令 `errno = 0`，再检查 `getauxval()` 是否返回 `0` 且 `errno == ENOENT`（表示没有该键）。
+
+```cpp
+if ((hwcap & HWCAP_ASIMD) != 0) {
+	// 选择使用 Advanced SIMD 指令的实现
+}
+```
+
+这些宏由所用编译器、目标三元组、`-march`、`-mcpu`、`-mabi`、`-mfpu`、`-mfloat-abi` 和 `-std` 等配置共同决定。手动 `-D__aarch64__` 只能伪造条件编译分支，不会让编译器生成 AArch64 代码。
+
+```bash
+aarch64-linux-gnu-g++ -dM -E -x c++ /dev/null | grep -E '__aarch64__|__ARM_PCS|__ARM_PCS_VFP|__cplusplus'
+```
+
+`-dM -E` 用于查看编译器实际提供的宏。`compileArchFromMacros()` 只把这些宏归并成 `arm`、`aarch64`、`x86_64`、`riscv64` 等粗粒度架构名；`floatAbiFromMacros()` 根据 Arm PCS 宏作简化分类。
+
+> [!Note] Linux 系统页大小
+> 页（page）是操作系统管理虚拟内存时使用的基本块。虚拟内存是操作系统为进程提供的地址空间，并由系统负责把这些地址映射到实际内存。`sysconf(_SC_PAGESIZE)` 在运行期查询系统页大小，返回值单位是字节；例如返回 `4096` 就是 `4096` 字节。它不是编译器选择的 ISA 或 ABI。不同系统配置可能有不同页大小，因此程序需要时应查询实际运行环境。
+
+> [!Note] `mmap()` 与 `munmap()`
+> `mmap()` 把文件或匿名内存映射到进程地址空间；`munmap()` 移除一段已有映射。内核以页为单位管理这些映射，所以某些地址或文件偏移必须满足页边界对齐要求。
+
+`mmap()` 文件映射的偏移必须按页大小对齐；`munmap()` 的起始地址也必须按页边界对齐。程序会用查询到的页大小计算对齐边界或所需页数。示例把返回值存入 `facts._pageSize`，测试再检查它是否大于 `0`；如果查询失败，`sysconf()` 会返回 `-1`，所以使用前应处理非正值。
+
+`getauxval()` 是 Linux 接口，`sysconf()` 属于 POSIX 运行期查询接口；这段代码面向 Linux 用户态。裸机程序没有 Linux 辅助向量或 `sysconf()`，RTOS 项目要使用对应 RTOS/BSP 提供的能力查询和内存管理信息。
+
+`collectTargetFacts()` 还会收集 `__cplusplus`、编译器版本、指针/整数大小、字节序等编译期事实，并读取 `/proc/self/exe`、`uname`、`AT_HWCAP`、页大小等运行期信息。因此同一个程序的编译期目标与运行期环境可能不一致。它记录的 `_hwcap` 和 `_pageSize` 描述当前运行环境，不会反过来改变已经生成的机器码。
+
+`/proc/self/exe` 是 Linux 提供的指向当前进程可执行文件的特殊链接。这些运行期事实描述程序当前所处环境，编译期宏描述编译器被配置成面向的目标。
+
+### `uname` 查询什么
+`uname` 输出当前内核报告的系统信息；它不是交叉编译器目标查询命令。
+
+| 命令 | 常见输出 |
+| --- | --- |
+| `uname -s` | 内核名称，如 `Linux` |
+| `uname -n` | 网络节点名，通常是主机名 |
+| `uname -r` | 内核发行版本 |
+| `uname -p` | 处理器类型；系统无法确定时可能输出 `unknown` |
+| `uname -i` | 硬件平台；系统无法确定时可能输出 `unknown` |
+| `uname -o` | 操作系统名称；这是 GNU 扩展选项 |
+| `uname -v` | 内核构建版本信息 |
+| `uname -m` | 内核报告的机器架构，如 `aarch64` |
+| `uname -a` | 一组系统信息；具体字段随系统实现变化 |
+
+`uname -m` 描述运行环境中内核报告的架构，不会因为交叉编译器选择了 AArch64 就自动变成 `aarch64`。容器和用户态模拟也可能让它报告宿主内核信息。裸机程序没有通用操作系统，通常没有 `uname` 命令。
+
+### 选择工具链与判断目标兼容性
+物理设备本身实现 ISA 和可选硬件功能；ABI 是固件、工具链和库之间采用的二进制约定；C/C++ 标准是编译器支持的源代码语言版本。需要分别确认：
+
+| 问题 | 应查证据 |
+| --- | --- |
+| 芯片能执行什么 | 完整芯片型号、内核手册、数据手册、可选 FPU/扩展配置 |
+| 程序运行在哪种系统 | Linux 镜像/发行版和 rootfs；或 RTOS、厂商 SDK、裸机启动要求 |
+| 采用什么 ABI 和库 | SDK 配套编译器、构建参数、sysroot、运行库和 ELF 属性 |
+| 采用什么 C/C++ 标准 | 实际编译命令、编译器版本和标准库版本 |
+
+优先从设备厂商、Linux 镜像或 RTOS 提供的 SDK 获取工具链和目标库。Linux 用户态要匹配 CPU 架构、ABI、libc 实现/版本、动态加载器及共享库；裸机或 RTOS 还要匹配启动文件、设备头文件、板级支持代码和链接脚本。若 SDK 没有预编译依赖库，才从源码用相同目标选项重编译该库及其传递依赖。
+
+> [!Note] 静态库与共享库
+> `.a` 通常是包含目标文件的归档，链接时把所需代码复制进最终程序；`.so` 是运行时由动态加载器装入的共享库。两者都必须面向兼容的目标架构和 ABI。
+
+只要 SDK 提供的预编译库与目标架构、ABI 和运行库兼容，就不必从源码重编；没有兼容版本时，才需要把依赖及其传递依赖全部交叉编译。
+
+ELF 头中的 `e_machine`、位数和字节序一致只是必要线索，不是可运行保证。AArch32 可用 `readelf -h -A program` 查看 ELF 头和 Arm Build Attributes；`Tag_ABI_VFP_args` 的值 `0` 表示基础 PCS，`1` 表示 VFP 寄存器 PCS，其他取值含工具链专用或兼容约定。需要同时检查所有对象文件和库。Linux 动态程序还要查看 `readelf -l` 的 `PT_INTERP` 和 `readelf -d` 的 `DT_NEEDED`；裸机 ELF 通常需进一步检查链接映射和启动布局。
+
+### 交叉编译排查流程
+| 步骤 | 怎么查 | 目的 |
+| --- | --- | --- |
+| 确认设备 | 记录完整芯片型号、CPU 内核、OS/RTOS/裸机环境 | 选出真正的目标平台，而不只凭 `ARM` 或 `64-bit` 猜测 |
+| 确认工具链 | 使用设备 SDK 的编译器、链接器、运行库和 sysroot；查看编译器 `-dumpmachine` | 保证编译器目标和系统库来自兼容组合 |
+| 检查构建命令 | 查看工具链文件、CMake Cache、`cmake --build build --verbose` 或 `compile_commands.json` | 发现误用宿主编译器、宿主头文件/库或错误 ABI 选项 |
+| 检查产物 | `file`、`readelf -h -l -A -d`、必要时 `objdump -d` | 验证架构、ABI 属性、加载器、依赖库和指令 |
+| 在目标环境运行 | Linux 复制到真实设备；裸机按烧录器/Bootloader 规范加载 | 验证实际加载器、库、硬件功能、启动地址和设备配置 |
+
+| 现象 | 优先检查 |
+| --- | --- |
+| `Exec format error` | ELF 格式、`e_machine`、类别、字节序或系统是否支持该可执行格式 |
+| 文件存在却报 `No such file or directory` | ELF `PT_INTERP` 指定的动态加载器是否存在；Linux 的 `ENOENT` 也可能来自解释器缺失 |
+| 报缺少共享库或符号版本 | `DT_NEEDED`、目标系统库目录、libc 和库版本 |
+| `Illegal instruction` | 目标芯片是否支持 `-march`、`-mcpu`、`-mfpu` 生成的指令；裸机还检查 FPU 初始化 |
+| 链接时未定义符号或 ABI 冲突 | 目标库是否齐全，编译器、C/C++ 运行库及浮点 PCS 是否兼容 |
+| 裸机程序未启动 | Bootloader 格式、入口/向量表、启动代码、链接脚本和 Flash/RAM 布局 |
+
+链接成功不等于程序一定能运行：链接器不一定知道物理芯片是否实现每条扩展指令，加载器和设备启动条件也只有在目标环境中才能验证。交叉编译应在宿主机完成，还是在目标机本地完成，由开发流程和 SDK 决定，与设备性能并非一一对应。
+
 ## 常见问题
 1. 项目的 `.gitignore` 如果忽略所有 `*.cmake`，工具链文件也可能被忽略。可检查 `git status`，按项目目录规则允许提交需要的工具链文件。
 2. `CMAKE_FIND_ROOT_PATH_MODE_PROGRAM` 与库、头文件和包的查找模式职责不同。程序通常用宿主版本，目标库和头文件通常只从目标路径查找；设反后容易出现“配置通过，构建或运行才失败”。
@@ -262,6 +585,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 > AUTOSAR（AUTomotive Open System ARchitecture，汽车开放系统架构）是汽车电子软件架构标准，包含多个分层模块。它的启动代码、运行库和构建方式与 Linux 应用有所区别。
 
 阶段 4 可对照 `IEEE1722Tp`、`LsduR` 等 AUTOSAR 模块，确认它们所在层次和依赖关系。模块位置应以实际项目采用的 AUTOSAR 版本和文档为准。
+
 ## 待验证清单
 > [!Info] 后续验证内容
 > 下面几项要等工具链安装或设备运行环境准备好后再做。阶段 0 和阶段 1 先掌握交叉编译流程即可，这些进阶检查可以暂时跳过。
