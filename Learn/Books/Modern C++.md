@@ -47,18 +47,18 @@ using std::endl;
 在 C++ 中，除非是 `constexpr`、整型常量或 `inline` 静态成员变量，静态成员变量不能在类内初始化，必须在 `.h` 中声明但不初始化，`.cpp` 中定义初始化（C++17 之前）；C++17 及以后，`inline` 静态成员变量可以在类内初始化。
 #### `.h` 头文件（Header File）
 - **作用：声明**
-  
+
   - 类、函数、变量、宏等的**声明（declaration）**
-  
+
   - 不包含具体的实现逻辑
-  
+
   - `inline` 或者**模板**允许在头文件中定义
-  
+
   - 为避免多次包含应该使用 `#pragm once`
 - **目的：供其他** `.cpp` **文件包含使用**
 #### `.cpp` 源文件（Source File）
 - **作用：定义**
-  
+
   - 函数、类成员函数、全局变量等的**定义（definition）**
 - **目的：编译生成目标文件（.o / .obj），最终链接成可执行程序或库**
 | 项目   | 推荐写法                                   |
@@ -169,19 +169,19 @@ char arr_6[len_foo_constexpr() + 1]; // 合法
 mingw 会将非法情况都合法化不报错，但原则上只有 constexpr 变量才能够作为数组大小的定义 C++11 提供了 `constexpr` 让用户显式的声明函数或对象构造函数在编译期会成为常量表达式
 - **变量**：`constexpr` 可以修饰变量，表示其值在编译时已知。
 - **函数**：`constexpr` 函数指的是其返回值可以在编译时计算出的函数，这类函数必须满足：
-  
+
   1. **单一返回语句**：所有代码路径都必须通过单一 `return` 语句返回。
-  
+
   2. **仅编译时常量操作**：函数体内只能使用编译时常量、字面量、其他 `constexpr` 函数或 `constexpr` 变量。
-  
+
   3. **不允许修改外部状态**：不能修改非局部变量、使用 `volatile` 变量或 I/O 操作。
-  
+
   4. **返回类型限制**：`constexpr` 函数不仅限于基本数据类型，**任何可在编译时计算出的类型**都可以，包括：
-     
+
      - 整数、浮点数等基本类型
-     
+
      - `array`、`tuple` 等固定大小的容器
-     
+
      - 用户定义的类型（UDT），前提是其构造函数也是 `constexpr`
 - **函数体限制**：函数体内不能包含运行时特征（如 I/O、异常抛出、`volatile` 访问等）
 #### 检查是否可以编译期计算
@@ -402,7 +402,7 @@ int main() {
 }
 ```
 ### decltype 类型推导
-参考 [[C++ Runoob Tutoral#decltype 关键字]] 
+参考 [[C++ Runoob Tutoral#decltype 关键字]]
 ## 2.5 模板
 - C++11 开始，连续的右尖括号将变得合法
 ### 变长参数模板
@@ -492,7 +492,7 @@ C++ 编译器不是一个真正的逻辑执行环境，但它 **可以模拟一�
 > [!note]
 > - 用一个“二元运算符”，对其展开的每个参数进行“**编译期生成多个表达式**”。
 > - 所谓“折叠”—— 不是计算时折叠，而是**生成表达式链结构**的方式被折叠。
-> - 折叠表达式 `...` 的本质：不是为了**计算**某个表达式 —— 而是为了**在编译期根据参数包生成多个表达式片段**。每个 `args_i` 都会生成一份 `expr(args_i)` 逻辑代码。 
+> - 折叠表达式 `...` 的本质：不是为了**计算**某个表达式 —— 而是为了**在编译期根据参数包生成多个表达式片段**。每个 `args_i` 都会生成一份 `expr(args_i)` 逻辑代码。
 > - 如果这个 expr 是 lambda、pair decay 表达式、嵌套函数计算 —— 仍能在编译期转化成多个硬编码函数调用。
 #### 折叠语法
 一般在模板参数列表中使用 `Args` 表示类型参数包，在函数参数列表使用 `args` 表示形参参数包
@@ -569,7 +569,7 @@ void print_left(Args&&... args){
     // (((((std::cout << args1) << args2 ) << args3..... << argsN);  // 展开形式
     // std::cout << ... << args; // 报错，因为展开必须在语序的上下文中才能进行
     // ((std::cout << args1 << " "), ((std::cout << args2 << " "), ...))))))
-    
+
 	// 不能写成这样
 	// (std::cout << args << ... << " ");
 	// 因为这样展开之后是
@@ -1185,7 +1185,7 @@ int main() {
 ### 移动语义
 #### 移动语义原理
 > [!note] 移动语义（Move Semantics）是指：**将资源从一个对象“移动”到另一个对象，而非复制它**。它通过**右值引用（rvalue reference）** 和 `std::move()` 机制实现。
-> 
+>
 > 本质是通过[[C++ Runoob Tutoral#移动构造函数|移动构造/赋值函数]]，来让**右值传入时**触发**类自身移动语义**，实现 0 开销资源转移
 ![[Pasted image 20250806163633.png]]
 ```cpp
@@ -1283,20 +1283,20 @@ int main() {
 }
 ```
 - 对于 `pass(1) -> 左值`：
-  
+
   - `1` 是一个纯右值（prvalue），传入 `T&& v` 模板参数时，C++ 的模板推导规则是：
-    
+
     - `T` 被推导为 `int`；
-    
+
     - 所以 `T&& v` 实际上被推导为 `int&& v`；
-    
+
     - ⟹**所以，参数** `v` **是右值引用绑定一个右值**：`1` 被绑定为 `int&& v = 1;` 这种。
-  
+
   - 虽然 `v` 是 `int&&` 类型，pass函数中将v传入reference的过程中给1赋予了一个"v"的名字，所以在上下文中，v是一个左值
 - 对于 `pass(l) -> 右值`：
-  
+
   - `l` 已经被命名，`T&&` 通过[[#Note：万能引用|万能引用]]解析出传递的参数是一个左值
-  
+
   - 然后调起对应的左值 reference
 #### 左值引用注意事项
 ![[Pasted image 20250910141538.png]]
@@ -1477,11 +1477,11 @@ auto merge_tuples(Tuple1&& t1, Tuple2&& t2) {
 - 即便你传入的是 `std::move` 过来的 rvalue 参数，`tuple_cat` **仍以左值来 copy 所有元素**；
 - 合并过程就变得无法使用 move，而采用 copy 构造 → 如果你 tuple 中有 expensive 类型（如字符串、vector），不显式使用 `move` 的情况下，这将浪费大量拷贝。对 `unique_ptr`、`std::mutex` 这种不可复制类型，编译器会直接报错。
 - 如果使用 forward 转发，则会：
-  
+
   - 如果是左值 → tuple\_cat 会使用 `std::tuple<Ts...>` 内部的 copy构造函数；
-  
+
   - 如果是右值 → 使用 move构造函数；
-  
+
   - \*\*如果无法得知任意参数的身份，建议使用 **universal reference（**`T&&`**）与** `std::forward<T>` **结合转发让编译器决定如何传递值，如果可以确定参数的身份，可以显式使用 move 让左值变成右值提高性能**
 > 除非是 tuple 元素都是 trivial 类型（如 int、double、enum、trivial-functions），否则绝不 recommended。
 5. 遍历元组
@@ -1673,7 +1673,7 @@ int main() {
 - `a->pointer = b`（`shared_ptr<B>` → `weak_ptr<A>`） → `b` 的引用计数仍为 1（因没有增加强引用）
 - `b->pointer = a` → 因是 `weak_ptr<A>`，**不增加** `a` 的强引用计数，但 `a->pointer` 是强引用 `b` 接着当 a, b 被销毁后 ![[file2.png]]
 ## Note: 智能指针的局限性
-> [!warning] 
+> [!warning]
 > **智能指针不会在编译时或编写时指出开发者是否违反了智能指针的语义或设计意图**。
 > 它们不会像类型系统那样强制限制某些“危险行为”，比如：
 > - 把同一个原始指针多次交给不同的 `shared_ptr`，导致多个拥有权，从而引发未定义行为；
@@ -1905,145 +1905,6 @@ void push(int value)
 `std::atomic_flag` 是标准保证 lock-free 的标志类型：`test_and_set()` 原子地设为 `true` 并返回旧状态，`clear()` 设为 `false`。C++20 增加了 `test()`、`wait()` 和通知操作；已有的自旋锁示例见 [[#Note：内存序]]。
 ##### 浮点原子操作
 C++20 起，浮点原子特化提供 `fetch_add()` 和 `fetch_sub()`。它们保证对原子对象的更新不可分割，但不保证多个线程的累加次序；浮点加法存在舍入且不满足结合律，因此不同交错顺序可能得到不同结果。是否 lock-free 由实现决定，不能仅凭类型是 `float` 就推断其硬件实现或性能。
-##### 练习题解析
-教材练习 1 只给了思路，没有附完整代码；练习 2 的 `MaxTracker::update()` 代码就在题目后。源码链接的 `code/volumn_codes/vol5/ch03-atomic-memory-model/` 目录包含基础原子操作和汇编示例，不包含这两题的完整测试实现。
-
-练习 1：两种实现都应得到 `8 * 100000 = 800000`。计数器独立使用时，`relaxed` 足够；CAS 失败时 `expected` 被更新，下一轮会基于新值重新计算期望的加一结果。
-```cpp
-#include <atomic>
-#include <chrono>
-#include <functional>
-#include <iostream>
-#include <stdexcept>
-#include <thread>
-#include <vector>
-
-constexpr int kThreadCount = 8;
-constexpr int kIterations = 100000;
-
-void increment_with_fetch_add(std::atomic<int>& counter)
-{
-    for (int i = 0; i < kIterations; ++i) {
-        counter.fetch_add(1, std::memory_order_relaxed);
-    }
-}
-
-void increment_with_cas(std::atomic<int>& counter)
-{
-    for (int i = 0; i < kIterations; ++i) {
-        int expected = counter.load(std::memory_order_relaxed);
-        while (!counter.compare_exchange_weak(
-            expected, expected + 1,
-            std::memory_order_relaxed,
-            std::memory_order_relaxed)) {
-        }
-    }
-}
-
-void run_counter_test(
-    const char* name,
-    void (*increment)(std::atomic<int>&))
-{
-    std::atomic<int> counter{0};
-    std::vector<std::thread> workers;
-    const auto begin = std::chrono::steady_clock::now();
-
-    for (int i = 0; i < kThreadCount; ++i) {
-        workers.emplace_back(increment, std::ref(counter));
-    }
-    for (auto& worker : workers) {
-        worker.join();
-    }
-
-    const auto elapsed = std::chrono::duration<double, std::milli>(
-        std::chrono::steady_clock::now() - begin).count();
-    const int result = counter.load(std::memory_order_relaxed);
-    if (result != kThreadCount * kIterations) {
-        throw std::runtime_error("counter result is incorrect");
-    }
-    std::cout << name << ": " << result << " in " << elapsed << " ms\n";
-}
-
-int main()
-{
-    run_counter_test("fetch_add", increment_with_fetch_add);
-    run_counter_test("CAS loop", increment_with_cas);
-}
-```
-`fetch_add()` 通常能直接映射为原子读改写指令；CAS 循环在竞争时可能重试更多次，但具体耗时依赖编译器、CPU 和调度。上面的计时包含线程创建与回收，比较时应以 Release 构建、多轮结果的中位数为参考，不把单次结果当作普遍结论。
-
-练习 2：只在候选值大于当前最大值时尝试 CAS。CAS 失败后 `current` 已更新为最新值；若另一个线程写入了更大的值，循环条件随即变为假，无需继续写入。
-```cpp
-#include <algorithm>
-#include <array>
-#include <atomic>
-#include <iostream>
-#include <limits>
-#include <random>
-#include <thread>
-#include <vector>
-
-class MaxTracker {
-public:
-    void update(int candidate)
-    {
-        int current = max_.load(std::memory_order_relaxed);
-        while (candidate > current &&
-               !max_.compare_exchange_strong(
-                   current, candidate,
-                   std::memory_order_relaxed,
-                   std::memory_order_relaxed)) {
-        }
-    }
-
-    int get() const
-    {
-        return max_.load(std::memory_order_relaxed);
-    }
-
-private:
-    std::atomic<int> max_{std::numeric_limits<int>::min()};
-};
-
-int main()
-{
-    constexpr int kThreadCount = 8;
-    constexpr int kSamplesPerThread = 100000;
-    MaxTracker tracker;
-    std::array<int, kThreadCount> local_max{};
-    std::vector<std::thread> workers;
-
-    for (int i = 0; i < kThreadCount; ++i) {
-        workers.emplace_back([&tracker, &local_max, i] {
-            std::mt19937 engine(static_cast<unsigned>(i + 1));
-            std::uniform_int_distribution<int> distribution(-1000000, 1000000);
-            int thread_max = std::numeric_limits<int>::min();
-            for (int j = 0; j < kSamplesPerThread; ++j) {
-                const int value = distribution(engine);
-                thread_max = std::max(thread_max, value);
-                tracker.update(value);
-            }
-            local_max[i] = thread_max;
-        });
-    }
-    for (auto& worker : workers) {
-        worker.join();
-    }
-
-    const int expected = *std::max_element(local_max.begin(), local_max.end());
-    const int actual = tracker.get();
-    std::cout << "expected=" << expected << ", actual=" << actual << '\n';
-    return actual == expected ? 0 : 1;
-}
-```
-练习 2 的 `relaxed` 足够，因为原子对象只承载最大值本身，没有借它发布或读取其他非原子数据。
-参考：
-- 课程原文：[Tutorial_AwesomeModernCPP](https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeModernCPP)，`documents/vol5-concurrency/ch03-atomic-memory-model/01-atomic-operations.md`
-- [C++20 draft：通用原子操作与 CAS](https://timsong-cpp.github.io/cppwp/n4861/atomics.types.operations)
-- [C++20 draft：原子类型约束](https://timsong-cpp.github.io/cppwp/n4861/atomics.types.generic)
-- [C++20 draft：lock-free 属性](https://timsong-cpp.github.io/cppwp/n4861/atomics.lockfree)
-- [C++20 draft：浮点原子特化](https://timsong-cpp.github.io/cppwp/n4861/atomics.types.float)
-- [C++20 draft：`atomic_flag`](https://timsong-cpp.github.io/cppwp/n4861/atomics.flag)
 
 #### 资源锁定和线程执行
 ##### 锁的使用
@@ -2062,16 +1923,16 @@ cv.wait(lock, []{ return !data_queue.empty() || done; });
 // 只要队列为空并且还没完成生产，就一直等下去。
 ```
 1. **等待条件成立** ：
-   
+
    - `cv.wait(...)` 会**阻塞当前线程** ，直到被其他线程调用 `notify_one()` 或 `notify_all()`。
-   
+
    - 在等待期间，**自动释放锁（unlock）** ，允许其他线程修改共享资源。
-   
+
    - 当被唤醒后，**重新获得锁（lock）** ，然后检查谓词（predicate）是否为真。
 2. **谓词的作用（predicate）** ：
-   
+
    - 是一个返回布尔值的可调用对象（如 lambda 表达式）。
-   
+
    - 目的是防止虚假唤醒（spurious wakeups）——即线程被唤醒但条件仍未满足的情况。
 ##### 经典消费者生产者模型
 ```cpp
@@ -2111,7 +1972,7 @@ int main() {
     std::cout << "All tasks completed.\n";
 }
 ```
-- 前置知识  
+- 前置知识
 	- `std::condition_variable` 需要与 `std::mutex` 配合使用，通过 `wait` 和 `notify` 实现线程间通信。
 	- 消费者线程在 `cv.wait(lock, predicate)` 处阻塞，等待条件满足（队列非空或生产结束）。
 	- 生产者通过 `cv.notify_one`（唤醒 **一个** 等待的线程（随机选择）） 或 `cv.notify_all` 唤醒**等待**的消费者线程。
@@ -2338,11 +2199,11 @@ int val = data[42];  // 直接访问已知地址，p 的依赖链被切断
 >   int* q = another_ptr.load(consume); // ② 另一个 consume
 >   int x = *p;                          // ③ 依赖 ① 的数据
 >   int y = *q;                          // ④ 依赖 ② 的数据
-> 
->   // ① 和 ③ 之间：不重排 
->   // ② 和 ④ 之间：不重排 
->   // 但 ① 和 ② 之间：可以重排 
->   // ③ 和 ④ 之间：可以重排 
+>
+>   // ① 和 ③ 之间：不重排
+>   // ② 和 ④ 之间：不重排
+>   // 但 ① 和 ② 之间：可以重排
+>   // ③ 和 ④ 之间：可以重排
 >   // 编译器可以执行成：②, ①, ④, ③，也可以执行成：①, ②, ③, ④，两种都合法！
 > ```
 
@@ -2365,9 +2226,9 @@ c. 写 flag（写操作）                 ← 写
 release 保证：b 不能重排到 c 之后，不保证：a 不能重排到 c 之后 ← a 是读操作，release 管不住，所以需要 std::memory_order_acq_rel
 ##### 最强约束 std::memory_order_seq_cst
 表示屏障前后的所有操作经过重排后**都不能**越过屏障，不管他是读操作还是写操作，可以理解为以下几点:
-就是多个线程在使用 seq_cst 的时候。可以认为是在进行合并排序。  
-- 合并排序之后，当然可以得到一个有序的数组。  
-- 但是每个线程假设只看原本只属于自己的那些元素，它们仍然是自己原来的顺序。 
+就是多个线程在使用 seq_cst 的时候。可以认为是在进行合并排序。
+- 合并排序之后，当然可以得到一个有序的数组。
+- 但是每个线程假设只看原本只属于自己的那些元素，它们仍然是自己原来的顺序。
 - 至于这个总序本身是怎么样排出来的（不同硬件排序的结果可能不同），这并不是 c++语义所关心的。
 ##### 什么时候该用什么
 | 操作               | 内存序     | 原因           |
@@ -2657,9 +2518,9 @@ void no_throw() noexcept; // 不可能抛出异常
 - 当编译器遇到字面量后接用户定义的后缀（如 `"abc"_wow` 或 `123_km`），会自动调用对应的重载函数，根据字面量类型传入预定义的参数类型，并将返回值作为结果。
 - 不能将字符串字面量的参数改为 `std::string`，必须使用 `(const char*, size_t)` 避免不必要的 `std::string` 构造，允许直接处理原始字符数组。
 - 如果使用字符串字面量或者原始字符串参数列表，参数列表中：
-  
+
   - `str` 是后缀前的字符串字面量
-  
+
   - `len` 是字符串长度（不包括终止符 `\0`）
 - **自定义字面量 = 固定参数类型 + 用户定义后缀 + 自由返回值**
 #### 更好的单位可读性
@@ -3159,9 +3020,9 @@ T add(T a, T b) { return a + b; }
 `requires` **就是一个编译期 Boolean 求值器**：
 - `( )` 里是**约束变量表**；
 - `{ }` 里是“**必须要能编译通过**”的迷你代码块；
-  
+
   - 所有表达式都能通过语法和语义分析（如函数存在、操作合法）→ `requires` 表达式为 `true`
-  
+
   - 任意一条表达式不合法（如成员函数不存在、操作不支持）→ `requires` 表达式为 `false`
 - `->` 是“**给返回值附加额外条件**”的语法糖。 写一个具体的“表达式式约束”，告诉编译器“我期望某个类型能做某些事情”：
 ```cpp
@@ -3627,11 +3488,11 @@ std::enable_if_t<std::is_same_v<T, ErrorStruct>> printInfo(T value) {
 - 顺序容器：元素按顺序排列。虽然可以按顺序使用元素，但其中一些容器使用连续存储，而其他容器则不使用
 - 关联容器：将一个键与每个元素关联起来。元素是通过键来引用的，而不是其在容器中位置
 - 容器适配器：容器适配器是封装底层容器的类，容器类提供了一组特定的成员函数来访问底层容器元素。
-  
+
   - stack：底层容器可以是 vector、deque 或 list 中一种。若没有指定底层容器，默认为 deque
-  
+
   - queue：底层容器可以是 deque 或 list 容器之一。若没有指定底层容器，默认为 deque。
-  
+
   - priority\_queue：底层容器可以是 vector 或 deque 中一个。若没有指定底层容器，默认为 vector
 ### 使用擦除函数从容器中删除项
 - `std::remove` **不会真正从容器中删除元素**（尤其不是通过 `erase()` 那样的方式删除）。**仅重排元素**，有返回值，是容器末尾的迭代器
@@ -3678,9 +3539,9 @@ auto nh = m.extract(2);  // 把 key=2 的节点提取出来
 `nh` 是一个 `map<int, std::string>::node_type`（节点句柄）， 它**拿出了那个元素，但没有复制或移动其内容**（所以叫“zero-copy”）。 “节点句柄”是 C++17 引入的一种机制，它的本质是一个轻量包装器，用来：
 - 持有某个从[[#STL 容器类型的概述|关联容器]] 提取出的键值对（node）
 - 支持在不触发复制、不重新分配内存的前提下：
-  
+
   - 修改键（key）
-  
+
   - 插回容器或其他兼容容器中
 ```cpp
 auto nh = m.extract(2);  // nh 是节点句柄
@@ -3738,9 +3599,9 @@ In file included from D:/Program/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/inclu
 1. 一个 `.begin()` 成员
 2. 一个 `.end()` 成员，**两个成员返回的类型必须一致**，返回类型为 iterator
 3. 必须重载 iterator 中
-   
+
    1. `operator*()`  ——解引用，否则无法访问对应元素的值，只能拿到地址
-   
+
    2. `operator++()` ——前置 `++`，如果不实现则无法支持 min\_element，sort 这些算法函数，因 `min_element` 函数签名为：
 template ForwardIterator min\_element(ForwardIterator first, ForwardIterator last); // 需要传入了类型支持前向迭代器概念，概念定义可以再crefer中查到 \`\`\` ![[Pasted image 20250806171459.png]] 3. `operator==` / `!=` 代码实现参考 [[C++ Code Snippets#支持 for-range 的自定义 vector 数据结构]]
 
