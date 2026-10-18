@@ -640,14 +640,14 @@ int main() {
 // 得到的匿名对象
 class __lambda_6_10
 {
-  public: 
+  public:
   inline constexpr int operator()() 	   // 1
   inline constexpr int operator()() const  // 2
   {
     return 0;
   }
-  
-  // private: 
+
+  // private:
   int x;
 };
 
@@ -2395,7 +2395,7 @@ public:
   static Connection* createTcp(const std::string& h, int p) {
 	  return new TcpConnection(h, p);     // 友元可访问 protected
   }
-};  
+};
 ```
 ##### private 构造函数
 表示友元和类内部可以创建对象，外部不可创建
@@ -2423,7 +2423,7 @@ public:
   static Connection createTCP(std::string host, int port) {
 	  return Connection(host, port);  // ✅ 友元可以访问私有构造函数
   }
-};  
+};
 
 auto conn = ConnectionFactory::createTCP("localhost", 8080);
 // auto conn2 = Connection("localhost", 8080);   // ❌ 编译错误
@@ -2519,9 +2519,9 @@ public:
 		  [](DatabaseConnection* p) {
 			  p->close();
 			  delete p;
-		  }   
+		  }
 	  );
-  }   
+  }
   void close() { /* flush, release */
 ```
 2. 引用计数对象（类似 COM 模式）
@@ -2546,7 +2546,7 @@ public:
   static Singleton& getInstance() {
 	  static Singleton instance;
 	  return instance;
-  }   
+  }
 };
 ```
 这里 Singleton 实例在静态存储区（函数局部 static），析构由 C++ runtime 管理，但 private
@@ -3141,7 +3141,7 @@ int main (){
 	- 包括 typeid 返回的类型 id 是否相同
 	- 值类型，即是否引用类型两种
 - 参数列表顺序
-- 如果函数是成员函数还要看函数体是否为 const 
+- 如果函数是成员函数还要看函数体是否为 const
 **不看返回值**——仅返回值不同，
 #### 运算符重载
 - **运算符重载允许你为类定义运算符的自定义行为，但重载后的运算符的使用方式（语法）仍遵循 C++中该运算符的原始语法规则。**
@@ -4366,7 +4366,7 @@ std::cout<<s3<<std::endl;  // 输出 Hello
 > private:
 >     int* data;
 > };
-> 
+>
 > // 这里iterator才完全可见
 > auto Container::begin() -> iterator {
 >     return iterator(data);
@@ -4376,10 +4376,10 @@ std::cout<<s3<<std::endl;  // 输出 Hello
 > ```cpp
 > // 复杂的函数指针返回类型
 > auto(*get_func_ptr(int x))() -> int;  // 返回int(*)()
-> 
+>
 > // 用尾置更清晰
 > auto get_func_ptr(int x) -> int(*)();
-> 
+>
 > // 甚至更复杂的
 > auto get_complex(int x) -> int(*(*)())(int, int);
 > // 翻译：返回"指向返回'指向接受(int,int)返回int的函数指针'的函数"的指针
@@ -5937,7 +5937,7 @@ void process(std::string& s) {
 int main() {
     std::string s = "hello";
     const std::string cs = "world";
-    
+
     process(s);   // 调用非 const 版本
     process(cs);  // 调用 const 版本
     process("temp"); // 调用 const 版本（临时对象绑定到 const 引用）
@@ -5957,7 +5957,7 @@ void foo(T&& param) {  // 万能引用
 int main() {
     const int ci = 10;
     foo(ci);  // T 推导为 const int&
-    
+
     std::string s = "hello";
     const std::string& ref = s;
     foo(ref);  // T 推导为 const std::string&
@@ -5982,7 +5982,7 @@ class MyClass {
 public:
     // 非 const 版本：返回可修改的引用
     std::string& get() { return data; }
-    
+
     // const 版本：返回 const 引用
     const std::string& get() const { return data; }
 };
@@ -5990,7 +5990,7 @@ public:
 void use() {
     MyClass obj;
     obj.get() = "new value";  // 调用非 const 版本
-    
+
     const MyClass cobj;
     // cobj.get() = "error";  // ❌ 调用 const 版本，不能修改
     std::cout << cobj.get();   // ✅ 可以读取
@@ -6871,6 +6871,10 @@ template<
     - 将堆的最后一个元素移动到堆顶，时间复杂度为 $O (1)$
     - 通过“下沉”操作调整堆的结构，时间复杂度为 $O (\log n)$
     - 总时间复杂度为 $O (\log n)$
+##### 底层容器为何要求随机访问
+`priority_queue` 的底层容器需要提供 `front()`、`push_back()`、`pop_back()`，并支持随机访问迭代器。堆算法按 `parent = (i - 1) / 2`、`left = 2 * i + 1`、`right = 2 * i + 2` 定位节点，需要迭代器支持常数时间的 `it + n`。
+
+`vector` 和 `deque` 满足这些要求；`list` 只有双向迭代器，不能随机跳到父子节点，因此不能用作底层容器。`deque` 的元素不连续存放，但它的迭代器提供随机访问语义，所以堆算法不要求物理连续内存。
 ##### 实例
 ```cpp
 #include <queue>
@@ -7098,7 +7102,7 @@ cout << "Bitwise NOT: " << b_not << endl;
 内部实现依赖 union，通常使用以下内存布局：
 1. 一个足够大的未命名联合体，用于存储所有可能的类型。
 2. 一个整数索引，用于跟踪当前存储的类型（用来做类型检查）
-性能上: 
+性能上:
 3. `std::variant` 的大小等于最大可能类型的大小加上一些额外的存储（用于类型索引）。
 4. **访问开销**：直接访问当前值通常只有很小的运行时开销。
 与其相关的类:
@@ -7640,10 +7644,10 @@ ranges::to<vector>();			  // 将视图中的数据放入容器中
 std::views::enumerate` 			  // 需要注意在 C++23 中返回的是 std::tuple<size_t, T>，而不是 std::pair<size_t, T>
 ```
 ##### 自定义哨兵
-必须满足 concept 
+必须满足 concept
 ```cpp
 template<class S, class I>
-concept sentinel_for = 
+concept sentinel_for =
     std::semiregular<S> &&           // ① 默认构造/拷贝/赋值/析构/可交换
     std::equality_comparable_with<S, I>; // ② 支持与迭代器双向 == 比较
 ```
@@ -7973,13 +7977,13 @@ X::X(参数) try : 成员初始化列表 {
 - 构造函数中普通 `try` 无法捕获成员初始化列表抛出的异常
 - 析构函数中覆盖析构函数体，以及基类和成员的析构过程。
 需要注意的是:
-1. **catch 不能正常结束**  
-    如果控制流到达构造函数或析构函数 function-try-block 的 `catch` 末尾，原异常会被**重新抛出**。  
+1. **catch 不能正常结束**
+    如果控制流到达构造函数或析构函数 function-try-block 的 `catch` 末尾，原异常会被**重新抛出**。
     也就是说，你不能用它“吞掉”构造或析构中的异常，必须 `throw;` 或抛出新的异常。
-2. **不能访问非静态成员或基类**  
-    在构造函数或析构函数的 `catch` 中，不能访问该对象的非静态数据成员或基类，因为它们可能尚未构造或已被销毁。  
+2. **不能访问非静态成员或基类**
+    在构造函数或析构函数的 `catch` 中，不能访问该对象的非静态数据成员或基类，因为它们可能尚未构造或已被销毁。
     但可以访问构造函数的参数。
-3. **对象不会调用析构函数**  
+3. **对象不会调用析构函数**
     如果构造函数抛出异常并被 function-try-block 捕获，说明对象没有构造成功，因此不会调用该对象的析构函数。已经构造完成的基类和成员会自动销毁。
 ### 属性系统
 
@@ -8198,7 +8202,7 @@ print_values<1, 2, 3>();  // 输出：1 2 3
 - 加 `static` 多余——匿名命名空间已有内部链接
 - `static inline` 在匿名命名空间中双重冗余，无实际效果
 ##### inline 用于命名空间
-内联命名空间让某个命名空间的内容 "透明地" 对外层命名空间可见：                                 
+内联命名空间让某个命名空间的内容 "透明地" 对外层命名空间可见：
 ```cpp
  namespace MyLib {
      namespace v1 {  // 旧版本 - 非内联
@@ -8211,7 +8215,7 @@ print_values<1, 2, 3>();  // 输出：1 2 3
  }
 // 使用方式：
 MyLib::process(10);      // 自动调用 v2::process (默认)
-MyLib::newFeature();     // 可直接访问 v2 的内容 
+MyLib::newFeature();     // 可直接访问 v2 的内容
 MyLib::v1::process(10);  // 显式使用旧版本
 // MyLib::v1::newFeature();  // ❌ 错误，v1 没有 newFeature
 ```
@@ -8231,7 +8235,7 @@ MyLib::v1::process(10);  // 显式使用旧版本
 参考:
 - [[#静态成员和非静态成员|静态成员和非静态成员]]
 - [[#动静态变量|动静态变量]]
-- [[#类的静态成员|类的静态成员]] 
+- [[#类的静态成员|类的静态成员]]
 ##### 局部作用域
 函数内部定义 static 变量**不影响函数作用域（可见范围）**，但变量生命周期会在**程序运行结束时才结束**
 ##### 全局（文件）作用域中
@@ -8300,7 +8304,7 @@ namespace MyLib {
 
 ##### 补充：inline 的 ODR 豁免前提条件
 
-`inline` 的 ODR 豁免不是无条件放行——**所有 TU 中的定义必须完全相同**（token-for-token）。否则程序是 IFNDR（ill-formed, no diagnostic required），编译器无需报错，但行为未定义。这包括：
+`inline` 的 ODR 豁免不是无条件放行——**所有 TU 中的定义必须完全相同**（token-for-token）。否则程序是 IFNDR（ill-formed, no diagnostic required），编译器无需报错，但行为未定义(编译器会从这些符号相同但是实现不同的实现中随机挑选一个作为实现)。这包括：
 - 函数体必须逐令牌相同
 - 变量初始化器必须相同
 - 不能在不同 TU 中对同一个 inline 函数给出不同的默认实参
@@ -8704,7 +8708,7 @@ struct FNVHash {
 > 很多 C 函数（如 POSIX、旧库）C 标准并没引入 `const`，参数是非 const 指针，但函数内部实现并不会改变指针指向的数据，由于 C 语言没有 const 构造函数重载，所以如果传入 const 指针会导致编译错误，但需要传入的是 const 数据时
 > ```cpp
 > void legacy_c_func(char* str); // 声明为非 const，但实际不修改
-> 
+>
 > const char* msg = "Hello";
 > legacy_c_func(const_cast<char*>(msg)); // 安全！因为函数实际不改内容
 > ```
@@ -8772,14 +8776,14 @@ any中的数据应该和any生命周期一致，所以any中最好拥有数据�
 | 内存布局 | 动态分配（小对象优化） | 栈上固定大小       | 无额外开销       |
 | 适用场景 | 真正未知的类型     | 已知有限类型集合     | C 兼容/极端性能场景 |
 ##### 工作流程
-1. **类型检查**  
+1. **类型检查**
     比较 `std::any` 内部存储的 `type_info` 与目标类型 `T` 是否相同（通过 `typeid(T)`）。
 2. **安全提取**
     - 如果匹配：返回内部存储对象的副本（值形式）或引用/指针。
     - 如果不匹配：
         - 值/引用形式 → 抛出 `std::bad_any_cast`
         - 指针形式 → 返回 `nullptr`
-3. **无额外开销（除 RTTI 比较）**  
+3. **无额外开销（除 RTTI 比较）**
     不涉及内存拷贝（除非你用值形式提取），不调用转换函数。
 ##### 注意事项
 - 转换类型**必须完全匹配，即使他们之间有隐式转换规则也不行**，`std::any` 不能用于 cv 修饰符不匹配的情况：
@@ -8818,7 +8822,7 @@ Qt 默认在构建时**禁用 RTTI**（尤其在移动平台如 Android/iOS）�
 - 指针版本 → 返回 nullptr
 - 对象版本 -> Qt 不提供引用版本，编译错误
 ##### 工作流程
-1. **检查目标类型是否具有元对象信息**  
+1. **检查目标类型是否具有元对象信息**
     通过 `Q_OBJECT` 宏生成的 `staticMetaObject`。
 2. **调用 `QObject::inherits()` 进行类型检查**
     - 该函数遍历类的继承链，匹配类名（字符串比较）。

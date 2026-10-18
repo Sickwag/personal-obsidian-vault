@@ -18,15 +18,16 @@
 
 | 主题或任务 | 建议先读 | 常见关联 |
 | --- | --- | --- |
-| C++ 语言、模板、对象与生命周期 | `Learn/Language/C C++/模板元编程.md`、`Learn/Bases/Paradigm/C++开发范式和术语.md`、`Learn/Books/Modern C++.md` | `Learn/Books/Effective C++（侯捷）.md`、`Learn/Books/现代C++语言核心特性解析.md`、`Learn/Books/深度探索C++对象模型阅读指南.md` |
-| 并发、线程安全、协程与网络服务 | `Learn/Bases/Paradigm/IO复用模型.md`、`Learn/Books/C++并发编程实战（第二版）.md`、`Learn/ProjectsStudy/FromRemote/Tencent Libco.md` | `Learn/ProjectsStudy/FromRemote/FiberLib.md`、`Learn/ProjectsStudy/FromDocs/Sylar Backend Collection.md`、`Learn/ProjectsStudy/WriteByMyself/CPP网络编程实战.md`、`Chores/JobInterviews/简历项目.md` |
+| C++ 语言、模板、对象与生命周期 | `Learn/Language/C C++/模板元编程.md`、`Learn/Bases/Paradigm/C++开发范式和术语.md`、`Learn/Books/Modern C++.md` | `Learn/Books/Effective C++（侯捷）.md`、`Learn/Books/深度探索C++对象模型阅读指南.md` |
+| 并发、线程安全、协程与网络服务 | `Learn/Bases/Paradigm/IO复用模型.md`、`Learn/Books/C++并发编程实战（第二版）.md`、`Learn/ProjectsStudy/FromRemote/Tencent Libco.md` | `Learn/Bases/Paradigm/DistributedSystemDesign.md`、`Learn/Bases/Paradigm/分层探测与重试.md`、`Learn/ProjectsStudy/FromRemote/FiberLib.md`、`Learn/ProjectsStudy/FromDocs/Sylar Backend Collection.md`、`Learn/ProjectsStudy/WriteByMyself/CPP网络编程实战.md` |
 | TCP/IP、socket、select/poll/epoll | `Learn/Bases/Paradigm/IO复用模型.md`、`Learn/Bases/Network/小林Coding 计算机网络.md` | `Learn/Bases/Network/王道考研计算机网络.md`、`Learn/Books/Linux高性能服务器编程.md`、`Learn/ProjectsStudy/FromRemote/WebServer-Chat.md` |
 | OpenGL、图形学与三维可视化 | `Learn/Language/C C++/OpenGL.md` | `Context.md` 含当前主线与已学范围。当前未发现独立的 VTK/ITK 笔记；涉及这两者时先核对 Context 和用户提供的资料，再确定是否新建笔记。`Learn/Language/C C++/OpenGL.RewriteBackup.md` 是备份文件，默认以 `OpenGL.md` 为当前入口。 |
+| 操作系统与进程地址空间 | `Learn/Bases/OperatingSystem/小林 Coding 图解操作系统.md`、`Learn/Bases/OperatingSystem/王道考研操作系统（OS）.md` | `Learn/Bases/OperatingSystem/Linux 源码学习.md` |
 | 数据结构、算法与刷题 | `Learn/algorithm/刷题路线.md`、`Learn/algorithm/题型分类.md` | `Learn/algorithm/用法导向知识.md`、`Learn/algorithm/分析优化.md`、`Learn/Bases/DataStructure/` |
-| 数据库 | `Learn/Language/DB/MySQL.md`、`Learn/Language/DB/MongoDB.md` | `Learn/Books/Redis 设计与实现.md`、`Learn/Books/高性能MySQL第三版阅读指南.md`、`Files & LongText/Long code/Mysql Snippets.md` |
-| CMake、编译、CI/CD 与开发工具 | `Learn/ToolChain/CMake.md`、`Learn/ToolChain/CICD.md` | `Learn/ToolChain/Dev Tool.md`、`Learn/ToolChain/Components.md`、`Learn/ProjectsStudy/FromRemote/01Star-Punchase-Sale-Inventory.md` |
+| 数据库 | `Learn/Language/DB/MySQL.md`、`Learn/Language/DB/MongoDB.md` | `Learn/Language/DB/PostgreSQLSSI.md`、`Learn/Books/Redis 设计与实现.md`、`Learn/Books/高性能MySQL第三版阅读指南.md` |
+| CMake、编译、CI/CD 与开发工具 | `Learn/ToolChain/CMake.md`、`Learn/ToolChain/CICD.md` | `Learn/ToolChain/CppBuildAndLinking.md`、`Learn/ToolChain/CompilationOptimization.md`、`Learn/ToolChain/LTO.md`、`Learn/ToolChain/PGO与BOLT.md`、`Learn/ToolChain/编译加速.md`、`Learn/ToolChain/MessageQueue.md`、`Learn/ToolChain/Dev Tool.md`、`Learn/ToolChain/Components.md` |
 | Qt、QML、Android 与桌面应用 | `Learn/Books/QT6开发指南.md`、`Learn/Language/C C++/QML.md` | `Learn/ProjectsStudy/FromDocs/Qt Official Tutorial.md`、`Learn/ProjectsStudy/FromRemote/QTExamples.md`、`Learn/Language/Android/` |
-| 求职与面试 | `Chores/JobInterviews/简历项目.md`、`Chores/JobInterviews/面试题知识.md` | `Chores/JobInterviews/面试题合集.md`、`Chores/JobInterviews/questions精简.md`、`Chores/JobInterviews/收集的面试题.md`、`Chores/JobInterviews/面试复盘.md`、`Chores/JobInterviews/自我介绍.md` |
+| 求职与面试 | `Chores/JobInterviews/简历项目.md`、`Chores/JobInterviews/面试题合集.md` | `Chores/JobInterviews/智力题.md`、`Chores/JobInterviews/收集的面试题.md`、`Chores/JobInterviews/面试复盘.md`、`Chores/JobInterviews/自我介绍.md` |
 | FSRS 复习插件与成果包 | `Context.md` 及 `.obsidian/customDocument/FSRSScheduler/` 下的三份协作文档 | 先读 `UseGuide.md`、`FileGuide.md`、`AgentProtocol.md`，再按明确请求读取其指定来源 |
 ## 目录结构与配置边界
 - `Learn/`：技术学习主区。基础原理放 `Bases/`，语言和框架放 `Language/`，书籍笔记放 `Books/`，工具链放 `ToolChain/`，算法放 `algorithm/`，项目源码学习按 `ProjectsStudy/FromDocs`、`FromRemote`、`WriteByMyself` 区分来源，零散材料放 `Fragments/`。
@@ -38,7 +39,7 @@
 - `.obsidian/customDocument/FSRSScheduler/`：FSRS 插件的 Agent 交接、复习文档与插件数据。工作流入口是 `UseGuide.md`、`FileGuide.md`、`AgentProtocol.md`。严格遵守文档中的来源校验和写入边界；不要直接伪造或改写 `Data/Events`、`Data/Content`、`Data/Tasks`、`Data/Attempts` 或调度事实。仅按具体请求读取对应 `Request.json` 及所列 source。
 - `.obsidian/plugins/fsrs-scheduler/README.md` 说明插件功能和限制；插件开发代码仓库不在本知识库目录内，插件源码任务应先确认实际源码路径。
 - `.trash/` 是 Obsidian 删除项归档，不属于当前知识库索引；除非用户要求恢复或查找历史内容，不纳入检索与迁移。
-- 活跃文件地图列出本次盘点的 162 篇可见 Markdown 笔记，不逐项展开隐藏插件文档、生成数据和二进制附件。新增或移动后以目录实际内容为准，并更新本节相关分类。
+- 活跃文件地图是本次盘点快照，不逐项展开隐藏插件文档、生成数据和二进制附件。新增或移动后以目录实际内容为准，并更新本节相关分类。
 ## 活跃笔记文件地图
 ### 根目录
 - `AGENTS.md`：本仓库 AI 与贡献指南。
@@ -57,20 +58,23 @@
 - `Learn/Bases/DataStructure/数据结构.md`：抽象数据类型及数据结构基本概念。
 - `Learn/Bases/DataStructure/数据结构和算法图解.md`：数据结构、算法复杂度和大 O 分析。
 - `Learn/Bases/DataStructure/深入浅出数据结构.md`：视频课程式数据结构学习笔记。
-- `Learn/Bases/DataStructure/王道考研数据结构.md`：王道数据结构课程，覆盖线性表、栈队列、树等。
+- `Learn/Bases/DataStructure/王道考研数据结构.md`：王道数据结构课程，覆盖线性表、栈队列、树和内部排序。
 ##### 计算机网络
 - `Learn/Bases/Network/OSI七层模型.md`：OSI 七层模型的层次与服务关系。
 - `Learn/Bases/Network/小林Coding 计算机网络.md`：TCP/IP、HTTP、DNS、协议栈和 TCP 详解。
 - `Learn/Bases/Network/王道考研计算机网络.md`：按物理层到应用层组织的课程笔记。
 ##### 操作系统
 - `Learn/Bases/OperatingSystem/Linux 源码学习.md`：以 Linux 0.11 源码追踪启动、进程、内存、文件系统和设备。
-- `Learn/Bases/OperatingSystem/小林 Coding 图解操作系统.md`：硬件、中断、内核、虚拟内存等图解基础。
+- `Learn/Bases/OperatingSystem/小林 Coding 图解操作系统.md`：硬件、中断、内核、虚拟内存、进程隔离与共享等图解基础。
 - `Learn/Bases/OperatingSystem/王道考研操作系统（OS）.md`：进程、内存、文件系统和 I/O 管理课程笔记。
 ##### 设计与通用机制
 - `Learn/Bases/Paradigm/C++开发范式和术语.md`：RAII、生命周期及常用 C/C++ 术语和机制。
 - `Learn/Bases/Paradigm/IO复用模型.md`：socket 到 select/poll/epoll/AIO/io_uring 的模型与调用机制。
 - `Learn/Bases/Paradigm/常用算法和情景处理.md`：缓存淘汰、常见算法及场景处理。
 - `Learn/Bases/Paradigm/架构设计.md`：进程线程、无锁队列等架构和系统设计碎片。
+- `Learn/Bases/Paradigm/C++面向对象与值语义.md`：C++ 多范式、值语义及面向对象的适用边界。
+- `Learn/Bases/Paradigm/DistributedSystemDesign.md`：一致性、请求治理、分布式锁和事务等系统设计主题。
+- `Learn/Bases/Paradigm/分层探测与重试.md`：按依赖层级探测网络与应用健康状态。
 - `Learn/Bases/Paradigm/设计模式.md`：设计模式分类、原则和常见模式。
 #### 书籍笔记
 - `Learn/Books/C++ prime plus.md`：C++ 入门书章节摘记与语言基础。
@@ -104,7 +108,7 @@
 - `Learn/Language/Android/项目开发过程.md`：Android 项目开发过程和零散实现记录。
 ##### C 与 C++、Qt、图形
 - `Learn/Language/C C++/Communication protocol.md`：Modbus、MQTT QoS 等通信协议摘记。
-- `Learn/Language/C C++/C++ Runoob Tutoral.md`：C++ 基础语法和 Runoob 教程摘记。
+- `Learn/Language/C C++/C++ Runoob Tutoral.md`：C++ 基础语法、RTTI、容器适配器和 Runoob 教程摘记。
 - `Learn/Language/C C++/OpenGL.md`：LearnOpenGL 学习主笔记，按问题解释渲染管线和 API。
 - `Learn/Language/C C++/OpenGL.RewriteBackup.md`：OpenGL 重写过程的备份稿，非当前首选入口。
 - `Learn/Language/C C++/QML.md`：QML、图像提供器和焦点作用域等 Qt Quick 主题。
@@ -113,6 +117,7 @@
 ##### 数据库、前端与脚本
 - `Learn/Language/DB/MongoDB.md`：MongoDB 基本概念和操作。
 - `Learn/Language/DB/MySQL.md`：MySQL 环境配置、SQL 语法和常见操作。
+- `Learn/Language/DB/PostgreSQLSSI.md`：PostgreSQL 可串行化快照隔离与事务重试边界。
 - `Learn/Language/Fronted/CSS.md`：CSS 基础语法和样式。
 - `Learn/Language/Fronted/HTML.md`：HTML 与 HTML5 基础。
 - `Learn/Language/Java/java编程的逻辑.md`：Java 语言基础和《Java 编程的逻辑》章节笔记。
@@ -121,6 +126,12 @@
 - `Learn/Language/ScriptLangs/Ragel.md`：Ragel 状态机编译器的定位、工作流和原理。
 ##### 工具链
 - `Learn/ToolChain/CMake.md`：CMake 规范、查找依赖和构建问题。
+- `Learn/ToolChain/CppBuildAndLinking.md`：C++ 名称修饰、ODR、ELF 符号表和重定位。
+- `Learn/ToolChain/CompilationOptimization.md`：构建、编译、链接提速与运行期优化手段。
+- `Learn/ToolChain/LTO.md`：链接时优化机制、配置、收益和边界。
+- `Learn/ToolChain/PGO与BOLT.md`：基于运行剖面的编译和二进制布局优化。
+- `Learn/ToolChain/编译加速.md`：头文件依赖、PCH、Unity Build 等编译提速实践。
+- `Learn/ToolChain/MessageQueue.md`：RocketMQ、Kafka 的投递、存储、副本与消费语义。
 - `Learn/ToolChain/CICD.md`：Jenkins、C++ CI/CD 流程和配置。
 - `Learn/ToolChain/Components.md`：Redis、CI/CD、Docker 等组件和概念汇总。
 - `Learn/ToolChain/Dev Tool.md`：clang-format、Qt 格式配置和开发工具记录。
@@ -203,15 +214,14 @@
 - `Article/感悟/内外兼修？.md`：内向者、自我认知和应对工具的个人感悟。
 - `Article/感悟/大学生活快与慢.md`：大学生活节奏与成长体验。
 #### 求职面试
-- `Chores/JobInterviews/questions精简.md`：按 C++、并发、内存、网络和系统设计整理的精简题库。
 - `Chores/JobInterviews/具体公司的了解以及面试准备.md`：目标公司背景、产品与面试准备；内容可能随求职阶段变化。
 - `Chores/JobInterviews/反问环节.md`：面试末尾向面试官提出的问题。
 - `Chores/JobInterviews/收集的面试题.md`：收集的原始面试问题和部分回答素材。
 - `Chores/JobInterviews/简历项目.md`：自研项目和实习项目的简历表述、技术追问与回答。
 - `Chores/JobInterviews/自我介绍.md`：通用及不同岗位/公司的自我介绍版本。
+- `Chores/JobInterviews/智力题.md`：天平、缺失元素、整数方程等面试题思路。
 - `Chores/JobInterviews/面试复盘.md`：具体面试过程与复盘记录。
 - `Chores/JobInterviews/面试题合集.md`：覆盖 Qt、C++、并发、网络和系统设计的详细题库。
-- `Chores/JobInterviews/面试题知识.md`：面试题背后的原理，配合题库和回答话术使用。
 #### 生活与设备
 - `Chores/Life/Renting House.md`：租房沟通、合同和检查事项。
 - `Chores/computer learning puzzles.md`：CentOS、yum、MySQL 和网络配置故障记录。
@@ -241,7 +251,7 @@ Obsidian 配置修改后只核验被改文件和相关引用；不需要为普�
 - 技术笔记默认中文、高信息密度。先说明问题，再按机制、数据流/调用链、实现、取舍、边界和验证组织内容；涉及方案对比使用表格，代码块必须提供正文之外的信息。
 - 标题层级从 `#` 开始，不跳级、不加序号。列表层级缩进 4 个空格。数字、英文、行内代码与中文之间留空格。
 - 知识笔记使用 `[[Note]]` 或 `[[Note#Heading]]` 建立关联；图片和附件使用 `![[filename.png]]`。不要手写跨目录相对路径。
-- 面试题口径稿与原理详解分开放置：题目/回答素材放 `面试题合集.md`、`questions精简.md` 等，原理放 `面试题知识.md` 或对应 `Learn/` 主题笔记。
+- 面试题合集保留题目与回答素材；可复用原理归入对应 `Learn/` 主题笔记，并从题目处建立章节链接。
 ## 版本控制与验收
 - 仓库含自动 `vault backup` 与 Obsidian 同步提交。修改前检查 `git status --short`，仅处理本任务文件；不覆盖、暂存或撤销用户已有变更。
 - 普通笔记编辑的最小验收：查看 `git diff --check` 与 `git diff -- <文件>`，确认改动范围、Markdown 标题、链接、附件和索引检查结果。

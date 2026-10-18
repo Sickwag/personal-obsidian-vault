@@ -1366,6 +1366,9 @@ get_target_property(HelloVar Example Hello)
 ```
 CMake 语义上有意义的目标属性的完整列表已记录在 [`cmake-properties(7)`](https://cmake.com.cn/cmake/help/latest/manual/cmake-properties.7.html#manual:cmake-properties\(7\) "cmake-properties(7)") 中，但其中大多数应该使用其专用命令进行修改而不是这样的语意不明函数
 [`target_precompile_headers()`](https://cmake.com.cn/cmake/help/latest/command/target_precompile_headers.html#command:target_precompile_headers "target_precompile_headers") 命令接受一个头文件列表，类似于 [`target_sources()`](https://cmake.com.cn/cmake/help/latest/command/target_sources.html#command:target_sources "target_sources")，并从中创建一个预编译头。然后，此预编译头将被强制包含到目标的所有翻译单元中。这对于构建性能可能很有用。
+
+> PCH 的失效条件、收益边界与其他编译加速手段见 [[CompilationOptimization#PCH：跳过重复解析]]。
+
 ### 练习 1 - 特性和定义
 许多库为了兼容多种编译环境，在构建时需要一组最少的必需特性，比如空出 C++标准设置和一些特定编译器的设置
 #### target_compile_features
