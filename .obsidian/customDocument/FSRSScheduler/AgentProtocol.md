@@ -1,8 +1,11 @@
 # 外部 Agent 协议
 版本：schema 1。本文件描述已实现格式；更广的设计意图见 plan/ExternalAgent.md。
 ## 角色
-Agent 在 Obsidian 外运行。插件不调用、启动或收费，不读取 Agent 的日志、会话、运行数据库或密钥。
+Agent 通常在 Obsidian 外运行。插件默认不调用 AI，也不包含模型 API 客户端；仅当用户在设置中明确启用限定数据分享后，插件才可在后台启动本机 Codex CLI。插件不读取 Codex 的日志、会话文件、运行数据库或密钥。
 Agent 可按用户授权修改笔记、Context、Topics、Digests；正式卡片修订通过 Imports，事件不能被直接改写。
+### Codex 自动化的数据边界
+分享开关默认关闭并保存在本机用户数据目录，不随 Vault 同步。启用后，插件为每个任务仅暂存 Request.json/Request.md、该 Request.sources 列出的 Data/Sources 快照、Vault 根目录 Context.md，以及工作区 AgentProtocol.md、FileGuide.md、UseGuide.md；单次输入上限为 20 MB、64 个文件。输入会复制到系统用户数据目录下的工作区；固定会话由 Codex CLI 按本机配置保存，可能累积并保留对话内容。插件不复制认证凭证到提示词或输入目录，也不把 Data/Events、Data/Content、Data/Attempts 或其他笔记作为任务输入。Codex CLI 的实际文件与网络权限由本机配置决定；启用前应确认模型服务及会话的数据保留政策。
+自动生成另需开启“自动生成昨日复习材料”，仅扫描昨天归档的请求；单来源手动生成只要求分享开关开启。Review.md 保存至 Vault 根目录 Chores/reviewDocs；候选题包进入 Exchange/Imports，并受本协议的用户审阅、校验和接受流程约束。草稿不构成阅读、作答或掌握事实。
 ## 读取请求
 插件输出 Request.json，含 vault_id、repo_id、base_head、commits、commit_details 和 sources。sources 通过 source_file 指向 Data/Sources/<id>.json。
 Source 包含 id、commit、blob、path、heading、text 和 deleted。deleted 或不再匹配当前 HEAD/工作区的来源不能激活卡片。

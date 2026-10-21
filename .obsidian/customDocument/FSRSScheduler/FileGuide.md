@@ -30,6 +30,8 @@
 | Exchange/Imports/<package_id>/Ready.json | Manifest 的 SHA-256，最后写入表示发布完成 | 打包脚本生成，发布后不得改包 |
 | Exchange/Receipts/<package_id>.json | 已接受 proposal_id，保证重复点击不重复入库 | 插件管理 |
 | Exchange/Exports/export-*.json | 事实快照，Context 条目来自 Vault 根目录，恢复也写回根目录 | 插件生成，恢复不覆盖不同内容 |
+| /Chores/reviewDocs/<date>__<job>.md | Vault 根目录中 Codex 根据单个 Request 生成的复习草稿；不是复习事件或掌握证据 | Codex 草拟，用户审阅 |
 ## Agent 的事实边界
 学习进度不是掌握程度，笔记最后修改时间不是答题时间。对推断标注“待验证”；只根据真实作答评估质量。保存用户手写内容，修改前完整阅读目标文档。来源陈旧、删除或修正时先核对，不使用旧请求虚构新证据。
 操作系统用户数据目录中的 State.json、Writer.json、ReviewCache 和启动事务文件只供插件使用，不属于 Agent 任务输入，不随知识库同步。不要复制其他工具的日志、会话、数据库或密钥作为学习上下文。
+可选 Codex 自动化另在该用户数据目录保存本机授权开关、CLI 路径、固定会话 ID 与任务状态（CodexReviewJobs.json），以及 CodexWorkspace 输入/输出副本；固定会话历史由 Codex CLI 按本机配置保存。这些本地副本不随 Vault 同步，启用前应确认本机 Codex 配置和服务的数据保留政策。
