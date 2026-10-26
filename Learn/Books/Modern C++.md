@@ -2705,6 +2705,7 @@ struct alignas(32) Aligned {  // 结构体对齐到 32 字节
 `alignof` 运算符获取类型的对齐要求：`size_t al = alignof(Aligned);`。
 alignof 关键字能够获得一个与平台相关的 `std:: size_t` 类型的值，用于查询该平台的对齐方式。
 ```cpp
+#include <cstddef>
 #include <iostream>
 struct Storage {
     char      a;
@@ -2724,8 +2725,24 @@ int main() {
     return 0;
 }
 ```
-其中 `std::max_align_t` 要求每个标量类型的对齐方式严格一样，因此它几乎是最大标量没有差异，进而大部分平台上得到的结果为 `long double`，因此我们这里得到的 `AlignasStorage` 的对齐要求是 8 或 16。
-alignas 指定值必须是 2 的整数幂且**不能小于默认对齐数**（否则可能被忽略或扩展）。
+`std::max_align_t` 的对齐要求至少与所有标量类型的对齐要求一样严格，但不要求每种标量类型拥有相同对齐。它的具体对齐由实现决定；不少平台上与 `long double` 的对齐相同，但不能依赖这一点。使用 `alignas(std::max_align_t)` 也不等于缓存行对齐。
+`alignas` 指定的值必须是实现支持的有效对齐，且不能弱于类型原本要求的对齐；请求无效或更弱的对齐时，声明不符合标准。
+**C++17 缓存行对齐提示：** `<new>` 提供 `std::hardware_destructive_interference_size`。标准把它定义为实现给出的常量，是并发访问对象之间避免争用的**建议最小偏移量**，不是运行时读取 CPU 实际缓存行大小的接口（见 [C++ draft：Hardware interference size](https://eel.is/c++draft/hardware.interference)）。可用于把高频写入的独立状态隔开：
+
+```cpp
+#include <atomic>
+#include <cstdint>
+#include <new>
+
+struct Counters {
+    alignas(std::hardware_destructive_interference_size)
+    std::atomic<std::uint64_t> producer{0};
+
+    alignas(std::hardware_destructive_interference_size)
+    std::atomic<std::uint64_t> consumer{0};
+};
+```
+实现提供的值和 ABI 有关；对齐只是一种布局策略，可能增加对象尺寸。性能敏感代码应检查目标平台布局并用负载测量，不能把这个常量当作硬件运行时探测结果。
 #### std::align（C++11）
 原理：在给定缓冲区中找到满足对齐要求的指针，不改变已有内存的对齐属性，用于手动内存池中的对齐分配。
 ```cpp
@@ -2751,23 +2768,19 @@ struct IPv4Header {
 };  // 共 32 bits = 4 字节
 ```
 位域的限制：不能取地址、跨平台布局不确定（编译器可能从左到右或从右到左排列）、位域类型必须是整数类型。如果原类型需要的空间超过位域大小，会**截断并保留低位**，位域只能限制整形类型 + 枚举类型（本质上也是 int ）数据
-#### linux \_\_cacheline_aligned_in_smp
-```cpp
-//  成员本身从缓存行边界开始，结构体内部插入填充
-// [x前面有60字节填充][x][下一个缓存行][y][padding...56字节]   ← x从64字节边界开始
-struct s{
-	int a;
-	int b __cacheline_aligned_in_smp;
-};
+#### Linux 内核缓存行对齐宏
+```c
+/* Linux 内核示例，需包含 <linux/cache.h> */
+struct PerCpuState {
+    unsigned long producer ____cacheline_aligned_in_smp;
+    unsigned long consumer ____cacheline_aligned_in_smp;
+} ____cacheline_aligned_in_smp;
 
-// 整个结构体的起始地址对齐到缓存行边界（64字节）
-// [x][y][padding...56字节]   ← 起始地址和结束对齐到64字节边界
-struct s{
-	int a;
-	int b;
-} __cacheline_aligned_in_smp;
+/* 适用于具有静态存储期的对象声明 */
+static unsigned long global_counter __cacheline_aligned_in_smp;
 ```
-注意，`__cacheline_aligned_in_smp` **不破坏结构体内存连续的性质**，本质上x，y 成员还是连在一起的，但在被读入缓存时的**截断位置改变了**
+`____cacheline_aligned_in_smp`（4 个前导下划线）用于结构体成员或类型，只添加按 `SMP_CACHE_BYTES` 对齐的属性；成员对齐会在它前面插入填充，并改变结构体布局。分别对齐两个独立写入字段，可以让它们从不同缓存行边界开始，但未标注的字段不会自动隔离。
+`__cacheline_aligned_in_smp`（2 个前导下划线）用于全局或静态对象声明；在 SMP 配置下，除缓存行对齐外还会将对象放入 `.data..cacheline_aligned` section，因此不能把它当成普通结构体成员对齐宏。Linux 内核的 `include/linux/cache.h` 中，这两个宏都只在 `CONFIG_SMP` 开启时生效，具体对齐量由体系结构提供的 `SMP_CACHE_BYTES` 决定；它们不是用户态可移植接口。定义见 [Linux `include/linux/cache.h`](https://github.com/torvalds/linux/blob/master/include/linux/cache.h)。
 ### 特殊情况
 C 语言中空结构体大小为 0（GCC 扩展允许），但 C++ 标准规定必须至少为 1，保证每个对象有唯一地址
 继承情况下:
