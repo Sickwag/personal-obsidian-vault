@@ -96,6 +96,21 @@ ICMP 报文格式
 ## 第 5 章 Linux 网络编程基础 API
 ### 5.1 地址地址 API
 #### 5.1.1 主机字节序和网络字节序
+主机字节序是 CPU 在本机内存中表示多字节数值的方式；网络字节序是协议对线上多字节字段规定的序列化顺序。Internet 协议常用大端序，即高位字节先传输，但具体协议和字段格式才是最终依据，不能假设所有应用协议都采用网络字节序。
+例如，数值 `0x12345678` 在小端主机内存中通常按 `78 56 34 12` 排列，按大端网络序编码则为 `12 34 56 78`。通信双方不需要临时交换各自主机的字节序；发送方按协议格式编码，接收方按相同格式解码。
+Linux/POSIX 的 `<arpa/inet.h>` 提供主机序与网络序转换函数：`htons`/`htonl` 分别转换 16/32 位数值到网络序，`ntohs`/`ntohl` 转回主机序。
+
+```cpp
+#include <arpa/inet.h>
+#include <cstdint>
+
+std::uint32_t host_value = 0x12345678;
+std::uint32_t network_value = htonl(host_value);
+std::uint32_t decoded_value = ntohl(network_value);
+```
+直接发送 C/C++ 结构体的原始内存会同时暴露主机字节序、填充字节和 ABI 布局差异。跨机器通信应按协议显式序列化；例如 Protobuf 使用自身的线格式，并非把每个数值简单转换成大端。
+参考：[RFC 1700：Data Notations](https://www.rfc-editor.org/rfc/rfc1700.html)
+参考：[Linux `byteorder(3)`](https://man7.org/linux/man-pages/man3/byteorder.3.html)
 #### 5.1.2 通用 socket 地址
 #### 5.1.3 专用 socket 地址
 #### 5.1.4 IP 地址转换函数
