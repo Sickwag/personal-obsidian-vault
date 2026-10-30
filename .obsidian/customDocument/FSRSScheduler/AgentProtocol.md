@@ -4,11 +4,13 @@
 Agent 通常在 Obsidian 外运行。插件默认不调用 AI，也不包含模型 API 客户端；仅当用户在设置中明确启用限定数据分享后，插件才可在后台启动本机 Codex CLI。插件不读取 Codex 的日志、会话文件、运行数据库或密钥。
 Agent 可按用户授权修改笔记、Context、Topics、Digests；正式卡片修订通过 Imports，事件不能被直接改写。
 ### Codex 自动化的数据边界
-分享开关默认关闭并保存在本机用户数据目录，不随 Vault 同步。启用后，插件为每个任务仅暂存 Request.json/Request.md、该 Request.sources 列出的 Data/Sources 快照、Vault 根目录 Context.md，以及工作区 AgentProtocol.md、FileGuide.md、UseGuide.md；单次输入上限为 20 MB、64 个文件。输入会复制到系统用户数据目录下的工作区；固定会话由 Codex CLI 按本机配置保存，可能累积并保留对话内容。插件不复制认证凭证到提示词或输入目录，也不把 Data/Events、Data/Content、Data/Attempts 或其他笔记作为任务输入。Codex CLI 的实际文件与网络权限由本机配置决定；启用前应确认模型服务及会话的数据保留政策。
-自动生成另需开启“自动生成昨日复习材料”，仅扫描昨天归档的请求；单来源手动生成只要求分享开关开启。Review.md 保存至 Vault 根目录 Chores/reviewDocs；候选题包进入 Exchange/Imports，并受本协议的用户审阅、校验和接受流程约束。草稿不构成阅读、作答或掌握事实。
+分享开关保存在本机。0.2.0 固定使用 `gpt-6-luna / max`，以 `codex exec` 进行两轮出题与审题。输入范围为 Request 指定的当前章节来源（旧完整来源可派生章节）、同文件父级和邻接章节、根 Context、本文，以及已有卡片的目标、题目、状态、到期时间、复习次数和用户提交的题目质量反馈；不输入自由文本作答或 CLI 历史记录。
+自动任务处理所有未完成来源，失败最多自动尝试 3 次，也可手动重试。复习时间与题量由用户决定。参考预算不得成为拒绝继续复习的依据。
+模型只返回符合 `src/agent/Materials.ts` 所定义 JSON Schema 的内容：summary、exercises、skipped。题目必须包含 objective、kind、scenario、question、rubric、why、misconceptions、source_ids、estimated_seconds、quality_review。允许空题目列表；不允许为凑数生成定义问答或照搬笔记摘要。第二轮检查推理需求、充分条件、重复目标与答案依据。
+插件校验结构与来源，生成 Manifest/Ready 并发布草稿；同一检验目标保留稳定卡片 ID。正式接受、修订和真实评分继续遵守下文协议。CLI 以只读工具沙箱运行，其最终结构化回复由宿主接收；插件负责归档，模型不直接改写笔记或事实目录。
 ## 读取请求
 插件输出 Request.json，含 vault_id、repo_id、base_head、commits、commit_details 和 sources。sources 通过 source_file 指向 Data/Sources/<id>.json。
-Source 包含 id、commit、blob、path、heading、text 和 deleted。deleted 或不再匹配当前 HEAD/工作区的来源不能激活卡片。
+Source 包含 id、commit、blob、path、heading、text 和 deleted；新来源额外记录 section（key、行号、hash、before、kind）。章节来源按当前 HEAD 与工作区对应章节哈希校验，旧完整来源仍按文件 blob 校验。deleted 或不再匹配的来源不能激活卡片。
 startup-sync 提交的 archive_date 是归档日，snapshot_captured_at 才是真实捕获时间。不得据此虚构昨天的学习或复习。
 Vault 根目录 Context.md 的 frontmatter 是学习偏好，正文为人工与 Agent 的语义记录。不要删除人工补充；标明推断与覆盖范围。
 ## 发布文件
@@ -75,7 +77,7 @@ task_type 支持 reading、practice；due_at 必须明确时区。更新已有�
 }
 ```
 策略 revision 是对规范 JSON 策略对象的 SHA-256。对象字段顺序按键排序，默认策略为 budget_minutes、new_card_limit、retention、study_start、timezone。可从插件实际读取结果计算，或优先在设置页修改。
-接受前显示提案，用户确认后仅修改 Context frontmatter。不会补造复习，也不立即重排所有卡片。
+预算和新卡数字仅作为参考，0.2.0 的自由复习不按这些值截断。接受前显示提案，用户确认后仅修改 Context frontmatter。不会补造复习，也不立即重排所有卡片。
 ## Feedback
 对已经发生的复习：
 ```json
