@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "plugin_directory": "dist/fsrs-scheduler",
+  "files": [
+    "main.js",
+    "manifest.json",
+    "styles.css"
+  ],
+  "sha256": {
+    "main.js": "60bc08a9138433811ad4cb540eec64c8383a145090b7d7484d26160a5334f708",
+    "manifest.json": "81d3f9fb258dffe281afad5daca5a34d22adfbc175ab91232a6a6321c8842fa4",
+    "styles.css": "9edce7dd73a4affb361acdd90e4f05d7316aa22ee2fece667d72f91c4baabe65"
+  }
+}

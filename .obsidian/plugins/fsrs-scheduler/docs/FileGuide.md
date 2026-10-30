@@ -1,5 +1,5 @@
 # 文件用途与写入边界
-下表中路径相对于本工作区，只有 `/Context.md` 相对于 Vault 根目录。尚未使用的功能不会提前创建空文件；ID 命名文件按需增加。
+下表中路径相对于本工作区，以 `/` 开头的路径相对于 Vault 根目录。尚未使用的功能不会提前创建空文件；ID 命名文件按需增加。
 | 路径 | 内容与用途 | 谁可以维护 |
 | --- | --- | --- |
 | /Context.md | 项目背景、学习目标、当前进度、Agent 协作入口；frontmatter 为插件偏好 | 用户和 Agent 维护正文；插件设置仅更新偏好 |
@@ -30,6 +30,12 @@
 | Exchange/Imports/<package_id>/Ready.json | Manifest 的 SHA-256，最后写入表示发布完成 | 打包脚本生成，发布后不得改包 |
 | Exchange/Receipts/<package_id>.json | 已接受 proposal_id，保证重复点击不重复入库 | 插件管理 |
 | Exchange/Exports/export-*.json | 事实快照，Context 条目来自 Vault 根目录，恢复也写回根目录 | 插件生成，恢复不覆盖不同内容 |
+| Drafts/<id>.json | 已校验的候选题、检验理由、来源和材料路径 | 插件从模型结构化结果发布 |
+| QuestionFeedback/*.json | 用户明确提交的题目质量反馈，不是答题评级 | 插件记录，模型用于后续审题 |
+| /Chores/reviewDocs/<date>/Review.md | 当天已有到期目标与材料入口；保护手工编辑 | 插件生成 |
+| /Chores/reviewDocs/<date>/<job>/*.md | Review、Exercises、Changes；生成时间及章节版本可追踪 | 插件发布，用户可补充 |
+| /Chores/reviewDocs/<date>/Records/*.md | 按真实评分事件生成的可读记录 | 插件生成 |
 ## Agent 的事实边界
 学习进度不是掌握程度，笔记最后修改时间不是答题时间。对推断标注“待验证”；只根据真实作答评估质量。保存用户手写内容，修改前完整阅读目标文档。来源陈旧、删除或修正时先核对，不使用旧请求虚构新证据。
 操作系统用户数据目录中的 State.json、Writer.json、ReviewCache 和启动事务文件只供插件使用，不属于 Agent 任务输入，不随知识库同步。不要复制其他工具的日志、会话、数据库或密钥作为学习上下文。
+可选 Codex 自动化另在该用户数据目录保存本机授权开关、CLI 路径、固定会话 ID 与任务状态（CodexReviewJobs.json），以及 CodexWorkspace 输入/输出副本；固定会话历史由 Codex CLI 按本机配置保存。这些本地副本不随 Vault 同步，启用前应确认本机 Codex 配置和服务的数据保留政策。
