@@ -470,7 +470,7 @@ const QMetaObject metaObj= btn->staticMetaObject; //获取元对象
 ### 信号和槽
 参考[[Qt Official Tutorial#信号与插槽|信号槽机制]]
 ### 对象树
-- 使用 QObject 及其子类创建的对象（统称为 QObject 对象）是以对象树的形式来组织的。创建一个 QObject 对象时若设置一个父对象，它就会被添加到父对象的子对象列表里
+- 使用 QObject 及其子类创建的对象（统称为 QObject 对象）是以对象树的形式来组织的。创建一个 QObject 对象时若设置一个父对象，它就会被添加到父对象的子对象列表里，即使这个类并没有 `Q_OBJECT` 宏，只要继承了 QObject 仍然能够被纳入到对象树中管理
 - 这种机制最适合于 UI 界面，上层（父对象）被关闭时，所有下层（子对象）都会被关闭。这一点可以通过在析构函数中写入**控制台调试信息**看到子对象被删除
 - 所有 QObject 对象都有 parent 和 children 两个函数，用来返回**所有**父对象或者子对象，使用 `QObjectList/QList<QObject*>` 接受返回的对象指针数组。
 - `findChild()` 函数用来在对象的子类中寻找**可以被转化为 T 类型的对象**

@@ -6,7 +6,7 @@ daily_review_budget_minutes: 10
 new_card_daily_limit: 3
 desired_retention: 0.9
 ---
-# 学习与复习上下文
+ 学习与复习上下文
 本文件位于 Obsidian 知识库根目录，是本人、FSRS Scheduler 和外部 Agent 的共同入口。记录日期：2026-10-15；笔记和提交只证明内容变化，掌握程度须由真实作答检验。
 ## 项目基本信息
 - 长期目标：C++ 后端与基础架构开发，同时学习图形学和医学三维可视化。
