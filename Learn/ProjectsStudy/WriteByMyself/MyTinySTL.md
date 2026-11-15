@@ -30,6 +30,20 @@ Allocator 把“取得原始存储”和“在存储中建立对象”分开。`
 `std::vector` 的 `capacity()` 表示已取得的可用存储规模，`size()` 表示其中已开始生命周期的元素数量；`[size(), capacity())` 不是可访问的 `T` 元素，不能因为底层内存已分配就读写它们。
 标准容器通过 `std::allocator_traits<Allocator>` 适配分配器接口。旧版实现常直接调用 `construct`/`destroy`；`std::allocator` 的这两个成员函数自 C++17 起弃用，并在 C++20 移除，现代代码由 `allocator_traits` 提供构造和销毁入口。
 自定义分配器还要正确处理大小乘法溢出、对齐要求、异常路径和分配器状态。若分配器携带内存池状态，容器拷贝、移动、交换时的传播规则会影响存储是否能被匹配的分配器释放；实现时应优先遵循 `allocator_traits` 的传播属性。
+#### `new` 表达式、分配函数与 placement new
+名字都含 `new`，但它们处理的阶段不同：
+
+| 写法 | 分配原始存储 | 开始对象生命周期 | 释放方式 |
+| --- | --- | --- | --- |
+| `new T(args...)` | 是，调用相应分配函数 | 是，调用构造函数 | `delete p` 自动析构并释放 |
+| `::operator new(bytes)` | 是，只取得原始存储 | 否 | 对已构造对象先显式析构，再调用匹配的 `::operator delete(p)` |
+| `::new (p) T(args...)` | 否，placement 分配函数返回已有地址 `p` | 是，在该地址构造对象 | 显式析构对象；底层存储由原所有者按原分配方式释放 |
+
+`new T(args...)` 是 new-expression，不是单纯的分配函数调用；`::operator new(bytes)` 则是直接调用全局分配函数。前置 `::` 强制从全局作用域查找，避免落到类专属的 `operator new`。`::new (p) T(...)` 是 placement new-expression，`::` 同样指定全局 placement 形式。placement new 不分配缓冲区，不能用普通 `delete` 释放它构造出的对象。
+`new T[n]` 会对数组中的 `n` 个元素逐个构造，必须用 `delete[]` 配对。手写容器通常有 `size < capacity`，只允许前 `size` 个位置存在 `T` 对象；容量区间其余部分只是存储，因此容器要分别管理对象构造/析构和整块存储分配/释放。placement 构造若抛异常，语言会调用匹配的 placement `operator delete` 做构造失败清理；标准库提供的非分配 placement delete 不释放预先取得的缓冲区。
+直接使用 `::operator new(n * sizeof(T))` 还需检查乘法溢出和对齐。普通全局 `operator new(size)` 不保证满足超出默认 new 对齐的类型；C++17 起应使用带 `std::align_val_t` 的匹配重载，或优先使用 `std::allocator<T>` 与 `std::allocator_traits`，让分配器处理 `T` 的对齐要求。
+扩容时，新存储中每构造成功一个元素就递增已构造计数；失败时只析构新存储中已成功构造的对象，再释放新存储。`std::move_if_noexcept` 仅在移动构造不抛异常或类型不可拷贝时选择移动，否则优先拷贝。若类型不可拷贝且移动构造可能抛异常，扩容失败时旧元素可能已被部分移动，不能承诺强异常保证。
+参考：[C++ draft：allocator requirements](https://eel.is/c++draft/allocator.requirements.general)
 # Algorithm 复现
 ## wchar_t 重载
 ### 底层实现原理
