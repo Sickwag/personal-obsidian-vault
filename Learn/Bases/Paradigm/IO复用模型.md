@@ -4,6 +4,8 @@
 - [Linux epoll 完全图解，彻底搞懂 epoll 机制 - 物联网心球的文章 - 知乎](https://zhuanlan.zhihu.com/p/17856755436)
 - 为什么要设计 IO 复用模型 : https://www.cnblogs.com/Anker/p/3269106.html & https://segmentfault.com/a/1190000003063859 （需要代理）
 - https://mp.weixin.qq.com/s/Qpa0qXxuIM8jrBqDaXmVNA （整体介绍）
+关联：
+- [[/Learn/Bases/OperatingSystem/Linux Source Code.md|select/poll/epoll/io_uring 的函数签名、参数取值与 errno 速查]]
 ## 网络通信概览
 ### Socket 编程原理
 服务端 socket 编程四步，每步对应内核的一次状态推进：

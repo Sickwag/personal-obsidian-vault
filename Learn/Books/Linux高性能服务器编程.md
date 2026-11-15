@@ -112,8 +112,64 @@ std::uint32_t decoded_value = ntohl(network_value);
 参考：[RFC 1700：Data Notations](https://www.rfc-editor.org/rfc/rfc1700.html)
 参考：[Linux `byteorder(3)`](https://man7.org/linux/man-pages/man3/byteorder.3.html)
 #### 5.1.2 通用 socket 地址
+通用地址类型 `sockaddr` 为 socket API 提供统一参数接口。应用先填写具体地址族的结构，再将其地址转换为 `sockaddr*`，并同时传入结构长度；`sin_family` 等字段告诉内核具体地址族。
+
 #### 5.1.3 专用 socket 地址
+IPv4 的具体地址结构是 `sockaddr_in`：
+
+| 字段 | 用途 | 字节序 |
+| --- | --- | --- |
+| `sin_family` | 地址族，IPv4 填 `AF_INET` | 本机 API 使用的地址族常量，不做网络序转换 |
+| `sin_port` | TCP/UDP 端口 | 网络字节序，通常经 `htons()` / `ntohs()` 转换 |
+| `sin_addr.s_addr` | IPv4 地址 | 网络字节序；`inet_pton()` 已直接写入网络序 |
+
+`InetAddress` 这类封装只保存并转换地址，不创建 socket，也不负责收发数据。构造函数表达地址的来源；地址最终用于服务端还是客户端流程，取决于后续调用 `bind()`、`connect()`、`accept()` 等 API。
+
+| 构造方式 | 典型含义 | 后续用途 |
+| --- | --- | --- |
+| `InetAddress(port, loopbackOnly)` | 构造本地 IPv4 地址；`true` 选择 `127.0.0.1`，`false` 选择 `INADDR_ANY`（`0.0.0.0`），用 `htonl()` 写入网络序地址 | 通常传给 `bind()`；`port == 0` 时绑定后用 `getsockname()` 查询内核分配的端口 |
+| `InetAddress(ip, port)` | 用 `inet_pton()` 校验并转换数值 IPv4 字符串 | 可作为 `connect()` 的远端目标，也可绑定到指定本地网卡地址 |
+| `InetAddress(const sockaddr_in&)` | 包装已有 IPv4 socket 地址 | 常用于包装 `accept()`、`recvfrom()` 或 `getsockname()` 填好的结构 |
+
+`std::string_view` 不保证以 `\0` 结尾；传给 `inet_pton()` 前复制到 `std::string` 并使用 `c_str()`，可提供 C 字符串。端口构造时应写入 `htons(port)`；`port()` 返回时用 `ntohs()`。`toIp()` 通过 `inet_ntop()` 把二进制地址格式化为字符串，`toIpPort()` 再拼接主机字节序端口。地址解析和格式化细节见 [[#5.1.4 IP 地址转换函数]]。
 #### 5.1.4 IP 地址转换函数
+`inet_pton()`（presentation to network）把文本形式的 IP 地址解析为网络地址结构；`inet_ntop()`（network to presentation）执行反向转换。它们只处理数字 IP 地址，不做 DNS 域名解析；域名应使用 `getaddrinfo()`。
+
+| 函数 | 输入与输出 | 返回值 |
+| --- | --- | --- |
+| `inet_pton(AF_INET, src, dst)` | IPv4 点分十进制文本写入 `struct in_addr`，结果已是网络字节序 | 成功 `1`；文本非法 `0`；地址族无效 `-1`，并设置 `errno` |
+| `inet_ntop(AF_INET, src, dst, size)` | 网络字节序 `struct in_addr` 写入调用者缓冲区 `dst` | 成功返回 `dst`；失败返回 `nullptr` 并设置 `errno`，缓冲区不足时为 `ENOSPC` |
+
+`inet_pton()` 成功时只写入目标地址字段，不会设置 `sockaddr_in::sin_family` 或 `sin_port`；失败后不要依赖目标字段的内容。成功后也不要再对地址执行 `htonl()`。`AF_INET6` 对应 `struct in6_addr` 和 `INET6_ADDRSTRLEN`。IPv4 字符串缓冲区大小使用 `INET_ADDRSTRLEN`，包含结尾的空字符。
+
+```c
+#include <arpa/inet.h>
+#include <stdio.h>
+
+int main(void) {
+    struct in_addr address;
+    char text[INET_ADDRSTRLEN];
+
+    int result = inet_pton(AF_INET, "192.0.2.10", &address);
+    if (result == 0) {
+        fputs("invalid IPv4 address\n", stderr);
+        return 1;
+    }
+    if (result == -1) {
+        perror("inet_pton");
+        return 1;
+    }
+    if (inet_ntop(AF_INET, &address, text, sizeof(text)) == NULL) {
+        perror("inet_ntop");
+        return 1;
+    }
+    puts(text);
+    return 0;
+}
+```
+`inet_ntop()` 使用调用者提供的缓冲区，适合并发调用；仍应检查返回值，不能把未成功写入的缓冲区当作有效地址。
+参考：[Linux man-pages 6.19：inet_pton(3)](https://man7.org/linux/man-pages/man3/inet_pton.3.html)
+参考：[Linux man-pages 6.19：inet_ntop(3)](https://man7.org/linux/man-pages/man3/inet_ntop.3.html)
 ### 5.2 创建 socket
 ### 5.3 命名 socket
 ### 5.4 监听 socket
