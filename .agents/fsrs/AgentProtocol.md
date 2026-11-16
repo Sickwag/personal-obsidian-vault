@@ -1,3 +1,5 @@
+> 当前为旧版历史说明。旧插件已停用；新版协议将在临时库验收前更新，本文件中的 Codex 自动化与补提交流程不再执行。
+
 # 外部 Agent 协议
 版本：schema 1。本文件描述已实现格式；更广的设计意图见 plan/ExternalAgent.md。
 ## 角色
@@ -12,7 +14,7 @@ Agent 可按用户授权修改笔记、Context、Topics、Digests；正式卡片
 插件输出 Request.json，含 vault_id、repo_id、base_head、commits、commit_details 和 sources。sources 通过 source_file 指向 Data/Sources/<id>.json。
 Source 包含 id、commit、blob、path、heading、text 和 deleted；新来源额外记录 section（key、行号、hash、before、kind）。章节来源按当前 HEAD 与工作区对应章节哈希校验，旧完整来源仍按文件 blob 校验。deleted 或不再匹配的来源不能激活卡片。
 startup-sync 提交的 archive_date 是归档日，snapshot_captured_at 才是真实捕获时间。不得据此虚构昨天的学习或复习。
-Vault 根目录 Context.md 的 frontmatter 是学习偏好，正文为人工与 Agent 的语义记录。不要删除人工补充；标明推断与覆盖范围。
+Vault `.agents/Context.md` 的 frontmatter 是学习偏好，正文为人工与 Agent 的语义记录。不要删除人工补充；标明推断与覆盖范围。
 ## 发布文件
 ```text
 Exchange/Imports/package-id/
@@ -114,4 +116,4 @@ kind 支持 card、plan、policy、feedback。Ready.json 为 {"manifest_sha256":
 不要在包中放 due_at/memory_state 来冒充卡片记忆状态，不要放可执行命令。插件只把这些文件当数据。
 
 ## 工作区路径
-默认工作区为 `.obsidian/customDocument/FSRSScheduler/`，根目录 Context.md 指 Vault 根目录。新请求的 context_path_base 为 vault，context_paths 相对于 Vault；source_file 始终相对于工作区。生成和接收包也均位于工作区，不要把来源笔记搬进这里。
+默认工作区为 `.obsidian/customDocument/FSRSScheduler/`，`.agents/Context.md` 指 Vault 根目录。新请求的 context_path_base 为 vault，context_paths 相对于 Vault；source_file 始终相对于工作区。生成和接收包也均位于工作区，不要把来源笔记搬进这里。

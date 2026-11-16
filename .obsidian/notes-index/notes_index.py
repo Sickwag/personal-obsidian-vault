@@ -64,7 +64,7 @@ CREATE INDEX IF NOT EXISTS idx_heading_title ON headings(title);
 HEADING_RE = re.compile(r"^(#{1,3})\s+(.+?)\s*#*\s*$")
 
 # 不纳入索引的目录（vault 内）
-DESC_SKIP_DIRS = {".obsidian", ".git", ".trash"}
+DESC_SKIP_DIRS = {".obsidian", ".git", ".trash", ".agents", ".codex", ".aws"}
 
 
 @dataclass
@@ -106,7 +106,11 @@ def resolve_vault(vault_arg: Optional[str]) -> Path:
     return Path(vault_arg).resolve() if vault_arg else default_vault()
 
 
-def connect(db_path: Path) -> sqlite3.Connection:
+def connect(db_path: Path, readonly: bool = False) -> sqlite3.Connection:
+    if readonly:
+        conn = sqlite3.connect(db_path.resolve().as_uri() + "?mode=ro", uri=True)
+        conn.row_factory = sqlite3.Row
+        return conn
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -460,7 +464,12 @@ def main(argv: Optional[list[str]] = None) -> int:
         _print_json({"error": f"vault 目录不存在: {vault}"})
         return 1
     db = Path(args.db).resolve() if args.db else default_db()
-    conn = connect(db)
+    readonly = args.cmd in {"lookup", "check"} or (args.cmd == "update" and args.no_write)
+    try:
+        conn = connect(db, readonly=readonly)
+    except sqlite3.OperationalError as error:
+        _print_json({"error": "索引不可用；请用正文搜索，或明确授权更新索引", "detail": str(error)})
+        return 1
 
     if args.cmd == "update":
         if args.no_write:

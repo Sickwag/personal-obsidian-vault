@@ -1,7 +1,7 @@
 # Style.md — Vault 写作与 AI 写入规范
 
 > 本文件是本 vault 的唯一风格权威。所有 AI（爬虫/总结/改写/新增）写入或修改笔记时必须遵守本文。冲突时以本文为准，覆盖模型默认习惯。
-> 核心参考样本：`学习/Language/C C++`、`学习/ToolChain`、`学习/algorithm`、`学习/Bases/开发范式`、`Chores/JobInterviews` — 均为手写高密度样本。
+> 核心参考样本：`Learn/Language/C C++`、`Learn/ToolChain`、`Learn/Algorithm`、`Learn/Bases/Paradigm`、`Chores/JobInterviews` — 均为手写高密度样本。
 
 ## 1 写作风格与用语习惯
 
@@ -66,10 +66,10 @@
 ### 3.1 目录结构（现状即规范）
 ```
 Learn/
-  Bases/开发范式/ /操作系统/ /数据结构/ /计算机组成原理/ /计算机网络/
+  Bases/Paradigm/ /OperatingSystem/ /DataStructure/ /ComputerComposition/ /Network/
   Language/C C++/ /DB/ /ScriptLangs/ ...
   Books/                 # 专业书籍笔记（C++ prime plus、Modern C++、QT6 等）
-  ToolChain/ algorithm/ ProjectsStudy/ AI/ Fragments/
+  ToolChain/ Algorithm/ ProjectsStudy/ AI/ Fragments/
 Article/                 # 哲学/ 感悟/
 Chores/JobInterviews/    # 面试题、简历、复盘
 Files & LongText/Attachments/   # 全库附件统一目录（见 .obsidian/app.json）
@@ -82,7 +82,7 @@ Daily/
 ### 3.2 命名
 - 文件名使用中文或中英混合，直白反映主题。例：`IO复用模型.md`、`C++开发范式和术语.md`、`CMake.md`。
 - 允许空格（如 `C C++` 目录名、`C++ Runoob Tutoral.md`），但新增的文件/目录不允许空格，使用大驼峰命名规范
-- 附件（截图/录屏）由 Obsidian 自动命名 `Pasted image ...png` / `recording N.gif`，统一落 `Files & LongText/Attachments`，正文用 `![[附件名]]` 引用，不使用相对路径手写 `../../../`。
+- 附件（截图/录屏）由 Obsidian 自动命名 `Pasted image ...png` / `recording N.gif`，统一落 `Files & LongText/Attachments`，正文图片使用 `![说明](相对于当前笔记的附件路径)`，其他附件使用 `[说明](相对路径)`；路径中空格等特殊字符进行 URL 编码，不能只写文件名。笔记和章节关联仍使用 Wiki 链接。
 - 禁止用 `01-`、`1.` 这类序号前缀做标题或文件名排序（标题中不加序号）。
 
 ### 3.3 单篇内部结构
@@ -109,12 +109,12 @@ source: https://...
 
 ### 4.2 列表与缩进
 - 有层级/有顺序的内容用嵌套列表，不用 `①②` 等符号序号。
-- 缩进使用 4 空格的 tab。
+- 缩进使用 4 个空格，不使用 Tab。
 
 ### 4.3 链接与引用
 - 内部引用：`[[#标题内容]]` 或 `[[笔记名#标题]]`。
 - 外部链接：`[链接标题](链接)`，多个各占一行。
-- 图片/附件：`![[文件名.png]]`。
+- 图片：`![说明](相对于当前笔记的附件路径)`；其他附件：`[说明](相对路径)`。保留笔记嵌入和章节/块引用；普通编辑器不一定支持这些 Obsidian 功能。
 
 ### 4.4 代码与表格
 - 行内代码用 `` ` `` 包裹，参考 1.3。
@@ -165,9 +165,9 @@ python3 .obsidian/notes-index/notes_index.py desc --batch <json文件>
 ### 5.2 与 AI 写入的协作
 
 - 写入前：对当前要写的内容提炼 2-3 个关键词，逐个调用 `lookup`。结果非空则检查是否真相似；若真相似，在待写入内容上方单开一行用 `[[/相对路径/到/文件|description]]` 链接到对应标题，description 由 AI 编写（精简）。
-- 写入后：调用 `check <当前文件>`，若返回的标题有更新（added/renamed/deleted），说明库内记录落后，需要调 `update` 同步。
+- 写入后：调用 `check <当前文件>`，若返回的标题有更新（added/renamed/deleted），说明索引落后；报告差异，并使用正文搜索补齐。未获单独授权不运行 `update` 或 `desc`。
 - `update` 仅在用户要求时才调用，不自动触发。
-- 新标题的 `desc` 缺失时 `check` 会出现在 `need_desc` 中，AI 可调 `desc` 补写，使后续 `lookup` 检索更准。
+- 新标题的 `desc` 缺失时 `check` 会出现在 `need_desc` 中，报告缺失描述；只有用户单独授权索引写入时才可用 `desc` 补写。
 
 ### 5.3 跨笔记引用语法
 
@@ -193,13 +193,16 @@ python3 .obsidian/notes-index/notes_index.py desc --batch <json文件>
 - [ ] 标题无序号、段落紧凑、列表未合并、表格/引用块前有换行、缩进为 4 空格
 - [ ] 对比表格与代码块提供了正文之外的新信息，无冗余块
 - [ ] 引申不超过 2 层，超限已拆新篇并用 `[[wikilink]]` 关联
-- [ ] 附件已落 `Files & LongText/Attachments` 并用 `![[附件名]]` 引用
+- [ ] 附件已落 `Files & LongText/Attachments` 并用标准 Markdown 相对路径引用
 - [ ] 已更新 `参考` 链接，未删除用户已有内容（只追加/修正）
 - [ ] 已调 `lookup` 查重，命中相似内容已加 `[[/路径|说明]]` 引用行
-- [ ] 已调 `check` 校验目标文件标题，必要时已 `update` 同步索引库
+- [ ] 已调 `check` 校验目标文件标题，已报告索引差异，未经单独授权未写索引数据库
 
 ### 6.4 禁止事项
 - 禁止删除或重写用户已有段落（只追加新小节或在原小节内补充）；禁止为格式化而改动用户已固定的表述。
 - 禁止为单篇写入过多引申分支（>2 分支需拆篇）。
 - 禁止输出 emoji、寒暄、自我指代的冗余开场/收尾。
-- 禁止在用户未要求时自动调用 `update`（索引同步仅限用户要求或写入自检后）。
+- 禁止在用户未要求时自动调用 `update`（写入自检不会授予索引更新权限）。
+
+## Obsidian 与协作文件边界
+本仓库由本人和 Agent 共同维护，使用双向链接、反向链接、章节和块引用、Callout、笔记嵌入及插件功能。保持这些语义；附件的跨编辑器兼容采用标准 Markdown 相对路径，不把 Wiki 语法误称为通用 Markdown 标准。维护说明集中在 `.agents/`，根 `AGENTS.md` 为入口；学习知识留在原学科目录。
