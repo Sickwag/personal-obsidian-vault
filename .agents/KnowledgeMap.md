@@ -15,7 +15,7 @@
 | CMake、编译、CI/CD 与开发工具 | `Learn/ToolChain/CMake.md`、`Learn/ToolChain/CICD.md` | `Learn/ToolChain/CppBuildAndLinking.md`、`Learn/ToolChain/CompilationOptimization.md`、`Learn/ToolChain/MessageQueue.md`、`Learn/ToolChain/Dev Tool.md`、`Learn/ToolChain/Components.md` |
 | Qt、QML、Android 与桌面应用 | `Learn/Books/QT6开发指南.md`、`Learn/Language/C C++/QML.md` | `Learn/ProjectsStudy/FromDocs/Qt Official Tutorial.md`、`Learn/ProjectsStudy/FromRemote/QTExamples.md`、`Learn/Language/Android/` |
 | 求职与面试 | `Chores/JobInterviews/简历项目.md`、`Chores/JobInterviews/面试题合集.md` | `Chores/JobInterviews/智力题.md`、`Chores/JobInterviews/收集的面试题.md`、`Chores/JobInterviews/面试复盘.md`、`Chores/JobInterviews/自我介绍.md` |
-| FSRS 复习插件与成果包 | `.agents/Context.md` 及 `.obsidian/customDocument/FSRSScheduler/` 下的三份协作文档 | 先读 `.agents/fsrs/` 下的指南；新版验收前保持旧插件停用 |
+| FSRS 复习插件与成果包 | `.agents/Context.md` 及 `.agents/fsrs/` 下的协作说明 | 先读 `.agents/fsrs/` 下的指南；新版验收前保持旧插件停用 |
 ## 活跃笔记文件地图
 ### 根目录
 - `AGENTS.md`：本仓库 AI 与贡献指南。

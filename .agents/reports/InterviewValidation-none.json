@@ -1,0 +1,18 @@
+{
+  "note": "Learn/Algorithm/刷题路线.md",
+  "note_sha256": "1f4f1e532187d22446890d5870b1c5f3b93b50f9349c889de30d7eaab68d20d0",
+  "sanitizer": "none",
+  "compiler": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "tests": {
+    "InterviewTest.cpp": "ALL_SEQUENTIAL_AND_POOL_TESTS_PASS",
+    "InterviewQueueTest.cpp": "SPSC_MPSC_SPMC_MPMC_AND_LINEARIZABILITY_PASS",
+    "InterviewFaultTest.cpp": "ALLOCATION_FAILURE_ROLLBACK_PASS"
+  },
+  "passed": true,
+  "scope": "从最终正文代码块提取编译；线程检测不包含单线程全局分配器故障注入夹具",
+  "test_sources_sha256": {
+    "InterviewFaultTest.cpp": "c95c54efae6f766da66cfb993b15ee0382322dbf12db7821611aeb946fc0fcbb",
+    "InterviewQueueTest.cpp": "3b0ec38ac4fd5fbb2504aa92bd6442994693fc38dfa2841b33f844aed2abbf97",
+    "InterviewTest.cpp": "fc4ba36178a86f4872bf87b6fa3ec57a134f5cad02c0c0eaeaa31d732e316ecf"
+  }
+}
