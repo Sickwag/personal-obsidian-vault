@@ -1,43 +1,26 @@
-> 当前为旧版历史说明。旧插件已停用；新版协议将在临时库验收前更新，本文件中的 Codex 自动化与补提交流程不再执行。
+# 文件用途与所有权
+## 维护说明
+- `.agents/Context.md`：目标、路径与建议偏好；保留人工正文，不凭提交推断掌握程度。
+- `.agents/Style.md` 与 `KnowledgeMap.md`：写入规范和主题入口。
+- `.agents/fsrs/`：当前使用指南、文件协议及 DSH 提示词；legacy 只供历史核查。
+- `.agents/skills/learning-resource-merge/`：入库 Skill 的维护版本；`~/.agents/skills/learning-resource-merge/` 为共享安装版本。
+- `.agents/merge/Receipts/`：每条学习资源整理收据，记录知识覆盖、目标和附件哈希，不是复习评分。
+- `Learn/Fragments/ReadyToMerge.md`：本人按天放置的资源引用与完成状态，处理后保留来源。
+## 插件工作区
+以下路径相对于 `.obsidian/customDocument/FSRSScheduler/`：
 
-# 文件用途与写入边界
-下表中路径相对于本工作区，以 `/` 开头的路径相对于 Vault 根目录。尚未使用的功能不会提前创建空文件；ID 命名文件按需增加。
-| 路径 | 内容与用途 | 谁可以维护 |
+| 路径 | 用途 | 写入方 |
 | --- | --- | --- |
-| /Context.md | 项目背景、学习目标、当前进度、Agent 协作入口；frontmatter 为插件偏好 | 用户和 Agent 维护正文；插件设置仅更新偏好 |
-| UseGuide.md | 安装后操作顺序、命令、复习流程和提示词 | 插件首次生成，用户可补充 |
-| FileGuide.md | 本文件，说明各类文件的职责 | 插件首次生成，用户可补充 |
-| AgentProtocol.md | 已实现的候选卡、规划、反馈和发布协议 | 插件首次生成；升级以安装包 docs 协议为准 |
-| CurrentPlan.md | 当前阶段安排和下一步，不是调度事实 | 用户/Agent 按需创建 |
-| Topics/*.md | 主题进展、概念关联、薄弱点和证据 | 用户/Agent 按需维护 |
-| Digests/*.md | Git 变更摘要，注明范围和提交证据 | Agent 维护，不等同掌握记录 |
-| Practice/ | 综合编码练习与过程记录 | 用户/Agent 维护 |
-| Items/<card_id>.md | 正式卡片的可读投影，含问题、评分要点、来源和 revision | 插件生成；修订通过外部成果包 |
-| Data/Vault.json | Vault/repo 身份和主写入设备 | 插件管理，迁移保持身份 |
-| Data/Content/<revision_id>.json | 不可变题目内容版本 | 插件管理，不直接编辑 |
-| Data/Events/<event_id>.json | 真实建卡、评分、撤销、阅读等事件，可重建状态 | 插件追加，Agent 只读 |
-| Data/Sources/<source_id>.json | 某次提交的原始笔记版本与 blob、路径、标题、内容 | 插件生成，Agent 按请求读取 |
-| Data/ProjectionHashes/ | 检测 Items 人工改动，避免覆盖 | 插件管理 |
-| Data/Tasks/ | 当前已接受阅读/实践任务 | 插件管理，通过 Plan 导入 |
-| Data/TaskVersions/ | 已接受任务的历史版本 | 插件管理 |
-| Data/Attempts/ | 用户明确导出的真实作答；可能含个人内容 | 插件生成，Agent 仅评估用户指定记录 |
-| Data/Feedback/ | 已接受的 Agent 评价 | 插件保存；不自动覆盖已发生的评分 |
-| Exchange/Requests/<id>/Request.json | 待整理的提交范围、来源 ID、上下文位置和身份 | 插件输出，Agent 从这里取任务 |
-| Exchange/Requests/<id>/Request.md | 请求的简要说明 | 插件输出 |
-| Exchange/Imports/<package_id>/Cards/*.md | 候选新卡/修订卡，包含来源和评分要点 | Agent 发布 |
-| Exchange/Imports/<package_id>/Plan.json | 候选 reading/practice 任务 | Agent 发布 |
-| Exchange/Imports/<package_id>/PolicyPatch.json | 预算和保持率等偏好建议 | Agent 提议，用户确认 |
-| Exchange/Imports/<package_id>/Feedback/*.json | 关联真实 event/attempt 的评估 | Agent 发布，用户确认 |
-| Exchange/Imports/<package_id>/Manifest.json | 包身份、各文件类型与精确 SHA-256 | 打包脚本生成 |
-| Exchange/Imports/<package_id>/Ready.json | Manifest 的 SHA-256，最后写入表示发布完成 | 打包脚本生成，发布后不得改包 |
-| Exchange/Receipts/<package_id>.json | 已接受 proposal_id，保证重复点击不重复入库 | 插件管理 |
-| Exchange/Exports/export-*.json | 事实快照，Context 条目来自 Vault 根目录，恢复也写回根目录 | 插件生成，恢复不覆盖不同内容 |
-| Drafts/<id>.json | 已校验的候选题、检验理由、来源和材料路径 | 插件从模型结构化结果发布 |
-| QuestionFeedback/*.json | 用户明确提交的题目质量反馈，不是答题评级 | 插件记录，模型用于后续审题 |
-| /Chores/reviewDocs/<date>/Review.md | 当天已有到期目标与材料入口；保护手工编辑 | 插件生成 |
-| /Chores/reviewDocs/<date>/<job>/*.md | Review、Exercises、Changes；生成时间及章节版本可追踪 | 插件发布，用户可补充 |
-| /Chores/reviewDocs/<date>/Records/*.md | 按真实评分事件生成的可读记录 | 插件生成 |
-## Agent 的事实边界
-学习进度不是掌握程度，笔记最后修改时间不是答题时间。对推断标注“待验证”；只根据真实作答评估质量。保存用户手写内容，修改前完整阅读目标文档。来源陈旧、删除或修正时先核对，不使用旧请求虚构新证据。
-操作系统用户数据目录中的 State.json、Writer.json、ReviewCache 和启动事务文件只供插件使用，不属于 Agent 任务输入，不随知识库同步。不要复制其他工具的日志、会话、数据库或密钥作为学习上下文。
-可选 Codex 自动化另在该用户数据目录保存本机授权开关、CLI 路径、固定会话 ID 与任务状态（CodexReviewJobs.json），以及 CodexWorkspace 输入/输出副本；固定会话历史由 Codex CLI 按本机配置保存。这些本地副本不随 Vault 同步，启用前应确认本机 Codex 配置和服务的数据保留政策。
+| Identity.json | 新版库身份，schema 2 | 初始化程序 |
+| Requests/*.json | 固定 Git 范围、章节快照、已有目标 | 外部桥接命令 |
+| Bundles/<id>/Bundle.json、Ready.json | 不可变语义材料和完整发布标记 | 外部桥接命令 |
+| Bridge/State.json | 成功游标、运行状态与两种更新时间 | 外部桥接命令 |
+| Data/Content/*.json | 正式题目内容版本 | 插件 |
+| Data/Events/*.json | 真实创建、评分、撤销、阅读等事件 | 插件 |
+| Receipts/*.json | 已导入包记录 | 插件 |
+| Revisions/*.json、RevisionReceipts/*.json | 待确认修订及实际接受结果 | 插件 |
+| Tasks/*.json、TaskEvents/*.json | 阅读/实践任务和真实完成记录 | 插件 |
+| Publish.lock、Data/Events.lock | 本地并发写入保护，不是学习事实 | 执行中的程序 |
+
+`Chores/reviewDocs/YYYY-MM-DD/<run-id>/Review.md` 保存可读归档，每次发布使用独立目录，不覆盖手写日计划。
+旧 `Data/Vault.json` 存在时新版拒绝自动初始化；这是正式替换前的数据保护。正式旧数据清理、单库旧缓存核对和安装仅在临时库验收后执行，不改写 Git 历史，不动其他库数据。

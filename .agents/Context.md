@@ -20,7 +20,7 @@ learning_resource_inbox: "Learn/Fragments/ReadyToMerge.md"
 - 入库 Skill 的仓库维护版本在 `.agents/skills/learning-resource-merge/`，安装位置为 `~/.agents/skills/learning-resource-merge/`。
 ## 当前实施状态
 - 旧 FSRS 暂停使用，正式数据保留至新版临时库验收完成。不能把旧生成材料视为已作答。
-- 新源码位于旧源码同级的 `obsidian-FSRSScheduler-v2/`；旧源码及未提交工作保留。
+- 新版源码位于 `/mnt/windows-e/CodeFiles/learnAndDev/obsidian-FSRSScheduler-v2/`；旧源码及未提交工作保留。自动化与临时库交付完成后等待本人桌面验收，正式替换尚未执行。
 - DSH 的每天 22 点任务由本人配置；插件不启动 Agent、不自动提交 Git、不回填提交时间。
 - DSH 负责资源入库、变更总结、出题、审题和有证据的学习状态维护；插件负责展示、真实评分、FSRS 调度和提醒。
 - 首次回溯近 7 天，后续按成功游标及失败待办增量处理；本次入库未提交的正文也必须带工作区快照和哈希，不虚构提交。
