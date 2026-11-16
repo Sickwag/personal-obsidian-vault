@@ -1,3 +1,5 @@
+> 旧插件已停用，正式数据保留至新版临时库验收。当前协作说明已迁入 [使用指南](../../../.agents/fsrs/UseGuide.md)，本页旧版自动化和补提交说明仅作历史记录。
+
 # FSRS Scheduler
 面向 Obsidian 的桌面插件：启动时保存 Git 快照，按已有题目和文档提醒复习，使用 FSRS 记录真实回忆，并与外部 Agent 通过文件协作。插件默认不调用 AI；用户显式启用限定数据分享后，可在后台调用本机 Codex CLI 生成复习草稿。插件本身不包含模型 API 客户端或 API Key。
 当前版本：0.2.0。安装时核对 `Release.json` 的版本与 SHA-256，避免混用旧 dist。开发根目录：`/mnt/windows-e/CodeFiles/learnAndDev/obsidian-FSRSScheduler`。
