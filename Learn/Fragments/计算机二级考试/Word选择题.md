@@ -529,5 +529,5 @@
 
 
 考试错误
-![Untitled 41 2.png](../../../Files%20&%20LongText/Attachments/Untitled%2041%202.png)
+![Untitled 41 2.png](../../../Files%20%26%20LongText/Attachments/Untitled%2041%202.png)
 字体和段落等设置应用到其它文档，不使用模板，主题可以移植显示到其他

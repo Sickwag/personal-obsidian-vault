@@ -2,15 +2,15 @@
 参考教程： [Quick Start Guide | CLIUtils/CLI11 | DeepWiki](https://deepwiki.com/CLIUtils/CLI11/1.2-quick-start-guide)
 # Overview
 总体架构图
-![[Pasted image 20250717204518.png]]
+![Pasted image 20250717204518](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250717204518.png)
 类型系统和转换
-![[Pasted image 20250717204624.png]]
+![Pasted image 20250717204624](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250717204624.png)
 验证器和转换系统
-![[Pasted image 20250717204645.png]]
+![Pasted image 20250717204645](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250717204645.png)
 Subcommands 子命令
-![[Pasted image 20250717204714.png]]
+![Pasted image 20250717204714](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250717204714.png)
 从配置文件中读取参数
-![[Pasted image 20250717204748.png]]
+![Pasted image 20250717204748](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250717204748.png)
 # 快速入门
 `CLI::App` 类是 CLI11 的中心组件。它管理所有选项并处理解析。
 ## Add options & flags
@@ -155,7 +155,7 @@ auto utils = app.get_subcommands([](const App* sub) {
     return sub->get_group() == "Utilities";
 });
 ```
-![[Pasted image 20250718095637.png]]
+![Pasted image 20250718095637](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250718095637.png)
 ### 子命令函数回调
 为子命令设置回调，以便在调用时执行代码，默认情况下，回调函数在所有解析完成后运行。可以通过 `immediate_callback()` 更改。
 ```cpp
@@ -186,7 +186,7 @@ run();
 # Core APIs
 App 类提供了许多用于自定义行为的方法。大多数方法返回 `this` 以允许方法链式调用
 ## Configuration Method
-![[Pasted image 20250717214758.png|275]]
+![275](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250717214758.png)
 
 | Method  方法                     | Description  描述                                                                                            |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------- |

@@ -1,0 +1,304 @@
+{
+  "mode": "audit",
+  "changed_files": [
+    "Chores/computer learning puzzles.md",
+    "Chores/operation in devices.md",
+    "Files & LongText/Attachments/README.md",
+    "Learn/AI/Pytorch basic.md",
+    "Learn/Algorithm/SQL刷题记录.md",
+    "Learn/Algorithm/分析优化.md",
+    "Learn/Algorithm/刷题路线.md",
+    "Learn/Algorithm/用法导向知识.md",
+    "Learn/Algorithm/题型分类.md",
+    "Learn/Bases/ComputerComposition/Hardware Animation.md",
+    "Learn/Bases/DataStructure/dsacpp 3rd.md",
+    "Learn/Bases/DataStructure/数据结构.md",
+    "Learn/Bases/DataStructure/数据结构和算法图解.md",
+    "Learn/Bases/DataStructure/深入浅出数据结构.md",
+    "Learn/Bases/Network/OSI七层模型.md",
+    "Learn/Bases/Network/小林Coding 计算机网络.md",
+    "Learn/Bases/Network/王道考研计算机网络.md",
+    "Learn/Bases/OperatingSystem/小林 Coding 图解操作系统.md",
+    "Learn/Bases/Paradigm/IO复用模型.md",
+    "Learn/Bases/Paradigm/常用算法和情景处理.md",
+    "Learn/Bases/Paradigm/设计模式.md",
+    "Learn/Books/C++ prime plus.md",
+    "Learn/Books/C++并发编程实战（第二版）.md",
+    "Learn/Books/Linux多线程服务端编程 使用muduo C++网络库.md",
+    "Learn/Books/Linux高性能服务器编程.md",
+    "Learn/Books/Modern C++.md",
+    "Learn/Books/Python编程三剑客.md",
+    "Learn/Books/QT6开发指南.md",
+    "Learn/Books/QT样式表合集.md",
+    "Learn/Books/Redis 设计与实现.md",
+    "Learn/Books/汇编语言---王爽.md",
+    "Learn/Books/算法竞赛入门经典.md",
+    "Learn/Books/软件工程.md",
+    "Learn/Fragments/编程相关/基本知识/Regular Expression.md",
+    "Learn/Fragments/编程相关/基本知识/报错日志和代码异常分析.md",
+    "Learn/Fragments/编程相关/操作经验/乱码对照表及其解决方法.md",
+    "Learn/Fragments/编程相关/操作经验/网络连接问题解决.md",
+    "Learn/Fragments/装机/装机.md",
+    "Learn/Fragments/计算机二级考试/Excel选择题.md",
+    "Learn/Fragments/计算机二级考试/PowerPoint选择题.md",
+    "Learn/Fragments/计算机二级考试/Word选择题.md",
+    "Learn/Fragments/计算机二级考试/笔记-公共基础&计算机基础.md",
+    "Learn/Fragments/计算机二级考试/计算机公共基础知识.md",
+    "Learn/Fragments/计算机二级考试/靠记的题.md",
+    "Learn/Language/Android/Android Development.md",
+    "Learn/Language/Android/Jetpack  Compose开发.md",
+    "Learn/Language/Android/Jetpack Compose入门到精通.md",
+    "Learn/Language/Android/Kotlin + xml传统开发.md",
+    "Learn/Language/C C++/C++ Runoob Tutoral.md",
+    "Learn/Language/C C++/Communication protocol.md",
+    "Learn/Language/C C++/OpenGL.md",
+    "Learn/Language/C C++/模板元编程.md",
+    "Learn/Language/DB/MongoDB.md",
+    "Learn/Language/DB/MySQL.md",
+    "Learn/Language/Fronted/CSS.md",
+    "Learn/Language/Fronted/HTML.md",
+    "Learn/Language/Java/java编程的逻辑.md",
+    "Learn/Language/ScriptLangs/Ragel.md",
+    "Learn/ProjectsStudy/FromDocs/Agent Learning.md",
+    "Learn/ProjectsStudy/FromDocs/Boost库学习.md",
+    "Learn/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
+    "Learn/ProjectsStudy/FromRemote/CLI11.md",
+    "Learn/ProjectsStudy/FromRemote/Echat.md",
+    "Learn/ProjectsStudy/FromRemote/FiberLib.md",
+    "Learn/ProjectsStudy/FromRemote/QTExamples.md",
+    "Learn/ProjectsStudy/FromRemote/WebServer-Chat.md",
+    "Learn/ProjectsStudy/WriteByMyself/AzzatoChat.md",
+    "Learn/ProjectsStudy/WriteByMyself/BookManageSystem+mysql.md",
+    "Learn/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
+    "Learn/ProjectsStudy/WriteByMyself/DevFoundations.md",
+    "Learn/ToolChain/CMake.md",
+    "Learn/ToolChain/Components.md",
+    "Learn/ToolChain/Dev Tool.md"
+  ],
+  "resolved_references": 1113,
+  "unresolved": [
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 403,
+      "target": "images/email.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 410,
+      "target": "images/email2.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 420,
+      "target": "images/phone.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 427,
+      "target": "images/phone2.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 437,
+      "target": "images/domain-name.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 447,
+      "target": "images/ip.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 457,
+      "target": "images/userid.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 469,
+      "target": "images/chineses.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 477,
+      "target": "images/char1.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 485,
+      "target": "images/char2.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 495,
+      "target": "images/char3.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 503,
+      "target": "images/char4.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 511,
+      "target": "images/char5.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 519,
+      "target": "images/char6.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 527,
+      "target": "images/char7.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 535,
+      "target": "images/char8.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 543,
+      "target": "images/char9.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 551,
+      "target": "images/char10.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 559,
+      "target": "images/char11.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 569,
+      "target": "images/num1.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 577,
+      "target": "images/num2.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 585,
+      "target": "images/num3.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 593,
+      "target": "images/num4.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 601,
+      "target": "images/num5.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 609,
+      "target": "images/num6.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 617,
+      "target": "images/num7.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 625,
+      "target": "images/num8.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 633,
+      "target": "images/num9.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Files & LongText/Attachments/开发常用正则表达式.md",
+      "line": 641,
+      "target": "images/num10.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Learn/Algorithm/用法导向知识.md",
+      "line": 3610,
+      "target": "二叉树前序遍历（迭代法）.gif",
+      "reason": "missing"
+    },
+    {
+      "note": "Learn/Algorithm/用法导向知识.md",
+      "line": 3769,
+      "target": "KMP精讲2.gif",
+      "reason": "missing"
+    },
+    {
+      "note": "Learn/Bases/OperatingSystem/小林 Coding 图解操作系统.md",
+      "line": 1015,
+      "target": "recording%2018.gif",
+      "reason": "missing"
+    },
+    {
+      "note": "Learn/Books/QT6开发指南.md",
+      "line": 2468,
+      "target": "Pasted image 20251128170759.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Learn/Books/QT6开发指南.md",
+      "line": 2469,
+      "target": "Pasted image 20251128170805.png",
+      "reason": "missing"
+    },
+    {
+      "note": "Learn/Language/Android/Android Development.md",
+      "line": 376,
+      "target": "https;//docs.bughub.icu",
+      "reason": "missing"
+    },
+    {
+      "note": "Learn/ProjectsStudy/FromRemote/CommStudio.md",
+      "line": 648,
+      "target": "/home/azzato/CodeFiles/remote_push/CommStudio/include/managers/studio.h:14",
+      "reason": "missing"
+    },
+    {
+      "note": "Learn/ProjectsStudy/FromRemote/CommStudio.md",
+      "line": 657,
+      "target": "/home/azzato/CodeFiles/remote_push/CommStudio/src/main.cpp:62",
+      "reason": "missing"
+    }
+  ],
+  "note": "未解析项原已缺失，保留引用；没有伪造附件。远程图片不在本轮迁移范围。"
+}

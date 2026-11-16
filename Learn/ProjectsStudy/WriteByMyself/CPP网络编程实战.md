@@ -3,7 +3,7 @@ crea: 2025年11月6日14:30:28
 ---
 # 基本网络编程知识
 ## 网络请求总体流程
-![[Pasted image 20260210143735.png]]
+![Pasted image 20260210143735](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260210143735.png)
 ## 网络请求分类
 ### POST
 本质是一段 http 文本，包含请求头和请求体部分，数据包含在请求头内容中，目的是**根据这些数据获取另一些数据**，通常这些数据比较大并且复杂，需要高级语言来解析这些数据结构 用于处理变更，请求体中内容被服务器端解析，**根据解析结果在服务器端进行对应的操作**，再将操作结果发送回来。发送重复的 post 消息可能会造成不同的结果，因执行了重复的操作 post**仅仅只是数据不在链接中明文传输，数据包如果不加密仍不安全**
@@ -37,7 +37,7 @@ GET /api/products?category=electronics&minPrice=500 HTTP/1.1
 7. connect----根据服务端 ip+port，发起连接请求。
 8. write、read----建立连接后，就可发收消息了。
 传统的网络阻塞 IO 模型
-![[Pasted image 20260505135436.png|500]]
+![500](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260505135436.png)
 
 ### 基本架构代码编写
 #### 创建 endpoint
@@ -430,7 +430,7 @@ int server_accept_new_connection() {
 Boost Asio 的**类型安全设计**——用 C++ 类型系统在编译期防止错误。
 所谓 buffer 就是接收和发送数据时缓存数据的结构。 asio 提供了 `asio::mutable_buffer` 用于写服务和 `asio::const_buffer` 用于读服务这两个结构，他们**是一段连续的空间**，首字节存储了后续数据的长度
 但是这两个结构都没有被 asio 的 api 直接使用，asio 提出了 MutableBufferSequence 和 ConstBufferSequence 概念，他们是由多个 `asio::mutable_buffer` 和 `asio::const_buffer` 组成的。也就是说为了节省空间，将一部分连续的空间组合起来（***本质上他们是一段能够被连续的索引找到并连续遍历的一段不连续的空间集合***），作为参数交给 api 使用。这种方式节省了空间的同时没有降低性能，同时设计的也很优雅
-![[Pasted image 20260505230524.png|500]]
+![500](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260505230524.png)
 > [!note] 
 > "零拷贝"不是"不需要复制"，而是**不需要在用户态创建临时合并缓冲区**。
 > 
@@ -702,7 +702,7 @@ int main(int, char**) {
 ```cpp
 curl_easy_setopt(curl, CURLOPT_CAINFO, "path/to/pem/file");
 ```
-如果有些网站需要验证客户端身份，可以用浏览器先访问一下，然后使用浏览器默认身份（当然也可以自定义）, 所有的 http 请求头都需要**合并为一个字符串后传入** ![[PixPin_2025-11-06_14-37-12.png]]
+如果有些网站需要验证客户端身份，可以用浏览器先访问一下，然后使用浏览器默认身份（当然也可以自定义）, 所有的 http 请求头都需要**合并为一个字符串后传入** ![PixPin_2025-11-06_14-37-12](../../../Files%20%26%20LongText/Attachments/PixPin_2025-11-06_14-37-12.png)
 ```cpp
 std::string user_agent = "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0"
 std::string referer = "Referer:https://www.douban.com/";
@@ -715,7 +715,7 @@ headers = curl_slist_append(headers, "User - Agent : Mozilla / 5.0(Windows NT 10
 curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 curl_slist_free_all(headers);  // 不是必要，但最好记得
 ```
-添加 user\_agent 请求头后服务器的 html 返回结果也会包含请求头 ![[PixPin_2025-11-06_14-48-13.png]] 可以通过 curl 内置内容来分开获取
+添加 user\_agent 请求头后服务器的 html 返回结果也会包含请求头 ![PixPin_2025-11-06_14-48-13](../../../Files%20%26%20LongText/Attachments/PixPin_2025-11-06_14-48-13.png) 可以通过 curl 内置内容来分开获取
 ```cpp
 auto ec = curl_easy_perform(curl);
 if (ec != CURLE_OK) {

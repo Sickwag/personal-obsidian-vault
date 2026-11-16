@@ -4,7 +4,7 @@
 # 小林 Claude Code Note 基础知识
 ## CLAUDE.md
 ### 通用知识
-![[02-claude-md-load-timeline-749f46ae.webp]]
+![02-claude-md-load-timeline-749f46ae](../../../Files%20%26%20LongText/Attachments/02-claude-md-load-timeline-749f46ae.webp)
 一份好的 CLAUDE.md 应该包含这几部分：
 1. 项目简介：一句话说清楚项目是做什么的
 2. 技术栈：用了哪些框架和工具，让 Claude 不会乱选技术
@@ -115,7 +115,7 @@ Hooks 的配置写在项目的 `.claude/settings.json` 或全局的 `~/.claud
 /effort 调整，注意其 max 档位是模型能力上限，token 完全不设限。听起来最猛，但容易「过度思考」，钻牛角尖
 在**一次对话中添加 `ultrathink` 代表让这一轮临时把思考等级放到极限**，下一轮对话恢复到/effot 设置
 ## 标准 Vibe Coding 项目结构
-![[image-20260519220747776.webp]]
+![image-20260519220747776](../../../Files%20%26%20LongText/Attachments/image-20260519220747776.webp)
 ## 大项目代码库如何维护
 ### 索引逻辑
 核心原因是: **如何「精准找到要改的那几行代码」？**
@@ -260,14 +260,14 @@ cd <project>
 claude
 ```
 在 claude 中具体描述项目是做什么，同样先说需求，没有任何技术名词
-![[image-20260702225333944.webp]]
-![[image-20260702225815628.webp]]
+![image-20260702225333944](../../../Files%20%26%20LongText/Attachments/image-20260702225333944.webp)
+![image-20260702225815628](../../../Files%20%26%20LongText/Attachments/image-20260702225815628.webp)
 会生成  `specs/001-team-kanban/spec.md` 这份文档，你会发现这是非常详细的需求文档了，所以一定要读一遍，这是整个流程里性价比最高的一次检查
-![[image-20260702235432107.webp]]
+![image-20260702235432107](../../../Files%20%26%20LongText/Attachments/image-20260702235432107.webp)
 然后说明技术要求
-![[image-20260702235747708.webp]]
-![[image-20260703000129843.webp]] claude 会根据 spec-kit 生成的 skill 要求生成几个文件
-![[image-20260703000153790.webp]]
+![image-20260702235747708](../../../Files%20%26%20LongText/Attachments/image-20260702235747708.webp)
+![image-20260703000129843](../../../Files%20%26%20LongText/Attachments/image-20260703000129843.webp) claude 会根据 spec-kit 生成的 skill 要求生成几个文件
+![image-20260703000153790](../../../Files%20%26%20LongText/Attachments/image-20260703000153790.webp)
 然后拆分任务，直接执行 `/speckit-tasks` 即可，最后 `/speckit-implement` 执行
 ### 特殊情况
 对于需求模糊，大项目的兜底实现

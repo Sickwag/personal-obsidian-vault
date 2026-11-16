@@ -1096,7 +1096,7 @@ b'&#9731;'
 参考[通过实例理解js正则表达]([hyy1115/RegExp-Learning: 学习正则表达式 (github.com)](https://github.com/hyy1115/RegExp-Learning?tab=readme-ov-file))
 [工作常用正则表达式](../Attachments/工作常用正则表达式.md)
 [开发常用正则表达式](开发常用正则表达式.md)
-![learn\_regex-master.zip](learn_regex-master.zip)
+![learn\_regex-master.zip](../../Files%20%26%20LongText/Attachments/learn_regex-master.zip)
 ### 二进制数据
 
 `bytes()`&`bytearray`关键字创建字节型数据类型(**只能创建列表型)**

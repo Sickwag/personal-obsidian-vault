@@ -32,7 +32,7 @@ Redis主从复制是一种数据同步机制，允许将一台Redis服务器（�
 - 数据备份，提高容错
 
 同步的阶段
-![[Pasted image 20260222111702.png]]
+![Pasted image 20260222111702](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260222111702.png)
 1. 连接建立阶段 3
 	- 从节点通过 replicaof 命令配置连接主节点
 	- 发送 PING 命令检查通信
@@ -194,8 +194,8 @@ redis 127.0.0.1:6379>
 ##### Bitmap
 位图，可以看作是 string 的拓展，**基于**字符串数据容器，getbit/setbit 会直接操作字符串中的每一个字符（8 位），`set foo bar` 后，字符串被存储为：`01100010(b)01100001(a)01110010(r)`
 
-  ![[Pasted image 20260222145505.png]] 通过 getbit 得到的结果为：
-![[Pasted image 20260222145521.png]]  
+  ![Pasted image 20260222145505](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260222145505.png) 通过 getbit 得到的结果为：
+![Pasted image 20260222145521](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260222145521.png)\
 	这种方法下，一个字符的位置可以存储 8 个状态，通常用于需要记录大量开关，选项，状态的情景：
 - 大量用户今天是否登录过->一个位图（本质是一个字符串）中，每一个位存储该位下标对应的用户 id 今天是否登录
 - 进行位运算（`BITOP XOR/AND/NOT... result key1 key2`）
@@ -265,20 +265,20 @@ CI/CD 是持续集成（Continuous Integration）和持续部署（Continuous De
 2. **持续交付（CD）**：在持续集成的基础上，确保软件可以快速且稳定地发布到生产环境。这意味着每次代码变更通过所有测试后，都可以立即部署到生产环境。
 3. **持续部署**：是持续交付的进一步延伸，它自动将通过所有测试的代码变更部署到生产环境，无需人工干预。
 ## Docker 简介
-![Pasted image 20240913205607.png](Pasted%20image%2020240913205607.png)
+![Pasted image 20240913205607.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240913205607.png)
 将各种应用程序打包成一个个“集装箱”，通过图标上的鲸鱼运动到任何需要的地方
 将软件运行所需要的所有依赖文件封装在一起，配置好所有内容只等一键使用
-![Pasted image 20240913205809.png](Pasted%20image%2020240913205809.png)
-![Pasted image 20240913205908.png](Pasted%20image%2020240913205908.png)
+![Pasted image 20240913205809.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240913205809.png)
+![Pasted image 20240913205908.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240913205908.png)
 ## Docker 和虚拟机的区别
-![Pasted image 20240913211152.png](Pasted%20image%2020240913211152.png)
+![Pasted image 20240913211152.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240913211152.png)
 ### 虚拟机
 Windows，macos 等都是完整的操作系统，在这些操作系统中虚拟化环境通过 hypervisor 虚拟化功能创建虚拟机，创建虚拟的运行环境
-![Pasted image 20240913210101.png](Pasted%20image%2020240913210101.png)
+![Pasted image 20240913210101.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240913210101.png)
 - 虚拟机可以将一台物理机的资源分配给多个虚拟机，同时提供多个环境或服务
 - 缺点是需要重复占用硬件资源，启动资源
 - 每个软件需要不同的环境，一个环境一个虚拟机，启动所有软件相当于启动所有操作系统的全部功能
-![Pasted image 20240913210144.png](Pasted%20image%2020240913210144.png)
+![Pasted image 20240913210144.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240913210144.png)
 
 ### Docker
 Docker 和容器（container）不是一个概念，容器只有应用程序和依赖文件
@@ -303,12 +303,12 @@ Docker 中
 `
 - 安装后在系统设置中启动 Docker，设置中开启 *hyper-v*功能后可以在命令行中使用 Docker 代码
 ## Docker 运行逻辑
-![Pasted image 20240913212559.png](Pasted%20image%2020240913212559.png)
+![Pasted image 20240913212559.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240913212559.png)
 - docker daemon 是服务端守护进程，用来管理服务端资源，client 中操作（终端输入 docker 指令）由 client 发送给 docker daemon 处理后将返回结果发送回 client（执行结果）
 - docker daemon 是一个后台服务进程，类似 mysql 80
 - client 和 docker host 之间通过 socket 或 restful API 通信
 ## 容器化和 dockerfile
-![Pasted image 20240913213157.png](Pasted%20image%2020240913213157.png)
+![Pasted image 20240913213157.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240913213157.png)
 dockerfile 是镜像创建指导文件，告诉 docker 如何创建这个程序的操作系统环境（一般是精简的）、第三方库、依赖文件、编译器、环境变量等
 ## 虚拟化技术和容器化技术对比
 ### 虚拟化技术
@@ -330,7 +330,7 @@ dockerfile 是镜像创建指导文件，告诉 docker 如何创建这个程序�
 - 更便捷的升级和扩缩容
 - 更简的系统运维
 - 更高效的计算资源利用
-![Pasted image 20241019113309.png](Pasted%20image%2020241019113309.png)
+![Pasted image 20241019113309.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241019113309.png)
 
 ### 3. 名词解释
 
@@ -365,9 +365,9 @@ sudo systemctl restart docker
 ## Vscode
 ### intellisense 图标含义
 参考文档：[IntelliSense](https://code.visualstudio.com/docs/editor/intellisense)
-![[Pasted image 20250307144859.png]]
+![Pasted image 20250307144859](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250307144859.png)
 ## visual Studiio 
 ### intellisense 图标含义
 [Class View and Object Browser Icons - Visual Studio 2017 | Microsoft Learn](https://learn.microsoft.com/zh-cn/previous-versions/visualstudio/visual-studio-2017/ide/class-view-and-object-browser-icons?view=vs-2017&viewFallbackFrom=vs-2019&redirectedfrom=MSDN)
-![[Pasted image 20250307145219.png]]
-![[Pasted image 20250307145230.png]]
+![Pasted image 20250307145219](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250307145219.png)
+![Pasted image 20250307145230](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250307145230.png)

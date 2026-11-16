@@ -112,7 +112,7 @@ state chart 是同一台机器的底层画法（正则=用语言描述，状态�
 - 输入是运行时数据；DFA 开销 O(n) 线性查表（每字符 O(1)），消除的是回溯（最坏指数级 → 线性）
 - 内建字符类等价预定义正则：digit ≡ `[0-9]`、alpha ≡ `[a-zA-Z]`、alnum ≡ `[0-9a-zA-Z]`，可等价替换
 内建字符有:
-![[Pasted image 20260813111920.png]]
+![Pasted image 20260813111920](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260813111920.png)
 ## 与正则引擎对比
 | 维度 | Ragel | 运行时正则（std::regex/PCRE） |
 |---|---|---|

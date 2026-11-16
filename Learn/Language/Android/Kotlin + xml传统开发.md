@@ -26,7 +26,7 @@ Android 系统还自带了这种轻量级、运算速度极快的嵌入式关系
 Android 系统还提供了丰富的多媒体服务
 ## 开发工具
 ### 布局设置
-![[Pasted image 20241210162415.png]]
+![Pasted image 20241210162415](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241210162415.png)
 ### app 目录下的结构
 - build
 	这个目录和外层的 build 目录类似，也包含了一些在编译时自动生成的文件，不过它里面的内容会更加复杂，我们不需要过多关心。
@@ -104,7 +104,7 @@ class MainActivity : ComponentActivity() {
 
 ## 资源目录
 ### 资源是如何组织的
-![[Pasted image 20241211203117.png|现在可能没有这么多]]
+![现在可能没有这么多](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241211203117.png)
 - 所有以“drawable”开头的目录都是用来放图片的
 - 所有以“mipmap”开头的目录都是用来放应用图标的
 - 所有以“values”开头的目录都是用来放字符串、样式、颜色等配置的
@@ -240,7 +240,7 @@ dependencies {					// 指定当前项目的所有依赖关系
 - `Log.w()`。用于打印一些警告信息，提示程序在这个地方可能会有潜在的风险，最好去修复一下这些出现警告的地方。对应级别 warn，比 info 高一级。
 - `Log.e()`。用于打印程序中错误信息，比如程序进入了 catch 语句中。当有错误信息打印出来时，一般代表你的程序出现严重问题了，必须尽快修复。对应级别 error，比warn 高一级。
 logcat 中会输出日志工具打印的日志，使用 log 工具打印日志可以比较方便地师徒值日志标签，通过过滤器过滤
-![[Pasted image 20241211212511.png]]
+![Pasted image 20241211212511](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241211212511.png)
 对日志分类，只显示出想要看到的日志
 Logcat 中日志级别当前我们选中级别是 Verbose，也就是最低等级。这意味着不管我们使用哪一个方法打印日志，这条日志都一定会显示出来。而如果我们将级别选中为 Debug，这时只有我们使用 Debug及以上级别方法打印的日志才会显示出来，级别并没有向下覆盖
 
@@ -347,7 +347,7 @@ fun main(){
 
 这里使用了一些 [[java编程的逻辑]]中关于 [[java编程的逻辑#模块、包的应用|java 包的构建逻辑]]
 创建一个 kotlin 类，先要将类定义放在类文件中，文件位置和 Main. kt 文件同级
-![[Pasted image 20241214152256.png|339]]
+![339](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241214152256.png)
 Main 和 Person 文件中**都声明** `package com.example.learingkotlin` 表示两者同属于一个软件包，其中内容可以互相引用，类似 `#include`
 #### 继承——类修饰符
 两个类之间需要**创建**继承关系，需要父类**可以被继承**，kotlin 中加上 `open` 关键字表示可以被继承，java 中加上 `finnal` 关键字表示不可以被继承。kotlin 中所有非抽象类是不能实现的，一定要子类去继承才能实现
@@ -654,7 +654,7 @@ println(anyResult)
 println(allResult)
 ```
 any 和 all 支持两种重载，一种传入谓词（即（predicate）是一个接受一个或多个参数并返回一个布尔值（`true` 或 `false`）的函数。谓词通常用于条件**判断、过滤、搜索**等操作。），另一种不传入任何参数，判断容器是否为空
-![[Pasted image 20241215105745.png]]
+![Pasted image 20241215105745](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241215105745.png)
 
 #### java 函数式 API
 - 如果我们在 Kotlin 代码中调用了一个 Java 方法，并且该方法接收一个 Java **单抽象方法**接口参数，就可以使用函数式 API。Java 单抽象方法接口指的是接口中只有一个待实现方法，如果接口中有多个待实现方法，则**无法使用函数式 API**。
@@ -707,7 +707,7 @@ public void doStudy(Study study) {
 }
 ```
 kotlin 默认所有的**参数和变量都不可为空**，所以[[#^4sxqyn|次构造函数需要初始化次构造函数中未传入的主构造函数参数]]
-![[Pasted image 20241215122028.png|375]]
+![375](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241215122028.png)
 
 ### 可判空形式
 #### 防止指针悬空
@@ -814,7 +814,7 @@ kotlin 中由于 val 必须有初始值，一般在主构造函数中将所有�
 ## Activity 是什么
 Activity 是最容易吸引用户的地方，它是一种可以包含用户界面的组，主要用于和用户进行交互。
 创建 Android 项目时选中 `No activity` 会使 com. example. project_name 中没有文件
-![[Pasted image 20241215171722.png]]
+![Pasted image 20241215171722](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241215171722.png)
 可以右键创建一个新的 `activity`，不勾选 Generate Layout File和 Launcher Activity 则表示这个 activity 是真正“空”的
 - 勾选 Generate Layout File 表示会自动为 FirstActivity 创建一个对应的布局文件
 - 勾选Launcher Activity 表示会自动将 FirstActivity 设置为当前项目的主 Activity
@@ -843,7 +843,7 @@ xmlns:android="http://schemas.android.com/apk/res/android"
         tools:layout_editor_absoluteY="623dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>
 ```
-![[Pasted image 20241216113038.png]]
+![Pasted image 20241216113038](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241216113038.png)
 `@+id/button1` 这种语法变成 `@id/button1`，是在 XML 中引用资源的语法
 项目中添加的任何资源（图片、布局、值、xml）都会在 R 文件中生成一个相应的资源 id，因此我们刚才创建的 first_layout. xml 布局的 id 现在已经添加到 R 文件中
 
@@ -860,7 +860,7 @@ class FirstActivity : AppCompatActivity() {
 ```
 `setContentView` 用来显示布局
 一个 Activity 是一个活动，活动中有各种内容，要让活动作用，发生视觉、交互功能需要在 AndroidManifest.xml 中注册
-![[Pasted image 20241216115239.png]]
+![Pasted image 20241216115239](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241216115239.png)
 配置完成后，还需要为程序配置主Activity。也就是说，程序运行起来时，不知道要首先启动哪个 Activity。
 配置方法是在 `<activity>` 标签的内部加入 `<intent-filter>` 标签，并在这个标签里添加 `<action> android:name="android. intent. action. MAIN"/>` 和`<category
 `android:name="android. intent. category. LAUNCHER" />`这两句声明即可
@@ -916,7 +916,7 @@ class FirstActivity : AppCompatActivity() {
 首先在 Firstactivity 文件中使用逻辑布局将一个 button 变量和真实存在的 button 按钮联系起来，真实存在的按钮是一个**控件**，在 R 文件中**具有唯一 id**，所以可以使用
 - 其中，所有 Andriod 中预定义组件中，都会在`android.widget` 包中。Android SDK 已经为所有常用的 UI 组件（如 `Button`、`TextView`、`EditText` 等）提供了预定义的类。
 - 所有 UI 组件类（如 `Button`）都继承自 `android.view.View`，并且在 Android Studio 中通过导入相应的包来使用。(使用类会自动导包)
-![[Pasted image 20241216124437.png]]
+![Pasted image 20241216124437](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241216124437.png)
 - this 表示点击 button 出现的内容会在当前*上下文*中显示，即我点击按钮不会有消息弹出在上一层界面或其他地方，只在当前界面弹出
 - `findViewById()` 方法的作用就是获取布局文件中控件的实例
 #### findViewById() 方法使用

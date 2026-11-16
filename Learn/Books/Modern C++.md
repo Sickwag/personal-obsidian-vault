@@ -247,7 +247,7 @@ int main(){
     return vec_size;
 }
 ```
-![[Pasted image 20250803160434.png]] 由于 size 函数是 const 限定的，所以表达式可以在编译时求值。
+![Pasted image 20250803160434](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250803160434.png) 由于 size 函数是 const 限定的，所以表达式可以在编译时求值。
 - 构造的对象必须在 `constexpr` 上下文中被析构（内存必须编译期释放）
 - 不能“逃逸”出编译期（比如返回一个带有堆内存的对象）
 - 你可以在编译期用它计算结果，但**不能在运行期使用编译期动态分配的对象**
@@ -1187,7 +1187,7 @@ int main() {
 > [!note] 移动语义（Move Semantics）是指：**将资源从一个对象“移动”到另一个对象，而非复制它**。它通过**右值引用（rvalue reference）** 和 `std::move()` 机制实现。
 >
 > 本质是通过[[C++ Runoob Tutoral#移动构造函数|移动构造/赋值函数]]，来让**右值传入时**触发**类自身移动语义**，实现 0 开销资源转移
-![[Pasted image 20250806163633.png]]
+![Pasted image 20250806163633](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250806163633.png)
 ```cpp
 std::vector<int> v = heavy_computation(); // heavy_computation 返回一个局部 vector，传统拷贝代价峰值高
 ```
@@ -1299,7 +1299,7 @@ int main() {
 
   - 然后调起对应的左值 reference
 #### 左值引用注意事项
-![[Pasted image 20250910141538.png]]
+![Pasted image 20250910141538](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250910141538.png)
 - ***非常量引用的初始值必须是左值***，这很好理解。8 时临时的没有名字的常量，没有内存地址，无法使用 `&` 引用。非常量引用意味着允许通过引用来修改原始对象。如果允许一个非常量引用绑定到一个右值（临时值）上，那么你修改这个引用，就是在修改一个即将消失的临时值，这没有任何意义，而且极易引发错误（**修改未定义内存区域**）。所以C++语言标准禁止这种行为。
 - ***常量左值引用可以引用左值或者右值***，被绑定的右值生命周期会得到延长。这是因 `const` 承诺“我不会修改你引用的对象”。既然承诺不修改，那么绑定一个临时的右值就是安全的。我只需要读取你的值，你销毁与否不影响我的逻辑。意思就是我要引用一个不可修改的值，它可以是左值也可以是右值。 ***这一操作常用于拷贝构造函数***，拷贝构造函数中：使用
 ```cpp
@@ -1310,7 +1310,7 @@ copy_func(const T& other);   // 这相当于copy_func(T(other));
 而函数只接受左值，传入右值时编译失败。而传入左值需要先使用 `T` 类型的构造（拷贝）函数在**整个作用域中构造函数**，考虑到作用于中其他语句可以访问到这个对象，使得**编译器很难做优化**，需要进行这就导致了内存和时间开销。 如果传入的是第二个函数中，那么编译器就会在更小的作用域（copy\_func 函数的栈帧）**构造匿名对象**后直接读取（注意不能修改）其中数据。避免性能浪费。
 - 必须要声明的是，如果函数只需要一个只读的字符串，那么一般而言使用 `string_view` 会有更高的性能。但须绝**对保证** `string_view` **所指向的底层字符串数据，其生命周期比** `string_view` **实例本身要长**。否则就是悬空指针，导致未定义行为。
 #### 右值引用注意事项
-![[Pasted image 20250910150742.png]]
+![Pasted image 20250910150742](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250910150742.png)
 - 当对象间使用移动语义时，需要设计移动构造函数和移动赋值运算符。
 - 必须为他们声明 `noexcept`，这是因一旦移动过程中出现了报错终中断，就会出现**旧对象中部分旧数据没有从把所属权移交给新对象**，同时**新对象不完整**的情况。如果没有声明，则默认使用拷贝构造函数（或运算符）保证内存安全。 右值引用 `int&& a` 只能使用右值 `int&& z = 8;`，如果使用左值放在右边会编译错误。但可以通过 `static_cast<int&&>` 将左值转化为右值引用，从而左值也能使用移动构造函。 **左值不能被隐式移动的**，但可以通过 `std::move` 将左值转化为右值引用，从而能够被移动。其原理也是 `static_cast` 类型转换。
 #### 易混淆的点
@@ -1667,11 +1667,11 @@ int main() {
     b->pointer = a; // A结构体资源引用+1
 }
 ```
-例子中 ![[file1.png]] 将 B 的强指针改为弱指针后
+例子中 ![file1](../../Files%20%26%20LongText/Attachments/file1.png) 将 B 的强指针改为弱指针后
 - `a` 初始化 → 引用计数 1
 - `b` 初始化 → 引用计数 1
 - `a->pointer = b`（`shared_ptr<B>` → `weak_ptr<A>`） → `b` 的引用计数仍为 1（因没有增加强引用）
-- `b->pointer = a` → 因是 `weak_ptr<A>`，**不增加** `a` 的强引用计数，但 `a->pointer` 是强引用 `b` 接着当 a, b 被销毁后 ![[file2.png]]
+- `b->pointer = a` → 因是 `weak_ptr<A>`，**不增加** `a` 的强引用计数，但 `a->pointer` 是强引用 `b` 接着当 a, b 被销毁后 ![file2](../../Files%20%26%20LongText/Attachments/file2.png)
 ## Note: 智能指针的局限性
 > [!warning]
 > **智能指针不会在编译时或编写时指出开发者是否违反了智能指针的语义或设计意图**。
@@ -2541,7 +2541,7 @@ regex operator"" _re(const char* restr, size_t len) {
 }
 auto re = R"(\d+)"_re;
 ```
-![[Pasted image 20250608124728.png]]
+![Pasted image 20250608124728](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250608124728.png)
 #### 对象哈希值快速比较
 ```cpp
 constexpr size_t operator"" _str_hash(const char* str, size_t len) {
@@ -2658,16 +2658,16 @@ C++ STL 中在 `<type_traits>` 中定义的类型操作特性（Type Traits）�
     - 注意：成员自身大小为 1、2、4、8 等基础类型大小。_
 3. **结构体总大小**：必须是 **所有成员对齐数中的最大值** 的整数倍（即最大对齐数的整数倍）。
 C/C++中，结构体中默认所有数据放在一整块连续的内存中，理论和实际有冲突
-![Pasted image 20241021210727.png](Pasted%20image%2020241021210727.png)
+![Pasted image 20241021210727.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241021210727.png)
 通过互查看汇编源码可以得到其内存布局
-![Pasted image 20241021210839.png](Pasted%20image%2020241021210839.png)
+![Pasted image 20241021210839.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241021210839.png)
 
 ### 为什么需要内存对齐
 寄存器只能从内存地址是 4 的倍数的位置开始读取数据（与处理器架构和位数也有关系）
-![Pasted image 20241021211403.png](Pasted%20image%2020241021211403.png)
+![Pasted image 20241021211403.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241021211403.png)
 对齐的对齐数可以手动指定
 - 从硬件层面分析
-![Pasted image 20241021212144.png](Pasted%20image%2020241021212144.png)
+![Pasted image 20241021212144.png](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241021212144.png)
 一个主板上插入的内存条中有多个 chip，这些 chip 共同组成一个连续的存储空间
 主板上多个内存芯片（Chip）共同组成连续存储空间，**CPU 以固定字长（如 4 字节/8 字节）为粒度访问内存**，4chip，8bank 的设计一般在 DDR3/4 上常见，现代 DDR5 内存一般使用更多的 chip 和 bank 数据，CPU 也对这种架构的内存有特殊优化
 - 若数据未对齐，可能跨两个读取周期（甚至触发硬件异常）。
@@ -2950,7 +2950,7 @@ void print(T x) {
     std::cout << x.value();
 }
 ```
-模板在在未展开的**编辑代码阶段**不会有错误提示，有点类似于 ![[Pasted image 20250804144323.png]] list 模板额没有实现迭代器检查概念，这就导致了 sort 函数要求容器对象必须要实现迭代器，list 由于是模板类，在没有展开时无法判断他是否实现了迭代器，所以编译器不报错，但无法通过编译。**编译器错误长达几百行** 有了概念和约束后，**模板参数推导中，如果某些条件不符合，别直接爆一脸错误，而是把这套模板扔掉**（让它不参与匹配），让编译器安静点。 有了概念和约束后，错误信息能直接定位到概念和约束的相关代码上，非常清晰。 这一点在[[#第 10 章展望：C++20 简介#概念与约束|第 10 章展望：C++20 简介 > 概念与约束]]中有提到
+模板在在未展开的**编辑代码阶段**不会有错误提示，有点类似于 ![Pasted image 20250804144323](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250804144323.png) list 模板额没有实现迭代器检查概念，这就导致了 sort 函数要求容器对象必须要实现迭代器，list 由于是模板类，在没有展开时无法判断他是否实现了迭代器，所以编译器不报错，但无法通过编译。**编译器错误长达几百行** 有了概念和约束后，**模板参数推导中，如果某些条件不符合，别直接爆一脸错误，而是把这套模板扔掉**（让它不参与匹配），让编译器安静点。 有了概念和约束后，错误信息能直接定位到概念和约束的相关代码上，非常清晰。 这一点在[[#第 10 章展望：C++20 简介#概念与约束|第 10 章展望：C++20 简介 > 概念与约束]]中有提到
 ### 概念(concept)
 #### 定义和特性
 concept 是一种**编译期谓词（compile-time predicate）**，它定义了一组关于类型的要求（如支持哪些操作、属于哪种类别等）。当用于模板参数时，它起到“类型守门员”的作用：只有满足该谓词的类型才能通过编译。
@@ -3381,7 +3381,7 @@ public:
 ```
 - `std::span<T>`：表示对连续数据的视图，**大小在运行期**决定
 - `std::dynamic_extent`：一个特殊值，表示“这个 span 的大小不是编译期固定”）。
-- `span<type, const_num>` 和 `span<type>` 两种方法创建的对象**在类型上不同**，一个是编译期确定长度，一个运行期确定。若作为参数传入需注意类型。 所有成员函数都是 constexpr 和 const 限定的，包括： ![[Pasted image 20250805133844.png]] ![[Pasted image 20250805133915.png]] span 类只是一个简单的包装器，不执行边界检查。若尝试访问 n 个元素中元素 n+1，结果就是**未定义的**，所以最好不要这样做。
+- `span<type, const_num>` 和 `span<type>` 两种方法创建的对象**在类型上不同**，一个是编译期确定长度，一个运行期确定。若作为参数传入需注意类型。 所有成员函数都是 constexpr 和 const 限定的，包括： ![Pasted image 20250805133844](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250805133844.png) ![Pasted image 20250805133915](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250805133915.png) span 类只是一个简单的包装器，不执行边界检查。若尝试访问 n 个元素中元素 n+1，结果就是**未定义的**，所以最好不要这样做。
 #### C++26 提案中 `mdspan`
 `std::mdspan` 是一个多维视图 —— 通俗地说：本地坐标的张量式内存访问封装（针对多维数据结构）
 - `span` —— 是一维切片（如 `.subspan(i, len)`），是长方形式视图 API 封装
@@ -3622,9 +3622,9 @@ m.insert(std::move(nh)); // 插入修改后的键值对
 # 第 4 章兼容迭代器
 ## 迭代器
 ### 定义特性
-基本内容参考 [[C++ Runoob Tutoral#迭代]] 新增内容参考 [[C++ Runoob Tutoral#基于范围的 for 循环]] 总结图 ![[Pasted image 20250805231439.png]]
+基本内容参考 [[C++ Runoob Tutoral#迭代]] 新增内容参考 [[C++ Runoob Tutoral#基于范围的 for 循环]] 总结图 ![Pasted image 20250805231439](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250805231439.png)
 ### 对迭代器使用概念和约束
-所有的迭代器约束概念都在 `std::` 命名空间中 ![[Pasted image 20250805231720.png]] ![[Pasted image 20250805231729.png]]
+所有的迭代器约束概念都在 `std::` 命名空间中 ![Pasted image 20250805231720](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250805231720.png) ![Pasted image 20250805231729](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250805231729.png)
 ```cpp
 template<typename T>
 requires std::random_access_iterator<typename T::iterator>
@@ -3636,7 +3636,7 @@ void printc(const T & c) {
     cout << format("element 0: {}\n", c[0]);
 }
 ```
-函数需要一个 random\_access\_iterator。若用非随机访问容器的列表使用时，编译器会报错: 编辑时就会出现报错 ![[Pasted image 20250805232401.png]] 编译器立刻返回报错，完整报错内容分析可参考--> [[报错日志分析#C++#约束不匹配报错|约束不匹配]]
+函数需要一个 random\_access\_iterator。若用非随机访问容器的列表使用时，编译器会报错: 编辑时就会出现报错 ![Pasted image 20250805232401](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250805232401.png) 编译器立刻返回报错，完整报错内容分析可参考--> [[报错日志分析#C++#约束不匹配报错|约束不匹配]]
 ```cpp
 cpp20feature.cpp: In function 'int main()':
 cpp20feature.cpp:19:11: error: no matching function for call to 'printc(std::__cxx11::list<int>&)'
@@ -3660,7 +3660,7 @@ In file included from D:/Program/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/inclu
    1. `operator*()`  ——解引用，否则无法访问对应元素的值，只能拿到地址
 
    2. `operator++()` ——前置 `++`，如果不实现则无法支持 min\_element，sort 这些算法函数，因 `min_element` 函数签名为：
-template ForwardIterator min\_element(ForwardIterator first, ForwardIterator last); // 需要传入了类型支持前向迭代器概念，概念定义可以再crefer中查到 \`\`\` ![[Pasted image 20250806171459.png]] 3. `operator==` / `!=` 代码实现参考 [[C++ Code Snippets#支持 for-range 的自定义 vector 数据结构]]
+template ForwardIterator min\_element(ForwardIterator first, ForwardIterator last); // 需要传入了类型支持前向迭代器概念，概念定义可以再crefer中查到 \`\`\` ![Pasted image 20250806171459](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250806171459.png) 3. `operator==` / `!=` 代码实现参考 [[C++ Code Snippets#支持 for-range 的自定义 vector 数据结构]]
 
 | 缺失操作                  | 导致什么失败？                             | 具体例子                     |
 | --------------------- | ----------------------------------- | ------------------------ |
@@ -3719,7 +3719,7 @@ MyVector& operator=(MyVector&& other) noexcept{
   return *this;
 }
 ```
-移动语义的核心是新的对象**接管**旧的对象数据，具体原理可以参考 [[#移动语义|移动语义]]，原本 `other.data_` 并不会删除，而是在新对象中用 `data_` 的内存地址修改为 `other.data_` 的地址。 `delete[]` 是对内存的操作而不是对对象的操作。所以只需要将 `other.data_` 不再指向原地址即可。具体原因可以参考 ![[Pasted image 20250806163725.png]]
+移动语义的核心是新的对象**接管**旧的对象数据，具体原理可以参考 [[#移动语义|移动语义]]，原本 `other.data_` 并不会删除，而是在新对象中用 `data_` 的内存地址修改为 `other.data_` 的地址。 `delete[]` 是对内存的操作而不是对对象的操作。所以只需要将 `other.data_` 不再指向原地址即可。具体原因可以参考 ![Pasted image 20250806163725](../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250806163725.png)
 ## 使用迭代器适配器填充 STL 容器
 迭代器本质上是一种抽象，有一个特定的接口，并以特定的方式使用。STL 附带了各种迭代器适配器，通常与算法库一起使用，分为：
 - 插入迭代器或插入器用于在容器中插入元素。

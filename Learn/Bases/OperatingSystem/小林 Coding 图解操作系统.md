@@ -4,7 +4,7 @@ create: 2026-08-05
 ---
 # 硬件结构篇
 计算机基本结构为 5 个部分，分别是**运算器、控制器、存储器、输入设备、输出设备**，这 5 个部分也被称为**冯诺依曼模型**。
-![[冯诺依曼模型.webp]]
+![冯诺依曼模型](../../../Files%20%26%20LongText/Attachments/%E5%86%AF%E8%AF%BA%E4%BE%9D%E6%9B%BC%E6%A8%A1%E5%9E%8B.webp)
 ## CPU
 ### 一次计算
 - 32 位 CPU 一次可以计算 4 个字节；
@@ -31,21 +31,21 @@ Linux ELF 程序的机器指令通常位于 `.text` 代码段，加载后映射�
 ### 指令
 汇编代码专成机器码之后形式变为二进制，不同的指令集对一段相同的二进制编码的解释方式不一样，这里使用 MIPS 指令集
 MIPS 的指令是一个 32 位的整数，高 6 位代表着操作码，表示这条指令是一条什么样的指令，剩下的 26 位不同指令类型所表示的内容也就不相同，主要有三种类型 R、I 和 J。
-![[MIPS指令集.webp]]
+![MIPS指令集](../../../Files%20%26%20LongText/Attachments/MIPS%E6%8C%87%E4%BB%A4%E9%9B%86.webp)
 - R 类型用于逻辑和算术运算
 	- shamt 用于计算逻辑位移操作的参数
 	- func 用于 opcode 不够时的拓展
 - I 指令，用在数据传输、条件分支等，简单的语义让只需要地址参数就可以
 - J 指令，用于跳转，target address 表示跳转目的地
 现代大多数 CPU 都使用来流水线的方式来执行指令，所谓的流水线就是把一个任务拆分成多个小任务，于是一条指令通常分为 4 个阶段，称为 4 级流水线
-![[CPU指令周期.webp]]
+![CPU指令周期](../../../Files%20%26%20LongText/Attachments/CPU%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F.webp)
 编译时程序将指令编码，Decode 表示 CPU 读取指令并按照指令集规定解释，叫做解码
 1. CPU 通过程序计数器读取对应内存地址的指令，这个部分称为 **Fetch（取得指令）**；
 2. CPU 对指令进行解码，这个部分称为 **Decode（指令译码）**；
 3. CPU 执行指令，这个部分称为 **Execution（执行指令）**；
 4. CPU 将计算结果存回寄存器或者将寄存器的值存入内存，这个部分称为 **Store（数据回写）**；
 四个步骤称之为*指令周期*，不同的阶段其实是由计算机中的不同组件完成的：
-![[指令周期工作组件.webp]]
+![指令周期工作组件](../../../Files%20%26%20LongText/Attachments/%E6%8C%87%E4%BB%A4%E5%91%A8%E6%9C%9F%E5%B7%A5%E4%BD%9C%E7%BB%84%E4%BB%B6.webp)
 
 > [!Info]  32 位的操作系统可以运行在 64 位的电脑上吗？反之如何？
 > 64 位和 32 位软件，实际上代表指令是 64 位还是 32 位的
@@ -61,7 +61,7 @@ MIPS 的指令是一个 32 位的整数，高 6 位代表着操作码，表示�
 ### CPU cache
 CPU Cache 用的是一种叫 **SRAM（_Static Random-Access_ Memory，静态随机存储器）** 的芯片。
 在 SRAM 里面，一个 bit 的数据，通常需要 6 个晶体管，所以 SRAM 的存储密度不高，同样的物理空间下，能存储的数据是有限的，不过也因为 SRAM 的电路简单，所以访问速度非常快。
-![[CPU-Cache.webp]]
+![CPU-Cache](../../../Files%20%26%20LongText/Attachments/CPU-Cache.webp)
 #### store buffer 和 load buffer
 即使写 L1 cache 也要 3-10 周期。如果 CPU 每写一次都要等 cache 完成，流水线就卡死了。所以 CPU 加了一个写缓冲区（store buffer）。写操作先进入 store buffer（只要 1 周期），CPU
   立刻继续执行后面的指令，store buffer 里的内容再异步刷入 L1 cache。
@@ -114,7 +114,7 @@ L1 高速缓存的访问速度几乎和寄存器一样快，通常只需要 `2~4
 几 MB 到几十 MB 不等，速度在 `20~60` 个时钟周期。
 #### 数据结构
 CPU Cache 是由很多个 Cache Line 组成的，Cache Line 是 CPU 从内存读取数据的基本单位，而 Cache Line 是由各种标志（Tag）+ 数据块（Data Block）组成
-![[Cache的数据结构.webp]]
+![Cache的数据结构](../../../Files%20%26%20LongText/Attachments/Cache%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84.webp)
 
 [CPU Cache伪共享问题：原理与优化指南](https://chengxumiaodaren.com/docs/performance/cpu-cache/) 这篇文章很明显地展示了根据 cache line 作用机制优化带来的性能提高，得到结论为:
 
@@ -144,10 +144,10 @@ CPU Cache 是由很多个 Cache Line 组成的，Cache Line 是 CPU 从内存读
 | **高位（Tag）**    | 与该组中各路保存的 Tag 比较，确认目标内存块 |
 通用组相联 Cache 由多个 Set 构成，每个 Set 有多条 Cache Line。下图中 `E` 表示每组的行数，地址的 Tag、Set Index、Block Offset 分别用于识别内存块、选择组和选择行内字节；完整地址的每一位都参与划分。
 直接映射、组相联和全相联的映射方式可对照 [[王道考研计算机组成原理#9. Cache 地址映射]]。
-![[CSAPP-Cache-Organization-Figure-6-25.jpg]]
+![CSAPP-Cache-Organization-Figure-6-25](../../../Files%20%26%20LongText/Attachments/CSAPP-Cache-Organization-Figure-6-25.jpg)
 图注：每条缓存行包含有效位、Tag 和数据块；地址拆分为 Tag、Set Index、Block Offset。
 图源：[CS:APP 第三版 Figure 6.25](https://csapp.cs.cmu.edu/3e/figures.html)，Randal E. Bryant、David R. O'Hallaron，© Pearson。
-![[直接Cache映射.webp]]
+![直接Cache映射](../../../Files%20%26%20LongText/Attachments/%E7%9B%B4%E6%8E%A5Cache%E6%98%A0%E5%B0%84.webp)
 
 #### 缓存行读取过程
 CPU 访问数据时，先在当前 Cache 层级查询；未命中后才从下一层 Cache 或内存层级取得所需数据。Cache 的查找由访问地址和 Cache 的映射参数决定，地址本身不是根据 Cache 的槽位重新构造出来的。
@@ -162,14 +162,14 @@ Cache Line 与 C++ 对象边界没有绑定。读取 `struct S { int a, b, c; };
 #### 缓存行写入过程
 写直达（Write Through）和写回（Write Back）描述缓存数据何时向下一级传播，与 L1/L2/L3 是私有还是共享、是否包含式组织是不同维度；这些层级关系由处理器实现决定。
 - 写直达（_Write Through_）：每次写操作都把数据更新到 Cache，并向下一级传播；写未命中时是否分配缓存行由另一项策略决定。
-![[写直达.webp|350]]
+![350](../../../Files%20%26%20LongText/Attachments/%E5%86%99%E7%9B%B4%E8%BE%BE.webp)
 - 写回（_Write Back_）：数据先在缓存层级中更新并标记为脏，通常在缓存行被驱逐时写回下一级；一致性协议需要转移数据时也可能发生缓存间传递。
-![[写回1.webp]]
+![写回1](../../../Files%20%26%20LongText/Attachments/%E5%86%99%E5%9B%9E1.webp)
 写回缓存中，CPU 的 Store 会先取得该缓存行的写权限，再修改指令指定的字节。脏状态表示本级缓存的内容比下一级更新；它可以由独立元数据或一致性状态表达，不能据此断言所有处理器都没有单独的 Dirty Bit。
 在典型的写分配策略下，写未命中会先取得包含目标地址的缓存行，再更新其中对应字节。如果映射到的组已满，需要驱逐受害行；受害行若为脏行，则先写回下一层。具体读入、分配和写回步骤取决于处理器的写策略与一致性协议。
 #### 缓存一致性问题
 写回缓存可能让 DRAM 暂时保留旧值，但不能据此推断其他 CPU 核心会一直读到旧副本。对可缓存、具备硬件一致性的普通内存，Cache Coherence 协议会协调各核心缓存行的有效性和写入权限；最新数据也可能由其他核心的 Cache 提供，不一定先写入 DRAM。
-![[缓存一致性问题例子.webp|400]]
+![400](../../../Files%20%26%20LongText/Attachments/%E7%BC%93%E5%AD%98%E4%B8%80%E8%87%B4%E6%80%A7%E9%97%AE%E9%A2%98%E4%BE%8B%E5%AD%90.webp)
 缓存一致性协议按缓存行协调副本与写权限，使同一缓存行不会在缺少协调时出现可同时写入的互相矛盾副本。实现可以使用总线侦听或目录等机制，不一定向所有 CPU 广播。
 缓存一致性不等于 C++ 内存序，也不等于数据库事务串行化：它不保证不同地址上的操作都按源码顺序被其他线程观察。C++ 的 `std::memory_order` 用于定义原子操作的排序与同步关系；跨多个变量维护一个整体不变量通常还需要互斥锁或其他同步协议，详见 [[原子操作]]。
 #### MESI 协议
@@ -179,8 +179,8 @@ Cache Line 与 C++ 对象边界没有绑定。读取 `struct S { int a, b, c; };
 - `I — Invalid`：该缓存行不能用于命中。
 
 `M` 与 `E` 都具有独占写权限，差别是数据是否已修改；`S` 表示可以共享读取，不保证此刻一定有多个副本。真实处理器可能采用 MESIF、MOESI、目录协议或额外瞬态状态，教材中的 MESI 状态图是简化模型。
-![[MESI协议.webp]]
-![[_MESI状态转换表格.webp]]
+![MESI协议](../../../Files%20%26%20LongText/Attachments/MESI%E5%8D%8F%E8%AE%AE.webp)
+![_MESI状态转换表格](../../../Files%20%26%20LongText/Attachments/_MESI%E7%8A%B6%E6%80%81%E8%BD%AC%E6%8D%A2%E8%A1%A8%E6%A0%BC.webp)
 #### 分支预测器
 对于 if 条件语句，意味着此时至少可以选择跳转到两段不同的指令执行，也就是 if 还是 else 中的指令。那么，如果分支预测可以预测到接下来要执行 if 里的指令，还是 else 指令的话，就可以「提前」把这些指令放在指令缓存中，这样 CPU 可以直接从 Cache 读取到指令，于是执行速度就会很快。
 当数组中的元素是随机的，分支预测就无法有效工作，而当数组元素都是是顺序的，分支预测器会动态地根据历史命中数据对未来进行预测，这样命中率就会很高。
@@ -275,7 +275,7 @@ Fair 调度类是应用于普通任务，都是由 CFS 调度器管理的，分�
 虚拟运行时间   vruntime += 实际运行时间   delta_exec * NICE_0_LOAD / 权重
 ```
 权重值由 nice 值映射而来（可以为负数），权重越大，nice 越小，vruntime 增长越慢，运行时间越长
-![[优先级.webp]]
+![优先级](../../../Files%20%26%20LongText/Attachments/%E4%BC%98%E5%85%88%E7%BA%A7.webp)
 我们可以在启动任务的时候，可以指定 nice 的值，比如将 mysqld 以 -3 优先级：
 ```bash
 $ nice -n -3 /usr/sbin/mysqld
@@ -306,7 +306,7 @@ slice = sched_latency_ns x (task_weight / cfs_rq 总权重)
 - 真正切换发生在从内核返回用户态的安全点（延迟抢占），所以线程切换总发生在"系统调用返回"时
 #### 任务队列
 每个 CPU 都有自己的**运行队列**，多任务的数量基本都是远超 CPU 核心数量，因此这时候就需要**排队**
-![[CPU队列.webp]]
+![CPU队列](../../../Files%20%26%20LongText/Attachments/CPU%E9%98%9F%E5%88%97.webp)
 由于[[#进程调度|进程调度]]中，调度类也是有优先级的，Linux 选择下一个任务执行的时候，先从 `dl_rq` 里选择任务，然后从 `rt_rq` 里选择任务，最后从 `cfs_rq` 里选择任务。因此，**实时任务总是会比普通任务优先被执行**。（完整顺序为 stop → dl → rt → fair → idle，此处简写了其中可调度部分）
 CFS 把可运行任务存在一个 per-CPU 的红黑树，以 vruntime 为键，最左节点就是下一个要运行的任务
 **每个 CPU 的运行队列（`struct rq`）内部按调度类分区：**
@@ -386,7 +386,7 @@ CPU 默认是顺序执行的，但现实世界充满异步事件，CPU 只能通
 Linux 中的软中断包括网络收发、定时、调度、RCU 锁等各种类型，可以通过查看 `/proc/softirqs` 来观察软中断的累计中断次数情况，如果要实时查看中断次数的变化率，可以使用 `watch -d cat /proc/softirqs` 命令。
 
 每一个 CPU 都有各自的软中断内核线程，用 ps 命令查看内核线程，一般名字在中括号里面的，都认为是内核线程。
-![[ksoftirqd.webp]]
+![ksoftirqd](../../../Files%20%26%20LongText/Attachments/ksoftirqd.webp)
 现代系统每个 CPU 都能接收中断，由 APIC（高级可编程中断控制器） 决定投递目标：
 ```
 中断源
@@ -479,25 +479,25 @@ IRET 返回，线程 X 继续
 - 内存的分配和回收，也就是内存管理的能力；
 - 为进程与硬件设备之间提供通信能力，也就是硬件通信能力；
 - 如果应用程序要运行更高权限运行的服务，那么就需要有系统调用，它是用户程序与操作系统之间的接口。
-![[systemcall.webp]]
+![systemcall](../../../Files%20%26%20LongText/Attachments/systemcall.webp)
 # 内存管理篇
 ## 虚拟内存
 操作系统是管理虚拟地址与物理地址的映射关系，主要有**内存分段和内存分页**方式
 ### 内存结构
-![[4956918c43e186d49df7b9802f080de8 1.webp|575]]
+![575](../../../Files%20%26%20LongText/Attachments/4956918c43e186d49df7b9802f080de8%201.webp)
 通过内存地址划分，虚拟内存地址的高 16 位全部为 0 ，那么我们就可以直接判断出这是一个用户空间的虚拟内存地址，如果高 16 位全为 1，就是内核地址虚拟空间
-![[532e6cdf4899588f8b873b6435cba2d8-20230309233823236.webp|400]]
+![400](../../../Files%20%26%20LongText/Attachments/532e6cdf4899588f8b873b6435cba2d8-20230309233823236.webp)
 内核通过 `task_struct` 管理虚拟内存空间的所有区域，将不同的区域抽象为指针，其中 `mm_struct` 是用户空间的抽象
-![[2b2dbb2b6ea19871152a3bf6566df205.webp|675]]
+![675](../../../Files%20%26%20LongText/Attachments/2b2dbb2b6ea19871152a3bf6566df205.webp)
 每个分段通过 `vm_area_struct` 结构体表示，其中 `vm_start/vm_end` 用于标记开始和结束位置，vm_page_prot 和 vm_flags 都是用来标记 vm_area_struct 结构表示的这块虚拟内存区域的访问权限和行为规范，由一个标识位通过*位掩码技术*标记权限
-![[600ef23c454d9f3653ece44debaaf3a7.webp|525]]
+![525](../../../Files%20%26%20LongText/Attachments/600ef23c454d9f3653ece44debaaf3a7.webp)
 ### 分段机制
 分段机制下的虚拟地址由两部分组成，**段选择因子**和**段内偏移量**
-![[a9ed979e2ed8414f9828767592aadc21.webp]]
+![a9ed979e2ed8414f9828767592aadc21](../../../Files%20%26%20LongText/Attachments/a9ed979e2ed8414f9828767592aadc21.webp)
 - **段选择因子**保存在段寄存器里面。段选择子里面最重要的是**段号**，用作段表的索引。**段表**里面保存的是这个**段的基地址、段的界限和特权等级**等。
 - 虚拟地址中的**段内偏移量**应该位于 0 和段界限之间，如果段内偏移量是合法的，就将段基地址加上段内偏移量得到物理内存地址。
 - ***段表存放在普通物理内存中，由段存器中存储指针***
-![[c5e2ab63e6ee4c8db575f3c7c9c85962.webp]]
+![c5e2ab63e6ee4c8db575f3c7c9c85962](../../../Files%20%26%20LongText/Attachments/c5e2ab63e6ee4c8db575f3c7c9c85962.webp)
 又是 TLV 结构的布局，记录起始位置，长度和偏移量
 存在的问题:
 - 内存碎片，每个应用程序占用长度动态变化，且长度不一，不同内存块之间必然会有"空隙"，这就需要内存交换技术解决，安装系统时的交换分区就用来做这个
@@ -518,9 +518,9 @@ IRET 返回，线程 X 继续
 > `mmap` 返回虚拟地址时物理页并不存在，第一次访问触发缺页才填充--所以 mmap 文件是**懒加载**的
 
 换入换出的单位是 4kb 固定大小，且排列紧密，不再需要一次性都把程序加载到物理内存中。在进行虚拟内存和物理内存的页之间的映射之后，并不真的把页加载到物理内存里，而是**只有在程序运行中，需要用到对应虚拟内存页里面的指令和数据时，再加载到物理内存里面去**，形成了虚拟地址+页表+物理地址+硬盘四级结构
-![[388a29f45fe947e5a49240e4eff13538-20230309234651917.webp]]
+![388a29f45fe947e5a49240e4eff13538-20230309234651917](../../../Files%20%26%20LongText/Attachments/388a29f45fe947e5a49240e4eff13538-20230309234651917.webp)
 分页方式的虚拟地址和物理地址映射关系相对于[[#分段机制|分段机制]]省去了基地址和长度，因为这两者都是固定的，只需要页号和页内偏移量即可定位
-![[7884f4d8db4949f7a5bb4bbd0f452609.webp]]
+![7884f4d8db4949f7a5bb4bbd0f452609](../../../Files%20%26%20LongText/Attachments/7884f4d8db4949f7a5bb4bbd0f452609.webp)
 
 **页表存储在普通物理内存中，由寄存器定位：**
 - 页表基址存在 **CR3 寄存器**，四级页表（PML4/PDPT/PD/PT）每一级都是一张内存中的表
@@ -540,7 +540,7 @@ IRET 返回，线程 X 继续
 简单分页的缺陷:
 在 32 位的环境下，虚拟地址空间共有 4GB，假设一个页的大小是 4KB（2^12），需要有 `4MB` 的内存来存储页表。而虚拟内存每个进程一个，所以 100 个进程需要 400MB 存储页表，这不现实
 ### 多级页表机制
-![[19296e249b2240c29f9c52be70f611d5.webp]]
+![19296e249b2240c29f9c52be70f611d5](../../../Files%20%26%20LongText/Attachments/19296e249b2240c29f9c52be70f611d5.webp)
 
 每个进程都有 4GB 的虚拟地址空间，由于*空间局部性原理*，而对于大多数程序来说用到的空间远未达到 4GB，因为会存在部分对应的页表项都是空的，根本没有分配。所以多级页表对于没有用到的内存**不分配/创建次级页表**，这部分空间只是在逻辑上存在，只在用到时才会创建。
 对于已分配的页表项，如果存在最近一定时间未访问的页表，在物理内存紧张的情况下，操作系统会将页面换出到硬盘
@@ -562,7 +562,7 @@ IRET 返回，线程 X 继续
 每级 512 项；页大小 4KB
 也支持 2MB / 1GB 大页（少遍历级数，TLB 命中率更高）
 ```
-![[四级分页.webp]]
+![四级分页](../../../Files%20%26%20LongText/Attachments/%E5%9B%9B%E7%BA%A7%E5%88%86%E9%A1%B5.webp)
 
 **TLB（Translation Lookaside Buffer）：** 页表翻译结果在 CPU 中的缓存，用于解决多级页表带来的跳转开销，因翻译问题也可以称为**页表缓存、转址旁路缓存、快表**
 - 命中：1 周期拿到物理地址
@@ -582,12 +582,12 @@ MMU 查页表：存在位 = 0（虚拟页在，物理页未分配）
   ▼
 建立映射，返回用户态重新执行该指令
 ```
-![[四级分页.webp]]
+![四级分页](../../../Files%20%26%20LongText/Attachments/%E5%9B%9B%E7%BA%A7%E5%88%86%E9%A1%B5.webp)
 进程虚拟地址空间一般是 2 的 48/57 次幂**字节**的原因：
 - 多级页表因为**地址太大会降低缓存命中效率**
 - 深度太深（虚拟地址空间大到必须要纵向拓展，5 级页表最多支持 2 的 57 次幂字节地址空间）也会导致多次跳转的开销，完整 64 位寻址需要更好的 CPU
 ### 段页式内存管理
-![[f19ebd6f70f84083b0d87cc5e9dea8e3.webp]]
+![f19ebd6f70f84083b0d87cc5e9dea8e3](../../../Files%20%26%20LongText/Attachments/f19ebd6f70f84083b0d87cc5e9dea8e3.webp)
 - 先将程序划分为多个有逻辑意义的段，也就是前面提到的分段机制；
 - 接着再把每个段划分为多个页，也就是对分段划分出来的连续空间，再划分固定大小的页；
 很自然，地址结构就由**段号、段内页号和页内位移**三部分组成。
@@ -599,9 +599,9 @@ MMU 查页表：存在位 = 0（虚拟页在，物理页未分配）
 - 每个进程有自己的页表，无法访问其他人的，因为虚拟内存是逻辑上相互隔离的
 - 页表里的页表项中除了物理地址之外，还有一些标记属性的比特，比如控制一个页的读写权限，标记该页是否存在等
 ### linux 内存管理模型
-![[3a6cb4e3f27241d3b09b4766bb0b1124-20230309234553726.webp]]
+![3a6cb4e3f27241d3b09b4766bb0b1124-20230309234553726](../../../Files%20%26%20LongText/Attachments/3a6cb4e3f27241d3b09b4766bb0b1124-20230309234553726.webp)
 每个进程都各自有独立的虚拟内存，但是**每个虚拟内存中的内核地址，其实关联的都是相同的物理内存**。这样，进程切换到内核态后，就可以很方便地访问内核空间内存。
-![[48403193b7354e618bf336892886bcff.webp]]
+![48403193b7354e618bf336892886bcff](../../../Files%20%26%20LongText/Attachments/48403193b7354e618bf336892886bcff.webp)
 ### 进程虚拟地址空间的隔离与共享
 每个进程通过自己的页表把虚拟地址映射到物理页。同一个虚拟地址在不同进程中可以映射到不同物理页，实现隔离；多个进程的虚拟页也可以映射到同一物理页，实现共享内存、共享库映射或写时复制。隔离与共享使用的是同一套页表映射机制。
 
@@ -614,13 +614,13 @@ ELF 加载器主要按 program header 映射 segment；`.text`、`.data`、`.bss
 ### malloc 申请内存
 malloc 申请内存的时候，会有两种方式向操作系统申请堆内存。申请的空间在进程内存模型中，所以申请的是虚拟内存
 - 方式一：通过 brk() 系统调用从堆分配内存
-![[brk申请.webp]]
+![brk申请](../../../Files%20%26%20LongText/Attachments/brk%E7%94%B3%E8%AF%B7.webp)
 - 方式二：通过 mmap() 系统调用在文件映射区域分配内存；
-![[mmap申请.webp]]
+![mmap申请](../../../Files%20%26%20LongText/Attachments/mmap%E7%94%B3%E8%AF%B7.webp)
 malloc 分配内存并**不会按照传入参数的大小分配对应大小内存**，`malloc(1)` 会分配大约 132K，而且起始地址（`malloc()` 返回值的指针指向的位置，通过取地址得到）和 `/proc/pid/maps` 中记录的内存起始地址不一致，取地址得到的会比文件中记录的大 16 字节，这个区域用来存储内存块头部信息
-![[2b8f63892830553ec04c5f05f336ae8b.webp]]
+![2b8f63892830553ec04c5f05f336ae8b](../../../Files%20%26%20LongText/Attachments/2b8f63892830553ec04c5f05f336ae8b.webp)
 `/proc/pid/maps` 中记录的内存信息可以看到分配在堆上还是 mmap 区域
-![[cb6e3ce4532ff0a6bfd60fe3e52a806e 1.webp]]
+![cb6e3ce4532ff0a6bfd60fe3e52a806e 1](../../../Files%20%26%20LongText/Attachments/cb6e3ce4532ff0a6bfd60fe3e52a806e%201.webp)
 头部信息中存储了内存块长度，这也就是为什么 free 函数在**仅仅传入指针时可以知道需要释放多少空间**
 ### free 释放内存
 使用 free 函数后，如果这块内存是 malloc 通过 `brk()` 申请的，那么 free 后堆内存**依然存在**，只会先缓存着放进 malloc 的内存池里，如果是 `mmap()` 申请的就会将内存还给操作系统，通过 `munmap()`
@@ -639,7 +639,7 @@ malloc 分配内存并**不会按照传入参数的大小分配对应大小内�
 小结：`mmap` 灵活干净但开销大，`brk` 快但对大块和碎片敏感。全用 `mmap` 则小内存频繁分配慢；全用 `brk` 则大内存或长期运行碎片化可能分配不出。所以 malloc 混合使用，各取所长。
 ### 为什么不全部使用 brk 来分配？
 堆的生长方向固定，且由于其延迟归还的特性，free 的内存还在堆中存在会导致空闲内存块和有效内存块交织产生内存碎片，在频繁 malloc 和 free 的场景下会导致内存泄漏
-![[75edee0cb75450e7987a8a482b975bda.webp]]
+![75edee0cb75450e7987a8a482b975bda](../../../Files%20%26%20LongText/Attachments/75edee0cb75450e7987a8a482b975bda.webp)
 ### 如何判断内存分配在堆（brk）还是 mmap 区域
 - **看 `/proc/<pid>/maps`**：brk 堆在低地址（紧跟可执行文件段，标签 `[heap]`）；mmap 在高地址（靠近栈，匿名映射无标签）
 - **按大小判断**：glibc 默认 `M_MMAP_THRESHOLD = 128KB`，超过走 mmap，以下走 brk
@@ -663,7 +663,7 @@ bool isOnHeap(void* p) { return p < sbrk(0); }
 - **直接内存回收**（direct reclaim）：如果后台异步回收跟不上进程内存申请的速度，就会开始直接回收，这个回收内存的过程是**同步**的，会阻塞进程的执行。
 如果回收后还是无法满足申请要求，进入 OOM 处理机制
 OOM Killer 机制会根据算法选择一个占用物理内存较高的进程，然后将其杀死，不断杀死进程直到满足
-![[2f61b0822b3c4a359f99770231981b07.webp]]
+![2f61b0822b3c4a359f99770231981b07](../../../Files%20%26%20LongText/Attachments/2f61b0822b3c4a359f99770231981b07.webp)
 ### 哪些内存可以被回收？
 - **文件页**（File-backed Page）：内核缓存的磁盘数据（Buffer）和内核缓存的硬盘文件数据（Cache）都叫作文件页。**回收干净页的方式是直接释放内存，回收脏页的方式是先写回磁盘后再释放内存**。
 - **匿名页**（Anonymous Page）：这部分内存没有实际载体，比如堆、栈数据等。这部分内存很可能还要再次被访问，所以不能直接释放，**回收的方式是通过 Linux 的 Swap 机制**，Swap 会把不常访问的内存先写到交换分区，然后释放这些内存，需要时再次读入
@@ -673,7 +673,7 @@ OOM Killer 机制会根据算法选择一个占用物理内存较高的进程，
 	- 页最小阈值（pages_min），小于这个值触发*直接回收*
 	- 页低阈值（pages_low），小于这个值触发*后台回收*
 	- 页高阈值（pages_high）
-![[166bc9f5b7c545d89f1e36ab8dd772cf.webp]]
+![166bc9f5b7c545d89f1e36ab8dd772cf](../../../Files%20%26%20LongText/Attachments/166bc9f5b7c545d89f1e36ab8dd772cf.webp)
 页低阈值（pages_low）可以通过内核选项 `/proc/sys/vm/min_free_kbytes` （该参数代表系统所保留空闲内存的最低限）来间接设置。
 - 如果关注延迟那就适当地增大 min_free_kbytes
 - 如果关注内存的使用量那就适当地调小 min_free_kbytes。
@@ -707,13 +707,13 @@ Linux 提供了两种不同的方法启用 Swap，分别是 Swap 分区（Swap P
     - 如果没有 Swap 分区，因为物理空间不够，进程会被操作系统杀掉，原因是 OOM（内存溢出），报错 `cannot allocate memory`
     - 如果有 Swap 分区，即使物理内存只有 4GB，程序也能正常使用 8GB 的内存，进程可以正常运行；
 ## 预读失效和缓存污染
-![[提问.webp]]
+![提问](../../../Files%20%26%20LongText/Attachments/%E6%8F%90%E9%97%AE.webp)
 系统级（Linux 页缓存）和数据库（InnoDB Buffer Pool）都以页为基本单元、用 [[常用算法和情景处理#LRU|LRU 算法]] 管理缓存，都会遇到**预读失效**和**缓存污染**两个问题
 ### 预读机制
 Linux 操作系统为基于 Page Cache 的读缓存机制提供**预读机制**（readahead，`mm/readahead.c`）
 - 应用程序只想读取磁盘上文件 A 的 offset 为 0-3KB 范围内的数据，操作系统至少会读 0-4KB 的内容，这恰好可以在一个 page 中装下。
 - 但是操作系统出于空间局部性原理，选择将磁盘块 0~16kb 位置的页都加载到内存，额外在内存中申请了 3 个 page；
-![[ae8252378169c8c14b8b9907983f7d8b.webp]]
+![ae8252378169c8c14b8b9907983f7d8b](../../../Files%20%26%20LongText/Attachments/ae8252378169c8c14b8b9907983f7d8b.webp)
 如果预读进来的页**从来没有被访问**，预读就白做了，称为**预读失效**：白占磁盘 I/O 带宽，预读页还占据缓存，把可能活跃的页挤出去。
 
 预读会让大量**暂时无关**的页进入 LRU，纯 LRU 分不清「新进来但马上会反复访问」和「只用一次」的页，Linux 改用**双链表 LRU**（`mm/vmscan.c`）：
@@ -898,11 +898,11 @@ std::signal(SIGINT, handler);  // 多线程用 sigaction + pthread_sigmask
 参考视频：[为什么浮点数运算不够精确_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV14w4m1k71N/?spm_id_from=333.337.search-card.all.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
 ### 负数使用补码表示
 **补码就是把正数的二进制全部取反再加 1**
-![[反码.webp|350]]
+![350](../../../Files%20%26%20LongText/Attachments/%E5%8F%8D%E7%A0%81.webp)
 如果不使用补码
-![[非反码运算.webp|350]]
+![350](../../../Files%20%26%20LongText/Attachments/%E9%9D%9E%E5%8F%8D%E7%A0%81%E8%BF%90%E7%AE%97.webp)
 而使用补码表示
-![[补码运算过程.webp|350]]
+![350](../../../Files%20%26%20LongText/Attachments/%E8%A1%A5%E7%A0%81%E8%BF%90%E7%AE%97%E8%BF%87%E7%A8%8B.webp)
 如果负数不是使用补码的方式表示，则在做基本对加减法运算的时候，**还需要多一步操作来判断是否为负数，如果为负数，还得把加法反转成减法，或者把减法反转成加法**，多了很多开销
 ### 小数的二进制表示
 浮点数的表示借鉴了科学计数法，比如在十进制中 311.56 可以表示成 3.1156∗10^2 。类似地，浮点型数据的二进制存储结构也可以被划分成：**符号位 s + 指数位 e + 尾数位（有效数字位）m**。按照国际标准 IEEE 754，任意一个二进制浮点数可以表示成： 𝑉=(-1)^𝑠x𝑀x2^𝐸   其中：
@@ -925,9 +925,9 @@ std::signal(SIGINT, handler);  // 多线程用 sigaction + pthread_sigmask
 > double 类型和 float 类型（可能还有 long double 类型）在计算机的底层存储结构都是一致的，唯一的不同在于 float 是 32 位而 double 是 64 位的。
 
 32 位浮点数在内存中划分机制
-![Pasted image 20240826195547.png](Pasted%20image%2020240826195547.png)
+![Pasted image 20240826195547.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240826195547.png)
 计算机中小数的表示按照小数点的位置是否固定可以分为浮点数和定点数。为了方便和 float 32 浮点数做对比，我们构造一个 32 位精度的定点数，其中小数点固定在 23 bit 处：
-![v2-cb2ae52724d3d8c4b2d52934ca495f18\_720w.webp](v2-cb2ae52724d3d8c4b2d52934ca495f18_720w.webp)
+![v2-cb2ae52724d3d8c4b2d52934ca495f18\_720w.webp](../../../Files%20%26%20LongText/Attachments/v2-cb2ae52724d3d8c4b2d52934ca495f18_720w.webp)
 
 其中 IEEE 754 的规定为：
 
@@ -936,19 +936,19 @@ std::signal(SIGINT, handler);  // 多线程用 sigaction + pthread_sigmask
 - E 不全为 0，不全为 1：正常的计算规则，E 的真实值就是 E 的字面值减去 127（中间值），M 加回 1
 - E 全为 0：指数 E 等于 1-127 为真实值，M 不加回 1（此时 M 为 0. xxxxxx），这样是为了表示 0 和一些很小的数
 - E 全为 1：M 全为 0 表示正负无穷大（取决于 S 符号位）；M 不全为 0 时表示不是一个数（NaN）
-![Pasted image 20240826200022.png](Pasted%20image%2020240826200022.png)
+![Pasted image 20240826200022.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240826200022.png)
 `𝑉=(-1)^𝑠x𝑀x2^𝐸`  e 为 0 表示 e 的 0-127=-127 次方乘以一个 1<=M<=2 的数值，得到一个非常小的数。正负无穷大
 
 ### 转换的具体例子
 #### 无精度损失
 10.25 转换二进制存储在计算机中过程：
 10.25 转换为 2 进制为 1010.01
-![400](Pasted%20image%2020240826194617.png)
+![400](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240826194617.png)
 使用 IEEE 标准公式转换为 1.01001\*2^3：
 10.25 为正数，所以 s = 0，小数位数 5 位，所以 M = 01001
 10.25 是正数\*自然对数的正次幂，所以 E 的字面值为 127+3 = 130
 将三个数填充如计算机存储空间中：
-![一般的编程语言给float赋4字节32位空间](Pasted%20image%2020240826195250.png)
+![一般的编程语言给float赋4字节32位空间](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240826195250.png)
 使用指针查看数据在内存中地址就是 0 x 4121000
 
 #### 有精度损失
@@ -998,19 +998,19 @@ xxxhdpi (extra-extra-extra-high) ~640 dpi
 ## 字符编码
 参考视频教程：[ASCII、Unicode和UTF-8编码详解，一次彻底弄明白！简单易懂_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV14Ns8eEERu/?spm_id_from=333.1007.tianma.1-1-1.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
 最原始的字符和数字进行映射的方案是 ascii
-![Pasted image 20240929174428.png](Pasted%20image%2020240929174428.png)
+![Pasted image 20240929174428.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240929174428.png)
 ascii 真正编码位只有 7 个，最前一位固定是 0
 
-![Pasted image 20240929180207.png](Pasted%20image%2020240929180207.png)
+![Pasted image 20240929180207.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240929180207.png)
 所有的支持的字符都有一个唯一的编码
 最小的，有意义的书写符号到位叫做**字素**
-![Pasted image 20240929181350.png](Pasted%20image%2020240929181350.png)
+![Pasted image 20240929181350.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240929181350.png)
 编码规则用来解决二进制编码读取过程中混乱问题
-![同一个二进制编码，可以解析出不同的结果](Pasted%20image%2020240929181513.png)
+![同一个二进制编码，可以解析出不同的结果](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240929181513.png)
 - UTF-32 和 ascii 一样是定长编码，无论什么字符都会占用 4 个字节（而不是 ascii 的 1 个），空间浪费较为严重
 - utf-8 是一种**变长**（意为改变长度）的编码，不同的字符规定不同的字节大小（英文仍用 1 个字节，完全适配 ascii，中文三个，其他较为复杂的最多 4 个）
-![Pasted image 20240929181940.png](Pasted%20image%2020240929181940.png)
-![Pasted image 20240929182223.png](Pasted%20image%2020240929182223.png)
+![Pasted image 20240929181940.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240929181940.png)
+![Pasted image 20240929182223.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240929182223.png)
 将一个  Unicode 编码转换为 utf-8 编码方式是将 Unicode 代码点转换为二进制，然后根据 utf-8 的编码固定格式**从后向前**填充，未满的位置用 0 填充，解码则逆向即可
 ![recording 18.gif](recording%2018.gif)
 1. 数据的解码和编码，需要使用同一种编码 (GBK、UTF-8)
@@ -1019,4 +1019,4 @@ ascii 真正编码位只有 7 个，最前一位固定是 0
 - 字符串只包含 ASCII 编码的字符，可以直接处理
 - 字符串包含中文、表情包等，需要按照 Unicode 字符串来处理，不同编程语言可能不同（Python、Golang）
 - 如果想要更准确的处理字符串，比如字符串中
-包含这种字符：![75](Pasted%20image%2020240929183111.png)，需要使用 grapheme 函数
+包含这种字符：![75](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240929183111.png)，需要使用 grapheme 函数

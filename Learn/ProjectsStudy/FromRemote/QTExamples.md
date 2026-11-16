@@ -246,10 +246,10 @@ N=str2.isEmpty()；    //N=true
 ## 滑动条QSlider和QAbstractSlider的介绍和用法
 参考：[QSlider + QScrollBar + QProgressBar （ 移动条、滚动条 、进度条）的联动_qprogressbar循环滚动-CSDN博客](https://xmuli.blog.csdn.net/article/details/101003081)
 
-![[245c8ae377a072b353ad4d7666e363bc.gif]]
+![245c8ae377a072b353ad4d7666e363bc](../../../Files%20%26%20LongText/Attachments/245c8ae377a072b353ad4d7666e363bc.gif)
 
 需要注意的是信号槽机制，不同的信号哈数可以发送参数，具体发送参数的含义可以通过查询文档了解
-![[Pasted image 20251011193421.png]]
+![Pasted image 20251011193421](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251011193421.png)
 QSlider 的 valueChange 信号会将更改后的值作为 value 参数发送出去，根据valueChange 的签名可知，它的槽函数必须要接受一个**兼容** int 类型的参数，如果有多个参数，那么顺序也必须要保持一致。
 
 qt 还有循环信号保全机制：当组件的值已经等于要设置的值时不会发出 valueChanged 信号
@@ -283,7 +283,7 @@ void bar_collection::on_bar_value_changed(int value) {
 ```
 ## QSlider 仪表盘 + QLCD_NUmber 数值显示的介绍及用法
 参考：[仪表盘 QSlider + 数值显示 QLCD_NUmber 的介绍及用法_qt slider 显示数字-CSDN博客](https://xmuli.blog.csdn.net/article/details/101003115)
-![[20190918200740.gif]]
+![20190918200740](../../../Files%20%26%20LongText/Attachments/20190918200740.gif)
 ### QDial属性：
 - QDial是仪表盘式的组件，通过旋转表盘获得输入值。QDial的特有的属性包括以下两种。
 
@@ -317,7 +317,7 @@ void dash_board::on_dial_valueChanged(int value) {
 
 ## QTimer和QDateTime的讲解和使用
 参考：[QTimer和QDateTime的讲解和使用_qdateediter单击弹出-CSDN博客](https://xmuli.blog.csdn.net/article/details/101040841)
-![[2883c1621230299f4e6326632434d4e7.gif]]
+![2883c1621230299f4e6326632434d4e7](../../../Files%20%26%20LongText/Attachments/2883c1621230299f4e6326632434d4e7.gif)
 
 ### 时间日期相关的类
 
@@ -338,34 +338,34 @@ Qt 中有专门用于日期、时间编辑和显示的界面组件，介绍如�
 获取 calendar_widget 中**选中日期**，使用 selectDate 函数，返回 `QDate` 类型。
 
 常用日期显示格式：
-![[Pasted image 20251012100626.png]]
+![Pasted image 20251012100626](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251012100626.png)
 # QComboBox和QPlainTextEdit的讲解和使用
 参考 [QComboBox和QPlainTextEdit的讲解和使用_qt富文本下拉插入-CSDN博客](https://xmuli.blog.csdn.net/article/details/101127870)
 ## 一些 qt creater 使用经验
 ### 下载 qt 官方示例代码文件
 
-![[Pasted image 20251013195329.png]]
+![Pasted image 20251013195329](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251013195329.png)
 一个个文件复制粘贴太麻烦了，可以看到这是一个 git 仓库，使用 git，curl 方法可以将文件拉取下来。
 也使用脚本
-![[download_qt_example.bat]]
+[download_qt_example](../../../Files%20%26%20LongText/Attachments/download_qt_example.bat)
 
-![[download_qt_example.py]]
+[download_qt_example](../../../Files%20%26%20LongText/Attachments/download_qt_example.py)
 
-![[download_qt_example_full.py]]
+[download_qt_example_full](../../../Files%20%26%20LongText/Attachments/download_qt_example_full.py)
 
-![[download_qt_example_simple.py]]
+[download_qt_example_simple](../../../Files%20%26%20LongText/Attachments/download_qt_example_simple.py)
 
 这几个文件说明 [[README]]
 
 qt 官方也将内容打包好了放在 [Index of /official_releases](https://download.qt.io/official_releases/) 中，
 找到对应版本号 [Index of /official_releases/qt/6.8/6.8.0](https://download.qt.io/official_releases/qt/6.8/6.8.0/)
-![[Pasted image 20251013195552.png]]
+![Pasted image 20251013195552](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251013195552.png)
 submodules 分模块下载，single 是所有模块文件打包下载，压缩包有 1.5 G，解压会有 8~9 G，所以一般分模块下载
 大部分使用核心组件的教程代码会放在 `qtbase-everywhere-src-6.8.0.zip` 这种名称的代码包里
 
 ### 添加 qrc 资源管理
 #### 引入工程中
-![[Pasted image 20251012153023.png]]
+![Pasted image 20251012153023](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251012153023.png)
 添加完后如果显示添加失败，需要到 cmake 中查看是否将 qrc 文件引入到项目中
 需要在 `target_link_libraries` 之前引入
 想在项目视图下看见这个文件（cmake 构建的项目中认为项目有关的文件只会在 `add_executable` 和 `add_library` 中出现），所以还要添加
@@ -373,7 +373,7 @@ submodules 分模块下载，single 是所有模块文件打包下载，压缩�
 qt_add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} resource.qrc)
 ```
 `resource.qrc` 是管理资源文件的**文件**名称，在其中管理所有的资源文件
-![[Pasted image 20251012153638.png|464]]
+![464](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251012153638.png)
 虽然看起来有一个名为 image 的文件夹，但在本地文件管理中是看不到的，其中内容为：
 ```qrc
 <RCC>
@@ -385,9 +385,9 @@ qt_add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} resource.qrc)
 </RCC>
 ```
 file 标签引入两个文件夹相对于 project_source 宏的位置，即项目根目录
-![[Pasted image 20251012154031.png]]
+![Pasted image 20251012154031](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251012154031.png)
 可以看到，在项目视图下是看不到这几个图片文件的
-![[Pasted image 20251012154101.png]]
+![Pasted image 20251012154101](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251012154101.png)
 
 1. 物理路径：qrc 文件中`<file>`标签指定的文件路径（相对于 qrc 文件位置）
 2. 虚拟路径：通过 prefix 定义的虚拟文件系统路径
@@ -438,8 +438,8 @@ qt 对 qrc 路径解析规则为：
 Qt会忽略 `<file>` 标签中前面的路径部分（`icons/`），只使用文件名，因 prefix 标签已经实行过分类的作用了（prefix 标签可以不止一级），file 标签记录**文件相对当前 qrc 文件的相对位置**
 ### 添加组件和类
 qt creater 不像 vs，能够在添加继承自 widget 的类的同时选择是否添加 ui 文件，而是需要自己添加完 h\cpp 文件后自己再添加一次 ui 文件
-![[Pasted image 20251012120655.png]]
-![[Pasted image 20251012120715.png]] 然后还需要： ^6zk649
+![Pasted image 20251012120655](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251012120655.png)
+![Pasted image 20251012120715](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251012120715.png) 然后还需要： ^6zk649
 - 将 ui 文件名修改成类名同名
 - 对应 CMakeLists.txt add_executeable 项中添加 ui 文件（前提 `set(CMAKE_AUTOUIC ON)`）
 - 保存文件，重新使用 cmake 构建（不然没 moc 构建出来的 ui. h 文件）
@@ -468,7 +468,7 @@ signals:
 ```
 - 对于这段代码 `Ui::combobox_and_plainClass* ui;` 如果提示 Ui 中找不到 `combobox_and_plain`，则说明 ui 文件**所属的类**有问题，在[[#^6zk649|创建ui文件时给ui类命名时用了别的名字]]（且极有可能名为 `Form.ui`）
 - 应该填 UI 编辑器中最上面一层的名字
-![[Pasted image 20251012145405.png]]
+![Pasted image 20251012145405](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251012145405.png)
 
 ### 组件命名规范
 - 一般以组件类型名称为开头，下划线链接不同语义
@@ -522,14 +522,14 @@ C++11 之前不存在这样的语法，所以有了这个宏，但随着标准�
 `QPlainTextEdit`的文字内容以**QTextDocument**类型存储，函数`document()`返回这个文档对象的指针。
 **QTextDocument**是内存中文本对象，以文本块的方式存储，一个文本块就是一个段落，每个段落以回车符结束。**QTextDocument**提供一些函数实现对文本内容的存取。
 可以通过观察 ide 提示，知道他的工作原理
-![[Pasted image 20251012164856.png]]
+![Pasted image 20251012164856](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251012164856.png)
 ## 列表控件QListWidget和工具按钮QToolButton的和用法
 参考： [列表控件QListWidget和工具按钮QToolButton的和用法_qlistwidgetitem button-CSDN博客](https://xmuli.blog.csdn.net/article/details/101314908)
 ### QListWidget 组件注意事项
-![[Pasted image 20251012190342.png]]
+![Pasted image 20251012190342](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251012190342.png)
 移除其中一个 item 使用的是 `takeItem` 函数
 根据这个函数的文档：
-![[Pasted image 20251012194440.png]]
+![Pasted image 20251012194440](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251012194440.png)
 需要知道`takeItem()` 的行为是**将 `QListWidgetItem` 从 `QListWidget` 中“提取”出来**，但**它不会删除这个 item 的内存**。换句话说，你只是“移除”了它在列表中显示，并没有销毁它的内部数据。所以，你需要手动释放这个 item 所占用的内存，否则会导致**内存泄漏**。
 
 | 控件           | Item 类                          | takeItem () 行为 | 是否需要手动 delete |

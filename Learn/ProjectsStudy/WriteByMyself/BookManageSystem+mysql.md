@@ -93,7 +93,7 @@ public:
 严重性	代码	说明	项目	文件	行	抑制状态	详细信息
 错误	C2504	“Librarian”: 未定义基类	mysql-connect-demo	D:\Code Files\vsstudio\mysql-connect-demo\mysql-connect-demo\sys_admin.h	5
 ```
-**![[Pasted image 20250712150300.png]]**
+**![Pasted image 20250712150300](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250712150300.png)**
 ## 单例模式使用模板
 ```cpp
 #pragma once

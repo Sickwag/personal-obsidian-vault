@@ -1,18 +1,18 @@
 # 官网文档学习
 ## 创建你的首个 android 应用
 参考教程：官方开发者文档 : [创建你的首个 android 应用](https://developer.android.google.cn/codelabs/basic-android-kotlin-compose-first-app?continue=https%3A%2F%2Fdeveloper.android.com%2Fcourses%2Fpathways%2Fandroid-basics-compose-unit-1-pathway-2%23codelab-https%3A%2F%2Fdeveloper.android.com%2Fcodelabs%2Fbasic-android-kotlin-compose-first-app&%3Bhl=zh-cn&hl=zh-cn#8)
-![[MainActivity 1.kt|完整代码]]
+[完整代码](../../../Files%20%26%20LongText/Attachments/MainActivity%201.kt)
 ### 使用模板创建应用
-![[Pasted image 20250108105618.png]]
+![Pasted image 20250108105618](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108105618.png)
 右上角的 Split 按钮**同时看到代码和设计**
 - **Project** 视图 (1) 用于显示项目的文件和文件夹
 - **Code** 视图 (2) 是您修改代码的地方
 - **Design** 视图 (3) 是您预览应用外观的地方
  这是右边 design 显示的是现在这个项目所构成的所有对象，**只展示对象**
-![[Pasted image 20250108105908.png]]
+![Pasted image 20250108105908](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108105908.png)
 ### 查找项目文件
 Android 视图下
-![[Pasted image 20250108110253.png]]
+![Pasted image 20250108110253](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108110253.png)
 manifests 中主要用来存放 **AndroidManifest.xml** 文件。这个文件是 Android 应用的**清单文件**，它包含了应用的基本信息和配置
 **AndroidManifest.xml 文件的作用**：
 声明应用的组件
@@ -21,7 +21,7 @@ manifests 中主要用来存放 **AndroidManifest.xml** 文件。这个文件�
 - **BroadcastReceiver（广播接收器）**：接收和处理广播消息的组件。
 - **ContentProvider（内容提供者）**：用于在不同应用之间共享数据的组件。
 使用项目文件视图看到的就是软件包中真实的文件排列
-![[Pasted image 20250108110653.png]]
+![Pasted image 20250108110653](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108110653.png)
 ### 更新文本
 #### 程序入口
 - `onCreate()` 函数是此应用的入口点，并会调用其他函数来构建 UI。在 Kotlin 程序中，`main()` 函数是 Kotlin 编译器在代码中开始编译的特定位置；在 Android 应用中，则是由 `onCreate()` 函数来担任这个角色。
@@ -38,7 +38,7 @@ manifests 中主要用来存放 **AndroidManifest.xml** 文件。这个文件�
 - `@Composable` 函数名称采用首字母大写形式。
 - 需在该函数前面添加 `@Composable` 注解。
 - `@Composable` 函数无法返回任何内容。
-![[Pasted image 20250108112526.png]]
+![Pasted image 20250108112526](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108112526.png)
 > 使用 `@Composable` 注解的函数确实被设计用来描述 UI 的结构和行为，并且通常在 `setContent` 函数中使用，让编译器将其解释为一个 UI 组件
 > setContent 的作用是：将一个可组合的 UI 树（Composable UI Tree）设置为当前活动（Activity）的 UI 内容。
 #### DefaultPreview 函数
@@ -59,7 +59,7 @@ fun GreetingPreview() {
     }
 }
 ```
-![[Pasted image 20250108114808.png|400]]
+![400](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108114808.png)
 - `Greeting`函数显示出text中文本内容，由于使用了`@Composable`注解表示这个函数将被解析为一个UI
 - `GreetingPreview`由于使用了`@Preview`注解，这个函数将会只在代码编辑页面需要显示页面预览时调用并将预览页面的背景设置为显示状态（`showBackground = true`），并因`@Composalble`注解将他解释为一个UI，函数将会调用其中Follow_ofiicial函数，进而调用`Greeting`函数来在预览页面显示文本内容
 - 使用`@Preview` 注解的函数只在`Preview`页面中被调用不会打包进 apk
@@ -67,8 +67,8 @@ fun GreetingPreview() {
 - 但**如果预览函数中参数和实际参数不一样而两者未分离**会导致预览代码中参数覆盖原始代码的参数而最呈现预览代码在 App 中
 #### 更改背景颜色
 需要使用 [`Surface`](https://developer.android.google.cn/reference/kotlin/androidx/compose/material/package-summary?hl=zh-cn#Surface(androidx.compose.ui.Modifier,androidx.compose.ui.graphics.Shape,androidx.compose.ui.graphics.Color,androidx.compose.ui.graphics.Color,androidx.compose.foundation.BorderStroke,androidx.compose.ui.unit.Dp,kotlin.Function0)) 将文本包围起来。`Surface` 是一个容器，代表界面的某一部分，您可以在其中更改外观（如背景颜色或边框）
-![[Pasted image 20250108122322.png]]
-![[Pasted image 20250108122309.png]]
+![Pasted image 20250108122322](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108122322.png)
+![Pasted image 20250108122309](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108122309.png)
 添加一个 Box 容器（也可以用其他，如 Surface），surface 匀速 color 参数，在 import 中导入相应的包使用
 ```kotlin
 Surface(color = Color.Magenta) {
@@ -85,7 +85,7 @@ Surface(color = Color.Magenta) {
 
 ##  创建交互式 Dice Roller 应用
 参考教程[创建交互式 Dice Roller 应用](https://developer.android.google.cn/codelabs/basic-android-kotlin-compose-build-a-dice-roller-app?hl=zh-cn&continue=https%3A%2F%2Fdeveloper.android.google.cn%2Fcourses%2Fpathways%2Fandroid-basics-compose-unit-2-pathway-2%3Fhl%3Dzh-cn%23codelab-https%3A%2F%2Fdeveloper.android.com%2Fcodelabs%2Fbasic-android-kotlin-compose-build-a-dice-roller-app#0)
-![[MainActivity.kt]]
+[MainActivity](../../../Files%20%26%20LongText/Attachments/MainActivity.kt)
 ### 建立标准
 在新的项目中去除关于 `Greeting` 有关的内容替换为 DIce Roller
 ```kotlin
@@ -242,7 +242,7 @@ Compose 是一种[声明性编程范式](https://developer.android.google.cn/dev
 #### 生命周期
 可组合项通过调用各种函数生成布局，应用状态发生变化时通过重组生成新的页面
 组合只能通过初始组合生成且只能通过重组进行更新。重组是修改组合的唯一方式。
-![[Pasted image 20250109132120.png]]
+![Pasted image 20250109132120](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250109132120.png)
 
 ## Compose 布局
 [Compose 布局基础知识  |  Jetpack Compose  |  Android Developers](https://developer.android.google.cn/develop/ui/compose/layouts/basics?hl=zh-cn#composable-functions)
@@ -262,7 +262,7 @@ fun ArtistCard() {
     Text("3 minutes ago")
 }
 ```
-![[Pasted image 20250108172844.png]]
+![Pasted image 20250108172844](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108172844.png)
 这时候就需要 Compose 标准布局元素规范化内容布局
 ```kotlin
 @Composable
@@ -273,7 +273,7 @@ fun ArtistCardColumn() {
     }
 }
 ```
-![[Pasted image 20250108180854.png]]
+![Pasted image 20250108180854](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108180854.png)
 Row 将元素平铺
 ```kotlin
 @Composable
@@ -287,7 +287,7 @@ fun ArtistCardRow(artist: Artist) {
     }
 }
 ```
-![[Pasted image 20250108180935.png]] Box 将包含的元素自定义对齐方式
+![Pasted image 20250108180935](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108180935.png) Box 将包含的元素自定义对齐方式
 ```kotlin
 @Composable
 fun ArtistAvatar(artist: Artist) {
@@ -297,9 +297,9 @@ fun ArtistAvatar(artist: Artist) {
     }
 }
 ```
-![[Pasted image 20250108181049.png]]
+![Pasted image 20250108181049](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108181049.png)
 三种构件块
-![[layout-column-row-box.svg]]
+![layout-column-row-box](../../../Files%20%26%20LongText/Attachments/layout-column-row-box.svg)
 各种细致设置，Row 中子项全部向右对齐
 ```kotlin
 @Composable
@@ -313,7 +313,7 @@ fun ArtistCardArrangement(artist: Artist) {
     }
 }
 ```
-![[Pasted image 20250108181315.png]]
+![Pasted image 20250108181315](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250108181315.png)
 #### 布局模型
 其他布局模型：[[#可滚动布局|可滚动布局]]、[[#列表和延迟列表|列表和延迟列表]]
 布局模型中，通过单次传递即可完成界面树布局。
@@ -414,7 +414,7 @@ Text(
 	)
 )
 ```
-![[Pasted image 20250201181851.png]]
+![Pasted image 20250201181851](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250201181851.png)
 - 文本对齐
 只有设置了固定宽度才有用（使用 `Modifier. size(width = 100. dp, height = 100 .dp)`）
 - fontSize 参数默认跟随父级文字大小，接受一个TextUnit，可以设置 SP(像素值) 和 EM(字体值) 单位的值
@@ -448,7 +448,7 @@ fun TextSample() {
     )
 }
 ```
-![[Pasted image 20250201182441.png]]
+![Pasted image 20250201182441](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250201182441.png)
 将文本控件用 `SelectionContainer` 包裹让文字允许被选中
 - 如果想让一个 Text 语句中有不同的样式，需要使用到 AnnotaedString
 ---
@@ -497,7 +497,7 @@ ClickableText(
 	- 查找到对应的注解后，通过 `Log.d` 输出提示信息并显示注解的内容 `annotation.item`
 - `ClickableText` 在内部管理着文本的布局和点击位置与字符索引的映射。当用户点击文本时，`ClickableText` 会计算出点击的字符索引（即 `offset`），并将其传递给 `onClick` 回调函数。
 	- 索引即用户点击位置是字符串中哪一个字的返回的指针
-![[Pasted image 20250206214510.png]]
+![Pasted image 20250206214510](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250206214510.png)
 - 返回**带注解的字符串对应索引**位置的注解列表，`.firstOrNull()` 是 Kotlin 的**集合操作函数**，用于返回集合中第一个元素。如果没有找到任何元素，则返回 `null`。
  - `let` 是 Kotlin 的一个作用域函数，用于在不为 `null` 的情况下对对象执行特定的代码块。
 ### Button
@@ -519,7 +519,7 @@ fun Button(
 ```
 要求了最后一个 content 也就是按钮的显示内容是一个 Composable 组件
 colors 参数设置的是按钮的样式颜色，容器颜色，启用禁用颜色
-![[Pasted image 20250206222123.png]]
+![Pasted image 20250206222123](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250206222123.png)
 ```kotlin
 @Composable
 fun ButtonSample(){
@@ -624,7 +624,7 @@ fun ImageSample() {
     }
 }
 ```
-![[Pasted image 20250206231021.png]]
+![Pasted image 20250206231021](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250206231021.png)
 ## 状态
 > 应用中状态是指可以随时间变化的任何值。这个定义很广泛包括数据库或类中变量的所有内容。由于Compose 是**声明式的**，所以当需要改变其任何内容时，通过设置新的参数调用**同一组声明**，这些参数就是 UI 的表现形式。每State 更新时，都会发生重组——UI 发生变化
 

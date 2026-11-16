@@ -67,7 +67,7 @@ int main()
     return  0;
 }
 ```
-![Untitled 230.png](../../../Files%20&%20LongText/Attachments/Untitled%20230.png)
+![Untitled 230.png](../../../Files%20%26%20LongText/Attachments/Untitled%20230.png)
 主函数表示程序的入口, 从 main 函数开始运行
 cout 函数表示向外输出
 endl 表示输出一个换行符
@@ -75,7 +75,7 @@ return 表示函数返回值
 ### 单工程多 main 函数
 Clion 使用工程管理代码, 每个程序使用一个工程 ,每个工程仅有一个 main 函数表示程序的入口
 这样的管理规则不便于学习, 所以关闭将源代码添加到新目标的选项, 每学习一个知识点使用一个 C 文件. 这样表示新创建的文件不属于下面 learning 工程
-![Untitled 1 42.png](../../../Files%20&%20LongText/Attachments/Untitled%201%2042.png)
+![Untitled 1 42.png](../../../Files%20%26%20LongText/Attachments/Untitled%201%2042.png)
 ### C++环境设置
 程序 g++ 是将 gcc 默认语言设为 C++ 的一个特殊的版本，链接时它自动使用 C++ 标准库而不用 C 标准库。通过遵循源码的命名规范并指定对应库的名字，用 gcc 来编译链接 C++ 程序是可行的
 在命令行中编译源代码方式是先创建好 cpp 文件
@@ -277,7 +277,7 @@ for (auto &x : my_array) {
 ```
 ### 迭代
 #### 各种容器迭代器类型
-![[Pasted image 20250805231439.png]]
+![Pasted image 20250805231439](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250805231439.png)
 
 | 迭代器类型              | 移动能力       | 支持操作                         | 示例容器                  |
 |-------------------------|----------------|----------------------------------|---------------------------|
@@ -351,7 +351,7 @@ for (map<int, string>::iterator x = next(mapping.end(), -1); x != mapping.begin(
 }
     return results;
 ```
-![[Pasted image 20241219171119.png]]
+![Pasted image 20241219171119](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241219171119.png)
 - 这样的遍历方式由于循环条件不能使用 `x >= mapping.begin()` 迭代器没有重载比较操作，导致遍历不到 `begin()` 漏掉容器中一个元素
 - 需要反向迭代时，就需要使用 `rbegin()` 和 `rend()` 迭代器，如果需要迭代器固定还可以使用 `cbegin()`，`crbegin()`，以此类推
 #### 迭代器移动和下标计算
@@ -549,7 +549,7 @@ else(boolean_expression2){  //else可选
 代码块层级不明显时可以如 python 一般使用缩进而不用 `{}` 括起
 #### switch case
 switch 语句用于基于不同的条件执行不同的代码块，它通常用来**替代一系列的 if-else** 语句
-![202](Pasted%20image%2020240805092821.jpg)
+![202](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240805092821.jpg)
 - 即使 `default` 分支位于 `switch` 语句的中间位置，它仍只会在没有其他 `case` 匹配时执行。 ^e 1 df 0 e
 - 通常建议在每个 `case` 分支的末尾使用 `break` 语句，以防止代码执行“穿透”到下一个 `case` 分支。如果缺少 `break`，程序将继续执行下一个 `case`，这叫做"贯穿"。但 `default` 分支不需要 `break`，因它是 `switch` 语句的最后一个部分。
 - **执行时机**: 只有当没有任何 `case` 标签匹配时，`default` 分支才会执行。如果有一个 `case` 标签匹配，即使没有 `break` 语句，`default` 分支也不会执行。
@@ -579,7 +579,7 @@ int main() {
 定义同 main 函数, 函数声明方法如 [C++ prime plus \> 函数原型](C++%20prime%20plus.md#函数原型)
 **函数声明补充**
 在函数外部定义函数时一定要注意函数头要和声明完全一样，即便声明中写了，定义中不能不写函数返回类型，不然会报错
-![375](Pasted%20image%2020240811001027.png)
+![375](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240811001027.png)
 ```cpp
 // 函数声明
 int max(int num1, int num2);
@@ -994,7 +994,7 @@ Point points[2] = {{1, 2}, {3, 4}};
 赋值 : `double balance[5] = {1000.0, 2.0, 3.4, 7.0, 50.0};` 赋值使用大括号
 拓展: 通过 `setw`,  `setfill` 格式化输出
 `setw(n)` 函数只对**紧接着的** , 后面的输出产生作用。
-![350](cpp-setw-20200922-RUNOOB.svg)
+![350](../../../Files%20%26%20LongText/Attachments/cpp-setw-20200922-RUNOOB.svg)
 通过 `setfill(string)` 将 `setw` 的空位补齐, 两者都是流控制符 [C++ prime plus \> 对于流的新理解](C++%20prime%20plus.md#对于流的新理解)
 ### 多维数组
 定义 : `type name[size1][size2]...[sizeN];`，size 的数量表示数组的维度数 ( dimensions )
@@ -1890,7 +1890,7 @@ int x = myVector[0]; // 看做序列获取元素
 也可以在定义结构时定义别名，
 ## 类和对象
 - **结构：**
-![375](Pasted%20image%2020240809124518.png)
+![375](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240809124518.png)
 **类成员**
 指那些把定义和原型写在类定义内部的函数，就像类定义中其他变量一样。
 未说明变量作用域默认为 private
@@ -2105,7 +2105,7 @@ void externalFunction() {
 }
 
 ```
-![400](Pasted%20image%2020240908230304.png)
+![400](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240908230304.png)
 
 #### 友元类
 ```cpp
@@ -2645,8 +2645,8 @@ v.push_back(MyClass());
 由于 `std::move()` 会触发移动构造/赋值，使 `const` 对象不能使用 `std::move()` 移动，const 确保了对象的属性/状态不变，而拷贝会将元对象内部成员置空。这种操作是不允许的，**这点可能不会在 IDE 中有错误提示**，而在编译期报错
 由于 const 违反移动语义本质，所以实现 const 版本的移动构造/赋值函数没有意义，编译器会自动匹配对应的重载函数。
 如果函数接受一个引用传参，那么传入一个 `std::move()` 的值没有任何意义，如果函数使用值传递/const 左值引用，那么可以避免拷贝开销。这也就是为什么 emplace_back 不需要 `std::move` 而 push_back 需要
-![[PixPin_2026-01-26_13-20-40.png]]
-![[PixPin_2026-01-26_13-20-28.png]]
+![PixPin_2026-01-26_13-20-40](../../../Files%20%26%20LongText/Attachments/PixPin_2026-01-26_13-20-40.png)
+![PixPin_2026-01-26_13-20-28](../../../Files%20%26%20LongText/Attachments/PixPin_2026-01-26_13-20-28.png)
 - 可以看到 `push_back()` 在接受传入值时，`vec.push_back(obj)` 会传入一个左值，调用第一个构造函数
 - `emplace_back` 默认接受右值引用
 - 两者不同传入参数类型工作原理区别参考[[用法导向知识#`push_back()` 和 `emplace_back()` 性能差异原理]]
@@ -2783,9 +2783,9 @@ public:
 ### 对象的深浅拷贝
 ##### 深浅拷贝注意事项
 浅拷贝：简单的赋值拷贝操作, 只将内存地址中存储的数据逐字复制到目标对象中
-![Pasted image 20240905114412.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240905114412.png)
+![Pasted image 20240905114412.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240905114412.png)
 深拷贝：在堆区重新申请空间，进行拷贝操作
-![Pasted image 20240905113832.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240905113832.png)
+![Pasted image 20240905113832.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240905113832.png)
 ```cpp
     // 如果不自定义析构函数，编译器自动添加空析构函数，自动添加的析构函数只能完成浅拷贝
     //---- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -3056,7 +3056,7 @@ void test01()
 	   1.  `class_name::type varname = value` 前加 class 名指明从属关系，不然只是全局变量定义
 	   2. 在 public 中定义声明变量，否则外部无法访问，也就无法初始化和调用
 可以参考 [java编程的逻辑 \> 类的加载过程](java编程的逻辑.md#类的加载过程)中有完整解释，非静态修饰符的作用和其在类中作用
-![350](Pasted%20image%2020240811131402.png)
+![350](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240811131402.png)
 - 用 **static** 关键字来把类成员定义为静态，这意味着无论创建多少个类的对象，静态成员都只有一个副本。可以节省内存
 - 静态成员在类的所有对象中是共享的。如果不存在其他的初始化语句，编译无法通过
 - 通过 `int Box:: objectCount = 0;` 在外部初始化变量
@@ -3552,7 +3552,7 @@ int main() {
 ```
 
 ### 菱形继承
-![clip\_image002.jpg](../../../Files%20&%20LongText/Attachments/clip_image002.jpg)
+![clip\_image002.jpg](../../../Files%20%26%20LongText/Attachments/clip_image002.jpg)
 1. 羊继承了动物的数据，驼同样继承了动物的数据，当草泥马使用数据时，就会产生二义性。
 2. 草泥马继承自动物的数据继承了两份，其实我们应该清楚，这份数据我需要一份就可以。
 ```cpp
@@ -4010,9 +4010,9 @@ ret-type func-name(parameter list)
 ```
 type 是函数所使用的数据类型的占位符名称。这个名称可以在函数定义中使用。
 模板是一种用抽象化的定义生成函数、类的方法，是一种生成函数的**函数**
-![Pasted image 20240928154335.png](Pasted%20image%2020240928154335.png)
+![Pasted image 20240928154335.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240928154335.png)
 将其简化为
-![Pasted image 20240928154435.png](Pasted%20image%2020240928154435.png)
+![Pasted image 20240928154435.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240928154435.png)
 #### 函数模板实例
 用 template 作为关键字表示下面的是模板
 ```cpp
@@ -4035,7 +4035,7 @@ int main(){
 - 这样一来，无论函数中输入的参数需要重载为什么类型，都可以直接调用函数模板**实例化一个函数**匹配对应的数据类型
 - 代码中 T 表示一种需要编译器自动推断的数据类型，并不规定为 T，代码中用 T 表示 a，b，tmp 三个变量都同一类型，推断出一个类型是什么直接套用在另外两个上，不用推三个
 - 在实际编译过程中，编译器会对函数名进行修饰保证重载为针对某种数据类型的函数名是唯一的，不会被混乱地调用，每次重载时也能快速的找到对应的重载函数。最后在使用函数模板实例化的位置粘贴上经过名称修饰的函数名即可
-![Pasted image 20240928155601.png](Pasted%20image%2020240928155601.png)
+![Pasted image 20240928155601.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240928155601.png)
 编译器自动推导为 int 类型，手动在 Swap 后添加 `<数据类型>` 可以将 T 手动识别为对应类型。
 整个 `template <typename list>` 可视为函数的前缀，<>中可以填不同的类型标签，是**生成函数的函数的参数列表**
 ```cpp
@@ -4060,7 +4060,7 @@ void Swap<int>(int &a, int &b) {
 - 函数名 Swap 后的 `<int>` 目的是告诉开发者，这个具体化模板是针对 int 类型的，也可以省略，编译器根据 template 后面<>（模板类型参数）是空的推断出这是具体化函数模板
 
 #### 编译器使用函数规则
-![Pasted image 20240928163003.png](Pasted%20image%2020240928163003.png)
+![Pasted image 20240928163003.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240928163003.png)
 1）同等匹配条件下，具体化优先于常规模板，普通函数优先于具体化和常规模板。
 2）如果希望使用函数模板，可以用空模板参数强制使用函数模板。（即 main 函数中这样调用 Swap 函数 `Swap<>(1,2)`）
 3）如果函数模板能产生更好的匹配，将优先于非模板函数。
@@ -4070,7 +4070,7 @@ void Swap<int>(int &a, int &b) {
 - 函数模板能够适应（推断）任何数据类型，但函数中代码不能（即不能凭空推断出两个 [box类型相加](#运算符重载)得到什么结果）
 - 自动类型推到不会发生隐式转换，显示指定函数数据类型，可以发生隐式转换
 - 模板必须要能够推断出数据类型，如果函数模板中没有 T 也就是没东西可推，会报错
-![无类型可推报错](Pasted%20image%2020240928160731.png)
+![无类型可推报错](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240928160731.png)
 
 - 如果要将函数具体化模板和普通函数定义和声明分开放在文件中，那么一般**在头文件 (. h) 中声明，源文件 (. cpp) 中定义**
 - 创建函数模板的声明和定义都在头文件中，一般将模板声明和定义分开放，没有意义
@@ -4310,7 +4310,7 @@ decltype 推导有三种情况：
 7) 如果 value 是一个带有括号的内容，那么会被当成一个表达式处理，先计算表达式的值，然后计算他**去除引用后的基本类型**
 8) 如果 value 是函数调用，则 res 的类型与函数的返回值类型相同（**函数不能返回 void**，但可以返回 void*）
 9) decltype 中是函数调用，则返回函数的返回值类型，decltype 中只填函数名称不调用，则是返回函数的类型，在 res 前加 `*` 则返回函数指针
-![[Pasted image 20250917092227.png]]
+![Pasted image 20250917092227](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250917092227.png)
 ```cpp
 int func(){
 	cout<<“调用了funcO函数。\n"；
@@ -4453,7 +4453,7 @@ string add<string&,string&>(string& t,string& u);
 ```
 配合完美转发自动推导模板返回值类型
 易错理解：
-![[Pasted image 20250917093842.png]]
+![Pasted image 20250917093842](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250917093842.png)
 #### decltype/decltype(auto)/auto 之间的区别
 | 方面          | auto               | decltype | decltype(auto)     |
 | ----------- | ------------------ | -------- | ------------------ |
@@ -4471,7 +4471,7 @@ string add<string&,string&>(string& t,string& u);
 - 类模板的通用类型（T）可以放置于成员变量前，成员函数的参数位置，成员函数的代码中，成员函数的返回值位置，总之，**哪里需要通用类型，哪里就能放**
 - 类模板在创建类对象时使用，必须显示指定数据类型而不能自动推断，数据类型必须适应类模板中代码（类定义体中有多少个通用数据类型，尖括号中就需要定义多少个标识符）
 - 通用类型标识符列表（尖括号中） 也可用关键字“传参”，默认“参数”的方法来定义默认标识符
-![[Pasted image 20240928191057.png|300]]
+![300](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240928191057.png)
 - 模板类中成员函数可以在外部实现而内部只留下定义，但要加上修饰符 `template<typename T, typename U>`，模板函数在外部定义时不支持设置默认通用类型标识符
 - 程序中，只有使用到成员函数时，编译器才会根据模板创建这个函数，否则不实现，即使其中有错误代码
 #### typename 和 class 区别
@@ -5086,7 +5086,7 @@ int main () {
    cout <<"count: "<< count <<  endl; // 可能打印非 0 值
 }
 ```
-![Pasted image 20240930205503.png](Pasted%20image%2020240930205503.png)
+![Pasted image 20240930205503.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240930205503.png)
 ###### 不一致
 多线程对共享数据进行操作, 由于缓存一致性问题, 可能导致其中一个线程看到的数据不是最新值。
 比如在这个程序里面，有时候判断` x==1` 是 true，有时候判断` x==1` 是 false
@@ -5111,7 +5111,7 @@ int main () {
   t 2.join ();
 }
 ```
-![Pasted image 20240930205621.png](Pasted%20image%2020240930205621.png)
+![Pasted image 20240930205621.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240930205621.png)
 ###### 死锁
 死锁（Deadlock）是多线程或多进程编程中一个严重问题，它会导致程序无法继续执行下去，因一组线程或进程相互等待对方释放资源，但永远无法满足条件，从而陷入僵局。
 死锁的定义是：多个线程因抢占和持有资源而造成的一种互相等待的僵局状态。
@@ -5149,7 +5149,7 @@ int main () {
     return 0;
 }
 ```
-![Pasted image 20240930211247.png](Pasted%20image%2020240930211247.png)
+![Pasted image 20240930211247.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240930211247.png)
 - 线程 A 首先尝试锁定 mutex_1，并成功获得锁。
 - 线程 B 首先尝试锁定 mutex_2，并成功获得锁。
 - 接下来，线程 A 想要锁定 mutex_2，但它被线程 B 持有，因此线程 A 被阻塞，无法继续执行，等待 mutex_2 被释放。
@@ -5194,7 +5194,7 @@ int main () {
 }
 ```
 可以看到数据竞争的问题得到了解决
-![Pasted image 20240930211233.png](Pasted%20image%2020240930211233.png)
+![Pasted image 20240930211233.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020240930211233.png)
 #### 互斥锁包装器
 ##### 包装器的核心作用
 1. **自动资源管理**：
@@ -5542,7 +5542,7 @@ int main() {
 ```
 ## 内存分区
 ### 技术层次
-![Pasted image 20241019114301.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241019114301.png)
+![Pasted image 20241019114301.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241019114301.png)
 ### 数据类型
 #### 数据类型是什么
 数据类型是有由编译器创建的，为了更好管理内存空间的一种变量标识符。
@@ -5552,7 +5552,7 @@ int main() {
 - 数据类型可以理解为创建变量的模具，作用是
 	- ==分配存储该变量的相应内存大小的同时创建该内存单元的别名==
 	- 别名包含这块内存的地址信息
-![Pasted image 20241019115122.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241019115122.png)
+![Pasted image 20241019115122.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241019115122.png)
 
 #### typedef 关键字使用
 typedef 的出现目的是
@@ -5678,7 +5678,7 @@ printf("\np2+1 : %d", *(int *)((int *)p2+3));		// 4
 3）汇编：将汇编文件生成目标文件（二进制文件）
 4）链接：将目标文件链接为可执行程序
 当我们编译完成生成可执行文件后，我们通过在 linux 下 size 命令可以查看一个可执行二进制文件基本情况：（也就是下面的内容是编译过程中做的事）
-![Pasted image 20241019164847.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241019164847.png)
+![Pasted image 20241019164847.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241019164847.png)
 1. text 代码区表示写的代码文件占用字节大小，这段通常是**只读的**、共享的，所有程序都可以调用它以节省内存大小
 2. 数据区包括 data 和 bss
 3. date 区存放所有**初始化的**变量和值（普通赋值，static，const， \ #define ）
@@ -5735,8 +5735,8 @@ int main(){
 - 以 `void test(int a,int b){}` 为例，函数参数列表中每个参数（实际上是对函数调用时传递的**值的引用**。这些参数在函数被**调用时被创建**，并且在函数调用期间它们的值会被初始化为传递给函数的实际参数值。
 - `char *p = NULL;` 在 `test03` 函数中被初始化。当您调用 `allocateSpace(p);` 时，`p` 的值（即指针的地址）被复制到 `allocateSpace` 函数的参数 `pp` 中。`pp` 是 `p` 的一个副本，**指向相同的内存地址**，但存储两个指针的内存地址是不同的，由于 `p` 被定义为 `NULL`，所以内存地址是空的
 - `malloc` 的返回值为 `void`，需要转换成相应类型才能初始化变量 `char *temp = (char * )malloc(contend);`
-![Pasted image 20241020133619.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241020133619.png)
-![Pasted image 20241020133918.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241020133918.png)
+![Pasted image 20241020133619.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241020133619.png)
+![Pasted image 20241020133918.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241020133918.png)
 2. 问题的关键在于 p 是一个空指针，如果 p 初始化不为 `NULL`，那么 pp 会指向 p 一样的内存地址，对 pp 的操作也做用于 p，因是同一块内存
 ```cpp
 void allocateSpace(char ** pp){
@@ -5758,8 +5758,8 @@ int main(){
 }
 ```
 - 使用二级指针 `** pp` 存储一级指针的地址（一级指针地址是栈中 `p` 的地址）
-![Pasted image 20241020140359.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241020140359.png)
-![Pasted image 20241020185931.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241020185931.png)
+![Pasted image 20241020140359.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241020140359.png)
+![Pasted image 20241020185931.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241020185931.png)
 
 3. 所以可以总结出，当主调用函数给一个空指针分配内存（栈区）时，利用同级指针**值传递内容**，无法造成实质性的修改（这种情况下可以看做一种值传递），需要使用更高级的指针。
 ### 动静态变量
@@ -6016,7 +6016,7 @@ void test(){
 - 替换过程在编译阶段，不占用程序运行时的内存
 - 一般用于简短并且频繁使用或者可能要修改的情况，这样可以以代码区的空间增长为代价减少了用普通函数时需要的入栈出栈时间
 #### 函数调用流程
-![图中ret是result](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241021111844.png)
+![图中ret是result](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241021111844.png)
 -  普通函数调用流程
 	- `func(1,2)` 的 return 值 3 由临时变量存储，return 后 `func (1,2)` 生命周期结束：
 	- 临时变量被销毁，栈底临时变量出栈销毁
@@ -6036,13 +6036,13 @@ void test(){
 #### 栈的生长方式和内存存放方向
 ##### 调用实例
 先有一个情景，main 调用 func 1，func 1 调用 func 2
-![Pasted image 20241021121614.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241021121614.png)
+![Pasted image 20241021121614.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241021121614.png)
 - main ，func 1 和 func 2 中有数据定义在堆区和常量区时，三个函数都能访问
 - mian 函数定义常量在栈区，func 1 和 func 2 都可以调用
 - **func 1 定义数据在栈区时，main 函数不可以访问，func 2 可以**
 
 ##### 栈的结构
-![375](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241021122129.png)
+![375](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241021122129.png)
 ```cpp
 void test(){
     int a = 0;
@@ -6297,7 +6297,7 @@ int main(){
 }
 ```
 - 空指针可以被重复释放，野指针不能
-![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241021203159.png)
+![400](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020241021203159.png)
 `free` 只能释放 NULL 和有内容的内存回归初始化*随机数值*的状态
 ### 指针的各种操作
 #### 指针的步长
@@ -6800,9 +6800,9 @@ int main(){
 双端队列允许在队列**两端**对元素操作，进行插入和删除操作，deque 没有容量的概念，它是动态地以分段连续空间组合而成，随时可以增加**一点**新的空间并链接起来。不会因为拓容而全量复制数据到新的地址空间
 他的随机访问依赖 `operator++/--` 函数的实现
 数据结构为:
-![[Pasted image 20260723101328.png]]
-![[Pasted image 20260723101337.png]]
-![[Pasted image 20260723102026.jpg]]
+![Pasted image 20260723101328](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260723101328.png)
+![Pasted image 20260723101337](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260723101337.png)
+![Pasted image 20260723102026](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260723102026.jpg)
 注意事项
 - 无论使用返回迭代器的还是引用的成员函数之前，使用 `empty()` 成员函数确保双端队列不为空，否则会引发未定义的行为。
 - 注意根据需要调整容器成员函数的[容器返回值](#容器返回迭代器和引用)

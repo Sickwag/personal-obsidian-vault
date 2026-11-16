@@ -242,13 +242,13 @@
 
 ---
 考试错题
-![Untitled 34 3.png](Untitled%2034%203.png)
+![Untitled 34 3.png](../../../Files%20%26%20LongText/Attachments/Untitled%2034%203.png)
 背景比母版好用
-![Untitled 35 3.png](Untitled%2035%203.png)
+![Untitled 35 3.png](../../../Files%20%26%20LongText/Attachments/Untitled%2035%203.png)
 选项卡比右键好用
-![Untitled 36 3.png](Untitled%2036%203.png)
+![Untitled 36 3.png](../../../Files%20%26%20LongText/Attachments/Untitled%2036%203.png)
 文档部件不在不同文件中通用
-![Untitled 37 3.png](Untitled%2037%203.png)
+![Untitled 37 3.png](../../../Files%20%26%20LongText/Attachments/Untitled%2037%203.png)
 调整smartart升级层次，升级字面意思，上移一层是图层，上移是和上一行排列
-![Untitled 38 3.png](Untitled%2038%203.png)
+![Untitled 38 3.png](../../../Files%20%26%20LongText/Attachments/Untitled%2038%203.png)
 smartart右键比选项卡更简单

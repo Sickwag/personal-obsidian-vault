@@ -394,7 +394,7 @@ for(int i= 0; i<model.rowCount();++i) {
 }
 ```
 注意 QSqlQueryModelmodel 的文档说明
-![[Pasted image 20251013172953.png]] 从签名可以看出使用之前是需要设置 QSqlQuery 对象的，如果直接填 sql 语句字符串，也是可以转换的。`query()` 返回已经设置的 query 对象。`setQuery()` 要注意:
+![Pasted image 20251013172953](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251013172953.png) 从签名可以看出使用之前是需要设置 QSqlQuery 对象的，如果直接填 sql 语句字符串，也是可以转换的。`query()` 返回已经设置的 query 对象。`setQuery()` 要注意:
 
 > ***void QSqlQueryModel:: setQuery (QSqlQuery &&query)***
 > - Resets the model and sets the data provider to be the given query. Note that the query must be active and must not be isForwardOnly ().
@@ -676,7 +676,7 @@ timer->stop();       // 停止
 timer->start(500);   // 以不同间隔重新启动
 ```
 ### 按照系统主题颜色设置组件颜色
-![[Pasted image 20250921113557.png|一套代码，多个主题]]
+![一套代码，多个主题](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250921113557.png)
 ```cpp
 const QColor hourColor(palette().color(QPalette::Text)); // 使用palette绘制的颜色会自动适应系统主题颜色，这里使用内置的自适应文本颜色
 const QColor minuteColor(palette().color(QPalette::Text));
@@ -702,7 +702,7 @@ const QColor secondsColor(palette().color(QPalette::Accent)); // 使用**当前�
 主要学习嵌套布局
 ### 嵌套布局中组件排布
 本项目有有这几个 GUI 显示区域
-![[Pasted image 20250924105442.png|../../../../Files & LongText/Attachments/Pasted image 20250924105442.png]]
+![../../../../Files & LongText/Attachments/Pasted image 20250924105442.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250924105442.png)
 左上角的可显示区域由于实时渲染，调整右侧的一些选项（如 `Grid`）是否勾选，会导致左侧布局大小改变带动整个窗口改变，所以在构造函数中需要**根据需要限制**，确保更新时不调整大小。
 #### qt 中基础 GUI 组件
 一、基础控件 (Basic Widgets)
@@ -750,7 +750,7 @@ selectionModeLabel->setBuddy(selectionModeCombo);
 - 用户可以按 Alt + S 快速将焦点移到 selectionModeCombo 下拉框上
 如果想要显示 "&" 字符，则需要代码中写入 `&&`，如果要在 windows 中没有显示出下划线（一般 windows 10/11 后默认不显示，只有按下 ALT + 激活按键后才会显示）则需要在控制面板中设置"•	控制面板 → 轻松使用 → 使键盘更易于使用 → “启用以便于访问的下划线快捷键”
 
-![[Pasted image 20250924120532.png|../../../../Files & LongText/Attachments/Pasted image 20250924120532.png]]
+![../../../../Files & LongText/Attachments/Pasted image 20250924120532.png](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250924120532.png)
 
 #### QWidget 组件的 addItem 方法
 QComboBox:: addItem 方法的第二个参数是一个 QVariant 类型的用户数据，用于存储与该选项关联的自定义数据。
@@ -928,14 +928,14 @@ void Window::createGeneralOptionsGroupBox() {
 }
 ```
 由于 connect 函数只负责连接信号和槽，而信号是在**运行时用户发出动作**后广播。所有组件刚打开时显示的是**连接组件时的默认值**，而实际值**由初始化函数定义**
-![[Pasted image 20250925103623.png|正常显示]]
+![正常显示](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250925103623.png)
 ```cpp
 	firstDayChanged(firstDayCombo->currentIndex()+1);
 	selectionModeChanged(selectionModeCombo->currentIndex()+1);
 	horizontalHeaderChanged(horizontalHeaderCombo->currentIndex()+1);
 	verticalHeaderChanged(verticalHeaderCombo->currentIndex()+1);
 ```
-![[Pasted image 20250925103614.png|将所有index+1]]
+![将所有index+1](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250925103614.png)
 如果下拉 Week starts on，仍旧选择 Sunday，则会恢复正常。
 
 ## TextFinder
@@ -1208,7 +1208,7 @@ class BookDelegate : public QSqlRelationalDelegate
    数据           显示/编辑策略        用户界面
 ```
 #### 使用前后区别
-![[Pasted image 20251015101506.png]]
+![Pasted image 20251015101506](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251015101506.png)
 
 #### 自定义委托机制实现规则
 可以看到代码中对于不是想要实现渲染的列（如 rating 列需要由数字渲染成星星图案），会调用父类默认方法进行渲染
@@ -1285,9 +1285,9 @@ QWidget *BookDelegate::createEditor(QWidget *parent,
     return QSqlRelationalDelegate::createEditor(parent, option, index);
 }
 ```
-![[Pasted image 20251015180605.png]]
-![[Pasted image 20251015180620.png]]
-![[Pasted image 20251015180703.png]]
+![Pasted image 20251015180605](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251015180605.png)
+![Pasted image 20251015180620](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251015180620.png)
+![Pasted image 20251015180703](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251015180703.png)
 可以看到，外检 author 和 gener 还是下拉列表，yer 和 title 被设置为了文本编辑框
 
 ## Screenshot
@@ -1328,7 +1328,7 @@ mainLayout->addWidget(optionsGroupBox);  // addWidget
 ```
 代码中，`optionGroupBoxLayout` 在第一句就已经设置为为 `optionGroupBox` 的布局管理器，所以 mainlayout 中只需要 `mainLayout->addWidget(optionGroupBox)` 即可
 如果将 addWidget 替换为 addLayout，就能清晰看到两者的**可见和不可见区别**
-![[Pasted image 20251022201110.png|addLayout]] ![[Pasted image 20251022201138.png|addWidget]]
+![addLayout](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251022201110.png) ![addWidget](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020251022201138.png)
 ### qt 对象树基本特性
 #### 什么是对象树
 几乎所有 Qt 对象（QObject 及其派生类，包括可见控件如 QWidget 和不可见对象如 QTimer）在 new 动态分配时，都接受一个可选的 `QObject* parent = nullptr` 参数（通常是最后一个）。这个参数制定了这个对象的父对象是谁。
@@ -1383,7 +1383,7 @@ filedialog.setDirectory(initialPath);
 "All Files (*)": 显示名为 "All Files" 的过滤器，显示所有文件。
 "Image Files (*.png *.xpm *.jpg);;Text Files (*.txt)": 使用 ;;分隔多个过滤器选项。
 ```
-![[PixPin_2025-10-23_17-05-34.png]]
+![PixPin_2025-10-23_17-05-34](../../../Files%20%26%20LongText/Attachments/PixPin_2025-10-23_17-05-34.png)
 `filedialog.setDirectory(initialPath); ` 相当于再设置了一遍第二个参数
 AcceptMode：定义了文件对话框的意图：是用于选择文件来打开还是指定文件名来保存在硬盘上
 * `QFileDialog::AcceptOpen`: 对话框用于打开一个或多个现有文件。按钮通常显示为 "Open"。
@@ -1656,5 +1656,5 @@ endif()
 - 它用于动态管理插件列表
 
 qt 6.8.0 版本中，QtPDFWidget 库是商业版本 qt 才有的，开源版本 qt 无此功能，可以再 maintenance tools 中看到：
-![[PixPin_2025-10-28_14-04-51.png]]
+![PixPin_2025-10-28_14-04-51](../../../Files%20%26%20LongText/Attachments/PixPin_2025-10-28_14-04-51.png)
 可以通过安装特定版本的 qt 来解决，有时可以用，但有时可能会要求使用对应的编译套件来使用这些库

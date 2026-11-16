@@ -6,7 +6,7 @@ description: 参考书籍：Linux 高性能服务器编程
 
 ## 第 1 章 TCP/IP 协议族
 ### 1.1 TCP/IP 协议族体系结构以及主要协议
-![[Image00000.jpg]]
+![Image00000](../../Files%20%26%20LongText/Attachments/Image00000.jpg)
 #### 1.1.1 数据链路层
 数据链路层两个常用的协议是ARP 和 RARP，
 
@@ -18,7 +18,7 @@ IP 协议：
 ICMP 协议：
 是IP协议的重要补充，主要用于检测网络连接。
 ICMP 报文格式
-![[Image00001.jpg]]
+![Image00001](../../Files%20%26%20LongText/Attachments/Image00001.jpg)
 #### 1.1.3 传输层
 #### 1.1.4 应用层
 ### 1.2 封装

@@ -214,7 +214,7 @@ Caught in main: Error in func3
 结论：只要**没有在中间函数中捕获异常** ，它就会一直传播到调用栈的上层，直到被某个 `catch` 捕获。另外，现代 C++中默认遵循这种异常抛出规则，所以在 C++11 以后，函数声明中使用 `throw()` 抛出异常的做法已经废弃，不起作用
 
 已经实现的完整代码：
-![[source 1.zip]]
+[source 1](../../../Files%20%26%20LongText/Attachments/source%201.zip)
 
 ## 改良实现
 ### 各种功能的实现
@@ -467,7 +467,7 @@ using Row_t = std::vector<variant<std::string, const char *, string_view, Table>
 所有 row 的**横向长度**，table 的**纵向长度**都是动态的，**无法在编译期写死**
 无法自动根据插入内容调整宽度，如果 `add_row({"1","2“,”3","4"})`，下一行插入一个 5 列数据的行，程序会直接崩溃，Microsoft runtime C++弹窗提示**程序使用 `abort()` 函数强制中断**，给出内存错误地址，而不是在终端返回错误原因。
 如果想要返回
-![[Pasted image 20250901001120.png]]
+![Pasted image 20250901001120](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020250901001120.png)
 这种格式，表头必须写为 `table.add_row("head", "", "")`，不写转换函数的情况下****无法用动态数据（比如某个 vector 的 size）来初始化每一行的项数***。这又与它**动态**的设计相反。
 ##### 使用 `std::regex` 要保存原字符串数据
 - `std::regex` 设计为轻量级的正则表达式引擎，它只存储编译后的有限状态机，不存储原始字符串节省内存和提高性能。
@@ -666,7 +666,7 @@ void IntervalPage::showIntervalPage(quint16 intervalMinutes) {
 - 调用 `activateWindow` 方法激活指定窗口（使其获得焦点并前置）
 ## 防止信号循环触发槽函数
 要做到这样的效果
-![[PixPin_2026-01-05_23-34-07.mp4]]
+[PixPin_2026-01-05_23-34-07](../../../Files%20%26%20LongText/Attachments/PixPin_2026-01-05_23-34-07.mp4)
 ```cpp
 void Mainwindow::do_worktime_valueChanged(int value) {
 	if(this->check_recommend->isChecked()) {
@@ -750,10 +750,10 @@ static int test_pass = 0;
 为了完成任务，创建很多的线程可以吗？线程真的是越多越好？
 - 线程的创建和销毁都由非常大的开销
 - 线程的上下文切换要占用大量时间
-![[PixPin_2026-01-23_09-55-09.png|task之间的切换需要开销]]
+![task之间的切换需要开销](../../../Files%20%26%20LongText/Attachments/PixPin_2026-01-23_09-55-09.png)
 - 大量线程同时唤醒会使系统经常出现锯齿状负载或者瞬间负载量很大导致宕机
 - 创建线程最终需要**移交到操作系统内核来实现&调度**，用户态不能创建和调度
-![[PixPin_2026-01-23_10-06-49.png]]
+![PixPin_2026-01-23_10-06-49](../../../Files%20%26%20LongText/Attachments/PixPin_2026-01-23_10-06-49.png)
 #### 内存开销
 线程栈本身占用大量内存
 用户空间：
@@ -1051,7 +1051,7 @@ Result res = pool.submit_task(std::make_shared<MyTask>());
 res.get<T>();
 ```
 得到结果需要等待线程执行完毕，但是代码调用是可能没有执行完，这时候需要线程间通信了解执行情况，未执行完则阻塞调用 get 的线程。通过自定义信号量 `Semaphore` 实现
-![[PixPin_2026-01-27_20-48-49.png]]
+![PixPin_2026-01-27_20-48-49](../../../Files%20%26%20LongText/Attachments/PixPin_2026-01-27_20-48-49.png)
 ```cpp
 class Semaphore{
 	public:
@@ -1708,7 +1708,7 @@ void* MemoryPool::allocate() {
 	- `reinterpret_cast<size_t>(newBlock)` newBlock 是**新分配的内存块的开始位置**，转换为内存地址
 	- 加上 BlockSize_，跳转到**新分配块的末尾**
 	- 回退一个 slot，再+1 保证 lastSlot_一定在 curSlot_之后
-![[Pasted image 20260208212305.png]]
+![Pasted image 20260208212305](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260208212305.png)
 #### 多级内存池
 MemoryPool 设计内存池，HashBucket 管理内存池，提供入口
 ```md
@@ -2091,7 +2091,7 @@ PageCache 层级：
 - https://blog.csdn.net/m0_49834705/article/details/112465244
 ## 实现原理
 ### 数据结构
-![[Pasted image 20260603162938.png]]
+![Pasted image 20260603162938](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260603162938.png)
 ### forward 数组的本质
 跳表**只有一条单向链表**，各"层"是抽象概念。每个 `Node` 有一个 `forward` 指针数组：
 ```cpp
@@ -2105,7 +2105,7 @@ PageCache 层级：
 - forward 数组用于存储**每个节点之后（"之后"表示排序排在当前链表之后）的**
 - 跳表只是一条链表，每个节点的 forward 数组链接到链表在当前节点后不同位置的不同节点用于跳转，但本质上是一条单向链表。
 - 用来索引的各个层只是我们想象的一种抽象，每层间的节点可能有不同的父子节点，这些节点关系在物理内存结构体现为一个节点通过 forward 数组指向节点来体现父子关系
-![[Pasted image 20260603163829.png]]
+![Pasted image 20260603163829](../../../Files%20%26%20LongText/Attachments/Pasted%20image%2020260603163829.png)
 - 红框的 1 其实是一个节点，他有三个子节点，子节点地址存储在 `forward` 数组中，同理，`Node(7)` 节点也有多个父节点，但是不能通过子节点索引到父节点，一个子节点的父节点都有谁这个信息存储在各层节点的 forward 中，非常零散
 - `forward[index]` 如果为 nullptr，说明节点是链表的末尾了
 - 所有的父子关系体现在一个个指针地址的指向中，父子关系存储不会影响空间复杂度，但实现中每个节点都需要存储一个 forward 数组，大小为最大层高（需要记录每层的当前节点下一个节点是谁）
@@ -2371,16 +2371,16 @@ VLA 的问题：
 对固定值 2^32 取模，使得一致性算法具备良好的单调性：不管集群中有多少个节点，只要 key 值固定，那所请求的服务器节点也同样是固定的。其算法的工作原理如下：
 - 将整个哈希值空间映射成一个虚拟的圆环，整个哈希空间的取值范围为 0~2^32-1；
 - 计算各服务器节点的哈希值（通常使用 ip 地址计算哈希值），并映射到哈希环上；
-![[cfc28cde8dd64ce5ba3287d2cece6ba1.webp]]
+![cfc28cde8dd64ce5ba3287d2cece6ba1](../../../Files%20%26%20LongText/Attachments/cfc28cde8dd64ce5ba3287d2cece6ba1.webp)
 - 将服务发来的数据请求使用哈希算法算出对应的哈希值；
 - 将计算的哈希值映射到哈希环上，同时沿圆环顺时针方向查找，遇到的第一台服务器就是所对应的处理请求服务器。
-![[ceedff022ca14186b7cab7b0b05e2be4.webp]]
+![ceedff022ca14186b7cab7b0b05e2be4](../../../Files%20%26%20LongText/Attachments/ceedff022ca14186b7cab7b0b05e2be4.webp)
 - 当增加或者删除一台服务器时，受影响的数据仅仅是新添加或删除的服务器到其环空间中前一台的服务器（也就是顺着逆时针方向遇到的第一台服务器）之间的数据，其他都不会受到影响
-![[2d714f20b6964d9aad085f98a3213647.webp|缩容]]
-![[e0201d5aa072406996aaa7395e84bd55.webp|拓容]]
+![缩容](../../../Files%20%26%20LongText/Attachments/2d714f20b6964d9aad085f98a3213647.webp)
+![拓容](../../../Files%20%26%20LongText/Attachments/e0201d5aa072406996aaa7395e84bd55.webp)
 ### 数据倾斜问题
 由于哈希计算的随机性，导致一致性哈希算法存在一个致命问题：数据倾斜，也就是说大多数访问请求都会集中少量几个节点的情况。特别是节点太少情况下，容易因为节点分布不均匀造成数据访问的冷热不均。这就失去了集群和负载均衡的意义。
-![[d03f264c5ea04cee98f77616a6f0e312.webp]]
+![d03f264c5ea04cee98f77616a6f0e312](../../../Files%20%26%20LongText/Attachments/d03f264c5ea04cee98f77616a6f0e312.webp)
 解决方法:
 - 使用随机性更好的哈希算法计算节点哈希值，尽可能使服务器分配均匀
 - 虚拟节点机制，即对每一个物理服务节点映射多个虚拟节点，将这些虚拟节点计算哈希值并映射到哈希环上，当请求找到某个虚拟节点后，将被重新映射到具体的物理节点。虚拟节点越多，哈希环上的节点就越多，数据分布就越均匀，从而避免了数据倾斜的问题。
