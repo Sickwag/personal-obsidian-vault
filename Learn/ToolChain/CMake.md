@@ -20,7 +20,7 @@ cmake 是 `自动生成本地化的Makefile和工程文件`，用户只需 `make
 
 C 程序源文件到可执行文件需要经过：
 预处理→编译→汇编→链接→可执行文件
-![[Pasted image 20241011104830.png]]
+![Pasted image 20241011104830](../../Files%20&%20LongText/Attachments/Pasted%20image%2020241011104830.png)
 
 用 cmake 脚本文件（`cmakelists.txt`）过程
 - 创建cmakelists.txt
@@ -28,7 +28,7 @@ C 程序源文件到可执行文件需要经过：
 - 文件生成makefile文件
 - Makefile文件执行make命令
 - 命令调用os接口处理源文件
-![[Pasted image 20241011105200.png]]
+![Pasted image 20241011105200](../../Files%20&%20LongText/Attachments/Pasted%20image%2020241011105200.png)
 #### Cmake 的本质
 为了解决 makefile 需要根据不同平台写入不同的makefile 操作指令，cmake 制定了一套规则，让相同的源代码，在不同平台编译时，根据不同的平台生成不同的 Makefile 编译文件，实现跨平台
 - Cmake 命令对当前需要编译的文件生成 makefile 文件
@@ -220,7 +220,7 @@ Call Stack (most recent call first):
 可以创建项目，也可以通过 cmake 构建编译，运行 exe 程序，但错误列表中出现大量无法打开源文件，头文件，标准库文件的报错。
 ### 原因和解决
 没有设置 cmake 可信执行文件的目录
-![[Pasted image 20251011153910.png]]
+![Pasted image 20251011153910](../../Files%20&%20LongText/Attachments/Pasted%20image%2020251011153910.png)
 设置完后，问题解决
 
 ## find_package 使用方法
@@ -1495,7 +1495,7 @@ target_link_libraries(MyApp PRIVATE MyHeaderOnly)
 #### 具体实现
 ##### 插件系统实现
 不同团队同时开发一个应用的不同插件：
-![[PixPin_2026-01-09_21-45-32.png]]
+![PixPin_2026-01-09_21-45-32](../../Files%20&%20LongText/Attachments/PixPin_2026-01-09_21-45-32.png)
 ```cmake
 # 主配置中：
 add_subdirectory(OpAdd)
@@ -1835,7 +1835,7 @@ install(
 - 配置中定义 `CMAKE_INTALL_PREFIX`
 - 构建阶段定义 `-DCMAKE_INTALL_PREFIX=/path/to/install`
 - 安装阶段使用 `--prefix` 参数定义
-![[PixPin_2026-01-10_11-15-36.png]]
+![PixPin_2026-01-10_11-15-36](../../Files%20&%20LongText/Attachments/PixPin_2026-01-10_11-15-36.png)
 配置完成后用户就能通过 `cmake --install` 命令将项目安装到对应的位置并使用了
 ### 练习 2 - 导出目标
 但对于库，使用[[#练习 1 - 安装构件|练习 1 - 安装构件]]的配置并不能实现要求，有些库在安装后文件结构比较复杂，如果需要使用这些库需要在导入项目中使用很多 `target_link/include_XXX` 来指定文件路径，非常麻烦
@@ -2319,7 +2319,7 @@ source_group(DeveloperComponents FILES ${DEVELOPER})
 ```
 - `FILE(GLOB <name> <path/regex>)` 将路径中文件分组
 - `source_group` 用于在 vs 中显示文件分组（include 分组是空的，因没有 `${INCLUDE}`）变量
-![[PixPin_2026-01-11_15-20-37.png]]
+![PixPin_2026-01-11_15-20-37](../../Files%20&%20LongText/Attachments/PixPin_2026-01-11_15-20-37.png)
 构建和安装过程配置
 ```cmake
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
@@ -2339,8 +2339,8 @@ install(TARGETS ${PROJECT_NAME}
 )
 ```
 这些 cmake 开头的选项用来设置**cmake 构建过程中将生成文件放在什么位置**，由于 cmake 默认会将构建文件放在 `build/[Debug | relase]/target_name/` 中，设置这几个变量仅仅是将默认位置修改而已。而 install 命令设置使用 ` --install ` 的**cmake 安装过程中将文件放在什么位置**
-![[PixPin_2026-01-11_13-28-08.png|build没有Debug/Relase文件夹，打开目录才有Debug/release之分]]
-![[PixPin_2026-01-11_13-28-42.png|install命令同理]]
+![build没有Debug/Relase文件夹，打开目录才有Debug/release之分](../../Files%20&%20LongText/Attachments/PixPin_2026-01-11_13-28-08.png)
+![install命令同理](../../Files%20&%20LongText/Attachments/PixPin_2026-01-11_13-28-42.png)
 - 第一次 install 定义并导出目标信息到 ElaWidgetToolsTargets.cmake，在其中记录这个目标的二进制文件安装位置
 - 第二次 install 将标记当安装时，同时将这个库文件放到演示程序的对应位置中，延时程序也使用了这个库，需要库文件
 - 两者本质上是将相同文件安装到不同位置**的信息记录到 target.cmake 中**，真正执行 `--install` 命令时会读取 target.cmake 中信息按照要求安装文件
@@ -2430,7 +2430,7 @@ cmake --build ./build_debug --config Debug
 cmake --install ./build_debug --config Debug --prefix "D:/Code Files/remote_push/ElaWidgetTool/debug-dynamic-install"
 ```
 同理构建完 release 版本的库
-![[PixPin_2026-01-22_17-06-37.png]]
+![PixPin_2026-01-22_17-06-37](../../Files%20&%20LongText/Attachments/PixPin_2026-01-22_17-06-37.png)
 在想要使用这个库的项目中
 ```cmake
 # 直接设置库路径

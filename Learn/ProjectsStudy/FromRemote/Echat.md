@@ -283,7 +283,7 @@ case REGISTER_RESPONSE:
 ```
 ### 用户信息模块
 简单显示用户信息窗口，在用户点击头像位置 show，widget 会被在 mainwindow 中传入用户头像控件
-![[PixPin_2025-12-21_12-52-50.png]]
+![PixPin_2025-12-21_12-52-50](../../../Files%20&%20LongText/Attachments/PixPin_2025-12-21_12-52-50.png)
 ```cpp
 void UserInfoPopup::showAtWidgetSide(QWidget *widget)
 {

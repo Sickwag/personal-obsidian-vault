@@ -149,8 +149,8 @@ d 数字，w 字母数字或下划线，s 空白，b 边界，大写表示反取
 - `.` 表示任意一个字符
 - `[]` 中间的字符集被单独对待，表示方括号中任意一个字符
 - `[]` 中可以使用 `-` 表示范围, 字母按照字母表顺序，数字从小到大，区分大小写
-![Pasted image 20240928201004.png](Pasted%20image%2020240928201004.png)
-![Pasted image 20240928201013.png](Pasted%20image%2020240928201013.png)
+![Pasted image 20240928201004.png](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240928201004.png)
+![Pasted image 20240928201013.png](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240928201013.png)
 - 每一个 `-` 部分都是独立的，`[^a-z]` ，`-` 的优先级高于 `^`，不用连接符连接的作为一个单词被识别，所以 `[^a-zA-Z]` 表示所有除了字母以外的符号
 - 方括号中填写的字符**都是字面意思**，不需要转义
 - `^` 表示在**方括号内**后面一个单位取反，在**方括号外**表示每一行的开头
@@ -192,12 +192,12 @@ d 数字，w 字母数字或下划线，s 空白，b 边界，大写表示反取
 语法：`(?<=pattern)`
 
 `/d+` 表示匹配多次出现的数字，`(?<=\$)/d+` 表示以 `$` 开头的多次出现的数字
-![Pasted image 20240929201928.png](Pasted%20image%2020240929201928.png)
+![Pasted image 20240929201928.png](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240929201928.png)
 
 #### 负向后顾
 与正向后顾相反
 `(?<!\$)/d+` 表示匹配所有不以 `$` 开头的多次出现的数字字符串
-![Pasted image 20240929202121.png](Pasted%20image%2020240929202121.png)
+![Pasted image 20240929202121.png](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240929202121.png)
 
 #### 总结
 - 前瞻和后顾结构中固定分为捕获部分（没有 `()` 包围）和非捕获部分（用 `()` 包围）
@@ -214,33 +214,33 @@ d 数字，w 字母数字或下划线，s 空白，b 边界，大写表示反取
 ## 实例
 ### 首字母和尾字母相同的单词
  `/\b([a-z])[a-z]*\1\b/g`
- ![Pasted image 20240929195452.png](Pasted%20image%2020240929195452.png)
+ ![Pasted image 20240929195452.png](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240929195452.png)
  注意 `\1` 表示引用第一个分组
 
 ### 不同格式的日期
 `/(\d{4})[-/._]?(\d{1,2})[-/._]?(\d{1,2})/g`
-![Pasted image 20240929192244.png](Pasted%20image%2020240929192244.png)
+![Pasted image 20240929192244.png](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240929192244.png)
 创建分组是为了使用替换功能，在替换栏中输入 `$2-$3-$1` 表示将这三个分组按照 231 重新排序，并按照 `-` 统一格式化
-![替换前](Pasted%20image%2020240929195917.png)
-![替换后](Pasted%20image%2020240929195938.png)
+![替换前](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240929195917.png)
+![替换后](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240929195938.png)
 
 ### 选取所有单词
 `\w+(?=[\s.,_-])`
-![Pasted image 20240929200959.png](Pasted%20image%2020240929200959.png)
+![Pasted image 20240929200959.png](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240929200959.png)
 
 优化版本
 `\w+(?!\d)`
-![Pasted image 20240929201353.png](Pasted%20image%2020240929201353.png)
+![Pasted image 20240929201353.png](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240929201353.png)
 
 ### 匹配完整数字
 `\b\d+\b`
-![Pasted image 20240929204335.png](Pasted%20image%2020240929204335.png)
+![Pasted image 20240929204335.png](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240929204335.png)
 - 用两个 `\b` 包围数字原因是需要将纯数字段定义为一个完整单词，需要查找的是两边只有非单词字符包围的纯数字
 - 数字，字母和下划线没有通过符号链接表示一个单词整体，图中 rtx4090 就是一个完整的单词没有被特殊符号包围，所以无法被**完整的**`\d+` 匹配到
 
 ### 两个以空格分开的单词
 `((\w+) \2)`
-![Pasted image 20240930112205.png](Pasted%20image%2020240930112205.png)
+![Pasted image 20240930112205.png](../../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240930112205.png)
 
 ### obsidian 标题批量调整
 `"^(#+)\s(.*)$"->"#$1 $2"`

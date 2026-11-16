@@ -8,7 +8,7 @@ description: 模仿llfc的qt全栈聊天项目
 ### LoginDialog/RegisterDialog
 #### 图片按窗口比例缩放
 如果需要让图片按比例大小显示在 QLabel 中
-![[Pasted image 20260401092221.png]]
+![Pasted image 20260401092221](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260401092221.png)
 ```cpp
 wxQRLabel_ = new QLabel(this);
 QPixmap pic(QString(":/resource/wxQR.jpg"));
@@ -17,7 +17,7 @@ wxQRLabel_->setPixmap(scaledPic);
 mainlayout->addWidget(wxQRLabel_, 0, Qt::AlignCenter);
 ```
 不能直接添加图片到 pixmap 中，这样图片会保持原有的像素和缩放比例
-![[Pasted image 20260401092346.png]]
+![Pasted image 20260401092346](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260401092346.png)
 #### QMainWindow 的中心组件问题
 一个 QMainWindow 对象 `setCentralWidget` 之后，如果再重新设置，可能会导致之前设置的中心组件被删除，并且如果把**组件设置为中心组件然后在析构函数中 delete 通过 new 得到的对象**会导致关闭应用时报错，原因是设置中心组件 qt 就会将组件放入对象树中管理生命周期，窗口关闭自然就会析构对象，再使用 delete 双重释放是未定义行为
 
@@ -76,7 +76,7 @@ void QWidget::childEvent(QChildEvent* e) {
 > - **顶级窗口**：没有父窗口，显示在桌面上，有独立的窗口管理器装饰（标题栏、边框等）
 > - **子窗口**：有父窗口，显示在父窗口内部，没有独立的窗口装饰
 > - 由于子窗口依赖于父窗口，所以显示效果是由父窗口决定的，父窗口中没有为两者设置布局，所以两者的本质关系是：
-> ![[Pasted image 20260418184946.png|500]]
+> ![500](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260418184946.png)
 
 #### 依赖关系
 > [!question] 为什么子窗口不能设置 WindowsFlags?

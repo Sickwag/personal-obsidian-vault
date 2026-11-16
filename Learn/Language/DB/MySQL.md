@@ -35,7 +35,7 @@ ORDER BY
 	-- 按照哪一项属性来升降序排列
 ```
 ### 基本查看命令
-![](Pasted%20image%2020240816215314.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240816215314.png)
 Show databases;
 Show tables;
 use <database_name>          使用库
@@ -53,7 +53,7 @@ name varchar(10));
 show tables;
 desc stuinfo ; -- 查看数组结构
 ```
-![](Pasted%20image%2020240816212856.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240816212856.png)
 ### 插入&删除命令
 **单列插入**
 ```sql
@@ -61,7 +61,7 @@ insert into stuinfo (id) value(923802),(527486),(4823096);
 show tables;
 select id from stuinfo s ; --s表示给stuinfo别名s
 ```
-![](Pasted%20image%2020240816213814.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240816213814.png)
 **多列插入**
 Insert into 命令默认加在末尾，未定义单元格赋值 NULL
 ```sql
@@ -70,11 +70,11 @@ insert into stuinfo (id,name) value(46782543,"beta");
 insert into stuinfo (id,name) value(43858235,"charlie");
 select * from stuinfo s ;
 ```
-![](Pasted%20image%2020240816214939.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240816214939.png)
 **单行删除**
-![Untitled 156 8.png](Untitled%20156%208.png)
+![Untitled 156 8.png](../../../Files%20&%20LongText/Attachments/Untitled%20156%208.png)
 在 sql 中操作不存在的数据一般不会报错，只会显示没有数据（行）被更新
-![](Pasted%20image%2020240816221939.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240816221939.png)
 - `DELETE FROM` 后面跟着你想要删除数据的表名。**对行操作**
 ```sql
 delete from stuinfo where id=923802;
@@ -106,21 +106,21 @@ select version();
 ```
 ### 语法规范
 #### 书写和注释
-![](Pasted%20image%2020240816223400.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240816223400.png)
 #### 限定名书写
 sql 中层级模式是 `数据库名.模式名.表名`，如果没有指定模式可以跳过，如 `db_name..table_name`
 
 ---
 ## 语法命令
-![](Pasted%20image%2020240816225343.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240816225343.png)
 ### DQL (database query language)
 #### DQL 语句执行和书写顺序
-![](Pasted%20image%2020240824165847.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240824165847.png)
 #### 基础命令
 ##### 操作符
 单行操作符：（> = < <> ）
 多行操作符：所有操作符都接受一个列表参数，根据含义匹配列表（一列多行）的内容
-![](Pasted%20image%2020240824113527.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240824113527.png)
 - 其中，any/some 等价于用在**多行子查询中**等价于单行子查询中将查询条件改为 max 列表字段[[使用- 实例]]
 - ^4132 db
 - 操作符一般用于查询中，起到一种筛选的作用，在[[#约束填写|设置约束]]时并不适用，这种情况下一般用 `IN/NOT IN`
@@ -137,7 +137,7 @@ CREATE TABLE test(
 );
 ```
 ##### 基础查询筛选选
-![Untitled 159 6.png](Untitled%20159%206.png)
+![Untitled 159 6.png](../../../Files%20&%20LongText/Attachments/Untitled%20159%206.png)
 - 查询列表可以是：表中字段、常量值、表达式、函数
 - 查询的结果是一个虚拟的表格（意为使用 select 语句表示选中一个表格，对他的 group by，order by 的命令并不会影响实际物理表的内容，仅做显示，select 表本质是只读和临时的）
 ```sql
@@ -147,13 +147,13 @@ SELECT * from employees e ;  -- check out all fields
 -- 着重号告诉解释器是一个字段而不是关键字
 ```
 ##### 查询常量值，数学计算、函数
-![](Pasted%20image%2020240818122230.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240818122230.png)
 ##### 起别名
 提高代码、结果可读性：其中 employee; 的别名为 e
-![375](Pasted%20image%2020240818122833.png)
+![375](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240818122833.png)
 其中 as 可以省略
 ##### 将查询结果（返回值）取别名
-![375](Pasted%20image%2020240818123221.png)
+![375](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240818123221.png)
 取别名后的需要使用有别名的对象时，只能用别名，原始名称会报错
 ##### 去重操作
 将返回结果中所有重复值唯一显示，注意作用范围
@@ -161,10 +161,10 @@ SELECT * from employees e ;  -- check out all fields
 -- 显示员工中所有的部门编号
 SELECT department_id from employees e ;
 ```
-![每个员工都有一个部门编号|350](Pasted%20image%2020240818124133.png)
+![每个员工都有一个部门编号|350](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240818124133.png)
 显示唯一值**distinct**关键字
 `SELECT DISTINCT department_id from employees e ;`
-![375](Pasted%20image%2020240818124330.png)
+![375](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240818124330.png)
 ##### +号作用
 Select 100+90：两个操作数都为数值型，则做加法运算
 Select'123'+90；其中一方为字符型，试图将字符型数值转换成数值型
@@ -187,7 +187,7 @@ concat(first_name," ",last_name," ",ifnull(commission_pct,0)) as info
 from
 employees e ;
 ```
-![400](Pasted%20image%2020240818131726.png)
+![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240818131726.png)
 ##### 模糊查找和精确查找
 ###### LIKE
  `LIKE` 通常用于模糊匹配，它允许你在查询中使用[通配符](../Scattered%20knowlegde/通配符.md)来匹配列中特定模式。
@@ -216,7 +216,7 @@ select * from table where name like '%\_%' escape '\';
 #### 条件查询
 ##### 普通查询
 `where` 表示条件筛选，对象时选中列表的每一行的数据，符合条件显示这一行，执行顺序和书写顺序不一样
-![350](Pasted%20image%2020240818132014.png)
+![350](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240818132014.png)
 ```sql
 select
 	要查询的字段|表达式|常量值|函数
@@ -322,7 +322,7 @@ WHERE
 如果其中一个为 `NULL` 而另一个不是，或者两者不相等则返回 `FALSE`；
 如果两者都不为 `NULL` 并且相等，则返回 `TRUE`。
 简而言之，`<=>` 运算符在处理 `NULL` 值时提供了一种类似于 `=` 运算符的行为，但增加了对 `NULL` 值的特殊处理。
-![450](Pasted%20image%2020240818144854.png)
+![450](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240818144854.png)
 Salary 等于 12000 的被筛选出，不等于 12000 和 NULL 值被忽略，因返回 false 的行在 where 栏中不显示
 ```sql
 -- 查询员工号为176的员工姓名和部门号和年薪
@@ -462,7 +462,7 @@ ORDER BY
 **LENGTH 函数**
 当 LENGTH 参数列表中传入中文，判断长度依据是字符串占用空间大小
 使用 `show variables like "%char%";` 查看当前客户端的编解码字符集
-![](Pasted%20image%2020240818164431.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240818164431.png)
 `SELECT LENGTH(“张三丰”)` 汉字在 UTF 8 协议中占用三个字节空间，结果为 9
 **sql 中处理字符串用字节占用空间处理的，只有 LENGTH 函数** ^3 ce 0 f 3
 **SUBSTR/SUBSTRING 截取字符串**
@@ -537,8 +537,8 @@ SELECT  YEAR(hiredate) 年 FROM employees;
 SELECT MONTH(NOW()) 月;
 SELECT MONTHNAME(NOW()) 月;-- 返回月名并转换为文字表示
 ```
-![400](Pasted%20image%2020240818200550.png)
-![400](Pasted%20image%2020240818200732.png)
+![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240818200550.png)
+![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240818200732.png)
 **str_to_date** 将字符通过指定的格式转换成日期
 `SELECT STR_TO_DATE('1998-3-2','%Y-%c-%d') AS out_put;` %c 表示不补 0
 ```sql
@@ -669,7 +669,7 @@ having Count(xk.课程号) >= 2;
 - 在 `GROUP BY` 子句中只使用了 `xs.姓名`，但查询结果中包含了 `xs.学号`。在某些数据库系统中，如果 `学号` 不是 `姓名` 的函数（即一个 `姓名` 对应多个 `学号`），这可能会导致错误或不准确的结果。
 即使用 `xs. 姓名, xs. 学号` 作为分组依据时会将两项组合看做一个分组依据，一个姓名两个学号或者反之的情况会备份来计算
 如果使用一个作为分组条件会导致有一行被忽略
-![[Pasted image 20241109111101.png]]
+![Pasted image 20241109111101](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241109111101.png)
 ##### 基础分组函数
 Sum 求和
 Max 最大值
@@ -769,11 +769,11 @@ HAVING
 ORDER BY
 	num DESC ;
 ```
-![](Pasted%20image%2020240819221448.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240819221448.png)
 ##### 多字段分组
 多个分组条件，即类似**每个部门中每个工种**大分类小分类分组查询
 类似于 excel 中分类汇总
-![300](Pasted%20image%2020240819145532.png)
+![300](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240819145532.png)
 组要注意，分类汇总中大分类和小分类通过 SELECT 字段中排序决定
 ```sql
 SELECT
@@ -791,13 +791,13 @@ GROUP BY
 #### 多表查询
 ##### 笛卡尔乘积现象
 两个表中数据的连接
-![400](Pasted%20image%2020240819153039.png)
+![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240819153039.png)
 `SELECT name ,boyName FROM beauty b,boys b2 ;` 乱配对的原因是两结果表长度不一样
-![325](Pasted%20image%2020240819153633.png)
+![325](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240819153633.png)
 没有匹配条件都可以匹配成功
-![400](Pasted%20image%2020240819153736.png)
+![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240819153736.png)
 **笛卡尔乘积现象**
-![](Pasted%20image%2020240819153820.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240819153820.png)
 为解决笛卡尔乘积错误，需在两个表之间添加连接筛选条件
 ```sql
 -- 笛卡尔乘积错误解决
@@ -810,10 +810,10 @@ FROM
 WHERE
 	f.boyfriend_id = m.id ;-- 使用别名不容易混淆
 ```
-![](Pasted%20image%2020240819154458.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240819154458.png)
 ##### SQL 92 内连接
 **所谓内连接，就是根据两个表之间的共同字段来合并行**，共同字段当做"跳板"，忽略所有没有匹配到的内容，将连接后的表视作一张整的表
-![其中全外连接MySQL不支持](Pasted%20image%2020240819155049.png) ^b 30 bab
+![其中全外连接MySQL不支持](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240819155049.png) ^b 30 bab
 ###### 等值连接
 多表等值连接条件需要多个表中有相互连接的属性（列）
 N 个表连接，需要 n-1 个连接条件
@@ -866,7 +866,7 @@ GROUP BY
 	d.department_name ,d.manager_id ;-- 每个部门
 ```
 ###### 非等值连接
-![375](Pasted%20image%2020240819201429.png)
+![375](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240819201429.png)
 根据工资情况匹配相应的等级
 ```sql
 SELECT  -- 链接工资和工资等级评测两张表
@@ -882,7 +882,7 @@ ORDER BY jg.grade_level ;-- 通过级别字母排序
 ```
 ###### 自连接
 上司的员工编号可以查找到对应的上司编号（在这里相同），通过自连接一次语句执行两次查找同一张表，第一次查询的结果做我第二次查询的依据
-![查找员工对应上司](Pasted%20image%2020240819203241.png)
+![查找员工对应上司](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240819203241.png)
 ```sql
 SELECT
 	e.last_name,
@@ -996,7 +996,7 @@ WHERE
 ```
 ##### 外连接
 外连接连接多个表，它允许从表中返回所有行，即使在另一个表中没有找到匹配的行，连接的表有主从之分，用于处理不完全匹配的情况。[内连接](#SQL%2092%20内连接)仅仅只能处理两表中有相同字段（属性），且只能返回字段中属性值一样的字段对象
-![](Pasted%20image%2020240820151116.png)**用于查询一个表中有，另一个表中没有的记录**
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240820151116.png)**用于查询一个表中有，另一个表中没有的记录**
 1. 外连接的查询结果为主表中所有记录
    如果从表中有和它匹配的，则显示匹配的值
    如果从表中没有和它匹配的，则显示 nul
@@ -1007,8 +1007,8 @@ WHERE
 4. 全外连接=内连接的结果+表 1 中有但表 2 没有的 + 表 2 中有但表 1 没有的
 ###### 左外连接
 连列类型为 `LEFT` 表示 join 左边的表是主表，后再对连接后的表操作
-![](Pasted%20image%2020240820162253.png)
-![主副表关系](Pasted%20image%2020240820164121.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240820162253.png)
+![主副表关系](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240820164121.png)
 - 主表中有，副表中匹配不到的，副表显示为 NULL
 - 主表中没有，副表中有的，不会被主表匹配，忽略不显示
 - SELECT 字段中表中字段顺序决定显示顺序（从左到右）
@@ -1028,7 +1028,7 @@ WHERE
 	bo.id IS NOT NULL;   -- boyid不为NULL表示只显示被主表匹配到的
 ```
  Where 函数最好写值一定不为 NULL 的属性，否则语句逻辑没错但结果错（数据录入不规范）
-![使用user\_cp做匹配会多出一个anglebaby](Pasted%20image%2020240820165221.png)
+![使用user\_cp做匹配会多出一个anglebaby](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240820165221.png)
 ```sql
 -- 查询哪个部门没有员工
 SELECT
@@ -1055,7 +1055,7 @@ employees表是副表，拼接后主表department主表中查不到empolyee的�
 
 ###### 交叉连接
 显式使用笛卡尔乘积匹配两个表，两表相互匹配
-![前表一个对象将后表所有对象全部匹配一遍](Pasted%20image%2020240820173928.png)
+![前表一个对象将后表所有对象全部匹配一遍](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240820173928.png)
 ##### 内外连接总结
 ###### 所有连接的本质
 -  from join 拼接主从两张表
@@ -1090,18 +1090,18 @@ employees表是副表，拼接后主表department主表中查不到empolyee的�
 | **结果集大小**   | 结果集较小             | 结果集较大                |
 | **应用场景**    | 查找两个表的交集          | 查找一个表的所有行，即使另一个表没有匹配 |
 ###### 图示
-![](Pasted%20image%2020240820174724.png)
-![](Pasted%20image%2020240826184102.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240820174724.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240826184102.png)
 - 左外连接，显示左表所有内容。
 - 剔除右表中匹配不上左表连接条件的==行== （如右表 id=5 的左表查不到，忽略一整行）
 - 右表匹配不上左表的列，用 NULL 填充（因左表所有内容必须保留）
 - **右外连接**反之同理
-![](Pasted%20image%2020240820175815.png)
-![](Pasted%20image%2020240820181354.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240820175815.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240820181354.png)
 #### 子查询
 **始终记住子查询中是临时创建的虚拟表，因 from 引用表，所以必须创建别名，其他不需要**
 出现在**其他语句**内部的 SELECT 语句成为子查询，内部嵌套其他 select 语句的查询成为外查询，子查询需要使用（）括起
-![](Pasted%20image%2020240824105229.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240824105229.png)
 ##### 分类
 子查询优先于主查询执行
 **按子查询出现的位置：**
@@ -1148,7 +1148,7 @@ WHERE
 	WHERE
 		e.last_name = 'Abel');
 ```
-![](Pasted%20image%2020240824110624.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240824110624.png)
 支持多个标量子查询
 ```sql
 -- 返回job_id与141号员工相同，salary比143号员工多的员工姓名，job_id和工资
@@ -1293,7 +1293,7 @@ ON
 	ag_dep.ag BETWEEN lowest_sal AND highest_sal;
 ```
 子查询中内容：
-![350](Pasted%20image%2020240824135242.png)
+![350](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240824135242.png)
 现在要求新加上一列，而且这一列来自别的表，所以只能外层嵌套一个 SELECT 放入这一列
 #####  exist 后（相关子查询）
 `EXISTS` 是一个布尔操作符，用于检查子查询是否返回任何行。如果子查询返回至少一行，`EXISTS` 返回 `TRUE`；如果没有返回任何行，`EXISTS` 返回 `FALSE`
@@ -1374,7 +1374,7 @@ salary DESC
 LIMIT 10;
 ```
 使用公式 `limit (page-1)*size,size;` 可以达到网页中按页数显示内容
-![](Pasted%20image%2020240824164459.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240824164459.png)
 **LIMIT 的执行顺序和书写顺序都在最后**—— [DQL 语句执行和书写顺序](#DQL%20语句执行和书写顺序)
 ------------------------ [大量练习](Mysql%20Snippets.md#DQL%20除联合查询外联系) --------------
 #### Union 联合查询
@@ -1398,7 +1398,7 @@ FROM employees2;
 6. **列名**：在使用 `UNION` 时，列名通常来自第一个 `SELECT` 语句。后续的 `SELECT` 语句中对应的列名可以不同，但它们的数据类型必须与第一个 `SELECT` 语句中列类型相匹配。
 7. **去重**：`UNION` 默认去除两个 SELECT 中查询字段中相同的值的数据（即[上面代码中](#^ba687a) name 和 department 都相同的数据行）。如希望保留所有行，可以使用 `UNION ALL`。
 8. **排序**：`UNION` 不保留各个 `SELECT` 语句中排序。如果需要对最终结果进行排序，需要在 `UNION` 后使用 `ORDER BY`
-![](Pasted%20image%2020240825112318.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240825112318.png)
 ### DML （datebase manage language）
 #### 插入语句
 语法：
@@ -1424,7 +1424,7 @@ INSERT INTO beauty
 SET id=19,NAME='刘涛',phone='999';
 ```
 在已经初始化表后 INSERT 中列字段的顺序可以颠倒，即 `(id,NAME,sex,phone)` 括号中字段顺序并不重要，已经定义好了
-![](Pasted%20image%2020240826081258.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240826081258.png)
 - 方法一支持插入数据时支持一次性插入多行，不同 values 列表之间 `,` 连接。支持子查询
 ```sql
 -- INSERT INTO 表名后直接接能够返回结果集的语句
@@ -1437,7 +1437,7 @@ FROM boys WHERE id<3;
 
 对于多条数据查询：
 可以使用[学习/SQL/MySQL \> union 联合查询](#union%20联合查询)方法插入多条数据
-![500](Pasted%20image%2020240825153345.png) ^096846
+![500](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240825153345.png) ^096846
 #### 修改语句
 ##### 修改单表记录
 语法：
@@ -1503,7 +1503,7 @@ WHERE bo. `boyName` ='张无忌';
 3. 假如要删除的表中有**自增长列**，如果用 delete 删除后，再插入数据，自增长列的值从断点开始，而 truncate 删除后，再插入数据，自增长列的值从 1 开始。 ^018766
 4. Truncate 删除没有返回值，delete 删除有返回值。（返回有多少行受到影响）
 5. Truncate 删除不能回滚，delete 删除可以回滚.
-![](Pasted%20image%2020240825152631.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240825152631.png)
 ### DDL (date define language)
 和 DML 语言不一样，DML 操作的是数据，对行，**没有列**，表中数据进行操作，DDL 操作的是库，表存储单元
 #### 库相关
@@ -1596,7 +1596,7 @@ CREATE TABLE  表名();
 - 如果插入的数值超出了整型的范围, 会报 `out of range` 异常，并且插入临界值
 - 如果定义 `int(7)` 并不是表示数据会限定出现 7 位数，数据显示多少由数据类型决定（无符号 0 到 4,294,967,295，有符号-2,147,483,648 到 2,147,483,647），int 最大支持 10 位数。7 的意义是在使用 `ZEROFILL` 时，不足 7 位数的数字会在左边填充 0 而达到 7 的指定宽度
 - 加了 `ZEROFILL` 的**任何整数类型**都会变为无符号类型
-![400](Pasted%20image%2020240825200427.png)
+![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240825200427.png)
 ###### 小数
 1. 浮点型
 Float (M, D)
@@ -1634,13 +1634,13 @@ Enum（Enumerate）表示枚举类型（**不区分大小写**）
 	![400](Pasted%20image%2020240825205430.png)
 	![注意插入空值而不是NULL](Pasted%20image%2020240825205514.png)
 Set 与 enum 类似，但支持子枚举列表插入
-![插入枚举列表的子列表内容](Pasted%20image%2020240825210158.png)
+![插入枚举列表的子列表内容](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240825210158.png)
 如果 `set` 枚举列表是 unioncode 中所有字符，那么理论上可以插入任意文本内容
 ###### 日期型
-![400](Pasted%20image%2020240825212421.png)
+![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240825212421.png)
 一般能使用 timestamp 就用，超出范围再考虑 datatime
 Datetime 时间格式只输入时间或只输入日期，缺少部分会默认填充为 0
-![400](Pasted%20image%2020240825213201.png)
+![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240825213201.png)
 			字节范围时区等的影响
 Datetime    8		1000——9999	                  不受
 Timestamp	4	    1970-2038	                    受
@@ -1690,11 +1690,11 @@ CREATE TABLE stuinfo (
 使用 `SHOW INDEX FROM table_name;` 查看表的索引。包括主键、外键、唯一
 `DESC stuinfo;` 查看表的结构，两者结合使用查看所有的约束
 列级约束中外键约束不用 foreign key，在标记约束中才会加上
-![主键、外键、唯一键自动生成索引](Pasted%20image%2020240826094111.png)
+![主键、外键、唯一键自动生成索引](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240826094111.png)
  ^c 8 a 865
 ###### 表级约束：
 除了非空、默认，其他的都支持
-![](Pasted%20image%2020240826095755.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240826095755.png)
 语法：在各个字段的最下面
 ` 【constraint 约束名】 约束类型 (字段名) `
 当不加约束名时，除主键外都使用字段名作为默认索引名
@@ -1706,14 +1706,14 @@ CREATE TABLE stuinfo (
 ###### 主键与唯一对比
 **允许列数：** 只允许一个主键列（为多列整体设置为一个主键列），多个唯一列（每列唯一属性各自独立）
 **是否允许组合**：将两列内容作为一个主键，只有两列内容完全相同才会违反主键数值唯一条件而报错，两者都允许
-![](Pasted%20image%2020240826180925.png) ![设置john的stuname列和id为组合主键](Pasted%20image%2020240826181038.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240826180925.png) ![设置john的stuname列和id为组合主键](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240826181038.png)
 只有名称列内容和 id 列都一样是触发错误
 **唯一性的区别**：
 |     | 保证唯一性 | 是否允许为空 | 一个表中可以有多少个 NULL | 是否允许组合 |     |
 | --- | ----- | ------ | -------------- | ------ | --- |
 | 主键  | √     | ×      | 至多有 1 个          | √，但不推荐 |     |
 | 唯一  | √     | √      | 可以有多个          | √，但不推荐 |     |
-![](Pasted%20image%2020240826181915.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240826181915.png)
 **外键连接**：
 	1、外键链接语法需要放在表级约束中，不然没效果
 	2、从表的外键列的类型和主表的关联列类型要求一致或兼容，名称无要求（但一般一样）
@@ -1743,7 +1743,7 @@ ALTER TABLE stuinfo DROP INDEX seat;
 ALTER TABLE stuinfo DROP FOREIGN KEY fk_name;
 -- 注意删除使用的是**自定义的**外键名而不是外键的字段名
 ```
-![](Pasted%20image%2020240827190304.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240827190304.png)
 ###### 约束使用示例
 ```sql
 use Exam;
@@ -1790,7 +1790,7 @@ CREATE TABLE test(id int PRIMARY KEY AUTO_INCREMENT ,
 INSERT INTO test values(1,'john'); -- 不加自增长标识每次添加数据必须重写序号，因是PRIMARY
 INSERT INTO test values(null,'john'); -- 自增长列添加数据为NULL或省略，系统自动补充
 ```
-![](Pasted%20image%2020240827191526.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240827191526.png)
 ###### 调整步长
 1、标识列必须和主键搭配吗？不一定，但要求是一个 Key ![^a77b27](#^a77b27)
 2、一个表可以有几个标识列？至多一个！
@@ -1804,7 +1804,7 @@ SET auto_increment_increment = 3; -- 全局修改步长
 ALTER TABLE `test` AUTO_INCREMENT = 3; -- 对单个表修改步长
 SELECT * FROM test;
 ```
-![](Pasted%20image%2020240827202354.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240827202354.png)
 可以在修改表时设置、删除标识列
 ```sql
 ALTER TABLE test MODIFY id int PRIMARY KEY AUTO_INCREMENT; -- 修改表时设置自增列
@@ -1933,10 +1933,10 @@ EXEC sp_bindefault 'rule_course_number', 'kc.年龄;
 ##### Windows 身份验证登录
 这种方式只有本地（或远程连接）计算机中**有相应的用户**才可行
 打开 cmd 输入 `whoami` 查看当前用户和所在域名
-![[Pasted image 20241110113932.png]]
+![Pasted image 20241110113932](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241110113932.png)
 域名，也是当前计算机的名称，该域名下使用的账户为 Sickwag
 可以通过计算机管理->本地用户和组查看当前计算机（当前域名下的用户（组）都有什么）
-![[Pasted image 20241110114059.png]]
+![Pasted image 20241110114059](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241110114059.png)
 对应账户控制语句
 ```sql
 create login [desktop-4h2qjbs\Guest] from windows; -- 创建登录名
@@ -2013,7 +2013,7 @@ Update 表 set 郭襄的余额=1500 where name='郭襄'（执行失败）
 ^19949 e
 #### 事务
 ##### 数据库引擎
-![](Pasted%20image%2020240827203959.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240827203959.png)
 ##### 事务的 ACID 属性
 1. 原子性（Atomicity）
 	原子性是指事务不可分割，事务中操作要么都发生，要么都不发生。
@@ -2069,18 +2069,18 @@ ROLLBACK;-- 但使用rollback将操作撤销
 ```
 ##### 数据库隔离级别
 对于同时运行的多个事务（多线程，多应用同时访问一个数据库），当这些事务访问数据库中相同的数据时，如果没有采取必要的隔离机制就会导致各种并发问题：
-![知道就好不用记](Pasted%20image%2020240828140035.png)
- ![MySQL支持的隔离级别](Pasted%20image%2020240828142955.png) ![orecal默认蓝，MySQL默认红](Pasted%20image%2020240829195208.png)
+![知道就好不用记](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240828140035.png)
+ ![MySQL支持的隔离级别](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240828142955.png) ![orecal默认蓝，MySQL默认红](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240829195208.png)
 设置当前隔离级别：`set session transaction isolation level read uncommited|read commited|repeatable read|serializable`
 设置全局隔离级别：`set global session transaction isolation level read uncommited|read commited|repeatable read|serializable`
 **session 表示限制隔离级别的范围为当前会话**，在命令行中每用一个窗口执行 `mysql -u root -p` 创建一个会话，Dbeaver 中创建查询只是新建一个 sql 脚本
 ##### 隔离级别- 实例
- ![read uncommited不能防止出现脏读](Pasted%20image%2020240828144723.png) ![read commited不能防止出现不可重复读](Pasted%20image%2020240828150208.png)
- ![repeatable read防止出现脏读和重复读](Pasted%20image%2020240828150958.png)
-![无法避免幻读](Pasted%20image%2020240828151817.png)
+ ![read uncommited不能防止出现脏读](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240828144723.png) ![read commited不能防止出现不可重复读](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240828150208.png)
+ ![repeatable read防止出现脏读和重复读](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240828150958.png)
+![无法避免幻读](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240828151817.png)
 串行化 `serializable` 可以避免
-![进程2的插入操作已经按下回车](Pasted%20image%2020240828152258.png)
-![](Pasted%20image%2020240828152336.png)
+![进程2的插入操作已经按下回车](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240828152258.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240828152336.png)
 只要进程 1 没有提交，就一直占用，锁住表不让其他进程修改，进程 1 commit 后进程 2 会立即执行
 ##### 事务的隔离级别
                    脏读、、不可重复读、幻读
@@ -2163,7 +2163,7 @@ WHERE
 `alter view 视图名 as 查询语句; ` 仅仅修改
 `drop view 视图名,视图名,...;`  删除
 `DESC 视图名` 像表一样查看它的结构，同理 `SHOW CREATE VIEW 视图名`，和 show table 一样，会显示的比较简略，在**命令行**中会显示所有操作细节，**后加\\G 格式化**查看
-![](Pasted%20image%2020240828180455.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240828180455.png)
 ##### 更新视图
 ###### 更新基本操作
 ```sql
@@ -2555,7 +2555,7 @@ Return 值; 函数体中仅有一句话，则可以省略 begin end
 
 因 sql 开启了 bin-log，信任创建的函数，解决方法是：`set global log_bin_trust_function_creators=TRUE;`
 在 MySQL 5.7 版本中，mysql 数据库中有 proc 表（8.0 中没有）记录了所有函数和存储过程
-![](Pasted%20image%2020240831203949.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240831203949.png)
 - 实例：
 ![Mysql Snippets \> 函数](Mysql%20Snippets.md#函数)
 ##### 分支
@@ -2698,7 +2698,7 @@ end repeat 【标签】;
 ```
 注意 repeat 类似于 do-while 语句，无条件执行一次循环内容
 ###### 三种循环框架区别
-![](Pasted%20image%2020240901140343.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240901140343.png)
 # MySQL 高级
 ## Linux 环境中 MySQL 安装
 ### 前置知识准备
@@ -2736,7 +2736,7 @@ end repeat 【标签】;
 ##### 配置文件设置
 `log-bin` 为默认的主从复制二进制日志文件
 `log-error` 是错误日志记录文件，默认关闭
-![主要配置文件目录](Pasted%20image%2020240921140715.png)
+![主要配置文件目录](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240921140715.png)
 #### 存储引擎
 显示引擎命令 `mysql> show variables like "%engine%";`
 ```sql
@@ -2754,20 +2754,20 @@ mysql> show variables like "%engine%";
 +-----------------------------------------+---------------+
 7 rows in set (0.00 sec)
 ```
-![](Pasted%20image%2020240921141511.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240921141511.png)
 ### 索引优化
 #### Sql 性能下载原因
-![](Pasted%20image%2020240921142305.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240921142305.png)
 Sql 加载顺序
-![手写](Pasted%20image%2020240921142807.png)
-![机器执行](Pasted%20image%2020240921142728.png)
+![手写](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240921142807.png)
+![机器执行](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240921142728.png)
 #### 7 中 join 模式
 ![内外连接总结](#内外连接总结)
 #### 什么是索引
 MySQL 官方对索引的定义为：索引（Index）是帮助 MySQL 高效获取数据的数据结构。可以得到索引的本质：**索引是数据结构**。
 索引的目的在于提高查找效率，可**类比**字典
 排好序的快速查找的数据结构（也就是索引的定义）是提高效率的原因，索引会影响 `order by` 和 `Group by`
- ![索引的原理](Pasted%20image%2020240927183019.png)
+ ![索引的原理](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240927183019.png)
  - 为了加快 CoI 2 的查找，可以维护一个右边所示的二叉查找树，每个节点分别包含索引键值和一个指向对应数据记录物理地址的指针，这样就可以运用二叉查找在一定的复杂度内获取到相应数据，从而快速的检索出符合条件的记录（**类似于二分查找**）
 - 数据本身之外，数据库还维护着一个满足**特定查找算法的数据结构**（上面的例子中使用的是 B+树），这些数据结构以**某种方式**（上面使用指针）指向数据，这样就可以在这些数据结构的基础上实现高级查找算法，这种数据结构就是索引。
 - 数据库中索引一般都与数据内容绑定，所以软件开发过程中，为保障查找速度，在版本更新后会根据最新版数据更新索引（重建）
@@ -2783,7 +2783,7 @@ MySQL 官方对索引的定义为：索引（Index）是帮助 MySQL 高效获�
 - 更新表时，MySQL 不仅要保存数据，还要保存索引文件每次更新添加了索引列的字段，都会调整因更新所带来的键值变化后的索引信息
 - 索引只是提高效率的一个因素，如果 MySQL 有大数据量的表，就需要花时间研究建立**最优秀的**索引，或优化查计，根据查询什么内容最多或其他来调整建立什么索引
 #### 索引分类
-![](Pasted%20image%2020240927190535.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240927190535.png)
 #### 索引检索原理
 ##### 初始化介绍
 - b+树，浅蓝色的块我们称之为一个磁盘块，可以看到每个磁盘块包含几个数据项（深蓝色所 示）和指针（黄色所示），
@@ -2791,7 +2791,7 @@ MySQL 官方对索引的定义为：索引（Index）是帮助 MySQL 高效获�
 - P 1 表示小于 17 的磁盘块，P 2 表示在 17 和 35 之间的磁盘块，P 3 表示大于 35 的磁盘块。
 - 真实的数据存在于**叶子节点**即 3、5、9、10、13、15、28、29、36、60、75、79、90、99。
 - **非叶子节点**只不存储真实的数据，只存储指引搜素方向的数据项，非最底层的深蓝色数据块不是数据只是参考值，如 17、35**并不真实存在**于数据表中。
-![](Pasted%20image%2020240927191918.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240927191918.png)
 ##### 查找过程
 - 如果要查找数据项 29，那么首先会把**磁盘块 1 由磁盘加载到内存**，此时发生一次 IO，
 	在内存中用二分查找确定 29 在 17 和 35 之间，锁定磁盘块 1 的 P 2 指针，内存时间因非常短（相比磁盘的 IO）可以忽略不计，
@@ -2800,7 +2800,7 @@ MySQL 官方对索引的定义为：索引（Index）是帮助 MySQL 高效获�
 - 结束查询，总计三次 IO。
 
 真实的情况是，3 层的 b+树可以表示上百万的数据，如果上百万的数据查找只需要三次 IO，性能提高将是巨大的，如果没有索引，每个数据项都要发生一次 IO，那么总共需要百万次的 IO，显然成本非常非常高
-![](Pasted%20image%2020240927191520.png)
+![](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240927191520.png)
 #### 建立索引的情况
 ##### 需要建立索引
 1. 主键自动建立唯一索引
@@ -3140,9 +3140,9 @@ HAVING 非常类似于 WHERE。事实上，目前为止所学过的所有类型�
 # 数据库编程
 ## mysql-connenctor-cpp
 mysql-connector-cpp 安装步骤 [2025最新版VS2022配置C++ connector连接mysql(保姆级教学)mysql c++ connector-CSDN博客](https://blog.csdn.net/weixin_74027669/article/details/137203874)
-![[Pasted image 20250620144029.png]]
+![Pasted image 20250620144029](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250620144029.png)
 随着 mysql 更新，`mysqlcppconnXXXXXXX.dll` 文件数字可能有变化，需要对应地调整
-![[Pasted image 20250620144354.png]]
+![Pasted image 20250620144354](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250620144354.png)
 中第二项 `mysqlcppconn8.lib`
 
 > 记下这里时（2025 年 6 月 20 日14:45:29）已经升级到了 `mysqlcppconnx.dll`（10）所以需要在图片中位置相应改动
@@ -3228,11 +3228,11 @@ on p.player_id=a.player_id and datediff(a.event_date, p.login)=1
 参考小林 coding https://xiaolincoding.com/mysql/base
 ## SQL 执行流程
 ### 总体流程大观
-![[mysql查询流程.webp]]
+![mysql查询流程](../../../Files%20&%20LongText/Attachments/mysql%E6%9F%A5%E8%AF%A2%E6%B5%81%E7%A8%8B.webp)
 
-![[Pasted image 20260815232807.png]]
+![Pasted image 20260815232807](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260815232807.png)
 
-![[Pasted image 20260815232830.png]]
+![Pasted image 20260815232830](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260815232830.png)
 **Server 层负责建立连接、分析和执行 SQL**。MySQL 大多数的核心功能模块都在这实现，主要包括连接器，查询缓存、解析器、预处理器、优化器、执行器等。
 **存储引擎层负责数据的存储和提取**。支持 InnoDB、MyISAM、Memory 等多个存储引擎，不同的存储引擎共用一个 Server 层
 ### 连接器
@@ -3478,7 +3478,7 @@ MySQL 直接去倒排索引里找到“苹果”这个词，**立即拿到 [1, 2
 | `WHERE name='A' AND age BETWEEN 20 AND 30` | 使用 `(name,age)` | `BETWEEN`属于范围查询，`salary`字段失效       |
 ### 什么是聚集索引？
 从上文的部首目录和拼音目录同时存在但实际的字典内容只有一份这一点上可以看出，在数据库中一张表上是可以有多个索引的，即一行记录可以被多个索引找到
-![[1460000018156726.webp]]
+![1460000018156726](../../../Files%20&%20LongText/Attachments/1460000018156726.webp)
 
 
 像拼音目录这样的索引，数据会根据索引中顺序进行排列和组织的，这样的索引就被称为**聚集索引**，而**非聚集索引**就是其他的一般索引。因数据只能按照一种规则排序，所以一张表至多有一个聚集索引，但可以有多个非聚集索引。
@@ -3493,7 +3493,7 @@ MySQL 直接去倒排索引里找到“苹果”这个词，**立即拿到 [1, 2
 SHOW VARIABLES LIKE 'datadir'
 ```
 查看文件位置，一般在 `/var/lib/mysql` 中
-![[database.webp]]
+![database](../../../Files%20&%20LongText/Attachments/database.webp)
 ```bash
 #ls /var/lib/mysql/my_test
 db.opt  
@@ -3504,7 +3504,7 @@ t_order.ibd
 - t_order.frm ，t_order 的**表结构**会保存在这个文件。在 MySQL 中建立一张表都会生成一个.frm 文件，该文件是用来保存每个表的元数据信息的，主要包含表结构定义。
 - t_order.ibd，t_order 的**表数据**会保存在这个文件。表数据既可以存在共享表空间文件（文件名：ibdata1）里，也可以存放在独占表空间文件（文件名：表名字.ibd）。这个行为是由参数 innodb_file_per_table 控制的，若设置了参数 innodb_file_per_table 为 1，则会将存储的数据、索引等信息单独存储在一个独占表空间，从 MySQL 5.6.6 版本开始，它的默认值就是 1 了，因此从之后，MySQL 中每一张表的数据都存放在一个独立的 .ibd 文件。
 ### 表空间文件结构
-![[表空间结构.drawio.webp]]
+![表空间结构.drawio](../../../Files%20&%20LongText/Attachments/%E8%A1%A8%E7%A9%BA%E9%97%B4%E7%BB%93%E6%9E%84.drawio.webp)
 
 记录是按照行来存储的，但是数据库的读取并不以「行」为单位，否则一次读取（也就是一次 I/O 操作）只能处理一行数据，效率会非常低。一般以页作单位读取，每页 16KB
 **在表中数据量大的时候，为某个索引分配空间的时候就不再按照页为单位分配了，而是按照区（extent）为单位分配。每个区的大小为 1MB，对于 16KB 的页来说，连续的 64 个页会被划为一个区，这样就使得链表中相邻的页的物理位置也相邻，就能使用顺序 I/O 了**
@@ -3515,7 +3515,7 @@ t_order.ibd
 ### InnoDB 行格式
 Redundant 没人用了，5.1 版本后行格式使用 Compact，5.7 之后采用 Dynamic 格式，Dynamic 和 Compress 都由 Compact 衍生而来，除了 Redundant 以外都是紧凑行格式
 #### Compact 格式
-![[COMPACT.drawio 1.webp]]
+![COMPACT.drawio 1](../../../Files%20&%20LongText/Attachments/COMPACT.drawio%201.webp)
 *变长字段长度列表*不是必须的，如果表中没有变长字段就没有
 对于这样的表数据
 ```sql
@@ -3527,13 +3527,13 @@ CREATE TABLE `t_user` (
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB DEFAULT CHARACTER SET = ascii ROW_FORMAT = COMPACT;
 ```
-![[t_test.webp]]
+![t_test](../../../Files%20&%20LongText/Attachments/t_test.webp)
 每行的数据行结构如下：
-![[变长字段长度列表1.webp]]
-![[变长字段长度列表2.webp]]
-![[变长字段长度列表3.webp]]
+![变长字段长度列表1](../../../Files%20&%20LongText/Attachments/%E5%8F%98%E9%95%BF%E5%AD%97%E6%AE%B5%E9%95%BF%E5%BA%A6%E5%88%97%E8%A1%A81.webp)
+![变长字段长度列表2](../../../Files%20&%20LongText/Attachments/%E5%8F%98%E9%95%BF%E5%AD%97%E6%AE%B5%E9%95%BF%E5%BA%A6%E5%88%97%E8%A1%A82.webp)
+![变长字段长度列表3](../../../Files%20&%20LongText/Attachments/%E5%8F%98%E9%95%BF%E5%AD%97%E6%AE%B5%E9%95%BF%E5%BA%A6%E5%88%97%E8%A1%A83.webp)
 NULL 值列表长度不固定，但是每个字节可以允许 8 列数据是非 `NOT NULL` 的，每一位记录 NULL 状态，1 表示为 NULL，0 为 `NOT NULL` 同样逆序存放
-![[null值列表2.webp]]
+![null值列表2](../../../Files%20&%20LongText/Attachments/null%E5%80%BC%E5%88%97%E8%A1%A82.webp)
 > [!Question] 为什么「变长字段长度列表」的信息要按照逆序存放？
 > 这个设计是有想法的，主要是因为「记录头信息」中指向下一个记录的指针，指向的是下一条记录的「记录头信息」和「真实数据」之间的位置，这样的好处是向左读就是记录头信息，向右读就是真实数据，比较方便。
 > 「变长字段长度列表」中的信息之所以要逆序存放，是因为这样可以**使得位置靠前的记录的真实数据和数据对应的字段长度信息可以同时在一个 CPU Cache Line 中，这样就可以提高 CPU Cache 的命中率**。
@@ -3560,11 +3560,11 @@ ACID：
 ### 并行事务过程
 #### 存在问题
 脏读：如果一个事务「读到」了另一个「未提交事务修改过的数据」，简单来说同时执行的 AB 两个事务，B 事务执行过程中读取了不就后 A 事务将会触发回滚覆盖的 A 事务执行过程之间产生的临时数据
-![[10b513008ea35ee880c592a88adcb12f.webp]]
+![10b513008ea35ee880c592a88adcb12f](../../../Files%20&%20LongText/Attachments/10b513008ea35ee880c592a88adcb12f.webp)
 不可重复读：在一个事务内多次读取同一个数据，如果出现前后两次读到的数据不一样的情况。原理类似脏读
-![[f5b4f8f0c0adcf044b34c1f300a95abf.webp]]
+![f5b4f8f0c0adcf044b34c1f300a95abf](../../../Files%20&%20LongText/Attachments/f5b4f8f0c0adcf044b34c1f300a95abf.webp)
 幻读：在一个事务内多次查询某个符合查询条件的「记录数量」，如果出现前后两次查询到的记录数量不一样的情况。类似不可重复读，但是不是值不一样了而是记录条数数量不一样
-![[d19a1019dc35dfe8cfe7fbff8cd97e31.webp]]
+![d19a1019dc35dfe8cfe7fbff8cd97e31](../../../Files%20&%20LongText/Attachments/d19a1019dc35dfe8cfe7fbff8cd97e31.webp)
 严重程度：脏读>不可重复读>幻读
 #### 解决方法
 MySQL 提出 4 中隔离级别
@@ -3574,19 +3574,19 @@ MySQL 提出 4 中隔离级别
 - **串行化**；会对记录加上读写锁，在多个事务对这条记录进行读写操作时，如果发生了读写冲突的时候，后访问的事务必须等前一个事务执行完成，才能继续执行；
 隔离水平：串行化>可重复读>读已提交>读未提交，性能由低到高
 不同隔离水平会发生的现象：
-![[4e98ea2e60923b969790898565b4d643.webp]]
+![4e98ea2e60923b969790898565b4d643](../../../Files%20&%20LongText/Attachments/4e98ea2e60923b969790898565b4d643.webp)
 - 对于「读未提交」隔离级别的事务来说，因为可以读到未提交事务修改的数据，所以直接读取最新的数据就好了，不做任何限制
 - 对于「串行化」隔离级别的事务来说，通过加**读写锁**的方式来避免并行访问；
 - 对于「读提交」和「可重复读」隔离级别的事务来说，它们是通过 Read View 来实现的，区别在于创建 Read View （类似快照）的时机不同，「读提交」隔离级别是在「每个语句执行前」都会重新生成一个 Read View，而「可重复读」隔离级别是「启动事务时」生成一个 Read View，然后整个事务期间都在用这个 Read View。
 #### Read View 实现与工作原理
 MVCC = Multi-Version Concurrency Control 多版本并发控制，允许多个事务并发执行且不互相阻塞。
-![[readview结构.drawio.webp]]
+![readview结构.drawio](../../../Files%20&%20LongText/Attachments/readview%E7%BB%93%E6%9E%84.drawio.webp)
 - m_ids ：指的是在创建 Read View 时，当前数据库中「活跃事务」的**事务 id 列表**，注意是一个列表，**“活跃事务”指的就是，启动了但还没提交的事务**，并且**不包括创建该 Read View 的事务自身**。
 - min_trx_id ：指的是在创建 Read View 时，当前数据库中「活跃事务」中事务 **id 最小的事务**，也就是 m_ids 的最小值。
 - max_trx_id ：这个并不是 m_ids 的最大值，而是**创建 Read View 时，下一个将要分配给新事务的事务 id 值**（即全局事务 id 计数器的当前值）。
 - creator_trx_id ：指的是**创建该 Read View 的事务的事务 id**。
 聚簇索引记录中的两个隐藏列:
-![[f595d13450878acd04affa82731f76c5.webp]]
+![f595d13450878acd04affa82731f76c5](../../../Files%20&%20LongText/Attachments/f595d13450878acd04affa82731f76c5.webp)
 - trx_id，当一个事务对某条聚簇索引记录进行改动时，就会**把该事务的事务 id 记录在 trx_id 隐藏列里**；
 - roll_pointer，每次对某条聚簇索引记录进行改动时，都会把旧版本的记录写入到 undo 日志中，然后**这个隐藏列是个指针，指向每一个旧版本记录**
 MVCC 就是依靠 trx_id 和 min_trx_id/max_trx_id 的比较来运行判断逻辑，roll_pointer 找到回滚的数据

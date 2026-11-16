@@ -256,7 +256,7 @@ WHERE p 2. Min_id IS NULL;
 - 它会对目标表（`person`）进行锁定，以确保数据一致性。
 - 如果子查询直接引用了被更新的表，MySQL 会认为这是一种潜在的死锁风险，因此抛出错误。
 - MySQL 在处理 `DELETE` 或 `UPDATE` 时，不允许子查询直接引用被更新的表（称为 **"target table for update in FROM clause"** 错误）。
-![[Pasted image 20250420201607.png|方法二为什么不报错]]
+![方法二为什么不报错](../../Files%20&%20LongText/Attachments/Pasted%20image%2020250420201607.png)
 ---
 
 1. **`LEFT JOIN` 机制**：`LEFT JOIN` 会先生成一个临时结果集，这个结果集是基于子查询 (`SELECT MIN(id) ...`) 和 `person` 表的连接。
@@ -266,7 +266,7 @@ WHERE p 2. Min_id IS NULL;
 3. **锁定顺序**：
     - MySQL 先锁定了子查询的结果（临时结果集）。
     - 然后锁定 `person` 表进行删除操作。
-![[Pasted image 20250420202132.png]]
+![Pasted image 20250420202132](../../Files%20&%20LongText/Attachments/Pasted%20image%2020250420202132.png)
 
 ##### 197. 上升的温度
 (https://leetcode.cn/problems/rising-temperature/)

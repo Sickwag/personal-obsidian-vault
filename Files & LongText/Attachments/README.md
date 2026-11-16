@@ -9,4 +9,4 @@ python download_qt_example_simple.py "https://code.qt.io/cgit/qt/qtbase.git/tree
 # python .py 地址链接 名称（不填默认用网页标题）
 ```
 地址页要是这样的
-![[Pasted image 20251013195329.png]]
+![Pasted image 20251013195329](Pasted%20image%2020251013195329.png)

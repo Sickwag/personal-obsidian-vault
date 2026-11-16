@@ -39,8 +39,8 @@ created: 2026-06-23
     - **作为发送方时**：当 IP 层需要将数据报发给下一跳，但不知道下一跳的物理地址时，向本地网络广播 ARP 请求报文，等待响应。
     - **作为接收方时**：处理收到的 ARP 请求或响应，提取 IP 与 MAC 的映射关系，更新本地的 **ARP 缓存表**，并将解析出的 MAC 地址提供给数据链路层使用。
 #### 结构
-![[网络层.webp]]
-![[12.webp]]
+![网络层](../../../Files%20&%20LongText/Attachments/%E7%BD%91%E7%BB%9C%E5%B1%82.webp)
+![12](../../../Files%20&%20LongText/Attachments/12.webp)
 #### 子网掩码的意义
 通过与 IP 地址进行按位"与"运算，将 32 位的 IP 地址严格划分为 **"网络前缀（Network Prefix）"** 和 **"主机号（Host ID）"** 两部分。
 **1. 层次化路由的必然设计**
@@ -157,8 +157,8 @@ A(`192.168.1.10`) 发给 C(`192.168.2.30`)：
     - **作为接收方时**：从传输介质接收物理信号，进行放大、整形、解调和时钟同步，从中提取出原始的比特流（0 和 1），向上交付给数据链路层。
 # 协议栈
 **当键入网址后，到网页显示，其间发生了什么**
-![[2.webp]]
-![[image.KLXOR3.png]]
+![2](../../../Files%20&%20LongText/Attachments/2.webp)
+![image.KLXOR3](../../../Files%20&%20LongText/Attachments/image.KLXOR3.png)
 ## HTTP 协议
 首先解析 URL，将 url 文本转化为对某个服务器上的某个文件的请求，产生 HTTP 请求报文
 ### 访问 URL 使用的 HTTP 方法是什么？
@@ -182,31 +182,31 @@ A(`192.168.1.10`) 发给 C(`192.168.2.30`)：
 - URL 末尾**无扩展名**（`/users/123`）→ 多半路由；有 `.html/.php/.jpg` → 多半文件（但框架可伪装）
 根本：URL 是抽象资源标识符，**怎么解释服务器说了算**，同一 URL 可静态可动态。RESTful 风格故意隐藏实现。
 ## DNS 协议
-![[6.webp]]
+![6](../../../Files%20&%20LongText/Attachments/6.webp)
 通过缓存解决重复查询问题
 ## 协议栈
 DNS 获取到 IP 后，就可以把 HTTP 的传输工作交给操作系统中的**协议栈**，上面的部分会向下面的部分委托工作，下面的部分收到委托的工作并执行。
-![[Pasted image 20260623165931.png]]
+![Pasted image 20260623165931](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623165931.png)
 得到 IP 地址后，进入协议栈中的 TCP 协议中
 ## TCP 协议
 ### 三次握手
 HTTP 传输数据之前，首先需要 TCP 建立连接，TCP 连接的建立，通常称为**三次握手**。
-![[TCP三次握手.drawio.webp|650]]
+![650](../../../Files%20&%20LongText/Attachments/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.drawio.webp)
 三次握手目的是**保证双方都有发送和接收的能力**（过程中会确定 [[#TCP 报文头部字段|MSS字段的值]]）
 - 一开始,客户端和服务端都处于 CLOSED 状态。先是服务端主动监听某个端口,处于 LISTEN 状态。
 - 开始握手，客户端主动发起连接 SYN，之后处于 SYN-SENT 状态。服务端收到发起的连接，返回 SYN ，并且 ACK 客户端的 SYN ，之后处于 SYN-RCVD 状态。
 	- 将序列号填充为客户端随机生成的序号，将 SYN 设置为 1
-![[format,png-20230309230500953.webp]]
+![format,png-20230309230500953](../../../Files%20&%20LongText/Attachments/format%2Cpng-20230309230500953.webp)
 - 服务端收到客户端的 `SYN` 报文后
 	- 首先服务端也随机初始化自己的序号（`server_isn`）填入 TCP 首部的「序号」字段
 	- 其次把 TCP 首部的「确认应答号」字段填入 `client_isn + 1`
 	- 接着把 `SYN` 和 `ACK` 标志位置为 `1`,发送对 SYN 确认的 ACK，之后处于 ESTABLISHED 状态,因为它一发一收成功了。
-![[format,png-20230309230504118.webp]]
+![format,png-20230309230504118](../../../Files%20&%20LongText/Attachments/format%2Cpng-20230309230504118.webp)
 - 服务端收到客户端的 `SYN` 报文后，
 	- 首先服务端也随机初始化自己的序号（`server_isn`）填入 TCP 首部的「序号」字段中
 	- 把 TCP 首部的「确认应答号」字段填入 `client_isn + 1`
 	- 把 `SYN` 和 `ACK` 标志位置为 `1`
-![[format,png-20230309230508297.webp]]
+![format,png-20230309230508297](../../../Files%20&%20LongText/Attachments/format%2Cpng-20230309230508297.webp)
 三次握手的序列号（seq）和应答号（ack）的变化参考:
 ```md
 客户端初始化: SYN = 1, seq = x, ack = 0
@@ -232,18 +232,18 @@ ACK = 1, seq = x + 1, ack = y + 1
 • 目的：告诉服务端"我已收到你的 y，连接建立完成" 
 ```
 通过 netstat 命令检查状态
-![[Pasted image 20260623170506.png]]
+![Pasted image 20260623170506](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623170506.png)
 如果 HTTP 请求消息比较长，超过了 `MSS` 的长度，这时 TCP 就需要把 HTTP 的数据拆解成一块块的数据发送
-![[11.webp]]
-![[12 1.webp]]
+![11](../../../Files%20&%20LongText/Attachments/11.webp)
+![12 1](../../../Files%20&%20LongText/Attachments/12%201.webp)
 注意 HTTP 报文被被切成了多个 TCP 报文，可能只有前面的数据块是由 HTTP 头部信息，后面的数据块只装消息体内容，生成报文可能是这样的:
-![[13.webp]]
+![13](../../../Files%20&%20LongText/Attachments/13.webp)
 ### 握手报文丢失情况
 #### 第一次握手丢失
 当客户端想和服务端建立 TCP 连接的时候，首先第一个发的就是 SYN 报文，然后进入到 `SYN_SENT` 状态。等待时间由内核决定（1~3 秒），超时重传次数同理（5 次），每次超时重传时间是上一次的 2 倍，最后断开连接
 #### 第二次握手丢失
 此时客户端在 SYN_SEND，服务端在 SYN_RCVD 状态
-![[TCP三次握手.drawio.webp|650]]
+![650](../../../Files%20&%20LongText/Attachments/TCP%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.drawio.webp)
 客户端会**保守认为不是第二次握手丢失而是第一次握手丢失**，重传 SYN 第一次握手报文
 服务端会认为是第二次握手丢失，重传 SYN+ACK 第二次握手报文（重传次数，超时时间都由内核决定）
 但两者不知道对方情况，都会**一直重传，直到客户端受到服务端重传的 SYN+ACK 让客户端知道第一次握手没有失败**，重新建立连接，否则重传到达上限双方连接都关闭。
@@ -256,7 +256,7 @@ ACK = 1, seq = x + 1, ack = y + 1
 - 第二是至少 2 此握手才能让双方同步对方的初始化的随机列号，再加一次才能确定双方同步的信息没有问题
 - 三次握手才可以避免资源浪费
 #### 阻止历史连接
-![[format,png-20230309230525514.webp|565]]
+![565](../../../Files%20&%20LongText/Attachments/format%2Cpng-20230309230525514.webp)
 场景: 客户端发现在第一次握手之后出现问题，并且这次握手的报文被重启后发送新的第一次握手报文
 同理，如果新的 SYN 比旧的先到达，SYN+ACK 的 seq 为 100+1，第二次握手结束时发现 seq 不匹配仍然发送 RST
 
@@ -264,7 +264,7 @@ ACK = 1, seq = x + 1, ack = y + 1
 > 如果 ACK 丢失，即使服务端还是在 syn_received 状态，收到了客户端发送的数据，还是可以建立连接的，并且还可以正常收到这个数据包。这是因为数据报文中是有 ack 标识位，也有确认号。[[#TCP 报文头部字段|TCP 报文头部字段]]中的 ACK 字段状态能让服务端知道二次握手已经结束。服务端会收下数据包，重传 SYN+ACK。
 > **客户端开始发送数据到服务端没有收到第三次握手 ACK 报文然后发起重传 SYN+ACK 这段时间内客户端发送的数据会被缓存**，此时应用层对这些数据不可见，重传过程中从中断位置开始重传
 
-![[Pasted image 20260804115428.png]]
+![Pasted image 20260804115428](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260804115428.png)
 #### 同步双方序列号
 - 接收方可以去除重复的数据；
 - 接收方可以根据数据包的序列号按序接收；
@@ -272,9 +272,9 @@ ACK = 1, seq = x + 1, ack = y + 1
 只有三次握手才能**让双方确保知道对方的序列号，且互相知道对方知道**
 #### 避免资源浪费
 **两次握手让服务端没有中间状态得知客户端已经准备好了**（client established），所以只能在服务端 established 之后就发送数据，如果这个连接被客户端判定为历史连接，那么这段时间内发送的数据全部浪费
-![[Pasted image 20260804114652.png|525]]
+![525](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260804114652.png)
 ### 四次挥手
-![[format,png-20230309230614791.webp|575]]
+![575](../../../Files%20&%20LongText/Attachments/format%2Cpng-20230309230614791.webp)
 TCP 是**全双工**连接，断开需要双方各自关闭自己这一侧，所以是四次挥手而非三次：
 1. 客户端发 **FIN**，表示"我没有数据要发了"→ 进入 `FIN_WAIT_1`
 2. 服务端回 **ACK** → 客户端进入 `FIN_WAIT_2`。此时服务端可能还有数据没发完，所以这步只确认，不断开
@@ -286,24 +286,24 @@ TCP 是**全双工**连接，断开需要双方各自关闭自己这一侧，所
 ### 挥手报文丢失情况
 #### 第一次挥手丢失
 客户端不断重传 FIN 报文，**达到最大次数之后**最后等待一次，没有受到客户端会关闭连接
-![[第一次挥手丢失.webp|575]]
+![575](../../../Files%20&%20LongText/Attachments/%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8C%A5%E6%89%8B%E4%B8%A2%E5%A4%B1.webp)
 #### 第二次挥手丢失
 同样，[[#第三次握手丢失|ACK报文不会重传]]，客户端和[[#第一次挥手丢失|第一次挥手丢失]]一样认为 FIN 报文失败了，继续重传
-![[第二次挥手丢失.webp|550]]
+![550](../../../Files%20&%20LongText/Attachments/%E7%AC%AC%E4%BA%8C%E6%AC%A1%E6%8C%A5%E6%89%8B%E4%B8%A2%E5%A4%B1.webp)
 
 #### 客户端和服务端 shutdown 的区别
 对于调用 close 关闭的连接，如果在 60 秒后还没有收到 FIN 报文，客户端（主动关闭方）的连接就会直接关闭
-![[fin_wait_2.drawio.webp]]
+![fin_wait_2.drawio](../../../Files%20&%20LongText/Attachments/fin_wait_2.drawio.webp)
 如果主动关闭方使用 shutdown 函数关闭连接，指定了只关闭发送方向，而接收方向并没有关闭，那么意味着主动关闭方还是可以接收数据的。
 #### 第三次挥手丢失
 正常的通信流程和 close 函数调用位置是这样的: 
 当服务端（被动关闭方）收到客户端（主动关闭方）的 FIN 报文后，内核会自动回复 ACK，同时连接处于 `CLOSE_WAIT` 状态，顾名思义，它表示等待应用进程调用 close 函数关闭连接。
 双方都在等对方发挥的消息，但丢失导致发不回来，此时内核没有权利替代进程关闭连接，必须由进程主动调用 close 函数来触发服务端发送 FIN 报文。
 所以正常服务端调用 close 函数后，发送 FIN 报文。丢失重传机制依旧起作用
-![[第三次挥手丢失.drawio.webp|600]]
+![600](../../../Files%20&%20LongText/Attachments/%E7%AC%AC%E4%B8%89%E6%AC%A1%E6%8C%A5%E6%89%8B%E4%B8%A2%E5%A4%B1.drawio.webp)
 #### 第四次挥手丢失了，会发生什么？
 有些特殊，因为第四次挥手失败同时意味着第三次挥手会一直发送，在 Linux 系统，TIME_WAIT 状态会持续 2MSL 后才会进入关闭状态。
-![[第四次挥手丢失drawio.drawio.webp|625]]
+![625](../../../Files%20&%20LongText/Attachments/%E7%AC%AC%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B%E4%B8%A2%E5%A4%B1drawio.drawio.webp)
 ### 为什么建立是三次而断开是四次？ 
 建立连接时服务端的 SYN+ACK 本来理应分为两步，但是这两步之间没有数据需要发送，可合并为一次
 断开时服务端收到 FIN 往往还有数据没发完，只能先 ACK，等发完再 FIN，无法合并。
@@ -316,7 +316,7 @@ TCP 是**全双工**连接，断开需要双方各自关闭自己这一侧，所
 需要 TIME-WAIT 状态，主要是两个原因：
 - 防止历史连接中的数据，被后面相同四元组的连接错误的接收；
 由于服务端和客户端生成的序列号是**从随机数开始，之后每次递增 1**，达到 `INT_MAX` 之后回到 0，如果没有 TIME_WAIT，会导致上一个连接末尾发送的 ACK（第四次挥手）如果在客户端结束 TIME_WAIT 之后到达客户端，且刚好随机数生成了一个和上一连接发送的 ACK 序号相接的序号，就会导致新的连接接受旧数据。
-![[6385cc99500b01ba2ef288c27523c1e7-20230309230608128.webp]]
+![6385cc99500b01ba2ef288c27523c1e7-20230309230608128](../../../Files%20&%20LongText/Attachments/6385cc99500b01ba2ef288c27523c1e7-20230309230608128.webp)
 - 保证「被动关闭连接」的一方，能被正确的关闭；没啥好说的，客户端需要知道服务端已经正常关闭了，才能释放自己的端口和资源
 ### 服务器出现大量 TIME_WAIT 状态的原因有哪些？
 三种原因，**突破口为:主动发起关闭连接的一方，才会有 `TIME-WAIT` 状态。**
@@ -385,7 +385,7 @@ CLOSE_WAIT 状态是「被动关闭方」才会有的状态，而且如果「被
 ### MSS 和 MTU
 - `MTU`：一个网络包的最大长度，以太网中一般为 `1500` 字节；
 - `MSS`：除去 IP 和 TCP 头部之后，一个网络包所能容纳的 TCP 数据的最大长度；
-![[format,png-20230309230633447.webp]]
+![format,png-20230309230633447](../../../Files%20&%20LongText/Attachments/format%2Cpng-20230309230633447.webp)
 当 IP 层有一个超过 `MTU` 大小的数据（TCP 头部 + TCP 数据）要发送，那么 IP 层就要进行分片， IP 层本身没有超时重传机制，它由传输层的 TCP 来负责超时和重传。
 
 当某一个 IP 分片丢失后，接收方的 IP 层就无法组装成一个完整的 TCP 报文（头部 + 数据），也就无法将数据报文送到 TCP 层，所以接收方不会响应 ACK 给发送方，因为发送方迟迟收不到 ACK 确认报文，所以会触发超时重传，就会重发「整个 TCP 报文（头部 + 数据）」。所以 TCP 握手阶段会协商 MSS 的值，MTU 的值根据不同的协议（以太网协议 1500，各种自定义协议等）和网络环境确定
@@ -423,7 +423,7 @@ TCP 可靠 = 保证接收方**收全、收对、收有序**，靠一堆机制堆
 ## IP 协议
 TCP 模块在执行连接、收发、断开等各阶段操作时，都需要委托 IP 模块将数据封装成**网络包**发送给通信对象
 ### 头部字段
-![[Pasted image 20260623170822.png|475]]
+![475](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623170822.png)
 各个字段的含义:
 - 服务类型 TOS
 - 标志
@@ -433,7 +433,7 @@ TCP 模块在执行连接、收发、断开等各阶段操作时，都需要委�
 - 目标地址: 就是通过 DNS 域名解析得到的 Web 服务器 IP
 - 源地址: 目标机器的 IP 地址 
 至此，网络包的报文如下图
-![[Pasted image 20260623172128.png]]
+![Pasted image 20260623172128](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623172128.png)
 ### 多网卡设备如何填写源 IP 地址字段？
 核心：**源 IP 不由用户选，由路由表 + 出接口决定**。
 机制：
@@ -454,7 +454,7 @@ TCP 模块在执行连接、收发、断开等各阶段操作时，都需要委�
 - 接收端回包按目的 IP 路由，不保证原路返回（不对称路由问题，需策略路由解决）。
 ## MAC 协议--两点传输
 数据链路层的工作（OSI），TCP/IP 中在网络接口层完成。生成了 IP 头部之后，接下来网络包还需要在 IP 头部的前面加上 **MAC 头部**。MAC 头部是以太网使用的头部，它包含了接收方和发送方的 MAC 地址等信息。
-![[Pasted image 20260623172226.png]]
+![Pasted image 20260623172226](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623172226.png)
 一般在 TCP/IP 通信里，MAC 包头的**协议类型**只使用：
 - `0800` ： IP 协议
 - `0806` ： ARP 协议
@@ -462,13 +462,13 @@ TCP 模块在执行连接、收发、断开等各阶段操作时，都需要委�
 **接收方**的 MAC 地址就需要查找路由表，IP 协议头已经明确了目的 IP 地址，那么在这个目的 IP 地址所指向的网络号+主机号所在的以太网中，通过 [[#ARP 协议如何得到 MAC 信息？|ARP协议]] 广播获取 MAC 地址的信号，这样接受源 IP 地址的硬件就会在他的路由表中匹配到这个信号，并回应自己的 MAC 地址，其他无关硬件不作回应
 操作系统会把本次查询结果放 **ARP 缓存**的内存空间留着以后用，有效时间几分钟。
 至此，网络包的报文如下图
-![[Pasted image 20260623173635.png]]
+![Pasted image 20260623173635](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623173635.png)
 ## 包发送
 ### 网卡出口
 网络包只是存放在内存中的一串二进制数字信息，没有办法直接发送给对方。因此需要将**数字信息转换为电信号**，才能在网线上传输，也就是说，这才是真正的数据发送过程。
 负责执行这一操作的是**网卡**，要控制网卡还需要靠**网卡驱动程序**。
 网卡驱动获取网络包之后，会将其**复制**到网卡内的缓存区中，接着会在其**开头加上报头和起始帧分界符，在末尾加上用于检测错误的帧校验序列**。
-![[Pasted image 20260623173741.png]]
+![Pasted image 20260623173741](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623173741.png)
 - 起始帧分界符是一个用来表示包起始位置的标记
 - 末尾的 FCS (帧校验序列)用来检查包传输过程是否有损坏
 以太网帧的完整结构（IEEE 802.3 标准）：
@@ -503,7 +503,7 @@ TCP 模块在执行连接、收发、断开等各阶段操作时，都需要委�
 交换机的 MAC 地址表主要包含两个信息：
 - 局域网内终端设备的 MAC 地址
 - 这个终端设备连在交换机的哪个端口上
-![[Pasted image 20260623180431.png|575]]
+![575](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623180431.png)
 
 当 MAC 地址表找不到指定的 MAC 地址（缓存已满，通过淘汰机制将地址表项删除/新的机器接入）会将包转发到除了源端口之外的所有端口上,无论该设备连接在哪个端口上都能收到这个包。正确的机器接到信息后会发送回相应从而更新 mac 地址表
 此外,如果接收方 MAC 地址是一个**特意指明了是广播地址**，那么交换机会将包发送到除源端口之外的所有端口。以下两个属于广播地址:
@@ -565,7 +565,7 @@ https://blog.csdn.net/qq_39689711/article/details/103746534 （更细致）
 - 所以"IP 层决定下一跳"不是主机专利：**任何发送 IP 包的设备（主机或路由器）都由自己的 IP 层 + ARP 模块做这件事**。
 ##### 路由器如何决定下一跳？
 路由器转发决策的核心是 **路由表 + 最长前缀匹配**。
-![[Pasted image 20260629212001.jpg]]
+![Pasted image 20260629212001](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260629212001.jpg)
 对于 `172.16.10.1` 这个 ip 地址：
 - 深灰色的空间 `172.16.0.0/16`，这个网络号，我们称为主类网络号，意思是该网络号按照其所属的 IP 地址类别区分后、对应上的默认的子网掩码长度后得到的网络号。如 `172.16.0.0` 这是一个 B 类地址，B 类地址的默认子网掩码长度是 16 位，因此 `172.16.0.0/16` 本身就是一个主类网络号。
 - 从 `172.16.0.0/16` 开始往里走，下一个网络号是 `172.16.10.0/24`，这很明显是应用了 VLSM 可变长子网掩码之后，得到的一个 `172.16.0.0/16` 这个主类网络的一个子网（subnet）。子网可以理解为是在网络号所属类别的默认掩码长度的基础上，将掩码"拉长"或者向主机位借位从而得到的一个子网络号。这个子网下也有子网，比如 `172.16.10.0/30`，这些分组就**更精确**。
@@ -582,7 +582,7 @@ https://blog.csdn.net/qq_39689711/article/details/103746534 （更细致）
 路由器收到数据包后：
 1. 取出**目的 IP 地址 `172.16.10.1`**，注意这里并不需要发送方提供掩码。
 2. 与路由表中每条记录做**最长前缀匹配**：三个路由前缀转为二进制后，根据掩码决定要严格匹配的位，掩码为 1 的位是需要严格匹配的，掩码为 0 的位则无所谓（画 X 的部分），可知 `172.16.2.0/24` 匹配位数更多。
-![[Pasted image 20260629213441.png]]
+![Pasted image 20260629213441](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260629213441.png)
 3. 找到匹配项后，将包从对应接口发往"下一跳"。
 4. 没有匹配项则走默认路由（`0.0.0.0/0`）。
 5. 只有当数据包到达目标 IP 所在的**最后一个子网**时，才会利用主机号部分，通过 ARP 协议解析出目标主机的 MAC 地址。
@@ -624,7 +624,7 @@ https://blog.csdn.net/qq_39689711/article/details/103746534 （更细致）
 在出厂默认设置下，这个设备内部的 **“LAN 口（交换机）”和“Wi-Fi 模块（AP）”在逻辑上是被桥接在一起的**。它们属于同一个二层广播域，也就是你所说的“同一个局域网/同一个网段”。
 
 ## 包接受
-![[Pasted image 20260630104634.png]]
+![Pasted image 20260630104634](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260630104634.png)
 - 一层层解析协议头，根据协议头中的协议编号和版本确定如何解析
 
 ## Linux 如何收发网络包
@@ -634,11 +634,11 @@ https://blog.csdn.net/qq_39689711/article/details/103746534 （更细致）
 - p-receive/
 - Linux网络-数据包接收过程:https://blog.csdn.net/frank_jb/article/details/115841622
 ### 完整收发结构
-![[Pasted image 20260630105111.png]]
+![Pasted image 20260630105111](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260630105111.png)
 - 应用程序需要通过系统调用,来跟 Socket 层进行数据交互;
 - Socket 层的下面就是传输层、网络层和网络接口层;
 - 最下面的一层,则是网卡驱动程序和硬件网卡设备;
-![[Pasted image 20260630110036.png]]
+![Pasted image 20260630110036](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260630110036.png)
 ### 接收流程
 网卡接收到一个网络包后，会通过 DMA 技术，将网络包写入到指定的内存地，也就是写入到 [[架构设计#io_uring 机制|Ring Buffer]] 中，引出问题: 怎么告诉操作系统这个网络包已经到达了呢?
 - 触发中断,每当网卡收到网络包,就触发一个中断告诉 OS。在高性能网络场景下网络包会触发非常多的中断，CPU 收到了中断而去处理这些网络包，同步处理在频繁触发中断的情景下其他任务可能无法继续前进
@@ -666,7 +666,7 @@ CPU 收到硬件中断请求后,根据中断表,调用已经注册的中断处�
 > Q: 「HTTP 是用于从互联网服务器传输超文本到本地浏览器的协议」,这种说法正确吗?
 > A: 不正确。因为也可以是「服务器< -- >服务器」,所以采用两点之间的描述更准确
 #### HTTP 状态码是什么？分别表示什么？
-![[Pasted image 20260630112607.png]]
+![Pasted image 20260630112607](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260630112607.png)
 - 1xx 类状态码属于提示信息，是协议处理中的一种中间状态，实际用到的比较少。
 - 2xx 类状态码表示服务器成功处理了客户端的请求，也是我们最愿意看到的状态。
 	- 「200 OK」是最常⻅的成功状态码,表示一切正常。如果是非 HEAD 请求,服务器返回的响应头都会有 body 数据。
@@ -695,7 +695,7 @@ CPU 收到硬件中断请求后,根据中断表,调用已经注册的中断处�
 - Content-Encoding 字段说明数据的压缩方法。表示服务器返回的数据使用了什么压缩格式（gzip/7z）
 #### HTTP 方法
 GET 的语义是从服务器获取指定的资源,这个资源可以是静态的文本、⻚面、图片视频等。GET 请求的参数位置一般是写在 URL 中
-![[image.4Z0SR3.png]]
+![image.4Z0SR3](../../../Files%20&%20LongText/Attachments/image.4Z0SR3.png)
 POST 的语义是根据请求负荷(报文 body)对指定的资源做出处理,具体的处理方式视资源类型而不同。POST 请求携带数据的位置一般是写在报文 body 中,body 中的数据可以是任意格式的数据,只要客户端与服务端协商好即可
 
 > [!note] 浏览器对 GET/POST 请求的限制:
@@ -712,7 +712,7 @@ RFC 规范中规定任何请求都可以带 body，URL 中的参数也可被任�
 强缓存是利用下面这两个 HTTP 响应头部(Response Header)字段实现的,它们都用来表示资源在客户端缓存的有效期:
 - Cache-Control,是一个相对时间;（优先级更高）
 - Expires,是一个绝对时间;
-![[image.1KLMR3.png]]
+![image.1KLMR3](../../../Files%20&%20LongText/Attachments/image.1KLMR3.png)
 #### 强缓存
 缓存的行为一般由浏览器自动执行，在控制台中状态码显示 `200 OK (from disk cache)` 或 `from memory cache`），HTTP 头中通过 `Cache-Control` 字段实现
 当浏览器第一次请求访问服务器资源时,服务器会在返回这个资源的同时,在 Response头部加上 Cache-Control设置了过期时间；
@@ -783,13 +783,13 @@ HTTP/1.1 和 HTTP/2.0 传输协议使用的是 TCP 协议,而到了 HTTP/3.0 传
 但是服务器必须按照接收请求的顺序发送对这些管道化请求的响应，导致某个管道请求处理时间长让后面的信息阻塞的问题。所以,HTTP/1.1 管道解决了请求的队头阻塞,但是没有解决响应的队头阻塞。
 #### HTTPS 解决 HTTP 的哪些问题？
 HTTPS 在 HTTP 与 TCP 层之间加入了 SSL/TLS 协议
-![[image.EFUQR3.png]]
+![image.EFUQR3](../../../Files%20&%20LongText/Attachments/image.EFUQR3.png)
 SSL/TLS 通过一些做法解决 [[#HTTP 版本有哪些？特性分别有什么？|HTTP安全问题]]:
 ##### 混合加密
 对称加密和非对称加密结合的「混合加密」方式:
 在通信建立前采用**非对称加密**的方式交换「会话秘钥」,后续就不再使用非对称加密。速度较慢所以只在**交换密钥本身的情况下使用**
 在通信过程中全部使用**对称加密的**「会话秘钥」的方式加密明文数据。对称加密只使用一个密钥,运算速度快,密钥必须保密,无法做到安全的密钥交换，借助上面生成的密钥对**内容哈希值进行加密**
-![[image.356SR3.png]]
+![image.356SR3](../../../Files%20&%20LongText/Attachments/image.356SR3.png)
 ##### 摘要算法
 实现完整性,它能够为数据生成独一无二的「指纹」,指纹用于校验数据的完整性
 对发送内容计算出一个「指纹」,然后同内容一起传输给对方。
@@ -801,7 +801,7 @@ SSL/TLS 通过一些做法解决 [[#HTTP 版本有哪些？特性分别有什么
 将服务器公钥放入到数字证书中,解决了冒充的⻛险。
 公私钥是配对的，攻击者伪造一对公私钥，并替换了服务器上的原公钥，导致攻击者再不需要得到私钥的情况下伪装成私钥持有方
 数字证书相当于提供了一层有**公信力的额外公私钥保障**，公信力的来源是 CA(数字证书认证机构)，相当于通过外力能够验证自己的公钥是否被替换了
-![[image.IW1SR3.png]]
+![image.IW1SR3](../../../Files%20&%20LongText/Attachments/image.IW1SR3.png)
 ### HTTP 与 HTTPS
 #### HTTPS 是如何建立连接的?其间交互了什么?
 SSL/TLS 协议基本流程:
@@ -811,14 +811,14 @@ SSL/TLS 协议基本流程:
 前两步也就是 SSL/TLS 的建立过程,也就是 TLS 握手阶段。
 TLS 的「握手阶段」涉及四次通信,使用不同的密钥交换算法,TLS 握手流程也会不一样的,现在常用的密钥交换算法有两种:RSA 算法和 ECDHE 算法。
 #未完成 细节部分涉及到很多加密算法，这里略过
-![[Pasted image 20260630162939.png]]
+![Pasted image 20260630162939](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260630162939.png)
 本质上经历而三个阶段:
 - 哈希算法可以保证传输的内容不被篡改，哈希值校验不通过说明内容被修改
 - 因为 HTTP 协议传输是明文的，所以通过公钥私钥这种 RSA 非对称加密技术确保只有互相"认识对方"才能进行通信。
 - 私钥窃取难度高，但是公钥是公开的容易被偷偷替换，所以使用了数字证书这一机制，通过权威机构认证公钥的合法性，确保了公钥替换会被发现。所以 HTTPS 协议是安全的，
 注意**公钥来自于数字证书，，不需要服务端和客户端协商生成**，最后生成的会话密钥会在**传输层**中给 HTTP 报文外部添加的 TCP 头部中
 #### 数字证书的签发
-![[证书的校验.webp]]
+![证书的校验](../../../Files%20&%20LongText/Attachments/%E8%AF%81%E4%B9%A6%E7%9A%84%E6%A0%A1%E9%AA%8C.webp)
 
 CA 签发证书的过程，如上图左边部分：
 - 首先 CA 会把持有者的公钥、用途、颁发者、有效时间等信息打成一个包，然后对这些信息进行 Hash 计算，得到一个 Hash 值；
@@ -829,13 +829,13 @@ CA 签发证书的过程，如上图左边部分：
 - 通常浏览器和操作系统中集成了 CA 的公钥信息，浏览器收到证书后可以使用 CA 的公钥解密 Certificate Signature 内容，得到一个 Hash 值 H2 ；
 - 比对服务器发来的数字证书 H1 和浏览器保存的 H2，如果值相同，则为可信赖的证书，否则则认为证书不可信。
 证书验证是有层级的，因为浏览器内能存放的证书有限，面对未知域名会**不断向上查询颁发机构**，直到查找到内核/浏览器信任的机构。然后用**预存储的信任机构证书的公钥**验证下级**非预存储机构**的证书是否可信任。
-![[证书链.webp]]
-![[baidu证书.webp]]
+![证书链](../../../Files%20&%20LongText/Attachments/%E8%AF%81%E4%B9%A6%E9%93%BE.webp)
+![baidu证书](../../../Files%20&%20LongText/Attachments/baidu%E8%AF%81%E4%B9%A6.webp)
 #### HTTPS 的应用数据是如何保证完整性的?
 TLS 在实现上**分为握手协议和记录协议两层**:
 - TLS 握手协议就是我们前面说的 TLS 四次握手的过程,负责协商加密算法和生成对称密钥,后续用此密钥来保护应用程序数据(即 HTTP 数据);
 - TLS 记录协议负责保护应用程序数据并验证其完整性和来源,所以对 HTTP 数据加密是使用记录协议;
-![[Pasted image 20260630164328.png]]
+![Pasted image 20260630164328](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260630164328.png)
 - 首先,消息被分割成多个较短的片段,然后分别对每个片段进行压缩。
 - 接下来,经过压缩的片段会被加上消息认证码（MAC 值，通过哈希算法根据双方协商的密钥+明文内容+序列号生成）,这是为了保证完整性,并进行数据的认证。通过附加消息认证码的 MAC 值,可以识别出篡改。使用双方协商好的**对称密钥**和**哈希算法**（通常是 HMAC），计算出一个固定长度的 MAC 值**放在消息末尾**，与此同时,为了防止**重放和乱序攻击**（攻击者无法解开内容，但重新将相同的请求发送到服务器会导致问题。双方共同维护一个序列号但不出现在传输内容中）,在计算消息认证码时,还加上了片段的编码。
 - 再接下来,经过压缩的片段再加上消息认证码会一起通过对称密码进行加密。
@@ -850,8 +850,8 @@ HTTPS 协议本身到目前为止在设计上没有任何漏洞的，但他能�
 5. 用解密后的信息和真正的服务器通信，拿到服务器的私钥。此时双方通信完全暴露
 ##### 伪造根证书攻击
 1. 通过病毒在系统信任证书中添加攻击者的证书，使中转基站攻击过程第 3 步没有检测异常
-![[Pasted image 20260630171159.png]]
-![[Pasted image 20260630171213.png]]
+![Pasted image 20260630171159](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260630171159.png)
+![Pasted image 20260630171213](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260630171213.png)
 中间人要拿到私钥只能通过如下方式:
 - 去网站服务端拿到私钥;
 - 去 CA 处拿域名签发私钥;
@@ -870,14 +870,14 @@ HTTPS 抓包调试也只是通过专业软件充当 CA ，签发人是用户自�
 - 服务器是按请求的顺序响应的,如果服务器响应慢,会招致客户端一直请求不到数据,也就是队头阻塞;
 - 没有请求优先级控制;
 - 请求只能从客户端开始,服务器只能被动响应。
-![[Pasted image 20260630172112.png]]
+![Pasted image 20260630172112](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260630172112.png)
 #### HTTP/2 相比 HTTP/1.1 性能上的改进
 - 头部压缩
 	- 如果你同时发出多个请求,他们的头是一样的或是相似的,那么,协议会帮你消除重复的部分。
 	- 这就是所谓的 HPACK 算法:在客户端和服务器同时维护一张头信息表,所有字段都会存入这个表,生成一个索引号，通过索引号获取本地缓存的头
 - 二进制格式
   采用了二进制格式,头信息和数据体都是二进制,并且统称为帧(frame):头信息帧和数据帧，加快计算机处理速度避免了纯文本空间浪费
-![[Pasted image 20260630172351.png]]
+![Pasted image 20260630172351](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260630172351.png)
 
 - 并发传输
 	- 同一个连接中，HTTP 完成一个事务（请求与响应），才能处理下一个事务，串行逻辑下服务器性能如果比较低，响应迟迟不来，后续的请求是无法发送的，也造成了**队头阻塞**的问题。
@@ -887,7 +887,7 @@ HTTPS 抓包调试也只是通过专业软件充当 CA ，签发人是用户自�
 	- 客户端在访问 HTML 时，服务器可以直接主动推送 CSS 文件，减少了消息传递的次数。
 HTTP2 的缺陷
 HTTP/2 还是存在“队头阻塞”的问题，只不过问题不是在 HTTP 这一层面，而在TCP 这一层。TCP 协议是**文本流式传输协议**，会存在前一个字节没有到达接收端会导致后面所有 stream 都接收不到的问题
-![[http2阻塞.webp]]
+![http2阻塞](../../../Files%20&%20LongText/Attachments/http2%E9%98%BB%E5%A1%9E.webp)
 断开了导致 streamid**不连续**，内核不会返回缓冲区中**不完整的数据**，一旦发生了丢包现象，就会触发 TCP 的重传机制，这样在一个 TCP 连接中的**所有的 HTTP 请求都必须等待这个丢了的包被重传回来**。
 #### HTTP/3 做了哪些优化？
 #未完成 
@@ -898,9 +898,9 @@ HTTP/2 还是存在“队头阻塞”的问题，只不过问题不是在 HTTP �
 ### 在需要发送 HTTP 请求时，考虑如何减少请求次数
 - _减少重定向请求次数_；
 302 响应码一般用于告知 url 重定向，新的 url 放在头部的 Location 字段中，常见重定向实现方法:
-![[客户端重定向.webp|需要客户端手动再发送一次请求]]
-![[代理服务器重定向.webp|通过代理服务器重定向]]
-![[代理服务器重定向2.webp|代理服务器中存储映射关系]]
+![需要客户端手动再发送一次请求](../../../Files%20&%20LongText/Attachments/%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%87%8D%E5%AE%9A%E5%90%91.webp)
+![通过代理服务器重定向](../../../Files%20&%20LongText/Attachments/%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%87%8D%E5%AE%9A%E5%90%91.webp)
+![代理服务器中存储映射关系](../../../Files%20&%20LongText/Attachments/%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%87%8D%E5%AE%9A%E5%90%912.webp)
 
 - _合并请求_
 多个访问小文件的请求合并成一个大的请求
@@ -928,30 +928,30 @@ Content-Type: audio/basic
 ## HTTPS RSA 握手解析
 ### RSA 协商算法概要
 细化 [[#HTTPS 是如何建立连接的?其间交互了什么?|HTTPS 是如何建立连接的?其间交互了什么?]]
-![[tls握手.webp]]
+![tls握手](../../../Files%20&%20LongText/Attachments/tls%E6%8F%A1%E6%89%8B.webp)
 每一个「框」都是一个记录（_record_），记录是 TLS 收发数据的基本单位，类似于 TCP 里的 segment，所以**通常（RSA 加密方式）经过「四个消息」就可以完成 TLS 握手，也就是需要 2 个 RTT 的时延**，然后就可以在安全的通信环境里发送 HTTP 报文，实现 HTTPS 协议
 RSA 协商算法无法保证前向加密[^1]
 抓包解析后可以看到四个阶段:
-![[tls四次握手.webp]]
+![tls四次握手](../../../Files%20&%20LongText/Attachments/tls%E5%9B%9B%E6%AC%A1%E6%8F%A1%E6%89%8B.webp)
 ### TLS 第一次握手 Client SayHello
-![[clienthello.webp]]
+![clienthello](../../../Files%20&%20LongText/Attachments/clienthello.webp)
 ### TLS 第二次握手 Server Hello
 当服务端收到客户端的「Client Hello」消息后，会确认 TLS 版本号是否支持，和从密码套件列表中选择一个密码套件，以及生成**随机数（_Server Random_）**。
-![[serverhello 1.webp]]
+![serverhello 1](../../../Files%20&%20LongText/Attachments/serverhello%201.webp)
 密码套件形式是「**密钥交换算法 + 签名算法 + 对称加密算法 + 摘要算法**」用二进制代码代表组合，WITH 单词前面有两个单词分别表示约定密钥交换的算法和约定证书的验证算法。
 然后**进入下一个 record**发送，Server Certificate，发送验证信息
-![[certificate.webp]]
+![certificate](../../../Files%20&%20LongText/Attachments/certificate.webp)
 最后发送 Server Hello Done
-![[serverhellodone.webp]]
+![serverhellodone](../../../Files%20&%20LongText/Attachments/serverhellodone.webp)
 ### TLS 第三次握手
 客户端验证完证书后，认为可信才会进入这一阶段，客户端就会生成一个新的**随机数 (_pre-master_)**，用服务器的 RSA 公钥加密该随机数，通过「**Client Key Exchange**」消息传给服务端。
-![[clietnkeyexchange.webp]]
+![clietnkeyexchange](../../../Files%20&%20LongText/Attachments/clietnkeyexchange.webp)
 客户端就会生成一个新的**随机数 (_pre-master_)**，用服务器的 RSA 公钥加密该随机数，通过「**Client Key Exchange**」消息传给服务端。服务端解密 pre-master 得到 Client Random。至此双方根据已经得到的三个随机数，生成**会话密钥（Master Secret）**
 下一个 record 「**Change Cipher Spec**」，告诉服务端开始使用加密方式发送消息。
 需要注意，***在此之前都是明文，之后就是密文了***
-![[cipherspecmessage.webp]]
+![cipherspecmessage](../../../Files%20&%20LongText/Attachments/cipherspecmessage.webp)
 再发一个「**Encrypted Handshake Message（Finishd）**」消息，把之前所有发送的数据做个**摘要**，再用会话密钥（master secret）加密一下，让服务器做个验证，验证加密通信「是否可用」和「之前握手信息是否有被中途篡改过」
-![[encryptd.webp]]
+![encryptd](../../../Files%20&%20LongText/Attachments/encryptd.webp)
 ### TLS 第四次握手
 服务器也是同样的操作，发「**Change Cipher Spec**」和「**Encrypted Handshake Message**」消息
 
@@ -966,35 +966,35 @@ session_keys  = PRF(master_secret, "key expansion", server_random + client_rando
 ## HTTPS ECDHE 握手解析
 ### 算法实现
 ECDHE 密钥协商算法是 DH 算法演进过来的，算法实现暂时不用了解 #未完成 
-![[ech_tls握手.webp]]
+![ech_tls握手](../../../Files%20&%20LongText/Attachments/ech_tls%E6%8F%A1%E6%89%8B.webp)
 
 **使用了 ECDHE，在 TLS 第四次握手前，客户端就已经发送了加密的 HTTP 数据**，而对于 RSA 握手过程，必须要完成 TLS 四次握手，才能传输应用数据
 ### TLS 第一次握手
 客户端首先会发一个「**Client Hello**」消息，消息里面有客户端使用的 TLS 版本号、支持的密码套件列表，以及生成的**随机数（_Client Random_）**。
-![[ech_clinethello.webp]]
+![ech_clinethello](../../../Files%20&%20LongText/Attachments/ech_clinethello.webp)
 ### TLS 第二次握手
 服务端收到客户端的「打招呼」，同样也要回礼，会返回「**Server Hello**」消息，消息面有服务器确认的 TLS 版本号，也给出了一个**随机数（_Server Random_）**，然后从客户端的密码套件列表选择了一个合适的密码套件。
 **到这里为止**，握手和 [[#HTTPS RSA 握手解析|HTTPS RSA 握手解析]]一致，只是选择的套件不一样
-![[ech_serverhello.webp]]
+![ech_serverhello](../../../Files%20&%20LongText/Attachments/ech_serverhello.webp)
 下一个 record，服务端为了证明自己的身份发送「**Certificate**」消息，会把证书也发给客户端，选择了 ECDHE 密钥协商算法，所以会在发送完证书后，发送「**Server Key Exchange**」消息。
-![[ech_serverkey.webp]]
+![ech_serverkey](../../../Files%20&%20LongText/Attachments/ech_serverkey.webp)
 服务器做了三件事：
 - 选择了**名为 x25519 的椭圆曲线**，选好了椭圆曲线相当于椭圆曲线基点 G 也定好了，这些都会公开给客户端；
 - 生成随机数作为服务端椭圆曲线的私钥，保留到本地；
 - 根据基点 G 和私钥计算出**服务端的椭圆曲线公钥**，这个会公开给客户端。
 为了保证这个椭圆曲线的公钥不被第三方篡改，服务端会用 RSA 签名算法给服务端的椭圆曲线公钥做个签名。
 随后发送下一个 record，「**Server Hello Done**」消息，服务端跟客户端表明：“这些就是我提供的信息，打招呼完毕”。
-![[ech_serverhellodone.webp]]
+![ech_serverhellodone](../../../Files%20&%20LongText/Attachments/ech_serverhellodone.webp)
 至此，TLS 两次握手就已经完成了，目前客户端和服务端通过明文共享了这几个信息：**Client Random、Server Random 、使用的椭圆曲线、椭圆曲线基点 G、服务端椭圆曲线的公钥**用于生成对话密钥
 ### TLS 第三次握手
 同理，校验证书是否合法之后，客户端会生成一个随机数作为客户端椭圆曲线的私钥，然后再根据服务端前面给的信息，生成**客户端的椭圆曲线公钥**，然后用「**Client Key Exchange**」消息发给服务端。
-![[ech_clientkeyexchange.webp]]
+![ech_clientkeyexchange](../../../Files%20&%20LongText/Attachments/ech_clientkeyexchange.webp)
 最终的会话密钥，就是用「客户端随机数 + 服务端随机数 + x（ECDHE 算法算出的共享密钥） 」，生成会话密钥
 然后就是明文转密文的消息和加密验证消息，都由**客户端发送**
 - 「**Change Cipher Spec**」消息，告诉服务端后续改用对称算法加密通信
 - 「**Encrypted Handshake Message**」消息，把之前发送的数据做一个摘要，再用对称密钥加密一下，让服务端做个验证，验证下本次生成的对称密钥是否可以正常使用。
-![[ech_schangecipherspec.webp]]
-![[ech_encryptedhandshakemessage.webp]]
+![ech_schangecipherspec](../../../Files%20&%20LongText/Attachments/ech_schangecipherspec.webp)
+![ech_encryptedhandshakemessage](../../../Files%20&%20LongText/Attachments/ech_encryptedhandshakemessage.webp)
 ### TLS 第四次握手
 这次**服务端**发送「**Change Cipher Spec**」和「**Encrypted Handshake Message**」消息验证
 ### 前向保密问题
@@ -1011,7 +1011,7 @@ pre-master = a × bG = b × aG = abG（椭圆曲线 Diffie-Hellman）
 	- 客户端验证证书时，会访问 CA 获取 CRL 或者 OCSP，目的是验证服务器的证书是否有被吊销；
 	- 双方计算 Pre-Master，也就是对称加密密钥；
 - 第二个环节，握手后的对称加密报文传输。这一点现代硬件厂商甚至做了硬件优化，几乎没有优化空间
-![[tls性能损耗.webp]]
+![tls性能损耗](../../../Files%20&%20LongText/Attachments/tls%E6%80%A7%E8%83%BD%E6%8D%9F%E8%80%97.webp)
 
 - 硬件优化: 可以看到**HTTPS 协议是计算密集型，而不是 I/O 密集型**，所以应该使用更好的 CPU，选择可以**支持 AES-NI 特性的 CPU**，因为这种款式的 CPU 能在指令级别优化了 AES 算法
 - 软件升级: 升级 linux 内核，更新软件的 openssl 依赖
@@ -1034,13 +1034,13 @@ TLS 握手的目的就是为了协商，通过双方各自支持的算法，偏�
 但是它有两个缺点：
 - 维护 session 导致的内存压力让服务器连接并发量下降
 - 多服务器（分布式系统）让下次连接不一定会在经过**负载均衡后**连接到缓存了 Session ID 的服务器上，这引入了分布式系统的一致性问题
-![[sessionid.webp]]
+![sessionid](../../../Files%20&%20LongText/Attachments/sessionid.webp)
 #### Session Ticket
 服务器不再缓存每个客户端的会话密钥，而是把缓存的工作交给了客户端，类似于 HTTP 的 Cookie。
 客户端与服务器首次建立连接时，服务器会加密「会话密钥」作为 Ticket 发给客户端，交给客户端缓存该 Ticket。再次连接服务器时，客户端会发送 Ticket，服务器解密后就可以获取上一次的会话密钥，然后验证有效期
 这相当于将会话在服务器端本地存储改为服务器集中存储 session，本地检索操作转换为了向集群服务的通信中心的一次通信过程
 #### 重放攻击
-![[Pasted image 20260802190239.png]]
+![Pasted image 20260802190239](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260802190239.png)
 如果请求时 POST/DELETE 等**非幂等操作**可能会引起危险，避免重放攻击的方式就是需要**对会话密钥设定一个合理的过期时间**。
 ## HTTP/2 牛逼在哪？
 #暂时意义不大
@@ -1064,10 +1064,10 @@ Connection: Upgrade\r\n
 ```
 浏览器也用同样的**公开算法**将请求中的 `base64码` 转成另一段字符串，如果和响应中的哈希字符串一致则验证成功
 ### 具体通信细节
-![[f756ca625523f0f9d40a402465179bbe.webp]]
-![[82d65f08dad05e6b537ea06b94224a5f.webp]]
-![[382c7699530ea7e7b22f60bb68af21bd.webp]]
-![[3a63a86e5d7e72a37b9828fc6e65c21f.webp|传输数据协议的消息格式:]]
+![f756ca625523f0f9d40a402465179bbe](../../../Files%20&%20LongText/Attachments/f756ca625523f0f9d40a402465179bbe.webp)
+![82d65f08dad05e6b537ea06b94224a5f](../../../Files%20&%20LongText/Attachments/82d65f08dad05e6b537ea06b94224a5f.webp)
+![382c7699530ea7e7b22f60bb68af21bd](../../../Files%20&%20LongText/Attachments/382c7699530ea7e7b22f60bb68af21bd.webp)
+![传输数据协议的消息格式:](../../../Files%20&%20LongText/Attachments/3a63a86e5d7e72a37b9828fc6e65c21f.webp)
 重要的字段:
 **opcode 字段**：这个是用来标志这是个**什么类型**的数据帧。
 - 等于 1 ，是指text类型（`string`）的数据包
@@ -1078,14 +1078,14 @@ Connection: Upgrade\r\n
 - 如果是 `126（0x7E）`。那它表示payload的长度范围在 `126~65535` 之间，接下来还需要**再读 16bit**
 - 如果是 `127（0x7F）`。那它表示payload的长度范围 `>=65536`，接下来还需要**再读 64bit**。
 ## Socket 编程
-![[format,png-20230309230545997.webp]]
+![format,png-20230309230545997](../../../Files%20&%20LongText/Attachments/format%2Cpng-20230309230545997.webp)
 ### listen 函数参数 backlog 意义
 Linux 内核中会维护两个队列：
 - 半连接队列（SYN 队列）：接收到一个 SYN 建立连接请求，处于 SYN_RCVD 状态；
 - 全连接队列（Accpet 队列）：已完成 TCP 三次握手过程，处于 ESTABLISHED 状态；
 这里引出 [[#SYN 攻击|SYN 攻击]]，现在 listen 函数的 backlog 指的是 accept 队列的长度
 ### accept 发生在三次握手的哪一步？
-![[socket三次握手.drawio.webp]]
+![socket三次握手.drawio](../../../Files%20&%20LongText/Attachments/socket%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B.drawio.webp)
 # 补充知识
 ## TCP 协议本质理解
 TCP 协议的三个特点: 面向连接、可靠、基于字节流
@@ -1104,7 +1104,7 @@ TLS 握手，TCP 协议栈的握手都是**建立连接**的体现
 数据有效性通过: 校验和（反码求和算法，注意不是 CRC，这是数据链路层，以太网数据帧传输时使用）
 #### 基于字节流
 ### 协议字段的细节
-![[format,png-20230309230534096.webp]]
+![format,png-20230309230534096](../../../Files%20&%20LongText/Attachments/format%2Cpng-20230309230534096.webp)
 **序列号**：在建立连接时由计算机生成的随机数作为其初始值，通过 SYN 包传给接收端主机，每发送一次数据，就「累加」一次该「数据字节数」的大小。**用来解决网络包乱序问题。**
 **确认应答号**：指下一次「期望」收到的数据的序列号，发送端收到这个确认应答以后可以认为在这个序号以前的数据都已经被正常接收。**用来解决丢包的问题。**
 **控制位：**
@@ -1120,7 +1120,7 @@ TLS 握手，TCP 协议栈的握手都是**建立连接**的体现
 - **序列号**：用来解决乱序问题等
 - **窗口大小**：用来做流量控制
 TCP 四元组包括:
-![[format,png-20230309230433082 1.webp]]
+![format,png-20230309230433082 1](../../../Files%20&%20LongText/Attachments/format%2Cpng-20230309230433082%201.webp)
 源地址和目的地址的字段（32 位）是在 IP 头部中，作用是通过 IP 协议发送报文给对方主机。
 源端口和目的端口的字段（16 位）是在 TCP 头部中，作用是告诉 TCP 协议应该把报文发给哪个进程。
 ### TCP 和 UDP 可以使用同一个端口吗？
@@ -1297,9 +1297,9 @@ retry: 3000\n
 - localhost 是一个主机名，需要通过 DNS 解析才能找到对应的 IP，是**应用层**的
 浏览器对两者的解析:
 解析 localhost 时需要经过 DNS 服务
-![[Pasted image 20260719143644.png]]
+![Pasted image 20260719143644](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260719143644.png)
 解析 127.0.0.1 时
-![[Pasted image 20260719143707.png]]
+![Pasted image 20260719143707](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260719143707.png)
 所以一般来说直接解析地址，跳过 DNS 要快一点
 #### 两者产生效果与差异的原因
 - hosts 文件被**恶意修改**

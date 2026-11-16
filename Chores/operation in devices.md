@@ -3,9 +3,9 @@
 
 1. 禁用计算机管理——软件设备中
 	![Pasted image 20240818085708.png](Pasted%20image%2020240818085708.png)
-2. 关闭服务中 SSDP ![Pasted image 20240818085817.png](Pasted%20image%2020240818085817.png)
-3. 更改着色器缓存大小![Pasted image 20240818090008.png](Pasted%20image%2020240818090008.png)
-4. 程序设置中调整 OpenGL 渲染为优先性能，自定义程序使用添加找到游戏 ![Pasted image 20240818090111.png](Pasted%20image%2020240818090111.png)
+2. 关闭服务中 SSDP ![Pasted image 20240818085817.png](../Files%20&%20LongText/Attachments/Pasted%20image%2020240818085817.png)
+3. 更改着色器缓存大小![Pasted image 20240818090008.png](../Files%20&%20LongText/Attachments/Pasted%20image%2020240818090008.png)
+4. 程序设置中调整 OpenGL 渲染为优先性能，自定义程序使用添加找到游戏 ![Pasted image 20240818090111.png](../Files%20&%20LongText/Attachments/Pasted%20image%2020240818090111.png)
 ## 2024 年 9 月 19 日08:58:41
 ### 解决本地回环地址无法访问
 2024 年 9 月 19 日09:29:48 开启后发现[使用虚拟机地址而不是外部Windows本机地址](Linux%20Basics.md#^1a483c)，遂关闭
@@ -17,7 +17,7 @@
 #### 参考链接
 [解决访问127.0.0.1时，提示“127.0.0.1 拒绝了我们的连接请求”](https://blog.csdn.net/sunyctf/article/details/130526379)
 #### 正常使用
-![Pasted image 20240919090831.png](Pasted%20image%2020240919090831.png)
+![Pasted image 20240919090831.png](../Files%20&%20LongText/Attachments/Pasted%20image%2020240919090831.png)
 
 ### RabbitMQ 控制台无法启动
 #### 问题
@@ -52,12 +52,12 @@ started 3 plugins.
 
 ## 坚果云上传书
 2024 年 9 月 19 日11:33:37
-![Pasted image 20240919113339.png](Pasted%20image%2020240919113339.png)
+![Pasted image 20240919113339.png](../Files%20&%20LongText/Attachments/Pasted%20image%2020240919113339.png)
 浏览器上传
 
 ## 关闭 win 11 自动更新
 2024 年 9 月 22 日16:58:19
-![Pasted image 20240922165820.png](Pasted%20image%2020240922165820.png)
+![Pasted image 20240922165820.png](../Files%20&%20LongText/Attachments/Pasted%20image%2020240922165820.png)
 [如何彻底关闭Win11更新？分享四种关闭方法_win11关闭自动更新-CSDN博客](https://blog.csdn.net/XdecadeXXX/article/details/137913605)
 
 ## 关闭 microsoft 兼容性遥测

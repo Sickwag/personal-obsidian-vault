@@ -30,8 +30,8 @@ fun Example(a: () -> Unit, b: @Composable () -> Unit) {
 间隙缓冲区是一个含有**当前索引或游标的集合**，它在内存中使用扁平数组 (flat array) 实现。这一扁平数组比它代表的数据集合要大，而那些没有使用的空间就被称为**间隙**。
 
 **compose 构建 UI 的方式是将各种组件放在一个数据结构中，通过改变数据结构更新 UI**
-![[Pasted image 20250120212957.png|325]]
+![325](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250120212957.png)
 一个**正在执行**的 Composable 的层级结构可以使用这个**数据结构**，而且我们可以在其中插入一些东西
-![[Pasted image 20250120213323.png]]
+![Pasted image 20250120213323](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250120213323.png)
 除了移动间隙，它的所有其他操作包括获取 (get)、移动 (move)、插入(insert)、删除 (delete) 都是常数时间操作。移动间隙的时间复杂度为 O (n)
 注意，组件样式的更改只是数据结构**中一个元素改变，并没有改变数据结构**，而删除，顺序调换一整个 compose 组件才会改变结构

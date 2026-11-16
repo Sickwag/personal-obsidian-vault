@@ -6,8 +6,8 @@ HTML 是一种超文本标记语言，可使用下面两种后缀，没有区别
 - .html
 - .htm
 #### html 标签和元素
-![[Pasted image 20241123103135.png]]
-![[Pasted image 20241123103149.png]]
+![Pasted image 20241123103135](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241123103135.png)
+![Pasted image 20241123103149](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241123103149.png)
 *XML 是一种很像 HTML 的语言*[[XML#语法规则]]
 `<!DOCTYPE>` 声明
 `<!DOCTYPE>`声明有助于浏览器中正确显示网页。
@@ -394,7 +394,7 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 </html>
 ```
 文件树结构如下：
-![[Pasted image 20250113191334.png]]
+![Pasted image 20250113191334](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250113191334.png)
 ##### 调整图片位置的方法
 ####### 1.  `text-align` 属性
 - **适用场景**: 当图像作为文本的一部分时，可以使用 `text-align` 属性来控制图像的对齐方式。
@@ -506,7 +506,7 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
     </p>
 </p>
 ```
-![[Pasted image 20241201170737.png|450]]
+![450](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241201170737.png)
 #### HTML 属性
 ##### 全局属性
 | 属性                                                                                                                 | 描述                            |
@@ -567,7 +567,7 @@ href 是 Hypertext Reference 的缩写，表示超文本引用。用来建立当
 ![[Files & LongText/Long code/HTML#表格的简单样式]]
 
 效果：
-![[Pasted image 20241202081554.png]]
+![Pasted image 20241202081554](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241202081554.png)
 #### 使用 CSS 控制表格样式
 ##### 引入 CSS 样式方法
 -  使用 `<link>` 标签
@@ -666,12 +666,12 @@ CSS 由一个**选择器**（分为类选择器， ID 选择器，`:nth-of-type`
     }
 </style>
 ```
-![[Pasted image 20241202082411.png]]
+![Pasted image 20241202082411](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241202082411.png)
 
 ---
 - `border-collapse` 属性
 border-collapse CSS 属性是用来决定表格的边框是分开的还是合并的。在分隔模式下，相邻的单元格都拥有独立的边框。在合并模式下，相邻单元格共享边框。
-![[Pasted image 20250113195020.png]]
+![Pasted image 20250113195020](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250113195020.png)
 - 可以一次性对多个元素设置 CSS 属性
 ```css
 table,th,td{
@@ -748,7 +748,7 @@ table,th,td{
 - **可设置盒模型属性**：支持内边距、外边距和边框。
 - **排列方式**：像内联元素一样在同一行内排列，直到空间不足时才会换行。
 ### HTML 布局
-![[Pasted image 20250114094248.png]]
+![Pasted image 20250114094248](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114094248.png)
 创建这样的布局可以使用 div 容器方法，也可以看做一个 `table` 用单元格排列
 table 布局和 div&span 布局
 ```html
@@ -804,7 +804,7 @@ table 布局和 div&span 布局
 	- input 标签中 `name` 来关联 label 中 `id` 属性，
 	- label 标签中 `for` 属性关联 input 控件的 `name` 属性，label 不需要 `name`（因这是控件属性）
 - 当用户点击“用户名：”或“电子邮件：”的文本时，相应的输入框会**自动获得焦点**。
-![[PixPin_2025-01-14_12-15-53.mp4]]
+[PixPin_2025-01-14_12-15-53](../../../Files%20&%20LongText/Attachments/PixPin_2025-01-14_12-15-53.mp4)
 label 也可以通过 `form` 指定关联表单的的 id，`accesskey` 关联快捷键，一般通过 ALT+accesskey 中关联按键
 一般通过 label 标签和相对应的控件**分开写而不是嵌套写**，这样有助于代码复用，嵌套的代码难以维护和更改
 ```html
@@ -823,7 +823,7 @@ label 也可以通过 `form` 指定关联表单的的 id，`accesskey` 关联快
 ##### 常用控件
 ###### fieldset
 域说明元素 `<legend>` 代表一个用于表示它的父元素 `<fieldset>` 的内容的标题。
-![[Pasted image 20250114134138.png]]
+![Pasted image 20250114134138](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114134138.png)
 个人信息就是 fieldset 的标题，属性 form（value 为 form 标签的 id），规定 fieldset 所属的**一个或多个表单**
 ###### input
 input 中 type 值有：
@@ -839,7 +839,7 @@ input 中 type 值有：
 - 文件上传进度条：file-progress（横向灰色进度条）
 - 搭配 output 显示计算结果
 效果图
-![[Pasted image 20250114142809.png]]
+![Pasted image 20250114142809](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114142809.png)
 ```html
 <button type="button" onclick="alert('Hello!')">点击我</button><br>
 <label for="date">date</label>
@@ -906,7 +906,7 @@ input 控件中 autocomplete 属性可以填多种值，作用是告诉浏览器
 </select>
 ```
 option 还有拓展 optgroup
-![[Pasted image 20250114202938.png]]
+![Pasted image 20250114202938](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114202938.png)
 ```html
 <select>
     <optgroup label="Swedish Cars">
@@ -920,7 +920,7 @@ option 还有拓展 optgroup
 </select>
 ```
 ###### datalist-option
-![[Pasted image 20250114140838.png]]
+![Pasted image 20250114140838](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114140838.png)
 和 select-option 像，input 组件通过 `list` 属性和 datalist 的 id 属性**绑定**
 ```html
 <input list="browsers">
@@ -933,7 +933,7 @@ option 还有拓展 optgroup
 ```
 ###### button
 定义一个可点击的按钮，可以包含文本和其他 HTML 元素。其中 alert 会使用浏览器通知显示消息
-![[Pasted image 20250114140952.png|375]]
+![375](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114140952.png)
 ###### 详细信息域
 其中 details 一般和 summary 一起使用，summary 表示详细信息的摘要内容，`open` 属性描述细节是否可见
 只要放在 `details` 中内容都是详细信息**而不管顺序**
@@ -951,10 +951,10 @@ option 还有拓展 optgroup
     <summary>click here to show details</summary>
 </details>
 ```
-![[Pasted image 20250114143611.png|效果是这样的]]
+![效果是这样的](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114143611.png)
 ###### textarea 文本框
 设置 cols 和 rows 调整文本框宽度 `<textarea rows="10" cols="30">`
-![[Pasted image 20250114143754.png]]
+![Pasted image 20250114143754](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114143754.png)
 
 ##### 相似控件区别
 ###### button 和 input type="button"
@@ -971,7 +971,7 @@ option 还有拓展 optgroup
 
 #### 实例
 ##### 简单信息收集
-![[Pasted image 20250114134008.png]]
+![Pasted image 20250114134008](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114134008.png)
 ```html
 <body>
     <form action="/">
@@ -1015,14 +1015,14 @@ option 还有拓展 optgroup
 
 ### HTML 框架
 通过使用框架，你可以在同一个浏览器窗口中显示不止一个页面。
-![[PixPin_2025-01-14_14-46-19.mp4]]
+[PixPin_2025-01-14_14-46-19](../../../Files%20&%20LongText/Attachments/PixPin_2025-01-14_14-46-19.mp4)
 语法：`<iframe src="demo_iframe.htm" width="200" height="200"></iframe>`
 - width 和 height 默认以 px 作为单位
 - frameborder 可以设置边框粗细
 ### HTML 颜色
 HTML 颜色由一个十六进制符号来定义，这个符号由红色、绿色和蓝色的值组成（RGB）。
 HEX 和 RGB 两种表示方法无非是**进制不同**
-![[Pasted image 20250114145349.png|400]]
+![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114145349.png)
 最多用在 style 中 background-color 属性上，使用颜色首先声明进制规则，再声明颜色代码，常用进制规则有 RGB HEX RGB（在 RGB 上扩展包括了 **“alpha”** 通道，运行对颜色值设置透明度。）3 位十六进制（不常用）
 `background:rgba(255,0,0,0.5);` 透明度在 0~1，所以可以省略开头 0
 html 内置了常用颜色并使用了别名代表他们，具体参考 [HTML 颜色名 | 菜鸟教程](https://www.runoob.com/html/html-colornames.html)
@@ -1208,7 +1208,7 @@ canvas 中 height 和 width 属性可以限制画布尺寸
 通过使用 `<colgroup>` 标签，可以向整个列应用样式，而不需要重复为每个单元格或每一行设置样式。
 **注释：**只能在 `<table>` 元素之内，在任何一个 `<caption>` 元素后，在任何一个 `<thead>`、`<tbody>`、`<tfoot>`、`<tr>` 元素之前使用 `<colgroup>` 标签。**
 colgroup 定义在一个 table 中，按顺序从左至右为每一个 col 设置格式
-![[Pasted image 20250114162637.png]]
+![Pasted image 20250114162637](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114162637.png)
 ```html
 </table>
 <table>
@@ -1324,7 +1324,7 @@ figure 中有几个常用的 ARIA **描述性属性**
 </figure>
 ```
 显示效果：
-![[Pasted image 20250114202443.png]]
+![Pasted image 20250114202443](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250114202443.png)
 #### param
 用于向嵌入的插件（如 `<object>` 或 `<embed>` 元素）传递参数。它允许开发者为嵌入的外部内容或应用程序提供配置选项或初始化参数。以下是对 `<param>` 标签的详细解释，包括其用途、语法、属性以及使用场景。
 一般在网页中使用各种插件，为插件传递参数（下面是插入一个 flash）
@@ -1393,9 +1393,9 @@ sizes 和 srcset 中描述内容用来帮助浏览器*做出最好的决策*，�
 - `<rt>zi</rt>`：提供汉字的拼音 `zi`。
 - `<rp>)</rp>`：如果浏览器不支持 ruby，则显示右括号 `)`。
 不支持情况下的渲染
-![[Pasted image 20250115124857.png]]
+![Pasted image 20250115124857](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115124857.png)
 支持情况下
-![[Pasted image 20250115124917.png]]
+![Pasted image 20250115124917](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115124917.png)
 #### section
 用于定义文档中一个独立部分或章节。它用于将相关内容组织在一起，使其在语义上与主内容分离，类似于 field， div 和 span 等，将不同内容组合在一起，但 `div` 是一个**通用容器标签**，没有明确的语义
 主要作用是让 html 文档和网页更有可读性，更强组织性
@@ -1419,7 +1419,7 @@ sizes 和 srcset 中描述内容用来帮助浏览器*做出最好的决策*，�
     </section>
 </aside>
 ```
-![[Pasted image 20250115133600.png|299]]
+![299](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115133600.png)
 #### nav
 用于定义文档中**导航部分**（创建一个导航栏时用到，如主菜单、侧边栏导航、页脚导航等）。它用于包含一组导航链接，帮助用户在不同页面或同一页面的不同部分之间导航
 用这个标签更好展示网站的结构（也有一些**辅助技术**可以识别 nav 标签，提供更好的网站设计），其中一般放入导航目录
@@ -1434,7 +1434,7 @@ sizes 和 srcset 中描述内容用来帮助浏览器*做出最好的决策*，�
 </nav>
 ```
 常用的网站结构：
-![[Pasted image 20250115140116.png]]
+![Pasted image 20250115140116](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115140116.png)
 ```html
 <html lang="en">
 <head>
@@ -1572,7 +1572,7 @@ sizes 和 srcset 中描述内容用来帮助浏览器*做出最好的决策*，�
 ```html
 <p> our website <a href="www.<wbr>baidu.<wbr>com">www.baidu.com</a></p>
 ```
-![[Pasted image 20250115150425.png|可以直接写在网址中间]]
+![可以直接写在网址中间](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115150425.png)
 
 ### HTML5 重要元素
 #### canvas
@@ -1641,7 +1641,7 @@ canvas 元素本身是没有绘图能力的。所有的绘制工作必须在 Jav
 </html>
 ```
 实现效果：
-![[Pasted image 20250115160331.png]]
+![Pasted image 20250115160331](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115160331.png)
 ### SVG
 HTML5 支持内联 SVG，内置标签 `<svg>` 元素是 SVG 图形的容器，使用 XML 描述图形内容，而 canvas 通过 JavaScript 绘制
 在 SVG 中，每个被绘制的图形均被视为**对象**。如果 SVG 对象的属性发生变化，那么浏览器能够自动重现图形。
@@ -1657,7 +1657,7 @@ Canvas 是逐像素进行渲染的。在 canvas 中，一旦图形被绘制完�
 </body>
 ```
 
-![[Pasted image 20250115163824.png]]
+![Pasted image 20250115163824](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115163824.png)
 #### HTML5 拖放（Drag 和 Drop）
 拖放是一种常见的特性，即抓取**对象**以后拖到另一个位置。
 在 HTML5 中，拖放是标准的一部分，**任何元素**都能够拖放。

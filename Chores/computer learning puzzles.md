@@ -53,7 +53,7 @@ GPG检查失败
 ## 配置静态 IP 地址和 ifconfig 不同
 ### 问题
 通过编辑 `vim /etc/sysconfig/network-scripts/ifcfg-ens160` 文件时，修改 BOOTPROTO 为 static 静态 IP 地址分配，也添加了四行新内容，但使用 ifconfig 得到的 IP 地址和配置文件中不同
-![Pasted image 20240927215913.png](Pasted%20image%2020240927215913.png)
+![Pasted image 20240927215913.png](../Files%20&%20LongText/Attachments/Pasted%20image%2020240927215913.png)
 ### 原因
 centos 8 以上系统自动忽略配置属性 HWADDR，需要手动添加，不然只会在虚拟机中设置的子网 IP 字段中随机选择一个，属于是“半静态”
 

@@ -4,7 +4,7 @@
 ### Moidfier 的特性
 Modifier 是**顺序敏感的**，同时链式调用（Modifier 对象如果有返回值那么返回值也是 Modifier）
 Modifier 对象都有一个成员方法 then：
-![[Pasted image 20250112144117.png]]
+![Pasted image 20250112144117](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250112144117.png)
 #### 小知识
 - `===` 引用相等运算符
 用于检查两个引用是否指向同一个对象实例。与之相对的是 `==` 运算符，它用于检查两个对象的**内容相等**。
@@ -75,19 +75,19 @@ fun function1(arg1: arg1_type,(args[]) -> return_type){/*body*/}
 	// 其中，(args[]) -> return_type表示接受的参数类型时一种函数
 ```
 在 java 中，不支持函数作为参数传递，所以一般使用接口实现，将函数作为一个对象，传递对象进另一个函数的参数中，从而实现他的功能
-![[Pasted image 20250111110438.png]]
+![Pasted image 20250111110438](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111110438.png)
 这种情境下 a 函数的返回值**跟传入的方法有关**，类似于现实中通勤方式，a 函数计算总共花费多消耗时间，金钱成本。成本的计算方法和成做什么交通工具有关，不同的交通工具有不同的成本消耗（计算方法），所以 a 函数的返回值与“方法”有关
 在 java 中通常使用接口管理这些方法：
 - 在接口中调用各种计算方法（也就是代表**不同交通工具对应的函数**）
 - 所有方法通过一个接口管理
 - 在 a 函数需要某种特定的计算方法时，调用接口中具体实现即可
-![[Pasted image 20250111111022.png]]
+![Pasted image 20250111111022](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111111022.png)
 
 > 所以传递函数（或者 java 中传递接口，）本质上是为了使用函数的方法（或者说是接口中具体实现）
 > java 中不允许传递方法，所以才使用接口管理
 
 kotlin 中没有一种**基本数据类型**为函数类型（也不可能有，因函数有不同的返回值，参数列表。他们不同代表函数也不同，自然不能归为一种类型）
-![[Pasted image 20250111111414.png]]
+![Pasted image 20250111111414](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111111414.png)
 所以需要使用[[#将函数作为参数|将函数作为参数]]或者 [[#lambda 函数|lambda]] 方法
 #### 将函数作为参数（匿名函数）
 如果需要将一个**已经定义，声明好的函数**传入另一个函数中作为参数
@@ -95,7 +95,7 @@ kotlin 中没有一种**基本数据类型**为函数类型（也不可能有，
 > 由于其函数本身并不是一种数据类型，还是要通过对象作为参数传入，做法是**构造一个和函数拥有相同功能的对象**（即对象中有功能和函数一样的方法）实现，java 中做法仍是用一个接口管理这个函数，并在需要使用这个函数的地方实现它，或者管理一个已经实现的函数
 
 Kotlin 提供一种语法糖，在**已经实现的函数名前**加 `::` 表示***拥有函数相同功能的对象***，所以，***匿名函数是一个对象***，所以他支持赋值操作
-![[Pasted image 20250111112652.png]]
+![Pasted image 20250111112652](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111112652.png)
 - 编译器会自动构建这样一个对象，其中包含的 `invoke()` 方法就能调用起原函数的**逻辑**
 - `::function_name` 的写法是一个指向对象的**引用**
 - 这种函数的引用得到的**返回值类型**是一个对象，可以被赋值
@@ -104,9 +104,9 @@ var var1 = ::func_name
 var var2 = var1
 ```
 这种情况下函数被转换成对象，除了双冒号的写法，还可以直接将函数*作为对象*传递变量
-![[Pasted image 20250111113422.png|a是一个函数]]
+![a是一个函数](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111113422.png)
 这种情况下函数名已经没用了，因右边已经转换为一个对象，不需要名称来作为函数转换为对象的中间媒介（所以 kotlin 直接禁止这样写）
-![[Pasted image 20250111113627.png]]
+![Pasted image 20250111113627](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111113627.png)
 
 #### lambda 函数
 ##### lambda 函数作用
@@ -115,13 +115,13 @@ var var2 = var1
 > 能够怎么使用 `::func_name`，就能怎么使用匿名函数和 lambda
 
 
-![[Pasted image 20250111111621.png]]
+![Pasted image 20250111111621](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111111621.png)
 ##### kotlin 中 lambda 的省略规则
-![[Pasted image 20250111114658.png]]
+![Pasted image 20250111114658](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111114658.png)
 这种省略参数类型和返回值类型的写法，只有在作为参数传递时才能写，如果在一个普通的变量赋值情景下，lambda 无法从上下文推断出是什么类型
-![[Pasted image 20250111114859.png]]
+![Pasted image 20250111114859](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111114859.png)
 由于变量赋值在没有类型转换情况下，变量类型等于 lambda 类型，所以可以通过对变量指明类型类约束（让 lambda 推断）匿名函数的类型
-![[Pasted image 20250111115122.png]]
+![Pasted image 20250111115122](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111115122.png)
 lambda 函数的返回值类型由**最后一行代码的返回值类型**决定，而不是 `return` 语句
 ```kotlin
 fun funciton_name(funcion_variable_name: vari_type() -> return_type)
@@ -139,16 +139,16 @@ fun funciton_name(funcion_variable_name: @Composable vari_type()() -> return_typ
 引子：
 java 中使用幂运算，一般要使用 Math 类中静态函数 pow，`Math.poe(3,2)`，但有更直观地写法是 `3.pow(2)` 但 3，也就是 `Integer` 类中并没有这个方法
 但 kotlin 中，使用 `3f.pow(2)` 就可以，同样 `Integer` 中没有定义，pow 是一个拓展函数
-![[Pasted image 20250111152327.png]]
+![Pasted image 20250111152327](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111152327.png)
 拓展函数一般写在一个文件的最上方，package 语句下方，这样这个**拓展函数不属于任何类**，在同一包中都可以调用（作用于问题，如在类中定义就只能在类中使用）
-![[Pasted image 20250111152833.png|550]]
+![550](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111152833.png)
 在函数名的**左边**添加一个**类型名**，表示给这个数据类型添加一个 `receiver` 接受它，表示这个**数据类型的对象**可以使用它（虽然顶层放置拓展函数让他在整个包中都能被调用，但限定了他只能被哪种**类型的对象**调用）
-![[Pasted image 20250111153556.png|550]]
+![550](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111153556.png)
 在一个类中定义的拓展函数，属于**类的成员函数**，但这个成员函数只能被**对应的 `receiver` 使用**，相当于一种**特定类型专用的 private 访问修饰符**
 这与 [[#lambda函数|lambda函数]]类似，拓展函数也可以被*指向*
-![[Pasted image 20250111161221.png|600]]
+![600](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111161221.png)
 如果这个拓展函数不在 TOP level 中，是类的成员函数则不能被引用
-![[Pasted image 20250111161410.png|600]]
+![600](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111161410.png)
 这是为了防止存在下面情况
 ```kotlin
 class Extensions{
@@ -164,9 +164,9 @@ class Extensions{
 ```
 这时，String. method 不能确定调用 str 变量的对象的 String 内置大类的拓展函数还是调用 Extensions 类中拓展函数，所以干脆禁止使用
 拓展函数也支持用对象的引用来使用，但无论是直接调用还是 `invoke` 方法，都需将第一个参数设置为**需要变为对象的引用的对象**
-![[Pasted image 20250111162105.png]]
+![Pasted image 20250111162105](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111162105.png)
 拓展函数也支持传递给变量（会自动调用创建这个函数功能相同的对象的引用）
-![[Pasted image 20250111162215.png]]
+![Pasted image 20250111162215](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111162215.png)
 
 ---
 其他属性：
@@ -196,7 +196,7 @@ println(str) // 输出: "Hello World!"
 ```
 ##### 拓展属性
 同[[#拓展函数|拓展函数]]逻辑，在声明属性的左边写上类名，相当于添加了一个**特定类型专用的 private 访问修饰符**用在变量上而已
-![[Pasted image 20250111162807.png|600]]
+![600](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111162807.png)
 但去掉了拓展函数中 receiver 的转化等比较绕的属性
 其他特性：
 拓展属性不会自动创建 [[Kotlin + xml传统开发#Java Bean|Java Bean]] 幕后字段，需要自己实现 getter 和 setter（对于可写的 var）
@@ -216,7 +216,7 @@ val doubledWithIt = numbers.map { it * 2 }
 在上述例子中，`it` 代表列表中**每一个元素**。
 ### 资源对象管理
 Kotlin compose 中管理资源和各种组件的方法一般是引用各种 kt 文件存储资源
-![[Pasted image 20250110194446.png]]
+![Pasted image 20250110194446](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250110194446.png)
 软件包中不同类型的变量资源通过 kt 文件存储，需要这些文件时，导入相应文件中对象，如 `import com.example.wecompose.ui.theme.black ` 导入一种颜色还可以
 - 使用 `import com.example.wecompose.ui.theme.*` 导入所有变量（对象），但这样容易引起域名冲突，导入其他内容
 - 解决域名冲突可以使用别名**按类型导入**的方式：
@@ -256,7 +256,7 @@ import com.example.project.ui.theme.DarkColors
 #### CompositionLocal 对象
 在设置主题时，不能通过函数传递参数来修改颜色变量，而需要通过主题管理器
 如内置的 `MaterialTheme.colors` 这一个对象来设置，其中每一个对象代表一种颜色并可以切换，他的返回值对象类型是 `CompositionLocal<Colors>`，其中 `Colors` 是专门用来主题管理的颜色对象
-![[Pasted image 20250110202005.png]]
+![Pasted image 20250110202005](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250110202005.png)
 `CompositionLocal` 对象是一个**用在组合函数中**局部**对象**，在组合函数中调用 `setter` 调整颜色用于当前 Composable 组件时，下一个组件**不继承上一个组件中修改**，被**重新初始化**
 *重新被初始化*的原理是***每个组合函数拿到的是分别独立的 `CompositionLocal` 对象***
 #### 主题管理器
@@ -324,9 +324,9 @@ fun WeBottomBarDark(){
     )
 }
 ```
-![[Pasted image 20250110221537.png]]
+![Pasted image 20250110221537](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250110221537.png)
 后为保证代码整洁，将底部栏部分抽出放入 `con.example.wecompose.ui` 单独的 WeBottomBar.kt 文件中，在 AS 中复制粘贴会自动添加原来代码在 MainActivity 中用到的 import 语句
-![[Pasted image 20250110222156.png]]
+![Pasted image 20250110222156](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250110222156.png)
 
 ### 底部导航栏逻辑
 通过 ViewModel 创建逻辑，首先创建一个 Wemodel 用于管理按钮逻辑
@@ -382,8 +382,8 @@ clickable 函数接受一个参数，表示被点击时应用的操作，将 onS
 ### 聊天页面逻辑
 #### 内容设置
 创建一个单独的 ChatList. kt 实现逻辑和 UI，并在 MainActivity 中 Column 中调用，并且一定要在 WeBottomBar **上面调用**，因页面显示在底部导航栏之前，而且上面的页面变化，导航栏不变，只是更改逻辑显示不同的图片而已
-![[Pasted image 20250111150540.png]]
-![[Pasted image 20250111144307.png]]
+![Pasted image 20250111150540](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111150540.png)
+![Pasted image 20250111144307](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250111144307.png)
 0,1,2,3 分别控制不同的页面，用不同的函数对应，这些空间都是 UI 的，放在不同的文件中
 引入相应的聊天记录（使用 List 结构）后，LazyColumn 创建消息列表
 ```kotlin
@@ -414,7 +414,7 @@ fun Modifier.unread(show: Boolean, color: Color): Modifier = this.drawWithConten
 }
 ```
 由于未读角标是高复用内容，所以做成一个函数方便调用，也可以用于 WeBottomBar 中 TableItem 未读消息展示，不过需要注意的是，**不能在 Modifier. unread 函数中使用 WeCompose. Theme. colors**，因 `WeCompose.Theme. colors` 是一个 `compositionLocal` 对象类型，虽然 color 类型相同，但**只能使用在@compose 注解的函数定义中**
-![[Pasted image 20250112115755.png]]
+![Pasted image 20250112115755](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250112115755.png)
 为了解决这一问题，需要在 `fun Modifier.unread` 定义中加入 color 参数，但传入参数在
 ```kotlin
 Image(  // 填充图片
@@ -467,8 +467,8 @@ fun ChatList(chats: List<Chat>) {
 }
 ```
 当不想细微调整各个组件的背景，可以直接加一个 `Box` 嵌套来单独设置组件的背景（Compose 中组件嵌套不会耗费性能）
-![[Pasted image 20250112121733.png|设置完分割线]]
-![[Pasted image 20250112121829.png|对整个对象设置一个背景色]]
+![设置完分割线](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250112121733.png)
+![对整个对象设置一个背景色](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250112121829.png)
 方法是在 `LazyColumn` 中设置一个 Modifier，因所有消息列表都在 LazyColumn 中显示，对它添加一个父 Box 专门设置颜色
 #### 顶栏设计
 上面提到可以嵌套父容器来实现单独调整颜色风格，这时加入顶栏，由于顶栏和下面的聊天页面是上下关系，所以改换 `Box` 为 `Column` 作为 LazyColumn 父容器并在 ChatListItem**上方**使用 WeTopBar

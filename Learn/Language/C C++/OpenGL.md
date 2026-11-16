@@ -873,7 +873,7 @@ OpenGL 按应用提供的数据读取。模型创建或加载时，应决定哪�
 如果希望表现光滑球面，可以让每个顶点的法线朝向球面在该位置的外侧，再让它们在片段之间插值。这样三角形内部的光照方向逐渐变化，明暗就更连贯。
 以球为例，某点减去球心就指向它所在位置的外侧，归一化后可以作为该点的球面法线。
 于是两种处理各有用途：正方体希望保留棱角，面与面之间分开法线；球希望连续平滑，顶点之间使用连续变化的方向。三角形几何上仍然是平面，我们通过法线控制它怎样呈现明暗。
-![[OpenGLSmoothNormals.png]]
+![OpenGLSmoothNormals](../../../Files%20&%20LongText/Attachments/OpenGLSmoothNormals.png)
 左侧按各面的法线着色，面与面之间明暗突变；右侧使用平滑顶点法线，内部明暗连续，但轮廓仍能看出多边形折线。图源：[Scratchapixel：Normals, Vertex Normals and Facing Ratio](https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/shading-normals.html)，保留图中作者署名。
 ### 顶点法线怎样得到？能任意指定吗？
 面法线描述真实平面的朝向；顶点法线是提供给光照计算的属性，不必与某一个相邻面垂直。希望平滑时，可以把参与平滑的相邻面法线加权相加再归一化，即 `normalize(w1*N1 + w2*N2 + ...)`；权重可按面面积或角度选择。硬边两侧则分开保存，不跨边平均。
@@ -971,7 +971,7 @@ float diffuseStrength = max(dot(N, L), 0.0);
 这一章先解决一个具体问题：上一章用一个固定颜色表示整个物体，现在希望木箱不同位置有木纹、边框、标签等不同颜色。光照计算仍要进行，只是其中的“表面颜色”不再处处相同。
 上一章的 `material.diffuse` 是 `vec3`，例如棕色 `(0.6,0.3,0.1)`。无论正在计算木箱哪个位置，拿到的都是这一个颜色。这一章把该成员改为 `sampler2D`，用一张图片记录各处的颜色，再按照当前片段对应的图片位置读取。
 因此，`material.diffuse` 虽然名字没变，类型和用法已经变了：过去直接就是颜色，现在必须经过 `texture` 才能取得颜色。这是阅读公式前需要补上的一步。
-![[OpenGLDiffuseMapLighting.png]]
+![OpenGLDiffuseMapLighting](../../../Files%20&%20LongText/Attachments/OpenGLDiffuseMapLighting.png)
 木纹、边框的颜色分区来自贴图，各处亮暗继续由光照计算。图源：[LearnOpenGL：Lighting maps](https://learnopengl.com/Lighting/Lighting-maps)，Joey de Vries；这是原教程效果图，不是本机运行截图。
 ## 为什么片段着色器又需要纹理坐标？从哪里传来？
 图片有许多不同颜色，仅知道“使用木箱图片”还不够，还需要知道“当前表面位置对应图片哪里”。纹理坐标就是这个对应位置，通常用两个数表示，称为 UV。
@@ -1149,7 +1149,7 @@ f 1//2 4//2 2//2
 先忽略 API，只想最终需要什么：正常大小的箱子已经画好，还想在它周围露出一圈颜色。如果再画一个稍大的纯色箱子，并禁止它覆盖原箱子所在的屏幕区域，那么剩下的部分就像边框。
 模板缓冲（Stencil Buffer）就是用来记录“哪些屏幕位置已经属于原箱子”的标记表。它不保存箱子的三维模型，也不自动识别轮廓；我们先写标记，再按标记筛选后一次绘制。
 在当前普通采样的例子中，可以先理解为每个像素位置旁边还有一个整数标记。初始为 `0`，第一次绘制箱子时，将通过测试的位置标为 `1`。启用多重采样后则需要按采样点理解，不影响这里的基本思路。
-![[OpenGLStencilOutline.png]]
+![OpenGLStencilOutline](../../../Files%20&%20LongText/Attachments/OpenGLStencilOutline.png)
 图中原箱子周围露出的纯色区域，来自第二次放大的绘制，不是新增了一组边框顶点。图源：[LearnOpenGL：Stencil testing](https://learnopengl.com/Advanced-OpenGL/Stencil-testing)，Joey de Vries；原教程示意效果，非本机运行截图。
 ## 两遍绘制分别留下什么？
 设某条屏幕横线上，原箱子占据中间五个位置，放大箱子占据七个位置：

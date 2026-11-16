@@ -1,4 +1,4 @@
-![[Pasted image 20250327130718.png]]
+![Pasted image 20250327130718](../../Files%20&%20LongText/Attachments/Pasted%20image%2020250327130718.png)
 ## PyTorch 官方文档
 ### 张量
 [Tensors — PyTorch Tutorials 2.6.0+cu124 documentation](https://pytorch.org/tutorials/beginner/basics/tensorqs_tutorial.html)

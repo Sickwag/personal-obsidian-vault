@@ -188,5 +188,5 @@
 
 ---
 考试错题
-![Untitled 18 3.png](Untitled%2018%203.png)
+![Untitled 18 3.png](../../../Files%20&%20LongText/Attachments/Untitled%2018%203.png)
 一个单元格内输入多行内容，excel不是notion，shift+enter跳转到上一行单元格

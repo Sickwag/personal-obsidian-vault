@@ -34,7 +34,7 @@
 - 接收：自下而上，`data` 递增跳过下层首部，暴露上层负载。
 - 发送：自上而下，建 `sk_buff` 时头部预留足够空间（应对不定长首部），各下层通过 `data` 递减来"压入"自己的首部。
 
-![[640.webp]] 
+![640](../../../Files%20&%20LongText/Attachments/640.webp)
 
 > [!note] 阻塞 IO 的天然瓶颈
 > TCP 的 `read/write` 默认阻塞：缓冲区空时 `read` 挂起、满时 `write` 挂起。单线程服务端处理一个客户端时若阻塞，其他客户端既无法连接也无法通信。这就是并发模型（多进程/多线程/多路复用）要解决的根本矛盾——一个阻塞 fd 不应拖垮其他 fd。
@@ -51,7 +51,7 @@ TCP 连接由**本机 IP, 本机端口, 对端 IP, 对端端口**四元组唯一
 一对一连接约束下，要让一个进程"同时"处理多个客户端，核心矛盾是阻塞 IO 会串行化所有连接。早期两种解法都用"一个连接配一个执行流"绕开阻塞，但代价不同：
 #### 多进程模型
 主进程监听，`accept()` 返回已连接 socket 后 `fork()` 子进程处理。`fork()` 复制父进程全部上下文（fd 表、内存空间、PC、代码），刚复制完父子几乎一模一样，靠 `fork` 返回值区分（0 为子进程）。子进程继承的已连接 socket 与父进程一致，可直接与客户端 IO。分工：父进程只监听+分发连接，子进程 `read/write` 干活。
-![[Pasted image 20260627175339.png]]
+![Pasted image 20260627175339](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260627175339.png)
 两个遗留问题决定其不现实：
 - **僵尸进程**：子进程退出后内核仍保留其信息占内存，父进程须 `wait` / `waitpid` 回收，否则耗尽系统资源。
 - **上下文切换开销大**：切换要换虚拟内存、栈、全局变量等用户空间资源，外加内核栈、寄存器等内核空间资源。连接数一多，进程数膨胀，切换开销吞噬性能。
@@ -81,7 +81,7 @@ select 用三张位图（读/写/异常）表达"我关心哪些 fd 的什么事
 设计意图：消除用户态忙轮询，等待期间 CPU 让给其他进程。
 #### 就绪信息回填位图：省结构，毁复用
 内核唤醒后遍历位图，把就绪的 bit 保留、未就绪的清零，**原位回填**到用户传入的位图。设计取舍：复用入参位图作输出，省一个数据结构，但代价是用户原始关注集合被覆盖——每次调用前必须 `FD_ZERO` + `FD_SET` 重建，不能复用。
-![[Pasted image 20260622173723.jpg]]
+![Pasted image 20260622173723](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260622173723.jpg)
 流程：注册位图 → select 陷入内核 → 全未就绪则阻塞睡眠 → 数据到达/超时/信号唤醒 → 内核遍历位图写结果 → `copy_to_user` 回填 → 用户逐个 `FD_ISSET` 找就绪 fd。
 #### 暴露的根本缺陷
 位图 + 无状态两个设计前提，决定了 select 的天花板：
@@ -117,10 +117,10 @@ select(max_fd + 1, &tmp, NULL, NULL, NULL);
 for (int i = 0; i <= max_fd; i++)
     if (FD_ISSET(i, &tmp)) { /* 处理就绪 fd */ }
 ```
-![[349279b4-9119-11eb-85d0-1278b449b310.mp4]]
+[349279b4-9119-11eb-85d0-1278b449b310](../../../Files%20&%20LongText/Attachments/349279b4-9119-11eb-85d0-1278b449b310.mp4)
 ## poll 机制
 ### 概览
-![[Pasted image 20260622204403.jpg]]
+![Pasted image 20260622204403](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260622204403.jpg)
 poll 是 System V 对 select 的修订：核心模型不变（内核替进程监视多个 fd，无就绪则阻塞），但用结构体数组替代位图，修掉 select 两个数据结构层面的痛点。
 ### 设计思路：用数据结构升级修缺陷
 #### 结构体数组替代位图：破除两道枷锁
@@ -175,8 +175,8 @@ epoll 是 Linux 2.6 对 select/poll 的根本性重构。select/poll 的核心�
 范式对比：
 - select/poll："内核，帮我看看这些 fd 有动静没？"——每次全量传，内核用完就忘。
 - epoll："内核，帮我盯着这些 fd，有动静通知我"——只传一次，回调通知。
-![[Pasted image 20260627205446.png]]
-![[Pasted image 20260622214002.jpg]]
+![Pasted image 20260627205446](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260627205446.png)
+![Pasted image 20260622214002](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260622214002.jpg)
 
 > [!note] epoll_wait 仍需拷贝，但只拷就绪的
 > 网上称 epoll_wait 用共享内存零拷贝，是错的。就绪链表 `rdllist` 是内核私有结构，未 mmap 到用户空间；epoll_wait 返回时仍由 `ep_send_events_proc` 通过 `__put_user` / `copy_to_user` 把就绪事件拷入用户 `events` 数组。优势在于只拷**就绪事件**（少量），而非全量监控集合。
@@ -218,7 +218,7 @@ struct epitem {
 };
 ```
 关系：一个 `eventpoll` 管一棵红黑树（全部 epitem）+ 一条就绪链表（仅就绪 epitem）。epitem 同时挂在红黑树（按 fd 查）和就绪链表（按就绪取）两处。
-![[346e30f4-9119-11eb-bb4a-4a238cf0c417.mp4]]
+[346e30f4-9119-11eb-bb4a-4a238cf0c417](../../../Files%20&%20LongText/Attachments/346e30f4-9119-11eb-bb4a-4a238cf0c417.mp4)
 ### 回调机制：ep_poll_callback
 epoll 最关键的创新。数据到达时协议栈遍历 socket 等待队列，逐个调用等待项的 callback，即 `ep_poll_callback`：
 ```cpp
@@ -319,7 +319,7 @@ while (1) {
 ## AIO 异步 IO
 ### 概览
 前面 select/poll/epoll 都是"就绪通知"（同步 IO 多路复用）：通知你"fd 可以读了"，你还要自己 `read` 把数据从内核拷到用户空间。异步 IO 反过来：内核直接把数据拷好，再通知你"数据已经在这里了"。
-![[Pasted image 20260623102207.jpg|同步IO和异步IO]]
+![同步IO和异步IO](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623102207.jpg)
 Linux 上有两套 AIO 接口，分别代表两次失败的尝试：
 - **POSIX AIO（glibc 用户态）**：用线程池模拟，伪异步。
 - **Linux Native AIO（内核态）**：真异步，但只对 `O_DIRECT` 文件可靠，残缺。
@@ -333,7 +333,7 @@ Linux 上有两套 AIO 接口，分别代表两次失败的尝试：
 #未完全理解 
 #### 设计思路：内核原生异步
 Native AIO 是内核态真异步：`io_submit` 提交请求后立即返回，内核异步执行，`io_getevents` 收完成事件。用 `kioctx` 管理上下文，`kiocb` 描述单次操作，完成事件写入 `aio_ring` 环形缓冲区。
-![[Pasted image 20260623102407.jpg]]
+![Pasted image 20260623102407](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623102407.jpg)
 #### ring buffer 完成队列：被 io_uring 继承的设计
 Native AIO 用 mmap 映射的环形缓冲区（`aio_ring`）传完成事件 `io_event`，避免 `io_getevents` 时拷贝。这个"共享内存环形队列传完成事件"的设计正是 io_uring 的前身——io_uring 把它从"只传完成"扩展到"提交和完成都走共享环形队列"。
 #### O_DIRECT 限制的根因
@@ -342,8 +342,8 @@ Native AIO 只对 `O_DIRECT` 文件可靠工作，这是设计上无法回避的
 - **O_DIRECT 满足前提**：绕过 page cache 直接 DMA 读写磁盘，IO 路径确定，不在锁/内存分配上阻塞 → 可真正异步。
 - **buffered IO 破坏前提**：依赖 page cache，缺页时要从磁盘读页，这个操作在内核里本质是阻塞的，无法推迟。于是 `io_submit` 退化为同步——在调用线程上下文直接做完再标记完成，失去异步意义。socket/pipe/普通文件都走 buffered 路径，全部失效。
 - **设计教训**：异步 IO 要求"提交即返回"。buffered IO 的缺页处理本质阻塞，无法异步化。这把 Native AIO 的应用面限死在数据库（自管缓存 + `O_DIRECT`）。
-![[Pasted image 20260623102907.jpg|kioctx结构]]
-![[Pasted image 20260623103439.jpg]]
+![kioctx结构](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623102907.jpg)
+![Pasted image 20260623103439](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260623103439.jpg)
 这些限制让 Linux 社区长期没有可用的通用异步 IO 方案，直到 io_uring 用另一套思路绕开。
 
 ### 对比：I/O 多路复用 vs AIO
@@ -474,7 +474,7 @@ https://www.cnblogs.com/panhua/p/19210455
 
 经典的一种切分方法是将「连接」和「业务线程」分开处理，当「连接层」有事件触发时提交给「业务线程」，避免了业务线程因「网络数据处于准备中」导致的长时间等待问题，节省线程资源，这就是大名鼎鼎的 `事件驱动模型`。
 
-![[Pasted image 20260707140242.jpg]]
+![Pasted image 20260707140242](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260707140242.jpg)
 事件驱动的核心是，以事件为连接点，当有 IO 事件准备就绪时，以事件的形式通知相关线程进行数据读写，进而业务线程可以直接处理这些数据，这一过程的后续操作方，都是被动接收通知，看起来有点像回调操作；
 
 这种模式下，IO 读写线程、业务线程工作时，必有数据可操作执行，不会在 IO 等待上浪费资源，这便是事件驱动的核心思想。

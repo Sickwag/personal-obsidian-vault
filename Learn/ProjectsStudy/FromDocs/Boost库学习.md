@@ -503,7 +503,7 @@ test 2: 2, 2
 - 测试套件：树的内部节点。这些元素本身没有主体或可执行代码，但可以附加执行代码和测试的夹具。
 - 主测试套件：树的根节点，定义上就是一个测试套件。附加到主测试套件的夹具是 **全局** 夹具。
 - 夹具：在上述测试单元之前和/或后执行的代码单元。
-![[Pasted image 20260203121417.jpg|500]]
+![500](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260203121417.jpg)
 > [!note]
 > 修饰可以添加到测试套件和用例上，但主测试套件除外。这些修饰可能会改变单元测试框架处理树的方式。例如，除了夹具及其相关的元素（套件、用例）之外，树本身不强制执行测试用例的执行顺序；修饰可用于指示树元素之间的特定顺序。
 
@@ -866,7 +866,7 @@ Boost 库中“静态接口”是指 **不依赖对象实例** 的***类方法**
 ### 多结果集查询
 使用多结果集查询需要先在单个 `connection::execute` 调用中运行多个分号分隔的文本查询。出于安全考虑，此功能默认禁用。启用它需要在连接之前设置 `handshake_params::multi_queries`
 它的定义为：
-![[Pasted image 20250722152355.png]]
+![Pasted image 20250722152355](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250722152355.png)
 使用构造函数初始化并将 multi_queries 设置为 true
 像 `DELIMITER` 这样的语句使用此功能 **不起作用**。这是因 `DELIMITER` 是 `mysql` 命令行工具的伪命令，而不是实际的 SQL。
 #### 静态接口结构体解析数据类型
@@ -904,14 +904,14 @@ mysql::static_results<mysql::pfr_by_postion<Info>> result;
 ##### 复杂类型误用未定义操作符报错
 
 对于 `optional<T>` 类型，不能 `<<` 输出值，导致 cmake 大量***近乎不可读的***报错：
-![[Pasted image 20250722003147.png]]
+![Pasted image 20250722003147](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250722003147.png)
 这些错误来自错误列表（还是可读的😅）
-![[Pasted image 20250722004123.png]] 通过筛选器筛选**输出**关键词，问题列表中也可以筛选从而快速定位
+![Pasted image 20250722004123](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250722004123.png) 通过筛选器筛选**输出**关键词，问题列表中也可以筛选从而快速定位
 ```bash
 error # 注意error后有空格，一般错误以 字母+数字 编写，可以用筛选器正则表达筛选快速找到错误所在
 warning
 ```
-![[Pasted image 20250722004106.png]]
+![Pasted image 20250722004106](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250722004106.png)
 并通过下面这段代码来输出包装器中值：
 ```cpp
 if (info.phone.has_value()) {

@@ -19,7 +19,7 @@ ObjectId 类似唯一主键，可以很快的去生成和排序，包含 12 byte
 - 接下来的 3 个字节是机器标识码
 - 紧接的两个字节由进程 id 组成 PID
 - 最后三个字节是随机数
-![[Pasted image 20260725103541.jpg]]
+![Pasted image 20260725103541](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020260725103541.jpg)
 
 ## 操作方法
 ### 类 JDBC 的连接方式

@@ -232,7 +232,7 @@ void QMetaObject::connectSlotsByName(QObject *obj) {
 
 ### QT 项目构建过程
 总体流程
-![[Pasted image 20251020205938.png]]
+![Pasted image 20251020205938](../../Files%20&%20LongText/Attachments/Pasted%20image%2020251020205938.png)
 - 由于 QT 有自定义宏，关键字和特殊文件但使用 C++进行描述，构建应用程序，所以这些**非标准 C++** 内容都会经过特殊处理后，变为**标准 C++** 代码，通过**标准 C++编译器**构建可执行程序。
 - `moc_dialog.cpp` 是 MOC 读取文件 `dialog.h` 的内容后生成的一个元对象代码文件，文件 `moc_predefs.h` 里是一些宏定义，资源文件 `res.qrc` 会被编译为 `qrc_res.cpp`
 - 只要**头文件类**中包含 `Q_OBJECT` 宏，那么 MOC 就会为他生成对应的 `moc_classname.cpp` 文件，MOC**只会处理头文件中的 `Q_OBJECT` 宏**，如果将一个类定义在源文件中，那么 MOC**不会在预处理阶段展开宏，生成对应的元对象**，导致***编译时不报错，链接出错***。
@@ -274,7 +274,7 @@ CONFIG += debug   # Debug 模式
 CONFIG += release # Release 模式
 ```
 如果使用 msvc 编译器，通过生成->配置管理器调整编译行为
-![[PixPin_2025-12-21_19-28-51.png]]
+![PixPin_2025-12-21_19-28-51](../../Files%20&%20LongText/Attachments/PixPin_2025-12-21_19-28-51.png)
 ## 代码化 UI 设计
 编撰完成：
 [[C++ Code Snippets#Qt 项目代码#quick_example qt 6高级开发书籍#2.3 代码化 UI 设计]]
@@ -739,14 +739,14 @@ void windowTitleChanged (const QString &title)
 QGridLayout 和 QFormLayout 较为相似，后者更适合于两列表单，主要的区别是：
 - GroupBox 1 使用了表单布局，当 GroupBox 1 的高度大于最合适的尺寸时，内部的组件的垂直间距不会再增大，下方多余的空间是空白的。
 - GroupBox 2 使用了网格布局，当 GroupBox 2 的高度增大时内部的组件在垂直方向上均匀分布的
-![[Pasted image 20251031205759.png]]
+![Pasted image 20251031205759](../../Files%20&%20LongText/Attachments/Pasted%20image%2020251031205759.png)
 QStackedLayout：堆叠布局，用于管理多个 QWidget 类对象，也就是多个页面，**但任何时候只有一个页面可见**。QStackedLayout 的管理效果与 QStackedWidget 的相似，只是它没有切换页面的按钮，需要另外编程处理页面切换。
 
 ## QString 字符串操作
 具体内部编码参考 [[Qt Official Tutorial#字符串数据类]]
 QString 使用了隐式共享，**只有在修改操作时**才会复制其中包含的字符数据，并且由于其每一个字符都是 UTF-16 编码，所以使用 `[]` 时不会因中文占用 2~4 个字节而读入半个字节的数据
 QString 中字符都使用 QChar 存储，可以通过 `from__` 获得其 unicode 码，后面的 2/4 表示字符的字节长度，2 字节接受 `char16_t` 类型数据，反之 `char32_t`
-![[PixPin_2025-10-31_21-35-05.png]]
+![PixPin_2025-10-31_21-35-05](../../Files%20&%20LongText/Attachments/PixPin_2025-10-31_21-35-05.png)
 
 注意这是一个静态函数，并且如果源码中有**使用中文字符修改字符串时**，需要特别注意：
 qt creator 编写的源代码文件使用 utf-8 编码，在其中使用中文（2~4 字节）中如果有 2~3 字节的文本用来赋值 QChar，不会出现编译错误，而会在运行时显示错误字符串，因**超过 2 字节的部分会被截断**，导致显示错误的内容
@@ -867,7 +867,7 @@ QMainWindow 是主窗口类，具有菜单栏、工具栏、状态栏等主窗�
 经常在 UI 编辑器中使用 QAction 规划动作行为逻辑，按钮逻辑，有些 QT 中不允许的操作（比如将 QComboBox 放在 QMainWindow 工具栏上，原则上工具栏上只会放一些按钮）
 ### 关于工具栏和状态栏
 QMainWindow 类窗口上有**菜单栏、工具栏和状态栏**，这 3 种界面组件对应的类分别是QMenuBar、QToolBar 和 QStatusBar，它们都是直接从 QWidget 继承而来的。**一个主窗口上最多有一个菜单栏和一个状态栏，可以有多个工具栏。**
-![[PixPin_2025-11-04_10-22-05.png]]
+![PixPin_2025-11-04_10-22-05](../../Files%20&%20LongText/Attachments/PixPin_2025-11-04_10-22-05.png)
 ```md
 ┌─────────────────────────────────────────────────────────────┐
 │ 文件(F) 编辑(E) 视图(V) 帮助(H)                            ← 菜单栏
@@ -888,7 +888,7 @@ QMainWindow 类窗口上有**菜单栏、工具栏和状态栏**，这 3 种界�
 ```
 
 设计菜单的 QAction 动作：
-![[PixPin_2025-11-04_10-31-04.png]]
+![PixPin_2025-11-04_10-31-04](../../Files%20&%20LongText/Attachments/PixPin_2025-11-04_10-31-04.png)
 - 其中 Menu role 只有 macos 上才有效
 - 可以通过拖动 Action 编辑器里的 QAction 对象放到工具栏上
 - 常用的信号和槽函数需要知道
@@ -908,7 +908,7 @@ void addPermanentWidget(QWidget *widget, int stretch = 0) //添加永久组件
 ```
 这两个函数区别是：函数 `showMessage()` 用于在状态栏上左端首位置显示字符串信息，显示持续时间是 timeout，单位是毫秒。如果 timeout 设置为 0，就是一直显示，直到被 `clearMessage()` 清除，或显示下一条临时消息。使用 `showMessage()` 显示临时消息时，状态栏上用 addWidget()添加的组件会被临时隐藏，而用 `addPermanentWidget()` 函数添加的组件会保持不变。
 
-![[PixPin_2025-11-11_21-46-34.png]]
+![PixPin_2025-11-11_21-46-34](../../Files%20&%20LongText/Attachments/PixPin_2025-11-11_21-46-34.png)
 ### 编写代码
 两个重要的槽函数
 ```cpp
@@ -990,12 +990,12 @@ void TextEditorMainWindow::buildUI()
 完整代码参考：[[C++ Code Snippets#Qt 项目代码#4.10 QMainWindow 和 QAction]]
 ## QToolButton 和 QListWidget
 ### 基本使用方法
-![[PixPin_2025-11-12_15-36-15.png]]
+![PixPin_2025-11-12_15-36-15](../../Files%20&%20LongText/Attachments/PixPin_2025-11-12_15-36-15.png)
 这样的内容在 [[QTExamples#列表控件QListWidget和工具按钮QToolButton的和用法]]中已经写过，这里跳过实现部分
 只讲注意事项
 - 左边的是 QToolBox，每一个QToolBox 中展开后是一个 QWidget 组件，可以填若干个 QToolButton**或者任何元素**，每一个 QToolButton 可通过 `setDefaultAction()` 将按钮和 QAction 连接。这一个操作无法在 UI 设计中实现，只能通过代码。按钮的文字、图标、toolTip 等属性都将自动从关联的 Action复制而来
 - 在右侧添加一个 QListWidget，可以通过双击它来进行直观的调整
-![[PixPin_2025-11-12_15-48-11.png]]
+![PixPin_2025-11-12_15-48-11](../../Files%20&%20LongText/Attachments/PixPin_2025-11-12_15-48-11.png)
 需要注意 QToolButton 的几个属性
 - popupMode 属性：
 	- `QToolButton::DelayedPopup`：按钮上没有任何附加的显示内容。如果按钮有下拉菜单，按下按钮并延时一会儿后，才显示下拉菜单。
@@ -1003,7 +1003,7 @@ void TextEditorMainWindow::buildUI()
 	- `QToolButton::InstantPopup `：会在按钮的右下角显示一个很小的下拉箭头图标，点击按钮就会立刻显示下拉菜单，即使工具按钮关联了一个 Action，也不会执行这个 Action。图 4-46 中工具栏上的“项选择”按钮就设置为这种模式。
 - autoRaise 属性，如果设置为 true，按钮就没有边框，鼠标移动到按钮上时才显示按钮边框。
 - arrowType 属性。属性值是枚举类型 Qt:: ArrowType。默认值是 `Qt::NoArrow` 用来显示箭头图标
-![[PixPin_2025-11-12_15-55-48.png]]
+![PixPin_2025-11-12_15-55-48](../../Files%20&%20LongText/Attachments/PixPin_2025-11-12_15-55-48.png)
 - 在 QListWidget 中使用 `currentIndex()` 会调用底层的**数据模型**来获取当前行在数据模型中所对应的 index，没有选中行返回的 `QModelIndex` 对象的 `isValid()` 方法返回 false。而 ` currentRow() ` 只返回 int 类型，从 0 开始的行号下标，如果没有选中行返回 `-1`
 ### 代码逻辑
 #### 创建插入 item 逻辑
@@ -1288,17 +1288,17 @@ int main(int argc, char** argv) {
 ## QTreeWidge
 ### 准备工作
 要在一个 container 容器中设置布局，UI 编辑器中设置 `layoutDirection`
-![[PixPin_2025-11-14_17-37-17.png]]
-![[Pasted image 20251114173750.png]]
+![PixPin_2025-11-14_17-37-17](../../Files%20&%20LongText/Attachments/PixPin_2025-11-14_17-37-17.png)
+![Pasted image 20251114173750](../../Files%20&%20LongText/Attachments/Pasted%20image%2020251114173750.png)
 代码中使用 `setLayoutDirection` 即可
 设置中心组件（`setCentralWidget`）是 QMainWindow 的专属方法，一个 MainWindow 类只能有一个中心组件，后设置的会覆盖前设置的。设置一个子空间为中心组件后：
 1. **布局管理**：该子组件会自动占据主窗口的中心区域
 2. **自动调整**：当主窗口大小改变时，中心组件会自动调整大小以适应可用空间
 3. **移除默认**：替换掉`QMainWindow`默认的空中心部件
 4. **内存管理**：设置为中心组件的子组件会被`QMainWindow`自动管理其生命周期
-![[PixPin_2025-11-14_17-44-50.png|400]]
+![400](../../Files%20&%20LongText/Attachments/PixPin_2025-11-14_17-44-50.png)
 这里由于 scrollArea 不是中心，所以不会自动填充（当然也可以设置 `sizePolicy` 来实现）
-![[PixPin_2025-11-14_17-47-48.png|400]]
+![400](../../Files%20&%20LongText/Attachments/PixPin_2025-11-14_17-47-48.png)
 设置后自动填充
 ### 关闭所有调试信息输出
 有些信号槽配合比较复杂的类，需要通过输出调试信息来观察信号触发情况时，就会用到很多 `qDebug` 调试信息，在 qmake 中可以通过
@@ -1388,11 +1388,11 @@ void  resizeRowsToContents()                      //自动调整所有行的高�
 > 模型/视图（model/view）结构是进行数据存储和界面展示的一种编程结构。在这种结构里，**模型存储数据，界面上的视图组件显示模型中数据**，在视图组件里修改的数据会被自动保存到模型里。
 
 重点在于模型**只负责存储数据**，**视图只负责展示模型中数据**，模型的数据来源可以是**内存中**的字符串列表或二维表格型数据，也可以是**数据库中**的数据表，一种模型可以用不同的视图组件来显示数据
-![[PixPin_2025-11-15_17-07-57.png]]
+![PixPin_2025-11-15_17-07-57](../../Files%20&%20LongText/Attachments/PixPin_2025-11-15_17-07-57.png)
 模型向视图提供数据是**单向的**，代理（delegate）在视图与模型之间交互操作时提供的临时编辑器，当需要在视图上编辑数据时，代理会为编辑数据提供一个编辑器，这个编辑器获取模型的数据、接受用户编辑的数据后又将其提交给模型。例如在QTableView组件上双击一个单元格来编辑数据时，在单元格里就会出现一个QLineEdit组件，这个编辑框就是代理提供的临时编辑器。这一点已经在[[Qt Official Tutorial#Books|官方books示例]]中使用到
 ### 模型
 所有基于项（item）的模型类都是基于QAbstractItemModel类的，这个类定义了视图组件和代理存取数据的接口。**继承自 QObject 所以支持元对象系统**
-![[PixPin_2025-11-16_09-03-18.png]]
+![PixPin_2025-11-16_09-03-18](../../Files%20&%20LongText/Attachments/PixPin_2025-11-16_09-03-18.png)
 常用模型类：
 
 | 模型类                | 功能                                 |
@@ -1414,7 +1414,7 @@ void  resizeRowsToContents()                      //自动调整所有行的高�
 | QUndoView      | 用于显示 undo 指令栈内数据的视图组件，是 QListView 的子类。             |
 
 QListWidget、QTreeWidget和QTableWidget这3个用于处理项数据的组件。这3个类分别是3个视图类的子类，称为视图类的便利类（convenience class）。
-  ![[PixPin_2025-11-16_09-10-30.png]]
+  ![PixPin_2025-11-16_09-10-30](../../Files%20&%20LongText/Attachments/PixPin_2025-11-16_09-10-30.png)
   调用视图类的 `setModel()` 函数为视图组件设置一个模型，模型的数据就可以显示在视图组件上。在视图组件上修改数据后，数据可以自动保存到模型里。便利类实际上是将数据管理关联给每一个item对象，**便利类没有模型**，只是使用item来管理数据,属于一种简化版的模型。只适用于小型数据源
 ### 代理
 代理就是在视图组件上为编辑数据提供的**临时编辑器**，例如在 QTableView 组件上编辑一个单元格的数据时，默认会提供一个 QLineEdit 编辑框。代理负责从模型获取相应的数据，然后将其显示在编辑器里，修改数据后又将编辑器里的数据保存到模型中。
@@ -1422,7 +1422,7 @@ QListWidget、QTreeWidget和QTableWidget这3个用于处理项数据的组件。
 #### 模型基本结构
 在模型/视图结构中，模型为视图组件和代理提供存取数据的标准接口。`QAbstractItemModel` 是所有模型类的基类，不管底层的数据结构是如何组织数据的，`QAbstractItemModel` 的子类都以表格的层次结构展示数据，视图组件按照这种规则来存取模型中数据，但展示给用户的形式不一样。
 常用三种模型为：
-![[PixPin_2025-11-16_09-21-59.png]]
+![PixPin_2025-11-16_09-21-59](../../Files%20&%20LongText/Attachments/PixPin_2025-11-16_09-21-59.png)
 #### 模型索引
 QModelIndex是表示模型索引的类。模型索引提供访问数据的临时指针，模型索引是临时的，模型数据改变会让指针失效。
 当模型为列表或表格结构时，使用行号、列号访问数据比较直观，**所有项的父项就是顶层项**。当模型为树状结构时情况比较复杂（树状结构中，项一般称为节点），一个节点有**父节点**，其也可以是其他节点的父节点要获得一个模型索引，必须提供3个参数：行号、列号、父项的模型索引 （默认使用对应模型的构造函数获取）
@@ -1676,15 +1676,15 @@ void MainWindow::on_btnApplyFilters_clicked()
 ```
 
 ### UI 设计
-![[PixPin_2025-11-19_16-47-34.png]]
+![PixPin_2025-11-19_16-47-34](../../Files%20&%20LongText/Attachments/PixPin_2025-11-19_16-47-34.png)
 - 留空的地方最好放一个 spacer
 - 选中多个控件，然后右键->布局->使用拆分器水平（垂直）布局，这样这几个控件之间就会出现一个**分隔条**，用户可以通过拖动分隔条来调整不同部分控件的所占用的空间大小。
 - 如果有多个不同的 splitter 组合成不同方向的布局，比如图中 TreeView 和右边的两个 View 是 splitter 水平布局，而右边两个 ListView 和 TableView 是上下结构体的 Splitter，这就需要给 splitter 设置 sizePolicy 为 expanding，否则调整 splitter_main 也就是 1，右边的 splitter 水平拓展
-![[PixPin_2025-11-19_17-17-44.png]]
-![[PixPin_2025-11-19_17-21-59.png]]
+![PixPin_2025-11-19_17-17-44](../../Files%20&%20LongText/Attachments/PixPin_2025-11-19_17-17-44.png)
+![PixPin_2025-11-19_17-21-59](../../Files%20&%20LongText/Attachments/PixPin_2025-11-19_17-21-59.png)
 - 如果想要 ui 编辑器中拖动画布，所有画布中控件都随着画布大小变化，那么需要调整**根布局（mainwindow 类中名为 centeralWidget），也就是根对象下的第一个布局**的 layout 属性
-![[Pasted image 20251119172713.png]]
-![[PixPin_2025-11-19_17-27-50.png]]
+![Pasted image 20251119172713](../../Files%20&%20LongText/Attachments/Pasted%20image%2020251119172713.png)
+![PixPin_2025-11-19_17-27-50](../../Files%20&%20LongText/Attachments/PixPin_2025-11-19_17-27-50.png)
 这样控件就会随着画布大小而调整
 
 # 事件处理
@@ -2277,11 +2277,11 @@ bool eventFilter(QObject *watctded, QEvent *event)
 | **QPrintPreviewDialog** | —                                | 打印预览对话框，没有静态函数                   |
 ### 标准对话框预览
 选择颜色窗口
-![[PixPin_2025-11-20_20-53-58.png]]
+![PixPin_2025-11-20_20-53-58](../../Files%20&%20LongText/Attachments/PixPin_2025-11-20_20-53-58.png)
 字体选择窗口
-![[PixPin_2025-11-20_20-54-22.png]]
+![PixPin_2025-11-20_20-54-22](../../Files%20&%20LongText/Attachments/PixPin_2025-11-20_20-54-22.png)
 输入窗口
-![[PixPin_2025-11-20_21-38-57.png]]
+![PixPin_2025-11-20_21-38-57](../../Files%20&%20LongText/Attachments/PixPin_2025-11-20_21-38-57.png)
 ### Qt 内置对话框翻译
 qt 内置的标准对话框**是可翻译的**，如果需要设置其中语言，需要加载对应的语言包文件
 ```cpp
@@ -2475,7 +2475,7 @@ void MainWindow::on_actWidget_triggered()
 
 ## MDI 应用程序设计
 MDI 应用程序有一个主窗口和任意多个子窗口，当在 MDI 应用程序里打开了多个子窗口时，获得输入焦点的子窗口是活动的（active）子窗口。子窗口一般共享（**但也可以独立设置**）主窗口上的工具栏和菜单，主窗口上的操作一般是针对当前的活动子窗口
-![[PixPin_2025-11-28_18-06-47.png]]
+![PixPin_2025-11-28_18-06-47](../../Files%20&%20LongText/Attachments/PixPin_2025-11-28_18-06-47.png)
 子窗口就像 vc++6.0 的交互逻辑，但现代软件一般采用多页模式，MDI 应用程序的设计主要是对 QMdiArea 和 QMdiSubWindow 类的使用
 ### QMdiArea 类
 QMdiArea 显示子窗口有两种模式：子窗口模式和多页模式。通过下面函数设置
@@ -2549,9 +2549,9 @@ void MainWindow::on_actDoc_Open_triggered()
 - 如果没有窗口，则无脑创建即可
 - 一定要先获取MDI子窗口，再使用QFileDialog对话框打开文件。如果**先显示 QFileDialog，会导致焦点集中到其他应用中，MDI 应用主窗口就没有当期激活窗口这一说法**。
 层叠展开：
-![[PixPin_2025-11-28_20-53-05.png]]
+![PixPin_2025-11-28_20-53-05](../../Files%20&%20LongText/Attachments/PixPin_2025-11-28_20-53-05.png)
 平铺展开
-![[PixPin_2025-11-28_20-53-25.png]]
+![PixPin_2025-11-28_20-53-25](../../Files%20&%20LongText/Attachments/PixPin_2025-11-28_20-53-25.png)
 都是内置 api，不用自己手动布局，平铺 api 会自动处理窗口大小
 **从多窗口模式切换到多页模式需要重新设置窗口属性和设置**
 ```cpp
@@ -2568,10 +2568,10 @@ void MainWindow::on_actViewMode_triggered(bool checked)
 ```
 ## Splash 与登录窗口
 splash 窗口简单来说就是启动界面，显示启动界面表示程序已经启动，但在加载中，可以在这个时候进行一些耗时的操作和用户交互，比如登录，使用 QSplashScreen 实现
-![[PixPin_2025-11-28_20-56-53.png]]
+![PixPin_2025-11-28_20-56-53](../../Files%20&%20LongText/Attachments/PixPin_2025-11-28_20-56-53.png)
 
 Splash 窗口通常是无边框的，所以拖动事件发生在窗口中显示的组件上，需要自行设置事件代理，`setWindowFlags(Qt::FramelessWindowHint);` 可以设置无边框，但在任务显示对话框标题
-![[PixPin_2025-12-10_22-16-48.png]]
+![PixPin_2025-12-10_22-16-48](../../Files%20&%20LongText/Attachments/PixPin_2025-12-10_22-16-48.png)
 ### 代码编写
 #### 窗口拖动事件
 Splash 窗口没有标题栏，只能采用在图片上拖动的方式移动窗口，需要**使用鼠标事件实现窗口拖动**，程序在运行时，图片是显示在 QLabel 组件上的，鼠标拖动的实际上是 QLabel 组件，**QLabel 组件没有对事件进行处理，事件传播给其父容器组件** TDialogLogin处理。
@@ -3784,7 +3784,7 @@ void Widget::paintEvent(QPaintEvent *event)
 }
 ```
 这个函数作用仅仅是显示一个红边框，黄填充，长宽为 1/2 窗口大小的居中矩形
-![[PixPin_2025-12-13_16-41-35.png]] 对于 QPen 对象来说，下面的所有调整都是**针对线条的绘制**
+![PixPin_2025-12-13_16-41-35](../../Files%20&%20LongText/Attachments/PixPin_2025-12-13_16-41-35.png) 对于 QPen 对象来说，下面的所有调整都是**针对线条的绘制**
 ```cpp
 void    setColor(QColor  &color)  	// 设置画笔颜色，即线条颜色
 void    setWidth(int  width)  		// 设置线条宽度，单位是像素
@@ -3813,7 +3813,7 @@ painter.drawRect(rec);
 event.accept();
 ```
 其中两种渐变形式会出现不同的图案
-![[PixPin_2025-12-13_17-10-27.png]]
+![PixPin_2025-12-13_17-10-27](../../Files%20&%20LongText/Attachments/PixPin_2025-12-13_17-10-27.png)
 
 ### 绘制基本图形
 | 函数名                   | 功能和示例代码                                                                                                                                                                                                                       | 示例图形                 |
@@ -3843,7 +3843,7 @@ QPainterPath 类用于记录绘图操作序列。一个 PainterPath 由许多基
 
 ## 坐标系统和坐标变换
 ### 坐标变换
-![[PixPin_2025-12-13_17-45-10.png]]
+![PixPin_2025-12-13_17-45-10](../../Files%20&%20LongText/Attachments/PixPin_2025-12-13_17-45-10.png)
 ```cpp
 void drawClock(QPainter &painter) {
     // 1. 平移原点到时钟中心
@@ -3954,7 +3954,7 @@ void Widget::paintEvent(QPaintEvent *event)
 绘图设备的物理坐标系是基本的坐标系，通过 QPainter 的平移、旋转等坐标变换可以得到更容易操作的逻辑坐标系。物理坐标系也称为视口（viewport）坐标系，逻辑坐标系也称为窗口（window）坐标系
 - 视口是指绘图设备的任意一个矩形区域，它使用物理坐标系。可以只选取物理坐标系中一个矩形区域来绘图，默认情况下，视口等于绘图设备的整个矩形区域。
 - 窗口是用逻辑坐标系定义的，窗口可以直接定义矩形区域的逻辑坐标范围。
-![[PixPin_2025-12-13_19-58-31.png|800]]
+![800](../../Files%20&%20LongText/Attachments/PixPin_2025-12-13_19-58-31.png)
 ```cpp
 painter.setViewport(50,0,200,200);
 painter.setWindow(-50,-50,100,100);
@@ -3989,7 +3989,7 @@ void Widget::paintEvent(QPaintEvent *event)
 - 默认情况下，`QPainter` 的**逻辑坐标系**与**设备坐标系**重合。画 `(0,0)` 就是左上角，`(width, height)` 是右下角。`drawEllipse(QPoint(50,0), 50, 50)` 中 `(50,0)` 是**设备像素坐标**。
 - `setviewport()` 会导致所有后续绘图操作将被限制在这个矩形内（超出部分会被裁剪），不改变逻辑坐标，只是“框定”了绘图范围
 - `setWindow()` 它会建立一个**从逻辑坐标到设备坐标的映射关系**，逻辑坐标 `(-100, -100)` 映射到设备坐标 `(0,0)`，逻辑坐标 `(100, 100)` 映射到设备坐标 `(side, side)`（因 window 宽高是 200x200）
-![[PixPin_2025-12-13_20-38-56.png]]
+![PixPin_2025-12-13_20-38-56](../../Files%20&%20LongText/Attachments/PixPin_2025-12-13_20-38-56.png)
 - 方框是由于 rec 对象设置了大小，所以绘制出矩形，构造函数中 `setAutoFillBackground(true)` 自动填充白色
 - 1 图不设置窗口和视口导致绘图坐标原点在左上角，并且**可绘制图形的区域**在是整个 Widget 对象，绘制圆形 `painter.drawEllipse(QPoint(50,0),50,50);` 半径 50 像素，所以组合图形圆心在左上角，并且较小**不会随窗口缩放**
 - 2 图设置视口，设置了可绘制区域限定在 rec 矩形中，**逻辑坐标仍是设备坐标**，同样半径 50 像素较小，**不会随窗口缩放**
@@ -4005,7 +4005,7 @@ void Widget::paintEvent(QPaintEvent *event)
 ### 场景、视图与图形项
 Qt为绘制复杂的可交互的图形提供了图形/视图（graphics/view）架构，这是一种基于图形项的模型/视图结构。使用图形/视图架构可以绘制复杂的由成千上万个基本图形组件组成的图形，并且每个图形组件是可选择、可拖放和可修改的，类似于矢量绘图软件的绘图功能
 图形/视图架构主要由**场景、视图和图形项**组成
-![[PixPin_2025-12-13_21-22-59.png|800]]
+![800](../../Files%20&%20LongText/Attachments/PixPin_2025-12-13_21-22-59.png)
 场景是一个抽象的管理图形项的容器，可以向场景添加图形项，获取场景中某个图形项。主要具有如功能:
 - 提供管理大量图形项的快速接口。
 - 将事件传播给每个图形项。
@@ -4020,7 +4020,7 @@ drawForeground()
 ```
 视图 QGraphicsView 是图形/视图架构中视图组件。间接父类是 QWidget，所以它是一个界面组件，用于显示场景中内容。可以为一个场景设置多个视图，用于对同一个场景提供
 不同的显示界面。
-默认情况下，当视图大于场景时（[[PixPin_2025-12-13_21-22-59.png|上图中最外部的视图1]]），场景在视图的中央位置显示，也可以通过设置视图的 Alignment 属性来控制场景在视图中显示位置。**视图 2 只能显示场景的部分内容，但会自动提供卷滚条实现在整个场景内移动**
+默认情况下，当视图大于场景时（[上图中最外部的视图1](../../Files%20&%20LongText/Attachments/PixPin_2025-12-13_21-22-59.png)），场景在视图的中央位置显示，也可以通过设置视图的 Alignment 属性来控制场景在视图中显示位置。**视图 2 只能显示场景的部分内容，但会自动提供卷滚条实现在整个场景内移动**
 图形项就是一些基本图形组件，所有图形项类都是从 QGraphicsItem 继承而来的， QGraphicsItem 没有父类，QGraphicsItem 支持如下一些操作。
 - 鼠标事件响应。
 - 键盘输入，以及按键事件。
@@ -4028,7 +4028,7 @@ drawForeground()
 - 支持组合，可以是父子图形项关系组合，也可以通过 QGraphicsItemGroup 类进行组合。
 ### 图形/视图架构的坐标系
 图形/视图架构有3个有效的坐标系：场景坐标系、视图坐标系、图形项坐标系
-![[PixPin_2025-12-14_09-54-15.png|700]]
+![700](../../Files%20&%20LongText/Attachments/PixPin_2025-12-14_09-54-15.png)
 - 场景坐标系等价于 QPainter 的逻辑坐标系，一般以场景的中心为原点；
 	- 场景坐标系描述了每个顶层图形项的位置。创建场景时可以定义场景矩形区域的坐标范围
 	- `scene= new QGraphicsScene(-400,-300,800,600)`单位是像素
@@ -4191,10 +4191,10 @@ void Widget::on_horizontalSlider_valueChanged(int value)
 qt 安装目录下的 `\Qt\Tools\QtCreator\bin\plugins` 用 dll（linux 是 so）文件存储插件，其中包含了**高级 API**用以拓展 Qt 功能，**低级 API 用于自行编写拓展应用程序功能**，其中包含了自定义 Qt Designer Widget 插件
 ### 创建自定义 QWidget 控件
 NewProject 中 Qt 4 设计师控件项目
-![[PixPin_2025-12-14_15-27-39.png]]
+![PixPin_2025-12-14_15-27-39](../../Files%20&%20LongText/Attachments/PixPin_2025-12-14_15-27-39.png)
 插件若要安装到 Qt Designer 的组件面板里，并且要在设计时**正常显示**（否则会显示空白），**编译插件的编译器必须和编译 Qt Creator 的编译器相同**
-![[PixPin_2025-12-14_15-21-34.png]]
-![[PixPin_2025-12-14_15-31-12.png]]
+![PixPin_2025-12-14_15-21-34](../../Files%20&%20LongText/Attachments/PixPin_2025-12-14_15-21-34.png)
+![PixPin_2025-12-14_15-31-12](../../Files%20&%20LongText/Attachments/PixPin_2025-12-14_15-31-12.png)
 `tpbatteryplugin.h` 和 `tpbatteryplugin.cpp`**用于实现插件有关逻辑**，决定了这个自定义 QWidget 在 UI 编辑器中图标显示，是否是容器，名称，toolTip，拖拽到画布中初始化行为
 ```cpp
 #include <QDesignerCustomWidgetInterface>
@@ -4257,18 +4257,18 @@ include(tpbattery.pri)
 在Release模式下编译，编译后会生成 `tpbatteryplugin.dll` 和 `tpbatteryplugin.lib` 两个文件。若在Debug模式下编译，会生成文件 `tpbatteryplugind.dll` 和 `tpbatteryplugind.lib`，**注意文件名后面多了一个字母“d”**
 #### 引入到 Qt Designer 控件盒子
 编译后，将构建目录下的 Debug 和 Release 编译的 dll 文件复制到
-![[PixPin_2025-12-14_16-13-23.png]]
+![PixPin_2025-12-14_16-13-23](../../Files%20&%20LongText/Attachments/PixPin_2025-12-14_16-13-23.png)
 ```md
 D:\Qt\Tools\QtCreator\bin\plugins\designer
 D:\Qt\6.2.3\msvc2019_64\plugins\designer
 ```
 控件盒子中**出现对应的控件**需要满足下面几个条件
 - Qt creator 的 Base qt 版本需要和编译控件 dll 的编译器**完全一样**，包括次版本号，Qt 6.7.3 和 Qt 6.8.0 虽然都是 6. x 系列，**但在 ABI 级别上不兼容**
-![[Pasted image 20251214173138.png]]
-![[PixPin_2025-12-14_17-33-30.png]]
+![Pasted image 20251214173138](../../Files%20&%20LongText/Attachments/Pasted%20image%2020251214173138.png)
+![PixPin_2025-12-14_17-33-30](../../Files%20&%20LongText/Attachments/PixPin_2025-12-14_17-33-30.png)
 如果控件盒子中没有空间，可以**在 UI 编辑器界面查看 Design Widgeter** 插件安装情况
-![[Pasted image 20251214172709.png]]
-![[PixPin_2025-12-14_17-34-47.png]]
+![Pasted image 20251214172709](../../Files%20&%20LongText/Attachments/Pasted%20image%2020251214172709.png)
+![PixPin_2025-12-14_17-34-47](../../Files%20&%20LongText/Attachments/PixPin_2025-12-14_17-34-47.png)
 其中显示版本不兼容，则无法直接引入到 qt creator 中，则需要通过[[#prompt to 引入自定义控件|提升法]]或[[#通过外部库引入自定义控件|外部库引入]]方法，或者**将 qt creator 版本**切换到对应编译器版本
 #### prompt to 引入自定义控件
 简单粗暴，直接将源代码添加到项目中，然后再 UI 编辑器中对对应的控件右键 prompt to 提升控件即可，这样做自定义组件类中**新增的属性不会出现在属性编辑器里**，新增的信号也不会出现在 Go to slot 对话框里
@@ -4276,9 +4276,9 @@ D:\Qt\6.2.3\msvc2019_64\plugins\designer
 参考：[Qt项目中添加外部库的详细配置教程,-CSDN博客](https://blog.csdn.net/jason_thinking/article/details/137654933)
 [Qt之实现自定义控件的两种方式——插件法_qt自定义控件-CSDN博客](https://blog.csdn.net/u011832219/article/details/128531359?ops_request_misc=%7B%22request%5Fid%22%3A%22170964553816800184155013%22%2C%22scm%22%3A%2220140713.130102334..%22%7D&request_id=170964553816800184155013&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_click~default-2-128531359-null-null.142)
 qmake 项目右键项目->添加库->外部库
-![[PixPin_2025-12-14_17-45-04.png]]
+![PixPin_2025-12-14_17-45-04](../../Files%20&%20LongText/Attachments/PixPin_2025-12-14_17-45-04.png)
 在项目目录中添加一个 include（或者其他名称都行）文件夹，并将 dll 文件和 lib 文件（取决于动静态引入方式）和头文件添加进去即可
-![[Pasted image 20251214174148.png]]
+![Pasted image 20251214174148](../../Files%20&%20LongText/Attachments/Pasted%20image%2020251214174148.png)
 效果和[[#prompt to 引入自定义控件|提升法]]一致，但由于只通过 `.h` 文件暴露了接口，无法新增属性和新的信号
 
 ## 创建和使用静态库
@@ -4296,7 +4296,7 @@ add_library(MyStaticLib STATIC
 **静态库不需要设置导入导出宏**，静态库中所有符号（如果未使用 `static` 或匿名命名空间隐藏）会被直接打包到目标文件中，导入导出是[[#动态库（共享库）|动态库（共享库）]]的概念
 生成的库文件与使用的编译器有关，**只会生成一个 lib 或者 a 文件**，MSVC生成的库文件是 ` MyStaticLib.lib `；MinGW生成的库文件是 ` libMyStaticLib.a `。**同编译器在 Release 和 Debug 模式下编译生成的静态库文件名称是相同的，并不会为 Debug 版本库文件名自动添加一个字母“d”**，如需区分则手动更名，然后通过[[#通过外部库引入自定义控件|添加外部库]]实现引入
 如果使用 msbuild 作为构建工具：
-![[PixPin_2025-12-21_19-24-40.png]]
+![PixPin_2025-12-21_19-24-40](../../Files%20&%20LongText/Attachments/PixPin_2025-12-21_19-24-40.png)
 链接器只会将程序实际调用的函数和类从静态库中链接到最终的可执行文件中，而不是整个静态库 ^prqdmq
 - 如果你只使用了库中 AntButton，只有 AntButton 相关的代码会被链接
 - 其他未使用的组件（如 AntInput、CarouselWidget 等）不会被包含
@@ -4482,18 +4482,18 @@ int main() {
 }
 ```
 如果使用 msbuild 则需要修改项目属性中**包含目录+库目录+附加依赖项**
-![[PixPin_2025-12-21_20-27-33.png]]
+![PixPin_2025-12-21_20-27-33](../../Files%20&%20LongText/Attachments/PixPin_2025-12-21_20-27-33.png)
 库目录（Library Directories），只是**文件夹**路径字符串，**不能用来指向文件** ^vjmdhz
 - 作用：告诉链接器在哪里搜索库文件
 - 内容：路径列表（例如：D:\MyLibs\Debug）
 - 功能：提供搜索路径，就像告诉链接器"去这些地方找库文件"
-![[PixPin_2025-12-21_20-40-09.png]]
+![PixPin_2025-12-21_20-40-09](../../Files%20&%20LongText/Attachments/PixPin_2025-12-21_20-40-09.png)
 附加依赖项（Additional Dependencies）
 - 作用：告诉链接器具体要使用哪个库文件
 - 内容：具体的库文件名（例如：QtAntDesign. lib）
 - 功能：指定需要链接的具体库文件名
 需要注意，**使用动/静态库只有项目被配置为动态库或者应用程序时**，项目属性中才会有链接器这个选项，否则不会出现，只有最终编译为动态/应用程序时，才会需要链接
-![[PixPin_2025-12-21_20-40-48.png]] ^igwo85
+![PixPin_2025-12-21_20-40-48](../../Files%20&%20LongText/Attachments/PixPin_2025-12-21_20-40-48.png) ^igwo85
 ### 链接方式区分总结
 | 特性       | 隐式链接             | 显式链接                     |
 | -------- | ---------------- | ------------------------ |
@@ -4581,11 +4581,11 @@ LIB （静态）文件完全不同，包含：
 └───x64
 ```
 首先将库的第三方库头文件包含到 includepath 中（这两个库是 head-only ）
-![[PixPin_2025-12-21_21-43-01.png]]
+![PixPin_2025-12-21_21-43-01](../../Files%20&%20LongText/Attachments/PixPin_2025-12-21_21-43-01.png)
 然后将库编译为静态库
-![[PixPin_2025-12-21_21-44-32.png]]
+![PixPin_2025-12-21_21-44-32](../../Files%20&%20LongText/Attachments/PixPin_2025-12-21_21-44-32.png)
 debug 模式和 release 模式全部编译一遍，注意根据[[#^prqdmq|之前知识]]可知需要自己给 debug 编译得到的库文件添加 d 后缀
-![[PixPin_2025-12-21_22-14-25.png]]
+![PixPin_2025-12-21_22-14-25](../../Files%20&%20LongText/Attachments/PixPin_2025-12-21_22-14-25.png)
 使用静态库的项目结构
 ```bash
 ├───images
@@ -5195,7 +5195,7 @@ void MainWindow::on_actThread_Run_triggered()
 }
 ```
 这种方式需要**注意线程启动 `run()` 顺序，初始化顺序无所谓**，先启动随机数生成和图片这种**消费者线程**，后启动主线程（发送信号的线程）
-![[PixPin_2025-12-16_16-56-58.png]]
+![PixPin_2025-12-16_16-56-58](../../Files%20&%20LongText/Attachments/PixPin_2025-12-16_16-56-58.png)
 
 ### 基于信号量的线程同步
 信号量（semaphore）是另一种限制对**同一组共享**资源进行访问的 ITC 技术，它与互斥量相似，但二者有区别。一个互斥量只能被锁定一次，而信号量可以被多次使用。互斥锁主要用于**防止资源访问冲突**和限制所有权，信号量用于限制某些资源的**并发访问数量**，用于生产者消费者模型，线程池模型等，**用于多个线程需要同时访问资源的场景**
@@ -5312,7 +5312,7 @@ for(const auto& interface : list){
 ```
 ## TCP 通信
 TCP通信必须先建立TCP连接，通信端分为客户端和服务器端。Qt提供QTcpSocket类和QTcpServer类，用于设计TCP通信应用程序。服务器端程序必须使用QTcpServer进行端口监听，建立服务器；使用QTcpSocket建立连接，然后使用套接字（socket）进行通信。
-![[PixPin_2025-12-16_19-57-01.png]]
+![PixPin_2025-12-16_19-57-01](../../Files%20&%20LongText/Attachments/PixPin_2025-12-16_19-57-01.png)
 ### 基本知识
 在客户端与服务器端建立 TCP 连接后，具体的数据通信是通过 QTcpSocket 对象完成的。QTcpSocket 类提供了 TCP 的接口，可以用 QTcpSocket 类实现标准的网络通信协议，如 POP 3、SMTP 和 NNTP 等，也可以设计自定义协议。
 TCP客户端使用QTcpSocket对象与TCP服务器端建立连接并通信。客户端的QTcpSocket对象首先通过 `connectToHost()` 尝试连接到服务器，该函数需要指定服务器的IP地址和端口。函数 `connectToHost()` 以异步方式连接到服务器，不会阻塞程序运行，成功连接后QTcpSocket对象会发射 `connected()` 信号。
@@ -5333,7 +5333,7 @@ MainWindow::~MainWindow()
 }
 ```
 如果不设置，在**没有点击断开连接的情况下**关闭应用会因 tcp 连接没有关闭导致内存泄漏
-![[PixPin_2025-12-16_22-08-58.png]]
+![PixPin_2025-12-16_22-08-58](../../Files%20&%20LongText/Attachments/PixPin_2025-12-16_22-08-58.png)
 获取基本信息
 ```cpp
 void MainWindow::on_actHostInfo_triggered()
@@ -5451,11 +5451,11 @@ tcpClient->connectToHost(addr, port);  // 连接到指定IP和端口的服务器
 ## UDP 通信
 用户数据报协议（User Datagram Protocol，UDP）是轻量的、不可靠的、面向数据报（datagram）的、无连接的协议，它可以用于对可靠性要求不高的场合。
 ***UDP通信不区分客户端和服务器端，UDP程序都是客户端程序***
-![[PixPin_2025-12-16_22-13-24.png]]
+![PixPin_2025-12-16_22-13-24](../../Files%20&%20LongText/Attachments/PixPin_2025-12-16_22-13-24.png)
 
 QUdpSocket 类用于实现 UDP 通信，它与 QTcpSocket 具有相同的父类 QAbstractSocket，**共享大部分的接口函数**，QUdpSocket以数据报传输数据，而不是以连续的数据流传输数据。`QUdpSocket::writeDatagram()`函数用于发送数据报，**数据报一般少于512字节每个数据报包含发送者和接收者的IP地址和端口等信息。**，
 **UDP 消息传送有单播、广播、组播 3 种模式**
-![[PixPin_2025-12-16_22-15-44.png|800]]
+![800](../../Files%20&%20LongText/Attachments/PixPin_2025-12-16_22-15-44.png)
 TCP 通信只有单播模式，没有广播和组播模式。UDP 通信虽然不能保证数据传输的准确性，但它具有灵活性，一般的即时通信软件都是基于 UDP 通信的。
 `QUdpSocket::joinMulticastGroup()` 函数可实现加入多播组的功能，加入多播组后，UDP数据的收发与正常的UDP数据的收发方法一样
 在单播、广播和组播模式下，UDP 程序都是对等的。组播和广播的实现方式基本相同，只是数据报的目标 IP 地址设置不同。组播模式需要加入多播组，实现方式有较大差异。
@@ -6503,13 +6503,13 @@ add_custom_target(update_translations
 ```
 第一个翻译文件会使用代码中字符串语言，时默认语言，其他文件是**需要从**源代码中字符串翻译过来的语言文件
 然后使用语言家
-![[Pasted image 20251219111414.png]]
+![Pasted image 20251219111414](../../Files%20&%20LongText/Attachments/Pasted%20image%2020251219111414.png)
 创建/更新对应的 ts 文件
 在 qt linguist 中打开对应 en_ts 文件，源语言（源代码中语言）用的是中文，会显示在**字符串窗口中**
-![[Pasted image 20251219113023.png]]
+![Pasted image 20251219113023](../../Files%20&%20LongText/Attachments/Pasted%20image%2020251219113023.png)
 
 深绿色问号图标表示还没有翻译过的源文，黄色问号图标表示已经有译文的源文，亮绿色钩形图标表示已完成翻译的源文，灰色图标表示**无效原文**，无效原文是由于**翻译文件未重新同步，但源代码/ui 文件发生改变**导致的，不影响程序运行，会自动忽略
-![[PixPin_2025-12-19_11-31-52.png]]
+![PixPin_2025-12-19_11-31-52](../../Files%20&%20LongText/Attachments/PixPin_2025-12-19_11-31-52.png)
 程序中**可输入组件**（如 QPlainText）在源代码/ui 文件中应该被清空，否则也会被提取，填翻译字符串后工具栏更新字符串状态，保存文件后，使用 lrelease 工具生成**紧凑 qm 文件**，在 `main.cpp` 中加载 qm 文件
 ```cpp
 int main(int argc, char *argv[])

@@ -3,12 +3,12 @@
 [十七分钟CSS快速入门 | 无废话且清晰流畅 | WEB前端必备程序语言~哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Ci4y1W7H7/?spm_id_from=333.1387.homepage.video_card.click&vd_source=876be08bc9c030f4a9ea1fb97e0d0342)
 #### 选择器对应关系
 要对 html 中**对应**元素样式调整，**选择器应运而生**，id 选择器最精准，html 允许多个标签class 属性相同，元素选择较容易造成污染
-![[Pasted image 20250115213118.png|525]]
+![525](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115213118.png)
 如果需要对有**父子类层级关系**的元素使用样式，遵循语法
 `.parent .child{/*css styles*/}`
-![[Pasted image 20250115213427.png]]
+![Pasted image 20250115213427](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115213427.png)
 或者嵌套 CSS 样式
-![[Pasted image 20250115213510.png]]
+![Pasted image 20250115213510](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115213510.png)
 一个标签**可以继承多个类**，用空格分开，获取多个 CSS 样式
 - `font-family` 声明中可以放入多种字体，浏览器回从前至后依次读取直到有一款字体可用
 - `font-size` 设置字体大小
@@ -18,10 +18,10 @@
 - `font-weight` 设置字体粗细
 #### 盒子模型
 浏览器中可以**选中元素后**可以在*元素窗口中*检视各种标签的元素构成和 CSS 样式在**盒子模型中构成**
-![[Pasted image 20250115214337.png]]
+![Pasted image 20250115214337](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115214337.png)
 盒子模型在网页开发中较为常用
-![[Pasted image 20250115214456.png]]
-![[Pasted image 20250115214705.png|鼠标可视化查看]]
+![Pasted image 20250115214456](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115214456.png)
+![鼠标可视化查看](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115214705.png)
 margin 和 padding 都有上下左右之分，`margin-direction` 设置对应属性，也可以 `margin: top right down left` 上右下左顺序
 边框声明需要三个参数，粗细 px，边框类型，边框颜色
 
@@ -33,12 +33,12 @@ margin 和 padding 都有上下左右之分，`margin-direction` 设置对应属
 ---
 ##### 弹性容器布局
 - 如果设置一个**容器**（div）为弹性容器（`class=flex`），会将容器中所有标签定义为**弹性标签（或弹性项目）**。
-![[Pasted image 20250115215803.png]]
+![Pasted image 20250115215803](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115215803.png)
 - flex 容器默认是**水平的**，可通过 `flex-direction=column` 调整为纵向的
 - 对弹性项设置 flex 属性可以调整其占用空间，占用空间比例的计算方法是：
 根据一个弹性容器中 `flex 属性值 / 所有弹性项目 flex 值的总和` 计算占据屏幕比例
 更方便的方法是在一个弹性容器中**再继承一个具有 gap 属性的声明**，实现分割
-![[Pasted image 20250115220312.png]] ^rdb1pp
+![Pasted image 20250115220312](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115220312.png) ^rdb1pp
 - 每个弹性容器都有一个**主轴**，如果 `flex-direction=row` 则主轴为横轴，反之纵轴
 - flex 容器中应用的 CSS 样式声明 `justify-content` 根据主轴方向调整弹性容器中元素**垂直于主轴方向上的排列方式**
 	- 如主轴为横轴，声明值：
@@ -72,10 +72,10 @@ css 中 `grid-template-columns` 的计算方法同[[#^rdb1pp|弹性容器中flex
     grid-template-columns: 1fr 2fr;
 }
 ```
-![[Pasted image 20250115222330.png]]
+![Pasted image 20250115222330](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115222330.png)
 `grid-template-columns` 可以设置 `repeat(repeat_times,grid_weight)` 来简化书写
 template 表示手动设置模板，也可以换成 auto 自动调节**一行或者一列**样式
-![[Pasted image 20250115222901.png]]
+![Pasted image 20250115222901](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115222901.png)
 ```css
 .grid{
     display: grid;
@@ -98,7 +98,7 @@ template 表示手动设置模板，也可以换成 auto 自动调节**一行或
 - absolute 相对于离他最近的**非静态(static)定位元素的父元素**定位
 - fixed 固定定位相对于浏览器窗口
 如果希望元素相对谁，就将*参考系*设置为相对定位 relative
-![[Pasted image 20250115224941.png]]
+![Pasted image 20250115224941](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020250115224941.png)
 ```html
 <div id="outside" class="relative">
     <div id="inside" class="absolute">绝对定位内容</div>
@@ -120,4 +120,4 @@ template 表示手动设置模板，也可以换成 auto 自动调节**一行或
 - absolute 作为 position 声明值的选择器，是**按照声明方向确定原点**
 - 声明值还可以为**百分数**
 - fixed 可以让元素在相对于浏览器窗口位置**固定**，常用于导航栏、侧边栏
-![[PixPin_2025-01-15_23-00-32.mp4]]
+[PixPin_2025-01-15_23-00-32](../../../Files%20&%20LongText/Attachments/PixPin_2025-01-15_23-00-32.mp4)

@@ -1,9 +1,9 @@
 ## 绪论
 ### 计算机与算法
 - 古埃及人的绳索，原理是勾股定理
-![Pasted image 20241013175638.png](Pasted%20image%2020241013175638.png)
+![Pasted image 20241013175638.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241013175638.png)
 - 欧几里得尺规算法
-![Pasted image 20241013175603.png](Pasted%20image%2020241013175603.png)
+![Pasted image 20241013175603.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241013175603.png)
 - 冒泡排序
 ```cpp
 void bubble_sort(int need_sort[],int length){
@@ -44,12 +44,12 @@ void bubble_sort(int need_sort[],int length){
 	这些都是在 n 足够大（处理的数据足够多使函数接近下界，O 则是上界）
 	将时间复杂度理解为算法中各条指令的执行时间之和。在图灵机（Turing Machine, TM）和随机存储机（Random Access Machine, RAM）等计算模型中，指令语句均可分解为若干次基本操作，**从而将 T (n) 定义为算法将T(n)定义所执行基本操作的总次数**，即算法所需要的基本操作的次数通过时间变换函数（`T()`）计算得到时间
 
-![Pasted image 20241013205002.png](Pasted%20image%2020241013205002.png)
+![Pasted image 20241013205002.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241013205002.png)
 
 #### 复杂度分类
 - 常数复杂度
-![Pasted image 20241014090752.png](Pasted%20image%2020241014090752.png)
-![Pasted image 20241014090809.png](Pasted%20image%2020241014090809.png)
+![Pasted image 20241014090752.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241014090752.png)
+![Pasted image 20241014090809.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241014090809.png)
 ```cpp
 ordinaryElement(S[], n) //从n  3个互异整数中，除最大、最小者以外，仸叏一个“常觃元素”
 仸叏癿三个元素x, y, z  S; //返三个元素亦必互异
@@ -58,7 +58,7 @@ ordinaryElement(S[], n) //从n  3个互异整数中，除最大、最小者�
 ```
 上面伪代码的时间复杂度仅仅和数组长度有关，而且有关性是一维的，所以复杂度都是 `O(1)`
 - 对数复杂度
-![Pasted image 20241014091226.png](Pasted%20image%2020241014091226.png)
+![Pasted image 20241014091226.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241014091226.png)
 ```cpp
 int countOnes(unsigned int n){  // 统计整数二迕刢展开中数位1癿总数：O(logn)
     int ones = 0; // 计数器复位
@@ -69,7 +69,7 @@ int countOnes(unsigned int n){  // 统计整数二迕刢展开中数位1癿总�
     return ones; // 迒回计数
 } // 等效亍glibc癿内置函数int __builtin_popcount (unsigned int n)
 ```
-![Pasted image 20241014091710.png](Pasted%20image%2020241014091710.png)
+![Pasted image 20241014091710.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241014091710.png)
 - 多项式复杂度
 多项式时间复杂度被视作一个具有**特殊意义的复杂度级别**。多项式级的运行时间成本，在实际应用中一般被认为是可接受的。某问题若存在**一个复杂度在此范围以内**的算法，则称该问题是可有效求解的或易解的（tractable）
 在这个范围中，相对于多项式中最高级的一项以下级数的指数级复杂度，二者之间不超过多项式规模的差异小到可以忽略不计
@@ -134,9 +134,9 @@ __int64 power_func(int n){
 ```
 - 循环次数和 n 有关，复杂度为 `O(2^r)` 是指数复杂度的算法，在实际应用中不可取
 ==改进方法==
-![Pasted image 20241016195317.png](Pasted%20image%2020241016195317.png)
-![Pasted image 20241016195333.png](Pasted%20image%2020241016195333.png) 表示向下取整，对奇数有影响
-![400](Pasted%20image%2020241016195627.png)
+![Pasted image 20241016195317.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241016195317.png)
+![Pasted image 20241016195333.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241016195333.png) 表示向下取整，对奇数有影响
+![400](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241016195627.png)
 - 每计算一次 pow 函数参数都变小了，直到 0 结束迭代（降低规模）
 - `(1 & n)` ：按位与运算，n 转化为二进制后和二进制化后的 1（`00000000 00000000 00000000 00000001`）与运算，也就是说 n 二进制后最后一位为 1 则返回 true，为 0 则返回 false。
 ---
@@ -175,7 +175,7 @@ int main() {
     cout << sum(array, 0, 10);
 }
 ```
-![Pasted image 20241016214437.png](Pasted%20image%2020241016214437.png)
+![Pasted image 20241016214437.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241016214437.png)
 - 经连续 ` m = log 2^n` 次递归调用，数组区间的长度从最初的 n 首次缩减至 1，到达第一个递归基。
 - 刚到达任一递归基时，已执行的递归调用总是比递归返回多 `m = log 2^n` 次。
 - 到达区间长度为 `2^k `的任一递归实例之前，已执行的递归调用总是比递归返回多`m-k` 次。
@@ -194,9 +194,9 @@ __int64 fibonacci(int n){
     return (2 > n) ? (__int64)n : fibonacci(n - 1) + fibonacci(n - 2);
 }
 ```
-代码计算斐波那契数列的第 n 项数字大小，斐波那契数列的极限增长率 `lim v = F(n+1)/F(n)` =φ, 其中​​ ![Pasted image 20241017124712.png](Pasted%20image%2020241017124712.png) 为黄金增长率，所以最后一个斐波那契数 n 需要经过 n 次递归才可以变为 1 到达 return 递归基，`O (φ^(n+1)) = O (2^n)`，不能用于实际中
+代码计算斐波那契数列的第 n 项数字大小，斐波那契数列的极限增长率 `lim v = F(n+1)/F(n)` =φ, 其中​​ ![Pasted image 20241017124712.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241017124712.png) 为黄金增长率，所以最后一个斐波那契数 n 需要经过 n 次递归才可以变为 1 到达 return 递归基，`O (φ^(n+1)) = O (2^n)`，不能用于实际中
 时间复杂度高达指数量级，究其原因在于计算过程中所出现的递归实例的重复度极高：
-![Pasted image 20241017133259.png](Pasted%20image%2020241017133259.png)
+![Pasted image 20241017133259.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241017133259.png)
 ##### 解决重复递归的两种方法
 1. 制表（tabulation）或记忆 memoization）策略：每遇一个子问题，先查验它是否计算过，通过调阅记录，从而避免重新计算。
 ```cpp
@@ -265,7 +265,7 @@ __int64 fibonacci (int n){
 - 以递归调用中递归调用实例作为向量中元素为例，元素的前驱元素数量等于它的秩，由于他是线性的，所以秩的大小反映了这个元素的创建时间。这样通过创建时间（rank）可以定位到相应的实例，反之亦然
 - 因向量之间根据秩区分对象，不同对象之间没有定义运算法则没有可比性和计算性。但可以通过重载运算符来排序容器中对象（参考 [C++ Runoob Tutoral \> 自定义比较器](C++%20Runoob%20Tutoral.md#自定义比较器)）
 作为一种抽象数据类型，向量对象应支持如下操作接口。
-![Pasted image 20241017203506.png](Pasted%20image%2020241017203506.png)
+![Pasted image 20241017203506.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241017203506.png)
 严格来说 find 在没有找到结果的情况下返回 `last` 迭代器
-![Pasted image 20241017204437.png](Pasted%20image%2020241017204437.png)
+![Pasted image 20241017204437.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020241017204437.png)
 ### 析构与构造

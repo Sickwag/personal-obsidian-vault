@@ -9,7 +9,7 @@ Redis 数据库里面的每个键值对(key-value pair)都是由对象(object)�
 - 哈希对象(hash object)、集合对象(set object)、有序集合对象(sorted set object)这五种对象中的其中一种。
 ## 第 2 章 简单动态字符串
 ### 数据结构
-![[Pasted image 20260612165138.png]] 
+![Pasted image 20260612165138](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260612165138.png)
 - len 只记录字符串长度
 - free 只记录空位置长度
 - buffer 空间总长度= len+free+1（`\0`）
@@ -99,7 +99,7 @@ struct sdshdr {
 | 内存布局   | 数据和 vector对象分离（堆）            | Header 和数据同一次 malloc (FAM, 连续布局) |
 ## 第 3 章 链表
 ### 链表的结构
-![[Pasted image 20260613141023.png]]
+![Pasted image 20260613141023](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260613141023.png)
 - listNode 是经典的 prev+next 双指针+value 值的简单组合
 - dup 函数用于复制链表节点所保存的值;
 - free 函数用于释放链表节点所保存的值;
@@ -138,7 +138,7 @@ class List {
 Redis 4.0+ 已经开始逐步将热路径宏转为 `static inline` 函数。
 ## 第 4 章 字典
 ### 数据结构
-![[Pasted image 20260613145457.png]] ![[Pasted image 20260613145529.png]]
+![Pasted image 20260613145457](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260613145457.png) ![Pasted image 20260613145529](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260613145529.png)
 ```cpp
 typedef struct dictType {
 	unsigned int (*hashFunction)(const void* key);
@@ -151,7 +151,7 @@ typedef struct dictType {
 ```
 dictType 是一个"多态结构体"，用非常细致的粒度，判断两个哈希表中的元素是否相等，如何计算哈希值，决定了一个哈希表中的元素应该放在 `dict::ht[2][0]::table;` 中的什么位置
 一个普通状态下(没有进行 rehash)的字典。
-![[Pasted image 20260613150852.png]]
+![Pasted image 20260613150852](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260613150852.png)
 
 ### sizemask — power-of-two 哈希表显式约束
 哈希表数据结构:
@@ -188,8 +188,8 @@ idx = h & d->ht[table].sizemask;  // 等价于 h % size，位运算比取模快�
 **sizemask 的核心价值**不是性能（位运算比除法快是附带收益），而是将 power-of-two 约束显式化。看到 `sizemask` 就知道"此哈希表必须 2^N"，避免各处书写 `hash & (size - 1)` 时遗漏 `-1` 导致越界，同时很多地方需要用到 `hash & (size - 1)` ，存起来可以省去一次减法的开销
 ### 哈希算法
 Redis 使用 murmur2 哈希生成算法，并采用链地址法(separate chaining)来解决键冲突，并且出现冲突时，后插入的节点会在链表头部插入
-![[Pasted image 20260613154142.png]]
-![[Pasted image 20260613154157.png]]
+![Pasted image 20260613154142](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260613154142.png)
+![Pasted image 20260613154157](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260613154157.png)
 ### rehash 流程与逻辑
 步骤为:
 10. 为字典的 ht[1]哈希表分配空间，这个哈希表的空间大小取决于要执行的操作,
@@ -252,8 +252,8 @@ Redis 是单线程事件循环，大批量 rehash 会阻塞事件处理。1ms �
 跳跃表支持平均 O(logN)、最坏 O(N)复杂度的节点查找，还可以通过顺序性操作来批量处理节点。
 在大部分情况下，跳跃表的效率可以和平衡树相媲美，并且因为跳跃表的实现比平衡树要来得更为简单，所以有不少程序都使用跳跃表来代替平衡树。
 Redis 在两个地方用到了跳跃表，一个是实现有序集合键，另一个是在集群节点中用作内部数据结构
-![[Pasted image 20260613163127.png]]
-![[Pasted image 20260613163754.png]]
+![Pasted image 20260613163127](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260613163127.png)
+![Pasted image 20260613163754](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260613163754.png)
 - 节点的分值(score 属性)是 double 浮点数，跳跃表中的所有节点都按分值从小到大来排序。
 - 节点的成员对象(obj 属性)是指针，它指向一个字符串对象，保存着一个 SDS 值。
 - 在同一个跳跃表中各个节点保存的成员对象必须是唯一的，但是多个节点保存的分值可以相同:分值相同的节点将按照成员对象在字典序中的大小来进行排序，**两者共同构成，所以本质上还是不允许插入重复元素的**，只是 score 作为查找/比较的优先级比 obj 要高
@@ -353,7 +353,7 @@ intset 用 O(n) 换来极致的内存紧凑和零碎片；超阈值就切换为 
 当一个哈希键只包含少量键值对，比且每个键值对的键和值，要么就是小整数值，要么就是长度比较短的字符串，那么 Redis 就会使用压缩列表来做哈希键的底层实现。
 压缩列表是 Redis 为了节约内存而开发的，是由一系列特殊编码的**连续内存块**组成的顺序型(sequential)数据结构。
 它是一种 [TLV 格式的数据](https://zhuanlan.zhihu.com/p/1950670667100971771)
-![[Pasted image 20260613211539.png]]
+![Pasted image 20260613211539](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260613211539.png)
 每一个 entry 存储的是**不同类型的**数据，**长度不一**，所以需要 zltail 和 zllen 标记
 
 | 属性 | 类型 | 长度 | 用途 |
@@ -364,7 +364,7 @@ intset 用 O(n) 换来极致的内存紧凑和零碎片；超阈值就切换为 
 | entryX | 列表节点 | 不定 | 压缩列表包含的各个节点，节点的长度由节点保存的内容决定 |
 | zlend | uint8_t | 1 字节 | 特殊值 0xFF（十进制 255），用于标记压缩列表的末端 |
 每个压缩列表节点都由 previous_entry_length、encoding、content 组成
-![[Pasted image 20260613211755.png]]
+![Pasted image 20260613211755](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260613211755.png)
 - previous_entry_length 属性以字节为单位，记录了压缩列表中前一个节点的长度，**范围在 1~5**字节，他的设计思想是**通过当前元素的地址计算出前一元素起始地址**，这也允许了列表反向遍历
 	- 这个字段在只有 1 字节时，只能保存 1~254 字节的长度值
 	- 如果超过 254 字节，则 previous_entry_length 长度为 5 字节，的第一字节会被设置为 0xFE(十进制值 254，用于告知 previous_entry_length 长度为 5 bytes)
@@ -397,7 +397,7 @@ C 的 prevlen 从 1B 变 5B，导致自身膨胀了 4B，引起后面所有的�
 C 膨胀后 >= 254，push D 的 prevlen 也需要从 1B 变 5B
 连锁反应继续...
 删除节点同理
-![[Pasted image 20260613214253.png]]
+![Pasted image 20260613214253](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260613214253.png)
 big 的 prevlen 用 5 字节存储，small 的用 1 字节，删去 small 后，e1 的 prevlen（从记录 small 变为记录 big 的长度） 要从 1 字节变为 5 字节，后面的节点同理。**插入和删除本质上都是 prevlen 引起的** ^0f8m2r
 ### 和压缩列表对比
 
@@ -410,8 +410,8 @@ big 的 prevlen 用 5 字节存储，small 的用 1 字节，删去 small 后，
 | 连锁更新 | 无           | 有（连接问题）   |
 ## 额外: Redis 5.0 引入 listpack
 压缩列表有连锁更新问题，所以 5.0 引入了 listpack 解决，从 [[#^0f8m2r|^0f8m2r]] 可以看到 prevlen 在 entry 开头且变长而导致的
-![[Pasted image 20260614102228.jpg|整体结构]]
-![[Pasted image 20260614102308.jpg|元素结构]] 
+![整体结构](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614102228.jpg)
+![元素结构](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614102308.jpg)
 total-bytes 和 num-elements 是固定的，所以:
 - 单个 listpack 最大只能表示约 4GB 的内存占用
 - 头部记录的节点数量最大只能到 65535
@@ -439,9 +439,9 @@ encoding-type 字段
 | `11111111`              | 用来表示 listpack 结尾。                        |
 
 element-total-len表示**前两部分**占用的[字节数](https://zhida.zhihu.com/search?content_id=236918071&content_type=Article&match_order=2&q=%E5%AD%97%E8%8A%82%E6%95%B0&zhida_source=entity)，1-5字节不等。每个字节第一位用0或1来表示当前字节是否为最后一字节，0表示是，1表示否，剩余字节逻辑上拼接在一起来存放无符号整数表示字节数，采用的是大端模式，即高字节保存在低地址，低字节保存在高地址，这部分主要是为了是[反向遍历](https://zhida.zhihu.com/search?content_id=236918071&content_type=Article&match_order=1&q=%E5%8F%8D%E5%90%91%E9%81%8D%E5%8E%86&zhida_source=entity)而设计的。也就是说，element-total-len 字段字节位读取顺序是反过来的
-![[Pasted image 20260614104850.png]]
+![Pasted image 20260614104850](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614104850.png)
 
-![[Pasted image 20260614104154.png|存放"hello"和整数1024实际案例]]
+![存放"hello"和整数1024实际案例](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614104154.png)
 ## 额外: Redis 2.6 引入 ziplist 替代 zipmap
 zipmap 是历史遗留。它的内存布局是
 ```
@@ -497,9 +497,9 @@ typedef struct redisObject {
 字符串对象的编码可以是 int、raw 或者 embstr
 字符串编码分为 long，raw 和 embedstr
 如果使用 SET number 10086，则10086会被保存为一个long类型的"字符串" void* 类型转换为long
-![[Pasted image 20260614111857.png]]
+![Pasted image 20260614111857](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614111857.png)
 RAWSTR 适用于长字符串，>=32 字节，使用 [[#第 2 章简单动态字符串|SDS]] 保存
-![[Pasted image 20260614111843.png]]
+![Pasted image 20260614111843](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614111843.png)
 EMBSTR 适用于短字符串（Redis 3.0 中 ≤32 字节），不可修改（尝试修改会自动转为 RAW）。
 - 同样使用 redisObject 结构和 sdshdr 结构表示字符串对象，但 raw 编码会调用两次内存分配函数来分别创建 redisObject 结构和sdshdr 结构，而 embstr 编码则通过调用一次内存分配函数来分配一块连续的空间，空间中依次包含 redisObject 和 sdshdr 两个结构。
 - 释放空间时同理也比 RAW 字符串少一次释放
@@ -514,8 +514,8 @@ robj* o = zmalloc(sizeof(robj) + sizeof(struct sdshdr) + len + 1);
 // [ robj header | sdshdr | buf data ]
 // 省一次分配，省一个指针跳转，但不可修改（无 free 空间）
 ```
-![[Pasted image 20260614112204.png]]
-![[Pasted image 20260614112408.png]]
+![Pasted image 20260614112204](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614112204.png)
+![Pasted image 20260614112408](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614112408.png)
 
 > [!info]
 > 可以用 long double 类型表示的浮点数在 Redis 中也是作为字符串值来保存的。如果我们要保存一个浮点数到字符串对象里面,那么程序会先将这个浮点数转换成字符串值,然后再保存转换所得的字符串值，**使用raw 或者 embstr 保存**
@@ -530,9 +530,9 @@ robj* o = zmalloc(sizeof(robj) + sizeof(struct sdshdr) + len + 1);
 由于 embstr 是只读的（redis 没有设置任何对外的 embstr 修改接口），所以对 embstr 的操作返回结果一定是 raw 格式
 ### 列表对象
 列表对象的编码可以是 ziplist 或者 linkedlist
-![[Pasted image 20260614114023.png]]
-![[Pasted image 20260614114033.png]]
-![[Pasted image 20260614114529.png]]
+![Pasted image 20260614114023](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614114023.png)
+![Pasted image 20260614114033](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614114033.png)
+![Pasted image 20260614114529](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614114529.png)
 当列表对象可以同时满足以下两个条件时，列表对象使用 ziplist 编码：
 - 列表对象保存的所有字符串元素的长度都小于 64 字节；
 - 列表对象保存的元素数量小于 512 个；不能满足这两个条件的列表对象需要使用 linkedlist 编码。
@@ -540,8 +540,8 @@ robj* o = zmalloc(sizeof(robj) + sizeof(struct sdshdr) + len + 1);
 ### 哈希对象
 编码可以是 ziplist 或者 hashtable
 ziplist 编码的哈希对象使用压缩列表作为底层实现，插入新的键值对时，会将**键和值分别构成的两个压缩列表节点依次方队队尾**，key-node 和 value-node 挨着，key 在前
-![[Pasted image 20260614120711.png]]
-![[Pasted image 20260614120743.png]]
+![Pasted image 20260614120711](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614120711.png)
+![Pasted image 20260614120743](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260614120743.png)
 #### 编码转换
 - 哈希对象保存的所有键值对的键和值的字符串长度都小于 64 字节;
 - 哈希对象保存的键值对数量小于 512 个;不能满足这两个条件的哈希对象需要使用 hashtable 编码。
@@ -557,8 +557,8 @@ ziplist 编码的哈希对象使用压缩列表作为底层实现，插入新的
 ZADD price 8.5 apple 5.0 banana 6.0 cherry
 ```
 压缩列表存储:
-![[Pasted image 20260622105405.png]]
-![[Pasted image 20260622105823.png]]
+![Pasted image 20260622105405](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260622105405.png)
+![Pasted image 20260622105823](../../Files%20&%20LongText/Attachments/Pasted%20image%2020260622105823.png)
 ```c
 typedef struct zset {
 	zskiplist *zsl;

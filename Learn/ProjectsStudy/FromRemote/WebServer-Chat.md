@@ -56,12 +56,12 @@ cmake . -DCMAKE_CXX_STANDARD=17 && make
 > 有栈协程在切换时确实比系统线程要轻量，但和无栈协程相比仍是偏重的，无栈协程可以做到**纳秒级**切换
 
 普通的函数函数体顺序执行，无法暂停挂起，跟别说恢复，协程函数可以
-![[v2-7a2e0860eecee953296458dc06cb2b40_720w.webp]]
+![v2-7a2e0860eecee953296458dc06cb2b40_720w](../../../Files%20&%20LongText/Attachments/v2-7a2e0860eecee953296458dc06cb2b40_720w.webp)
 C++的协程（协程函数）内部可以用**co_await** , **co_yield**. 两个关键字挂起协程，**co_return**, 关键字进行返回。**如果一个函数中存在这三个关键字之一，那么它就是一个协程**。
 ### 协程函数和普通函数的区别
 普通函数是**线程相关的**，协程不依赖于特定线程（“依赖”体现在一个函数能否在**同一线程或者不同线程中挂起，恢复**）
 - **普通函数**：状态存储在调用线程的栈上
-![[PixPin_2025-11-05_16-43-14.png]]
+![PixPin_2025-11-05_16-43-14](../../../Files%20&%20LongText/Attachments/PixPin_2025-11-05_16-43-14.png)
 普通函数的执行与销毁完全通过在栈上分配内存记录函数状态来达到。一旦脱离线程的管控（不使用栈），则函数调用无法实现
 - **协程**：状态存储在堆分配的"协程帧(coroutine frame)"中
 func_1 是普通函数，func_2 是协程函数，则 func_2 会存储在**堆**中，运行 func_2 的过程中对他的挂起是将**栈里的 func_2 状态复制到堆中**然后栈销毁 func_2 的内存，恢复是栈中分配一夸内存，将**堆中 func_2 复制回栈中**的位置
@@ -877,7 +877,7 @@ main.cpp:(.text+0x45df): undefined reference to `User::User(int, std::__cxx11::b
 ```
 从上往下依次解决即可，类似 `main.cpp:(.text+0x45df)` 这样形式的报错在说明报错出现在源代码中字符流位置
 ## muduo 网络库工作基本原理
-![[PixPin_2026-01-12_16-06-41.png]]
+![PixPin_2026-01-12_16-06-41](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-12_16-06-41.png)
 运行程序的后，程序根据**设备 CPU 数量来做到线程数约等于程序工作线程数**，从而做到*尽可能的高并发*
 - 主线程用来处理用户连接/断开，是 I/O 线程
 - 剩余（如果有）的线程用来处理用户网络读写操作（通过 socketfd 等）
@@ -972,7 +972,7 @@ int main() {
 	return 0;
 }
 ```
-![[PixPin_2026-01-12_17-42-04.png]]
+![PixPin_2026-01-12_17-42-04](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-12_17-42-04.png)
 ## 业务模块代码
 ### 搭建整体架构
 > [!note]
@@ -1143,9 +1143,9 @@ void ChatServer::onMessage(const net::TcpConnectionPtr& conn, net::Buffer* buffe
 }
 ```
 编译运行后能够看到正在监听对应端口
-![[PixPin_2026-01-13_10-02-40.png]]
+![PixPin_2026-01-13_10-02-40](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-13_10-02-40.png)
 通过发送 json 数据调用对应服务
-![[PixPin_2026-01-13_10-05-49.png]]
+![PixPin_2026-01-13_10-05-49](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-13_10-05-49.png)
 #### 添加数据层
 数据层不止有一个，可以分为功能性数据模块&存储类数据模块，这里使用 mysqldb 类控制所有数据的 CURD，usermodel 控制客户端和 msyql 交互的数据，usermodel 再和业务层沟通
 所有接口围绕 `mysql_query` 函数构建
@@ -1164,7 +1164,7 @@ private:
 };
 ```
 ***要注意，如果创建 `MYSQL_RES*` 对象需要在使用后 `mysql_free_result(res）`***
-![[PixPin_2026-01-13_17-39-25.png]]
+![PixPin_2026-01-13_17-39-25](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-13_17-39-25.png)
 数据层 usermodel 用来管理所有和用户信息有关的
 #### 完善数据层功能
 ```cpp
@@ -1230,7 +1230,7 @@ void ChatService::reg(const net::TcpConnectionPtr& conn, json& j, muduo::Timesta
 }
 ```
 主要是实现 reg 和 login 函数，CRUD 流程
-![[PixPin_2026-01-14_09-35-11.png]]
+![PixPin_2026-01-14_09-35-11](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-14_09-35-11.png)
 
 #### 客户端和服务端断开处理
 添加son 异常处理（让发送不合格式的消息时服务器不终止）
@@ -1415,11 +1415,11 @@ void ChatService::login(const net::TcpConnectionPtr& conn, const json& j, muduo:
 
 ## 客户端编写
 使用 socket 编程，无 GUI 界面，简单增删改查数据转换即可实现
-![[PixPin_2026-01-16_21-44-29.png]]
+![PixPin_2026-01-16_21-44-29](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-16_21-44-29.png)
 需要注意：
 - 由于客户端也需要访问结构体 User，GroupUser，Group 这些**纯数据结构体**（也可能是类），这些*数据体中工具函数实现*一般需要放在 hpp 文件中，不然可能导致**初始化找不到构造函数**，数据转换（序列/反序列化）已在头文件声明但找不到的问题，因实现在 cpp 文件中，没 include cpp 文件
 ## 负载均衡
-![[PixPin_2026-01-17_09-17-52.png]]
+![PixPin_2026-01-17_09-17-52](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-17_09-17-52.png)
 负载均衡器的意义：
 1. 把 client 的请求按照负载算法分发到具体的业务服务器 ChatServer 上面
 2. 能够和 ChatServer 保持心跳机制，监测 ChatServer 故障
@@ -1480,7 +1480,7 @@ server {
 - `proxy_connect_timeout`：设置连接到后端服务器的超时时间，即 Nginx 尝试连接到后端服务器（如 3025/3026 端口）的最大等待时间。
 #### 编写和启动配置
 这里单独开一个文件作为 chatserver 的集群服务
-![[PixPin_2026-01-17_09-58-45.png|图中配置为旧版nginx写在stream中]]
+![图中配置为旧版nginx写在stream中](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-17_09-58-45.png)
 - weight 配置权重，负载均衡会按照权重比分发对应数量的数据包，一般按照不同服务器的性能强弱配置
 - max_fails 和 timeout 用于设置心跳间隔时长和重试次数
 配置后测试语法
@@ -1513,13 +1513,13 @@ server {
     # 移除proxy_responses，允许持续的双向通信
 }
 ```
-![[PixPin_2026-01-17_12-43-53.png]]
+![PixPin_2026-01-17_12-43-53](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-17_12-43-53.png)
 ## 消息队列
 ### 如何解决跨服务器通信问题
 跨服务器通信并不能让所有的服务器间都通过 tcp 连接，强耦合并且占用大量 **socket 资源和空闲但被占用带宽**
-![[PixPin_2026-01-17_09-29-16.png]]
+![PixPin_2026-01-17_09-29-16](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-17_09-29-16.png)
 解决方法是使用中间件
-![[PixPin_2026-01-17_09-31-27.png]]
+![PixPin_2026-01-17_09-31-27](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-17_09-31-27.png)
 有了消息队列后，
 - 客户端只需要 **订阅(subscribe)** 消息队列的一个**频道(channel)**，在消息队列中表明对 XXX 感兴趣
 - 服务器端只需要在消息队列中 **发布(publish)** 消息
@@ -1579,7 +1579,7 @@ Redis 与 Nginx 的对比
 2. 客户端应用 → TCP 连接 → redis-server → 内存存储 → 响应返回（对于应用程序直接连接）
 ### 代码编写
 简单来说就是封装一个 redis 类接管所有业务中涉及到的 redis 操作，使用 hiredis 库，需要注意 subscribe 操作在都是独占一个终端中执行**会阻塞操作直到退出**，未退出时只要其他人使用了 `publish message` ，redis 的 subscribe 界面就会收到消息。所以一个 redis 类中需要两个上下文分别控制
-![[PixPin_2026-01-17_14-50-00.png]]
+![PixPin_2026-01-17_14-50-00](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-17_14-50-00.png)
 有其他人使用 publish 命令发送消息时会返回一个内容描述三元组
 ```cpp
 bool Redis::connect() {
@@ -1660,12 +1660,12 @@ bool Redis::unsubscribe(int channel) {
 - 可能我在编写时没有想清楚，具体怎么实现我还需要根据业务逻辑查资料
 
 对称加密
-![[PixPin_2026-01-18_09-36-04.png]]
+![PixPin_2026-01-18_09-36-04](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-18_09-36-04.png)
 这种加密算法**最关键的是统一客户端和服务端的密钥**，这一般不能硬编码在程序里，通常是**动态更新**的，并且这种方式密钥必须**只在 C/S 端知道**，不能网络上明文传输
 常见的算法是 AES 加解密
 
 非对称加密
-![[PixPin_2026-01-18_09-41-52.png]]
+![PixPin_2026-01-18_09-41-52](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-18_09-41-52.png)
 服务器私钥，客户端公钥，数据都通过这对密钥加解密，密钥加密算法有 rsa 等，性能较低
 
 混合加密
@@ -1673,7 +1673,7 @@ bool Redis::unsubscribe(int channel) {
 #### 历史消息存储
 本地存储:
 - 以文件形式存储，每个文件通过加密算法生成**客户端唯一的**加解密密钥
-![[PixPin_2026-01-18_09-51-42.png]]
+![PixPin_2026-01-18_09-51-42](../../../Files%20&%20LongText/Attachments/PixPin_2026-01-18_09-51-42.png)
 - 以数据库形式（sqlite）存储，客户端本地文件保存（安全/统一/访问效率高）
 云端存储：
 - 可以使用任何本地存储的方法，需要添加消息传输到服务器的功能

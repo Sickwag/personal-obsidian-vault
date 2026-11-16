@@ -8,7 +8,7 @@ when you input a website address in you web browser,the dns will **turn the addr
 
 所以DNS只是一个帮助用户“记住”网站的工具，你不必记住成千上万的复杂数字组合，只需记住他们的名字，服务器自动回将名字转换为数字，以方便用户
 可以理解成**dns是一个电话簿，按名称查找数字域名**
-![Pasted image 20240329223414.png](Pasted%20image%2020240329223414.png)**一旦解析器收到网址的IP地址信息后，就会将它存储到缓存中，以防止下一次同样的地址请求到来时重复询问浪费资源。**
+![Pasted image 20240329223414.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329223414.png)**一旦解析器收到网址的IP地址信息后，就会将它存储到缓存中，以防止下一次同样的地址请求到来时重复询问浪费资源。**
 
 所有的查询数据都是放在不同服务器中cache memory中
 
@@ -26,7 +26,7 @@ when you input a website address in you web browser,the dns will **turn the addr
 - CPU插槽（CPU Scoket）：CPU插座是防止中央处理器的位置
 - 内存插槽（memory slots）
 - 总线插槽：用来连接各种组件，拓展电脑的功能
-- 南北桥芯片组![Pasted image 20240329154418.png](Pasted%20image%2020240329154418.png)
+- 南北桥芯片组![Pasted image 20240329154418.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329154418.png)
 	- 北桥芯片组：位于主板的上部分，作为CPU、Pci、总线和内存的中间人。
 	- 南桥芯片组：负责连接sata，USB等较低短的端口![Pasted image 20240329154726.png](Pasted%20image%2020240329154726.png)备注：在PCH等较高端的主板设计方案中北桥的功能已经很大程度上的集成到CPU中，南桥的功能也已**完全被** 平台控制器集线器芯片控制接管
 - 集成接口
@@ -41,15 +41,15 @@ when you input a website address in you web browser,the dns will **turn the addr
 在云端存储或者运行程序/数据，而不在本地设备上
 
 ** 当今主要的云计算供应商
-![Pasted image 20240329211255.png](Pasted%20image%2020240329211255.png)
+![Pasted image 20240329211255.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329211255.png)
 AWS主要业务来源是Netflix
 **当今三种云计算**
 - 基础设施及服务（Infrastructure as a serves）
 - 平台及服务（platform as a serves）
 - 软件及服务（software as a serves）
-![Pasted image 20240329211710.png](Pasted%20image%2020240329211710.png)
-![Pasted image 20240329211916.png](Pasted%20image%2020240329211916.png)
-![Pasted image 20240329211824.png](Pasted%20image%2020240329211824.png)**谷歌文档服务就是典型的SAAS** ，至于要在本机发送操作指令，所有的操作都在云端进行
+![Pasted image 20240329211710.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329211710.png)
+![Pasted image 20240329211916.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329211916.png)
+![Pasted image 20240329211824.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329211824.png)**谷歌文档服务就是典型的SAAS** ，至于要在本机发送操作指令，所有的操作都在云端进行
 
 ## 什么是热点(Hotspot)
 创建热点的设备
@@ -70,12 +70,12 @@ AWS主要业务来源是Netflix
 >
 >专用网络是所有人都可以使用的网络，开放性很高，安全性低，比如公共的WIFI
 
-![Pasted image 20240329205412.png](Pasted%20image%2020240329205412.png)过滤是主要的作用
-![Pasted image 20240329205651.png](Pasted%20image%2020240329205651.png)![Pasted image 20240329205724.png](Pasted%20image%2020240329205724.png)
+![Pasted image 20240329205412.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329205412.png)过滤是主要的作用
+![Pasted image 20240329205651.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329205651.png)![Pasted image 20240329205724.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329205724.png)
 ### 防火墙工作原理
 现代防火墙主要根据数据来源的端口信息匹配防火墙规则决定是否过滤信息
 **网络防火墙**旨在防火整个计算机网络，不针对某一个计算机
-![Pasted image 20240329210500.png](Pasted%20image%2020240329210500.png)
+![Pasted image 20240329210500.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329210500.png)
 **主机防火墙**保护个人
 ### 防火墙的部署
 - 小型路由器部署
@@ -99,19 +99,19 @@ RAM（random access）存储在主办的DIMS（dual inline memory Module）模�
 
 #### 新兴内存技术
 - **DDR技术（double data rate）**
-顾名思义，DDR在每个时钟周期发送的数据是非DDR的两倍![Pasted image 20240330124525.png](Pasted%20image%2020240330124525.png)
+顾名思义，DDR在每个时钟周期发送的数据是非DDR的两倍![Pasted image 20240330124525.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330124525.png)
 DDR利用了数据波段的波峰和波谷两段发送数据
-![Pasted image 20240330124721.png](Pasted%20image%2020240330124721.png)
+![Pasted image 20240330124721.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330124721.png)
 标签上说明了内存的速度
 - **DDR2技术**
 通过拓展总线宽度，使得DDR2拥有两倍于DDR的速度，风少的电量
-![Pasted image 20240330124930.png](Pasted%20image%2020240330124930.png)
+![Pasted image 20240330124930.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330124930.png)
 - **DDR3**
 是DDR2内存速度的两倍，使用更少的电量
-同样的240个针脚，但针脚缺口位置不一样![Pasted image 20240330125112.png](Pasted%20image%2020240330125112.png)
+同样的240个针脚，但针脚缺口位置不一样![Pasted image 20240330125112.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330125112.png)
 - DDR4
 更快速度，消耗更少电量，拥有288个针脚
-![Pasted image 20240330125231.png](Pasted%20image%2020240330125231.png)
+![Pasted image 20240330125231.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330125231.png)
 
 #### 其他
 - 有些RAM中会集成ECC（error coding code）用来检测故障
@@ -120,13 +120,13 @@ DDR利用了数据波段的波峰和波谷两段发送数据
 
 ## 双频段路由器
 频段是无线数据在设备之间的传输方式
-![Pasted image 20240330121156.png](Pasted%20image%2020240330121156.png)单带路由器只能传输其中一个波段（band）
+![Pasted image 20240330121156.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330121156.png)单带路由器只能传输其中一个波段（band）
 许多设备（如微波炉，手机，路由器）一般都使用2.4GHZ，为了**防止2.4Ghz频段过于拥挤而影响信号接收**，新设备一般支持5GHZ频段来降低 干扰
 
 ### 降低干扰的方法
 - 更换频道（channel）
 2.4GHZ有11个频道可以选择，其中有3个信号频道不重叠，这是最稳定的三个频道
-![Pasted image 20240330121744.png](Pasted%20image%2020240330121744.png)
+![Pasted image 20240330121744.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330121744.png)
 5GHZ有两个不重叠频道，25个频道
 
 ### 两者之间的不同
@@ -138,16 +138,16 @@ DDR利用了数据波段的波峰和波谷两段发送数据
 用于将网络分解为更小的网络（提高安全性，性能和易管理性）
 #### 子网
 **子网是通过路由器创建的，小型的局域网是有多个连接在一个路由器上的几台计算机组成的**
-- 当局域网中计算机想要与其他计算机通信时需要连接在同一个“交换机（Switch，不是路由器）”上![Pasted image 20240330164640.png](Pasted%20image%2020240330164640.png)
-- 类似于集线器，当一个计算机想要向外通信，发送广播时所有计算机都会受到广播，所以一旦计算机的数量多起来，就会造成数据拥挤和资源浪费![Pasted image 20240330164819.png](Pasted%20image%2020240330164819.png)
+- 当局域网中计算机想要与其他计算机通信时需要连接在同一个“交换机（Switch，不是路由器）”上![Pasted image 20240330164640.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330164640.png)
+- 类似于集线器，当一个计算机想要向外通信，发送广播时所有计算机都会受到广播，所以一旦计算机的数量多起来，就会造成数据拥挤和资源浪费![Pasted image 20240330164819.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330164819.png)
 - 子网本质是**由路由器隔开的不同广播域**组成
-- 每个子网都有属于自己的广播域，广播不会穿过路由器传播![Pasted image 20240330165110.png](Pasted%20image%2020240330165110.png)
+- 每个子网都有属于自己的广播域，广播不会穿过路由器传播![Pasted image 20240330165110.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330165110.png)
 企业间的各个部门需要保证数据安全性，数据只在各个部门之内流动，就需要建立子网
 
 ### 虚拟局域网（VLAN virtual local area network）
 VLAN引入一种新的硬件——**VLAN交换机**
-这种交换机可以配置网络流量，可以看做是多个交换机的组合集成，这种集成互不干扰，每个集成进来的交换机的接口数量和流量都可以通过控制VLAN控制。![Pasted image 20240330165713.png](Pasted%20image%2020240330165713.png)
-![Pasted image 20240330165725.png](Pasted%20image%2020240330165725.png)
+这种交换机可以配置网络流量，可以看做是多个交换机的组合集成，这种集成互不干扰，每个集成进来的交换机的接口数量和流量都可以通过控制VLAN控制。![Pasted image 20240330165713.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330165713.png)
+![Pasted image 20240330165725.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330165725.png)
 VLAN的最大优点是可以再**不需要增加路由器的情况下分割网络**，因所有的网络流量分配都是VLAN统一管理，所以**也不需要增加防火墙、线缆和请求多个IP地址**
 
 ## 显示器
@@ -161,7 +161,7 @@ VLAN的最大优点是可以再**不需要增加路由器的情况下分割网�
 
 - OLED：一种不需要背光而是通过电流通过有机物使他们自身发光的技术，每一个像素自己发光。广泛使用在现代电子设备上，有极高的对比度，同时**价格更高**，可以做到比LED更薄，没有视角偏移产生的失真
 #### 像素
-![Pasted image 20240331162127.png](Pasted%20image%2020240331162127.png)
+![Pasted image 20240331162127.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240331162127.png)
 可以看到，最高的4K分辨率也不过用800万像素就可以做到
 #### 三种显示器类型
 - TN显示器：更低的响应时间（可以在很短的时间内变幻屏幕上的颜色）、更不明显的残影效果（残影形象观感）**但在观看角度上会有缺陷，尤其是垂直观看**
@@ -171,7 +171,7 @@ VLAN的最大优点是可以再**不需要增加路由器的情况下分割网�
 
 ## 桥接模式
 作用：将两个网络连接在一起，成为一个共通的网络
-![Pasted image 20240331162515.png](Pasted%20image%2020240331162515.png)
+![Pasted image 20240331162515.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240331162515.png)
 两个局域网中只有一个介入internet，链接这两个网络的方法可以是**使用线缆**或者使用**桥接无线网络**。使用桥接的条件是两个局域网中都要有路由器
 ### 使用桥接的方法
 1. 登录没有网络的路由器设置页面
@@ -199,7 +199,7 @@ VLAN的最大优点是可以再**不需要增加路由器的情况下分割网�
 #### 电源上的标识
 80plus表示电源能够有80%以上的电源效率，这个效率是因电源在由**交流电到直流电过程**中由能量损耗。
 600W的电源一般表示满功率负载下有600/0.8=725W的输入功率，在80%以上还会有其他的等级评定
-![Pasted image 20240331160236.png](Pasted%20image%2020240331160236.png)
+![Pasted image 20240331160236.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240331160236.png)
 
 
 ## 虚拟化
@@ -207,9 +207,9 @@ VLAN的最大优点是可以再**不需要增加路由器的情况下分割网�
 
 **传统虚拟模式**：one machine for one application
 每台机器都运行一套应用程序，并使用不同的一套操作系统
-![Pasted image 20240330161915.png](Pasted%20image%2020240330161915.png)
+![Pasted image 20240330161915.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330161915.png)
 将这三个服务器整合到一起，在一台机器中运行三个程序和他们相应的三个操作系统
-![Pasted image 20240330162113.png](Pasted%20image%2020240330162113.png)
+![Pasted image 20240330162113.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330162113.png)
 当用户与虚拟机交互时，并没有三种不同的方式，而是和物理机没有任何区别
 
 ### 虚拟机管理程序（hypervisor）
@@ -219,24 +219,24 @@ VLAN的最大优点是可以再**不需要增加路由器的情况下分割网�
 - 建立一个没有操作系统的主机，**RAM、CPU、hardware所有硬件都有但没有操作系统** ，在这个主机中安装虚拟机管理系统（vmware esxi）（这不是操作系统，只用于创建虚拟机）
 - 然后再安装两个虚拟机，用来运行其他两个程序
 - 给每一个虚拟机安装操作系统和应用程序
-![Pasted image 20240330163316.png](Pasted%20image%2020240330163316.png)
+![Pasted image 20240330163316.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330163316.png)
 **每一个虚拟机都是独立的，只是被虚拟机统一管理了而已**，这种模式一般用于企业数据管理
 ### ***type II（安装在现有的操作系统上）***
 一般用于个人测试软件，使用多种不同的操作系统
 
 ### 虚拟机的好处
 所有的虚拟机都是软件文件，只是借助硬件运行行使管理职能
-![Pasted image 20240330164132.png](Pasted%20image%2020240330164132.png)
+![Pasted image 20240330164132.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240330164132.png)
 
 
 ## 调制解调器（modem）和路由器（router）
 ### 调制解调器
 作用：将互联网带入家庭或者企业，将模拟和数字信号**相互转化**，互联网传入的数据转为数字信号称为解调（demodulate），反之称为调制（modulate）
 使用原因：计算机和网络上的数据使用不同的信号表示方式，计算机使用的是**数字信号**，网络信号时**模拟信号**。
-![Pasted image 20240329212454.png](Pasted%20image%2020240329212454.png)
+![Pasted image 20240329212454.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329212454.png)
 ### 路由器
 路由器的本质是一个有多个接口的交换机，可以将互联网上的信息转接给多个设备（使用以太网线缆或者作为热点发送）
-![Pasted image 20240329213008.png](Pasted%20image%2020240329213008.png)
+![Pasted image 20240329213008.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329213008.png)
 路由器之前必须接一个解调器用来传输信号
 ### 解调器的类型
 - 电缆型：一般是有线电视等设备使用，由有线电视提供商提供
@@ -244,7 +244,7 @@ VLAN的最大优点是可以再**不需要增加路由器的情况下分割网�
 
 大多数路由器中已经内置了交换机，没有必要新增
 唯一需要时是路由器需要接入计算机太多，需要增加端口
-![Pasted image 20240329213616.png](Pasted%20image%2020240329213616.png)
+![Pasted image 20240329213616.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329213616.png)
 
 ## 集线器（hub）交换机（Switch）路由器（router）
 处理数据的方式不同
@@ -264,9 +264,9 @@ VLAN的最大优点是可以再**不需要增加路由器的情况下分割网�
 #### 路由器
 路由器可以使用在需要对外交换数据的网络中，**routers is a device that routes or forwards date from one to another base on their IP adress.**
 路由器识别出为相应端口准备的数据并接受它，本质上是网络的网关
-![Pasted image 20240329220318.png](Pasted%20image%2020240329220318.png)
+![Pasted image 20240329220318.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329220318.png)
 
 #### 建立内网
 使用交换器和路由器组合，每个网络只在内部交换信息，而不会公开
-![Pasted image 20240329221133.png](Pasted%20image%2020240329221133.png)
+![Pasted image 20240329221133.png](../../../Files%20&%20LongText/Attachments/Pasted%20image%2020240329221133.png)
 在这个网络组合中，集线器和交换机用语创建网络，路由器用于交换网络，如果红色计算机需要和蓝色计算机通信，则需要中间三个路由器都需要**识别并允许**发送的信息通过，最终传到目标计算机
