@@ -1689,7 +1689,7 @@ set_target_properties(MyApp
 构建过程中任何步骤通常都可以用其输入和输出来描述。CMake 假定代码生成器和其他自定义过程遵循相同的原则。这样，代码生成器就与编译器、链接器和其他工具链元素一样运行；当输入比输出新（或输出不存在）时，将运行用户指定的命令来更新输出。
 核心是 **通过 `add_custom_command()` 和 `add_custom_target()` 实现代码生成**，并将其集成到项目构建流程中
 ### 交叉编译下的 gRPC 代码生成
-[[/Chores/JobInterviews/简历项目.md|项目中的 protoc 构建期代码生成实践]]
+[[../../Chores/JobInterviews/简历项目问题|项目中的 protoc 构建期代码生成实践]]
 `CMAKE_FIND_ROOT_PATH_MODE_PROGRAM` 控制 `find_program()` 是否把 `CMAKE_FIND_ROOT_PATH` 和 `CMAKE_SYSROOT` 当作程序查找根目录。它只改变查找位置，不负责运行生成器，也不会自动生成或加入缺失的源文件。
 
 | 模式 | 查找范围 | 交叉编译中的含义 |

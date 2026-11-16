@@ -4,6 +4,7 @@
 - 写入知识前完整读取 [.agents/Style.md](.agents/Style.md)。涉及学习、复习和跨笔记整理时同时读取 [.agents/Context.md](.agents/Context.md)。
 - 用 [.agents/KnowledgeMap.md](.agents/KnowledgeMap.md) 定位主题和文件；它保留完整文件地图，实际路径和正文优先。
 - 整理 AI 问答、博客、视频、其他笔记等学习资源时，读取 [.agents/skills/learning-resource-merge/SKILL.md](.agents/skills/learning-resource-merge/SKILL.md)。共享安装入口为 `~/.agents/skills/learning-resource-merge/SKILL.md`。
+- 求职面试协作分两类：新面试邀约按 JD 生成针对性准备，读 [.agents/skills/interview-prep-from-jd/SKILL.md](.agents/skills/interview-prep-from-jd/SKILL.md)；零散面试题合并进面试题合集，读 [.agents/skills/interview-question-merge/SKILL.md](.agents/skills/interview-question-merge/SKILL.md)。
 - 复习协作先读 [.agents/fsrs/UseGuide.md](.agents/fsrs/UseGuide.md)、[文件说明](.agents/fsrs/FileGuide.md) 和 [Agent 协议](.agents/fsrs/AgentProtocol.md)。历史资料不覆盖当前规则。
 - 这些是必须打开的依赖文档；Markdown 链接不代表工具会自动加载正文。当前用户指令优先。
 ## 知识定位与编辑
