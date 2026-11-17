@@ -6,3 +6,7 @@
 - [ ] [资源标题](https://example.org/article)
 - [ ] /明确指定的本地资料.md
 ```
+
+## 2026-11-17
+整理状态：待整理
+- [ ] Chores/JobInterviews/收集的面试题.md（零散题面与口语答案，需按 `interview-question-merge` 查重后并入 `Chores/JobInterviews/面试题合集.md`）
