@@ -1,0 +1,1287 @@
+{
+  "schema_version": 1,
+  "status": "awaiting_user_review",
+  "window_start": "2026-11-09T22:56:41+08:00",
+  "window_end": "2026-11-16T22:56:41+08:00",
+  "timezone": "Asia/Shanghai",
+  "snapshot_head": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+  "baseline": "a5f9bcb24d596e13d5695811bc6542b5e0868ac7",
+  "selection": "first-parent commits selected by actual committer timestamps; each selected section intersects an introducing commit hunk",
+  "commits": [
+    {
+      "commit": "68fab80ec950305a97e3fbefec6dc5e1cb5a3789",
+      "author_at": "2026-11-13T23:59:59+08:00",
+      "committed_at": "2026-11-13T23:59:59+08:00",
+      "subject": "chore(vault): 为了保证仓库同步的 Git 补提交",
+      "learning_paths": []
+    },
+    {
+      "commit": "f5c1163e0b7b798ed5ca991728ca87485c54e342",
+      "author_at": "2026-11-14T15:17:32+08:00",
+      "committed_at": "2026-11-14T15:17:32+08:00",
+      "subject": "vault backup: 2026-11-14 15:17:32",
+      "learning_paths": [
+        "Learn/Algorithm/刷题路线.md"
+      ]
+    },
+    {
+      "commit": "af211d04749c8da74ce8f92a543f4fa14d7b8887",
+      "author_at": "2026-11-14T19:17:32+08:00",
+      "committed_at": "2026-11-14T19:17:32+08:00",
+      "subject": "vault backup: 2026-11-14 19:17:32",
+      "learning_paths": [
+        "Learn/Algorithm/刷题路线.md",
+        "Learn/ProjectsStudy/FromRemote/stl1week.md"
+      ]
+    },
+    {
+      "commit": "fed44991438b2980ea86c43acb2745343ea7c8ed",
+      "author_at": "2026-11-15T16:20:52+08:00",
+      "committed_at": "2026-11-15T16:20:52+08:00",
+      "subject": "vault backup: 2026-11-15 16:20:52",
+      "learning_paths": [
+        "Learn/ProjectsStudy/FromRemote/stl1week.md"
+      ]
+    },
+    {
+      "commit": "0643f370dc1a959ef3f2395f48e68fda3b5db146",
+      "author_at": "2026-11-15T16:20:56+08:00",
+      "committed_at": "2026-11-15T16:20:56+08:00",
+      "subject": "vault backup: 2026-11-15 16:20:56",
+      "learning_paths": []
+    },
+    {
+      "commit": "a76099a99a28fb17d2ccf8762763f31859590514",
+      "author_at": "2026-11-14T23:59:59+08:00",
+      "committed_at": "2026-11-14T23:59:59+08:00",
+      "subject": "chore(vault): 为了保证仓库同步的 Git 补提交",
+      "learning_paths": [
+        "Chores/JobInterviews/面试题合集.md",
+        "Learn/Bases/OperatingSystem/Linux Source Code.md",
+        "Learn/Bases/OperatingSystem/Linux 源码学习.md"
+      ]
+    },
+    {
+      "commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "author_at": "2026-11-15T21:50:45+08:00",
+      "committed_at": "2026-11-15T21:50:45+08:00",
+      "subject": "vault backup: 2026-11-15 21:50:44",
+      "learning_paths": [
+        "Learn/Algorithm/刷题路线.md",
+        "Learn/Bases/OperatingSystem/Linux Source Code.md",
+        "Learn/Bases/Paradigm/IO复用模型.md",
+        "Learn/Books/Linux高性能服务器编程.md",
+        "Learn/Books/Modern C++.md",
+        "Learn/ProjectsStudy/FromRemote/CommStudio.md",
+        "Learn/ProjectsStudy/WriteByMyself/MyTinySTL.md"
+      ]
+    },
+    {
+      "commit": "7287f78d49860867394e18bb2f6ab851ab118acc",
+      "author_at": "2026-11-15T21:50:51+08:00",
+      "committed_at": "2026-11-15T21:50:51+08:00",
+      "subject": "vault backup: 2026-11-15 21:50:51",
+      "learning_paths": []
+    },
+    {
+      "commit": "e23b93f8bd1534de3aee4b540c1f387b6b8fc05c",
+      "author_at": "2026-11-16T09:29:21+08:00",
+      "committed_at": "2026-11-16T09:29:21+08:00",
+      "subject": "vault backup: 2026-11-16 09:29:21",
+      "learning_paths": [
+        "Learn/Algorithm/刷题路线.md"
+      ]
+    },
+    {
+      "commit": "2801b00c978857e97dd077780f840dccf830fd60",
+      "author_at": "2026-11-15T23:59:59+08:00",
+      "committed_at": "2026-11-16T14:40:17+08:00",
+      "subject": "chore(vault): 为了保证仓库同步的 Git 补提交",
+      "learning_paths": [
+        "Learn/Algorithm/刷题路线.md"
+      ]
+    },
+    {
+      "commit": "4e967b38c111fedf0b7153256b502fd2ce2eeb38",
+      "author_at": "2026-11-16T16:55:30+08:00",
+      "committed_at": "2026-11-16T16:55:30+08:00",
+      "subject": "docs: reorganize vault agent guidance",
+      "learning_paths": []
+    },
+    {
+      "commit": "7834852ad415c45cd5ab94df482e6ee37f0edee4",
+      "author_at": "2026-11-16T16:59:16+08:00",
+      "committed_at": "2026-11-16T18:29:43+08:00",
+      "subject": "docs: make local resource links portable",
+      "learning_paths": [
+        "Learn/AI/Pytorch basic.md",
+        "Learn/Algorithm/SQL刷题记录.md",
+        "Learn/Algorithm/分析优化.md",
+        "Learn/Algorithm/刷题路线.md",
+        "Learn/Algorithm/用法导向知识.md",
+        "Learn/Algorithm/题型分类.md",
+        "Learn/Bases/ComputerComposition/Hardware Animation.md",
+        "Learn/Bases/DataStructure/dsacpp 3rd.md",
+        "Learn/Bases/DataStructure/数据结构.md",
+        "Learn/Bases/DataStructure/数据结构和算法图解.md",
+        "Learn/Bases/DataStructure/深入浅出数据结构.md",
+        "Learn/Bases/Network/OSI七层模型.md",
+        "Learn/Bases/Network/小林Coding 计算机网络.md",
+        "Learn/Bases/Network/王道考研计算机网络.md",
+        "Learn/Bases/OperatingSystem/小林 Coding 图解操作系统.md",
+        "Learn/Bases/Paradigm/IO复用模型.md",
+        "Learn/Bases/Paradigm/常用算法和情景处理.md",
+        "Learn/Bases/Paradigm/设计模式.md",
+        "Learn/Books/C++ prime plus.md",
+        "Learn/Books/C++并发编程实战（第二版）.md",
+        "Learn/Books/Linux多线程服务端编程 使用muduo C++网络库.md",
+        "Learn/Books/Linux高性能服务器编程.md",
+        "Learn/Books/Modern C++.md",
+        "Learn/Books/Python编程三剑客.md",
+        "Learn/Books/QT6开发指南.md",
+        "Learn/Books/QT样式表合集.md",
+        "Learn/Books/Redis 设计与实现.md",
+        "Learn/Books/汇编语言---王爽.md",
+        "Learn/Books/算法竞赛入门经典.md",
+        "Learn/Books/软件工程.md",
+        "Learn/Fragments/编程相关/基本知识/Regular Expression.md",
+        "Learn/Fragments/编程相关/基本知识/报错日志和代码异常分析.md",
+        "Learn/Fragments/编程相关/操作经验/乱码对照表及其解决方法.md",
+        "Learn/Fragments/编程相关/操作经验/网络连接问题解决.md",
+        "Learn/Fragments/装机/装机.md",
+        "Learn/Fragments/计算机二级考试/Excel选择题.md",
+        "Learn/Fragments/计算机二级考试/PowerPoint选择题.md",
+        "Learn/Fragments/计算机二级考试/计算机公共基础知识.md",
+        "Learn/Fragments/计算机二级考试/靠记的题.md",
+        "Learn/Language/Android/Android Development.md",
+        "Learn/Language/Android/Jetpack  Compose开发.md",
+        "Learn/Language/Android/Jetpack Compose入门到精通.md",
+        "Learn/Language/Android/Kotlin + xml传统开发.md",
+        "Learn/Language/C C++/C++ Runoob Tutoral.md",
+        "Learn/Language/C C++/Communication protocol.md",
+        "Learn/Language/C C++/OpenGL.md",
+        "Learn/Language/C C++/模板元编程.md",
+        "Learn/Language/DB/MongoDB.md",
+        "Learn/Language/DB/MySQL.md",
+        "Learn/Language/Fronted/CSS.md",
+        "Learn/Language/Fronted/HTML.md",
+        "Learn/Language/Java/java编程的逻辑.md",
+        "Learn/Language/ScriptLangs/Ragel.md",
+        "Learn/ProjectsStudy/FromDocs/Agent Learning.md",
+        "Learn/ProjectsStudy/FromDocs/Boost库学习.md",
+        "Learn/ProjectsStudy/FromDocs/Qt Official Tutorial.md",
+        "Learn/ProjectsStudy/FromRemote/CLI11.md",
+        "Learn/ProjectsStudy/FromRemote/Echat.md",
+        "Learn/ProjectsStudy/FromRemote/FiberLib.md",
+        "Learn/ProjectsStudy/FromRemote/QTExamples.md",
+        "Learn/ProjectsStudy/FromRemote/WebServer-Chat.md",
+        "Learn/ProjectsStudy/WriteByMyself/AzzatoChat.md",
+        "Learn/ProjectsStudy/WriteByMyself/BookManageSystem+mysql.md",
+        "Learn/ProjectsStudy/WriteByMyself/CPP网络编程实战.md",
+        "Learn/ProjectsStudy/WriteByMyself/DevFoundations.md",
+        "Learn/ToolChain/CMake.md",
+        "Learn/ToolChain/Components.md",
+        "Learn/ToolChain/Dev Tool.md"
+      ]
+    },
+    {
+      "commit": "fa654eb90bca7f2a1ca84fc2377a6910340474e7",
+      "author_at": "2026-11-16T17:02:12+08:00",
+      "committed_at": "2026-11-16T18:29:43+08:00",
+      "subject": "feat: add learning resource merge skill",
+      "learning_paths": [
+        "Learn/Fragments/ReadyToMerge.md"
+      ]
+    },
+    {
+      "commit": "f60cd66c75435666d8157ad337c88cdd1827d243",
+      "author_at": "2026-11-16T17:19:29+08:00",
+      "committed_at": "2026-11-16T18:29:43+08:00",
+      "subject": "docs: document external FSRS workflow and acceptance gate",
+      "learning_paths": []
+    },
+    {
+      "commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "author_at": "2026-11-16T17:50:14+08:00",
+      "committed_at": "2026-11-16T18:30:13+08:00",
+      "subject": "docs: add verified interview design implementations",
+      "learning_paths": [
+        "Learn/Algorithm/刷题路线.md"
+      ]
+    },
+    {
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "author_at": "2026-11-16T22:50:12+08:00",
+      "committed_at": "2026-11-16T22:50:12+08:00",
+      "subject": "vault backup: 2026-11-16 22:50:12",
+      "learning_paths": [
+        "Chores/JobInterviews/具体公司的了解以及面试准备.md",
+        "Chores/JobInterviews/反问环节.md",
+        "Chores/JobInterviews/收集的面试题.md",
+        "Chores/JobInterviews/智力题.md",
+        "Chores/JobInterviews/简历项目.md",
+        "Chores/JobInterviews/简历项目问题.md",
+        "Chores/JobInterviews/自我介绍.md",
+        "Chores/JobInterviews/面试准备.md",
+        "Chores/JobInterviews/面试复盘.md",
+        "Chores/JobInterviews/面试题合集.md",
+        "Learn/Algorithm/刷题路线.md",
+        "Learn/ToolChain/CMake.md"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "line": 4906,
+      "heading": "5. 最长回文子串",
+      "section": "字符串 › 查找算法 › 5. 最长回文子串",
+      "end_line": 5053,
+      "hash": "c0adf6f8e1740f163265f8655e7d56a3978d66b7b7b6493054dd9789a9c8ed38",
+      "id": "689b2ae11bc00ccb9e475fc99e3d80742107a56853a344bbe91add58144d3eb1",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "af211d04749c8da74ce8f92a543f4fa14d7b8887",
+      "changed_at": "2026-11-14T19:17:32+08:00",
+      "changed_hunks": [
+        "@@ -4881,0 +4921,34 @@ string longestPalindromeDP(const string& s) {",
+        "@@ -4889,3 +4962,2 @@ string longestPalindromeDP(const string& s) {",
+        "@@ -4893,6 +4965,15 @@ int longestPalindromeSubseq(string s) {   // 注意：其实是求子串",
+        "@@ -4900,3 +4981,8 @@ int longestPalindromeSubseq(string s) {   // 注意：其实是求子串",
+        "@@ -4904 +4990,3 @@ int longestPalindromeSubseq(string s) {   // 注意：其实是求子串"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 4867,
+      "heading": "205 . 同构字符串",
+      "section": "字符串 › 查找算法 › 205 . 同构字符串",
+      "end_line": 4905,
+      "hash": "d31b91f49279b9aa7dddb88c574147a0d1702d1ef1a860eb3a9c49a266d3f2b7",
+      "id": "b3bb7ece8f3c70aa37ddb5f73f83ae895cdd9ebd3579d362ad6aa3315361da25",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "af211d04749c8da74ce8f92a543f4fa14d7b8887",
+      "changed_at": "2026-11-14T19:17:32+08:00",
+      "changed_hunks": [
+        "@@ -4807,0 +4808,39 @@ public:"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 4850,
+      "heading": "796. 旋转字符串",
+      "section": "字符串 › 查找算法 › 796. 旋转字符串",
+      "end_line": 4866,
+      "hash": "a95490daebaa8563d6478c2a9def9f9cbc7b9af5143937602e01b51d0b4ae253",
+      "id": "4466e20623c17f5859186bc857905aa135726ef2662c79f489ca1b8aafdaff92",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "e23b93f8bd1534de3aee4b540c1f387b6b8fc05c",
+      "changed_at": "2026-11-16T09:29:21+08:00",
+      "changed_hunks": [
+        "@@ -4845 +4849,18 @@ public:"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 4630,
+      "heading": "415\\. 字符串相加",
+      "section": "字符串 › 字符串模拟 › 415\\. 字符串相加",
+      "end_line": 4670,
+      "hash": "9e3bcfcaa548cd4d28677a54e8d588831facecff20018c9c29b83f07f749d7f7",
+      "id": "9094b90d95c9d1417ec257e8c23dc7b08a32e925042bfb39202690e1851d4784",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -4628,0 +4629,37 @@ public:"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 6328,
+      "heading": "295. 数据流的中位数",
+      "section": "堆（优先队列） › 基础 › 295. 数据流的中位数",
+      "end_line": 6400,
+      "hash": "8af1ddc6fb2783ac6d882793c33d781b009aa58ad57ba4c13e0d9e3c53e21d24",
+      "id": "4fbc70d454335a9155d8a86312c74133341be8230c2c0d7feb839a6951f968f3",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "e23b93f8bd1534de3aee4b540c1f387b6b8fc05c",
+      "changed_at": "2026-11-16T09:29:21+08:00",
+      "changed_hunks": [
+        "@@ -6305,0 +6327,73 @@ public:"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 33,
+      "heading": "`new` 表达式、分配函数与 placement new",
+      "section": "Vector 复现 › alloc 管理内存**分配\\构建\\销毁\\释放** › Allocator 与对象生命周期的边界 › `new` 表达式、分配函数与 placement new",
+      "end_line": 46,
+      "hash": "029f254a05838aa95cbdc84393ff85d0252121a0d70d517e64db72a31fa72115",
+      "id": "5199cf1292373e151498aaf09cf8178d46d7d721f22306ca5d3cb747f83231b7",
+      "path": "Learn/ProjectsStudy/WriteByMyself/MyTinySTL.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -32,0 +33,14 @@ Allocator 把“取得原始存储”和“在存储中建立对象”分开。`"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "c8f5d0f91f3da4e691652e898f1a6848b61d00ec"
+    },
+    {
+      "line": 3510,
+      "heading": "`std::stack` 的接口与底层容器",
+      "section": "第 3 章 STL 容器 › STL 容器类型的概述 › `std::stack` 的接口与底层容器",
+      "end_line": 3553,
+      "hash": "39ea84700e60ee3691b3fa10456ac91b1e33172e5f308003b515b1d7e417bdcc",
+      "id": "6707e678eeb25bc9288ee932b7607275d4da7be5b0e5c07b05b54f473cbe938c",
+      "path": "Learn/Books/Modern C++.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -3509,0 +3510,44 @@ std::enable_if_t<std::is_same_v<T, ErrorStruct>> printInfo(T value) {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "54988d8b3f80d586741fc9bf16fd1499709e57cf"
+    },
+    {
+      "line": 10556,
+      "heading": "vector",
+      "section": "设计题 › STL › vector",
+      "end_line": 10638,
+      "hash": "33766417a01123d2d0325e49f07ee4de1df27822903d112700acc30d799cb799",
+      "id": "a41dfc273db92cf4efaf8a14c7adea94309c67cbaa220e7be74c240b5b5755a7",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10507,0 +10556,83 @@ public:"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 10639,
+      "heading": "stack",
+      "section": "设计题 › STL › stack",
+      "end_line": 10772,
+      "hash": "3042401a64eecd126614d17e3f0a626165c36746d559550578404a4fee346e51",
+      "id": "21be43e83b61be6aa158d30fcccec2701ce1cc469a5516d34a774affd39844d5",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10508,0 +10640,3 @@ public:",
+        "@@ -10511 +10645,2 @@ template <typename T>",
+        "@@ -10514,15 +10649 @@ class Stack {",
+        "@@ -10530,11 +10651,7 @@ class Stack {",
+        "@@ -10542,4 +10659,13 @@ class Stack {",
+        "@@ -10547,6 +10673,5 @@ class Stack {",
+        "@@ -10554,6 +10679,6 @@ class Stack {",
+        "@@ -10561,6 +10686,6 @@ class Stack {",
+        "@@ -10568,7 +10693,6 @@ class Stack {",
+        "@@ -10576,8 +10700,4 @@ class Stack {",
+        "@@ -10585 +10705,15 @@ class Stack {",
+        "@@ -10587 +10721 @@ class Stack {",
+        "@@ -10590,10 +10724,11 @@ class Stack {",
+        "@@ -10601,7 +10736,7 @@ class Stack {",
+        "@@ -10609,24 +10744,24 @@ class Stack {",
+        "@@ -10634,3 +10769,3 @@ class Stack {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 10908,
+      "heading": "LRU 缓存池",
+      "section": "设计题 › 数据结构设计 › LRU 缓存池",
+      "end_line": 10991,
+      "hash": "29d8af07870456217b1ba8fe86bdb4c4063d969a046d5b6595423d30b6216381",
+      "id": "14597f1f7f762394b15e94593954c8f45fe1eecdab763b63fb76ce8869bee430",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10641,0 +10913,5 @@ class Stack {",
+        "@@ -10644,5 +10920,3 @@ struct Node {",
+        "@@ -10652,26 +10925,23 @@ class LRUCache {",
+        "@@ -10680,3 +10950,5 @@ class LRUCache {",
+        "@@ -10684,4 +10956,13 @@ class LRUCache {",
+        "@@ -10691,14 +10971,16 @@ class LRUCache {",
+        "@@ -10709 +10991 @@ class LRUCache {",
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 10992,
+      "heading": "LFU 缓存池",
+      "section": "设计题 › 数据结构设计 › LFU 缓存池",
+      "end_line": 11069,
+      "hash": "8f48d1f3ffade564e58d3b9afef814be6a987cddb33b29b1f404e05fa5868dd6",
+      "id": "93af2b68458d8c577ff3c57a03a2c70619fd269f3277eb183428f1c02187dfea",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11071,
+      "heading": "二叉堆",
+      "section": "设计题 › 堆、Trie 与并查集 › 二叉堆",
+      "end_line": 11115,
+      "hash": "083e7e9f7d0568604aab078477dfb44437b4bbfd26099d3714023d586a3c50fa",
+      "id": "16bfc1870aa842ceff8963766cde2cabe68eaa000c25524d57b252a1240e17bc",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11116,
+      "heading": "Trie",
+      "section": "设计题 › 堆、Trie 与并查集 › Trie",
+      "end_line": 11175,
+      "hash": "fc1f4767c35fb2a0a0a583371b48141ab37fd8b091b0774cce5c600706bb182d",
+      "id": "74aad0549d7527df2086c4afe93580fc08e0cd6d3e0add567837f0c5731df96b",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11176,
+      "heading": "并查集",
+      "section": "设计题 › 堆、Trie 与并查集 › 并查集",
+      "end_line": 11220,
+      "hash": "0d983548918fc9e932b1559941181c078ed6aab80f94ce087067d7e3b20223fb",
+      "id": "7e5ff934ca53b80ae739ca141d1f697307821f6f617ba89e623c1a1ecbde9281",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11222,
+      "heading": "CPU 到 C++ 内存序",
+      "section": "设计题 › 无锁队列 › CPU 到 C++ 内存序",
+      "end_line": 11228,
+      "hash": "77b5444d44a37622187dd79c8d04e55ee1bc455fd34ed7be3113fe980d437bd3",
+      "id": "15ed881dced774f4dfa1d81d05c5cbf5e27df828e50f39a17b96967418a6b380",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11239,
+      "heading": "SPSC 环形队列",
+      "section": "设计题 › 无锁队列 › SPSC 环形队列",
+      "end_line": 11268,
+      "hash": "9e44ced7ae5f7f08fb89c6c1519632a181443aabae19ef71aade74ac9db1c5f5",
+      "id": "e1deaca81b2da21ab81f680084998a64b6bff75be630f5d107bf16675d15c4e6",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11269,
+      "heading": "MPSC、SPMC 与 MPMC 的安全核心",
+      "section": "设计题 › 无锁队列 › MPSC、SPMC 与 MPMC 的安全核心",
+      "end_line": 11445,
+      "hash": "5b495f3cdf096ee5af9e63a1b3d4f1a6ecacafb269834806579a6468e9a57b12",
+      "id": "dcb3292b5ff9b422f2aeb9407b3ed63a1f36bbf789c4a3d4a6dca69512a743a8",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11446,
+      "heading": "线程池",
+      "section": "设计题 › 线程池",
+      "end_line": 11533,
+      "hash": "66e165971d63ab2f1c3b33aee1d3193fd49b81e6b6243c6b52e4b9903090512f",
+      "id": "f774883126c25d30db4e4fd32f1f8a931693393c1df7e33347f95515e4e9e2bf",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11535,
+      "heading": "复杂度与稳定性",
+      "section": "设计题 › 经典排序 › 复杂度与稳定性",
+      "end_line": 11550,
+      "hash": "02eb78177f133f2e858df2fcd88ceffa1a07b869682c1c787f7585f9a42d8e32",
+      "id": "46646fca2cbf2e9f4d0a7f564220f95481da3b5f2302b3d7f685f3a32c96675b",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11599,
+      "heading": "三路快速排序",
+      "section": "设计题 › 经典排序 › 三路快速排序",
+      "end_line": 11629,
+      "hash": "ac3680ca467e9771619bbe23f12880d15b6fa6f303f9b283c76b012e3c0dcbd5",
+      "id": "bf676e22a526392587042e71ea047aa9810b4c800ad9cb61e1eac714fb0da009",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11681,
+      "heading": "计数、桶与基数排序",
+      "section": "设计题 › 经典排序 › 计数、桶与基数排序",
+      "end_line": 11745,
+      "hash": "81d4cac12c302c2c5a6f92d777652610bba0c3467cff33918239cadb668c80d5",
+      "id": "d0d4d45afefb7f5294f4666e37f6bd8b61395f6c222018f482c808dc1e82aba9",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11746,
+      "heading": "哈夫曼树与编码还原",
+      "section": "设计题 › 哈夫曼树与编码还原",
+      "end_line": 11852,
+      "hash": "3719b598310ee7adc4e79e259431e454e3f393b021dc4eeddc390a152df4304e",
+      "id": "fbcf37d60c8b7d60a7440f511a51066f9c80f9acc145e6dd1fc88031263cf5a4",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11857,
+      "heading": "树状数组",
+      "section": "设计题 › 树与高级结构的追问 › 树状数组",
+      "end_line": 11859,
+      "hash": "e82201e20b5fb69c684e9a4dcc18d32a91b1f6569bfe3c7f878b2e74700f41f2",
+      "id": "8724b071736e5f064472b870115c8b6b4dfbf0424c80adf77b2e93235c5bbb40",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 11860,
+      "heading": "线段树",
+      "section": "设计题 › 树与高级结构的追问 › 线段树",
+      "end_line": 11862,
+      "hash": "7fe647aa9bdae599ed70068cb5b4b46cc1c518636aac95bb318883361564ce16",
+      "id": "9f714c32a6ccce07f6d1363c49a70412e773fce99263a0abf7a9463981646227",
+      "path": "Learn/Algorithm/刷题路线.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "86a54b059eef823bdb1156b3daa3e01dacfb9df5",
+      "changed_at": "2026-11-16T18:30:13+08:00",
+      "changed_hunks": [
+        "@@ -10711,0 +10994,888 @@ class LRUCache {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "bfad8f4f3a2c37107a2f141745a3b07843f31698"
+    },
+    {
+      "line": 189,
+      "heading": "flags 能填什么（创建与存在性）",
+      "section": "Linux 编程 API 速查 › 文件与描述符 › open / openat › flags 能填什么（创建与存在性）",
+      "end_line": 212,
+      "hash": "f76fcf7557014bdda7871a6d84a2883bfae081730369cb37d2768d78b44b3433",
+      "id": "aedd932cbaaedd1677a32af61ce30f02f6ca4ce15dc4fee9a62081e2e7e0b0cf",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 262,
+      "heading": "close",
+      "section": "Linux 编程 API 速查 › 文件与描述符 › close",
+      "end_line": 274,
+      "hash": "6be93cb7403a86871a9259d8e59de1c01be8001e40504f1a5ad91fbcec9e070c",
+      "id": "c45b579be4adfece73e650beadaffbf546cbb8dd4a8b4f0f8f881f3a9b5846ba",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 359,
+      "heading": "dup / dup2 / dup3",
+      "section": "Linux 编程 API 速查 › 文件与描述符 › dup / dup2 / dup3",
+      "end_line": 390,
+      "hash": "5ddad4c037ce878219a1a65c411cf221c846ed3a290303fe31345dab71434735",
+      "id": "8d7b028d0058aa893cd2b6e12abd0b231addceff7e484eb2a1accc065e3a1081",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 275,
+      "heading": "read / write",
+      "section": "Linux 编程 API 速查 › 文件与描述符 › read / write",
+      "end_line": 321,
+      "hash": "ece33568aa0d25c46d7d00872d5b283cc3c51c0d002166558ecde9dff0a3fa23",
+      "id": "0678559e67dd3f18e66d3d1a2d60c34e162954bb41dfb829e6aff55047c4c90d",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 965,
+      "heading": "非阻塞 connect 完整流程",
+      "section": "Linux 编程 API 速查 › socket 编程 › 非阻塞 connect 完整流程",
+      "end_line": 979,
+      "hash": "828e35c21d5fb9af79c4d30222dd463bcf6c0f282a3e5b05af7df775c597859d",
+      "id": "6b98738873da5e2c7a061113c231d65d2ce59d8576a81b629738a364c798b450",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 1556,
+      "heading": "epoll",
+      "section": "Linux 编程 API 速查 › IO 多路复用 › epoll",
+      "end_line": 1613,
+      "hash": "e5b42a9db765773d927e91cd6980fa1515aaaeb3b378da74107d5c5d6db65e5a",
+      "id": "6472b1b3e4159c008a50a86fd28e0dd37465c555bdf2c03b0a36f32f0549e93c",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 1085,
+      "heading": "fork",
+      "section": "Linux 编程 API 速查 › 进程控制 › fork",
+      "end_line": 1121,
+      "hash": "39f69e3bca5faa061bd98df58fe14d2c5e8b0faa5079bcb3700dfec9dd7ec850",
+      "id": "b5caa1692c4803e9b8eaa9d8c320b35d025cca44571d61672a381fae17ff8d51",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 1129,
+      "heading": "execve 与 exec 家族",
+      "section": "Linux 编程 API 速查 › 进程控制 › execve 与 exec 家族",
+      "end_line": 1170,
+      "hash": "4cff2f09d6eb46367faf121926b5664ec7955cd3dc8c52205fc3a83d9427c979",
+      "id": "351aad084d396d49492270cb8aab02e1175ba8df00e7aa9aa1e70f827ec0eed9",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 1249,
+      "heading": "sigaction 与信号屏蔽",
+      "section": "Linux 编程 API 速查 › 进程控制 › sigaction 与信号屏蔽",
+      "end_line": 1292,
+      "hash": "37c7105a341a34a3524d6d6f2e39b18e89d2c6cc836c1b90faf3d77376d3aeee",
+      "id": "fdad68a82b476dffd1228287921ee4732396d980d0998477628949e736fe7e51",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 1468,
+      "heading": "pthread_cond",
+      "section": "Linux 编程 API 速查 › 线程与同步 › pthread_cond",
+      "end_line": 1494,
+      "hash": "7f6e2b4c9d70e605d88c5317e960f46e3df04226681f0b577b01d8006db53162",
+      "id": "39d81bf9258b45df461f8d9556b14159b8c7a8d420d87d0eacf0efc3881356f5",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 494,
+      "heading": "mmap / munmap",
+      "section": "Linux 编程 API 速查 › 文件与描述符 › mmap / munmap",
+      "end_line": 527,
+      "hash": "94b85583f421eba2ff85bf4e612bf0d66ab89b2d900435e9eb58b4056ac67c76",
+      "id": "00e8c88b34d008955fa859170a002c3be466b3d5f080f9da531233b6bb88b9d1",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 2069,
+      "heading": "共享内存",
+      "section": "Linux 编程 API 速查 › 进程间通信 › 共享内存",
+      "end_line": 2086,
+      "hash": "f765a51cd9589ed4d7d48887c3bb8dcedb42c99c7a2a026a141f70f002eb9120",
+      "id": "964a9507ead702920d0dd34dcc2bcbb0e07682992cbd291f7841652656c4b463",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 1735,
+      "heading": "VMIN / VTIME：非规范模式的读语义",
+      "section": "Linux 编程 API 速查 › 终端与串口 › VMIN / VTIME：非规范模式的读语义",
+      "end_line": 1743,
+      "hash": "0b24ba70471d9b550b5d273aee4927523cfe33c0582ac82fbe778c7fc1fbd90f",
+      "id": "65a7d4884f83aa976659eeb6571bf3dcda2f7939e5e1781cb10abcf41017bd0e",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 1818,
+      "heading": "ioctl 的调用形态",
+      "section": "Linux 编程 API 速查 › ioctl 与硬件访问 › ioctl 的调用形态",
+      "end_line": 1851,
+      "hash": "b6dabe23a873ec301f193951bd428e2a8804d5140a8e260d0dbef8990d8d5df5",
+      "id": "278488857b313493580aee0fe2d63a432d5eba03c5906785d090fe1e32755c7c",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 1970,
+      "heading": "clock_gettime",
+      "section": "Linux 编程 API 速查 › 时间与定时 › clock_gettime",
+      "end_line": 1997,
+      "hash": "4fb8b55bbe293a5727512a997474fea9a53dcb3279d4234ce57c70ebfc64e1ff",
+      "id": "393322b1f503c43324f75875252023deb57a892032a5b44f07ff033db91665eb",
+      "path": "Learn/Bases/OperatingSystem/Linux Source Code.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -1,3 +1,2212 @@"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "4b9f1c74f44fd21799c57eb22797aff2df6a4f88"
+    },
+    {
+      "line": 135,
+      "heading": "5.1.4 IP 地址转换函数",
+      "section": "第二篇深入解析高性能服务器编程 › 第 5 章 Linux 网络编程基础 API › 5.1 地址地址 API › 5.1.4 IP 地址转换函数",
+      "end_line": 172,
+      "hash": "ba7407452f1be3b6faef001715b97091eb9babcded0a086789bc817a24948785",
+      "id": "2867e1ae503231a4e87027f35a16108add39f6a66a52cff976223398c69099fe",
+      "path": "Learn/Books/Linux高性能服务器编程.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "9c9cd67430e2d56593ed054ef6e16b8896bab8cf",
+      "changed_at": "2026-11-15T21:50:45+08:00",
+      "changed_hunks": [
+        "@@ -116,0 +136,37 @@ std::uint32_t decoded_value = ntohl(network_value);"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "58c0d399beb1a3d55336fcc4fbf7ac87b6bad2ce"
+    },
+    {
+      "line": 3495,
+      "heading": "Agent 工具的工作原理是什么？",
+      "section": "通用面试题 › 项目与学习习惯 › Agent 工具的工作原理是什么？",
+      "end_line": 3524,
+      "hash": "677f01764fc3dfee66e1eb57ab89ff13a3e27486b890cbc9c26fab118f919d54",
+      "id": "b6e1990621559e5b51698367ef27185b5261211aeba1da3d321b99350c07d869",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -3494,0 +3495,30 @@ Skills 本质上是可复用的提示词和工作流模板。我可以通过编"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 6238,
+      "heading": "进程、线程、协程有什么区别？协程能利用多核机器吗？",
+      "section": "通用面试题 › 操作系统 › 进程、线程、协程有什么区别？协程能利用多核机器吗？",
+      "end_line": 6263,
+      "hash": "99da1e8672569cbc49245a5ecc01cf31be4bd88c1086281312671b526848df62",
+      "id": "389b658952ca60c7c0733391290b9ccafa8a4d9e414207418f5ed6fe28c93b3b",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -6207,0 +6238,46 @@ rwlock.unlock();"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 6264,
+      "heading": "协程的状态机都有什么？",
+      "section": "通用面试题 › 操作系统 › 协程的状态机都有什么？",
+      "end_line": 6283,
+      "hash": "2ffdecd5660a3bbcb861b3672c9292369ff342e56efd6b870410fc8900f5d74f",
+      "id": "bd4812d99a2d0e5d78c8a55db49f30e587a4b730807f27a7c821e5875d6ad218",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -6207,0 +6238,46 @@ rwlock.unlock();"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 7518,
+      "heading": "动态库封装了哪些接口？动态库链接的过程",
+      "section": "通用面试题 › Linux 与系统编程 › 动态库封装了哪些接口？动态库链接的过程",
+      "end_line": 7553,
+      "hash": "16498e478e63ad4ef534500ebc93fd86771d4953eeccd1bb9571e750ce934732",
+      "id": "0630cf89254c4422ddecb149fe63d47c1627701ab44b5a016501c43f49c8cbad",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -7463,0 +7544,9 @@ int maxProfit(vector<int>& prices, int fee) {"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 7851,
+      "heading": "聚簇索引和非聚簇索引的区别？",
+      "section": "通用面试题 › 数据库 › 聚簇索引和非聚簇索引的区别？",
+      "end_line": 7876,
+      "hash": "b64df7d18a7d9d283ab6641c794f3856d26177b948c604302d9875053608d450",
+      "id": "ab3bcadf833da8941e205a863dbea366cdcf095afd186a97a4b0432150fa280f",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -7756,0 +7846,91 @@ B+树：3 层可存约 2000*2000*2000=80 亿条（每节点约 2000 键，扇出"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 7877,
+      "heading": "什么是回表？性能问题在什么地方？如何解决？",
+      "section": "通用面试题 › 数据库 › 什么是回表？性能问题在什么地方？如何解决？",
+      "end_line": 7898,
+      "hash": "06c4a4cd39ee43c9c9a106eea7dabeeb1f78a4f689991052d3ec8bcd781c3154",
+      "id": "889b1ee1696ff986ee458e6ca9286435c845c66eafc61b25612c386bbba63d96",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -7756,0 +7846,91 @@ B+树：3 层可存约 2000*2000*2000=80 亿条（每节点约 2000 键，扇出"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 7899,
+      "heading": "什么是最左前缀原则？",
+      "section": "通用面试题 › 数据库 › 什么是最左前缀原则？",
+      "end_line": 7918,
+      "hash": "def0bd499894e1d49b4f27e50f3dfd82846934a62087edaaae8476ee6327b46a",
+      "id": "f3929886ab6b258ae2506bf815e04cd99553c79c8a2b8a8ba86940aa7ded85dc",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -7756,0 +7846,91 @@ B+树：3 层可存约 2000*2000*2000=80 亿条（每节点约 2000 键，扇出"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 7919,
+      "heading": "什么是索引下推（Index Condition Pushdown，ICP）？",
+      "section": "通用面试题 › 数据库 › 什么是索引下推（Index Condition Pushdown，ICP）？",
+      "end_line": 7937,
+      "hash": "8bcd31348689b26e481172a4be0245432751fabfabf0952be569cf76c4aa9677",
+      "id": "423c3b237bc7a0ae9a2c5b900be3c2fa25080b2dcccb04cb6df1ddd4edc84c22",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -7756,0 +7846,91 @@ B+树：3 层可存约 2000*2000*2000=80 亿条（每节点约 2000 键，扇出"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 8195,
+      "heading": "MySQL 的 NULL 值会占用空间吗？",
+      "section": "通用面试题 › 数据库 › MySQL 的 NULL 值会占用空间吗？",
+      "end_line": 8211,
+      "hash": "b9c526a9e61f6569044c6d73dbcd73b23717f74e0f9d1fdc80de90d00b0280df",
+      "id": "e5119080c5d766b014add99e3bc732d854cac0e0278f9232ddd58e8d1baf384b",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -8014,0 +8195,71 @@ Server 层执行流程："
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 8212,
+      "heading": "MySQL 的 varchar(n) 是怎么存的？n 最大取多少？",
+      "section": "通用面试题 › 数据库 › MySQL 的 varchar(n) 是怎么存的？n 最大取多少？",
+      "end_line": 8228,
+      "hash": "d1287ff713964acf3d8140821e2590cc4f59e2a11a92436da80f736d9f5f0f41",
+      "id": "3e537586af1ae33a92e9004b6f21efd4e0841c68b38b676acf77eb57584af0fd",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -8014,0 +8195,71 @@ Server 层执行流程："
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 8229,
+      "heading": "行溢出后，MySQL 是怎么处理的？",
+      "section": "通用面试题 › 数据库 › 行溢出后，MySQL 是怎么处理的？",
+      "end_line": 8248,
+      "hash": "d61929fdb520fd32173ee5217ca313429d403810a5fb5d41ec478b3064fcf85a",
+      "id": "656059f933c3f6c761ce23347223957fb8290387886e3444818c38e370daf1f5",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -8014,0 +8195,71 @@ Server 层执行流程："
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 8249,
+      "heading": "为什么 MySQL 删除一条数据时不会将其在磁盘中删除？",
+      "section": "通用面试题 › 数据库 › 为什么 MySQL 删除一条数据时不会将其在磁盘中删除？",
+      "end_line": 8265,
+      "hash": "5708ac8c41a156d81ec404c62e7786849df1f79f8b7b34b482381e37d2804c52",
+      "id": "760fcf6f5054296570b258bf103e6e9b53c2d5e84f8415843ddb9c1388ea26b0",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -8014,0 +8195,71 @@ Server 层执行流程："
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 8487,
+      "heading": "PreparedStatement 构造 SQL 语句的意义是什么？",
+      "section": "通用面试题 › 数据库 › PreparedStatement 构造 SQL 语句的意义是什么？",
+      "end_line": 8510,
+      "hash": "b8dd4c04b3feb1770bada75fd4dd65a3a894f21b30bafe60de63f05aadf921ae",
+      "id": "fe56bc710c39f90b25178d7cd7e50ae88b4eb53627446898b584743ece733118",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -8218,0 +8487,24 @@ q.exec();"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 8530,
+      "heading": "什么是数据库的完整性？",
+      "section": "通用面试题 › 数据库 › 什么是数据库的完整性？",
+      "end_line": 8550,
+      "hash": "00dfb76f1ae95b165321522346323bf0fda48dceeb81fbd61d36411ee7ab1539",
+      "id": "9eaeaaf91401d984fb694afd3fa52d1fb90967841abb5bc26b27dcc4b9fa5291",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -8237,0 +8530,21 @@ q.exec();"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 8732,
+      "heading": "Redis 持久化 RDB 和 AOF 的区别？",
+      "section": "通用面试题 › Redis › Redis 持久化 RDB 和 AOF 的区别？",
+      "end_line": 8760,
+      "hash": "a31938c75872920271dafc6a5c3baf37449eeb24e5cf7fe62dcbab78f3de8a97",
+      "id": "8975560a8befa3a5e89b980eb09a78dacb5d5b78962c1d546301fae7ca91bc2e",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -8436,0 +8754,6 @@ appendfsync no       # 由操作系统决定"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 9114,
+      "heading": "ZooKeeper 是什么？和 Nacos 有什么区别？",
+      "section": "通用面试题 › 分布式系统问题 › ZooKeeper 是什么？和 Nacos 有什么区别？",
+      "end_line": 9139,
+      "hash": "a7e88be5aa1e034f152f5072bf65a990ba92d9353a991122486e28fc0cc33678",
+      "id": "94dd0446e0883fca68ed1d6a5a2aaf0f1a650fd178dbc3a202e7aba02cef7523",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -8811,0 +9135,5 @@ public:"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    },
+    {
+      "line": 9154,
+      "heading": "JWT 基本原理",
+      "section": "通用面试题 › 系统设计 › JWT 基本原理",
+      "end_line": 9174,
+      "hash": "f5dc294f35be9b8270f9173752d77d5cf3a4cc132f484c705f141fb77b3b109d",
+      "id": "68926a8701ccceab89c9715251247b66eb0e9114558059857749bc9c0f8f1635",
+      "path": "Chores/JobInterviews/面试题合集.md",
+      "snapshot_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "changed_at": "2026-11-16T22:50:12+08:00",
+      "changed_hunks": [
+        "@@ -8839,0 +9168,6 @@ JWT（JSON Web Token）是一个自包含的令牌，由三部分组成：`heade"
+      ],
+      "kind": "git",
+      "commit": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+      "file_blob": "f5e23e7fb15f02eb9480dedd7b10d517c610be56"
+    }
+  ]
+}

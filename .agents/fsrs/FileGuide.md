@@ -22,5 +22,5 @@
 | Tasks/*.json、TaskEvents/*.json | 阅读/实践任务和真实完成记录 | 插件 |
 | Publish.lock、Data/Events.lock | 本地并发写入保护，不是学习事实 | 执行中的程序 |
 
-`Chores/reviewDocs/YYYY-MM-DD/<run-id>/Review.md` 保存可读归档，每次发布使用独立目录，不覆盖手写日计划。
+`Chores/reviewDocs/YYYY-MM-DD/<run-id>/Review.md` 保存可读归档，每次发布使用独立目录，不覆盖手写日计划。该文件只给本人看复习内容；summary、why、ID 与哈希留在 `Bundle.json`，不重复进正文。
 旧 `Data/Vault.json` 存在时新版拒绝自动初始化；这是正式替换前的数据保护。正式旧数据清理、单库旧缓存核对和安装仅在临时库验收后执行，不改写 Git 历史，不动其他库数据。

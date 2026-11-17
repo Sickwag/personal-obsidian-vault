@@ -1,0 +1,35 @@
+{
+  "compiler": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "tests": [
+    {
+      "case": "rotation",
+      "source_code_sha256": "65a3836018bc96c3e033237e922b635caeb24107d932eb54f3729498e0455344",
+      "compiled": true,
+      "exit_code": 0,
+      "observation": "1 0",
+      "scope": "原题输入域内反例：abc/acb 应为 false、bca/abc 应为 true；现有实现输出 1 0。",
+      "expected_observation_reproduced": true,
+      "within_original_problem_domain": true
+    },
+    {
+      "case": "median",
+      "source_code_sha256": "117f5ef4ccc305b3a39b22b47096a3d49b5cd59984666c94f565fda0f5bf7511",
+      "compiled": true,
+      "exit_code": 1,
+      "observation": "signed integer overflow",
+      "scope": "完整 int 输入域的扩展测试；INT_MAX 超出力扣 295 的 [-100000,100000] 原题数值范围，不能据此宣称原题解失败。",
+      "expected_observation_reproduced": true,
+      "within_original_problem_domain": false
+    },
+    {
+      "case": "manacher",
+      "source_code_sha256": "4a8cf5dfd9caf8c168503238baf9749347ebe36bff2422e8c70d3f49c24edb66",
+      "compiled": true,
+      "exit_code": -6,
+      "observation": "string index assertion",
+      "scope": "任意字符串输入域的扩展测试；^ 超出力扣 5 的字母数字约束，证明通用复用需处理边界，不证明原题解失败。",
+      "expected_observation_reproduced": true,
+      "within_original_problem_domain": false
+    }
+  ]
+}
