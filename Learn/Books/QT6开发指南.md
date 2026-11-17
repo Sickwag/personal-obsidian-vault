@@ -6676,3 +6676,51 @@ MusicPlayer组件。所有**程序运行的必要文件和文件夹**压缩为�
 	<SortingPriority>80</SortingPriority>
 </Package>
 ```
+
+## Qt 的智能指针与隐式共享
+来源：qt_interview_reference 第 103、105、158 题整理（2026-11），原题答案把 `QSharedDataPointer` 误写成“数据收集技术”，此处按 Qt 源码语义重写。
+### 五种智能指针的分工
+Qt 的智能指针分两类：管理 `QObject` 生命周期的，和实现值语义 COW 的。
+
+| 类型 | 语义 | 对标标准库 | 关键行为 |
+| --- | --- | --- | --- |
+| `QPointer<T>` | 会置空的弱引用 | 无 | `T` 必须是 `QObject` 子类，析构后自动变 `nullptr`，不拥有对象 |
+| `QScopedPointer<T>` | 独占所有权 | `std::unique_ptr` | 不可拷贝，析构 delete，C++11 前的替代品 |
+| `QSharedPointer<T>` | 共享所有权 | `std::shared_ptr` | 引用计数原子，支持 Qt 容器与 `qHash` |
+| `QWeakPointer<T>` | 弱引用 | `std::weak_ptr` | `toStrongRef()` 提升，打破循环引用 |
+| `QSharedDataPointer<T>` | 隐式共享数据 | 无 | 非 const 访问时 `detach()`，实现 COW |
+新代码优先 `std::` 版本：控制块更紧凑、支持 `make_shared`、与标准库互操作更好；只有需要“对象销毁自动置空”（`QPointer`）或维护 Qt 5 老代码时才用 Qt 类。
+`QPointer` 能自动置空，靠的是 `QObject` 析构时遍历 `QObjectPrivate::weakReferences` 逐个清零；普通类型没有这个钩子，所以它只接受 `QObject` 子类。
+### 隐式共享的实现方式
+`QSharedDataPointer` 配合 `QSharedData` 派生类，让一个值语义类在拷贝时只增加引用计数，写时再分离：
+```cpp
+class EmployeeData : public QSharedData {   // 数据体，引用计数在基类
+public:
+    QString name;
+    int id = -1;
+};
+class Employee {
+public:
+    void setName(const QString &n) { d->name = n; }  // 非 const operator-> 触发 detach
+    QString name() const { return d->name; }         // const 访问共享
+private:
+    QSharedDataPointer<EmployeeData> d;
+};
+```
+`QString`、`QImage`、`QByteArray` 以及 Qt 容器都采用同一模型：只读传递零拷贝，写时复制整块数据。
+多线程下要小心：两个线程同时通过非 const 接口写同一份共享数据，会各自 detach 出副本，写入互不可见；线程间共享应先显式拷贝或用锁保护。
+## Qt 的线程同步原语
+来源：qt_interview_reference 第 48 题整理（2026-11）。
+Qt 在标准库之上提供一组与事件循环配合的同步工具，选型看“谁在等、等什么”。
+
+| 原语 | 解决的问题 | 注意 |
+| --- | --- | --- |
+| `QMutex` + `QMutexLocker` | 互斥临界区 | `QMutexLocker` 是 RAII，异常安全；Qt 6 内部用 `std::mutex` |
+| `QRecursiveMutex` | 同一线程可重入 | 设计异味，能用调用边界拆分就不要用 |
+| `QReadWriteLock` | 读多写少 | 不承诺公平性，持续有读者时写可能饥饿 |
+| `QSemaphore` | 计数资源（缓冲区空位、连接数） | `acquire(n)` 可一次取 n 个 |
+| `QWaitCondition` | 等条件成立 | 必须与 `QMutex` 配对，且用 `while` 循环判断谓词防虚假唤醒 |
+| `QAtomicInt` / `QAtomicPointer` | 无锁计数、指针发布 | 只有单个原子量能解决的问题才用它 |
+| 排队信号槽 | 跨线程传数据与调用 | 本质是往目标线程事件队列投递 `QMetaCallEvent`，目标线程必须跑事件循环 |
+| `QThreadStorage` | 线程局部存储 | 对标 `thread_local`，Qt 4 时代的替代品 |
+跨线程更新界面的标准写法是工作线程发信号、主线程槽函数执行；`BlockingQueuedConnection` 只在确定不会自锁时使用（同线程使用会直接死锁）。
