@@ -1,5 +1,5 @@
 .obsidian/copilot-index-*.json
-./trash
+/.trash/
 ./Chores/Life/**
 ./Chores/LearningDailyRecord/**
 .obsidian/plugins/remember-cursor-position/cursor-positions.json
