@@ -1,6 +1,7 @@
 {
-  "note": "Learn/Algorithm/刷题路线.md",
-  "note_sha256": "b2720b018563f9d624e7f92928e33e3de72225e8d20c7c20536f7b607669f472",
+  "note": "/mnt/windows-e/file_storage/obsidian-vault/Learn/Algorithm/刷题路线.md",
+  "note_sha256": "e1f64075dc4fbe8687b8a5665ff55f3cbae3ddb89740efc2466340edd50e56eb",
+  "locator": "markers",
   "sanitizer": "address",
   "code_blocks_sha256": {
     "CommonHeaders": "8a7b138df2eaa54ea6de6a9f48c6e56dd3533a58a981a86fd05fceeb68d74842",
@@ -30,11 +31,5 @@
     "InterviewQueueTest.cpp": "SPSC_MPSC_SPMC_MPMC_AND_LINEARIZABILITY_PASS",
     "InterviewFaultTest.cpp": "ALLOCATION_FAILURE_ROLLBACK_PASS"
   },
-  "passed": true,
-  "scope": "从正文设计题章节的实际代码声明定位后编译；线程检测不包含单线程全局分配器故障注入夹具",
-  "test_sources_sha256": {
-    "InterviewFaultTest.cpp": "c95c54efae6f766da66cfb993b15ee0382322dbf12db7821611aeb946fc0fcbb",
-    "InterviewQueueTest.cpp": "3b0ec38ac4fd5fbb2504aa92bd6442994693fc38dfa2841b33f844aed2abbf97",
-    "InterviewTest.cpp": "fc4ba36178a86f4872bf87b6fa3ec57a134f5cad02c0c0eaeaa31d732e316ecf"
-  }
+  "passed": true
 }
