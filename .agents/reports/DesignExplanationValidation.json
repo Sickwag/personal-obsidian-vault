@@ -1,0 +1,25 @@
+{
+  "original_sha256": "ba17c8a3b87daddeafb4232cc9019f74fe6a91171b3d914fa674c57b43bb1cba",
+  "final_sha256": "b2720b018563f9d624e7f92928e33e3de72225e8d20c7c20536f7b607669f472",
+  "original_blocks": 20,
+  "final_blocks": 25,
+  "explanation_sections": 24,
+  "individual_sort_explanations": 10,
+  "prefix_bytes": 410851,
+  "cpp_tokens_unchanged_except_braces": true,
+  "note": "Learn/Algorithm/刷题路线.md",
+  "passed": true,
+  "checked_at": "2026-11-17T00:45:57.809713+00:00",
+  "static_analysis": {
+    "clang_tidy_braces_user_findings": 0,
+    "cppcheck_findings": 0,
+    "clang_tidy_suppressed_non_user_warnings": 1803
+  },
+  "sanitizers": [
+    "none",
+    "address/undefined/leak",
+    "thread"
+  ],
+  "changed_before_design": false,
+  "new_commit_created": false
+}

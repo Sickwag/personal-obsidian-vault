@@ -1,0 +1,104 @@
+{
+  "passed": false,
+  "commits": 16,
+  "sources": 57,
+  "questions": 46,
+  "wiki_links_checked": 125,
+  "source_hashes_current": false,
+  "published": false,
+  "scope": "验证证据、结构、引用及空白；不证明每个技术答案正确，不生成评分。",
+  "checked_at": "2026-11-17T00:13:08.031579+00:00",
+  "files_sha256": {
+    "Changes.md": "fd8b13163cb6243f96bfeaaebd775cd9bc9091c48d97b1e6853cb2d3a54c2106",
+    "Counterexamples.json": "215952171ea4bdd62ab01e7ad82ac9ef2fe09eb33b4a8276340173145d5adba9",
+    "Draft.json": "92f01dad353a086f421f68f3bda0de6f2ea949dc110b3c73ebca27f519fd176f",
+    "Evidence.json": "fa84f62e7e762e1da0495c7f3b5c822306b18d844fdff06d93295bc9f20df9f3",
+    "Exercises.md": "7f3f5df496426cc804161277db80eb848b49a4c66d96b520aa4bf6712992292a",
+    "Review.md": "7c244d8938bfcd4d227c5b2667eff8b0c67aa00a3bb21a3b2a2c25e9d6002c4f"
+  },
+  "status": "needs_source_refresh",
+  "invalidated_at": "2026-11-17T00:45:57.809478+00:00",
+  "invalidation_reason": "设计题补充说明、排序分节并规范控制语句后，来源章节哈希发生变化；冻结提交证据与草稿保留，发布前须重新绑定并核对。",
+  "stale_source_sections": [
+    {
+      "section": "设计题 › STL › vector",
+      "expected_hash": "33766417a01123d2d0325e49f07ee4de1df27822903d112700acc30d799cb799",
+      "current_hash": "3ead6416a526b3433672afc98e1b8a12a5f103b6bcb61498f4426d3cc0dc80dd"
+    },
+    {
+      "section": "设计题 › STL › stack",
+      "expected_hash": "3042401a64eecd126614d17e3f0a626165c36746d559550578404a4fee346e51",
+      "current_hash": "fd4b570acaad804627abd1f5d71de894c1ad1050902aaa022d06e647ce88bbd5"
+    },
+    {
+      "section": "设计题 › 数据结构设计 › LRU 缓存池",
+      "expected_hash": "29d8af07870456217b1ba8fe86bdb4c4063d969a046d5b6595423d30b6216381",
+      "current_hash": "edb9e18fd9526a07335d7f81bebe8d6e5ef2ed631c2d0c2203f952035983d6f0"
+    },
+    {
+      "section": "设计题 › 数据结构设计 › LFU 缓存池",
+      "expected_hash": "8f48d1f3ffade564e58d3b9afef814be6a987cddb33b29b1f404e05fa5868dd6",
+      "current_hash": "6b65bf6c1d7bb64a8702580f7b8d7cf36a2afedb3772a07731db87ca60608719"
+    },
+    {
+      "section": "设计题 › 堆、Trie 与并查集 › 二叉堆",
+      "expected_hash": "083e7e9f7d0568604aab078477dfb44437b4bbfd26099d3714023d586a3c50fa",
+      "current_hash": "e3f99fe62d9c9ca1cd3eefb43175006998b64f18638152a3ca6359326a020bcc"
+    },
+    {
+      "section": "设计题 › 堆、Trie 与并查集 › Trie",
+      "expected_hash": "fc1f4767c35fb2a0a0a583371b48141ab37fd8b091b0774cce5c600706bb182d",
+      "current_hash": "110eab68ad0953396a6fc165edea530613727cc1b2e981cf9f4158069b030110"
+    },
+    {
+      "section": "设计题 › 堆、Trie 与并查集 › 并查集",
+      "expected_hash": "0d983548918fc9e932b1559941181c078ed6aab80f94ce087067d7e3b20223fb",
+      "current_hash": "03714166ed0f25c71b1ad7b2c9463c82a56a987e2c7739e637eca4b72605e959"
+    },
+    {
+      "section": "设计题 › 无锁队列 › CPU 到 C++ 内存序",
+      "expected_hash": "77b5444d44a37622187dd79c8d04e55ee1bc455fd34ed7be3113fe980d437bd3",
+      "current_hash": "5dba82408ea78de758f53b3f8d95f23652245acfb35a617de5fb0347628d02a0"
+    },
+    {
+      "section": "设计题 › 无锁队列 › SPSC 环形队列",
+      "expected_hash": "9e44ced7ae5f7f08fb89c6c1519632a181443aabae19ef71aade74ac9db1c5f5",
+      "current_hash": "860d5e66b93e90f01f41193c32af2bd93e95827f850101793e81dd80f48e0399"
+    },
+    {
+      "section": "设计题 › 无锁队列 › MPSC、SPMC 与 MPMC 的安全核心",
+      "expected_hash": "5b495f3cdf096ee5af9e63a1b3d4f1a6ecacafb269834806579a6468e9a57b12",
+      "current_hash": "4bddd516ea38e719df48c7c2ef0886aadbd2be28fad0c05489e5cde8026c176e"
+    },
+    {
+      "section": "设计题 › 线程池",
+      "expected_hash": "66e165971d63ab2f1c3b33aee1d3193fd49b81e6b6243c6b52e4b9903090512f",
+      "current_hash": "49ecd56c10180320134e9c0df0e848e0703df7bb123bc574cea1812913dc3268"
+    },
+    {
+      "section": "设计题 › 经典排序 › 三路快速排序",
+      "expected_hash": "ac3680ca467e9771619bbe23f12880d15b6fa6f303f9b283c76b012e3c0dcbd5",
+      "current_hash": "115a04fe3cc8c4ba61194b6501ffcb3ffa8d78c6a3557a3bfc82a6aad634a587"
+    },
+    {
+      "section": "设计题 › 经典排序 › 计数、桶与基数排序",
+      "expected_hash": "81d4cac12c302c2c5a6f92d777652610bba0c3467cff33918239cadb668c80d5",
+      "current_hash": "7a678585b3761a0c7cad5a0e57de54df13279c77596164c483606966af4775ca"
+    },
+    {
+      "section": "设计题 › 哈夫曼树与编码还原",
+      "expected_hash": "3719b598310ee7adc4e79e259431e454e3f393b021dc4eeddc390a152df4304e",
+      "current_hash": "f0343c7ceb9d70993cd542dfbf12a861d23c421a1404a22d64c47ce8277d02fb"
+    },
+    {
+      "section": "设计题 › 树与高级结构的追问 › 树状数组",
+      "expected_hash": "e82201e20b5fb69c684e9a4dcc18d32a91b1f6569bfe3c7f878b2e74700f41f2",
+      "current_hash": "ac5e140da1b08902fc30e8713f8704ac3b231a7dfec422683be18efa0d4db565"
+    },
+    {
+      "section": "设计题 › 树与高级结构的追问 › 线段树",
+      "expected_hash": "7fe647aa9bdae599ed70068cb5b4b46cc1c518636aac95bb318883361564ce16",
+      "current_hash": "849d2e991a914554aadda654d72378f77d8d4bb113d6b3485920baeacd1237c6"
+    }
+  ]
+}

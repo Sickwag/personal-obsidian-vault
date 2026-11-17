@@ -1,0 +1,41 @@
+{
+  "phase": "awaiting_user_review",
+  "review_directory": "Chores/reviewDocs/2026-11-16/RecentSevenDays",
+  "window_start": "2026-11-09T22:56:41+08:00",
+  "window_end": "2026-11-16T22:56:41+08:00",
+  "snapshot_head": "4c6a0aeebcba4a83297f4633c21ba5ca9e9017fa",
+  "old_generated_files_removed": 17,
+  "all_local_refs_clean": true,
+  "original_commit_count_preserved": 1403,
+  "non_target_historical_trees_and_commit_metadata_verified": true,
+  "recent_commits": 16,
+  "source_sections": 57,
+  "candidate_questions": 46,
+  "wiki_links_checked": 125,
+  "remote_history_replaced": false,
+  "unreachable_old_objects_cleaned": false,
+  "pending_remote_refs": [
+    "gitee:refs/heads/master",
+    "github:refs/heads/master"
+  ],
+  "notes_index_updated": false,
+  "plugin_installed": false,
+  "old_plugin_data_removed": false,
+  "review_published": false,
+  "new_commit_created": false,
+  "pushed": false,
+  "authorization": "用户已授权审阅通过后更新 notes-index、安装 FSRS、将本次修改统一为一个新提交并推送；其他已有提交保留。带租约强制更新远程历史等待明确确认。",
+  "continuation_manifest": "/tmp/vault-review-rebuild-bzt0l771/purge-state.json",
+  "remote_lease_snapshot": "/tmp/vault-review-rebuild-bzt0l771/remote-state.json",
+  "pending_steps": [
+    "用户审阅复习稿",
+    "复核真实来源与最终发布请求",
+    "按已授权范围更新索引、备份并正式替换插件/旧数据、发布材料",
+    "将本次修改统一为一个新提交",
+    "按确认的远程范围带租约替换历史，完成旧对象清理并验证远程"
+  ],
+  "source_refresh_required": true,
+  "source_revision_note": "Learn/Algorithm/刷题路线.md",
+  "source_revision_sha256": "b2720b018563f9d624e7f92928e33e3de72225e8d20c7c20536f7b607669f472",
+  "stale_source_sections": 16
+}

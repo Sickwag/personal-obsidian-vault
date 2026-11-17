@@ -1,7 +1,29 @@
 {
   "note": "Learn/Algorithm/刷题路线.md",
-  "note_sha256": "f53de27976bb5173468847bbf37d550f44e700dec2a11558f567dcf59e4542d3",
+  "note_sha256": "b2720b018563f9d624e7f92928e33e3de72225e8d20c7c20536f7b607669f472",
   "sanitizer": "address",
+  "code_blocks_sha256": {
+    "CommonHeaders": "8a7b138df2eaa54ea6de6a9f48c6e56dd3533a58a981a86fd05fceeb68d74842",
+    "Vector": "df3d10f784d1b6ef0f73f8a731e98364a8103a38f544ca2765a4c018876c1df9",
+    "Stack": "803a256f900fc6005a91079bed73f7d5517363ed8c57d02d05240d3c29436e3c",
+    "Adapters": "e664595bbfea691b897e8c0eb6d06e08940a802f13ad059dd1615977ba37d35d",
+    "LinkedList": "103da5b91f59141936bdc33fa12ce7023f9b776d5653c43145452183a44089a9",
+    "Heap": "2d3d8dc69988ed260bb2f84ba80a9df196ecba75da4b1c87956c5eadfd6876c6",
+    "Trie": "c227502b9ee3adaaad6d01c21c0685cf4acc0ccaa3226184dade1a01c3928e09",
+    "DSU": "d3917d6911b8a3d8e4fa01c924bd4e7498489efa8f2bf15228d6a82a584bec2c",
+    "LRU": "ca6c625a5dc20b7ca81b91db5505ddfa291393443f6367504c1678ec96cb132b",
+    "LFU": "d6fd0e736abf5acc67798e4ae5a79d051456958720dbc7fce9238ec1d862daed",
+    "BasicSorts": "bcb5deb0cb6caa00db1fb7c7e220b95e802bf88926e3b4c47e103db6ab03a660",
+    "QuickSort": "d5e03f4685e7913027643552040f7614add7af10652cd993c7065347aa8fc1fb",
+    "MergeSort": "b3505bd972004fdf431cc3f69641bf0ffa2f6cab6e585933f844a62a0514153b",
+    "HeapSort": "bd2c5b8c2ff683e02e82b145c3ddeb592f6e45b024d9072529b4401edd05cada",
+    "DistributionSorts": "30f2bcba3d81889fcb60e6431e3b4fd2d0a57e32271a135d8ec96511a4c2acf0",
+    "Huffman": "c75ad5b04647d28cf7b7589e74bdb70164eba16a5c11b0af6bfa1b150d951b2b",
+    "ThreadPool": "b3d68c5dc9b3d318541ab9f1054ac2cd0d94175dfd093e5ffc0eadb5966b63b3",
+    "SPSC": "5f7c3be6b6aeb65a99eac2db0af17ef671dad23dc273ee6832668a31492f1701",
+    "MPMC": "641799c44c8583eaebbc8eaf684bd95a0b5bb1862e123ef1ef5a9a1c2d2822ee",
+    "QueueModels": "6aae8c3ab460d1afa5ad4dec5c21313e8b863db5812195a35bbc1f55dafb4e76"
+  },
   "compiler": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
   "tests": {
     "InterviewTest.cpp": "ALL_SEQUENTIAL_AND_POOL_TESTS_PASS",
@@ -9,7 +31,7 @@
     "InterviewFaultTest.cpp": "ALLOCATION_FAILURE_ROLLBACK_PASS"
   },
   "passed": true,
-  "scope": "从最终正文代码块提取编译；线程检测不包含单线程全局分配器故障注入夹具",
+  "scope": "从正文设计题章节的实际代码声明定位后编译；线程检测不包含单线程全局分配器故障注入夹具",
   "test_sources_sha256": {
     "InterviewFaultTest.cpp": "c95c54efae6f766da66cfb993b15ee0382322dbf12db7821611aeb946fc0fcbb",
     "InterviewQueueTest.cpp": "3b0ec38ac4fd5fbb2504aa92bd6442994693fc38dfa2841b33f844aed2abbf97",
