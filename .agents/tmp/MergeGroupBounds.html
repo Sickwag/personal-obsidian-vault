@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>自底向上归并：middle 与 last 的切分</title>
+<style>
+  :root {
+    --cell-w: 52px;
+    --cell-h: 44px;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: #cbd5e1;
+    --bg: #f8fafc;
+    --blue: #3b82f6;
+    --blue-bg: #dbeafe;
+    --blue-ink: #1d4ed8;
+    --green: #10b981;
+    --green-bg: #d1fae5;
+    --green-ink: #047857;
+    --red: #ef4444;
+    --red-bg: #fee2e2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 30px 34px 46px;
+    background: var(--bg);
+    color: var(--ink);
+    font: 14px/1.6 system-ui, -apple-system, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+  }
+  .page { max-width: 1080px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  .lead { margin: 0 0 22px; color: var(--muted); font-size: 13.5px; }
+  code {
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 12px;
+    background: #e2e8f0;
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .section { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 18px; }
+  .section h2 { font-size: 15px; margin: 0 0 6px; }
+  .hint { color: var(--muted); font-size: 12.5px; margin: 0 0 16px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  .legend .k { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .sw { width: 26px; height: 12px; border-radius: 3px; }
+  .sw.blue { background: var(--blue-bg); border: 1px solid var(--blue); }
+  .sw.green { background: var(--green-bg); border: 1px solid var(--green); }
+  .sw.empty { background: transparent; border: 1px dashed var(--green); }
+  .round { padding: 14px 0 16px; border-top: 1px dashed #e2e8f0; }
+  .round:first-of-type { border-top: none; padding-top: 4px; }
+  .round-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .round-head .w { font-family: ui-monospace, monospace; font-size: 13px; font-weight: 700; color: var(--blue-ink); }
+  .round-head .note { color: var(--muted); font-size: 12.5px; }
+  .round-body { display: flex; gap: 26px; align-items: flex-start; flex-wrap: wrap; }
+  .groups { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+  .group { position: relative; padding-top: 27px; }
+  .bars { position: absolute; top: 0; left: 0; right: 0; height: 19px; }
+  .bar { position: absolute; top: 0; height: 19px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 9.5px; letter-spacing: .04em; }
+  .bar.left { background: var(--blue-bg); border: 1px solid var(--blue); color: var(--blue-ink); }
+  .bar.right { background: var(--green-bg); border: 1px solid var(--green); color: var(--green-ink); }
+  .bar.empty { background: transparent; border: 1px dashed var(--green); color: var(--green-ink); }
+  .cells { display: flex; border-radius: 7px; overflow: hidden; box-shadow: 0 1px 2px rgba(15, 23, 42, .06); }
+  .cell {
+    position: relative;
+    width: var(--cell-w); height: var(--cell-h);
+    display: flex; align-items: center; justify-content: center;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-left: none;
+    font-family: ui-monospace, monospace; font-size: 13px;
+  }
+  .cells .cell:first-child { border-left: 1px solid var(--line); }
+  .cell .idx { position: absolute; top: 1px; left: 4px; font-size: 9px; color: #94a3b8; }
+  .calcs { list-style: none; margin: 0; padding: 0; font-size: 12px; min-width: 330px; }
+  .calcs li { padding: 5px 0; border-bottom: 1px dashed #eef2f6; }
+  .calcs li:last-child { border-bottom: none; }
+  .calcs .seg { font-family: ui-monospace, monospace; font-size: 11.5px; }
+  .calcs .seg .left { color: var(--blue-ink); }
+  .calcs .seg .right { color: var(--green-ink); }
+  .calcs .fml { color: var(--muted); font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.7; }
+  .anatomy .row { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+  .anatomy .fml { font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--muted); line-height: 1.9; }
+  table.cmp-table { border-collapse: collapse; width: 100%; margin-top: 14px; font-size: 12.5px; }
+  table.cmp-table th, table.cmp-table td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  table.cmp-table th { background: #f1f5f9; font-weight: 600; }
+  table.cmp-table td.good { color: var(--green-ink); }
+  table.cmp-table td.bad { color: var(--red); }
+  @media (max-width: 720px) {
+    body { padding: 20px 16px 36px; }
+    .round-body { gap: 16px; }
+    .calcs { min-width: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>自底向上归并：middle 与 last 到底怎么切</h1>
+  <p class="lead">代码是两个 <code>min</code>：<code>middle = first + min(width, count - first)</code>，<code>last = middle + min(width, count - middle)</code>。下面把每一轮的组边界画出来。</p>
+
+  <div class="section">
+    <h2>先看一个组的形状</h2>
+    <p class="hint">每组合并相邻两段：左段 [first, middle)，右段 [middle, last)。每段最多 width 个元素，但不能超过数组剩下的元素。</p>
+    <div id="anatomy" class="anatomy"></div>
+    <div class="legend">
+      <span class="k"><span class="sw blue"></span>左段 [first, middle)</span>
+      <span class="k"><span class="sw green"></span>右段 [middle, last)</span>
+      <span class="k"><span class="sw empty"></span>右段为空（last == middle）</span>
+    </div>
+  </div>
+
+  <div class="section" id="case-7"></div>
+  <div class="section" id="case-8"></div>
+
+  <div class="section">
+    <h2>如果不截断</h2>
+    <p class="hint">count = 5、width = 2，最后一组从 first = 4 开始：</p>
+    <table class="cmp-table">
+      <tr><th>写法</th><th>middle</th><th>last</th><th>结果</th></tr>
+      <tr>
+        <td><code>first + width</code></td>
+        <td>4 + 2 = 6</td>
+        <td>6 + 2 = 8</td>
+        <td class="bad">端点 6、8 都超过 count = 5，访问 values[5] 越界</td>
+      </tr>
+      <tr>
+        <td><code>first + min(width, count - first)</code></td>
+        <td>4 + min(2, 1) = 5</td>
+        <td>5 + min(2, 0) = 5</td>
+        <td class="good">左段 [4,5)，右段为空，只复制一个元素</td>
+      </tr>
+    </table>
+    <p class="hint" style="margin-top:12px; margin-bottom:0;">min 不是防御性代码，它是“最后一组只剩几个元素”和“右段可能为空”这两件事的唯一正确表达。</p>
+  </div>
+
+  <div class="section">
+    <h2>一句话总结</h2>
+    <p class="hint" style="margin-bottom:0;">每一轮按 2×width 切组；每组左段取 min(width, count-first) 个，右段取 min(width, count-middle) 个。count 能整除 2×width 时每组刚好满；除不尽时最后一组先短在左、再短在右，右段可能为空。端点永远落在 [0, count] 内，所以 first、middle、last 都不会越界。</p>
+  </div>
+</div>
+
+<script>
+const CELL = 52;
+
+const cases = [
+  {
+    host: 'case-7',
+    title: 'count = 7：除不尽，最后一组不满',
+    values: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+    rounds: [
+      { width: 1, note: '最后一组右段为空' },
+      { width: 2, note: '最后一组右段只有 1 个元素' },
+      { width: 4, note: '一组覆盖整个数组，合并后整体有序' },
+    ],
+  },
+  {
+    host: 'case-8',
+    title: 'count = 8：正好除尽，每组都满',
+    values: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'],
+    rounds: [
+      { width: 1, note: '每组刚好 2 个' },
+      { width: 2, note: '每组刚好 4 个' },
+      { width: 4, note: '一组覆盖整个数组' },
+    ],
+  },
+];
+
+function buildGroups(count, width) {
+  const groups = [];
+  for (let first = 0; first < count;) {
+    const middle = first + Math.min(width, count - first);
+    const last = middle + Math.min(width, count - middle);
+    groups.push({ first, middle, last });
+    first = last;
+  }
+  return groups;
+}
+
+function renderGroup(g, values) {
+  const leftLen = g.middle - g.first;
+  const rightLen = g.last - g.middle;
+  const extra = rightLen ? 0 : 22;
+  const box = document.createElement('div');
+  box.className = 'group';
+  box.style.width = ((leftLen + rightLen) * CELL + extra) + 'px';
+  box.title = 'first=' + g.first + ' middle=' + g.middle + ' last=' + g.last;
+
+  const bars = document.createElement('div');
+  bars.className = 'bars';
+  if (leftLen > 0) {
+    const b = document.createElement('div');
+    b.className = 'bar left';
+    b.style.left = '0';
+    b.style.width = (leftLen * CELL) + 'px';
+    b.textContent = '左段';
+    bars.appendChild(b);
+  }
+  if (rightLen > 0) {
+    const b = document.createElement('div');
+    b.className = 'bar right';
+    b.style.left = (leftLen * CELL) + 'px';
+    b.style.width = (rightLen * CELL) + 'px';
+    b.textContent = '右段';
+    bars.appendChild(b);
+  } else {
+    const b = document.createElement('div');
+    b.className = 'bar empty';
+    b.style.left = (leftLen * CELL) + 'px';
+    b.style.width = '16px';
+    b.textContent = '空';
+    bars.appendChild(b);
+  }
+  box.appendChild(bars);
+
+  const cells = document.createElement('div');
+  cells.className = 'cells';
+  for (let i = g.first; i < g.last; ++i) {
+    const c = document.createElement('div');
+    c.className = 'cell';
+    c.textContent = values[i];
+    const idx = document.createElement('span');
+    idx.className = 'idx';
+    idx.textContent = i;
+    c.appendChild(idx);
+    cells.appendChild(c);
+  }
+  box.appendChild(cells);
+  return box;
+}
+
+function renderRound(round, count, values) {
+  const groups = buildGroups(count, round.width);
+  const wrap = document.createElement('div');
+  wrap.className = 'round';
+
+  const head = document.createElement('div');
+  head.className = 'round-head';
+  head.innerHTML = '<span class="w">width = ' + round.width + '</span><span class="note">' + round.note + '</span>';
+  wrap.appendChild(head);
+
+  const body = document.createElement('div');
+  body.className = 'round-body';
+
+  const groupBox = document.createElement('div');
+  groupBox.className = 'groups';
+  groups.forEach(g => groupBox.appendChild(renderGroup(g, values)));
+  body.appendChild(groupBox);
+
+  const calcs = document.createElement('ul');
+  calcs.className = 'calcs';
+  groups.forEach(g => {
+    const li = document.createElement('li');
+    const rightLen = g.last - g.middle;
+    const seg = '<div class="seg"><span class="left">[' + g.first + ', ' + g.middle + ')</span> + ' +
+      '<span class="right">[' + g.middle + ', ' + g.last + ')</span>' +
+      (rightLen === 0 ? ' <span style="color:var(--muted)">右段空</span>' : '') + '</div>';
+    const fml = '<div class="fml">middle = ' + g.first + ' + min(' + round.width + ', ' + (count - g.first) + ') = ' + g.middle +
+      ' · last = ' + g.middle + ' + min(' + round.width + ', ' + (count - g.middle) + ') = ' + g.last + '</div>';
+    li.innerHTML = seg + fml;
+    calcs.appendChild(li);
+  });
+  body.appendChild(calcs);
+  wrap.appendChild(body);
+  return wrap;
+}
+
+function renderCase(spec) {
+  const host = document.getElementById(spec.host);
+  host.innerHTML = '<h2>' + spec.title + '</h2><p class="hint">数组：' + spec.values.join(' ') +
+    '，下标 0 … ' + (spec.values.length - 1) + '</p>';
+  spec.rounds.forEach(r => host.appendChild(renderRound(r, spec.values.length, spec.values)));
+}
+
+function renderAnatomy() {
+  const host = document.getElementById('anatomy');
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.appendChild(renderGroup({ first: 0, middle: 2, last: 4 }, ['A', 'B', 'C', 'D']));
+  const labels = document.createElement('div');
+  labels.className = 'fml';
+  labels.innerHTML = '左段长度 = min(width, count - first)<br>右段长度 = min(width, count - middle)<br>middle 同时是左段终点和右段起点';
+  row.appendChild(labels);
+  host.appendChild(row);
+}
+
+renderAnatomy();
+cases.forEach(renderCase);
+</script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>堆排序：建堆与排序过程</title>
+<style>
+  :root {
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: #cbd5e1;
+    --bg: #f8fafc;
+    --blue: #3b82f6;
+    --orange: #f59e0b;
+    --orange-bg: #fff7e6;
+    --gray: #94a3b8;
+    --gray-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 28px 32px 44px;
+    background: var(--bg);
+    color: var(--ink);
+    font: 14px/1.6 system-ui, -apple-system, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+  }
+  .page { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 20px; font-size: 13px; }
+  .lead code { background: #e2e8f0; padding: 1px 5px; border-radius: 4px; font-size: 12px; font-family: ui-monospace, monospace; }
+  .panel { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px 20px; }
+  #tree { width: 100%; height: auto; display: block; }
+  .arr { display: flex; justify-content: center; margin-top: 8px; }
+  .cell {
+    position: relative;
+    width: 52px; height: 46px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: ui-monospace, monospace; font-size: 14px;
+    background: #fff; border: 1px solid var(--line); border-left: none;
+  }
+  .cell:first-child { border-left: 1px solid var(--line); border-radius: 7px 0 0 7px; }
+  .cell:last-child { border-radius: 0 7px 7px 0; }
+  .cell .idx { position: absolute; top: 1px; left: 4px; font-size: 9px; color: #94a3b8; }
+  .cell.hl { background: var(--orange-bg); border-color: var(--orange); color: #b45309; font-weight: 700; }
+  .cell.hl .idx { color: #d97706; }
+  .cell.done { background: var(--gray-bg); color: var(--gray); }
+  .legend { display: flex; gap: 18px; justify-content: center; font-size: 12px; color: var(--muted); margin-top: 14px; flex-wrap: wrap; }
+  .legend .k { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 14px; height: 14px; border-radius: 4px; }
+  .sw.normal { background: #fff; border: 1px solid var(--blue); }
+  .sw.hl { background: var(--orange-bg); border: 1px solid var(--orange); }
+  .sw.done { background: var(--gray-bg); border: 1px solid var(--gray); }
+  .note { min-height: 46px; text-align: center; font-size: 13.5px; margin-top: 14px; }
+  .note b { color: #b45309; }
+  .step { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .controls { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+  button {
+    font: inherit; font-size: 13px;
+    padding: 6px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  button:hover { background: #f1f5f9; }
+  button:disabled { opacity: .4; cursor: default; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>堆排序：数组 ↔ 大顶堆</h1>
+  <p class="lead">节点 <code>i</code> 的父节点是 <code>(i-1)/2</code>，左孩子 <code>2i+1</code>，右孩子 <code>2i+2</code>。建堆后，排序阶段每轮把堆顶最大值换到末尾。</p>
+  <div class="panel">
+    <svg id="tree" viewBox="0 0 480 400"></svg>
+    <div class="arr" id="arr"></div>
+    <div class="legend">
+      <span class="k"><span class="sw normal"></span>堆内节点</span>
+      <span class="k"><span class="sw hl"></span>正在比较 / 交换</span>
+      <span class="k"><span class="sw done"></span>已就位（堆外）</span>
+    </div>
+    <div class="note" id="note"></div>
+    <div class="step" id="stepLabel"></div>
+    <div class="controls">
+      <button id="prev">上一步</button>
+      <button id="next">下一步</button>
+      <button id="reset">重置</button>
+    </div>
+  </div>
+</div>
+<script>
+const INITIAL = [5, 3, 8, 4, 1, 2, 9, 7, 6];
+const R = 24;
+const X0 = 45, DX = 90;
+const Y0 = 45, DY = 85;
+
+const px = x => X0 + x * DX;
+const py = d => Y0 + d * DY;
+
+function layout(n) {
+  const nodes = new Array(n);
+  let nextLeaf = 0;
+  function walk(i, depth) {
+    const l = 2 * i + 1;
+    const r = 2 * i + 2;
+    const lx = l < n ? walk(l, depth + 1) : null;
+    const rx = r < n ? walk(r, depth + 1) : null;
+    let x;
+    if (lx === null && rx === null) {
+      x = nextLeaf++;
+    } else if (rx === null) {
+      x = lx;
+    } else {
+      x = (lx + rx) / 2;
+    }
+    nodes[i] = { x, depth };
+    return x;
+  }
+  walk(0, 0);
+  return nodes;
+}
+
+function buildSteps() {
+  const a = INITIAL.slice();
+  const n = a.length;
+  const steps = [];
+  let heapSize = n;
+  const push = (note, hl, phase) => {
+    steps.push({ arr: a.slice(), hl: hl.slice(), heapSize, phase, note });
+  };
+
+  push('初始数组，先把它看成一棵完全二叉树。大顶堆要求每个父节点不小于它的孩子。', [], 'build');
+
+  for (let p = Math.floor(n / 2) - 1; p >= 0; --p) {
+    push('建堆：从最后一个非叶节点 ' + p + ' 开始向下检查', [p], 'build');
+    let i = p;
+    for (;;) {
+      const l = 2 * i + 1;
+      if (l >= n) {
+        push('节点 ' + i + ' 没有孩子，下滤结束', [i], 'build');
+        break;
+      }
+      let c = l;
+      if (l + 1 < n && a[l + 1] > a[l]) {
+        c = l + 1;
+      }
+      if (a[i] >= a[c]) {
+        push('节点 ' + i + ' 不小于孩子 ' + c + '，下滤停止', [i, c], 'build');
+        break;
+      }
+      [a[i], a[c]] = [a[c], a[i]];
+      push('交换 ' + i + ' 与 ' + c + '，继续沿孩子 ' + c + ' 向下检查', [i, c], 'build');
+      i = c;
+    }
+  }
+  push('建堆完成：每个父节点都不小于它的孩子。', [], 'build');
+
+  for (let end = n; end > 1; --end) {
+    [a[0], a[end - 1]] = [a[end - 1], a[0]];
+    heapSize = end - 1;
+    push('把堆顶最大值 ' + a[end - 1] + ' 换到下标 ' + (end - 1) + '，堆缩小到前 ' + (end - 1) + ' 个元素', [0, end - 1], 'sort');
+    let i = 0;
+    for (;;) {
+      const l = 2 * i + 1;
+      if (l >= end - 1) {
+        push('堆顶 ' + i + ' 没有孩子，堆序已恢复', [i], 'sort');
+        break;
+      }
+      let c = l;
+      if (l + 1 < end - 1 && a[l + 1] > a[l]) {
+        c = l + 1;
+      }
+      if (a[i] >= a[c]) {
+        push('堆顶 ' + i + ' 不小于孩子 ' + c + '，堆序已恢复', [i, c], 'sort');
+        break;
+      }
+      [a[i], a[c]] = [a[c], a[i]];
+      push('下滤：交换 ' + i + ' 与 ' + c, [i, c], 'sort');
+      i = c;
+    }
+  }
+  push('排序完成：数组升序。', [], 'done');
+  return steps;
+}
+
+const STEPS = buildSteps();
+const NODES = layout(INITIAL.length);
+let index = 0;
+
+function render() {
+  const state = STEPS[index];
+  const n = state.arr.length;
+
+  const parts = [];
+  for (let i = 0; i < n; ++i) {
+    for (const c of [2 * i + 1, 2 * i + 2]) {
+      if (c < n) {
+        const p = NODES[i], q = NODES[c];
+        parts.push('<line x1="' + px(p.x) + '" y1="' + (py(p.depth) + R) + '" x2="' + px(q.x) + '" y2="' + (py(q.depth) - R) + '" stroke="#cbd5e1" stroke-width="2"/>');
+      }
+    }
+  }
+  for (let i = 0; i < n; ++i) {
+    const node = NODES[i];
+    let fill = '#fff', stroke = '#3b82f6', color = '#0f172a';
+    if (state.hl.includes(i)) {
+      fill = '#fff7e6'; stroke = '#f59e0b'; color = '#b45309';
+    } else if (i >= state.heapSize) {
+      fill = '#f1f5f9'; stroke = '#94a3b8'; color = '#94a3b8';
+    }
+    parts.push('<circle cx="' + px(node.x) + '" cy="' + py(node.depth) + '" r="' + R + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2"/>');
+    parts.push('<text x="' + px(node.x) + '" y="' + (py(node.depth) + 5) + '" text-anchor="middle" font-size="15" font-family="ui-monospace, monospace" fill="' + color + '">' + state.arr[i] + '</text>');
+    parts.push('<text x="' + px(node.x) + '" y="' + (py(node.depth) + R + 15) + '" text-anchor="middle" font-size="10" fill="#94a3b8">' + i + '</text>');
+  }
+  document.getElementById('tree').innerHTML = parts.join('');
+
+  const arrBox = document.getElementById('arr');
+  arrBox.innerHTML = '';
+  state.arr.forEach((v, i) => {
+    const c = document.createElement('div');
+    let cls = 'cell';
+    if (state.hl.includes(i)) {
+      cls += ' hl';
+    } else if (i >= state.heapSize) {
+      cls += ' done';
+    }
+    c.className = cls;
+    c.innerHTML = '<span class="idx">' + i + '</span>' + v;
+    arrBox.appendChild(c);
+  });
+
+  document.getElementById('note').innerHTML = state.note;
+  const phaseName = state.phase === 'build' ? '建堆' : state.phase === 'sort' ? '排序' : '完成';
+  document.getElementById('stepLabel').textContent = phaseName + ' · 第 ' + (index + 1) + ' / ' + STEPS.length + ' 步';
+  document.getElementById('prev').disabled = index === 0;
+  document.getElementById('next').disabled = index === STEPS.length - 1;
+}
+
+document.getElementById('prev').addEventListener('click', () => {
+  if (index > 0) { --index; render(); }
+});
+document.getElementById('next').addEventListener('click', () => {
+  if (index < STEPS.length - 1) { ++index; render(); }
+});
+document.getElementById('reset').addEventListener('click', () => {
+  index = 0;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

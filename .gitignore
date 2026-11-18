@@ -1,6 +1,7 @@
 .obsidian/copilot-index-*.json
 /.trash/
 ./Chores/Life/**
+./.agents/tmp/**
 ./Chores/LearningDailyRecord/**
 .obsidian/plugins/remember-cursor-position/cursor-positions.json
 __pycache__/
