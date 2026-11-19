@@ -1,83 +1,12 @@
-.fsrs-scheduler .fsrs-actions,
-.fsrs-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-.fsrs-row > span {
-    flex: 1 1 250px;
-}
-.fsrs-warning {
-    color: var(--text-warning);
-    white-space: pre-wrap;
-}
-.fsrs-import-item {
+.fsrs-review .fsrs-card {
     border: 1px solid var(--background-modifier-border);
-    padding: 12px;
-    margin-bottom: 16px;
-}
-.fsrs-scheduler pre,
-.fsrs-import-item pre {
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-}
-.fsrs-scheduler-modal textarea {
-    width: 100%;
-    min-height: 80px;
-}
-
-.fsrs-search {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 8px 0 16px;
-}
-.fsrs-search input {
-    flex: 1 1 240px;
-    min-width: 120px;
-}
-.fsrs-search span {
-    color: var(--text-muted);
-    white-space: nowrap;
-}
-.fsrs-search-target[hidden] {
-    display: none !important;
-}
-.fsrs-context {
-    padding: 8px 12px;
-    border-inline-start: 2px solid var(--background-modifier-border);
-}
-.fsrs-diff-modal pre {
-    max-height: 60vh;
-    overflow: auto;
-    font-family: var(--font-monospace);
-}
-.fsrs-exercise {
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 8px;
-    padding: 12px 16px;
+    border-radius: 6px;
     margin: 12px 0;
+    padding: 12px;
 }
-.fsrs-exercise button {
-    margin: 4px 8px 4px 0;
+.fsrs-review button {
+    margin: 4px 6px 4px 0;
 }
-.fsrs-exercise h4 {
-    margin: 0 0 8px;
-}
-.fsrs-added {
-    color: var(--text-success);
-    background: rgba(40, 170, 80, 0.1);
-}
-.fsrs-removed {
-    color: var(--text-error);
-    background: rgba(210, 60, 60, 0.1);
-}
-.fsrs-hunk {
-    color: var(--text-accent);
-}
-.fsrs-scheduler button[aria-pressed="true"] {
-    background: var(--interactive-accent);
-    color: var(--text-on-accent);
+.fsrs-review pre {
+    white-space: pre-wrap;
 }
